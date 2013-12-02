@@ -1,0 +1,14 @@
+---
+# file: webservers.yml
+- name: Gather data about appservers
+  hosts:  appservers
+  gather_facts: yes
+  tasks:
+    - name: setup
+      shell: ifconfig
+
+- name: Configure all frontend loadbalancers
+  hosts: loadbalancers
+  sudo: yes
+  roles:
+    - nginx

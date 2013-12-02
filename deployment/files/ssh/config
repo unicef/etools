@@ -1,0 +1,5 @@
+host git.example.com
+    hostname git.example.com
+    user git
+    port 1234
+    identityfile ~/.ssh/id_rsa

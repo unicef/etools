@@ -1,0 +1,34 @@
+---
+project:
+  fqdn: equitrack.local
+  name: EquiTrack
+  user: equitrack
+  group: www-data
+  mode: local
+  branch: develop
+  repo: ssh://git@git.example.com:1234/examplecom.git
+  root: /home/vagrant/EquiTrack
+
+nginx:
+  servernames:
+    - "equitrack.local"
+
+django:
+  settings: EquiTrack.settings.local
+  wsgi: EquiTrack.wsgi
+  root: ${project.root}/EquiTrack
+  virtualenv_name: venv
+  virtualenv: ${project.root}/${virtualenv_name}
+
+database:
+  user: equitrack
+  password: equitrack
+  name: equitrack
+  host: localhost
+  port: 5432
+
+message_queue:
+  redis_id: 2
+
+cache:
+  redis_id: 1

@@ -1,0 +1,14 @@
+---
+- name: Install Packages
+  apt: >
+    pkg=${item}
+    state=installed
+    update-cache=yes
+  with_items:
+    - build-essential
+    - postgresql
+    - python-dev
+    - python-setuptools
+    - python-psycopg2
+    - postgresql-server-dev-all
+    - libpq-dev

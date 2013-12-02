@@ -1,0 +1,9 @@
+---
+# file: dbservers.yml
+- name: Configure all MessageQueue servers
+  hosts: queueservers
+  sudo: yes
+
+  roles:
+    - django
+    - celery

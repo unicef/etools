@@ -1,0 +1,26 @@
+---
+#- name: Django | Assets | Compress
+#  shell: command=". ${project.virtualenv}/bin/activate; cd ${django.root}; python ./manage.py compress --settings=${django.settings} --force"
+#  tags:
+#    - assets
+#    - collectstatic
+#    - update
+#    - application
+#    - django
+
+- name: Django | Assets | Collect
+  django_manage: >
+    command=collectstatic
+    link=yes
+    app_path=${django.root}
+    settings=${django.settings}
+    virtualenv=${project.virtualenv}
+  tags:
+    - assets
+    - collectstatic
+    - update
+    - application
+    - django
+  notify:
+    - restart nginx
+    - restart uwsgi

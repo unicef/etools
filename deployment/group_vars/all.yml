@@ -1,0 +1,8 @@
+---
+webserver:
+    ssl_private: files+'ssl/private.pem'
+    ssl_public: files+'ssl/public.pem'
+
+user:
+    ssh_files: files+'ssh'
+

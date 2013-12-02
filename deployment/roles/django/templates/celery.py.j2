@@ -1,0 +1,1 @@
+BROKER_URL = "redis://{{ groups.get('queueservers')[0] }}:{{ message_queue.get('redis_port', 6379) }}/{{ message_queue.get('redis_id', 2) }} }}"

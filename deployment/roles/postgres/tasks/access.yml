@@ -1,0 +1,16 @@
+---
+- name: Listen on public interface
+  lineinfile: >
+    dest=/etc/postgresql/9.1/main/postgresql.conf
+    regexp="^listen_addresses"
+    insertafter="^#listen_addresses"
+    line="listen_addresses = '*'"
+  notify: restart postgresql
+
+- name: allow access to appservers
+  lineinfile: >
+    dest=/etc/postgresql/9.1/main/postgresql.conf
+    regexp="${database.name}.*${item}"
+    line="host    ${database.name}             all             {{item}}/32       trust"
+  with_items: groups.get('appservers')
+  notify: restart postgresql

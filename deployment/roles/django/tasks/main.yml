@@ -1,0 +1,9 @@
+---
+- include: common.yml
+- include: packages.yml
+#- include: ssh.yml
+- include: git.yml
+- include: pip.yml
+#- include: settings.yml
+- include: database.yml
+- include: assets.yml

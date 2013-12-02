@@ -1,0 +1,20 @@
+#!/bin/bash
+# create and alias in your bashrc:
+#    alias playbook='~/Dev/ansible/play'
+#
+# Run with:
+#    ./play production all
+#    ./play production webservers
+#    ./play production dbservers
+#    ./play production webservers --tags=pip
+
+
+INVENTORY=$1
+ROLE=${2:-"site"}
+
+echo "Pulling vars from $PROJECTDIR"
+echo "Configuring ..."
+echo "inventory: ${INVENTORY}"
+echo "role: ${ROLES}"
+
+ansible-playbook --inventory-file=$INVENTORY "$(dirname $0)/${ROLE}.yml" --extra-vars="inventory_files=$PWD/inventory/files" "${@:3}"

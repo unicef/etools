@@ -1,0 +1,29 @@
+---
+- name: Nginx | remove default nginx site
+  notify: restart nginx
+  file: >
+    path=/etc/nginx/sites-enabled/default
+    state=absent
+
+- name: Nginx | Install nginx configuration file.
+  notify: restart nginx
+  template: >
+    src=vhost.conf.j2
+    dest=/etc/nginx/sites-available/${project.name}
+  tags:
+    - configuration
+    - nginx
+    - webserver
+    - update
+
+- name: Nginx | Enable nginx virtualhost.
+  file: >
+    src=/etc/nginx/sites-available/${project.name}
+    dest=/etc/nginx/sites-enabled/${project.name}
+    state=link
+  tags:
+    - configuration
+    - nginx
+    - webserver
+
+

@@ -1,0 +1,21 @@
+---
+- name: Create Database User
+  sudo: true
+  sudo_user: postgres
+  postgresql_user: >
+    user=${database.user}
+    password=${database.password}
+    role_attr_flags=CREATEDB,NOSUPERUSER
+  tags: database
+
+- name: Create Database.
+  sudo_user: postgres
+  postgresql_db: >
+    name=${database.name}
+    owner=${database.user}
+    login_host=localhost
+    login_user=${database.user}
+    login_password=${database.password}
+  tags:
+    - database
+    - create

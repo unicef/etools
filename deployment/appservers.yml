@@ -1,0 +1,17 @@
+---
+# file: webservers.yml
+
+- name: Gather data about database servers
+  hosts: dbservers
+  gather_facts: yes
+  tasks:
+    - name: setup
+      shell: ifconfig
+
+- name: Configure all application servers
+  hosts: appservers
+  sudo: yes
+  roles:
+    - nginx
+    - uwsgi
+    - django
