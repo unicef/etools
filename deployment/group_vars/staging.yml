@@ -17,12 +17,12 @@ project:
 django:
   settings: base.settings.live
   wsgi: base.wsgi
-  root: ${project.root}/code/application
-  virtualenv: ${project.root}/environ
+  root: ${project.root}/${project.mode}
+  virtualenv: ${project.root}/venv
   fixtures:
-    - ${django.root}/base/fixtures/${project.mode}.json
-    - ${django.root}/base/fixtures/users.json
-    - ${django.root}/base/fixtures/pages.json
+    - ${django.root}/${project.name}/fixtures/${project.mode}.json
+    - ${django.root}/${project.name}/fixtures/users.json
+    - ${django.root}/${project.name}/fixtures/pages.json
 
 database:
   user: examplecom

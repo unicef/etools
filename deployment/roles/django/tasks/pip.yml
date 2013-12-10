@@ -3,10 +3,10 @@
   sudo_user: ${project.user}
   pip: >
     requirements=$item
-    virtualenv=${project.root}/${virtualenv_name}
+    virtualenv=${django.virtualenv}
   with_items:
-    - ${project.root}/requirements/base.txt
-    - ${project.root}/requirements/${project.mode}.txt
+    - ${project.root}/${project.name}/requirements/base.txt
+    - ${project.root}/${project.name}/requirements/${project.mode}.txt
   tags:
     - packages
     - application

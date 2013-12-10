@@ -5,7 +5,7 @@
     command=syncdb
     app_path=${django.root}
     settings=${django.settings}
-    virtualenv=${project.virtualenv}
+    virtualenv=${django.virtualenv}
   tags:
     - database
     - application
@@ -17,7 +17,7 @@
     command=migrate
     app_path=${django.root}
     settings=${django.settings}
-    virtualenv=${project.virtualenv}
+    virtualenv=${django.virtualenv}
   tags:
     - database
     - update
@@ -31,7 +31,7 @@
     fixtures=$item
     app_path=${django.root}
     settings=${django.settings}
-    virtualenv=${project.virtualenv}
+    virtualenv=${django.virtualenv}
   with_items: django.fixtures
   tags:
     - database

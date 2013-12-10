@@ -2,7 +2,7 @@
 - name: Django | Settings | Create Django Database Settings Module
   template: >
     src=db.py.j2
-    dest=${django.root}/base/settings/modules/db.py
+    dest=${django.root}/${project.name}/settings/modules/db.py
   tags:
     - database
     - application
@@ -13,7 +13,7 @@
 - name: Django | Settings | Create Django Cache Settings Module
   template: >
     src=cache.py.j2
-    dest=${django.root}/base/settings/modules/cache.py
+    dest=${django.root}/${project.name}/settings/modules/cache.py
   tags:
     - cache
     - application
@@ -24,7 +24,7 @@
 - name: Django | Settings | Create Django Celery Settings Module
   template: >
     src=celery.py.j2
-    dest=${django.root}/base/settings/modules/celery.py
+    dest=${django.root}/${project.name}/settings/modules/celery.py
   tags:
     - cache
     - application

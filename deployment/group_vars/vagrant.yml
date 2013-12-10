@@ -16,9 +16,8 @@ nginx:
 django:
   settings: EquiTrack.settings.local
   wsgi: EquiTrack.wsgi
-  root: ${project.root}/EquiTrack
-  virtualenv_name: venv
-  virtualenv: ${project.root}/${virtualenv_name}
+  root: ${project.root}/${project.name}/${project.name}
+  virtualenv: ${project.root}/venv
 
 database:
   user: equitrack
