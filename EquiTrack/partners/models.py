@@ -3,7 +3,14 @@ __author__ = 'jcranwellward'
 from django.db import models
 from django.core import urlresolvers
 
-from EquiTrack.funds.models import Grant
+from funds.models import Grant
+from locations.models import (
+    Governorate,
+    Region,
+    Locality,
+    Location,
+    GatewayType
+)
 
 
 class PartnerOrganization(models.Model):
@@ -23,7 +30,7 @@ class PCA(models.Model):
     number = models.CharField(max_length=45L, blank=True)
     title = models.CharField(max_length=256L, blank=True)
     status = models.CharField(max_length=32L, blank=True)
-    partner = models.ForeignKey(PartnerOrganization, null=True, blank=True)
+    partner = models.ForeignKey(PartnerOrganization)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
     initiation_date = models.DateField(null=True, blank=True)
@@ -57,16 +64,30 @@ class PCA(models.Model):
 class PcaGrant(models.Model):
     pca = models.ForeignKey(PCA)
     grant = models.ForeignKey(Grant)
-    funds = models.IntegerField()
+    funds = models.IntegerField(null=True, blank=True)
 
     def __unicode__(self):
         return self.grant
 
 
+class GwPcaLocation(models.Model):
+
+    pca = models.ForeignKey(PCA)
+    name = models.CharField(max_length=128L)
+    governorate = models.ForeignKey(Governorate, null=True, blank=True)
+    region = models.ForeignKey(Region, null=True, blank=True)
+    locality = models.ForeignKey(Locality, null=True, blank=True)
+    gateway = models.ForeignKey(GatewayType, null=True, blank=True)
+    location = models.ForeignKey(Location)
+
+    def __unicode__(self):
+        return self.location.p_code
+
+
 class Sector(models.Model):
 
-    name = models.CharField(max_length=45L)
-    description = models.CharField(max_length=256L, blank=True)
+    name = models.CharField(max_length=45L, unique=True)
+    description = models.CharField(max_length=256L, blank=True, null=True)
 
     def __unicode__(self):
         return self.name
@@ -100,7 +121,7 @@ class WBS(models.Model):
     code = models.CharField(max_length=10L)
 
     def __unicode__(self):
-        return u'{} - {}'.format(self.code, self.name)
+        return self.name
 
 
 class PCASector(models.Model):
@@ -109,7 +130,6 @@ class PCASector(models.Model):
     sector = models.ForeignKey(Sector)
 
     RRP5_outputs = models.ManyToManyField(Rrp5Output)
-    wbs_activities = models.ManyToManyField(WBS)
 
     def __unicode__(self):
         return self.sector.name
@@ -123,11 +143,21 @@ class PCASector(models.Model):
             )
             changeform_url = urlresolvers.reverse(url_name, args=(self.id,))
             return u'<a class="btn btn-primary default" ' \
-                   u'onclick="return showAddAnotherPopup(this);" ' \
                    u'href="{}" target="_blank">Details</a>'.format(changeform_url)
         return u''
     changeform_link.allow_tags = True
     changeform_link.short_description = ''   # omit column header
+
+
+class PCASectorImmediateResult(models.Model):
+
+    pca_sector = models.ForeignKey(PCASector)
+    Intermediate_result = models.ForeignKey(IntermediateResult)
+
+    wbs_activities = models.ManyToManyField(WBS)
+
+    def __unicode__(self):
+        return self.Intermediate_result.name
 
 
 class Goal(models.Model):
@@ -140,7 +170,10 @@ class Goal(models.Model):
 
 
 class Unit(models.Model):
-    type = models.CharField(max_length=45L)
+    type = models.CharField(max_length=45L, unique=True)
+
+    def __unicode__(self):
+        return self.type
 
 
 class Indicator(models.Model):
@@ -148,6 +181,7 @@ class Indicator(models.Model):
     goal = models.ForeignKey(Goal)
     name = models.CharField(max_length=128L)
     unit = models.ForeignKey(Unit)
+    total = models.IntegerField()
 
     def __unicode__(self):
         return self.name

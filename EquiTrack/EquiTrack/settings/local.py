@@ -24,15 +24,22 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ########## DATABASE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
 DATABASES = {
-    'default': {
+    'tracker': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'pcatracking',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': '',
         'PORT': '',
+    },
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'equitrack',
+        'USER': '',
     }
 }
+
+DATABASE_ROUTERS = ['tracker.router.MyAppRouter', ]
 ########## END DATABASE CONFIGURATION
 
 

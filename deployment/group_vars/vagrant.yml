@@ -6,8 +6,8 @@ project:
   group: www-data
   mode: local
   branch: develop
-  repo: ssh://git@git.example.com:1234/examplecom.git
-  root: /home/vagrant/EquiTrack
+  repo: git://github.com/UNICEFLebanonInnovation/EquiTrack.git
+  root: /srv/EquiTrack
 
 nginx:
   servernames:

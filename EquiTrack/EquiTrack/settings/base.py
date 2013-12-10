@@ -184,7 +184,7 @@ DJANGO_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'django.contrib.gis',
     # Useful template tags:
     # 'django.contrib.humanize',
 
@@ -193,6 +193,7 @@ DJANGO_APPS = (
     #'grappelli.dashboard',
     #'grappelli',
     #'nested_inlines',
+    'autocomplete_light',
     'django_admin_bootstrapped',
     'django.contrib.admin',
     # 'django.contrib.admindocs',
@@ -207,6 +208,8 @@ THIRD_PARTY_APPS = (
 LOCAL_APPS = (
     'tracker',
     'partners',
+    'locations',
+    'funds',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

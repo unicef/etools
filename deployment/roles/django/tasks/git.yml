@@ -1,24 +1,24 @@
 ---
-- name: Django | Git | Create target directory.
-  file: >
-     state=directory
-     path=${project.root}
-     owner=${project.user}
-     group=${project.user}
-     mode=0775
-  tags:
-     - base
-     - ssh
-     - accounts
-     - provision
+#- name: Django | Git | Create target directory.
+#  file: >
+#     state=directory
+#     path=${project.root}
+#     owner=${project.user}
+#     group=${project.user}
+#     mode=0775
+#  tags:
+#     - base
+#     - ssh
+#     - accounts
+#     - provision
 
 - name: Django | Git | Pull sources from the repository.
   sudo: yes
   sudo_user: ${project.user}
   git: >
-    repo=${repo.url}
+    repo=${project.repo}
     dest=${project.root}
-    version=${repo.branch}
+    version=${project.branch}
     force=yes
     update=yes
   tags:

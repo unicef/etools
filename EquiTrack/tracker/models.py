@@ -557,7 +557,7 @@ class PcaUserAction(models.Model):
 
 
 class PcaWbs(models.Model):
-    pca = models.ForeignKey(PCA)
+    pca = models.ForeignKey(PCA, primary_key=True)
     wbs = models.ForeignKey('WBS')
 
     class Meta:

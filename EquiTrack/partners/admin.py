@@ -1,29 +1,55 @@
 __author__ = 'jcranwellward'
 
-from django.db.models import get_models, get_app
 from django.contrib import admin
-from django.contrib.admin.sites import AlreadyRegistered
 from django.utils.translation import ugettext_lazy as _
 
-from nested_inlines.admin import (
-    NestedModelAdmin,
-    NestedStackedInline,
-    NestedTabularInline,
-)
+import autocomplete_light
 
+from funds.models import Grant
+from locations.forms import LocationForm
 from . import models
 
 
-class PcaIndicatorInlineAdmin(admin.TabularInline):
+class PcaIRInlineAdmin(admin.StackedInline):
+    form = autocomplete_light.modelform_factory(
+        models.PCASectorImmediateResult
+    )
+    model = models.PCASectorImmediateResult
+    verbose_name = 'Immediate Result'
+    verbose_name_plural = 'Immediate Results'
+    extra = 0
+
+
+class PcaLocationInlineAdmin(admin.TabularInline):
+    model = models.GwPcaLocation
+    form = LocationForm
+    verbose_name = 'Location'
+    verbose_name_plural = 'Locations'
+    fields = (
+        'governorate',
+        'region',
+        'locality',
+        'location',
+        'gateway',
+
+    )
+    extra = 0
+
+
+class PcaIndicatorInlineAdmin(admin.StackedInline):
+    form = autocomplete_light.modelform_factory(
+        models.IndicatorProgress
+    )
     model = models.IndicatorProgress
     verbose_name = 'Indicator'
     verbose_name_plural = 'Indicators'
     fields = (
-        'unit',
         'indicator',
         'programmed',
         'current',
         'shortfall',
+        'unit',
+
     )
     readonly_fields = (
         'shortfall',
@@ -61,27 +87,29 @@ class PcaSectorInlineAdmin(admin.TabularInline):
 
 
 class PcaGrantInlineAdmin(admin.TabularInline):
+    form = autocomplete_light.modelform_factory(
+        models.Grant
+    )
     model = models.PcaGrant
     verbose_name = 'Grant'
     verbose_name_plural = 'Grants'
-    raw_id_fields = ('grant',)
-    related_lookup_fields = {
-        'fk': ['grant'],
-    }
-    extra = 1
+    extra = 0
 
 
 class PcaRRP5OutputsInlineAdmin(admin.TabularInline):
+
     model = models.Rrp5Output
     extra = 0
 
 
 class PcaSectorAdmin(admin.ModelAdmin):
+    form = autocomplete_light.modelform_factory(
+        models.PCASector
+    )
     fields = (
         'pca',
         'sector',
         'RRP5_outputs',
-        'wbs_activities',
     ),
     readonly_fields = (
         'pca',
@@ -89,10 +117,14 @@ class PcaSectorAdmin(admin.ModelAdmin):
     )
     inlines = (
         PcaIndicatorInlineAdmin,
+        PcaIRInlineAdmin
     )
 
 
 class PcaAdmin(admin.ModelAdmin):
+    form = autocomplete_light.modelform_factory(
+        models.PCA
+    )
     list_display = (
         'number',
         'title',
@@ -118,52 +150,39 @@ class PcaAdmin(admin.ModelAdmin):
         }),
         (_('Dates'), {
             'fields':
-                ('start_date',
-                 'initiation_date',
-                 'end_date',
-                 'signed_by_unicef_date',
-                 'unicef_mng_first_name',
-                 'unicef_mng_last_name',
-                 'unicef_mng_email',
-                 'signed_by_partner_date',
-                 'partner_mng_first_name',
-                 'partner_mng_last_name',
-                 'partner_mng_email',),
-            'classes': ('grp-collapse', 'grp-open')
+                (('start_date', 'initiation_date', 'end_date',),
+                 ('unicef_mng_first_name', 'unicef_mng_last_name', 'unicef_mng_email', 'signed_by_unicef_date', ),
+                 ('partner_mng_first_name', 'partner_mng_last_name', 'partner_mng_email', 'signed_by_partner_date', ),
+                ),
+            'classes': ('grp-collapse', 'grp-close')
 
         }),
         (_('Budget'), {
             'fields':
                 ('partner_contribution_budget',
-                 'unicef_cash_budget',
-                 'in_kind_amount_budget',
-                 'total_cash', 'received_date',),
-            'classes': ('grp-collapse', 'grp-open')
+                 ('unicef_cash_budget', 'in_kind_amount_budget',),
+                 'total_cash',
+                 'received_date',
+                ),
+            'classes': ('grp-collapse', 'grp-close')
         }),
     )
 
-    raw_id_fields = ('partner',)
-    related_lookup_fields = {
-        'fk': ['partner'],
-    }
     inlines = (
         PcaGrantInlineAdmin,
         PcaSectorInlineAdmin,
-        PcaReportInlineAdmin
+        PcaLocationInlineAdmin,
     )
 
 admin.site.register(models.PCA, PcaAdmin)
 admin.site.register(models.PCASector, PcaSectorAdmin)
+admin.site.register(models.PartnerOrganization)
+admin.site.register(models.IntermediateResult)
+admin.site.register(models.Rrp5Output)
+admin.site.register(models.Goal)
+admin.site.register(models.Unit)
+admin.site.register(models.Indicator)
+admin.site.register(models.WBS)
 
 
-def autoregister(*app_list):
-    for app_name in app_list:
-        app_models = get_app(app_name)
-        for model in get_models(app_models):
-            try:
-                admin.site.register(model)
-            except AlreadyRegistered:
-                pass
 
-
-autoregister('partners',)
