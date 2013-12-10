@@ -37,9 +37,7 @@ class PcaLocationInlineAdmin(admin.TabularInline):
 
 
 class PcaIndicatorInlineAdmin(admin.StackedInline):
-    form = autocomplete_light.modelform_factory(
-        models.IndicatorProgress
-    )
+
     model = models.IndicatorProgress
     verbose_name = 'Indicator'
     verbose_name_plural = 'Indicators'
@@ -88,7 +86,7 @@ class PcaSectorInlineAdmin(admin.TabularInline):
 
 class PcaGrantInlineAdmin(admin.TabularInline):
     form = autocomplete_light.modelform_factory(
-        models.Grant
+        Grant
     )
     model = models.PcaGrant
     verbose_name = 'Grant'

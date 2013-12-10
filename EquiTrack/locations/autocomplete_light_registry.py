@@ -27,11 +27,12 @@ class AutocompleteRegion(autocomplete_light.AutocompleteModelBase):
         q = self.request.GET.get('q', '')
         governorate_id = self.request.GET.get('governorate_id', None)
 
-        choices = self.choices.all()
-        if q:
-            choices = choices.filter(name__icontains=q)
-        if governorate_id:
-            choices = choices.filter(governorate_id=governorate_id)
+        if q and governorate_id:
+            choices = self.choices.filter(
+                name__icontains=q,
+                governorate_id=governorate_id)
+        else:
+            choices = self.choices.none()
 
         return self.order_choices(choices)[0:self.limit_choices]
 
@@ -46,13 +47,16 @@ class AutocompleteLocality(autocomplete_light.AutocompleteModelBase):
         q = self.request.GET.get('q', '')
         region_id = self.request.GET.get('region_id', None)
 
-        choices = self.choices.all()
-        if q:
-            choices = choices.filter(name__icontains=q)
-        if region_id:
-            choices = choices.filter(region_id=region_id)
+        if q and region_id:
+            choices = self.choices.filter(
+                name__icontains=q,
+                region_id=region_id)
+        else:
+            choices = self.choices.none()
 
         return self.order_choices(choices)[0:self.limit_choices]
+
+autocomplete_light.register(Locality, AutocompleteLocality)
 
 
 class AutocompleteLocation(autocomplete_light.AutocompleteModelBase):
@@ -63,22 +67,13 @@ class AutocompleteLocation(autocomplete_light.AutocompleteModelBase):
         q = self.request.GET.get('q', '')
         locality_id = self.request.GET.get('locality_id', None)
 
-        choices = self.choices.all()
-        if q:
-            choices = choices.filter(name__icontains=q)
-        if locality_id:
-            choices = choices.filter(locality_id=locality_id)
+        if q and locality_id:
+            choices = self.choices.filter(
+                name__icontains=q,
+                locality_id=locality_id)
+        else:
+            choices = self.choices.none()
 
         return self.order_choices(choices)[0:self.limit_choices]
 
-autocomplete_light.register(Locality, AutocompleteLocality)
-
-
-autocomplete_light.register(
-    Location,
-    # Just like in ModelAdmin.search_fields
-    search_fields=['^name',],
-    # This will actually html attribute data-placeholder which will set
-    # javascript attribute widget.autocomplete.placeholder.
-    autocomplete_js_attributes={'placeholder': 'Location name..',},
-)
+autocomplete_light.register(Location, AutocompleteLocation)

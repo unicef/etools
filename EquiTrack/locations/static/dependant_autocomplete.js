@@ -48,4 +48,27 @@ $(document).ready(function() {
         console.log($(this), 'changed to', value);
         console.log(localityWidgetElement, 'data is', localityWidgetElement.yourlabsWidget().autocomplete.data)
     });
+
+    $('body').on('change', '.autocomplete-light-widget select[name$=locality]', function() {
+        var localitySelectElement = $(this);
+        var locationSelectElement = $('#' + $(this).attr('id').replace('locality', 'location'));
+        var locationWidgetElement = locationSelectElement.parents('.autocomplete-light-widget');
+
+        // When the country select changes
+        value = $(this).val();
+
+        if (value) {
+            // If value is contains something, add it to autocomplete.data
+            locationWidgetElement.yourlabsWidget().autocomplete.data = {
+                'locality_id': value[0]
+            };
+        } else {
+            // If value is empty, empty autocomplete.data
+            locationWidgetElement.yourlabsWidget().autocomplete.data = {}
+        }
+
+        // example debug statements, that does not replace using breakbpoints and a proper debugger but can hel
+        console.log($(this), 'changed to', value);
+        console.log(locationWidgetElement, 'data is', locationWidgetElement.yourlabsWidget().autocomplete.data)
+    });
 });
