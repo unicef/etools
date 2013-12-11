@@ -14,7 +14,7 @@ nginx:
     - "equitrack.local"
 
 django:
-  settings: EquiTrack.settings.local
+  settings: EquiTrack.settings.dev
   wsgi: EquiTrack.wsgi
   root: ${project.root}/${project.name}/${project.name}
   virtualenv: ${project.root}/venv
