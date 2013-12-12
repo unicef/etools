@@ -1,5 +1,3 @@
-
-
 __author__ = 'jcranwellward'
 
 from django.db import models
@@ -7,18 +5,19 @@ from django.core import urlresolvers
 
 from funds.models import Grant
 from reports.models import (
+    IntermediateResult,
     Rrp5Output,
     Indicator,
     Activity,
     Sector,
     WBS,
-    IntermediateResult)
+)
 from locations.models import (
     Governorate,
-    Region,
+    GatewayType,
     Locality,
     Location,
-    GatewayType
+    Region,
 )
 
 
@@ -55,7 +54,7 @@ class PCA(models.Model):
     unicef_cash_budget = models.IntegerField(null=True, blank=True)
     in_kind_amount_budget = models.IntegerField(null=True, blank=True)
     cash_for_supply_budget = models.IntegerField(null=True, blank=True)
-    total_cash = models.IntegerField(null=True, blank=True)
+    total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget')
     received_date = models.DateTimeField(null=True, blank=True)
     is_approved = models.NullBooleanField(null=True, blank=True)
 
@@ -68,6 +67,15 @@ class PCA(models.Model):
             self.partner.name,
             self.number
         )
+
+    def save(self, **kwargs):
+
+        self.total_cash = (
+            self.partner_contribution_budget +
+            self.unicef_cash_budget +
+            self.in_kind_amount_budget
+        )
+        super(PCA, self).save(**kwargs)
 
 
 class PcaGrant(models.Model):
@@ -101,8 +109,15 @@ class PCASector(models.Model):
     RRP5_outputs = models.ManyToManyField(Rrp5Output)
     activities = models.ManyToManyField(Activity)
 
+    class Meta:
+        verbose_name = 'PCA Sector'
+
     def __unicode__(self):
-        return self.sector.name
+        return u'{}: {}: {}'.format(
+            self.pca.partner.name,
+            self.pca.number,
+            self.sector.name,
+        )
 
     def changeform_link(self):
         if self.id:

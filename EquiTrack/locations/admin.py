@@ -15,6 +15,7 @@ class LocationAdmin(admin.GeoModelAdmin):
     list_display = ('name', 'p_code', 'locality',)
     search_fields = ('name', 'p_code',)
 
+
 admin.site.register(models.Governorate, admin.GeoModelAdmin)
 admin.site.register(models.Region, admin.GeoModelAdmin)
 admin.site.register(models.Locality, admin.GeoModelAdmin)

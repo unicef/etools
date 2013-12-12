@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 
 from autocomplete_light import forms
 
+from reports.models import Indicator
 from partners.models import GwPcaLocation
 
 

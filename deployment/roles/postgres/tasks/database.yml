@@ -9,7 +9,7 @@
   tags: database
 
 - name: Create Database.
-  sudo_user: postgres
+  sudo_user: equitrack
   postgresql_db: >
     name=${database.name}
     owner=${database.user}

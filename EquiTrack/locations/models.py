@@ -23,6 +23,9 @@ class Region(models.Model):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        verbose_name = 'Caza'
+
 
 class Locality(models.Model):
     region = models.ForeignKey(Region)
@@ -37,6 +40,9 @@ class Locality(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    class Meta:
+        verbose_name = 'Cadastral/Locality'
 
 
 class GatewayType(models.Model):
@@ -59,3 +65,6 @@ class Location(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    class Meta:
+        verbose_name = 'Village'
