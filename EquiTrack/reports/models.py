@@ -16,7 +16,7 @@ class Rrp5Output(models.Model):
 
     sector = models.ForeignKey(Sector)
     code = models.CharField(max_length=16L)
-    name = models.CharField(max_length=256L)
+    name = models.CharField(max_length=256L, unique=True)
 
     class Meta:
         verbose_name = 'RRP5 Output'
@@ -27,7 +27,7 @@ class Rrp5Output(models.Model):
 
 class Goal(models.Model):
     sector = models.ForeignKey(Sector)
-    name = models.CharField(max_length=512L)
+    name = models.CharField(max_length=512L, unique=True)
     description = models.CharField(max_length=512L, blank=True)
 
     def __unicode__(self):
@@ -44,7 +44,7 @@ class Unit(models.Model):
 class Indicator(models.Model):
 
     goal = models.ForeignKey(Goal)
-    name = models.CharField(max_length=128L)
+    name = models.CharField(max_length=128L, unique=True)
     unit = models.ForeignKey(Unit)
     total = models.IntegerField()
 
@@ -55,7 +55,7 @@ class Indicator(models.Model):
 class IntermediateResult(models.Model):
     sector = models.ForeignKey(Sector)
     ir_wbs_reference = models.CharField(max_length=50L)
-    name = models.CharField(max_length=128L)
+    name = models.CharField(max_length=128L, unique=True)
 
     def __unicode__(self):
         return self.name
@@ -63,7 +63,7 @@ class IntermediateResult(models.Model):
 
 class WBS(models.Model):
     Intermediate_result = models.ForeignKey(IntermediateResult)
-    name = models.CharField(max_length=128L)
+    name = models.CharField(max_length=128L, unique=True)
     code = models.CharField(max_length=10L)
 
     def __unicode__(self):
@@ -72,7 +72,7 @@ class WBS(models.Model):
 
 class Activity(models.Model):
     sector = models.ForeignKey(Sector)
-    name = models.CharField(max_length=128L)
+    name = models.CharField(max_length=128L, unique=True)
     type = models.CharField(max_length=30L, blank=True, null=True)
 
     def __unicode__(self):

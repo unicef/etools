@@ -4,7 +4,7 @@ from django.contrib.gis.db import models
 
 
 class Governorate(models.Model):
-    name = models.CharField(max_length=45L)
+    name = models.CharField(max_length=45L, unique=True)
     area = models.MultiPointField(null=True, blank=True)
 
     objects = models.GeoManager()
@@ -15,7 +15,7 @@ class Governorate(models.Model):
 
 class Region(models.Model):
     governorate = models.ForeignKey(Governorate)
-    name = models.CharField(max_length=45L)
+    name = models.CharField(max_length=45L, unique=True)
     area = models.MultiPointField(null=True, blank=True)
 
     objects = models.GeoManager()
@@ -43,10 +43,11 @@ class Locality(models.Model):
 
     class Meta:
         verbose_name = 'Cadastral/Locality'
+        unique_together = ('name', 'cas_code_un')
 
 
 class GatewayType(models.Model):
-    name = models.CharField(max_length=64L)
+    name = models.CharField(max_length=64L, unique=True)
 
     def __unicode__(self):
         return self.name
@@ -68,3 +69,4 @@ class Location(models.Model):
 
     class Meta:
         verbose_name = 'Village'
+        unique_together = ('name', 'p_code')

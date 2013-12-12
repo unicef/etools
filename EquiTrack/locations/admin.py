@@ -16,7 +16,11 @@ class LocationAdmin(admin.GeoModelAdmin):
     search_fields = ('name', 'p_code',)
 
 
+class LocalityAdmin(admin.GeoModelAdmin):
+    search_fields = ('name',)
+
+
 admin.site.register(models.Governorate, admin.GeoModelAdmin)
 admin.site.register(models.Region, admin.GeoModelAdmin)
-admin.site.register(models.Locality, admin.GeoModelAdmin)
+admin.site.register(models.Locality, LocalityAdmin)
 admin.site.register(models.Location, LocationAdmin)

@@ -15,7 +15,8 @@ SITE_ROOT = dirname(DJANGO_ROOT)
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
 SUIT_CONFIG = {
-    'ADMIN_NAME': 'EquiTrack'
+    'ADMIN_NAME': 'EquiTrack',
+    'SEARCH_URL': '/admin/partners/pca/',
 }
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:

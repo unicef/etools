@@ -23,7 +23,7 @@ from locations.models import (
 
 class PartnerOrganization(models.Model):
 
-    name = models.CharField(max_length=45L)
+    name = models.CharField(max_length=45L, unique=True)
     description = models.CharField(max_length=256L, blank=True)
     email = models.CharField(max_length=128L, blank=True)
     contact_person = models.CharField(max_length=64L, blank=True)
@@ -69,12 +69,14 @@ class PCA(models.Model):
         )
 
     def save(self, **kwargs):
-
-        self.total_cash = (
-            self.partner_contribution_budget +
-            self.unicef_cash_budget +
-            self.in_kind_amount_budget
-        )
+        if self.partner_contribution_budget \
+            and self.unicef_cash_budget \
+            and self.in_kind_amount_budget:
+            self.total_cash = (
+                self.partner_contribution_budget +
+                self.unicef_cash_budget +
+                self.in_kind_amount_budget
+            )
         super(PCA, self).save(**kwargs)
 
 
