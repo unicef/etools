@@ -9,9 +9,10 @@ from django.core.management.base import (
 )
 from django.contrib.gis.geos import Point
 
+from reports import models as report_models
 from locations import models as loc_models
 from funds import models as fund_models
-from partners import models as new_models
+from partners import models as partner_models
 from tracker import models as old_models
 
 
@@ -95,7 +96,7 @@ class Command(BaseCommand):
         current_pcas = old_models.PCA.objects.all()
         for pca in current_pcas:
 
-            new_partner, created = new_models.PartnerOrganization.objects.get_or_create(
+            new_partner, created = partner_models.PartnerOrganization.objects.get_or_create(
                 name=pca.partner.name,
                 description=pca.partner.description,
                 email=pca.partner.email,
@@ -105,7 +106,7 @@ class Command(BaseCommand):
             if created:
                 print "Partner Created: {}".format(new_partner.name)
 
-            new_pca, created = new_models.PCA.objects.get_or_create(
+            new_pca, created = partner_models.PCA.objects.get_or_create(
                 number=pca.number,
                 partner=new_partner,
             )
@@ -135,9 +136,9 @@ class Command(BaseCommand):
             new_pca.save()
 
             for grant in old_models.PcaGrant.objects.filter(pca=pca):
-                pca_grant, created = new_models.PcaGrant.objects.get_or_create(
+                pca_grant, created = partner_models.PcaGrant.objects.get_or_create(
                     pca=new_pca,
-                    grant=new_models.Grant.objects.get(name=grant.grant.name),
+                    grant=partner_models.Grant.objects.get(name=grant.grant.name),
                     funds=grant.funds
                 )
                 if created:
@@ -152,7 +153,7 @@ class Command(BaseCommand):
                     p_code=old_pac_loc.location.p_code,
                 )
 
-                new_pca_loc, created = new_models.GwPcaLocation.objects.get_or_create(
+                new_pca_loc, created = partner_models.GwPcaLocation.objects.get_or_create(
                     pca=new_pca,
                     name=old_pac_loc.name,
                     governorate=location.locality.region.governorate,
@@ -170,7 +171,7 @@ class Command(BaseCommand):
             pca_sectors = old_models.PcaSector.objects.filter(pca=pca)
             for pca_sector in pca_sectors:
 
-                sector, created = new_models.Sector.objects.get_or_create(
+                sector, created = report_models.Sector.objects.get_or_create(
                     name=pca_sector.sector.name,
                 )
                 if created:
@@ -178,7 +179,7 @@ class Command(BaseCommand):
                     sector.save()
                     print "Sector Created: {}".format(sector.name)
 
-                new_pca_sector, created = new_models.PCASector.objects.get_or_create(
+                new_pca_sector, created = partner_models.PCASector.objects.get_or_create(
                     pca=new_pca,
                     sector=sector
                 )
@@ -191,7 +192,7 @@ class Command(BaseCommand):
                     rrp5_output__sector__name=pca_sector.sector.name
                 )
                 for pca_rrp5 in pca_rrp5_outputs:
-                    new_rrp5_output, created = new_models.Rrp5Output.objects.get_or_create(
+                    new_rrp5_output, created = report_models.Rrp5Output.objects.get_or_create(
                         sector=sector,
                         code=pca_rrp5.rrp5_output.code,
                         name=pca_rrp5.rrp5_output.name
@@ -206,7 +207,7 @@ class Command(BaseCommand):
                     target_progress = old_models.TargetProgress.objects.filter(
                         target_id=pca_target.target_id
                     )[0]
-                    new_goal, created = new_models.Goal.objects.get_or_create(
+                    new_goal, created = report_models.Goal.objects.get_or_create(
                         sector=sector,
                         name=target_progress.target.goal.name,
                         description=target_progress.target.goal.description,
@@ -214,13 +215,13 @@ class Command(BaseCommand):
                     if created:
                         print "      Goal Created: {}".format(new_goal.name)
 
-                    new_unit, created = new_models.Unit.objects.get_or_create(
+                    new_unit, created = report_models.Unit.objects.get_or_create(
                         type=target_progress.unit.type
                     )
                     if created:
                         print "      Unit Created: {}".format(new_unit.type)
 
-                    new_indicator, created = new_models.Indicator.objects.get_or_create(
+                    new_indicator, created = report_models.Indicator.objects.get_or_create(
                         goal=new_goal,
                         unit=new_unit,
                         name=target_progress.target.name,
@@ -230,7 +231,7 @@ class Command(BaseCommand):
                         print "      Indicator Created: {} | Total: {}".format(new_indicator.name,
                                                                                new_indicator.total)
 
-                    new_indicator_progress, created = new_models.IndicatorProgress.objects.get_or_create(
+                    new_indicator_progress, created = partner_models.IndicatorProgress.objects.get_or_create(
                         pca_sector=new_pca_sector,
                         indicator=new_indicator,
                         programmed=pca_target.total,
@@ -246,7 +247,7 @@ class Command(BaseCommand):
                 # WBS
                 old_wbs = old_models.PcaWbs.objects.filter(pca=pca)
                 for pca_wbs in old_wbs:
-                    new_itermeidate_result, created = new_models.IntermediateResult.objects.get_or_create(
+                    new_itermeidate_result, created = report_models.IntermediateResult.objects.get_or_create(
                         sector=new_pca_sector.sector,
                         ir_wbs_reference=pca_wbs.wbs.ir.ir_wbs_reference,
                         name=pca_wbs.wbs.ir.name
@@ -254,7 +255,7 @@ class Command(BaseCommand):
                     if created:
                         print "      IR Created: {}".format(new_itermeidate_result.name)
 
-                    new_wbs, created = new_models.WBS.objects.get_or_create(
+                    new_wbs, created = report_models.WBS.objects.get_or_create(
                         Intermediate_result=new_itermeidate_result,
                         name=pca_wbs.wbs.name,
                         code=pca_wbs.wbs.code
@@ -262,7 +263,7 @@ class Command(BaseCommand):
                     if created:
                         print "      WBS Created: {}".format(new_wbs.name)
 
-                    new_pca_ir, created = new_models.PCASectorImmediateResult.objects.get_or_create(
+                    new_pca_ir, created = partner_models.PCASectorImmediateResult.objects.get_or_create(
                         pca_sector=new_pca_sector,
                         Intermediate_result=new_itermeidate_result
                     )
@@ -270,3 +271,17 @@ class Command(BaseCommand):
                     new_pca_ir.wbs_activities.add(new_wbs)
 
 
+                # Activites
+                old_activities = old_models.PcaActivity.objects.filter(
+                    pca=pca,
+                    activity__sector__name=new_pca_sector.sector.name)
+                for pca_activity in old_activities:
+                    new_activity, created = report_models.Activity.objects.get_or_create(
+                        sector=report_models.Sector.objects.get(name=pca_activity.activity.sector.name),
+                        name=pca_activity.activity.name,
+                        type=pca_activity.activity.type
+                    )
+                    if created:
+                        print "      Activity Created: {}".format(new_activity.name)
+
+                    new_pca_sector.activities.add(new_activity)

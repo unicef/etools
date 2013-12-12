@@ -6,6 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 import autocomplete_light
 
 from funds.models import Grant
+from reports.models import Rrp5Output
 from locations.forms import LocationForm
 from . import models
 
@@ -96,7 +97,7 @@ class PcaGrantInlineAdmin(admin.TabularInline):
 
 class PcaRRP5OutputsInlineAdmin(admin.TabularInline):
 
-    model = models.Rrp5Output
+    model = Rrp5Output
     extra = 0
 
 
@@ -108,6 +109,7 @@ class PcaSectorAdmin(admin.ModelAdmin):
         'pca',
         'sector',
         'RRP5_outputs',
+        'activities',
     ),
     readonly_fields = (
         'pca',
@@ -175,12 +177,7 @@ class PcaAdmin(admin.ModelAdmin):
 admin.site.register(models.PCA, PcaAdmin)
 admin.site.register(models.PCASector, PcaSectorAdmin)
 admin.site.register(models.PartnerOrganization)
-admin.site.register(models.IntermediateResult)
-admin.site.register(models.Rrp5Output)
-admin.site.register(models.Goal)
-admin.site.register(models.Unit)
-admin.site.register(models.Indicator)
-admin.site.register(models.WBS)
+
 
 
 

@@ -1,15 +1,12 @@
+from reports.models import Goal, Indicator, Activity, Rrp5Output, WBS, IntermediateResult
+
 __author__ = 'jcranwellward'
 
 import autocomplete_light
 
 from .models import (
-    IntermediateResult,
     PartnerOrganization,
-    Rrp5Output,
-    Indicator,
-    Goal,
-    WBS,
-)
+    )
 
 
 autocomplete_light.register(
@@ -64,4 +61,13 @@ autocomplete_light.register(
     # This will actually html attribute data-placeholder which will set
     # javascript attribute widget.autocomplete.placeholder.
     autocomplete_js_attributes={'placeholder': 'Type WBS name or code',},
+)
+
+autocomplete_light.register(
+    Activity,
+    # Just like in ModelAdmin.search_fields
+    search_fields=['^name',],
+    # This will actually html attribute data-placeholder which will set
+    # javascript attribute widget.autocomplete.placeholder.
+    autocomplete_js_attributes={'placeholder': 'Type activity name',},
 )

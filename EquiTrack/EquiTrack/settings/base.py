@@ -194,7 +194,7 @@ DJANGO_APPS = (
     #'grappelli',
     #'nested_inlines',
     'autocomplete_light',
-    'django_admin_bootstrapped',
+    'suit',
     'django.contrib.admin',
     # 'django.contrib.admindocs',
 )
@@ -206,10 +206,12 @@ THIRD_PARTY_APPS = (
 
 # Apps specific for this project go here.
 LOCAL_APPS = (
+    'funds',
+    'reports',
+    'locations',
     'tracker',
     'partners',
-    'locations',
-    'funds',
+
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

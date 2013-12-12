@@ -19,3 +19,13 @@
   tags:
     - database
     - create
+
+- name: Create PostGIS Database
+  sudo: true
+  sudo_user: postgres
+  shell: psql -d ${database.name} -c 'CREATE EXTENSION postgis;'
+  ignore_errors: yes
+  tags:
+    - database
+    - create
+    - gis

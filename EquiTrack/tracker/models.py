@@ -392,7 +392,7 @@ class PCA(models.Model):
 
 
 class PcaActivity(models.Model):
-    pca = models.ForeignKey(PCA)
+    pca = models.ForeignKey(PCA, primary_key=True)
     activity = models.ForeignKey(Activity)
 
     class Meta:

@@ -1,9 +1,18 @@
+
+
 __author__ = 'jcranwellward'
 
 from django.db import models
 from django.core import urlresolvers
 
 from funds.models import Grant
+from reports.models import (
+    Rrp5Output,
+    Indicator,
+    Activity,
+    Sector,
+    WBS,
+    IntermediateResult)
 from locations.models import (
     Governorate,
     Region,
@@ -84,52 +93,13 @@ class GwPcaLocation(models.Model):
         return self.location.p_code
 
 
-class Sector(models.Model):
-
-    name = models.CharField(max_length=45L, unique=True)
-    description = models.CharField(max_length=256L, blank=True, null=True)
-
-    def __unicode__(self):
-        return self.name
-
-
-class Rrp5Output(models.Model):
-
-    sector = models.ForeignKey(Sector)
-    code = models.CharField(max_length=16L)
-    name = models.CharField(max_length=256L)
-
-    class Meta:
-        verbose_name = 'RRP5 Output'
-
-    def __unicode__(self):
-        return self.name
-
-
-class IntermediateResult(models.Model):
-    sector = models.ForeignKey(Sector)
-    ir_wbs_reference = models.CharField(max_length=50L)
-    name = models.CharField(max_length=128L)
-
-    def __unicode__(self):
-        return self.name
-
-
-class WBS(models.Model):
-    Intermediate_result = models.ForeignKey(IntermediateResult)
-    name = models.CharField(max_length=128L)
-    code = models.CharField(max_length=10L)
-
-    def __unicode__(self):
-        return self.name
-
-
 class PCASector(models.Model):
 
     pca = models.ForeignKey(PCA)
     sector = models.ForeignKey(Sector)
 
     RRP5_outputs = models.ManyToManyField(Rrp5Output)
+    activities = models.ManyToManyField(Activity)
 
     def __unicode__(self):
         return self.sector.name
@@ -160,33 +130,6 @@ class PCASectorImmediateResult(models.Model):
         return self.Intermediate_result.name
 
 
-class Goal(models.Model):
-    sector = models.ForeignKey('Sector')
-    name = models.CharField(max_length=512L)
-    description = models.CharField(max_length=512L, blank=True)
-
-    def __unicode__(self):
-        return self.name
-
-
-class Unit(models.Model):
-    type = models.CharField(max_length=45L, unique=True)
-
-    def __unicode__(self):
-        return self.type
-
-
-class Indicator(models.Model):
-
-    goal = models.ForeignKey(Goal)
-    name = models.CharField(max_length=128L)
-    unit = models.ForeignKey(Unit)
-    total = models.IntegerField()
-
-    def __unicode__(self):
-        return self.name
-
-
 class IndicatorProgress(models.Model):
 
     pca_sector = models.ForeignKey(PCASector)
@@ -206,7 +149,7 @@ class IndicatorProgress(models.Model):
     unit.short_description = 'Unit'
 
 
-class PcaReport(models.Model):
+class PCAReport(models.Model):
     pca = models.ForeignKey(PCA)
     title = models.CharField(max_length=128L)
     description = models.CharField(max_length=512L)

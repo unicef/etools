@@ -10,6 +10,8 @@ DATABASES = {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'equitrack',
         'USER': 'equitrack',
+        'HOST': 'localhost',
+
     }
 }
 ########## END DATABASE CONFIGURATION

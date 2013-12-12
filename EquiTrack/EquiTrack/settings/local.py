@@ -35,7 +35,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': 'equitrack',
-        'USER': 'equitrack',
+        'USER': '',
     }
 }
 
