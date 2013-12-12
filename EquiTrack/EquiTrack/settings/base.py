@@ -14,8 +14,9 @@ SITE_ROOT = dirname(DJANGO_ROOT)
 
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
-GRAPPELLI_ADMIN_TITLE = 'equitrack'
-
+SUIT_CONFIG = {
+    'ADMIN_NAME': 'EquiTrack'
+}
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:
 path.append(DJANGO_ROOT)
@@ -34,7 +35,7 @@ TEMPLATE_DEBUG = DEBUG
 ########## MANAGER CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
 ADMINS = (
-    ('Your Name', 'your_email@example.com'),
+    ('Your Name', 'jcranwellwardl@unicef.org'),
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
@@ -59,7 +60,7 @@ DATABASES = {
 
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
-TIME_ZONE = 'America/Los_Angeles'
+TIME_ZONE = 'EET'
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
