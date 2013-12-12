@@ -6,4 +6,5 @@ logutils==0.3.3
 South==0.8.1
 psycopg2==2.5.1
 dj-database-url
+django-suit==0.2.5
 django-autocomplete-light
