@@ -17,6 +17,20 @@ SITE_NAME = basename(DJANGO_ROOT)
 SUIT_CONFIG = {
     'ADMIN_NAME': 'EquiTrack',
     'SEARCH_URL': '/admin/partners/pca/',
+
+    'MENU': (
+
+        # Rename app and set icon
+        {'app': 'auth', 'label': 'Authorization', 'icon': 'icon-user', 'models': ('user', 'group')},
+
+        {'app': 'partners', 'models': ('pca', 'partnerorganization')},
+
+        {'app': 'locations', 'lable': 'Geography', 'icon': 'glyphicon glyphicon-globe'},
+
+        {'app': 'funds'},
+
+        {'app': 'reports'},
+    )
 }
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:
@@ -205,6 +219,8 @@ THIRD_PARTY_APPS = (
     # Database migration helpers:
     'south',
     'gunicorn',
+    'filer',
+    'easy_thumbnails',
 )
 
 # Apps specific for this project go here.

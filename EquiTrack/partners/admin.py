@@ -18,10 +18,11 @@ from locations.forms import LocationForm
 from partners.models import PartnerOrganization
 from partners.models import (
     PCA,
-    PcaGrant,
+    #PCAFile,
+    PCAGrant,
     PCAReport,
     PCASector,
-    GwPcaLocation,
+    GwPCALocation,
     IndicatorProgress,
     PCASectorImmediateResult
 )
@@ -69,7 +70,7 @@ class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
 
 
 class PcaLocationInlineAdmin(admin.TabularInline):
-    model = GwPcaLocation
+    model = GwPCALocation
     form = LocationForm
     verbose_name = 'Location'
     verbose_name_plural = 'Locations'
@@ -141,11 +142,18 @@ class PcaSectorInlineAdmin(admin.TabularInline):
     )
 
 
+#class PCAFileInline(admin.TabularInline):
+#    model = PCAFile
+#    verbose_name = 'File'
+#    verbose_name_plural = 'Files'
+#    extra = 0
+
+
 class PcaGrantInlineAdmin(admin.TabularInline):
     form = autocomplete_light.modelform_factory(
         Grant
     )
-    model = PcaGrant
+    model = PCAGrant
     verbose_name = 'Grant'
     verbose_name_plural = 'Grants'
     extra = 0
@@ -230,6 +238,7 @@ class PcaAdmin(admin.ModelAdmin):
         PcaGrantInlineAdmin,
         PcaSectorInlineAdmin,
         PcaLocationInlineAdmin,
+        #PCAFileInline,
     )
 
 

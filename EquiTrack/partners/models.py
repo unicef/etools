@@ -3,6 +3,8 @@ __author__ = 'jcranwellward'
 from django.db import models
 from django.core import urlresolvers
 
+from filer.fields.file import FilerFileField
+
 from funds.models import Grant
 from reports.models import (
     IntermediateResult,
@@ -51,10 +53,10 @@ class PCA(models.Model):
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
     partner_contribution_budget = models.IntegerField(null=True, blank=True)
-    unicef_cash_budget = models.IntegerField(null=True, blank=True)
-    in_kind_amount_budget = models.IntegerField(null=True, blank=True)
-    cash_for_supply_budget = models.IntegerField(null=True, blank=True)
-    total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget')
+    unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
+    in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
+    cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
+    total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
     received_date = models.DateTimeField(null=True, blank=True)
     is_approved = models.NullBooleanField(null=True, blank=True)
 
@@ -69,6 +71,9 @@ class PCA(models.Model):
         )
 
     def save(self, **kwargs):
+        """
+        Calculate total cash on save
+        """
         if self.partner_contribution_budget \
             and self.unicef_cash_budget \
             and self.in_kind_amount_budget:
@@ -80,7 +85,7 @@ class PCA(models.Model):
         super(PCA, self).save(**kwargs)
 
 
-class PcaGrant(models.Model):
+class PCAGrant(models.Model):
     pca = models.ForeignKey(PCA)
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
@@ -89,7 +94,7 @@ class PcaGrant(models.Model):
         return self.grant
 
 
-class GwPcaLocation(models.Model):
+class GwPCALocation(models.Model):
 
     pca = models.ForeignKey(PCA)
     name = models.CharField(max_length=128L)
@@ -98,6 +103,9 @@ class GwPcaLocation(models.Model):
     locality = models.ForeignKey(Locality, null=True, blank=True)
     gateway = models.ForeignKey(GatewayType, null=True, blank=True)
     location = models.ForeignKey(Location)
+
+    class Meta:
+        verbose_name = 'Activity Location'
 
     def __unicode__(self):
         return self.location.p_code
@@ -130,6 +138,7 @@ class PCASector(models.Model):
             )
             changeform_url = urlresolvers.reverse(url_name, args=(self.id,))
             return u'<a class="btn btn-primary default" ' \
+                   u'onclick="return showAddAnotherPopup(this);" ' \
                    u'href="{}" target="_blank">Details</a>'.format(changeform_url)
         return u''
     changeform_link.allow_tags = True
@@ -164,6 +173,17 @@ class IndicatorProgress(models.Model):
     def unit(self):
         return self.indicator.unit.type if self.id else ''
     unit.short_description = 'Unit'
+
+
+class FileType(models.Model):
+    name = models.CharField(max_length=64L, unique=True)
+
+
+#class PCAFile(models.Model):
+#
+#    pca = models.ForeignKey(PCA)
+#    type = models.ForeignKey(FileType)
+#    file = FilerFileField()
 
 
 class PCAReport(models.Model):

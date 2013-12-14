@@ -197,7 +197,7 @@ class Command(BaseCommand):
             new_pca.save()
 
             for grant in old_models.PcaGrant.objects.filter(pca=pca):
-                pca_grant, created = partner_models.PcaGrant.objects.get_or_create(
+                pca_grant, created = partner_models.PCAGrant.objects.get_or_create(
                     pca=new_pca,
                     grant=partner_models.Grant.objects.get(name=grant.grant.name),
                     funds=grant.funds
@@ -214,7 +214,7 @@ class Command(BaseCommand):
                     p_code=old_pac_loc.location.p_code,
                 )
 
-                new_pca_loc, created = partner_models.GwPcaLocation.objects.get_or_create(
+                new_pca_loc, created = partner_models.GwPCALocation.objects.get_or_create(
                     pca=new_pca,
                     name=old_pac_loc.name,
                     governorate=location.locality.region.governorate,

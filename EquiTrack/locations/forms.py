@@ -2,7 +2,7 @@ __author__ = 'jcranwellward'
 
 from autocomplete_light import forms
 
-from partners.models import GwPcaLocation
+from partners.models import GwPCALocation
 
 
 class LocationForm(forms.ModelForm):
@@ -17,4 +17,4 @@ class LocationForm(forms.ModelForm):
         js = ('dependant_autocomplete.js',)
 
     class Meta:
-        model = GwPcaLocation
+        model = GwPCALocation
