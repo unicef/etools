@@ -21,15 +21,17 @@ SUIT_CONFIG = {
     'MENU': (
 
         # Rename app and set icon
-        {'app': 'auth', 'label': 'Authorization', 'icon': 'icon-user', 'models': ('user', 'group')},
+        {'app': 'auth', 'label': 'Users', 'icon': 'icon-user', 'models': ('user', 'group')},
 
-        {'app': 'partners', 'models': ('pca', 'partnerorganization')},
+        {'app': 'partners', 'icon': 'icon-pencil', 'models': ('pca', 'partnerorganization')},
 
-        {'app': 'locations', 'lable': 'Geography', 'icon': 'glyphicon glyphicon-globe'},
+        {'app': 'locations', 'lable': 'Geography', 'icon': 'icon-globe'},
 
-        {'app': 'funds'},
+        {'app': 'funds', 'icon': 'icon-briefcase'},
 
-        {'app': 'reports'},
+        {'app': 'reports', 'icon': 'icon-info-sign'},
+
+        {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
     )
 }
 # Add our project to our pythonpath, this way we don't need to type our project
