@@ -200,17 +200,14 @@ class PcaAdmin(admin.ModelAdmin):
     )
     list_display = (
         'number',
-        'title',
         'partner',
+        'sectors',
+        'title',
         'total_cash',
-        #'sectors',
-        #'RRP Outputs',
-        #'CCC',
-        #'Indicator',
-        #'Activities',
     )
     search_fields = (
         'number',
+        'sectors',
         'partner__name',
     )
     readonly_fields = ('total_cash',)

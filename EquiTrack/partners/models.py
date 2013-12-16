@@ -60,6 +60,8 @@ class PCA(models.Model):
     received_date = models.DateTimeField(null=True, blank=True)
     is_approved = models.NullBooleanField(null=True, blank=True)
 
+    sectors = models.CharField(max_length=255, null=True, blank=True)
+
     class Meta:
         verbose_name = 'PCA'
         verbose_name_plural = 'PCAs'
@@ -82,6 +84,13 @@ class PCA(models.Model):
                 self.unicef_cash_budget +
                 self.in_kind_amount_budget
             )
+
+        if self.pcasector_set.all().count():
+            self.sectors = ", ".join(
+                [sector.sector.name for sector in self.pcasector_set.all()]
+            )
+
+
         super(PCA, self).save(**kwargs)
 
 
