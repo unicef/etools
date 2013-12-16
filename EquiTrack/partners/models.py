@@ -142,7 +142,7 @@ class PCASector(models.Model):
                    u'href="{}" target="_blank">Details</a>'.format(changeform_url)
         return u''
     changeform_link.allow_tags = True
-    changeform_link.short_description = ''   # omit column header
+    changeform_link.short_description = 'View Sector Details'
 
 
 class PCASectorImmediateResult(models.Model):
@@ -178,12 +178,26 @@ class IndicatorProgress(models.Model):
 class FileType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
 
+    def __unicode__(self):
+        return self.name
 
-#class PCAFile(models.Model):
-#
-#    pca = models.ForeignKey(PCA)
-#    type = models.ForeignKey(FileType)
-#    file = FilerFileField()
+
+class PCAFile(models.Model):
+
+    pca = models.ForeignKey(PCA)
+    type = models.ForeignKey(FileType)
+    file = FilerFileField()
+
+    def __unicode__(self):
+        return file.name
+
+    def download_url(self):
+        if self.file:
+            return u'<a class="btn btn-primary default" ' \
+                   u'href="{}" >Download</a>'.format(self.file.file.url)
+        return u''
+    download_url.allow_tags = True
+    download_url.short_description = 'Download Files'
 
 
 class PCAReport(models.Model):

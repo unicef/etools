@@ -1,6 +1,6 @@
 """Common settings and globals."""
 
-
+import os
 from os.path import abspath, basename, dirname, join, normpath
 from sys import path
 
@@ -98,8 +98,29 @@ USE_TZ = True
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
 MEDIA_ROOT = normpath(join(SITE_ROOT, 'media'))
 
+####### S3 Storage setup ########
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-url
-MEDIA_URL = '/media/'
+MEDIA_URL = 'https://{}.s3.amazonaws.com/'.format(AWS_STORAGE_BUCKET_NAME)
+FILER_IS_PUBLIC_DEFAULT = False
+FILER_STORAGES = {
+    'public': {
+        'main': {
+            'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
+            'UPLOAD_TO': 'partners.utils.by_pca',
+        },
+    },
+    'private': {
+        'main': {
+            'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
+            'UPLOAD_TO': 'partners.utils.by_pca',
+        },
+    },
+}
 ########## END MEDIA CONFIGURATION
 
 
@@ -221,6 +242,7 @@ THIRD_PARTY_APPS = (
     'gunicorn',
     'filer',
     'easy_thumbnails',
+    'storages',
 )
 
 # Apps specific for this project go here.

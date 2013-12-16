@@ -18,7 +18,8 @@ from locations.forms import LocationForm
 from partners.models import PartnerOrganization
 from partners.models import (
     PCA,
-    #PCAFile,
+    PCAFile,
+    FileType,
     PCAGrant,
     PCAReport,
     PCASector,
@@ -142,11 +143,19 @@ class PcaSectorInlineAdmin(admin.TabularInline):
     )
 
 
-#class PCAFileInline(admin.TabularInline):
-#    model = PCAFile
-#    verbose_name = 'File'
-#    verbose_name_plural = 'Files'
-#    extra = 0
+class PCAFileInline(admin.TabularInline):
+    model = PCAFile
+    verbose_name = 'File'
+    verbose_name_plural = 'Files'
+    extra = 0
+    fields = (
+        'type',
+        'file',
+        'download_url',
+    )
+    readonly_fields = (
+        'download_url',
+    )
 
 
 class PcaGrantInlineAdmin(admin.TabularInline):
@@ -238,13 +247,14 @@ class PcaAdmin(admin.ModelAdmin):
         PcaGrantInlineAdmin,
         PcaSectorInlineAdmin,
         PcaLocationInlineAdmin,
-        #PCAFileInline,
+        PCAFileInline,
     )
 
 
 admin.site.register(PCA, PcaAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization)
+admin.site.register(FileType)
 
 
 
