@@ -11,8 +11,9 @@ from reversion import VersionAdmin
 from funds.models import Grant
 from reports.models import (
     WBS,
-    Rrp5Output,
+    Activity,
     Indicator,
+    Rrp5Output,
     IntermediateResult
 )
 from locations.forms import LocationForm
@@ -175,16 +176,17 @@ class PcaRRP5OutputsInlineAdmin(admin.TabularInline):
     extra = 0
 
 
-class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
-    form = autocomplete_light.modelform_factory(
-        PCASector
-    )
+class PcaSectorAdmin(SectorMixin, VersionAdmin):
     fields = (
         'pca',
         'sector',
         'RRP5_outputs',
         'activities',
     ),
+    filter_horizontal = (
+        'RRP5_outputs',
+        'activities',
+    )
     readonly_fields = (
         'pca',
         'sector',
@@ -193,6 +195,19 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
         PcaIndicatorInlineAdmin,
         PcaIRInlineAdmin
     )
+
+    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+        if db_field.rel.to is Rrp5Output:
+            kwargs['queryset'] = Rrp5Output.objects.filter(
+                sector=self.get_sector(request)
+            )
+        if db_field.rel.to is Activity:
+            kwargs['queryset'] = Activity.objects.filter(
+                sector=self.get_sector(request)
+            )
+        return super(PcaSectorAdmin, self).formfield_for_manytomany(
+            db_field, request, **kwargs
+        )
 
 
 class PcaAdmin(VersionAdmin):
@@ -233,7 +248,6 @@ class PcaAdmin(VersionAdmin):
                 ('partner_contribution_budget',
                  ('unicef_cash_budget', 'in_kind_amount_budget',),
                  'total_cash',
-                 'received_date',
                 ),
             'classes': ('grp-collapse', 'grp-close')
         }),

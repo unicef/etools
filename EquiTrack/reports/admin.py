@@ -7,6 +7,7 @@ from reports.models import (
     WBS,
     Goal,
     Unit,
+    Activity,
     Indicator,
     Rrp5Output,
     IntermediateResult
@@ -18,6 +19,7 @@ class GoalAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Sector)
+admin.site.register(Activity)
 admin.site.register(IntermediateResult)
 admin.site.register(Rrp5Output)
 admin.site.register(Goal, GoalAdmin)

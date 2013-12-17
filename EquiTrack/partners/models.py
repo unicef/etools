@@ -59,13 +59,11 @@ class PCA(models.Model):
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
-    partner_contribution_budget = models.IntegerField(null=True, blank=True)
+    partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
     unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
     in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
     cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
     total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
-    received_date = models.DateTimeField(null=True, blank=True)
-
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
