@@ -6,11 +6,14 @@ import autocomplete_light
 from reports.models import Goal, Indicator, Activity, Rrp5Output, WBS, IntermediateResult
 
 
-class AutocompleteRRP(autocomplete_light.AutocompleteModelBase):
-
-    autocomplete_js_attributes = {'placeholder': 'Type output name'}
-
-autocomplete_light.register(Rrp5Output, AutocompleteRRP)
+autocomplete_light.register(
+    Rrp5Output,
+    # Just like in ModelAdmin.search_fields
+    search_fields=['^name', '^sector__name',],
+    # This will actually html attribute data-placeholder which will set
+    # javascript attribute widget.autocomplete.placeholder.
+    autocomplete_js_attributes={'placeholder': 'Type name or sector',},
+)
 
 autocomplete_light.register(
     Indicator,

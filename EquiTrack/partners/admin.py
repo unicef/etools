@@ -185,10 +185,6 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
         'sector',
         'RRP5_outputs',
         'activities',
-    ),
-    filter_horizontal = (
-        'RRP5_outputs',
-        'activities',
     )
     readonly_fields = (
         'pca',
