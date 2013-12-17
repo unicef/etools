@@ -176,7 +176,10 @@ class PcaRRP5OutputsInlineAdmin(admin.TabularInline):
     extra = 0
 
 
-class PcaSectorAdmin(SectorMixin, VersionAdmin):
+class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
+    form = autocomplete_light.modelform_factory(
+        PCASector
+    )
     fields = (
         'pca',
         'sector',
