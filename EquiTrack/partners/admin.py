@@ -6,6 +6,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
+from reversion import VersionAdmin
 
 from funds.models import Grant
 from reports.models import (
@@ -194,10 +195,7 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
     )
 
 
-class PcaAdmin(admin.ModelAdmin):
-    form = autocomplete_light.modelform_factory(
-        PCA
-    )
+class PcaAdmin(VersionAdmin):
     list_display = (
         'number',
         'partner',
@@ -207,6 +205,7 @@ class PcaAdmin(admin.ModelAdmin):
     )
     search_fields = (
         'number',
+        'title',
         'sectors',
         'partner__name',
     )
@@ -218,11 +217,11 @@ class PcaAdmin(admin.ModelAdmin):
                  'title',
                  'status',
                  'partner',
-                 'is_approved')
+                 'initiation_date',)
         }),
         (_('Dates'), {
             'fields':
-                (('start_date', 'initiation_date', 'end_date',),
+                (('start_date', 'end_date',),
                  ('unicef_mng_first_name', 'unicef_mng_last_name', 'unicef_mng_email', 'signed_by_unicef_date', ),
                  ('partner_mng_first_name', 'partner_mng_last_name', 'partner_mng_email', 'signed_by_partner_date', ),
                 ),

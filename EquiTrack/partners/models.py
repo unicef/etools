@@ -37,13 +37,20 @@ class PartnerOrganization(models.Model):
 
 class PCA(models.Model):
 
+    PCA_STATUS = (
+        (u'in_process', u"In Process"),
+        (u'active', u"Active"),
+        (u'implemented', u"Implemented"),
+        (u'cancelled', u"Cancelled"),
+    )
+
     number = models.CharField(max_length=45L, blank=True)
-    title = models.CharField(max_length=256L, blank=True)
-    status = models.CharField(max_length=32L, blank=True)
+    title = models.CharField(max_length=256L)
+    status = models.CharField(max_length=32L, blank=True, choices=PCA_STATUS, default=u'in_process')
     partner = models.ForeignKey(PartnerOrganization)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
-    initiation_date = models.DateField(null=True, blank=True)
+    initiation_date = models.DateField()
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
     unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
@@ -58,9 +65,15 @@ class PCA(models.Model):
     cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
     total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
     received_date = models.DateTimeField(null=True, blank=True)
-    is_approved = models.NullBooleanField(null=True, blank=True)
 
+
+    # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
+    amendment = models.BooleanField(default=False)
+    current = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    versioned_at = models.DateTimeField(null=True)
 
     class Meta:
         verbose_name = 'PCA'
@@ -77,8 +90,8 @@ class PCA(models.Model):
         Calculate total cash on save
         """
         if self.partner_contribution_budget \
-            and self.unicef_cash_budget \
-            and self.in_kind_amount_budget:
+            or self.unicef_cash_budget \
+            or self.in_kind_amount_budget:
             self.total_cash = (
                 self.partner_contribution_budget +
                 self.unicef_cash_budget +

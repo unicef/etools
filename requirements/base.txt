@@ -9,5 +9,6 @@ dj-database-url
 django-filer
 django-storages
 django-suit==0.2.5
-django-autocomplete-light
-boto
+django-reversion==1.8.0
+django-autocomplete-light==2.0.0a5
+boto==2.20.1
