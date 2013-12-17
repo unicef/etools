@@ -212,6 +212,7 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
 class PcaAdmin(VersionAdmin):
     list_display = (
         'number',
+        'amendment',
         'partner',
         'sectors',
         'title',
