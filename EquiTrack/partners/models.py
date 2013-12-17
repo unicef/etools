@@ -95,6 +95,8 @@ class PCA(models.Model):
                 self.unicef_cash_budget +
                 self.in_kind_amount_budget
             )
+        else:
+            self.total_cash = 0
 
         if self.pcasector_set.all().count():
             self.sectors = ", ".join(
