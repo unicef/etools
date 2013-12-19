@@ -224,6 +224,7 @@ class PcaAdmin(VersionAdmin):
         'sectors',
         'partner__name',
     )
+
     readonly_fields = ('total_cash',)
     fieldsets = (
         (_('Info'), {
@@ -252,6 +253,7 @@ class PcaAdmin(VersionAdmin):
             'classes': ('grp-collapse', 'grp-close')
         }),
     )
+    actions = ['create_amendment']
 
     inlines = (
         PcaGrantInlineAdmin,
@@ -259,6 +261,17 @@ class PcaAdmin(VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
     )
+
+    def queryset(self, request):
+        return super(PcaAdmin, self).queryset(request).order_by(
+            '-number',
+            'amendment'
+        )
+
+    def create_amendment(self, request, queryset):
+        for pca in queryset:
+            pca.make_amendment()
+        self.message_user(request, "{} PCA amended.".format(queryset.count()))
 
 
 admin.site.register(PCA, PcaAdmin)

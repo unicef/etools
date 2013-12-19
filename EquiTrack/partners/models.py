@@ -1,5 +1,8 @@
 __author__ = 'jcranwellward'
 
+import datetime
+from copy import deepcopy
+
 from django.db import models
 from django.core import urlresolvers
 
@@ -67,11 +70,13 @@ class PCA(models.Model):
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
-    amendment = models.BooleanField(default=False)
     current = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    versioned_at = models.DateTimeField(null=True)
+
+    amendment = models.BooleanField(default=False)
+    amended_at = models.DateTimeField(null=True)
+    original = models.ForeignKey('PCA', null=True)
 
     class Meta:
         verbose_name = 'PCA'
@@ -82,6 +87,64 @@ class PCA(models.Model):
             self.partner.name,
             self.number
         )
+
+    def make_amendment(self):
+
+        original = self
+        original.current = False
+        original.save()
+
+        amendment = deepcopy(original)
+        amendment.pk = None
+        amendment.amendment = True
+        amendment.amended_at = datetime.datetime.now()
+        amendment.original = original
+        amendment.save()
+
+        # copy over grants
+        for grant in original.pcagrant_set.all():
+            PCAGrant.objects.create(
+                pca=amendment,
+                grant=grant.grant,
+                funds=grant.funds
+            )
+
+        # copy over sectors
+        for pca_sector in original.pcasector_set.all():
+            new_sector = PCASector.objects.create(
+                pca=amendment,
+                sector=pca_sector.sector
+            )
+            new_sector.RRP5_outputs = pca_sector.RRP5_outputs.all()
+            new_sector.activities = pca_sector.activities.all()
+
+            # copy over indicators for sectors and reset programmed number
+            for pca_indicator in pca_sector.indicatorprogress_set.all():
+                IndicatorProgress.objects.create(
+                    pca_sector=new_sector,
+                    indicator=pca_indicator.indicator,
+                    programmed=0
+                )
+
+            # copy over intermediate results and activities
+            for pca_ir in pca_sector.pcasectorimmediateresult_set.all():
+                new_ir = PCASectorImmediateResult.objects.create(
+                    pca_sector=new_sector,
+                    Intermediate_result=pca_ir.Intermediate_result
+                )
+                new_ir.wbs_activities = pca_ir.wbs_activities.all()
+
+        # copy over locations
+        for location in original.gwpcalocation_set.all():
+            GwPCALocation.objects.create(
+                pca=amendment,
+                name=location.name,
+                governorate=location.governorate,
+                region=location.region,
+                locality=location.locality,
+                gateway=location.gateway,
+                location=location.location
+            )
 
     def save(self, **kwargs):
         """
@@ -102,7 +165,6 @@ class PCA(models.Model):
             self.sectors = ", ".join(
                 [sector.sector.name for sector in self.pcasector_set.all()]
             )
-
 
         super(PCA, self).save(**kwargs)
 
@@ -183,13 +245,13 @@ class IndicatorProgress(models.Model):
     pca_sector = models.ForeignKey(PCASector)
     indicator = models.ForeignKey(Indicator)
     programmed = models.IntegerField()
-    current = models.IntegerField(blank=True, null=True)
+    current = models.IntegerField(blank=True, null=True, default=0)
 
     def __unicode__(self):
         return self.indicator.goal
 
     def shortfall(self):
-        return self.programmed - self.current if self.id else ''
+        return self.programmed - self.current if self.id else 0
     shortfall.short_description = 'Shortfall'
 
     def unit(self):

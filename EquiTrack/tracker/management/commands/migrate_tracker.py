@@ -265,7 +265,7 @@ class Command(BaseCommand):
                         print "      Indicator Created: {} | Total: {}".format(new_indicator.name,
                                                                                new_indicator.total)
 
-                    new_indicator_progress, created = partner_models.IndicatorProgress.objects.get_or_create(
+                    new_indicator_progress, created = partner_models.PCAIndicatorProgrammed.objects.get_or_create(
                         pca_sector=new_pca_sector,
                         indicator=new_indicator,
                         programmed=pca_target.total,
