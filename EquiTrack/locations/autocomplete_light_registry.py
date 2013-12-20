@@ -21,7 +21,7 @@ autocomplete_light.register(
 
 class AutocompleteRegion(autocomplete_light.AutocompleteModelBase):
 
-    autocomplete_js_attributes = {'placeholder': 'Region name...'}
+    autocomplete_js_attributes = {'placeholder': 'Caza name...'}
 
     def choices_for_request(self):
         q = self.request.GET.get('q', '')
@@ -61,7 +61,7 @@ autocomplete_light.register(Locality, AutocompleteLocality)
 
 class AutocompleteLocation(autocomplete_light.AutocompleteModelBase):
 
-    autocomplete_js_attributes = {'placeholder': 'Location name...'}
+    autocomplete_js_attributes = {'placeholder': 'Village name...'}
 
     def choices_for_request(self):
         q = self.request.GET.get('q', '')

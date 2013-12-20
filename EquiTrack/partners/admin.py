@@ -224,15 +224,15 @@ class PcaAdmin(VersionAdmin):
         'sectors',
         'partner__name',
     )
-
     readonly_fields = (
         'total_unicef_contribution',
         'total_cash',
+        'amendment',
     )
     fieldsets = (
         (_('Info'), {
             'fields':
-                ('number',
+                (('number', 'amendment',),
                  'title',
                  'status',
                  'partner',

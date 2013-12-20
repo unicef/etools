@@ -83,10 +83,13 @@ class PCA(models.Model):
         verbose_name_plural = 'PCAs'
 
     def __unicode__(self):
-        return u'{}: {}'.format(
+        title = u'{}: {}'.format(
             self.partner.name,
             self.number
         )
+        if self.amendment:
+            title = u'{} (Amendment)'.format(title)
+        return title
 
     def total_unicef_contribution(self):
         return self.unicef_cash_budget + self.in_kind_amount_budget
@@ -187,10 +190,10 @@ class GwPCALocation(models.Model):
     pca = models.ForeignKey(PCA)
     name = models.CharField(max_length=128L)
     governorate = models.ForeignKey(Governorate, null=True, blank=True)
-    region = models.ForeignKey(Region, null=True, blank=True)
+    region = models.ForeignKey(Region, null=True, blank=True, verbose_name='Caza')
     locality = models.ForeignKey(Locality, null=True, blank=True)
     gateway = models.ForeignKey(GatewayType, null=True, blank=True)
-    location = models.ForeignKey(Location)
+    location = models.ForeignKey(Location, verbose_name='Village')
 
     class Meta:
         verbose_name = 'Activity Location'
