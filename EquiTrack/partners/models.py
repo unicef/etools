@@ -88,6 +88,10 @@ class PCA(models.Model):
             self.number
         )
 
+    def total_unicef_contribution(self):
+        return self.unicef_cash_budget + self.in_kind_amount_budget
+    total_unicef_contribution.short_description = 'Total Unicef contribution budget'
+
     def make_amendment(self):
 
         original = self

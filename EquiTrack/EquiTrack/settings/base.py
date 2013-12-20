@@ -94,22 +94,22 @@ USE_L10N = True
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
 
-DATE_INPUT_FORMATS = (
-    '%d-%m-%Y',
-    '%Y-%m-%d',
-    '%d/%m/%Y',
-    '%d/%m/%y',
-    '%m/%d/%Y',
-    '%m/%d/%y',
-    '%b %d %Y',
-    '%b %d, %Y',
-    '%d %b %Y',
-    '%d %b, %Y',
-    '%B %d %Y',
-    '%B %d, %Y',
-    '%d %B %Y',
-    '%d %B, %Y'
-)
+#DATE_INPUT_FORMATS = (
+#    '%d-%m-%Y',
+#    '%Y-%m-%d',
+#    '%d/%m/%Y',
+#    '%d/%m/%y',
+#    '%m/%d/%Y',
+#    '%m/%d/%y',
+#    '%b %d %Y',
+#    '%b %d, %Y',
+#    '%d %b %Y',
+#    '%d %b, %Y',
+#    '%B %d %Y',
+#    '%B %d, %Y',
+#    '%d %B %Y',
+#    '%d %B, %Y'
+#)
 ########## END GENERAL CONFIGURATION
 
 

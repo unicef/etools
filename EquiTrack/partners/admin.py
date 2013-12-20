@@ -225,7 +225,10 @@ class PcaAdmin(VersionAdmin):
         'partner__name',
     )
 
-    readonly_fields = ('total_cash',)
+    readonly_fields = (
+        'total_unicef_contribution',
+        'total_cash',
+    )
     fieldsets = (
         (_('Info'), {
             'fields':
@@ -247,7 +250,7 @@ class PcaAdmin(VersionAdmin):
         (_('Budget'), {
             'fields':
                 ('partner_contribution_budget',
-                 ('unicef_cash_budget', 'in_kind_amount_budget',),
+                 ('unicef_cash_budget', 'in_kind_amount_budget', 'total_unicef_contribution',),
                  'total_cash',
                 ),
             'classes': ('grp-collapse', 'grp-close')
