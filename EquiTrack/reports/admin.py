@@ -10,7 +10,8 @@ from reports.models import (
     Activity,
     Indicator,
     Rrp5Output,
-    IntermediateResult
+    IntermediateResult,
+    ResultStructure
 )
 
 
@@ -18,6 +19,7 @@ class GoalAdmin(admin.ModelAdmin):
     search_fields = ('name',)
 
 
+admin.site.register(ResultStructure)
 admin.site.register(Sector)
 admin.site.register(Activity)
 admin.site.register(IntermediateResult)

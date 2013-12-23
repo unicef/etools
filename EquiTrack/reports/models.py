@@ -3,6 +3,13 @@ __author__ = 'jcranwellward'
 from django.db import models
 
 
+class ResultStructure(models.Model):
+    name = models.CharField(max_length=150)
+
+    def __unicode__(self):
+        return self.name
+
+
 class Sector(models.Model):
 
     name = models.CharField(max_length=45L, unique=True)
@@ -14,6 +21,7 @@ class Sector(models.Model):
 
 class Rrp5Output(models.Model):
 
+    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector)
     code = models.CharField(max_length=16L)
     name = models.CharField(max_length=256L, unique=True)
