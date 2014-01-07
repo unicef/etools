@@ -15,16 +15,71 @@ from reports.models import (
 )
 
 
-class GoalAdmin(admin.ModelAdmin):
+class SectorListFilter(admin.SimpleListFilter):
+
+    title = 'Sector'
+    parameter_name = 'sector'
+    filter_by = 'sector__id'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        return [
+            (sector.id, sector.name) for sector in Sector.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        if self.value():
+            filter_dict = {}
+            filter_dict[self.filter_by] = self.value()
+            return queryset.filter(**filter_dict)
+        return queryset
+
+
+class IndicatorSectorListFilter(SectorListFilter):
+
+    filter_by = 'goal_sector_id'
+
+
+class ResultStructureAdmin(admin.ModelAdmin):
     search_fields = ('name',)
+    list_filter = ('result_structure', SectorListFilter,)
+    list_display = ('name', 'sector', 'result_structure',)
+
+
+class IndicatorAdmin(admin.ModelAdmin):
+    search_fields = ('name',)
+    list_filter = (IndicatorSectorListFilter,)
+    list_display = ('name', 'sector', 'result_structure',)
+
+    def goal(self, indicator):
+        return indicator.goal
+
+    def sector(self, indicator):
+        return indicator.goal.sector
+    sector.admin_order_field = 'goal__sector'
+
+    def result_structure(self, indicator):
+        return indicator.goal.result_structure
+    result_structure.admin_order_field = 'goal__result_structure'
 
 
 admin.site.register(ResultStructure)
 admin.site.register(Sector)
 admin.site.register(Activity)
 admin.site.register(IntermediateResult)
-admin.site.register(Rrp5Output)
-admin.site.register(Goal, GoalAdmin)
+admin.site.register(Rrp5Output, ResultStructureAdmin)
+admin.site.register(Goal, ResultStructureAdmin)
 admin.site.register(Unit)
-admin.site.register(Indicator)
+admin.site.register(Indicator, IndicatorAdmin)
 admin.site.register(WBS)

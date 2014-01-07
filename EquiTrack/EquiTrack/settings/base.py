@@ -20,11 +20,7 @@ SUIT_CONFIG = {
 
     'MENU': (
 
-        # Rename app and set icon
-        {'app': 'auth', 'label': 'Users', 'icon': 'icon-user', 'models': ('user', 'group')},
-
         {'label': 'PCAs', 'icon': 'icon-pencil', 'models': [
-            {'url': 'partners.pca.add', 'label': 'Create PCA', 'permissions': ('partners.add_pca',)},
             {'model': 'partners.pca', 'label': 'List of PCAs'},
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
         ]},
