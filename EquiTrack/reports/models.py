@@ -27,13 +27,15 @@ class Rrp5Output(models.Model):
     name = models.CharField(max_length=256L, unique=True)
 
     class Meta:
-        verbose_name = 'RRP5 Output'
+        verbose_name = 'Output'
 
     def __unicode__(self):
         return self.name
 
 
 class Goal(models.Model):
+
+    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector)
     name = models.CharField(max_length=512L, unique=True)
     description = models.CharField(max_length=512L, blank=True)

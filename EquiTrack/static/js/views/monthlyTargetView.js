@@ -46,7 +46,7 @@ define([
 
       // draw bar, starting from a relative point, so that all bars are achored 
       // to the bottom of the respective element
-      var chart = r.barchart(0, $('#'+element_id).height()-total_h, 30, total_h, [[height1],[height2],[height3]], {stacked:true});
+      var chart = r.barchart(0, $('#'+element_id).height()-total_h, 30, total_h, [[height1],[height2],[height3]], {stacked:true, colors: ['#a20000','#26a200','#006ba2']});
 
       // draw bar part labels. Values stored by the bar object
       // itself are obviously wrong, so have to provide our own

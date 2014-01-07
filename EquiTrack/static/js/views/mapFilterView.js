@@ -28,10 +28,20 @@ define([
         }
       });
     },
-    filterCollection: function(filter) {
-      
-      console.log(filter);
+    refreshSelectors: function() {
+      var sector_ids = _.pluck(_.where(this.filters, {
+        type: "sector"
+      }), 'id');
 
+      // create target filter links on the basis of unselected sector_ids
+      this.targetLinks.setSectorIDs(sector_ids);
+      this.targetLinks.render();
+
+      // create rrp5 output filter links on the basis of unselected sector_ids
+      this.rrp5OutputLinks.setSectorIDs(sector_ids);
+      this.rrp5OutputLinks.render();
+    },
+    filterCollection: function(filter) {
       // temporary variable for processing collection
       var coll;
 
@@ -76,9 +86,7 @@ define([
       // apply filters
       _.each(this.filters, function(filter_instance) {
         coll = _.filter(coll, function(item) {
-          if (parseInt(eval("item."+filter_instance.type+"_id")) == filter_instance.id) {
-            return false;
-          } else return true;
+          return parseInt(eval("item."+filter_instance.type+"_id")) != filter_instance.id;
         });
       });
 
@@ -86,6 +94,69 @@ define([
       // call this.render elsewhere
 //      this.collection = _.uniq(coll, function(item) { return item.latitude+"|"+item.longitude; });
       this.collection = coll;
+    },
+    events: {
+      "click #sectors-toggle": "sectorToggleHandler",
+      "click #rrp5-toggle": "RRP5ToggleHandler",
+      "click #target-toggle": "TargetToggleHandler"
+    },
+    TargetToggleHandler: function(e) {
+      var self = this;
+      $('.target-box').prop('checked', !$('.target-box').prop('checked'));
+      if ($('.target-box').prop('checked')) { // remove all targets from this.filter array
+        this.filters = _.filter(this.filters, function(filter_instance) {
+          return filter_instance.type != 'target'
+        });        
+      } else {
+        $('.target-box').each(function(target) {
+          self.filters.push({
+            "type": "target",
+            "id": this.name
+          });
+        });
+      }
+      this.filterCollection();
+      this.map.render();
+      e.preventDefault();
+    },
+    RRP5ToggleHandler: function(e) {
+      var self = this;
+      $('.rrp5-box').prop('checked', !$('.rrp5-box').prop('checked'));
+      if ($('.rrp5-box').prop('checked')) { // remove all rrp5 outputs from this.filter array
+        this.filters = _.filter(this.filters, function(filter_instance) {
+          return filter_instance.type != 'rrp5_output'
+        });        
+      } else {
+        $('.rrp5-box').each(function(rrp5) {
+          self.filters.push({
+            "type": "rrp5_output",
+            "id": this.name
+          });
+        });
+      }
+      this.filterCollection();
+      this.map.render();
+      e.preventDefault();
+    },
+    sectorToggleHandler: function(e) {
+      var self = this;
+      $('.sector-box').prop('checked', !$('.sector-box').prop('checked'));
+      if ($('.sector-box').prop('checked')) { // remove all sectors from this.filter array
+        this.filters = _.filter(this.filters, function(filter_instance) {
+          return filter_instance.type != 'sector'
+        });        
+      } else {
+        $('.sector-box').each(function(sector) {
+          self.filters.push({
+            "type": "sector",
+            "id": this.name
+          });
+        });
+      }
+      this.filterCollection();
+      this.refreshSelectors();
+      this.map.render();
+      e.preventDefault();
     },
     template: _.template('\
       <div id="map-filter" class="col-md-3">\
@@ -98,6 +169,7 @@ define([
                 <a data-toggle="collapse" href="#collapseOne">\
                   Sector\
                 </a>\
+                <button id="sectors-toggle" type="button" class="btn-xs btn-default" style="float:right;">toggle all</button>\
               </h4>\
             </div>\
             <div id="collapseOne" class="panel-collapse collapse in">\
@@ -113,6 +185,7 @@ define([
                 <a data-toggle="collapse" href="#collapseThree">\
                   RRP5\
                 </a>\
+                <button id="rrp5-toggle" type="button" class="btn-xs btn-default" style="float:right;">toggle all</button>\
               </h4>\
             </div>\
             <div id="collapseThree" class="panel-collapse collapse">\
@@ -128,6 +201,7 @@ define([
                 <a data-toggle="collapse" href="#collapseFour">\
                   Indicator\
                 </a>\
+                <button id="target-toggle" type="button" class="btn-xs btn-default" style="float:right;">toggle all</button>\
               </h4>\
             </div>\
             <div id="collapseFour" class="panel-collapse collapse">\
@@ -136,6 +210,8 @@ define([
               </div>\
             </div>\
           </div>\
+\
+          <hr />\
 \
           <div class="panel panel-default">\
             <div class="panel-heading">\

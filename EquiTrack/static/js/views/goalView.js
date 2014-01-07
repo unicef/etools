@@ -12,8 +12,9 @@ define([
   'goalModel',
   'cumulativeTargetView',
   'utils',
+  'cumulativeKeyView',
   'bootstrap'
-], function($, _, Backbone, router, goalModel, cumulativeTargetView, utils){
+], function($, _, Backbone, router, goalModel, cumulativeTargetView, utils, cumulativeKeyView){
   var goalView = Backbone.View.extend({
     initialize: function(arguments) {
       var self = this;
@@ -44,6 +45,8 @@ define([
             <div class="modal-header">\
               <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>\
               <h4 id="modal-title" class="modal-title">Modal title</h4>\
+              <hr />\
+              <div id="cumulative-key"></div>\
             </div>\
             <div id="modal-body" class="modal-body"></div>\
             <div class="modal-footer">\
@@ -82,6 +85,10 @@ define([
 
       // print model name to modal title
       $('#modal-title').html(this.model.attributes.name);
+
+      this.cumulativeKeyView = new cumulativeKeyView({
+        el: $('#cumulative-key')
+      });
 
       // show modal window
       $('#modal-window').modal();

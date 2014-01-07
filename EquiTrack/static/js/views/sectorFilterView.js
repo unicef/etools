@@ -24,7 +24,7 @@ define([
         <% _.each(data, function(sector) { %>\
         <div class="input-group">\
           <span class="input-group-addon">\
-            <input type="checkbox" name="<%=sector.sector_id%>" checked="true">\
+            <input type="checkbox" name="<%=sector.sector_id%>" checked="true" class="sector-box">\
           </span>\
           <div class="form-control" style="background:#fefefe; font-size:12px;"><%=sector.name%></div>\
         </div>\
@@ -42,6 +42,7 @@ define([
         "id": name,
         "checked": checked
       });
+      this.parent.refreshSelectors();
       this.parent.map.render();
     },
     render: function() {

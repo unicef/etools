@@ -56,13 +56,15 @@ define([
       var current_w = Math.floor((this.model.current/this.model.total)*total_w);
 
       // draw barchart
-      var chart = r.hbarchart(0, 0, total_w, 30, [[this.model.current],[this.model.total-this.model.current]], {stacked:true});
+      var chart = r.hbarchart(0, 0, total_w, 30, [[this.model.current],[this.model.total]], {gutter:'-1%', colors: ['#a20000','#26a200','#006ba2']});
       var values = [
         this.model.current,
         this.model.total
       ];
       _.each(chart.bars, function(bar, i) {
-        r.text(bar[0].x-30,15, utils.formatNumber(Number(values[i]))).attr("font","12px sans-serif").attr("fill","#FFFFFF");
+        var x = bar[0].x > 70 ? bar[0].x : 70;
+        var fill = bar[0].x > 70 ? '#FFFFFF' : "#000000";
+        r.text(x-30,bar[0].y, utils.formatNumber(Number(values[i]))).attr("font","12px sans-serif").attr("fill",fill);
       });
     }
   });

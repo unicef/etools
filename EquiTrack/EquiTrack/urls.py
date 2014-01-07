@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, include, url
-from django.views.generic import RedirectView
+from django.views.generic import TemplateView
 
 import autocomplete_light
 # import every app/autocomplete_light_registry.py
@@ -9,12 +9,11 @@ autocomplete_light.autodiscover()
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
-    url(r'^$', RedirectView.as_view(url='/admin/')),
+urlpatterns = patterns(
+    '',
+    url(r'^$', TemplateView.as_view(template_name='base.html')),
 
-    # Examples:
-    # url(r'^$', 'equitrack.views.home', name='home'),
-    # url(r'^equitrack/', include('equitrack.foo.urls')),
+    url(r'reports/', include('reports.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
@@ -23,4 +22,5 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 
     url(r'^autocomplete/', include('autocomplete_light.urls')),
+    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
 )

@@ -50,14 +50,6 @@ define([
               <td style="vertical-align:top; white-space:nowrap;">Sector:</td>\
               <td style="vertical-align:top;">'+location.sector_name+'</td>\
             </tr>\
-            <tr>\
-              <td style="vertical-align:top; white-space:nowrap;">Lat:</td>\
-              <td style="vertical-align:top;">'+location.latitude+'</td>\
-            </tr>\
-            <tr>\
-              <td style="vertical-align:top; white-space:nowrap;">Lon:</td>\
-              <td style="vertical-align:top;">'+location.longitude+'</td>\
-            </tr>\
           </table>\
   			';
   			var marker = L.marker(new L.LatLng(location.latitude, location.longitude), {});

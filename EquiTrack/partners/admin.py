@@ -39,13 +39,18 @@ class SectorMixin(object):
         results = self.model_admin_re.search(request.path)
         if results:
             pca_sector_id = results.group('id')
-            return PCASector.objects.get(id=pca_sector_id).sector
+            return PCASector.objects.get(id=pca_sector_id)
         return None
 
     def get_sector(self, request):
         if not getattr(self, '_sector', False):
-            self._sector = self.get_sector_from_request(request)
+            self._sector = self.get_sector_from_request(request).sector
         return self._sector
+
+    def get_pca(self, request):
+        if not getattr(self, '_pca', False):
+            self._pca = self.get_sector_from_request(request).pca
+        return self._pca
 
 
 class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
@@ -110,7 +115,8 @@ class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.rel.to is Indicator:
             kwargs['queryset'] = Indicator.objects.filter(
-                goal__sector=self.get_sector(request)
+                goal__sector=self.get_sector(request),
+                goal__result_structure=self.get_pca(request).result_structure
             )
         return super(PcaIndicatorInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
@@ -232,7 +238,8 @@ class PcaAdmin(VersionAdmin):
     fieldsets = (
         (_('Info'), {
             'fields':
-                (('number', 'amendment',),
+                ('result_structure',
+                 ('number', 'amendment',),
                  'title',
                  'status',
                  'partner',

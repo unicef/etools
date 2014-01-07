@@ -10,8 +10,9 @@ define([
   'backbone',
   'targetProgressList',
   'targetModel',
-  'monthlyTargetView'
-], function($, _, Backbone, targetProgressList, targetModel, monthlyTargetView, unitFilterView) {
+  'monthlyTargetView',
+  'monthlyKeyView'
+], function($, _, Backbone, targetProgressList, targetModel, monthlyTargetView, monthlyKeyView) {
   var targetProgressView = Backbone.View.extend({
     initialize: function(arguments) {
       var self = this;
@@ -36,19 +37,26 @@ define([
     template: _.template('\
       <div class="row target-grey">\
         <div id="target-progress-header" class="col-md-12">\
-          <div id="target-progress-headline" class="row"></div>\
+          <div class="row">\
+            <div id="target-progress-headline" class="col-md-8"></div>\
+            <div id="target-progress-key" class="col-md-4"></div>\
+          </div>\
         </div>\
-        <div id="target-progress-container" class="col-md-12"></div>\
+        <div id="target-progress-container" class="col-md-12" style="overflow:auto; overflow-y:hidden; -ms-overflow-y: hidden;"></div>\
       </div>\
     '),
     renderHeader: function() {
       var self = this;
       if (!$('#target-progress-headline').length) {
         setTimeout(function() { self.renderHeader(); },10); // if the element is not yet rendered wait and retry
+        return;
       }
 
       // render header
       $('#target-progress-headline').html('<h1>'+this.targetModel.attributes.name+'</h1>');
+      this.monthlyKeyView = new monthlyKeyView({
+        el: $('#target-progress-key')
+      });
 
     },
     render: function() {

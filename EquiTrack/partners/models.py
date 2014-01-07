@@ -10,6 +10,7 @@ from filer.fields.file import FilerFileField
 
 from funds.models import Grant
 from reports.models import (
+    ResultStructure,
     IntermediateResult,
     Rrp5Output,
     Indicator,
@@ -47,6 +48,7 @@ class PCA(models.Model):
         (u'cancelled', u"Cancelled"),
     )
 
+    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
     number = models.CharField(max_length=45L, blank=True)
     title = models.CharField(max_length=256L)
     status = models.CharField(max_length=32L, blank=True, choices=PCA_STATUS, default=u'in_process')

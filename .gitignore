@@ -22,3 +22,5 @@ build
 EquiTrack/assets
 
 README.rst
+
+*.dump

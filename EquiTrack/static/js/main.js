@@ -43,6 +43,8 @@ requirejs.config({
     "rrp5OutputFilterView":           "views/rrp5OutputFilterView",
     "targetFilterView":               "views/targetFilterView",
     "partnerOrganizationFilterView":  "views/partnerOrganizationFilterView",
+    "monthlyKeyView":                 "views/monthlyKeyView",
+    "cumulativeKeyView":              "views/cumulativeKeyView",
 
     // collections
     "sectorList":                     "collections/sectorList",

@@ -11,6 +11,7 @@ define([
   var targetModel = Backbone.Model.extend({
     urlRoot: '/pcatracking/api/v1/target',
     defaults: {
+      sector_id: null,
       goal_id: null,
       target_id: null,
       name: null,

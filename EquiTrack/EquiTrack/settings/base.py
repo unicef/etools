@@ -263,6 +263,7 @@ THIRD_PARTY_APPS = (
     'easy_thumbnails',
     'storages',
     'reversion',
+    'rest_framework',
 )
 
 # Apps specific for this project go here.
