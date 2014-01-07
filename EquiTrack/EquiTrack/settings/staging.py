@@ -9,6 +9,14 @@ DEBUG = True
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-debug
 TEMPLATE_DEBUG = DEBUG
+
+RAVEN_CONFIG = {
+    'dsn': 'https://edc3cc4bf9004598aeda1e452b71e256:27801a505ae245c78464711084442fc2@app.getsentry.com/17066',
+}
+
+INSTALLED_APPS = INSTALLED_APPS + (
+    'raven.contrib.django.raven_compat',
+)
 ########## END DEBUG CONFIGURATION
 
 ALLOWED_HOSTS = ['equitrack.herokuapp.com', 'equitrack.uniceflebanon.org']
