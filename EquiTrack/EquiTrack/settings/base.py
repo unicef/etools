@@ -23,13 +23,22 @@ SUIT_CONFIG = {
         # Rename app and set icon
         {'app': 'auth', 'label': 'Users', 'icon': 'icon-user', 'models': ('user', 'group')},
 
-        {'app': 'partners', 'icon': 'icon-pencil', 'models': ('pca', 'partnerorganization')},
-
-        {'app': 'locations', 'lable': 'Geography', 'icon': 'icon-globe'},
+        {'label': 'PCAs', 'icon': 'icon-pencil', 'models': [
+            {'url': 'partners.pca.add', 'label': 'Create PCA', 'permissions': ('partners.add_pca',)},
+            {'model': 'partners.pca', 'label': 'List of PCAs'},
+            {'model': 'partners.partnerorganization', 'label': 'Partners'},
+        ]},
 
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
-        {'app': 'reports', 'icon': 'icon-info-sign'},
+        {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign'},
+
+        {'label': 'Locations', 'icon': 'icon-globe', 'models': [
+            {'label': 'Governorate', 'model': 'locations.governorate'},
+            {'label': 'Cazas', 'model': 'locations.region'},
+            {'label': 'Localitys', 'model': 'locations.locality'},
+            {'label': 'Gateways', 'model': 'locations.location'},
+        ]},
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
     )
