@@ -220,9 +220,16 @@ class PcaAdmin(VersionAdmin):
         'number',
         'amendment',
         'partner',
+        'result_structure',
+        'status',
         'sectors',
         'title',
         'total_cash',
+    )
+    list_filter = (
+        'result_structure',
+        'status',
+        'partner',
     )
     search_fields = (
         'number',
