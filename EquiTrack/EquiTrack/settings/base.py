@@ -269,6 +269,7 @@ THIRD_PARTY_APPS = (
     'storages',
     'reversion',
     'rest_framework',
+    'import_export',
 )
 
 # Apps specific for this project go here.

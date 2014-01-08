@@ -7,6 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
 from reversion import VersionAdmin
+from import_export.admin import ExportMixin
 
 from funds.models import Grant
 from reports.models import (
@@ -17,6 +18,7 @@ from reports.models import (
     IntermediateResult
 )
 from locations.forms import LocationForm
+from partners.exports import PCAResource
 from partners.models import PartnerOrganization
 from partners.models import (
     PCA,
@@ -215,7 +217,8 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
         )
 
 
-class PcaAdmin(VersionAdmin):
+class PcaAdmin(ExportMixin, VersionAdmin):
+    resource_class = PCAResource
     list_display = (
         'number',
         'amendment',
