@@ -16,6 +16,7 @@ from reports.models import (
     Indicator,
     Activity,
     Sector,
+    Goal,
     WBS,
 )
 from locations.models import (
@@ -236,6 +237,36 @@ class PCASector(models.Model):
         return u''
     changeform_link.allow_tags = True
     changeform_link.short_description = 'View Sector Details'
+
+
+class PCASectorOutput(models.Model):
+
+    pca_sector = models.ForeignKey(PCASector)
+    output = models.ForeignKey(Rrp5Output)
+
+    class Meta:
+        verbose_name = 'Output'
+        verbose_name_plural = 'Outputs'
+
+
+class PCASectorGoal(models.Model):
+
+    pca_sector = models.ForeignKey(PCASector)
+    goal = models.ForeignKey(Goal)
+
+    class Meta:
+        verbose_name = 'CCC'
+        verbose_name_plural = 'CCCs'
+
+
+class PCASectorActivity(models.Model):
+
+    pca_sector = models.ForeignKey(PCASector)
+    activity = models.ForeignKey(Activity)
+
+    class Meta:
+        verbose_name = 'Activity'
+        verbose_name_plural = 'Activities'
 
 
 class PCASectorImmediateResult(models.Model):

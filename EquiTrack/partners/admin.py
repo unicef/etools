@@ -12,6 +12,7 @@ from import_export.admin import ExportMixin
 from funds.models import Grant
 from reports.models import (
     WBS,
+    Goal,
     Activity,
     Indicator,
     Rrp5Output,
@@ -28,6 +29,9 @@ from partners.models import (
     PCAReport,
     PCASector,
     GwPCALocation,
+    PCASectorOutput,
+    PCASectorGoal,
+    PCASectorActivity,
     IndicatorProgress,
     PCASectorImmediateResult
 )
@@ -117,12 +121,30 @@ class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.rel.to is Indicator:
             kwargs['queryset'] = Indicator.objects.filter(
-                goal__sector=self.get_sector(request),
-                goal__result_structure=self.get_pca(request).result_structure
+                sector=self.get_sector(request),
+                result_structure=self.get_pca(request).result_structure
             )
         return super(PcaIndicatorInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
+
+
+class PcaGoalInlineAdmin(admin.TabularInline):
+    verbose_name = 'CCC'
+    verbose_name_plural = 'CCCs'
+    model = PCASectorGoal
+    extra = 0
+
+
+class PcaOutputInlineAdmin(admin.TabularInline):
+    verbose_name = 'Output'
+    model = PCASectorOutput
+    extra = 0
+
+
+class PcaActivityInlineAdmin(admin.TabularInline):
+    model = PCASectorActivity
+    extra = 0
 
 
 class PcaReportInlineAdmin(admin.StackedInline):
@@ -178,12 +200,6 @@ class PcaGrantInlineAdmin(admin.TabularInline):
     extra = 0
 
 
-class PcaRRP5OutputsInlineAdmin(admin.TabularInline):
-
-    model = Rrp5Output
-    extra = 0
-
-
 class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
     form = autocomplete_light.modelform_factory(
         PCASector
@@ -199,8 +215,11 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
         'sector',
     )
     inlines = (
+        PcaOutputInlineAdmin,
+        PcaGoalInlineAdmin,
+        PcaIRInlineAdmin,
         PcaIndicatorInlineAdmin,
-        PcaIRInlineAdmin
+        PcaActivityInlineAdmin,
     )
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):

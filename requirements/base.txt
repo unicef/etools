@@ -14,4 +14,4 @@ django-import-export==0.1.5
 django-autocomplete-light==2.0.0a6
 djangorestframework==2.3.10
 boto==2.20.1
-raven
+fabric
