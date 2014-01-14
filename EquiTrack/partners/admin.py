@@ -135,16 +135,43 @@ class PcaGoalInlineAdmin(admin.TabularInline):
     model = PCASectorGoal
     extra = 0
 
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.rel.to is Goal:
+            kwargs['queryset'] = Goal.objects.filter(
+                sector=self.get_sector(request),
+            )
+        return super(PcaGoalInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
+
 
 class PcaOutputInlineAdmin(admin.TabularInline):
     verbose_name = 'Output'
     model = PCASectorOutput
     extra = 0
 
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.rel.to is Rrp5Output:
+            kwargs['queryset'] = Rrp5Output.objects.filter(
+                sector=self.get_sector(request),
+            )
+        return super(PcaOutputInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
+
 
 class PcaActivityInlineAdmin(admin.TabularInline):
     model = PCASectorActivity
     extra = 0
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.rel.to is Activity:
+            kwargs['queryset'] = Activity.objects.filter(
+                sector=self.get_sector(request),
+            )
+        return super(PcaActivityInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
 
 class PcaReportInlineAdmin(admin.StackedInline):
@@ -207,8 +234,6 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
     fields = (
         'pca',
         'sector',
-        'RRP5_outputs',
-        'activities',
     )
     readonly_fields = (
         'pca',
@@ -221,19 +246,6 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
         PcaIndicatorInlineAdmin,
         PcaActivityInlineAdmin,
     )
-
-    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-        if db_field.rel.to is Rrp5Output:
-            kwargs['queryset'] = Rrp5Output.objects.filter(
-                sector=self.get_sector(request)
-            )
-        if db_field.rel.to is Activity:
-            kwargs['queryset'] = Activity.objects.filter(
-                sector=self.get_sector(request)
-            )
-        return super(PcaSectorAdmin, self).formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
 
 
 class PcaAdmin(ExportMixin, VersionAdmin):

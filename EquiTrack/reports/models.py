@@ -56,7 +56,6 @@ class Unit(models.Model):
 
 class Indicator(models.Model):
 
-    goal = models.ForeignKey(Goal)
     sector = models.ForeignKey(Sector)
     result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
     name = models.CharField(max_length=128L, unique=True)
