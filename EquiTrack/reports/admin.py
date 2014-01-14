@@ -62,17 +62,6 @@ class IndicatorAdmin(admin.ModelAdmin):
     list_filter = (IndicatorSectorListFilter,)
     list_display = ('name', 'sector', 'result_structure',)
 
-    def goal(self, indicator):
-        return indicator.goal
-
-    def sector(self, indicator):
-        return indicator.goal.sector
-    sector.admin_order_field = 'goal__sector'
-
-    def result_structure(self, indicator):
-        return indicator.goal.result_structure
-    result_structure.admin_order_field = 'goal__result_structure'
-
 
 admin.site.register(ResultStructure)
 admin.site.register(Sector)

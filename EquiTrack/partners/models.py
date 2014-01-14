@@ -210,9 +210,6 @@ class PCASector(models.Model):
     pca = models.ForeignKey(PCA)
     sector = models.ForeignKey(Sector)
 
-    RRP5_outputs = models.ManyToManyField(Rrp5Output)
-    activities = models.ManyToManyField(Activity)
-
     class Meta:
         verbose_name = 'PCA Sector'
 
