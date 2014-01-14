@@ -129,7 +129,7 @@ class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
         )
 
 
-class PcaGoalInlineAdmin(admin.TabularInline):
+class PcaGoalInlineAdmin(SectorMixin, admin.TabularInline):
     verbose_name = 'CCC'
     verbose_name_plural = 'CCCs'
     model = PCASectorGoal
@@ -145,7 +145,7 @@ class PcaGoalInlineAdmin(admin.TabularInline):
         )
 
 
-class PcaOutputInlineAdmin(admin.TabularInline):
+class PcaOutputInlineAdmin(SectorMixin, admin.TabularInline):
     verbose_name = 'Output'
     model = PCASectorOutput
     extra = 0
@@ -160,7 +160,7 @@ class PcaOutputInlineAdmin(admin.TabularInline):
         )
 
 
-class PcaActivityInlineAdmin(admin.TabularInline):
+class PcaActivityInlineAdmin(SectorMixin, admin.TabularInline):
     model = PCASectorActivity
     extra = 0
 
