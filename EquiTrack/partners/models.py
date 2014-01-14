@@ -285,7 +285,7 @@ class IndicatorProgress(models.Model):
     current = models.IntegerField(blank=True, null=True, default=0)
 
     def __unicode__(self):
-        return self.indicator.goal
+        return self.indicator.name
 
     def shortfall(self):
         return self.programmed - self.current if self.id else 0

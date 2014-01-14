@@ -46,11 +46,6 @@ class SectorListFilter(admin.SimpleListFilter):
         return queryset
 
 
-class IndicatorSectorListFilter(SectorListFilter):
-
-    filter_by = 'goal_sector_id'
-
-
 class ResultStructureAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = ('result_structure', SectorListFilter,)
@@ -59,7 +54,7 @@ class ResultStructureAdmin(admin.ModelAdmin):
 
 class IndicatorAdmin(admin.ModelAdmin):
     search_fields = ('name',)
-    list_filter = (IndicatorSectorListFilter,)
+    list_filter = (SectorListFilter,)
     list_display = ('name', 'sector', 'result_structure',)
 
 
