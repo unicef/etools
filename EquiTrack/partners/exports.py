@@ -15,27 +15,27 @@ class PCAResource(resources.ModelResource):
         """
         Exports a resource.
         """
-        fields = SortedDict({
-            'number': '',
-            'title': '',
-            'partner organisation': '',
-            'initiation date': '',
-            'status': '',
-            'start date': '',
-            'end date': '',
-            'signed by unicef date': '',
-            'signed by partner date': '',
-            'unicef mng first name': '',
-            'unicef mng last name': '',
-            'unicef mng email': '',
-            'partner mng first name': '',
-            'partner mng last name': '',
-            'partner mng email': '',
-            'partner contribution budget': '',
-            'unicef cash budget': '',
-            'in kind amount budget': '',
-            'total budget': '',
-        })
+        fields = SortedDict([
+            ('number', ''),
+            ('title', ''),
+            ('partner organisation', ''),
+            ('initiation date', ''),
+            ('status', ''),
+            ('start date', ''),
+            ('end date', ''),
+            ('signed by unicef date', ''),
+            ('signed by partner date', ''),
+            ('unicef mng first name', ''),
+            ('unicef mng last name', ''),
+            ('unicef mng email', ''),
+            ('partner mng first name', ''),
+            ('partner mng last name', ''),
+            ('partner mng email', ''),
+            ('partner contribution budget', ''),
+            ('unicef cash budget', ''),
+            ('in kind amount budget', ''),
+            ('total budget', ''),
+        ])
         rows = []
 
         if queryset is None:
