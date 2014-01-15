@@ -19,15 +19,23 @@ class Sector(models.Model):
         return self.name
 
 
+class RRPObjective(models.Model):
+
+    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
+    sector = models.ForeignKey(Sector)
+    name = models.CharField(max_length=256L)
+
+
 class Rrp5Output(models.Model):
 
     result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector)
-    code = models.CharField(max_length=16L)
-    name = models.CharField(max_length=256L, unique=True)
+    objective = models.ForeignKey(RRPObjective, blank=True, null=True)
+    name = models.CharField(max_length=256L)
 
     class Meta:
         verbose_name = 'Output'
+        unique_together = ('result_structure', 'name')
 
     def __unicode__(self):
         return self.name
