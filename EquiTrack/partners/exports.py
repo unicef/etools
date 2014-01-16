@@ -104,12 +104,12 @@ class PCAResource(resources.ModelResource):
             row['Number'] = obj.number
             row['Title'] = obj.title
             row['Partner Organisation'] = obj.partner.name
-            row['Initiation Date'] = obj.initiation_date.strftime("%d-%m-%Y")
+            row['Initiation Date'] = obj.initiation_date.strftime("%d-%m-%Y") or ''
             row['Status'] = obj.status
-            row['Start Date'] = obj.start_date.strftime("%d-%m-%Y")
-            row['End Date'] = obj.end_date.strftime("%d-%m-%Y")
-            row['Signed by unicef date'] = obj.signed_by_unicef_date.strftime("%d-%m-%Y")
-            row['Signed by partner date'] = obj.signed_by_partner_date.strftime("%d-%m-%Y")
+            row['Start Date'] = obj.start_date.strftime("%d-%m-%Y") or ''
+            row['End Date'] = obj.end_date.strftime("%d-%m-%Y") or ''
+            row['Signed by unicef date'] = obj.signed_by_unicef_date.strftime("%d-%m-%Y") or ''
+            row['Signed by partner date'] = obj.signed_by_partner_date.strftime("%d-%m-%Y") or ''
             row['Unicef mng first name'] = obj.unicef_mng_first_name
             row['Unicef mng last name'] = obj.unicef_mng_last_name
             row['Unicef mng email'] = obj.unicef_mng_email
