@@ -104,12 +104,12 @@ class PCAResource(resources.ModelResource):
             row['Number'] = obj.number
             row['Title'] = obj.title
             row['Partner Organisation'] = obj.partner.name
-            row['Initiation Date'] = obj.initiation_date.strftime("%d-%m-%Y") or ''
+            row['Initiation Date'] = obj.initiation_date.strftime("%d-%m-%Y") if obj.initiation_date else ''
             row['Status'] = obj.status
-            row['Start Date'] = obj.start_date.strftime("%d-%m-%Y") or ''
-            row['End Date'] = obj.end_date.strftime("%d-%m-%Y") or ''
-            row['Signed by unicef date'] = obj.signed_by_unicef_date.strftime("%d-%m-%Y") or ''
-            row['Signed by partner date'] = obj.signed_by_partner_date.strftime("%d-%m-%Y") or ''
+            row['Start Date'] = obj.start_date.strftime("%d-%m-%Y") if obj.start_date else ''
+            row['End Date'] = obj.end_date.strftime("%d-%m-%Y") if obj.end_date else ''
+            row['Signed by unicef date'] = obj.signed_by_unicef_date.strftime("%d-%m-%Y") if obj.signed_by_unicef_date else ''
+            row['Signed by partner date'] = obj.signed_by_partner_date.strftime("%d-%m-%Y") if obj.signed_by_partner_date else ''
             row['Unicef mng first name'] = obj.unicef_mng_first_name
             row['Unicef mng last name'] = obj.unicef_mng_last_name
             row['Unicef mng email'] = obj.unicef_mng_email

@@ -125,8 +125,24 @@ class PCA(models.Model):
                 pca=amendment,
                 sector=pca_sector.sector
             )
-            new_sector.RRP5_outputs = pca_sector.RRP5_outputs.all()
-            new_sector.activities = pca_sector.activities.all()
+
+            for output in pca_sector.pcasectoroutput_set.all():
+                PCASectorOutput.objects.create(
+                    pca_sector=new_sector,
+                    output=output.output
+                )
+
+            for goal in pca_sector.pcasectorgoal_set.all():
+                PCASectorGoal.objects.create(
+                    pca_sector=new_sector,
+                    goal=goal.goal
+                )
+
+            for activity in pca_sector.pcasectoractivity_set.all():
+                PCASectorActivity.objects.create(
+                    pca_sector=pca_sector,
+                    activity=activity.activity
+                )
 
             # copy over indicators for sectors and reset programmed number
             for pca_indicator in pca_sector.indicatorprogress_set.all():
