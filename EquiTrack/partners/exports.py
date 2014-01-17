@@ -59,8 +59,9 @@ class PCAResource(resources.ModelResource):
                 row['Locality {}'.format(num)] = '' if nulls else location.locality.name
                 row['Gateway Type {}'.format(num)] = '' if nulls else location.gateway.name
                 row['Location {}'.format(num)] = '' if nulls else location.location.name
-                row['Latitude {}'.format(num)] = '' if nulls else location.location.point.y
-                row['Longitude {}'.format(num)] = '' if nulls else location.location.point.x
+                if location.location.point:
+                    row['Latitude {}'.format(num)] = '' if nulls else location.location.point.y
+                    row['Longitude {}'.format(num)] = '' if nulls else location.location.point.x
 
     def export(self, queryset=None):
         """
