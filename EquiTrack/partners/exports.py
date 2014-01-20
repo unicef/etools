@@ -2,6 +2,7 @@ __author__ = 'jcranwellward'
 
 import tablib
 
+from collections import OrderedDict
 from django.utils.datastructures import SortedDict
 
 from import_export import resources
@@ -11,118 +12,198 @@ from partners.models import PCA
 
 class PCAResource(resources.ModelResource):
 
-    def fill_pca_row(self, row, pca, nulls=False):
-        # dynamically add columns
+    headers = []
+
+    def insert_column(self, row, field_name, value):
+
+        row[field_name] = value if self.headers else ''
+
+    def insert_columns_inplace(self, row, fields, after_column):
+
+        keys = row.keys()
+        before_column = None
+        if after_column in row:
+            index = keys.index(after_column)
+            offset = index + 1
+            if offset < len(row):
+                before_column = keys[offset]
+
+        for key, value in fields.items():
+            if before_column:
+                row.insert(offset, key, value)
+                offset += 1
+            else:
+                row[key] = value
+
+    def fill_pca_grants(self, row, pca):
+
         for num, grant in enumerate(pca.pcagrant_set.all()):
             num += 1
-            row['Donor {}'.format(num)] = '' if nulls else grant.grant.donor.name
-            row['Grant {}'.format(num)] = '' if nulls else grant.grant.name
-            row['Amount {}'.format(num)] = '' if nulls else grant.funds
+            values = SortedDict()
 
-        for num, sector in enumerate(pca.pcasector_set.all()):
+            self.insert_column(values, 'Donor {}'.format(num), grant.grant.donor.name)
+            self.insert_column(values, 'Grant {}'.format(num), grant.grant.name)
+            self.insert_column(values, 'Amount {}'.format(num), grant.funds)
+
+            insert_after = 'Amount {}'.format(num-1)
+            insert_after = insert_after if insert_after in row else 'Total budget'
+
+            self.insert_columns_inplace(row, values, insert_after)
+        return row
+
+    def fill_sector_outputs(self, row, sector):
+        sector_name = sector.sector.name
+        for num, output in enumerate(sector.pcasectoroutput_set.all()):
             num += 1
-            row['Sector {}'.format(num)] = '' if nulls else sector.sector.name
+            values = SortedDict()
 
-            for num, output in enumerate(sector.pcasectoroutput_set.all()):
-                num += 1
-                row['RRP output {}'.format(num)] = '' if nulls else output.output.name
+            self.insert_column(values, '{} RRP output {}'.format(sector_name, num), output.output.name)
 
-            for num, goal in enumerate(sector.pcasectorgoal_set.all()):
-                num += 1
-                row['CCC {}'.format(num)] = '' if nulls else goal.goal.name
+            last_field = '{} RRP output {}'.format(sector_name, num-1)
+            insert_after = last_field if last_field in row else 'NULL'
 
-            for num, indicator in enumerate(sector.indicatorprogress_set.all()):
-                num += 1
-                row['Indicator {}'.format(num)] = '' if nulls else indicator.indicator.name
-                row['Unit {}'.format(num)] = '' if nulls else indicator.unit()
-                row['Total Beneficiaries {}'.format(num)] = '' if nulls else indicator.programmed
-                row['Current Beneficiaries {}'.format(num)] = '' if nulls else indicator.current
-                row['Shortfall of Beneficiaries {}'.format(num)] = '' if nulls else indicator.shortfall()
+            self.insert_columns_inplace(row, values, insert_after)
 
-            wbs_set = set()
-            for ir in sector.pcasectorimmediateresult_set.all():
-                for wbs in ir.wbs_activities.all():
-                    wbs_set.add(wbs.name)
+        return row
 
-            for num, wbs in enumerate(wbs_set):
-                num += 1
-                row['WBS/Activity {}'.format(num)] = '' if nulls else wbs
+    def fill_sector_goals(self, row, sector):
+        sector_name = sector.sector.name
+        for num, goal in enumerate(sector.pcasectorgoal_set.all()):
+            num += 1
+            values = SortedDict()
 
-            for num, activity in enumerate(sector.pcasectoractivity_set.all()):
-                num += 1
-                row['Activity {}'.format(num)] = '' if nulls else activity.activity.name
+            self.insert_column(values, '{} CCC {}'.format(sector_name, num), goal.goal.name)
 
-            for num, location in enumerate(pca.gwpcalocation_set.all()):
-                num += 1
-                row['Governorate {}'.format(num)] = '' if nulls else location.governorate.name
-                row['Caza {}'.format(num)] = '' if nulls else location.region.name
-                row['Locality {}'.format(num)] = '' if nulls else location.locality.name
-                row['Gateway Type {}'.format(num)] = '' if nulls else location.gateway.name
-                row['Location {}'.format(num)] = '' if nulls else location.location.name
-                if location.location.point:
-                    row['Latitude {}'.format(num)] = '' if nulls else location.location.point.y
-                    row['Longitude {}'.format(num)] = '' if nulls else location.location.point.x
+            last_field = '{} CCC {}'.format(sector_name, num-1)
+            insert_after = last_field if last_field in row else 'NULL'
+
+            self.insert_columns_inplace(row, values, insert_after)
+
+        return row
+
+    def fill_sector_indicators(self, row, sector):
+        sector_name = sector.sector.name
+        for num, indicator in enumerate(sector.indicatorprogress_set.all()):
+            num += 1
+            values = SortedDict()
+
+            self.insert_column(values, '{} Indicator {}'.format(sector_name, num), indicator.indicator.name)
+            self.insert_column(values, '{} Unit {}'.format(sector_name, num), indicator.unit())
+            self.insert_column(values, '{} Total Beneficiaries {}'.format(sector_name, num), indicator.programmed)
+            self.insert_column(values, '{} Current Beneficiaries {}'.format(sector_name, num), indicator.current)
+            self.insert_column(values, '{} Shortfall of Beneficiaries {}'.format(sector_name, num), indicator.shortfall())
+
+            last_field = '{} Shortfall of Beneficiaries {}'.format(sector_name, num-1)
+            insert_after = last_field if last_field in row else 'NULL'
+
+            self.insert_columns_inplace(row, values, insert_after)
+
+        return row
+
+    def fill_sector_wbs(self, row, sector):
+        sector_name = sector.sector.name
+        wbs_set = set()
+        for ir in sector.pcasectorimmediateresult_set.all():
+            for wbs in ir.wbs_activities.all():
+                wbs_set.add(wbs.name)
+
+        for num, wbs in enumerate(wbs_set):
+            num += 1
+            values = SortedDict()
+
+            self.insert_column(values, '{} WBS/Activity {}'.format(sector_name, num), wbs)
+
+            last_field = '{} WBS/Activity {}'.format(sector_name, num-1)
+            insert_after = last_field if last_field in row else 'NULL'
+
+            self.insert_columns_inplace(row, values, insert_after)
+
+        return row
+
+    def fill_sector_activities(self, row, sector):
+        sector_name = sector.sector.name
+        for num, activity in enumerate(sector.pcasectoractivity_set.all()):
+            num += 1
+            values = SortedDict()
+
+            self.insert_column(values, '{} Activity {}'.format(sector_name, num), activity.activity.name)
+
+            last_field = '{} Activity {}'.format(sector_name, num-1)
+            insert_after = last_field if last_field in row else 'NULL'
+
+            self.insert_columns_inplace(row, values, insert_after)
+
+        return row
+
+    def fill_pca_row(self, row, pca):
+        
+        self.insert_column(row, 'Number', pca.number)
+        self.insert_column(row, 'Title', pca.title)
+        self.insert_column(row, 'Partner Organisation', pca.partner.name)
+        self.insert_column(row, 'Initiation Date', pca.initiation_date.strftime("%d-%m-%Y") if pca.initiation_date else '')
+        self.insert_column(row, 'Status', pca.status)
+        self.insert_column(row, 'Start Date', pca.start_date.strftime("%d-%m-%Y") if pca.start_date else '')
+        self.insert_column(row, 'End Date', pca.end_date.strftime("%d-%m-%Y") if pca.end_date else '')
+        self.insert_column(row, 'Signed by unicef date', pca.signed_by_unicef_date.strftime("%d-%m-%Y") if pca.signed_by_unicef_date else '')
+        self.insert_column(row, 'Signed by partner date', pca.signed_by_partner_date.strftime("%d-%m-%Y") if pca.signed_by_partner_date else '')
+        self.insert_column(row, 'Unicef mng first name', pca.unicef_mng_first_name)
+        self.insert_column(row, 'Unicef mng last name', pca.unicef_mng_last_name)
+        self.insert_column(row, 'Unicef mng email', pca.unicef_mng_email)
+        self.insert_column(row, 'Partner mng first name', pca.partner_mng_first_name)
+        self.insert_column(row, 'Partner mng last name', pca.partner_mng_last_name)
+        self.insert_column(row, 'Partner mng email', pca.partner_mng_email)
+        self.insert_column(row, 'Partner contribution budget', pca.partner_contribution_budget)
+        self.insert_column(row, 'Unicef cash budget', pca.unicef_cash_budget)
+        self.insert_column(row, 'In kind amount budget', pca.in_kind_amount_budget)
+        self.insert_column(row, 'Total budget', pca.total_cash)
+
+            # for num, location in enumerate(pca.gwpcalocation_set.all()):
+            #     num += 1
+            #     self.insert_column(row, 'Governorate {}'.format(num), location.governorate.name)
+            #     self.insert_column(row, 'Caza {}'.format(num), location.region.name)
+            #     self.insert_column(row, 'Locality {}'.format(num), location.locality.name)
+            #     self.insert_column(row, 'Gateway Type {}'.format(num), location.gateway.name)
+            #     self.insert_column(row, 'Location {}'.format(num), location.location.name)
+
+        return row
+
+    def fill_row(self, pca, row):
+
+        self.fill_pca_row(row, pca)
+        self.fill_pca_grants(row, pca)
+
+        for sector in sorted(pca.pcasector_set.all()):
+
+            self.fill_sector_outputs(row, sector)
+            self.fill_sector_goals(row, sector)
+            self.fill_sector_indicators(row, sector)
+            self.fill_sector_wbs(row, sector)
+            self.fill_sector_activities(row, sector)
 
     def export(self, queryset=None):
         """
         Exports a resource.
         """
-        fields = SortedDict([
-            ('Number', ''),
-            ('Title', ''),
-            ('Partner Organisation', ''),
-            ('Initiation Date', ''),
-            ('Status', ''),
-            ('Start Date', ''),
-            ('End Date', ''),
-            ('Signed by unicef date', ''),
-            ('Signed by partner date', ''),
-            ('Unicef mng first name', ''),
-            ('Unicef mng last name', ''),
-            ('Unicef mng email', ''),
-            ('Partner mng first name', ''),
-            ('Partner mng last name', ''),
-            ('Partner mng email', ''),
-            ('Partner contribution budget', ''),
-            ('Unicef cash budget', ''),
-            ('In kind amount budget', ''),
-            ('Total budget', ''),
-        ])
         rows = []
 
         if queryset is None:
             queryset = self.get_queryset()
 
-        for obj in queryset.iterator():
-            # first pass gets the shape of the data
-            self.fill_pca_row(fields, obj, nulls=True)
+        fields = SortedDict()
+
+        for pca in queryset.iterator():
+
+            self.fill_row(pca, fields)
+
+        self.headers = fields
 
         # Iterate without the queryset cache, to avoid wasting memory when
         # exporting large datasets.
-        for obj in queryset.iterator():
+        for pca in queryset.iterator():
             # second pass creates rows from the known table shape
             row = fields.copy()
-            row['Number'] = obj.number
-            row['Title'] = obj.title
-            row['Partner Organisation'] = obj.partner.name
-            row['Initiation Date'] = obj.initiation_date.strftime("%d-%m-%Y") if obj.initiation_date else ''
-            row['Status'] = obj.status
-            row['Start Date'] = obj.start_date.strftime("%d-%m-%Y") if obj.start_date else ''
-            row['End Date'] = obj.end_date.strftime("%d-%m-%Y") if obj.end_date else ''
-            row['Signed by unicef date'] = obj.signed_by_unicef_date.strftime("%d-%m-%Y") if obj.signed_by_unicef_date else ''
-            row['Signed by partner date'] = obj.signed_by_partner_date.strftime("%d-%m-%Y") if obj.signed_by_partner_date else ''
-            row['Unicef mng first name'] = obj.unicef_mng_first_name
-            row['Unicef mng last name'] = obj.unicef_mng_last_name
-            row['Unicef mng email'] = obj.unicef_mng_email
-            row['Partner mng first name'] = obj.partner_mng_first_name
-            row['Partner mng last name'] = obj.partner_mng_last_name
-            row['Partner mng email'] = obj.partner_mng_email
-            row['Partner contribution budget'] = obj.partner_contribution_budget
-            row['Unicef cash budget'] = obj.unicef_cash_budget
-            row['In kind amount budget'] = obj.in_kind_amount_budget
-            row['Total budget'] = obj.total_cash
-            
-            self.fill_pca_row(row, obj)
+
+            self.fill_row(pca, row)
 
             rows.append(row)
 

@@ -3,9 +3,10 @@ __author__ = 'jcranwellward'
 from fabric.api import local
 
 
-def get_db_dump():
+def get_db_dump(capture=False):
 
-    local('heroku pgbackups:capture')
+    if capture:
+        local('heroku pgbackups:capture')
     local('curl -o latest.dump `heroku pgbackups:url`')
 
 
