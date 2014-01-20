@@ -9,10 +9,12 @@ import autocomplete_light
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin
 
-from funds.models import Grant
+from funds.models import Grant, Donor
+from reports.admin import SectorListFilter
 from reports.models import (
     WBS,
     Goal,
+    Sector,
     Activity,
     Indicator,
     Rrp5Output,
@@ -248,28 +250,69 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
     )
 
 
+class PCASectorFilter(SectorListFilter):
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            sector = Sector.objects.get(pk=self.value())
+            return queryset.filter(sectors__icontains=sector.name)
+        return queryset
+
+
+class PCADonorFilter(admin.SimpleListFilter):
+
+    title = 'Donor'
+    parameter_name = 'donor'
+
+    def lookups(self, request, model_admin):
+        """
+        """
+        return [
+            (donor.id, donor.name) for donor in Donor.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        if self.value():
+            donor = Donor.objects.get(pk=self.value())
+            pca_ids = PCAGrant.objects.filter(grant__donor=donor).values_list('pca__id')
+            queryset = PCA.objects.filter(id__in=pca_ids)
+        return queryset
+
+
 class PcaAdmin(ExportMixin, VersionAdmin):
     resource_class = PCAResource
     list_display = (
         'number',
+        'created_date',
         'amendment',
         'partner',
         'result_structure',
         'status',
         'sectors',
         'title',
+        'unicef_cash_budget',
         'total_cash',
     )
     list_filter = (
         'result_structure',
+        PCASectorFilter,
         'status',
+        'start_date',
+        'end_date',
         'partner',
+        PCADonorFilter,
     )
     search_fields = (
         'number',
         'title',
-        'sectors',
-        'partner__name',
+        'unicef_cash_budget',
+        'total_cash',
     )
     readonly_fields = (
         'total_unicef_contribution',
@@ -312,6 +355,10 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
     )
+
+    def created_date(self, obj):
+        return obj.created_at.strftime('%d-%m-%Y')
+    created_date.admin_order_field = 'created_at'
 
     def queryset(self, request):
         return super(PcaAdmin, self).queryset(request).order_by(

@@ -138,6 +138,8 @@ class PCAResource(resources.ModelResource):
     def fill_pca_row(self, row, pca):
         
         self.insert_column(row, 'Number', pca.number)
+        self.insert_column(row, 'Amendment', 'Yes' if pca.amendment else 'No')
+        self.insert_column(row, 'Amendment date', pca.amended_at.strftime("%d-%m-%Y") if pca.amended_at else '')
         self.insert_column(row, 'Title', pca.title)
         self.insert_column(row, 'Partner Organisation', pca.partner.name)
         self.insert_column(row, 'Initiation Date', pca.initiation_date.strftime("%d-%m-%Y") if pca.initiation_date else '')
