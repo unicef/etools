@@ -7,6 +7,7 @@ from django.db import models
 from django.core import urlresolvers
 
 from filer.fields.file import FilerFileField
+from smart_selects.db_fields import ChainedForeignKey
 
 from funds.models import Grant
 from reports.models import (
@@ -208,9 +209,23 @@ class GwPCALocation(models.Model):
 
     pca = models.ForeignKey(PCA)
     name = models.CharField(max_length=128L)
-    governorate = models.ForeignKey(Governorate, null=True, blank=True)
-    region = models.ForeignKey(Region, null=True, blank=True, verbose_name='Caza')
-    locality = models.ForeignKey(Locality, null=True, blank=True)
+    governorate = models.ForeignKey(Governorate)
+    region = ChainedForeignKey(
+        Region,
+        chained_field="governorate",
+        chained_model_field="governorate",
+        show_all=True,
+        auto_choose=True,
+        null=True, blank=True
+    )
+    locality = ChainedForeignKey(
+        Locality,
+        chained_field="region",
+        chained_model_field="region",
+        show_all=True,
+        auto_choose=True,
+        null=True, blank=True
+    )
     gateway = models.ForeignKey(GatewayType, null=True, blank=True)
     location = models.ForeignKey(Location)
 

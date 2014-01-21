@@ -20,7 +20,7 @@ from reports.models import (
     Rrp5Output,
     IntermediateResult
 )
-from locations.forms import LocationForm
+#from locations.forms import LocationForm
 from partners.exports import PCAResource
 from partners.models import PartnerOrganization
 from partners.models import (
@@ -93,7 +93,7 @@ class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
 
 class PcaLocationInlineAdmin(admin.TabularInline):
     model = GwPCALocation
-    form = LocationForm
+    #form = LocationForm
     verbose_name = 'Location'
     verbose_name_plural = 'Locations'
     fields = (
