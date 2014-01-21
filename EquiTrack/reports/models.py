@@ -38,7 +38,7 @@ class Rrp5Output(models.Model):
         unique_together = ('result_structure', 'name')
 
     def __unicode__(self):
-        return self.name
+        return u'({}) {}'.format(self.result_structure, self.name)
 
 
 class Goal(models.Model):
@@ -71,7 +71,7 @@ class Indicator(models.Model):
     total = models.IntegerField()
 
     def __unicode__(self):
-        return self.name
+        return u'({}) {}'.format(self.result_structure, self.name)
 
 
 class IntermediateResult(models.Model):

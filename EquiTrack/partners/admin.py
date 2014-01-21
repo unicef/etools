@@ -162,6 +162,7 @@ class PcaOutputInlineAdmin(SectorMixin, admin.TabularInline):
         if db_field.rel.to is Rrp5Output:
             kwargs['queryset'] = Rrp5Output.objects.filter(
                 sector=self.get_sector(request),
+                result_structure=self.get_pca(request).result_structure,
             )
         return super(PcaOutputInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
