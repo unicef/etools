@@ -68,5 +68,4 @@ class Location(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Village'
         unique_together = ('name', 'p_code')

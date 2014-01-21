@@ -212,7 +212,7 @@ class GwPCALocation(models.Model):
     region = models.ForeignKey(Region, null=True, blank=True, verbose_name='Caza')
     locality = models.ForeignKey(Locality, null=True, blank=True)
     gateway = models.ForeignKey(GatewayType, null=True, blank=True)
-    location = models.ForeignKey(Location, verbose_name='Village')
+    location = models.ForeignKey(Location)
 
     class Meta:
         verbose_name = 'Activity Location'

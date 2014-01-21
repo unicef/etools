@@ -37,6 +37,12 @@ from partners.models import (
     IndicatorProgress,
     PCASectorImmediateResult
 )
+from locations.models import (
+    Governorate,
+    GatewayType,
+    Locality,
+    Region,
+)
 
 
 class SectorMixin(object):
@@ -94,8 +100,8 @@ class PcaLocationInlineAdmin(admin.TabularInline):
         'governorate',
         'region',
         'locality',
-        'location',
         'gateway',
+        'location',
 
     )
     extra = 0
@@ -266,22 +272,97 @@ class PCADonorFilter(admin.SimpleListFilter):
     parameter_name = 'donor'
 
     def lookups(self, request, model_admin):
-        """
-        """
+
         return [
             (donor.id, donor.name) for donor in Donor.objects.all()
         ]
 
     def queryset(self, request, queryset):
-        """
-        Returns the filtered queryset based on the value
-        provided in the query string and retrievable via
-        `self.value()`.
-        """
+
         if self.value():
             donor = Donor.objects.get(pk=self.value())
             pca_ids = PCAGrant.objects.filter(grant__donor=donor).values_list('pca__id')
-            queryset = PCA.objects.filter(id__in=pca_ids)
+            return queryset.filter(id__in=pca_ids)
+        return queryset
+
+
+class PCAGovernorateFilter(admin.SimpleListFilter):
+
+    title = 'Governorate'
+    parameter_name = 'governorate'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (governorate.id, governorate.name) for governorate in Governorate.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            governorate = Governorate.objects.get(pk=self.value())
+            pca_ids = GwPCALocation.objects.filter(governorate=governorate).values_list('pca__id')
+            return queryset.filter(id__in=pca_ids)
+        return queryset
+
+
+class PCARegionFilter(admin.SimpleListFilter):
+
+    title = 'Caza'
+    parameter_name = 'caza'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (region.id, region.name) for region in Region.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            region = Region.objects.get(pk=self.value())
+            pca_ids = GwPCALocation.objects.filter(region=region).values_list('pca__id')
+            return queryset.filter(id__in=pca_ids)
+        return queryset
+
+
+class PCALocalityFilter(admin.SimpleListFilter):
+
+    title = 'Locality'
+    parameter_name = 'locality'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (locality.id, locality.name) for locality in Locality.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            locality = Locality.objects.get(pk=self.value())
+            pca_ids = GwPCALocation.objects.filter(locality=locality).values_list('pca__id')
+            return queryset.filter(id__in=pca_ids)
+        return queryset
+
+
+class PCAGatewayTypeFilter(admin.SimpleListFilter):
+
+    title = 'Gateway'
+    parameter_name = 'gateway'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (gateway.id, gateway.name) for gateway in GatewayType.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            gateway = GatewayType.objects.get(pk=self.value())
+            pca_ids = GwPCALocation.objects.filter(gateway=gateway).values_list('pca__id')
+            return queryset.filter(id__in=pca_ids)
         return queryset
 
 
@@ -307,6 +388,10 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         'end_date',
         'partner',
         PCADonorFilter,
+        PCAGovernorateFilter,
+        PCARegionFilter,
+        PCALocalityFilter,
+        PCAGatewayTypeFilter,
     )
     search_fields = (
         'number',
