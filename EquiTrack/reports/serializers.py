@@ -21,9 +21,9 @@ class GoalSerializer(serializers.ModelSerializer):
 class SectorSerializer(serializers.ModelSerializer):
 
     sector_id = serializers.CharField(source='id', read_only=True)
-    goals = GoalSerializer(many=True)
+    goals = GoalSerializer()
 
     class Meta:
         model = Sector
-        fields = ('id', 'name', 'description', 'goals')
+        fields = ('sector_id', 'name', 'description', 'goals')
 

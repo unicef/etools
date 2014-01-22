@@ -9,7 +9,7 @@ define([
   'backbone'
 ], function($, _, Backbone){
   var sectorModel = Backbone.Model.extend({
-    urlRoot: '/pcatracking/api/v1/sector',
+    urlRoot: '/partners/sectors',
     defaults: {
       sector_id: null,
       name: null, 
