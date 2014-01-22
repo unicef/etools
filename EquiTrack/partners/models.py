@@ -304,7 +304,7 @@ class IndicatorProgress(models.Model):
         return self.indicator.name
 
     def shortfall(self):
-        return self.programmed - self.current if self.id else 0
+        return self.programmed - self.current if self.id and self.current else 0
     shortfall.short_description = 'Shortfall'
 
     def unit(self):
