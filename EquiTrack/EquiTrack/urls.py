@@ -1,5 +1,6 @@
 from django.conf.urls import patterns, include, url
 from django.views.generic import TemplateView
+from django.contrib.auth.decorators import login_required
 
 import autocomplete_light
 # import every app/autocomplete_light_registry.py
@@ -11,7 +12,8 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
-    url(r'^$', TemplateView.as_view(template_name='base.html')),
+    url(r'^$', login_required(TemplateView.as_view(template_name='base.html'))),
+    (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
 
     url(r'', include('partners.urls')),
 
