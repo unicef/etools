@@ -7,9 +7,9 @@ define([
   'jquery',
   'underscore',
   'backbone',
-  'rrp5OutputList'
-], function($, _, Backbone, rrp5OutputList) {
-  var rrp5OutputFilterView = Backbone.View.extend({
+  'rrpOutputList'
+], function($, _, Backbone, rrpOutputList) {
+  var rrpOutputFilterView = Backbone.View.extend({
     initialize: function(args) {
       var self = this;
       this.parent = args.parent;
@@ -17,7 +17,7 @@ define([
       if (!_.isUndefined(args.unselected_sector_ids)) { // process sector_ids if any
         this.setSectorIDs(args.unselected_sector_ids);
       }
-      this.collection = new rrp5OutputList();
+      this.collection = new rrpOutputList();
       this.collection.fetch({
         success: function() {
           self.collection = self.collection.toJSON();
@@ -30,24 +30,24 @@ define([
       this.sector_ids = _.map(sector_ids, function(id) { return parseInt(id); }) 
     },
     template: _.template('\
-        <% _.each(data, function(rrp5_output) { %>\
+        <% _.each(data, function(rrp_output) { %>\
         <div class="input-group">\
           <span class="input-group-addon">\
-            <input type="checkbox" name="<%=rrp5_output.rrp5_output_id%>" checked="true" class="rrp5-box">\
+            <input type="checkbox" name="<%=rrp_output.rrp_output_id%>" checked="true" class="rrp-box">\
           </span>\
-          <div class="form-control" style="background:#fefefe; font-size:12px;"><%=rrp5_output.name%></div>\
+          <div class="form-control" style="background:#fefefe; font-size:12px;"><%=rrp_output.name%></div>\
         </div>\
         <% }); %>\
     ', null, {variable: 'data'}),
     events: {
-      "click input": "clickHandler",
+      "click input": "clickHandler"
     },
     clickHandler: function(e) {
       var ele = $(e.target);
       var checked = ele.prop('checked') ? true : false;
       var name = ele.attr('name');
       this.parent.filterCollection({
-        "type": "rrp5_output",
+        "type": "rrp_output",
         "id": name,
         "checked": checked
       });
@@ -63,6 +63,6 @@ define([
       this.$el.html(this.template(this.collection));
     }
   });
-  return rrp5OutputFilterView;
+  return rrpOutputFilterView;
 });
   

@@ -458,6 +458,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         self.message_user(request, "{} PCA amended.".format(queryset.count()))
 
 
+admin.site.register(GwPCALocation)
 admin.site.register(PCA, PcaAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization)

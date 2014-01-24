@@ -94,6 +94,13 @@ class PCA(models.Model):
             title = u'{} (Amendment)'.format(title)
         return title
 
+    @property
+    def sector_id(self):
+        sectors = self.pcasector_set.all()
+        if sectors:
+            return sectors[0].sector.id
+        return 0
+
     def total_unicef_contribution(self):
         return self.unicef_cash_budget + self.in_kind_amount_budget
     total_unicef_contribution.short_description = 'Total Unicef contribution budget'
@@ -206,7 +213,7 @@ class PCAGrant(models.Model):
 
 class GwPCALocation(models.Model):
 
-    pca = models.ForeignKey(PCA)
+    pca = models.ForeignKey(PCA, related_name='locations')
     name = models.CharField(max_length=128L)
     governorate = models.ForeignKey(Governorate, null=True, blank=True)
     region = models.ForeignKey(Region, null=True, blank=True, verbose_name='Caza')

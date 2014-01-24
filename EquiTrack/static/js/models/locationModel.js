@@ -9,7 +9,7 @@ define([
   'backbone'
 ], function($, _, Backbone){
   var locationModel = Backbone.Model.extend({
-    urlRoot: '/pcatracking/api/v1/location',
+    urlRoot: '/location',
     defaults: {
       location_id: null
     }

@@ -9,11 +9,11 @@ define([
   'backbone',
   'mapView',
   'sectorFilterView',
-  'rrp5OutputFilterView',
+  'rrpOutputFilterView',
   'targetFilterView',
   'partnerOrganizationFilterView',
   'locationList'
-], function($, _, Backbone, mapView, sectorFilterView, rrp5OutputFilterView, targetFilterView, partnerOrganizationFilterView, locationList) {
+], function($, _, Backbone, mapView, sectorFilterView, rrpOutputFilterView, targetFilterView, partnerOrganizationFilterView, locationList) {
   var mapFilterView = Backbone.View.extend({
     initialize: function() {
       var self = this;
@@ -179,38 +179,6 @@ define([
             </div>\
           </div>\
 \
-          <div class="panel panel-default">\
-            <div class="panel-heading">\
-              <h4 class="panel-title">\
-                <a data-toggle="collapse" href="#collapseThree">\
-                  RRP5\
-                </a>\
-                <button id="rrp5-toggle" type="button" class="btn-xs btn-default" style="float:right;">toggle all</button>\
-              </h4>\
-            </div>\
-            <div id="collapseThree" class="panel-collapse collapse">\
-              <div class="panel-body" id="rrp5-output-list">\
-                RRP5 list goes here\
-              </div>\
-            </div>\
-          </div>\
-\
-          <div class="panel panel-default">\
-            <div class="panel-heading">\
-              <h4 class="panel-title">\
-                <a data-toggle="collapse" href="#collapseFour">\
-                  Indicator\
-                </a>\
-                <button id="target-toggle" type="button" class="btn-xs btn-default" style="float:right;">toggle all</button>\
-              </h4>\
-            </div>\
-            <div id="collapseFour" class="panel-collapse collapse">\
-              <div class="panel-body" id="target-list">\
-                indicator list goes here\
-              </div>\
-            </div>\
-          </div>\
-\
           <hr />\
 \
           <div class="panel panel-default">\
@@ -245,7 +213,7 @@ define([
       });
 
       // create rrp5_output filter links
-      this.rrp5OutputLinks = new rrp5OutputFilterView({
+      this.rrp5OutputLinks = new rrpOutputFilterView({
         el: $('#rrp5-output-list'),
         parent: this
       });

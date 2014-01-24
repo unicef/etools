@@ -17,7 +17,7 @@ define([
     },
     render: function() {
       var self = this;
-      L.Icon.Default.imagePath = '/pcatracking/images';
+      L.Icon.Default.imagePath = '/static/img';
       var cloudmadeUrl = 'http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png',
         cloudmadeAttribution = 'Map data &copy; 2011 OpenStreetMap contributors, Imagery &copy; 2011 CloudMade, Points &copy 2012 LINZ',
         cloudmade = L.tileLayer(cloudmadeUrl, {maxZoom: 17, attribution: cloudmadeAttribution}),

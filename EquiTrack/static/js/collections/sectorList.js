@@ -12,7 +12,7 @@ define([
 ], function($, _, Backbone, sectorModel) {
   var sectorList = Backbone.Collection.extend({
     initialize: function() {
-      this.url = '/partners/sectors';
+      this.url = '/sector';
       this.model = sectorModel;
     }
   });

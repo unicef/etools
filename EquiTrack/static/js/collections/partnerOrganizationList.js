@@ -12,7 +12,7 @@ define([
 ], function($, _, Backbone, partnerOrganizationModel) {
   var partnerOrganizationList = Backbone.Collection.extend({
     initialize: function() {
-      this.url = '/pcatracking/api/v1/partner_organizations';
+      this.url = '/partner';
       this.model = partnerOrganizationModel;
     }
   });

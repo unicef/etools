@@ -9,7 +9,7 @@ define([
   'backbone'
 ], function($, _, Backbone){
   var partnerOrganizationModel = Backbone.Model.extend({
-    urlRoot: '/pcatracking/api/v1/partner_organization',
+    urlRoot: '/partner',
     defaults: {
       partner_id: null,
       name: null, 
