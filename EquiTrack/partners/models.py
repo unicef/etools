@@ -168,7 +168,7 @@ class PCA(models.Model):
                 new_ir.wbs_activities = pca_ir.wbs_activities.all()
 
         # copy over locations
-        for location in original.gwpcalocation_set.all():
+        for location in original.locations.all():
             GwPCALocation.objects.create(
                 pca=amendment,
                 name=location.name,
