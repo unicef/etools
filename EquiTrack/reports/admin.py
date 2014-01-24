@@ -10,6 +10,7 @@ from reports.models import (
     Activity,
     Indicator,
     Rrp5Output,
+    RRPObjective,
     IntermediateResult,
     ResultStructure
 )
@@ -58,6 +59,7 @@ class IndicatorAdmin(admin.ModelAdmin):
     list_display = ('name', 'sector', 'result_structure',)
 
 
+admin.site.register(RRPObjective)
 admin.site.register(ResultStructure)
 admin.site.register(Sector)
 admin.site.register(Activity)
