@@ -11,7 +11,7 @@ from .models import (
 class GoalSerializer(serializers.ModelSerializer):
 
     goal_id = serializers.CharField(source='id', read_only=True)
-    sector_id = serializers.CharField(source='sector__id', read_only=True)
+    sector_id = serializers.CharField(source='sector.id', read_only=True)
 
     class Meta:
         model = Goal

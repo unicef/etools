@@ -95,6 +95,13 @@ class PCA(models.Model):
             title = u'{} (Amendment)'.format(title)
         return title
 
+    @property
+    def sector_id(self):
+        sectors = self.pcasector_set.all()
+        if sectors:
+            return sectors[0].sector.id
+        return 0
+
     def total_unicef_contribution(self):
         return self.unicef_cash_budget + self.in_kind_amount_budget
     total_unicef_contribution.short_description = 'Total Unicef contribution budget'
@@ -162,7 +169,7 @@ class PCA(models.Model):
                 new_ir.wbs_activities = pca_ir.wbs_activities.all()
 
         # copy over locations
-        for location in original.gwpcalocation_set.all():
+        for location in original.locations.all():
             GwPCALocation.objects.create(
                 pca=amendment,
                 name=location.name,
@@ -207,7 +214,7 @@ class PCAGrant(models.Model):
 
 class GwPCALocation(models.Model):
 
-    pca = models.ForeignKey(PCA)
+    pca = models.ForeignKey(PCA, related_name='locations')
     name = models.CharField(max_length=128L)
     governorate = models.ForeignKey(Governorate)
     region = ChainedForeignKey(
@@ -319,7 +326,7 @@ class IndicatorProgress(models.Model):
         return self.indicator.name
 
     def shortfall(self):
-        return self.programmed - self.current if self.id else 0
+        return self.programmed - self.current if self.id and self.current else 0
     shortfall.short_description = 'Shortfall'
 
     def unit(self):

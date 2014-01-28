@@ -49,7 +49,7 @@ requirejs.config({
     "targetProgressList":             "collections/targetProgressList",
     "locationList":                   "collections/locationList",
     "gatewayList":                    "collections/gatewayList",
-    "rrp5OutputList":                 "collections/rrp5OutputList",
+    "rrpOutputList":                  "collections/rrpOutputList",
     "targetList":                     "collections/targetList",
     "partnerOrganizationList":        "collections/partnerOrganizationList",
     

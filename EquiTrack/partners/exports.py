@@ -136,7 +136,8 @@ class PCAResource(resources.ModelResource):
         return row
 
     def fill_pca_row(self, row, pca):
-        
+
+        self.insert_column(row, 'Sectors', pca.sectors)
         self.insert_column(row, 'Number', pca.number)
         self.insert_column(row, 'Amendment', 'Yes' if pca.amendment else 'No')
         self.insert_column(row, 'Amendment date', pca.amended_at.strftime("%d-%m-%Y") if pca.amended_at else '')

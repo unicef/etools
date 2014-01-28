@@ -25,7 +25,7 @@ requirejs.config({
     "pcaTargetShareModel":            "models/pcaTargetShareModel",
     "locationModel":                  "models/locationModel",
     "gatewayModel":                   "models/gatewayModel",
-    "rrp5OutputModel":                "models/rrp5OutputModel",
+    "rrpOutputModel":                 "models/rrpOutputModel",
     "partnerOrganizationModel":       "models/partnerOrganizationModel",
     
     // views
@@ -40,7 +40,7 @@ requirejs.config({
     "mapFilterView":                  "views/mapFilterView",
     "mapView":                        "views/mapView",
     "sectorFilterView":               "views/sectorFilterView",
-    "rrp5OutputFilterView":           "views/rrp5OutputFilterView",
+    "rrpOutputFilterView":            "views/rrpOutputFilterView",
     "targetFilterView":               "views/targetFilterView",
     "partnerOrganizationFilterView":  "views/partnerOrganizationFilterView",
     "monthlyKeyView":                 "views/monthlyKeyView",
@@ -51,7 +51,7 @@ requirejs.config({
     "targetProgressList":             "collections/targetProgressList",
     "locationList":                   "collections/locationList",
     "gatewayList":                    "collections/gatewayList",
-    "rrp5OutputList":                 "collections/rrp5OutputList",
+    "rrpOutputList":                  "collections/rrpOutputList",
     "targetList":                     "collections/targetList",
     "partnerOrganizationList":        "collections/partnerOrganizationList",
     

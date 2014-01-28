@@ -39,6 +39,14 @@ SUIT_CONFIG = {
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
     )
 }
+
+LOGIN_URL = '/login/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:
 path.append(DJANGO_ROOT)

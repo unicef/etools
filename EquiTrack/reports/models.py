@@ -44,7 +44,7 @@ class Rrp5Output(models.Model):
 class Goal(models.Model):
 
     result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
-    sector = models.ForeignKey(Sector)
+    sector = models.ForeignKey(Sector, related_name='goals')
     name = models.CharField(max_length=512L, unique=True)
     description = models.CharField(max_length=512L, blank=True)
 

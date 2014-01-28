@@ -12,7 +12,7 @@ define([
 ], function($, _, Backbone, targetModel) {
   var targetList = Backbone.Collection.extend({
     initialize: function() {
-      this.url = '/pcatracking/api/v1/targets';
+      this.url = '/target';
       this.model = targetModel;
     }
   });
