@@ -207,6 +207,9 @@ class PCAGrant(models.Model):
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
 
+    class Meta:
+        ordering = ['-funds']
+
     def __unicode__(self):
         return self.grant
 
