@@ -5,7 +5,7 @@ from django.contrib.gis.db import models
 
 class Governorate(models.Model):
     name = models.CharField(max_length=45L, unique=True)
-    area = models.MultiPointField(null=True, blank=True)
+    area = models.PolygonField(null=True, blank=True)
 
     objects = models.GeoManager()
 
@@ -16,7 +16,7 @@ class Governorate(models.Model):
 class Region(models.Model):
     governorate = models.ForeignKey(Governorate)
     name = models.CharField(max_length=45L, unique=True)
-    area = models.MultiPointField(null=True, blank=True)
+    area = models.PolygonField(null=True, blank=True)
 
     objects = models.GeoManager()
 
@@ -34,7 +34,7 @@ class Locality(models.Model):
     cas_code_un = models.CharField(max_length=11L)
     name = models.CharField(max_length=128L)
     cas_village_name = models.CharField(max_length=128L)
-    area = models.MultiPointField(null=True, blank=True)
+    area = models.PolygonField(null=True, blank=True)
 
     objects = models.GeoManager()
 
