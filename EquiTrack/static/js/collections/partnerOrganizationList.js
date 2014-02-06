@@ -12,7 +12,7 @@ define([
 ], function($, _, Backbone, partnerOrganizationModel) {
   var partnerOrganizationList = Backbone.Collection.extend({
     initialize: function() {
-      this.url = '/partner';
+      this.url = '/partners/partner';
       this.model = partnerOrganizationModel;
     }
   });

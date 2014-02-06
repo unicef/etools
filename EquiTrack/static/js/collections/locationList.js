@@ -12,7 +12,7 @@ define([
 ], function($, _, Backbone, locationModel) {
   var locationList = Backbone.Collection.extend({
     initialize: function() {
-      this.url = '/location';
+      this.url = '/partners/location';
       this.model = locationModel;
     }
   });

@@ -33,7 +33,8 @@ SUIT_CONFIG = {
             {'label': 'Governorate', 'model': 'locations.governorate'},
             {'label': 'Cazas', 'model': 'locations.region'},
             {'label': 'Localitys', 'model': 'locations.locality'},
-            {'label': 'Gateways', 'model': 'locations.location'},
+            {'label': 'Gateways', 'model': 'locations.gatewaytype'},
+            {'label': 'Locations', 'model': 'locations.location'},
         ]},
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
@@ -162,8 +163,6 @@ STATIC_ROOT = normpath(join(SITE_ROOT, 'assets'))
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-url
 STATIC_URL = '/static/'
-
-JQUERY_URL = STATIC_URL + 'js/lib/jquery.min.js'
 
 # See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
 STATICFILES_DIRS = (

@@ -13,9 +13,9 @@ admin.autodiscover()
 urlpatterns = patterns(
     '',
     url(r'^$', login_required(TemplateView.as_view(template_name='base.html'))),
-    (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
+    url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
 
-    url(r'', include('partners.urls')),
+    url(r'partners/', include('partners.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
