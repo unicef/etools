@@ -33,7 +33,8 @@ SUIT_CONFIG = {
             {'label': 'Governorate', 'model': 'locations.governorate'},
             {'label': 'Cazas', 'model': 'locations.region'},
             {'label': 'Localitys', 'model': 'locations.locality'},
-            {'label': 'Gateways', 'model': 'locations.location'},
+            {'label': 'Gateways', 'model': 'locations.gatewaytype'},
+            {'label': 'Locations', 'model': 'locations.location'},
         ]},
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
@@ -278,6 +279,7 @@ THIRD_PARTY_APPS = (
     'reversion',
     'rest_framework',
     'import_export',
+    'smart_selects',
 )
 
 # Apps specific for this project go here.

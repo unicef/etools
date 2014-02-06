@@ -9,7 +9,7 @@ define([
   'backbone'
 ], function($, _, Backbone){
   var locationModel = Backbone.Model.extend({
-    urlRoot: '/location',
+    urlRoot: '/partners/location',
     defaults: {
       location_id: null
     }
