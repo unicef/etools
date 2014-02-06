@@ -55,8 +55,9 @@ class GatewayType(models.Model):
 
 class Location(models.Model):
 
-    name = models.CharField(max_length=45L, blank=True)
-    locality = models.ForeignKey(Locality, blank=True, null=True)
+    name = models.CharField(max_length=45L)
+    locality = models.ForeignKey(Locality)
+    gateway = models.ForeignKey(GatewayType, verbose_name='Gateway type')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     p_code = models.CharField(max_length=32L, blank=True)
@@ -65,7 +66,7 @@ class Location(models.Model):
     objects = models.GeoManager()
 
     def __unicode__(self):
-        return self.name
+        return u'{} ({})'.format(self.name, self.gateway.name)
 
     class Meta:
         unique_together = ('name', 'p_code')

@@ -12,7 +12,7 @@ define([
 ], function($, _, Backbone, rrpOutputModel) {
   var rrpOutputList = Backbone.Collection.extend({
     initialize: function() {
-      this.url = '/output';
+      this.url = '/reports/output';
       this.model = rrpOutputModel;
     }
   });

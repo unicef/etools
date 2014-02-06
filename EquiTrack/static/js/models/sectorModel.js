@@ -9,7 +9,7 @@ define([
   'backbone'
 ], function($, _, Backbone){
   var sectorModel = Backbone.Model.extend({
-    urlRoot: '/sector',
+    urlRoot: '/partners/sector',
     defaults: {
       sector_id: null,
       name: null, 

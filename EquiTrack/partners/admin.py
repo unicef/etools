@@ -20,7 +20,6 @@ from reports.models import (
     Rrp5Output,
     IntermediateResult
 )
-#from locations.forms import LocationForm
 from partners.exports import PCAResource
 from partners.models import PartnerOrganization
 from partners.models import (
@@ -93,7 +92,6 @@ class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
 
 class PcaLocationInlineAdmin(admin.TabularInline):
     model = GwPCALocation
-    #form = LocationForm
     verbose_name = 'Location'
     verbose_name_plural = 'Locations'
     fields = (
@@ -102,9 +100,12 @@ class PcaLocationInlineAdmin(admin.TabularInline):
         'locality',
         'gateway',
         'location',
-
+        'view_location',
     )
-    extra = 0
+    readonly_fields = (
+        'view_location',
+    )
+    extra = 5
 
 
 class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
@@ -362,7 +363,7 @@ class PCAGatewayTypeFilter(admin.SimpleListFilter):
 
         if self.value():
             gateway = GatewayType.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(gateway=gateway).values_list('pca__id')
+            pca_ids = GwPCALocation.objects.filter(location__gateway=gateway).values_list('pca__id')
             return queryset.filter(id__in=pca_ids)
         return queryset
 
@@ -371,11 +372,14 @@ class PcaAdmin(ExportMixin, VersionAdmin):
     resource_class = PCAResource
     list_display = (
         'number',
+        'status',
         'created_date',
+        'start_date',
+        'end_date',
         'amendment',
+        'amended_at',
         'partner',
         'result_structure',
-        'status',
         'sectors',
         'title',
         'unicef_cash_budget',
