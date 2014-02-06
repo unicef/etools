@@ -3,11 +3,12 @@ __author__ = 'jcranwellward'
 import datetime
 from copy import deepcopy
 
-from django.db import models
+import reversion
+from django.db import models, transaction
 from django.core import urlresolvers
 
 from filer.fields.file import FilerFileField
-from smart_selects.db_fields import ChainedForeignKey, GroupedForeignKey
+from smart_selects.db_fields import ChainedForeignKey
 
 from funds.models import Grant
 from reports.models import (
@@ -80,6 +81,7 @@ class PCA(models.Model):
 
     amendment = models.BooleanField(default=False)
     amended_at = models.DateTimeField(null=True)
+    amendment_number = models.IntegerField(default=0)
     original = models.ForeignKey('PCA', null=True)
 
     class Meta:
@@ -106,18 +108,35 @@ class PCA(models.Model):
         return self.unicef_cash_budget + self.in_kind_amount_budget
     total_unicef_contribution.short_description = 'Total Unicef contribution budget'
 
-    def make_amendment(self):
+    def make_amendment(self, user):
+        """
+        Creates an amendment (new record) of this PCA copying
+        over all values and related objects, marks the existing
+        PCA as non current and creates a manual restore point.
+        The user who created the amendment is also captured.
+        """
+        with transaction.atomic(), reversion.create_revision():
 
-        original = self
-        original.current = False
-        original.save()
+            # make original as non current
+            original = self
+            original.current = False
+            original.save()
 
-        amendment = deepcopy(original)
-        amendment.pk = None
-        amendment.amendment = True
-        amendment.amended_at = datetime.datetime.now()
-        amendment.original = original
-        amendment.save()
+            # copy base properties to new object
+            amendment = deepcopy(original)
+            amendment.pk = None
+            amendment.amendment = True
+            amendment.amended_at = datetime.datetime.now()
+            amendment.amendment_number += 1  # increment amendment count
+            amendment.original = original
+            amendment.save()
+
+            # make manual revision point
+            reversion.set_user(user)
+            reversion.set_comment("Amendment {} created for PCA: {}".format(
+                self.amendment_numbert,
+                self.number)
+            )
 
         # copy over grants
         for grant in original.pcagrant_set.all():
@@ -157,6 +176,7 @@ class PCA(models.Model):
                 IndicatorProgress.objects.create(
                     pca_sector=new_sector,
                     indicator=pca_indicator.indicator,
+                    # programmed amount is cleared so a new amount can be set
                     programmed=0
                 )
 
@@ -175,7 +195,7 @@ class PCA(models.Model):
                 governorate=location.governorate,
                 region=location.region,
                 locality=location.locality,
-                gateway=location.gateway,
+                gateway=location.location.gateway,
                 location=location.location
             )
 

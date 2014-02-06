@@ -135,6 +135,16 @@ class PCAResource(resources.ModelResource):
 
         return row
 
+    def fill_pca_locations(self, row, pca):
+
+        for num, location in enumerate(pca.locations.all()):
+            num += 1
+
+            self.insert_column(row, 'Locality {}'.format(num), location.locality.name)
+            self.insert_column(row, 'Gateway Type {}'.format(num), location.gateway.name)
+
+        return row
+
     def fill_pca_row(self, row, pca):
 
         self.insert_column(row, 'Sectors', pca.sectors)
@@ -159,14 +169,6 @@ class PCAResource(resources.ModelResource):
         self.insert_column(row, 'Unicef cash budget', pca.unicef_cash_budget)
         self.insert_column(row, 'In kind amount budget', pca.in_kind_amount_budget)
         self.insert_column(row, 'Total budget', pca.total_cash)
-
-            # for num, location in enumerate(pca.gwpcalocation_set.all()):
-            #     num += 1
-            #     self.insert_column(row, 'Governorate {}'.format(num), location.governorate.name)
-            #     self.insert_column(row, 'Caza {}'.format(num), location.region.name)
-            #     self.insert_column(row, 'Locality {}'.format(num), location.locality.name)
-            #     self.insert_column(row, 'Gateway Type {}'.format(num), location.gateway.name)
-            #     self.insert_column(row, 'Location {}'.format(num), location.location.name)
 
         return row
 
@@ -198,6 +200,10 @@ class PCAResource(resources.ModelResource):
 
             self.fill_row(pca, fields)
 
+        for pca in queryset.iterator():
+
+            self.fill_pca_locations(fields, pca)
+
         self.headers = fields
 
         # Iterate without the queryset cache, to avoid wasting memory when
@@ -207,6 +213,7 @@ class PCAResource(resources.ModelResource):
             row = fields.copy()
 
             self.fill_row(pca, row)
+            self.fill_pca_locations(row, pca)
 
             rows.append(row)
 

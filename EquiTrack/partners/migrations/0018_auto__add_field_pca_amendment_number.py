@@ -1,30 +1,23 @@
 # -*- coding: utf-8 -*-
 import datetime
 from south.db import db
-from south.v2 import DataMigration
+from south.v2 import SchemaMigration
 from django.db import models
 
 
-class Migration(DataMigration):
+class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
-        # Note: Don't use "from appname.models import ModelName". 
-        # Use orm.ModelName to refer to models in this application,
-        # and orm['appname.ModelName'] for models in other applications.
+        # Adding field 'PCA.amendment_number'
+        db.add_column(u'partners_pca', 'amendment_number',
+                      self.gf('django.db.models.fields.IntegerField')(default=0),
+                      keep_default=False)
 
-        # create village gateway type
-        village, created = orm['locations.GatewayType'].objects.get_or_create(name='Village')
-        if created:
-            print "Village created"
-
-        # set all locations to village gateway type as default
-        for loc in orm['locations.Location'].objects.all():
-            loc.gateway = village
-            loc.save()
 
     def backwards(self, orm):
-        "Write your backwards methods here."
+        # Deleting field 'PCA.amendment_number'
+        db.delete_column(u'partners_pca', 'amendment_number')
+
 
     models = {
         u'auth.group': {
@@ -45,7 +38,7 @@ class Migration(DataMigration):
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Group']", 'symmetrical': 'False', 'blank': 'True'}),
+            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -53,7 +46,7 @@ class Migration(DataMigration):
             'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'}),
+            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Permission']"}),
             'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
         },
         u'contenttypes.contenttype': {
@@ -181,6 +174,7 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'PCA'},
             'amended_at': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'amendment': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'amendment_number': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'cash_for_supply_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'current': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
@@ -336,4 +330,3 @@ class Migration(DataMigration):
     }
 
     complete_apps = ['partners']
-    symmetrical = True
