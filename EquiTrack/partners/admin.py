@@ -376,7 +376,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         'created_date',
         'start_date',
         'end_date',
-        'amendment',
+        'amendment_number',
         'amended_at',
         'partner',
         'result_structure',
@@ -448,7 +448,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
 
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
-    created_date.admin_order_field = 'created_at'
+    created_date.admin_order_field = '-created_at'
 
     def queryset(self, request):
         return super(PcaAdmin, self).queryset(request).order_by(
@@ -458,7 +458,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
 
     def create_amendment(self, request, queryset):
         for pca in queryset:
-            pca.make_amendment()
+            pca.make_amendment(request.user)
         self.message_user(request, "{} PCA amended.".format(queryset.count()))
 
 
