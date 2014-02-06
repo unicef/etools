@@ -7,6 +7,7 @@ from django.db import models
 from django.core import urlresolvers
 
 from filer.fields.file import FilerFileField
+from smart_selects.db_fields import ChainedForeignKey, GroupedForeignKey
 
 from funds.models import Grant
 from reports.models import (
@@ -171,7 +172,6 @@ class PCA(models.Model):
         for location in original.locations.all():
             GwPCALocation.objects.create(
                 pca=amendment,
-                name=location.name,
                 governorate=location.governorate,
                 region=location.region,
                 locality=location.locality,
@@ -217,18 +217,50 @@ class PCAGrant(models.Model):
 class GwPCALocation(models.Model):
 
     pca = models.ForeignKey(PCA, related_name='locations')
-    name = models.CharField(max_length=128L)
-    governorate = models.ForeignKey(Governorate, null=True, blank=True)
-    region = models.ForeignKey(Region, null=True, blank=True, verbose_name='Caza')
-    locality = models.ForeignKey(Locality, null=True, blank=True)
+    governorate = models.ForeignKey(Governorate)
+    region = ChainedForeignKey(
+        Region,
+        chained_field="governorate",
+        chained_model_field="governorate",
+        show_all=False,
+        auto_choose=True,
+    )
+    locality = ChainedForeignKey(
+        Locality,
+        chained_field="region",
+        chained_model_field="region",
+        show_all=False,
+        auto_choose=True,
+    )
     gateway = models.ForeignKey(GatewayType, null=True, blank=True)
-    location = models.ForeignKey(Location)
+    location = ChainedForeignKey(
+        Location,
+        chained_field="locality",
+        chained_model_field="locality",
+        show_all=False,
+        auto_choose=True
+    )
 
     class Meta:
         verbose_name = 'Activity Location'
 
     def __unicode__(self):
         return self.location.p_code
+
+    def view_location(self):
+        if self.id:
+            url_name = 'admin:{app_label}_{model_name}_{action}'.format(
+                app_label=self.location._meta.app_label,
+                model_name=self.location._meta.module_name,
+                action='change'
+            )
+            location_url = urlresolvers.reverse(url_name, args=(self.location.id,))
+            return u'<a class="btn btn-primary default" ' \
+                   u'onclick="return showAddAnotherPopup(this);" ' \
+                   u'href="{}" target="_blank">View</a>'.format(location_url)
+        return u''
+    view_location.allow_tags = True
+    view_location.short_description = 'View Location'
 
 
 class PCASector(models.Model):

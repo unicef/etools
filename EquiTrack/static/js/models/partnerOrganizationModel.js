@@ -9,7 +9,7 @@ define([
   'backbone'
 ], function($, _, Backbone){
   var partnerOrganizationModel = Backbone.Model.extend({
-    urlRoot: '/partner',
+    urlRoot: '/partners/partner',
     defaults: {
       partner_id: null,
       name: null, 
