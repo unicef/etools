@@ -13,7 +13,7 @@ DJANGO_ROOT = dirname(dirname(abspath(__file__)))
 SITE_ROOT = dirname(DJANGO_ROOT)
 
 # for Django 1.6
-BASE_DIR = SITE_ROOT
+BASE_DIR = dirname(SITE_ROOT)
 
 HEROKU_APP_NAME = "equitrack"
 
