@@ -5,3 +5,6 @@ static
 local.py
 local.pyc
 node_modules
+deployment
+docs
+screenshots
