@@ -1,1 +1,1 @@
-web: waitress-serve --port=$PORT EquiTrack.wsgi:application
+web: waitress-serve --port=$PORT EquiTrack.EquiTrack.wsgi:application
