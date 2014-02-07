@@ -15,6 +15,8 @@ SITE_ROOT = dirname(DJANGO_ROOT)
 # for Django 1.6
 BASE_DIR = SITE_ROOT
 
+HEROKU_APP_NAME = "equitrack"
+
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
 SUIT_CONFIG = {
