@@ -34,7 +34,11 @@ INSTALLED_APPS = INSTALLED_APPS + (
 )
 ########## END DEBUG CONFIGURATION
 
+SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
+
 ALLOWED_HOSTS = ['equitrack.herokuapp.com', 'equitrack.uniceflebanon.org']
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
@@ -54,16 +58,21 @@ DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 REDIS_URL = get_env_setting('REDISCLOUD_URL')
 redis_url = urlparse(REDIS_URL)
 
-if redis_url:
-    CACHES = {
-        'default': {
-            'BACKEND': 'redis_cache.RedisCache',
-            'LOCATION': '{0}:{1}'.format(redis_url.hostname, redis_url.port),
-            'OPTIONS': {
-                'DB': 0,
-                'PASSWORD': redis_url.password,
-                'PARSER_CLASS': 'redis.connection.HiredisParser'
-            },
-        }
-    }
+CACHES = {
+    'default': {
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': '{0}:{1}'.format(redis_url.hostname, redis_url.port),
+        'OPTIONS': {
+            'DB': 0,
+            'PASSWORD': redis_url.password,
+            'PARSER_CLASS': 'redis.connection.HiredisParser'
+        },
+    },
+    # Long cache timeout for staticfiles, since this is used heavily by the optimizing storage.
+    "staticfiles": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "TIMEOUT": 60 * 60 * 24 * 365,
+        "LOCATION": "staticfiles",
+    },
+}
 ########## END CACHE CONFIGURATION
