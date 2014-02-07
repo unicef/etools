@@ -2,7 +2,7 @@ __author__ = 'jcranwellward'
 
 import tablib
 
-from collections import OrderedDict
+#from collections import OrderedDict
 from django.utils.datastructures import SortedDict
 
 from import_export import resources
