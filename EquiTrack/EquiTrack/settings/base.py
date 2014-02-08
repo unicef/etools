@@ -292,7 +292,6 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     # Database migration helpers:
     'south',
-    'gunicorn',
     'filer',
     'easy_thumbnails',
     'storages',
@@ -310,7 +309,6 @@ LOCAL_APPS = (
     'locations',
     'tracker',
     'partners',
-
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
