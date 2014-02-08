@@ -17,7 +17,7 @@ BASE_DIR = SITE_ROOT
 
 HEROKU_APP_NAME = "equitrack"
 
-HEROKU_BUILDPACK_URL = "https://github.com/heroku/heroku-buildpack-python.git"
+HEROKU_BUILDPACK_URL = "https://github.com/cyberdelia/heroku-geo-buildpack.git#1.1"
 
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
