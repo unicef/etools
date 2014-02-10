@@ -134,7 +134,7 @@ class PCA(models.Model):
             # make manual revision point
             reversion.set_user(user)
             reversion.set_comment("Amendment {} created for PCA: {}".format(
-                self.amendment_numbert,
+                self.amendment_number,
                 self.number)
             )
 
