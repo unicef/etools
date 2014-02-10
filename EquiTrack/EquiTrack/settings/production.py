@@ -35,7 +35,12 @@ SERVER_EMAIL = EMAIL_HOST_USER
 ########## END EMAIL CONFIGURATION
 
 ########## DATABASE CONFIGURATION
-DATABASES = {}
+DATABASES = {
+    'default': dj_database_url.config(
+        env="WERCKER_POSTGRESQL_URL",
+        default='postgis://db-user:@localhost:5432/equitrack'
+    )
+}
 ########## END DATABASE CONFIGURATION
 
 

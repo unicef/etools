@@ -178,8 +178,24 @@ FILER_STORAGES = {
 }
 ########## END MEDIA CONFIGURATION
 
+
+########## STATIC FILE CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
+STATIC_ROOT = normpath(join(SITE_ROOT, 'static'))
+
+# See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
+STATICFILES_DIRS = (
+    normpath(join(SITE_ROOT, 'assets')),
+)
+
+# See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#staticfiles-finders
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
+
 # The baseUrl to pass to the r.js optimizer.
-REQUIRE_BASE_URL = STATIC_URL + "js"
+REQUIRE_BASE_URL = normpath(join(STATIC_ROOT, 'js'))
 
 # The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
 # A sensible value would be 'app.build.js'. Leave blank to use the built-in default build profile.
@@ -205,21 +221,6 @@ REQUIRE_EXCLUDE = ("build.txt",)
 # It can also be a path to a custom class that subclasses require.environments.Environment
 # and defines some "args" function that returns a list with the command arguments to execute.
 REQUIRE_ENVIRONMENT = "auto"
-
-########## STATIC FILE CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
-STATIC_ROOT = normpath(join(SITE_ROOT, 'assets'))
-
-# See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
-STATICFILES_DIRS = (
-    normpath(join(SITE_ROOT, 'static')),
-)
-
-# See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#staticfiles-finders
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-)
 ########## END STATIC FILE CONFIGURATION
 
 
@@ -305,10 +306,6 @@ DJANGO_APPS = (
     # 'django.contrib.humanize',
 
     # Admin panel and documentation:
-
-    #'grappelli.dashboard',
-    #'grappelli',
-    #'nested_inlines',
     'autocomplete_light',
     'suit',
     'django.contrib.admin',

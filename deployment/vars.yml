@@ -1,0 +1,10 @@
+project_name: equitrack
+project_root: /var/local/sites/${project_name}
+project_port: 8000
+source_location: "/vagrant/"
+source_location_auto_remove: false
+dbuser: ${project_name}
+dbpassword: 4EjuzuHaBeyAPhuxeq3wragA6ECRUk9SUSpaspEdrUnu9rAXEpurE92ucRefr5fr
+dbname: ${project_name}
+database_url: postgis://{{dbuser}}:{{dbpassword}}@localhost:5432/{{dbname}}
+locale: en_US.UTF-8

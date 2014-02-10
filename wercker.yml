@@ -3,6 +3,11 @@ box: wercker/python
 build:
   # The steps that will be executed on build
   steps:
+
+    - script:
+        name: set postgis connection string
+        code: |
+          export WERCKER_POSTGRESQL_URL="postgis://$WERCKER_POSTGRESQL_USERNAME:$WERCKER_POSTGRESQL_PASSWORD@$WERCKER_POSTGRESQL_HOST:$WERCKER_POSTGRESQL_PORT/$WERCKER_POSTGRESQL_DATABASE"
     # A step that sets up the python virtual environment
     - install-packages:
         packages: postgresql-client-9.3 postgis
@@ -30,4 +35,4 @@ build:
     - script:
         name: run django tests
         code: |
-          python manage.py test
+          python ./EquiTrack/manage.py test
