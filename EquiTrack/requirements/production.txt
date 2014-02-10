@@ -2,6 +2,7 @@
 #	production that isn't in development.
 -r base.txt
 
+gunicorn==18.0
 django-herokuapp
 waitress
 raven
