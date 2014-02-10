@@ -1,0 +1,161 @@
+---
+
+- name: Install required system packages.
+  action: apt pkg={{item}} state=installed update-cache=yes
+  sudo: yes
+  with_items:
+    - libevent-dev
+    - nginx
+    - binutils
+    - libproj-dev
+    - gdal-bin
+    - libgeos-dev
+    - python3
+    - python3-dev
+    - python3-psycopg2
+    - python3-setuptools
+    - postgresql-server-dev-9.1
+
+- name: Create the project directory.
+  sudo: yes
+  action: file state=directory path={{project_root}}
+
+- name: Create user.
+  sudo: yes
+  action: user home={{project_root}}/home/ name={{project_name}} state=present
+
+- name: Update the project directory.
+  sudo: yes
+  action: file group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}
+
+- name: Update the project/src directory.
+  sudo: yes
+  action: file group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}/src
+
+- name: Update the project/media directory.
+  sudo: yes
+  action: file group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}/media
+
+- name: Update the project/static directory.
+  sudo: yes
+  action: file group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}/static
+
+- name: Change project directory owner.
+  sudo: yes
+  action: shell chown -R {{project_name}}:{{project_name}} {{project_root}}
+
+- name: Put source files in correct location
+  sudo: yes
+  action: shell cp -R {{source_location}}/* {{project_root}}/src
+  sudo: yes
+  sudo_user: "{{project_name}}"
+
+- name: Remove files from original source location
+  sudo: yes
+  action: shell rm -rf {{source_location}}
+  when: source_location_auto_remove == "true"
+
+- name: Create the run directory.
+  sudo: yes
+  action: file state=directory path={{project_root}}/run group={{project_name}} owner={{project_name}}
+
+- name: Ensure app start script exists.
+  sudo: yes
+  action: template src=gunicorn_start.sh.j2 dest={{project_root}}/run/gunicorn_start
+
+- name: Set permissions for app script
+  sudo: yes
+  action: file path={{project_root}}/run/gunicorn_start mode=0755 owner={{project_name}} group={{project_name}}
+
+- name: Install app scripts.
+  sudo: yes
+  action: template src=gunicorn.conf.j2 dest=/etc/supervisor/conf.d/{{project_name}}_gunicorn.conf
+
+- name: ensure pip for python 3 is installed
+  sudo: yes
+  action: shell easy_install3 pip
+
+- name: ensure virtualenv is installed
+  sudo: yes
+  action: shell pip install virtualenv
+
+- name: ensure required packages are installed.
+  sudo: yes
+  action: pip requirements={{project_root}}/src/requirements.txt virtualenv={{project_root}}/venv/ virtualenv_command=virtualenv-3.2
+
+- name: ensure right permissions
+  action: file group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}/venv
+  sudo: yes
+
+- name: ensure setproctitle is installed.
+  sudo: yes
+  action: pip name=setproctitle virtualenv={{project_root}}/venv/ virtualenv_command=virtualenv-3.2
+
+- name: ensure owner of content
+  action: file state=directory group={{project_name}} owner={{project_name}} recurse=yes path={{project_root}}
+  sudo: yes
+
+- name: sync database
+  action: django_manage command=syncdb app_path={{project_root}}/src settings={{project_name}}.settings virtualenv={{project_root}}/venv
+  sudo: yes
+  sudo_user: "{{project_name}}"
+  environment:
+    WERCKER_POSTGRESQL_URL: "{{database_url}}"
+
+- name: ensure initial_data file was not loaded before
+  action: stat path={{project_root}}/run/initial_data_loaded
+  register: inital_data
+  sudo: yes
+  sudo_user: "{{project_name}}"
+  tags:
+    - fixture
+
+- name: ensure inital_data was loaded
+  action: django_manage command=loaddata fixtures={{item}} app_path={{project_root}}/src settings={{project_name}}.settings virtualenv={{project_root}}/venv
+  with_items:
+    - data/locations.json
+    - data/users.json
+  sudo: yes
+  sudo_user: "{{project_name}}"
+  environment:
+    WERCKER_POSTGRESQL_URL: "{{database_url}}"
+  when: inital_data.stat.exists == false
+  tags:
+    - fixture
+
+- name: mark initial_data as loaded
+  action: shell touch {{project_root}}/run/initial_data_loaded
+  sudo: yes
+  sudo_user: "{{project_name}}"
+  tags:
+    - fixture
+  when: inital_data.stat.exists == false
+
+- name: make sure app is present
+  sudo: yes
+  action: supervisorctl name={{project_name}} state=present
+
+- name: app is started
+  sudo: yes
+  action: supervisorctl name={{project_name}} state=restarted
+
+- name: remove default nginx site
+  sudo: yes
+  action: file path=/etc/nginx/sites-enabled/default state=absent
+
+- name: Install nginx configuration file.
+  sudo: yes
+  action: template src=nginx.conf.j2 dest=/etc/nginx/sites-enabled/{{project_name}}
+
+- name: restart nginx
+  action: service name=nginx state=restarted
+  sudo: yes
+
+- name: collect static
+  action: django_manage command=collectstatic app_path={{project_root}}/src settings={{project_name}}.settings virtualenv={{project_root}}/venv
+  environment:
+    WERCKER_POSTGRESQL_URL: "{{database_url}}"
+  sudo: yes
+  sudo_user: "{{project_name}}"
+  tags:
+    - static
