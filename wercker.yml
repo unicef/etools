@@ -8,7 +8,7 @@ build:
         packages: postgresql-client-9.3 postgis
 
     # Use this virtualenv step for python 3.2
-    - virtualenv
+    - virtualenv:
          name: setup virtual environment
          python_location: /usr/bin/python3.2
 
