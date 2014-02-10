@@ -27,3 +27,4 @@
       - python-apt
       - python-pycurl
       - python-software-properties
+      - git

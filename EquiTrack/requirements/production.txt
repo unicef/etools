@@ -3,6 +3,4 @@
 -r base.txt
 
 gunicorn==18.0
-django-herokuapp
-waitress
 raven

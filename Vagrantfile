@@ -56,8 +56,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # information on available options.
 
   config.vm.provision :ansible do |ansible|
-    ansible.playbook = "site.yml"
-    ansible.inventory_path = "vagrant.ini"
+    ansible.playbook = "deployment/site.yml"
     ansible.verbose = 'v'
   end
 
