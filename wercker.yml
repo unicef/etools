@@ -8,6 +8,7 @@ build:
         name: set postgis connection string
         code: |
           export WERCKER_POSTGRESQL_URL="postgis://$WERCKER_POSTGRESQL_USERNAME:$WERCKER_POSTGRESQL_PASSWORD@$WERCKER_POSTGRESQL_HOST:$WERCKER_POSTGRESQL_PORT/$WERCKER_POSTGRESQL_DATABASE"
+
     # A step that sets up the python virtual environment
     - install-packages:
         packages: postgresql-client-9.3 postgis
@@ -30,6 +31,10 @@ build:
         code: |
           echo "python version $(python --version) running"
           echo "pip version $(pip --version) running"
+
+    - script:
+        name: set django settings file
+        code: export DJANGO_SETTINGS_MODULE="EquiTrack.settings.production"
 
     - script:
         name: run django tests
