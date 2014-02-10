@@ -326,6 +326,7 @@ THIRD_PARTY_APPS = (
     'import_export',
     'smart_selects',
     'herokuapp',
+    'gunicorn',
 )
 
 # Apps specific for this project go here.
