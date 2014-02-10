@@ -10,10 +10,10 @@
     - libproj-dev
     - gdal-bin
     - libgeos-dev
-    - python3
-    - python3-dev
-    - python3-psycopg2
-    - python3-setuptools
+    - python
+    - python-dev
+    - python-psycopg2
+    - python-setuptools
     - postgresql-server-dev-9.1
 
 - name: Create the project directory.
@@ -81,7 +81,7 @@
 
 - name: ensure required packages are installed.
   sudo: yes
-  action: pip requirements={{project_root}}/src/requirements.txt virtualenv={{project_root}}/venv/ virtualenv_command=virtualenv-3.2
+  action: pip requirements={{project_root}}/src/requirements.txt virtualenv={{project_root}}/venv/ virtualenv_command=virtualenv
 
 - name: ensure right permissions
   action: file group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}/venv
@@ -89,7 +89,7 @@
 
 - name: ensure setproctitle is installed.
   sudo: yes
-  action: pip name=setproctitle virtualenv={{project_root}}/venv/ virtualenv_command=virtualenv-3.2
+  action: pip name=setproctitle virtualenv={{project_root}}/venv/ virtualenv_command=virtualenv
 
 - name: ensure owner of content
   action: file state=directory group={{project_name}} owner={{project_name}} recurse=yes path={{project_root}}
