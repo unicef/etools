@@ -39,6 +39,7 @@ RAVEN_CONFIG = {
 
 INSTALLED_APPS = INSTALLED_APPS + (
     'raven.contrib.django.raven_compat',
+    'herokuapp',
 )
 ########## END DEBUG CONFIGURATION
 
@@ -53,6 +54,44 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 ########## END EMAIL CONFIGURATION
 
+####### S3 Storage setup ########
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+
+# Use Amazon S3 for static files storage.
+STATICFILES_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+AWS_AUTO_CREATE_BUCKET = True
+AWS_HEADERS = {
+    "Cache-Control": "public, max-age=86400",
+}
+AWS_S3_FILE_OVERWRITE = False
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_SECURE_URLS = True
+AWS_REDUCED_REDUNDANCY = False
+AWS_IS_GZIPPED = False
+
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#media-url
+MEDIA_URL = 'https://{}.s3.amazonaws.com/'.format(AWS_STORAGE_BUCKET_NAME)
+STATIC_URL = 'https://{}.s3.amazonaws.com/'.format(AWS_STORAGE_BUCKET_NAME)
+
+FILER_IS_PUBLIC_DEFAULT = False
+FILER_STORAGES = {
+    'public': {
+        'main': {
+            'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
+            'UPLOAD_TO': 'partners.utils.by_pca',
+        },
+    },
+    'private': {
+        'main': {
+            'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
+            'UPLOAD_TO': 'partners.utils.by_pca',
+        },
+    },
+}
 
 ########## DATABASE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
@@ -63,7 +102,7 @@ DATABASES['default']['ENGINE'] = 'django.contrib.gis.db.backends.postgis'
 
 
 ########## CACHE CONFIGURATION
-REDIS_URL = get_env_setting('REDISCLOUD_URL')
+REDIS_URL = os.environ.get('REDISCLOUD_URL', 'redis://localhost/')
 redis_url = urlparse(REDIS_URL)
 
 CACHES = {

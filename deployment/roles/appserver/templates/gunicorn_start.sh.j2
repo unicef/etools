@@ -5,7 +5,7 @@ DJANGODIR={{project_root}}/src                      # Django project directory
 USER={{project_name}}                               # the user to run as
 GROUP={{project_name}}                              # the group to run as
 NUM_WORKERS=3                                       # how many worker processes should Gunicorn spawn
-DJANGO_SETTINGS_MODULE={{project_name}}.settings.production    # which settings file should Django use
+DJANGO_SETTINGS_MODULE={{project_settings}}         # which settings file should Django use
 DJANGO_WSGI_MODULE={{project_name}}.wsgi            # WSGI module name
 DJANGO_STATIC_ROOT={{project_root}}/static          # custom location for django static files
 
@@ -16,7 +16,7 @@ cd $DJANGODIR
 source {{project_root}}/venv/bin/activate
 export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
 export PYTHONPATH=$DJANGODIR:$PYTHONPATH
-export WERCKER_POSTGRESQL_URL={{database_url}}
+export DATABASE_URL={{database_url}}
 export DJANGO_DEBUG="False"
 export DJANGO_ALLOWED_HOST={{hostname}}
 
