@@ -3,15 +3,15 @@ box: wercker/python
 build:
   # The steps that will be executed on build
   steps:
+  
+    # A step that sets up the python virtual environment
+    - install-packages:
+        packages: postgresql-client-9.3 postgis
 
     - script:
         name: set postgis connection string
         code: |
           export DATABASE_URL="postgis://$WERCKER_POSTGRESQL_USERNAME:$WERCKER_POSTGRESQL_PASSWORD@$WERCKER_POSTGRESQL_HOST:$WERCKER_POSTGRESQL_PORT/$WERCKER_POSTGRESQL_DATABASE"
-
-    # A step that sets up the python virtual environment
-    - install-packages:
-        packages: postgresql-client-9.3 postgis
 
     # Use this virtualenv step for python 3.2
     - virtualenv:
