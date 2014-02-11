@@ -1,11 +1,14 @@
 """Production settings and globals."""
 
-from staging import *
+from base import *
+from staging import environ
 
 
 ########## HOST CONFIGURATION
 # See: https://docs.djangoproject.com/en/1.5/releases/1.5/#allowed-hosts-required-in-production
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+]
 ########## END HOST CONFIGURATION
 
 ########## EMAIL CONFIGURATION
@@ -35,18 +38,40 @@ SERVER_EMAIL = EMAIL_HOST_USER
 ########## END EMAIL CONFIGURATION
 
 ########## DATABASE CONFIGURATION
+import dj_database_url
 DATABASES = {
     'default': dj_database_url.config(
-        env="WERCKER_POSTGRESQL_URL",
+        env="DATABASE_URL",
         default='postgis://db-user:@localhost:5432/equitrack'
     )
 }
 ########## END DATABASE CONFIGURATION
 
+FILER_STORAGES = {
+    'public': {
+        'main': {
+            'ENGINE': 'filer.storage.PublicFileSystemStorage',
+            'OPTIONS': {
+                'location': MEDIA_ROOT,
+                'base_url': '/media/filer/',
+            },
+            'UPLOAD_TO': 'partners.utils.by_pca'
+        },
+    },
+    'private': {
+        'main': {
+            'ENGINE': 'filer.storage.PrivateFileSystemStorage',
+            'OPTIONS': {
+                'location': MEDIA_ROOT,
+                'base_url': '/media/filer/',
+            },
+            'UPLOAD_TO': 'partners.utils.by_pca'
+        },
+    },
+}
 
-########## CACHE CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
-CACHES = {}
-########## END CACHE CONFIGURATION
+MEDIA_URL = '/media/'
+STATIC_URL = '/static/'
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
+

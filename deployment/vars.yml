@@ -1,6 +1,7 @@
 project_name: EquiTrack
 project_root: /var/local/sites/${project_name}
 project_port: 8000
+project_settings: ${project_name}.settings.production
 hostname: localhost
 source_location: /vagrant/${project_name}
 source_location_auto_remove: false

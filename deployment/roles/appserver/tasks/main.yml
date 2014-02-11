@@ -96,11 +96,11 @@
   sudo: yes
 
 - name: sync database
-  action: django_manage command=syncdb app_path={{project_root}}/src settings={{project_name}}.settings virtualenv={{project_root}}/venv
+  action: django_manage command=syncdb app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
   sudo: yes
   sudo_user: "{{project_name}}"
   environment:
-    WERCKER_POSTGRESQL_URL: "{{database_url}}"
+    DATABASE_URL: "{{database_url}}"
 
 - name: ensure initial_data file was not loaded before
   action: stat path={{project_root}}/run/initial_data_loaded
@@ -111,14 +111,14 @@
     - fixture
 
 - name: ensure inital_data was loaded
-  action: django_manage command=loaddata fixtures={{item}} app_path={{project_root}}/src settings={{project_name}}.settings virtualenv={{project_root}}/venv
+  action: django_manage command=loaddata fixtures={{item}} app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
   with_items:
     - data/locations.json
     - data/users.json
   sudo: yes
   sudo_user: "{{project_name}}"
   environment:
-    WERCKER_POSTGRESQL_URL: "{{database_url}}"
+    DATABASE_URL: "{{database_url}}"
   when: inital_data.stat.exists == false
   tags:
     - fixture
@@ -152,9 +152,9 @@
   sudo: yes
 
 - name: collect static
-  action: django_manage command=collectstatic app_path={{project_root}}/src settings={{project_name}}.settings virtualenv={{project_root}}/venv
+  action: django_manage command=collectstatic app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
   environment:
-    WERCKER_POSTGRESQL_URL: "{{database_url}}"
+    DATABASE_URL: "{{database_url}}"
   sudo: yes
   sudo_user: "{{project_name}}"
   tags:

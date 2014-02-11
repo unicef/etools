@@ -37,11 +37,11 @@ server {
              application/atom+xml;
 
     location /static/ {
-        alias   {{project_root}}/static/;
+        alias   {{project_root}}/src/static/;
     }
 
     location /media/ {
-        alias   {{project_root}}/media/;
+        alias   {{project_root}}/src/media/;
     }
 
     location / {
