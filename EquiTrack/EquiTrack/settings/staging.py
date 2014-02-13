@@ -5,6 +5,10 @@ from urlparse import urlparse
 
 from base import *
 
+# Load the Heroku environment.
+from herokuapp.env import load_env
+load_env(__file__, "equitrack")
+
 # Normally you should not import ANYTHING from Django directly
 # into your settings, but ImproperlyConfigured is an exception.
 from django.core.exceptions import ImproperlyConfigured

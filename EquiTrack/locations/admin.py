@@ -24,7 +24,13 @@ class LocationAdmin(admin.GeoModelAdmin):
 
 
 class LocalityAdmin(admin.GeoModelAdmin):
-    search_fields = ('name',)
+    list_display = (
+        'name',
+        'cas_code',
+        'region',
+    )
+    search_fields = ('name', 'cas_code')
+    list_filter = ('region', 'cas_code')
 
 
 admin.site.register(models.Governorate, admin.GeoModelAdmin)
