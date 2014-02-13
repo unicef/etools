@@ -18,4 +18,4 @@ django-redis-cache==0.10.2
 hiredis==0.1.2
 boto==2.20.1
 fabric
-django-heroku
+django-herokuapp
