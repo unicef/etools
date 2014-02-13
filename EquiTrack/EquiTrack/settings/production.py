@@ -47,31 +47,5 @@ DATABASES = {
 }
 ########## END DATABASE CONFIGURATION
 
-FILER_STORAGES = {
-    'public': {
-        'main': {
-            'ENGINE': 'filer.storage.PublicFileSystemStorage',
-            'OPTIONS': {
-                'location': MEDIA_ROOT,
-                'base_url': '/media/filer/',
-            },
-            'UPLOAD_TO': 'partners.utils.by_pca'
-        },
-    },
-    'private': {
-        'main': {
-            'ENGINE': 'filer.storage.PrivateFileSystemStorage',
-            'OPTIONS': {
-                'location': MEDIA_ROOT,
-                'base_url': '/media/filer/',
-            },
-            'UPLOAD_TO': 'partners.utils.by_pca'
-        },
-    },
-}
-
-MEDIA_URL = '/media/'
-STATIC_URL = '/static/'
-
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
