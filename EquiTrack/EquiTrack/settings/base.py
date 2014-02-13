@@ -15,6 +15,10 @@ SITE_ROOT = dirname(DJANGO_ROOT)
 # for Django 1.6
 BASE_DIR = SITE_ROOT
 
+HEROKU_APP_NAME = "equitrack"
+
+HEROKU_BUILDPACK_URL = "https://github.com/ddollar/heroku-buildpack-multi.git"
+
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
 SUIT_CONFIG = {
@@ -134,55 +138,42 @@ USE_TZ = True
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
 MEDIA_ROOT = normpath(join(SITE_ROOT, 'media'))
 
-####### S3 Storage setup ########
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-
-# Use Amazon S3 for static files storage.
-STATICFILES_STORAGE = "require_s3.storage.OptimizedCachedStaticFilesStorage"
-
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_AUTO_CREATE_BUCKET = True
-AWS_HEADERS = {
-    "Cache-Control": "public, max-age=86400",
-}
-AWS_S3_FILE_OVERWRITE = False
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_SECURE_URLS = True
-AWS_REDUCED_REDUNDANCY = False
-AWS_IS_GZIPPED = False
-
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#media-url
-MEDIA_URL = 'https://{}.s3.amazonaws.com/'.format(AWS_STORAGE_BUCKET_NAME)
-FILER_IS_PUBLIC_DEFAULT = False
 FILER_STORAGES = {
     'public': {
         'main': {
-            'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
-            'UPLOAD_TO': 'partners.utils.by_pca',
+            'ENGINE': 'filer.storage.PublicFileSystemStorage',
+            'OPTIONS': {
+                'location': MEDIA_ROOT,
+                'base_url': '/media/filer/',
+            },
+            'UPLOAD_TO': 'partners.utils.by_pca'
         },
     },
     'private': {
         'main': {
-            'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
-            'UPLOAD_TO': 'partners.utils.by_pca',
+            'ENGINE': 'filer.storage.PrivateFileSystemStorage',
+            'OPTIONS': {
+                'location': MEDIA_ROOT,
+                'base_url': '/media/filer/',
+            },
+            'UPLOAD_TO': 'partners.utils.by_pca'
         },
     },
 }
+
+MEDIA_URL = '/media/'
+STATIC_URL = '/static/'
+
 ########## END MEDIA CONFIGURATION
 
 
 ########## STATIC FILE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
-STATIC_ROOT = normpath(join(SITE_ROOT, 'assets'))
-
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#static-url
-STATIC_URL = '/static/'
+STATIC_ROOT = normpath(join(SITE_ROOT, 'static'))
 
 # See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
 STATICFILES_DIRS = (
-    normpath(join(SITE_ROOT, 'static')),
+    normpath(join(SITE_ROOT, 'assets')),
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#staticfiles-finders
@@ -190,6 +181,34 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
+
+# The baseUrl to pass to the r.js optimizer.
+REQUIRE_BASE_URL = normpath(join(STATIC_ROOT, 'js'))
+
+# The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
+# A sensible value would be 'app.build.js'. Leave blank to use the built-in default build profile.
+# Set to False to disable running the default profile (e.g. if only using it to build Standalone
+# Modules)
+REQUIRE_BUILD_PROFILE = None
+
+# The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
+REQUIRE_JS = "main.js"
+
+# A dictionary of standalone modules to build with almond.js.
+# See the section on Standalone Modules, below.
+REQUIRE_STANDALONE_MODULES = {}
+
+# Whether to run django-require in debug mode.
+REQUIRE_DEBUG = DEBUG
+
+# A tuple of files to exclude from the compilation result of r.js.
+REQUIRE_EXCLUDE = ("build.txt",)
+
+# The execution environment in which to run r.js: auto, node or rhino.
+# auto will autodetect the environment and make use of node if available and rhino if not.
+# It can also be a path to a custom class that subclasses require.environments.Environment
+# and defines some "args" function that returns a list with the command arguments to execute.
+REQUIRE_ENVIRONMENT = "auto"
 ########## END STATIC FILE CONFIGURATION
 
 
@@ -275,10 +294,6 @@ DJANGO_APPS = (
     # 'django.contrib.humanize',
 
     # Admin panel and documentation:
-
-    #'grappelli.dashboard',
-    #'grappelli',
-    #'nested_inlines',
     'autocomplete_light',
     'suit',
     'django.contrib.admin',
@@ -288,7 +303,6 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     # Database migration helpers:
     'south',
-    'gunicorn',
     'filer',
     'easy_thumbnails',
     'storages',
@@ -296,7 +310,7 @@ THIRD_PARTY_APPS = (
     'rest_framework',
     'import_export',
     'smart_selects',
-    'herokuapp',
+    'gunicorn',
 )
 
 # Apps specific for this project go here.
@@ -304,9 +318,7 @@ LOCAL_APPS = (
     'funds',
     'reports',
     'locations',
-    'tracker',
     'partners',
-
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

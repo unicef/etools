@@ -74,6 +74,6 @@ class LocationView(ListAPIView):
         data = cache.get('locations')
         if not data or len(data) < self.get_queryset().count():
             response = super(LocationView, self).list(request, *args, **kwargs)
-            cache.set('locations', response.data, None)
+            cache.set('locations', response.data, 0)
             return response
         return Response(data)

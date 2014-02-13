@@ -1,0 +1,7 @@
+[program:{{project_name}}]
+command={{project_root}}/run/gunicorn_start                       ; Command to start app
+user={{project_name}}                                             ; User to run as
+stdout_logfile=/var/log/supervisor_gunicorn_{{project_name}}.log  ; Where to write log messages
+redirect_stderr=true                                              ; Save stderr in the same log
+autostart=true
+autorestart=true
