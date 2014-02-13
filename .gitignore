@@ -19,8 +19,10 @@ build
 
 *idea*
 
-EquiTrack/assets
+EquiTrack/static
 
 README.rst
 
 *.dump
+.vagrant
+vagrant_ansible_inventory_default
