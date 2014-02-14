@@ -66,7 +66,14 @@ class Location(models.Model):
     objects = models.GeoManager()
 
     def __unicode__(self):
-        return u'{} ({})'.format(self.name, self.gateway.name)
+        return u'{} ({} {})'.format(
+            self.name,
+            self.gateway.name,
+            "{}: {}".format(
+                'CERD' if self.gateway.name == 'School' else 'P Code',
+                self.p_code
+            )
+        )
 
     class Meta:
         unique_together = ('name', 'p_code')

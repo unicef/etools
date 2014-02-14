@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
 from reversion import VersionAdmin
-from import_export.admin import ExportMixin
+from import_export.admin import ExportMixin, ImportExportModelAdmin
 
 from funds.models import Grant, Donor
 from reports.admin import SectorListFilter
@@ -20,7 +20,7 @@ from reports.models import (
     Rrp5Output,
     IntermediateResult
 )
-from partners.exports import PCAResource
+from partners.exports import PCAResource, PartnerResource
 from partners.models import PartnerOrganization
 from partners.models import (
     PCA,
@@ -462,10 +462,14 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         self.message_user(request, "{} PCA amended.".format(queryset.count()))
 
 
+class PartnerAdmin(ImportExportModelAdmin):
+    resource_class = PartnerResource
+
+
 admin.site.register(GwPCALocation)
 admin.site.register(PCA, PcaAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
-admin.site.register(PartnerOrganization)
+admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 
 

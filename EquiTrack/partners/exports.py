@@ -7,7 +7,13 @@ from django.utils.datastructures import SortedDict
 
 from import_export import resources
 
-from partners.models import PCA
+from partners.models import PCA, PartnerOrganization
+
+
+class PartnerResource(resources.ModelResource):
+
+    class Meta:
+        model = PartnerOrganization
 
 
 class PCAResource(resources.ModelResource):

@@ -5,6 +5,7 @@
     - vars.yml
   roles:
     - common
+
 - hosts: all
   sudo: no
   vars_files:
