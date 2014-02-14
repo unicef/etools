@@ -1,0 +1,240 @@
+/*
+* tweaks for bootstrap to play
+* nicely with a 100% wide and 100%
+* hight map (leaflet map)
+*/
+html, body {
+  height: 100%;
+}
+
+.fill {
+  padding: 0px;
+  min-height: 100%;
+  height: 100%;
+  width: 100%;
+  min-width: 100%;
+}
+
+.fill-height {
+  padding: 0px;
+  min-height: 100%;
+  height: 100%;
+}
+
+body {
+  padding-top: 50px; /*for navbar*/
+  -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+  -moz-box-sizing: border-box; /* Firefox, other Gecko */
+  box-sizing: border-box; /* Opera/IE 8+ */
+}
+
+/*
+* end of bootstrap tweaks
+*/
+
+
+#dashboard-container {
+  margin-top:25px;
+}
+#map-container {
+  padding:0;
+  width: 100%;
+  height:100%;
+  min-height: 100%;
+  min-width: 100%;
+  display: block;
+}
+#map-column {
+  padding:0;
+  height:100%;
+  min-height: 100%;
+}
+#map-container #map {
+  padding:0;
+  width: 100%;
+  height:100%;
+  min-height: 100%;
+  min-width: 100%;
+  display: block;
+}
+#map-filter h3 {
+  margin:20px 0 10px 10px;
+  font-size:20px;
+}
+#map-filter {
+  background:#e6e6e6;
+  height:100%;
+  overflow:auto;
+}
+.sector-container .sector-top {
+  border:2px solid blue;
+  border-top-right-radius:15px;
+  border-top-left-radius:15px;
+  background:blue;
+}
+.sector-container .sector-bottom {
+  border:2px solid blue;
+  border-bottom-right-radius:15px;
+  border-bottom-left-radius:15px;
+  background:#fff;
+  margin-bottom:15px; 
+}
+.sector-container .sector-top .heading {
+  color:#fff;
+  font-weight:bold;
+  padding:7px 0px 4px 18px;
+}
+.sector-container .sector-bottom .content {
+  padding:15px;
+}
+#templates {
+  display:none;
+}
+.sector-block-hoverer {
+  border: 2px solid transparent;
+  border-radius:5px;
+  padding:5px
+}
+.sector-block-hoverer:hover {
+  border: 2px solid #555;
+  cursor:pointer;
+}
+.sector-block-container {
+  min-height:70px;
+}
+.target-name {
+  font-size:12px;
+}
+.target-bar {
+  height:50px
+}
+.target-month-block-hoverer {
+  float:left;
+  border: 2px solid transparent;
+  border-radius:5px;
+  background:#ddd;
+  margin-right:5px;
+}
+.target-month-block-hoverer:hover {
+  border: 2px solid #555;
+  cursor:pointer;
+}
+.monthly-target-bar {
+  width:100px;
+  height:350px;
+}
+.monthly-target-bar-label {
+  text-align:center;
+  font-size:12px;
+}
+.target-grey {
+  background:#eee;
+  padding:20px;
+}
+#target-progress-header {
+  margin-bottom:15px;
+  border-bottom: 1px solid #555;
+}
+#target-progress-headline h1 {
+  padding:5px;
+  font-size:18px;
+}
+#modal-info {
+  padding:20px;
+  text-align:center;
+  background:#ccc;
+  height:150px;
+  border-radius:10px;
+  border: 1px solid #999;
+  margin-bottom:10px;
+}
+#target-progress-unit-filter-container {
+  background:#ddd;
+  margin-bottom:7px;
+  padding:7px;
+}
+#target-progress-unit-filter-title {
+  margin:0 0 5px 0;
+}
+
+/* LEAFLET STYLES */
+.leaflet-cluster-anim .leaflet-marker-icon, .leaflet-cluster-anim .leaflet-marker-shadow {
+  -webkit-transition: -webkit-transform 0.2s ease-out, opacity 0.2s ease-in;
+  -moz-transition: -moz-transform 0.2s ease-out, opacity 0.2s ease-in;
+  -o-transition: -o-transform 0.2s ease-out, opacity 0.2s ease-in;
+  transition: transform 0.2s ease-out, opacity 0.2s ease-in;
+}
+.marker-cluster-small {
+	background-color: rgba(181, 226, 140, 0.6);
+}
+.marker-cluster-small div {
+	background-color: rgba(110, 204, 57, 0.6);
+}
+.marker-cluster-medium {
+	background-color: rgba(241, 211, 87, 0.6);
+}
+.marker-cluster-medium div {
+	background-color: rgba(240, 194, 12, 0.6);
+}
+.marker-cluster-large {
+	background-color: rgba(253, 156, 115, 0.6);
+}
+.marker-cluster-large div {
+	background-color: rgba(241, 128, 23, 0.6);
+}
+/* IE 6-8 fallback colors */
+.leaflet-oldie .marker-cluster-small {
+	background-color: rgb(181, 226, 140);
+}
+.leaflet-oldie .marker-cluster-small div {
+	background-color: rgb(110, 204, 57);
+}
+.leaflet-oldie .marker-cluster-medium {
+	background-color: rgb(241, 211, 87);
+}
+.leaflet-oldie .marker-cluster-medium div {
+	background-color: rgb(240, 194, 12);
+}
+.leaflet-oldie .marker-cluster-large {
+	background-color: rgb(253, 156, 115);
+}
+.leaflet-oldie .marker-cluster-large div {
+	background-color: rgb(241, 128, 23);
+}
+.marker-cluster {
+	background-clip: padding-box;
+	border-radius: 20px;
+}
+.marker-cluster div {
+	width: 30px;
+	height: 30px;
+	margin-left: 5px;
+	margin-top: 5px;
+	text-align: center;
+	border-radius: 15px;
+	font: 12px "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+.marker-cluster span {
+	line-height: 30px;
+}
+.key-table {
+  border-spacing: 4px;
+  border-collapse: separate;  
+}
+.key-label {
+  font-size:12px;
+}
+hr { 
+  display: block; 
+  height: 1px;
+  border: 0; 
+  border-top: 1px solid #999;
+  margin: 1em 0;
+  padding: 0;
+}
+body .modal-dialog {
+  width: 60%; /* respsonsive width */
+}
+body .modal-header {
+  border-bottom: 1px solid #999;
+}
