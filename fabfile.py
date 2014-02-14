@@ -10,6 +10,11 @@ def get_db_dump(capture=False):
     local('curl -o latest.dump `heroku pgbackups:url`')
 
 
+def dump_local_db(name='equitrack'):
+
+    local('pg_dump -Fc --no-acl --no-owner -h localhost {} > latest.dump'.format(name))
+
+
 def load_db_dump(name='equitrack'):
 
     local('pg_restore --verbose --clean --no-acl --no-owner -h localhost -d {} latest.dump'.format(name))
