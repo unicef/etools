@@ -1,11 +1,14 @@
 """Production settings and globals."""
 
-from staging import *
+from base import *
+from staging import environ
 
 
 ########## HOST CONFIGURATION
 # See: https://docs.djangoproject.com/en/1.5/releases/1.5/#allowed-hosts-required-in-production
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+]
 ########## END HOST CONFIGURATION
 
 ########## EMAIL CONFIGURATION
@@ -35,17 +38,14 @@ SERVER_EMAIL = EMAIL_HOST_USER
 ########## END EMAIL CONFIGURATION
 
 ########## DATABASE CONFIGURATION
-DATABASES = {}
+import dj_database_url
+DATABASES = {
+    'default': dj_database_url.config(
+        env="DATABASE_URL",
+        default='postgis://db-user:@localhost:5432/equitrack'
+    )
+}
 ########## END DATABASE CONFIGURATION
 
+SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
-########## CACHE CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
-CACHES = {}
-########## END CACHE CONFIGURATION
-
-
-########## SECRET CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
-SECRET_KEY = get_env_setting('SECRET_KEY')
-########## END SECRET CONFIGURATION

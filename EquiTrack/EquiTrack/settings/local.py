@@ -31,8 +31,6 @@ DATABASES = {
         'USER': '',
     }
 }
-
-DATABASE_ROUTERS = ['tracker.router.MyAppRouter', ]
 ########## END DATABASE CONFIGURATION
 
 

@@ -1,0 +1,81 @@
+box: wercker/python
+# Build definition
+build:
+  # The steps that will be executed on build
+  steps:
+
+    # A step that sets up the python virtual environment
+    - install-packages:
+        packages: postgresql-client-9.3 postgis
+
+    - script:
+        name: set postgis connection string
+        code: |
+          export DATABASE_URL="postgis://$WERCKER_POSTGRESQL_USERNAME:$WERCKER_POSTGRESQL_PASSWORD@$WERCKER_POSTGRESQL_HOST:$WERCKER_POSTGRESQL_PORT/$WERCKER_POSTGRESQL_DATABASE"
+
+    # Use this virtualenv step for python 3.2
+    - virtualenv:
+         name: setup virtual environment
+
+    # A step that executes `pip install` command.
+    - pip-install
+
+    # # This pip-install clears the local wheel cache
+    # - pip-install:
+    #     clean_wheel_dir: true
+
+    # A custom script step, name value is used in the UI
+    # and the code value contains the command that get executed
+    - script:
+        name: echo python information
+        code: |
+          echo "python version $(python --version) running"
+          echo "pip version $(pip --version) running"
+
+    - script:
+        name: set django settings file
+        code: export DJANGO_SETTINGS_MODULE="EquiTrack.settings.production"
+
+    - script:
+        name: run django tests
+        code: |
+          python ./EquiTrack/manage.py test
+
+deploy:
+  steps:
+    - add-to-known_hosts:
+        hostname: $TARGET_MACHINE
+
+    - mktemp:
+        envvar: PRIVATEKEY_PATH
+    - create-file:
+        name: write key
+        filename: $PRIVATEKEY_PATH
+        content: $PEM_FILE_CONTENT
+        overwrite: true
+    - pip-install:
+        name: pip install ansible
+        requirements_file: ""
+        packages_list: "ansible"
+    - script:
+        name: Create /etc/ansible
+        code: |
+          sudo mkdir -p /etc/ansible
+          sudo chmod 777 /etc/ansible
+
+    - create-file:
+        name: create host file for ansible
+        filename: /etc/ansible/hosts
+        content: $TARGET_MACHINE
+        overwrite: true
+
+    - script:
+        name: Rsync source files
+        code: |
+          rsync -avz --rsh="ssh -i $PRIVATEKEY_PATH" `pwd`/* ubuntu@$TARGET_MACHINE:$REMOTE_SOURCE_DIR
+    - script:
+        name: run ansible
+        code: |
+          chmod 400 $PRIVATEKEY_PATH
+          cd deployment
+          ansible-playbook site.yml --private-key=$PRIVATEKEY_PATH --extra-vars "source_location=$REMOTE_SOURCE_DIR source_location_auto_remove=true hostname=$HOSTNAME"

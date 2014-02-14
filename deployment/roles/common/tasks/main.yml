@@ -1,0 +1,30 @@
+---
+
+- name: set locale to {{locale}}
+  action: command /usr/sbin/update-locale LANG={{locale}} LC_ALL={{locale}}
+  sudo: yes
+
+- name: add key for postgres apt repository
+  action: apt_key url=http://apt.postgresql.org/pub/repos/apt/ACCC4CF8.asc state=present
+  sudo: yes
+
+- name: add postgres apt repository
+  action: apt_repository repo='deb-src http://apt.postgresql.org/pub/repos/apt/ precise-pgdg main' state=present
+  sudo: yes
+
+- name: ensure ubuntugis ppa is available
+  action: apt_repository repo='ppa:ubuntugis/ppa'
+  sudo: yes
+
+- name: Install required system packages.
+  action: apt pkg={{item}} state=installed update-cache=yes state=installed
+  sudo: yes
+  with_items:
+      - build-essential
+      - python-setuptools
+      - python-pip
+      - supervisor
+      - python-apt
+      - python-pycurl
+      - python-software-properties
+      - git

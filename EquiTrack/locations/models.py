@@ -55,7 +55,7 @@ class GatewayType(models.Model):
 
 class Location(models.Model):
 
-    name = models.CharField(max_length=45L)
+    name = models.CharField(max_length=254L)
     locality = models.ForeignKey(Locality)
     gateway = models.ForeignKey(GatewayType, verbose_name='Gateway type')
     latitude = models.FloatField(null=True, blank=True)

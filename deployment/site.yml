@@ -1,6 +1,14 @@
 ---
-# file: site.yml
-- include: dbservers.yml
-- include: cacheservers.yml
-- include: appservers.yml
-- include: loadbalancers.yml
+- hosts: all
+  sudo: yes
+  vars_files:
+    - vars.yml
+  roles:
+    - common
+- hosts: all
+  sudo: no
+  vars_files:
+    - vars.yml
+  roles:
+    - dbserver
+    - appserver
