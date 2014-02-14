@@ -9,10 +9,10 @@ from locations.models import Location, GatewayType, Locality
 
 location_mapping = {
 
-    'name': 'Local_name',
-    'p_code': 'P_Code',
-    'longitude': 'Longitude',
-    'latitude': 'Latitude',
+    'name': 'Eng_nam',
+    'p_code': 'CERD',
+    'longitude': 'Long',
+    'latitude': 'Lat',
     #'point': 'POINT',
 }
 
@@ -54,14 +54,14 @@ class Command(BaseCommand):
                     skipped_points.append(field_values)
                     continue
 
-                print "Importing values:\n {}".format(field_values)
+                print "\nImporting values: {}".format(field_values)
 
-                cas_code = str(feat.get('CAS_code')).split('.')[0]
+                cad_code = str(feat.get('CAD_CODE')).split('.')[0]
 
                 try:
-                    locality = Locality.objects.get(cas_code=cas_code)
+                    locality = Locality.objects.get(cad_code=cad_code)
                 except Locality.DoesNotExist:
-                    print "Locality does not exist with Cas Code: {}".format(cas_code)
+                    print "Locality does not exist with Cad Code: {}".format(cad_code)
                     continue
 
                 location, created = Location.objects.get_or_create(
@@ -71,7 +71,7 @@ class Command(BaseCommand):
                     locality=locality
                 )
                 location.name = field_values['name']
-                location.p_code = field_values['p_code']
+                location.p_code = str(field_values['p_code'])
                 location.longitude = field_values['longitude']
                 location.latitude = field_values['latitude']
                 location.point = feat.geom.wkt
@@ -88,12 +88,3 @@ class Command(BaseCommand):
 
         print "{} points skipped".format(len(skipped_points))
         print "{} points imported".format(imported_points)
-
-
-
-        #
-        # lm = LayerMapping(Location, shape_file, location_mapping, transform=False, encoding='iso-8859-1')
-        #
-        # lm.save(strict=True, verbose=True)
-        #
-        # self.stdout.write('Successfull')
