@@ -1,10 +1,9 @@
 __author__ = 'jcranwellward'
 
+import os
+
 from filer.utils.generate_filename import by_date
 from filer.utils.files import get_valid_filename
-from django.utils.encoding import force_unicode, smart_str
-import datetime
-import os
 
 
 def by_pca(instance, filename):

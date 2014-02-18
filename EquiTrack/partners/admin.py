@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
 from reversion import VersionAdmin
-from import_export.admin import ExportMixin, ImportExportModelAdmin
+from import_export.admin import ExportMixin, DEFAULT_FORMATS
 
 from funds.models import Grant, Donor
 from reports.admin import SectorListFilter
@@ -20,8 +20,11 @@ from reports.models import (
     Rrp5Output,
     IntermediateResult
 )
-from partners.exports import PCAResource, PartnerResource
-from partners.models import PartnerOrganization
+from partners.exports import (
+    KMLFormat,
+    PCAResource,
+    PartnerResource,
+)
 from partners.models import (
     PCA,
     PCAFile,
@@ -34,7 +37,8 @@ from partners.models import (
     PCASectorGoal,
     PCASectorActivity,
     IndicatorProgress,
-    PCASectorImmediateResult
+    PCASectorImmediateResult,
+    PartnerOrganization
 )
 from locations.models import (
     Governorate,
@@ -45,7 +49,9 @@ from locations.models import (
 
 
 class SectorMixin(object):
-
+    """
+    Mixin class to get the sector from the admin URL
+    """
     model_admin_re = re.compile(r'^/admin/(?P<app>\w*)/(?P<model>\w*)/(?P<id>\w+)/$')
 
     def get_sector_from_request(self, request):
@@ -74,6 +80,9 @@ class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
     extra = 0
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        """
+        Only show IRs for the chosen Sector
+        """
         if db_field.rel.to is IntermediateResult:
             kwargs['queryset'] = self.get_sector(request).intermediateresult_set.all()
         return super(PcaIRInlineAdmin, self).formfield_for_foreignkey(
@@ -81,6 +90,9 @@ class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
         )
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+        """
+        Only show WBSs for the chosen Sector
+        """
         if db_field.rel.to is WBS:
             kwargs['queryset'] = WBS.objects.filter(
                 Intermediate_result__sector=self.get_sector(request)
@@ -128,6 +140,9 @@ class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
     extra = 0
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        """
+        Only show Indicators for the chosen Sector and Result Structure
+        """
         if db_field.rel.to is Indicator:
             kwargs['queryset'] = Indicator.objects.filter(
                 sector=self.get_sector(request),
@@ -145,6 +160,9 @@ class PcaGoalInlineAdmin(SectorMixin, admin.TabularInline):
     extra = 0
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        """
+        Only show CCCs for the chosen Sector
+        """
         if db_field.rel.to is Goal:
             kwargs['queryset'] = Goal.objects.filter(
                 sector=self.get_sector(request),
@@ -160,6 +178,9 @@ class PcaOutputInlineAdmin(SectorMixin, admin.TabularInline):
     extra = 0
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        """
+        Only show Outputs for the chosen Sector and Result Structure
+        """
         if db_field.rel.to is Rrp5Output:
             kwargs['queryset'] = Rrp5Output.objects.filter(
                 sector=self.get_sector(request),
@@ -175,6 +196,9 @@ class PcaActivityInlineAdmin(SectorMixin, admin.TabularInline):
     extra = 0
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        """
+        Only show Activities for the chosen Sector
+        """
         if db_field.rel.to is Activity:
             kwargs['queryset'] = Activity.objects.filter(
                 sector=self.get_sector(request),
@@ -370,6 +394,8 @@ class PCAGatewayTypeFilter(admin.SimpleListFilter):
 
 class PcaAdmin(ExportMixin, VersionAdmin):
     resource_class = PCAResource
+    # Add a custom export class KML exports
+    formats = DEFAULT_FORMATS + (KMLFormat,)
     list_display = (
         'number',
         'status',
@@ -462,7 +488,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         self.message_user(request, "{} PCA amended.".format(queryset.count()))
 
 
-class PartnerAdmin(ImportExportModelAdmin):
+class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = PartnerResource
 
 

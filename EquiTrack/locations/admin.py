@@ -26,7 +26,6 @@ class LocationAdmin(admin.GeoModelAdmin):
 class LocalityAdmin(admin.GeoModelAdmin):
     list_display = (
         'name',
-        'cas_code',
         'region',
     )
     search_fields = ('name', 'cas_code')
