@@ -50,22 +50,28 @@ class KMLFormat(Format):
                 data_copy['CAS_CODE'] = loc.locality.cas_code
                 data_copy['Gateway'] = loc.gateway.name
                 data_copy['Location Name'] = loc.location.name
-                template = loader.get_template("pca_kml_description.html")
-                context = Context({'data': data_copy})
-                description = template.render(context)
+                # template = loader.get_template("pca_kml_description.html")
+                # context = Context({'data': data_copy})
+                # description = template.render(context)
 
-                kml_doc.append(
-                    KML.Placemark(
-                        KML.name(data_copy['Number']),
-                        KML.description(description),
-                        KML.Point(
-                            KML.coordinates('{long},{lat}'.format(
-                                lat=loc.location.point.y,
-                                long=loc.location.point.x)
-                            ),
+                data = KML.ExtendedData()
+                for key, value in data_copy.items():
+                    data.append(
+                        KML.Data(KML.value(value), name=key)
+                    )
+
+                point = KML.Placemark(
+                    KML.name(data_copy['Number']),
+                    data,
+                    KML.Point(
+                        KML.coordinates('{long},{lat}'.format(
+                            lat=loc.location.point.y,
+                            long=loc.location.point.x)
                         ),
                     ),
                 )
+
+                kml_doc.append(point)
 
         return etree.tostring(etree.ElementTree(KML.kml(kml_doc)), pretty_print=True)
 
