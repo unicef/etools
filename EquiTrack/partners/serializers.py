@@ -16,6 +16,8 @@ class GWLocationSerializer(serializers.ModelSerializer):
     sector_id = serializers.CharField(source='pca.sector_id')
     latitude = serializers.CharField(source='location.point.y')
     longitude = serializers.CharField(source='location.point.x')
+    location_name = serializers.CharField(source='location.name')
+    location_type = serializers.CharField(source='location.gateway.name')
     gateway_name = serializers.CharField(source='gateway.name')
     gateway_id = serializers.CharField(source='gateway.id')
 

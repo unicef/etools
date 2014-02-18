@@ -1,13 +1,97 @@
 __author__ = 'jcranwellward'
 
 import tablib
+from lxml import etree
 
 #from collections import OrderedDict
 from django.utils.datastructures import SortedDict
+from django.template import Context, loader
 
 from import_export import resources
+from import_export.formats.base_formats import Format
 
-from partners.models import PCA, PartnerOrganization
+from pykml.factory import KML_ElementMaker as KML
+from pykml.factory import ATOM_ElementMaker as ATOM
+from pykml.factory import GX_ElementMaker as GX
+
+from partners.models import (
+    PCA,
+    GwPCALocation,
+    PartnerOrganization,
+)
+
+
+class KMLFormat(Format):
+
+    def get_title(self):
+        return self.get_extension()
+
+    def create_dataset(self, in_stream):
+        """
+        Create dataset from given string.
+        """
+        raise NotImplementedError()
+
+    def export_data(self, dataset):
+        """
+        Returns format representation for given dataset.
+        """
+        kml_doc = KML.Document(KML.name('PCA Locations'))
+
+        for pca_data in dataset.dict:
+
+            locations = GwPCALocation.objects.filter(pca__id=pca_data['ID'])
+
+            for loc in locations:
+
+                data_copy = pca_data.copy()
+                data_copy['Locality'] = loc.locality.name
+                data_copy['CAD_CODE'] = loc.locality.cad_code
+                data_copy['CAS_CODE'] = loc.locality.cas_code
+                data_copy['Gateway'] = loc.gateway.name
+                data_copy['Location Name'] = loc.location.name
+                template = loader.get_template("pca_kml_description.html")
+                context = Context({'data': data_copy})
+                description = template.render(context)
+
+                kml_doc.append(
+                    KML.Placemark(
+                        KML.name(data_copy['Number']),
+                        KML.description(description),
+                        KML.Point(
+                            KML.coordinates('{long},{lat}'.format(
+                                lat=loc.location.point.y,
+                                long=loc.location.point.x)
+                            ),
+                        ),
+                    ),
+                )
+
+        return etree.tostring(etree.ElementTree(KML.kml(kml_doc)), pretty_print=True)
+
+    def is_binary(self):
+        """
+        Returns if this format is binary.
+        """
+        return False
+
+    def get_read_mode(self):
+        """
+        Returns mode for opening files.
+        """
+        return 'rb'
+
+    def get_extension(self):
+        """
+        Returns extension for this format files.
+        """
+        return "kml"
+
+    def can_import(self):
+        return False
+
+    def can_export(self):
+        return True
 
 
 class PartnerResource(resources.ModelResource):
@@ -148,11 +232,13 @@ class PCAResource(resources.ModelResource):
 
             self.insert_column(row, 'Locality {}'.format(num), location.locality.name)
             self.insert_column(row, 'Gateway Type {}'.format(num), location.gateway.name)
+            self.insert_column(row, 'Location Name {}'.format(num), location.location.name)
 
         return row
 
     def fill_pca_row(self, row, pca):
 
+        self.insert_column(row, 'ID', pca.id)
         self.insert_column(row, 'Sectors', pca.sectors)
         self.insert_column(row, 'Number', pca.number)
         self.insert_column(row, 'Amendment', 'Yes' if pca.amendment else 'No')
@@ -206,10 +292,6 @@ class PCAResource(resources.ModelResource):
 
             self.fill_row(pca, fields)
 
-        for pca in queryset.iterator():
-
-            self.fill_pca_locations(fields, pca)
-
         self.headers = fields
 
         # Iterate without the queryset cache, to avoid wasting memory when
@@ -219,7 +301,6 @@ class PCAResource(resources.ModelResource):
             row = fields.copy()
 
             self.fill_row(pca, row)
-            self.fill_pca_locations(row, pca)
 
             rows.append(row)
 

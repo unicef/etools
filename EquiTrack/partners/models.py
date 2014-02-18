@@ -94,7 +94,9 @@ class PCA(models.Model):
             self.number
         )
         if self.amendment:
-            title = u'{} (Amendment)'.format(title)
+            title = u'{} (Amendment: {})'.format(
+                title, self.amendment
+            )
         return title
 
     @property
@@ -176,7 +178,6 @@ class PCA(models.Model):
                 IndicatorProgress.objects.create(
                     pca_sector=new_sector,
                     indicator=pca_indicator.indicator,
-                    # programmed amount is cleared so a new amount can be set
                     programmed=0
                 )
 
@@ -203,17 +204,13 @@ class PCA(models.Model):
         """
         Calculate total cash on save
         """
-        if self.partner_contribution_budget \
-            or self.unicef_cash_budget \
-            or self.in_kind_amount_budget:
-            self.total_cash = (
-                self.partner_contribution_budget +
-                self.unicef_cash_budget +
-                self.in_kind_amount_budget
-            )
-        else:
-            self.total_cash = 0
+        self.total_cash = (
+            self.partner_contribution_budget or 0 +
+            self.unicef_cash_budget or 0 +
+            self.in_kind_amount_budget or 0
+        )
 
+        # populate sectors display string
         if self.pcasector_set.all().count():
             self.sectors = ", ".join(
                 [sector.sector.name for sector in self.pcasector_set.all()]
@@ -265,13 +262,19 @@ class GwPCALocation(models.Model):
         verbose_name = 'Activity Location'
 
     def __unicode__(self):
-        return self.location.p_code
+        return u'{} -> {} -> {} -> {} ({})'.format(
+            self.governorate.name,
+            self.region.name,
+            self.locality.name,
+            self.location.name,
+            self.location.gateway.name
+        )
 
     def view_location(self):
         if self.id:
             url_name = 'admin:{app_label}_{model_name}_{action}'.format(
                 app_label=self.location._meta.app_label,
-                model_name=self.location._meta.module_name,
+                model_name=self.location._meta.model_name,
                 action='change'
             )
             location_url = urlresolvers.reverse(url_name, args=(self.location.id,))
@@ -302,7 +305,7 @@ class PCASector(models.Model):
         if self.id:
             url_name = 'admin:{app_label}_{model_name}_{action}'.format(
                 app_label=self._meta.app_label,
-                model_name=self._meta.module_name,
+                model_name=self._meta.model_name,
                 action='change'
             )
             changeform_url = urlresolvers.reverse(url_name, args=(self.id,))

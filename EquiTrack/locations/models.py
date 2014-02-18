@@ -60,7 +60,7 @@ class Location(models.Model):
     gateway = models.ForeignKey(GatewayType, verbose_name='Gateway type')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
-    p_code = models.CharField(max_length=32L, blank=True)
+    p_code = models.CharField(max_length=32L, blank=True, null=True)
 
     point = models.PointField(null=True, blank=True)
     objects = models.GeoManager()
@@ -71,7 +71,7 @@ class Location(models.Model):
             self.gateway.name,
             "{}: {}".format(
                 'CERD' if self.gateway.name == 'School' else 'P Code',
-                self.p_code
+                self.p_code if self.p_code else ''
             )
         )
 
