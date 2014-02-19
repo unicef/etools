@@ -26,3 +26,11 @@ README.rst
 *.dump
 .vagrant
 vagrant_ansible_inventory_default
+
+*.cpg
+
+*.dbf
+
+*.shp
+
+*.shx

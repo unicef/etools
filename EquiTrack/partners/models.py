@@ -95,7 +95,7 @@ class PCA(models.Model):
         )
         if self.amendment:
             title = u'{} (Amendment: {})'.format(
-                title, self.amendment
+                title, self.amendment_number
             )
         return title
 
@@ -204,11 +204,16 @@ class PCA(models.Model):
         """
         Calculate total cash on save
         """
-        self.total_cash = (
-            self.partner_contribution_budget or 0 +
-            self.unicef_cash_budget or 0 +
-            self.in_kind_amount_budget or 0
-        )
+        if self.partner_contribution_budget \
+            or self.unicef_cash_budget \
+            or self.in_kind_amount_budget:
+            self.total_cash = (
+                self.partner_contribution_budget +
+                self.unicef_cash_budget +
+                self.in_kind_amount_budget
+            )
+        else:
+            self.total_cash = 0
 
         # populate sectors display string
         if self.pcasector_set.all().count():
