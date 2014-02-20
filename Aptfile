@@ -1,0 +1,3 @@
+# for fiona and other geo libs
+libgdal-dev
+
