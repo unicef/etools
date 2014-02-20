@@ -12,7 +12,7 @@
     - libgdal-dev
     - libgeos-dev
     - libxml2-dev
-    - libxslt-dev
+    - libxslt1-dev
     - python
     - python-dev
     - python-psycopg2
