@@ -1,4 +1,2 @@
-https://github.com/ddollar/heroku-buildpack-apt
-https://github.com/JasonSanford/heroku-buildpack-python-geos.git
 https://github.com/cyberdelia/heroku-geo-buildpack.git#1.1
 https://github.com/heroku/heroku-buildpack-python.git
