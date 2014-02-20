@@ -85,4 +85,4 @@ deploy:
         code: |
           chmod 400 $PRIVATEKEY_PATH
           cd deployment
-          ansible-playbook site.yml --private-key=$PRIVATEKEY_PATH --extra-vars "source_location=$REMOTE_SOURCE_DIR source_location_auto_remove=true hostname=$HOSTNAME"
+          ansible-playbook site.yml -vvv --private-key=$PRIVATEKEY_PATH --extra-vars "source_location=$REMOTE_SOURCE_DIR source_location_auto_remove=true hostname=$HOSTNAME"
