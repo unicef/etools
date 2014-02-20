@@ -4,7 +4,6 @@ from os import environ
 from urlparse import urlparse
 
 from base import *
-
 # Load the Heroku environment.
 from herokuapp.env import load_env
 load_env(__file__, "equitrack")
