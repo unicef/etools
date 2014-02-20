@@ -51,15 +51,18 @@ deploy:
 
     - mktemp:
         envvar: PRIVATEKEY_PATH
+
     - create-file:
         name: write key
         filename: $PRIVATEKEY_PATH
         content: $PEM_FILE_CONTENT
         overwrite: true
+
     - pip-install:
         name: pip install ansible
         requirements_file: ""
         packages_list: "ansible"
+
     - script:
         name: Create /etc/ansible
         code: |
@@ -76,6 +79,7 @@ deploy:
         name: Rsync source files
         code: |
           rsync -avz --rsh="ssh -i $PRIVATEKEY_PATH" `pwd`/* ubuntu@$TARGET_MACHINE:$REMOTE_SOURCE_DIR
+
     - script:
         name: run ansible
         code: |
