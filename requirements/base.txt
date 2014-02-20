@@ -6,6 +6,7 @@ logutils==0.3.3
 South==0.8.1
 psycopg2==2.5.1
 dj-database-url
+easy-thumbnails==1.4
 django-filer
 django-storages
 django-suit==0.2.5
