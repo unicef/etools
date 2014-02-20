@@ -21,7 +21,7 @@ build:
 
     # A step that executes `pip install` command.
     - pip-install:
-      requirements_file: "requirements/test.txt"
+         requirements_file: "requirements/test.txt"
 
     # # This pip-install clears the local wheel cache
     # - pip-install:
