@@ -37,15 +37,5 @@ EMAIL_USE_TLS = True
 SERVER_EMAIL = EMAIL_HOST_USER
 ########## END EMAIL CONFIGURATION
 
-########## DATABASE CONFIGURATION
-import dj_database_url
-DATABASES = {
-    'default': dj_database_url.config(
-        env="DATABASE_URL",
-        default='postgis://db-user:@localhost:5432/equitrack'
-    )
-}
-########## END DATABASE CONFIGURATION
-
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
