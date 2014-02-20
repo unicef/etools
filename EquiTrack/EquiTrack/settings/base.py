@@ -80,18 +80,13 @@ ADMINS = (
 MANAGERS = ADMINS
 ########## END MANAGER CONFIGURATION
 
-
 ########## DATABASE CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
+import dj_database_url
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
-    }
+    'default': dj_database_url.config(
+        env="DATABASE_URL",
+        default='postgis://localhost:5432/equitrack'
+    )
 }
 ########## END DATABASE CONFIGURATION
 
