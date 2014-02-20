@@ -15,8 +15,8 @@ from import_export.formats.base_formats import Format, CSV
 
 from pykml.factory import KML_ElementMaker as KML
 
-from shapely.geometry import Point, mapping
-from fiona import collection
+# from shapely.geometry import Point, mapping
+# from fiona import collection
 
 from partners.models import (
     PCA,
@@ -25,89 +25,89 @@ from partners.models import (
 )
 
 
-class SHPFormat(Format):
-
-    def get_title(self):
-        return 'shp'
-
-    def create_dataset(self, in_stream):
-        """
-        Create dataset from given string.
-        """
-        raise NotImplementedError()
-
-    def export_data(self, dataset):
-        """
-        Returns format representation for given dataset.
-        """
-
-        props = {
-            'Locality': 'str',
-            'CAS_CODE': 'str',
-            'CAD_CODE': 'str',
-            'Gateway': 'str',
-            'Location Name': 'str',
-        }
-        for key in dataset.headers:
-            props[key] = 'str'
-
-        schema = {'geometry': 'Point', 'properties': props}
-        with collection("PCAs.shp", "w", "ESRI Shapefile", schema) as output:
-
-            for pca_data in dataset.dict:
-
-                locations = GwPCALocation.objects.filter(pca__id=pca_data['ID'])
-
-                for loc in locations:
-
-                    data_copy = pca_data.copy()
-                    data_copy['Locality'] = loc.locality.name
-                    data_copy['CAD_CODE'] = loc.locality.cad_code
-                    data_copy['CAS_CODE'] = loc.locality.cas_code
-                    data_copy['Gateway'] = loc.gateway.name
-                    data_copy['Location Name'] = loc.location.name
-
-                    point = Point(loc.location.point.y, loc.location.point.x)
-                    output.write({'properties': data_copy, 'geometry': mapping(point)})
-
-        in_memory = StringIO.StringIO()
-        zip = ZipFile(in_memory, "a")
-
-        for file in glob.glob("PCAs.*"):
-            zip.write(file)
-
-        # fix for Linux zip files read in Windows
-        for file in zip.filelist:
-            file.create_system = 0
-
-        zip.close()
-
-        in_memory.seek(0)
-        return in_memory.read()
-
-    def is_binary(self):
-        """
-        Returns if this format is binary.
-        """
-        return True
-
-    def get_read_mode(self):
-        """
-        Returns mode for opening files.
-        """
-        return 'rb'
-
-    def get_extension(self):
-        """
-        Returns extension for this format files.
-        """
-        return "zip"
-
-    def can_import(self):
-        return False
-
-    def can_export(self):
-        return True
+# class SHPFormat(Format):
+#
+#     def get_title(self):
+#         return 'shp'
+#
+#     def create_dataset(self, in_stream):
+#         """
+#         Create dataset from given string.
+#         """
+#         raise NotImplementedError()
+#
+#     def export_data(self, dataset):
+#         """
+#         Returns format representation for given dataset.
+#         """
+#
+#         props = {
+#             'Locality': 'str',
+#             'CAS_CODE': 'str',
+#             'CAD_CODE': 'str',
+#             'Gateway': 'str',
+#             'Location Name': 'str',
+#         }
+#         for key in dataset.headers:
+#             props[key] = 'str'
+#
+#         schema = {'geometry': 'Point', 'properties': props}
+#         with collection("PCAs.shp", "w", "ESRI Shapefile", schema) as output:
+#
+#             for pca_data in dataset.dict:
+#
+#                 locations = GwPCALocation.objects.filter(pca__id=pca_data['ID'])
+#
+#                 for loc in locations:
+#
+#                     data_copy = pca_data.copy()
+#                     data_copy['Locality'] = loc.locality.name
+#                     data_copy['CAD_CODE'] = loc.locality.cad_code
+#                     data_copy['CAS_CODE'] = loc.locality.cas_code
+#                     data_copy['Gateway'] = loc.gateway.name
+#                     data_copy['Location Name'] = loc.location.name
+#
+#                     point = Point(loc.location.point.y, loc.location.point.x)
+#                     output.write({'properties': data_copy, 'geometry': mapping(point)})
+#
+#         in_memory = StringIO.StringIO()
+#         zip = ZipFile(in_memory, "a")
+#
+#         for file in glob.glob("PCAs.*"):
+#             zip.write(file)
+#
+#         # fix for Linux zip files read in Windows
+#         for file in zip.filelist:
+#             file.create_system = 0
+#
+#         zip.close()
+#
+#         in_memory.seek(0)
+#         return in_memory.read()
+#
+#     def is_binary(self):
+#         """
+#         Returns if this format is binary.
+#         """
+#         return True
+#
+#     def get_read_mode(self):
+#         """
+#         Returns mode for opening files.
+#         """
+#         return 'rb'
+#
+#     def get_extension(self):
+#         """
+#         Returns extension for this format files.
+#         """
+#         return "zip"
+#
+#     def can_import(self):
+#         return False
+#
+#     def can_export(self):
+#         return True
 
 
 class KMLFormat(Format):
