@@ -71,9 +71,9 @@
   sudo: yes
   action: template src=gunicorn.conf.j2 dest=/etc/supervisor/conf.d/{{project_name}}_gunicorn.conf
 
-- name: ensure pip for python 3 is installed
+- name: ensure pip for python is installed
   sudo: yes
-  action: shell easy_install3 pip
+  action: shell easy_install pip
 
 - name: ensure virtualenv is installed
   sudo: yes
