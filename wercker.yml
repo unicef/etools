@@ -37,7 +37,7 @@ build:
 
     - script:
         name: set django settings file
-        code: export DJANGO_SETTINGS_MODULE="EquiTrack.settings.production"
+        code: export DJANGO_SETTINGS_MODULE="EquiTrack.settings.test"
 
     - script:
         name: run django tests
