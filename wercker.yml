@@ -6,7 +6,7 @@ build:
 
     # A step that sets up the python virtual environment
     - install-packages:
-        packages: postgresql-client-9.3 postgis
+        packages: postgresql-client-9.3 postgis gdal
 
     - script:
         name: set postgis connection string
