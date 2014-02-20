@@ -19,7 +19,7 @@ DATABASES = {
 SOUTH_TESTS_MIGRATE = False
 
 INSTALLED_APPS += (
-    'django_nose',
+    #'django_nose',
 )
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
