@@ -313,6 +313,26 @@ class PCADonorFilter(admin.SimpleListFilter):
         return queryset
 
 
+class PCAGrantFilter(admin.SimpleListFilter):
+
+    title = 'Grant Number'
+    parameter_name = 'grant'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (grant.id, grant.name) for grant in Grant.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            grant = Grant.objects.get(pk=self.value())
+            pca_ids = PCAGrant.objects.filter(grant=grant).values_list('pca__id')
+            return queryset.filter(id__in=pca_ids)
+        return queryset
+
+
 class PCAGovernorateFilter(admin.SimpleListFilter):
 
     title = 'Governorate'
@@ -420,6 +440,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         'end_date',
         'partner',
         PCADonorFilter,
+        PCAGrantFilter,
         PCAGovernorateFilter,
         PCARegionFilter,
         PCALocalityFilter,
