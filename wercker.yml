@@ -1,4 +1,7 @@
 box: wercker/python
+services:
+  - mies/postgis@0.0.5
+
 # Build definition
 build:
   # The steps that will be executed on build
@@ -6,7 +9,7 @@ build:
 
     # A step that sets up the python virtual environment
     - install-packages:
-        packages: postgresql-client-9.3 postgis gdal
+        packages: postgresql-client-9.3 postgis
 
     - script:
         name: set postgis connection string
