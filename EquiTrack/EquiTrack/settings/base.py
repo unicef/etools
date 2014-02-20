@@ -298,8 +298,8 @@ DJANGO_APPS = (
 THIRD_PARTY_APPS = (
     # Database migration helpers:
     'south',
-    'filer',
     'easy_thumbnails',
+    'filer',
     'storages',
     'reversion',
     'rest_framework',
