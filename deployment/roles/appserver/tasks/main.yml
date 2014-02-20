@@ -9,6 +9,7 @@
     - binutils
     - libproj-dev
     - gdal-bin
+    - libgdal-dev
     - libgeos-dev
     - python
     - python-dev
