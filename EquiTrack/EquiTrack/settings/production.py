@@ -11,6 +11,16 @@ ALLOWED_HOSTS = [
 ]
 ########## END HOST CONFIGURATION
 
+########## DATABASE CONFIGURATION
+import dj_database_url
+DATABASES = {
+    'default': dj_database_url.config(
+        env="DATABASE_URL",
+        default='postgis://localhost:5432/equitrack'
+    )
+}
+########## END DATABASE CONFIGURATION
+
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

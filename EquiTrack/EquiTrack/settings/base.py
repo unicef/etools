@@ -80,16 +80,6 @@ ADMINS = (
 MANAGERS = ADMINS
 ########## END MANAGER CONFIGURATION
 
-########## DATABASE CONFIGURATION
-import dj_database_url
-DATABASES = {
-    'default': dj_database_url.config(
-        env="DATABASE_URL",
-        default='postgis://localhost:5432/equitrack'
-    )
-}
-########## END DATABASE CONFIGURATION
-
 
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
