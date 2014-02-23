@@ -47,42 +47,23 @@ build:
 deploy:
   steps:
     - add-to-known_hosts:
-        hostname: $TARGET_MACHINE
-
-    - mktemp:
-        envvar: PRIVATEKEY_PATH
-
-    - create-file:
-        name: write key
-        filename: $PRIVATEKEY_PATH
-        content: $PEM_FILE_CONTENT
-        overwrite: true
-
-    - pip-install:
-        name: pip install ansible
-        requirements_file: ""
-        packages_list: "ansible"
-
+        hostname: $SERVER_HOSTNAME
+    - add-ssh-key:
+        keyname: DOKKU
     - script:
-        name: Create /etc/ansible
+        name: Initialize new repository
         code: |
-          sudo mkdir -p /etc/ansible
-          sudo chmod 777 /etc/ansible
-
-    - create-file:
-        name: create host file for ansible
-        filename: /etc/ansible/hosts
-        content: $TARGET_MACHINE
-        overwrite: true
-
+          rm -rf .git
+          git init
+          git config --global user.name "wercker"
+          git config --global user.email "pleasemailus@wercker.com"
+          git remote add dokku dokku@$SERVER_HOSTNAME:getting-started-nodejs
     - script:
-        name: Rsync source files
+        name: Add everything to the repository
         code: |
-          rsync -avz --rsh="ssh -i $PRIVATEKEY_PATH" `pwd`/* ubuntu@$TARGET_MACHINE:$REMOTE_SOURCE_DIR
-
+          git add .
+          git commit -m "Result of deploy $WERCKER_GIT_COMMIT"
     - script:
-        name: run ansible
+        name: Push to dokku
         code: |
-          chmod 400 $PRIVATEKEY_PATH
-          cd deployment
-          ansible-playbook site.yml -vvv --private-key=$PRIVATEKEY_PATH --extra-vars "source_location=$REMOTE_SOURCE_DIR source_location_auto_remove=true hostname=$HOSTNAME"
+          git push dokku master
