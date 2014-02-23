@@ -57,7 +57,7 @@ deploy:
           git init
           git config --global user.name "wercker"
           git config --global user.email "pleasemailus@wercker.com"
-          git remote add dokku dokku@$SERVER_HOSTNAME:getting-started-nodejs
+          git remote add dokku dokku@$SERVER_HOSTNAME:equitrack
     - script:
         name: Add everything to the repository
         code: |
