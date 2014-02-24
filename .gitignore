@@ -35,3 +35,5 @@ vagrant_ansible_inventory_default
 packer_cache
 *.iso
 *.box
+
+packer.json
