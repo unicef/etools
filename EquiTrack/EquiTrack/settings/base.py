@@ -13,7 +13,7 @@ DJANGO_ROOT = dirname(dirname(abspath(__file__)))
 SITE_ROOT = dirname(DJANGO_ROOT)
 
 # for Django 1.6
-BASE_DIR = SITE_ROOT
+BASE_DIR = dirname(SITE_ROOT)
 
 HEROKU_APP_NAME = "equitrack"
 
@@ -99,29 +99,12 @@ USE_L10N = True
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
-
-#DATE_INPUT_FORMATS = (
-#    '%d-%m-%Y',
-#    '%Y-%m-%d',
-#    '%d/%m/%Y',
-#    '%d/%m/%y',
-#    '%m/%d/%Y',
-#    '%m/%d/%y',
-#    '%b %d %Y',
-#    '%b %d, %Y',
-#    '%d %b %Y',
-#    '%d %b, %Y',
-#    '%B %d %Y',
-#    '%B %d, %Y',
-#    '%d %B %Y',
-#    '%d %B, %Y'
-#)
 ########## END GENERAL CONFIGURATION
 
 
 ########## MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = normpath(join(SITE_ROOT, 'media'))
+MEDIA_ROOT = normpath(join(BASE_DIR, 'media'))
 
 FILER_STORAGES = {
     'public': {
@@ -154,7 +137,7 @@ STATIC_URL = '/static/'
 
 ########## STATIC FILE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
-STATIC_ROOT = normpath(join(SITE_ROOT, 'static'))
+STATIC_ROOT = normpath(join(BASE_DIR, 'static'))
 
 # See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
 STATICFILES_DIRS = (
