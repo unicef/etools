@@ -78,7 +78,7 @@ deploy:
     - script:
         name: Rsync source files
         code: |
-          rsync -avz --rsh="ssh -i $PRIVATEKEY_PATH" `pwd`/* ubuntu@$TARGET_MACHINE:$REMOTE_SOURCE_DIR
+          rsync -avz --rsh="ssh -i $PRIVATEKEY_PATH" `pwd`/EquiTrack/* ubuntu@$TARGET_MACHINE:$REMOTE_SOURCE_DIR
 
     - script:
         name: run ansible
