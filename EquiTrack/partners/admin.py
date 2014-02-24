@@ -21,7 +21,7 @@ from reports.models import (
     IntermediateResult
 )
 from partners.exports import (
-    #SHPFormat,
+    SHPFormat,
     KMLFormat,
     PCAResource,
     PartnerResource,
@@ -416,7 +416,7 @@ class PCAGatewayTypeFilter(admin.SimpleListFilter):
 class PcaAdmin(ExportMixin, VersionAdmin):
     resource_class = PCAResource
     # Add a custom export class KML exports
-    formats = DEFAULT_FORMATS + (KMLFormat,) #SHPFormat,)
+    formats = DEFAULT_FORMATS + (KMLFormat, SHPFormat,)
     list_display = (
         'number',
         'status',
