@@ -2,6 +2,10 @@
 
 set -e
 
+sudo echo deb http://us.archive.ubuntu.com/ubuntu/ precise main restricted universe multiverse > /etc/apt/sources.list
+sudo echo deb http://us.archive.ubuntu.com/ubuntu/ precise-security main restricted universe multiverse >> /etc/apt/sources.list
+sudo echo deb http://us.archive.ubuntu.com/ubuntu/ precise-updates main restricted universe multiverse >> /etc/apt/sources.list
+
 # Updating and Upgrading dependencies
 sudo apt-get update -y -qq > /dev/null
 sudo apt-get upgrade -y -qq > /dev/null
