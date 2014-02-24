@@ -2,8 +2,8 @@
     "variables": {
         "aws_access_key": "",
         "aws_secret_key": "",
-        "digitalocean_client_id": "",
-        "digitalapi_key": ""
+        "digitalocean_client_id": "c27c2b62630dcdba0f7d1ff643305c2d",
+        "digitalocean_api_key": "fb38bb08a8b5c8c6f0ad40f0b3f061d7"
     },
     "builders": [
         {
