@@ -58,6 +58,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision :ansible do |ansible|
     ansible.playbook = "deployment/site.yml"
     ansible.verbose = 'vvvv'
+    ansible.extra_vars = { source_location: "/vagrant/EquiTrack", source_location_auto_remove: false }
   end
 
 end
