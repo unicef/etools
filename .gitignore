@@ -28,9 +28,10 @@ README.rst
 vagrant_ansible_inventory_default
 
 *.cpg
-
 *.dbf
-
 *.shp
-
 *.shx
+
+packer_cache
+*.iso
+*.box

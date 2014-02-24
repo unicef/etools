@@ -84,7 +84,7 @@
 
 - name: ensure required packages are installed.
   sudo: yes
-  action: pip requirements={{project_root}}/src/requirements.txt virtualenv={{project_root}}/venv/ virtualenv_command=virtualenv
+  action: pip requirements={{project_root}}/src/requirements/production.txt virtualenv={{project_root}}/venv virtualenv_command=virtualenv
 
 - name: ensure right permissions
   action: file group={{project_name}} owner={{project_name}} mode=755 state=directory path={{project_root}}/venv
@@ -92,14 +92,14 @@
 
 - name: ensure setproctitle is installed.
   sudo: yes
-  action: pip name=setproctitle virtualenv={{project_root}}/venv/ virtualenv_command=virtualenv
+  action: pip name=setproctitle virtualenv={{project_root}}/venv virtualenv_command=virtualenv
 
 - name: ensure owner of content
   action: file state=directory group={{project_name}} owner={{project_name}} recurse=yes path={{project_root}}
   sudo: yes
 
 - name: sync database
-  action: django_manage command=syncdb app_path={{project_root}}/src/{{project_name}} settings={{project_settings}} virtualenv={{project_root}}/venv
+  action: django_manage command=syncdb app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
   sudo: yes
   sudo_user: "{{project_name}}"
   environment:
@@ -114,7 +114,7 @@
     - fixture
 
 - name: ensure inital_data was loaded
-  action: django_manage command=loaddata fixtures={{item}} app_path={{project_root}}/src/{{project_name}} settings={{project_settings}} virtualenv={{project_root}}/venv
+  action: django_manage command=loaddata fixtures={{item}} app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
   with_items:
     - data/locations.json
     - data/users.json
@@ -155,7 +155,7 @@
   sudo: yes
 
 - name: collect static
-  action: django_manage command=collectstatic app_path={{project_root}}/src/{{project_name}} settings={{project_settings}} virtualenv={{project_root}}/venv
+  action: django_manage command=collectstatic app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
   environment:
     DATABASE_URL: "{{database_url}}"
   sudo: yes
