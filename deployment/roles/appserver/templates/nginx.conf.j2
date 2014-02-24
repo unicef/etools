@@ -37,11 +37,11 @@ server {
              application/atom+xml;
 
     location /static/ {
-        alias   {{project_root}}/src/{{project_name}}/static/;
+        alias   {{project_root}}/src/static/;
     }
 
     location /media/ {
-        alias   {{project_root}}/src/{{project_name}}/media/;
+        alias   {{project_root}}/src/media/;
     }
 
     location / {
@@ -52,21 +52,21 @@ server {
     }
 
     location ~* /favicon.ico {
-        root {{project_root}}/src/{{project_name}}/static;
+        root {{project_root}}/src/static;
     }
 
     location ~* /crossdomain.xml {
-        root {{project_root}}/src/{{project_name}}/static;
+        root {{project_root}}/src/static;
     }
 
     location ~* /robots.txt {
-        root {{project_root}}/src/{{project_name}}/static;
+        root {{project_root}}/src/static;
     }
 
     # Error pages
     error_page 500 502 503 504 /500.html;
     location = /500.html {
-        root {{project_root}}/src/{{project_name}}/static/;
+        root {{project_root}}/src/static/;
     }
 
 }

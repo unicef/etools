@@ -1,13 +1,13 @@
 #!/bin/bash
 
 NAME="{{project_name}}_app"                         # Name of the application
-DJANGODIR={{project_root}}/src/{{project_name}}     # Django project directory
+DJANGODIR={{project_root}}/src                      # Django project directory
 USER={{project_name}}                               # the user to run as
 GROUP={{project_name}}                              # the group to run as
 NUM_WORKERS=3                                       # how many worker processes should Gunicorn spawn
 DJANGO_SETTINGS_MODULE={{project_settings}}         # which settings file should Django use
 DJANGO_WSGI_MODULE={{project_name}}.wsgi            # WSGI module name
-DJANGO_STATIC_ROOT={{project_root}}/src/{{project_name}}/static          # custom location for django static files
+DJANGO_STATIC_ROOT={{project_root}}/src/static      # custom location for django static files
 
 echo "Starting $NAME"
 
