@@ -2,11 +2,20 @@ __author__ = 'jcranwellward'
 
 from django.contrib.gis import admin
 
+from import_export import resources
+from import_export.admin import ImportExportMixin
+
 from . import models
 
 
-class LocationAdmin(admin.GeoModelAdmin):
+class LocationResource(resources.ModelResource):
 
+    class Meta:
+        model = models.Location
+
+
+class LocationAdmin(ImportExportMixin, admin.GeoModelAdmin):
+    resource_class = LocationResource
     fields = (
         'name',
         'gateway',
