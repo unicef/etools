@@ -55,8 +55,9 @@ class ResultStructureAdmin(admin.ModelAdmin):
 
 class IndicatorAdmin(admin.ModelAdmin):
     search_fields = ('name',)
+    list_editable = ('in_activity_info',)
     list_filter = (SectorListFilter,)
-    list_display = ('name', 'sector', 'result_structure',)
+    list_display = ('name', 'sector', 'result_structure', 'in_activity_info',)
 
 
 admin.site.register(RRPObjective)

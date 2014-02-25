@@ -69,6 +69,7 @@ class Indicator(models.Model):
     name = models.CharField(max_length=128L, unique=True)
     unit = models.ForeignKey(Unit)
     total = models.IntegerField()
+    in_activity_info = models.BooleanField(default=False)
 
     def __unicode__(self):
         return u'({}) {}'.format(self.result_structure, self.name)
