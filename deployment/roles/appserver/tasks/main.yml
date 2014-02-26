@@ -108,7 +108,6 @@
     DATABASE_URL: "{{database_url}}"
 
 - name: Django |  Migrate Django database.
-  when: migrate is defined
   sudo: yes
   sudo_user: "{{project_name}}"
   environment:
