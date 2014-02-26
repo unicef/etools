@@ -114,7 +114,7 @@
     DATABASE_URL: "{{database_url}}"
   django_manage: >
     command=migrate
-    app_path={{project_root}}
+    app_path={{project_root}}/src
     settings={{project_settings}}
     virtualenv={{project_root}}/venv
 
