@@ -57,7 +57,6 @@ class SHPFormat(Format):
             for pca_data in dataset.dict:
 
                 locations = GwPCALocation.objects.filter(pca__id=pca_data['ID'])
-
                 for loc in locations:
 
                     data_copy = pca_data.copy()
@@ -67,7 +66,7 @@ class SHPFormat(Format):
                     data_copy['Gateway'] = loc.gateway.name
                     data_copy['Location Name'] = loc.location.name
 
-                    point = Point(loc.location.point.y, loc.location.point.x)
+                    point = Point(loc.location.point.x, loc.location.point.y)
                     output.write({'properties': data_copy, 'geometry': mapping(point)})
 
         in_memory = StringIO.StringIO()
