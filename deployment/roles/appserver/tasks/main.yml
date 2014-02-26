@@ -107,6 +107,18 @@
   environment:
     DATABASE_URL: "{{database_url}}"
 
+- name: Django |  Migrate Django database.
+  when: migrate is defined
+  sudo: yes
+  sudo_user: "{{project_name}}"
+  environment:
+    DATABASE_URL: "{{database_url}}"
+  django_manage: >
+    command=migrate
+    app_path={{project_root}}
+    settings={{project_settings}}
+    virtualenv={{project_root}}/venv
+
 - name: ensure initial_data file was not loaded before
   action: stat path={{project_root}}/run/initial_data_loaded
   register: inital_data
