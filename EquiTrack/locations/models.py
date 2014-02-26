@@ -62,7 +62,7 @@ class Location(models.Model):
     longitude = models.FloatField(null=True, blank=True)
     p_code = models.CharField(max_length=32L, blank=True, null=True)
 
-    point = models.PointField(null=True, blank=True)
+    point = models.PointField()
     objects = models.GeoManager()
 
     def __unicode__(self):

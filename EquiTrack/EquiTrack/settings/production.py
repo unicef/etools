@@ -21,12 +21,17 @@ DATABASES = {
 }
 ########## END DATABASE CONFIGURATION
 
+# Sentry config
 RAVEN_CONFIG = {
     'dsn': 'https://02b60c5ae099494d8ffe93d1701f9448:d55afaa1a9cb498180f112e41deb34e9@app.getsentry.com/20023',
 }
 
 INSTALLED_APPS = INSTALLED_APPS + (
     'raven.contrib.django.raven_compat',
+)
+
+MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+  'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
 )
 
 ########## EMAIL CONFIGURATION
