@@ -70,7 +70,6 @@ class Migration(SchemaMigration):
             ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=128L)),
             ('unit', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['reports.Unit'])),
             ('total', self.gf('django.db.models.fields.IntegerField')()),
-            ('in_activity_info', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
         db.send_create_signal(u'reports', ['Indicator'])
 
@@ -156,7 +155,6 @@ class Migration(SchemaMigration):
         u'reports.indicator': {
             'Meta': {'object_name': 'Indicator'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'in_activity_info': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128L'}),
             'result_structure': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.ResultStructure']", 'null': 'True', 'blank': 'True'}),
             'sector': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.Sector']"}),
