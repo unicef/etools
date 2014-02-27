@@ -34,6 +34,25 @@ MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
   'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
 )
 
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
+MEDIA_URL = 'https://{}.s3.amazonaws.com/'.format(AWS_STORAGE_BUCKET_NAME)
+FILER_STORAGES = {
+    'public': {
+        'main': {
+            'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
+            'UPLOAD_TO': 'partners.utils.by_pca',
+        },
+    },
+    'private': {
+        'main': {
+            'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
+            'UPLOAD_TO': 'partners.utils.by_pca',
+        },
+    },
+}
+
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
