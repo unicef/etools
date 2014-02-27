@@ -55,7 +55,7 @@ deploy:
     - create-file:
         name: write key
         filename: $PRIVATEKEY_PATH
-        content: $PEM_FILE_CONTENT
+        content: $SSH_KEY_PRIVATE
         overwrite: true
 
     - pip-install:
@@ -78,11 +78,13 @@ deploy:
     - script:
         name: Rsync source files
         code: |
-          rsync -avz --rsh="ssh -i $PRIVATEKEY_PATH" `pwd`/EquiTrack/* ubuntu@$TARGET_MACHINE:$REMOTE_SOURCE_DIR
+          rsync -avz --rsh="ssh -i $PRIVATEKEY_PATH" `pwd`/EquiTrack/* $REMOTE_USER@$TARGET_MACHINE:$REMOTE_SOURCE_DIR
 
     - script:
         name: run ansible
         code: |
           chmod 400 $PRIVATEKEY_PATH
           cd deployment
-          ansible-playbook site.yml -vvv --private-key=$PRIVATEKEY_PATH --extra-vars "source_location=$REMOTE_SOURCE_DIR source_location_auto_remove=true hostname=$HOSTNAME"
+          ansible-playbook site.yml -vvvv -u $REMOTE_USER \
+          --private-key=$PRIVATEKEY_PATH \
+          --extra-vars "source_location=$REMOTE_SOURCE_DIR source_location_auto_remove=true hostname=$HOSTNAME aws_id=$AWS_ID aws_key=$AWS_KEY aws_name=$AWS_NAME"

@@ -11,7 +11,7 @@ class Migration(SchemaMigration):
         # Adding model 'Donor'
         db.create_table(u'funds_donor', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=45L)),
+            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=45L)),
         ))
         db.send_create_signal(u'funds', ['Donor'])
 
@@ -19,7 +19,7 @@ class Migration(SchemaMigration):
         db.create_table(u'funds_grant', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('donor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['funds.Donor'])),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=128L)),
+            ('name', self.gf('django.db.models.fields.CharField')(unique=True, max_length=128L)),
         ))
         db.send_create_signal(u'funds', ['Grant'])
 
@@ -36,13 +36,13 @@ class Migration(SchemaMigration):
         u'funds.donor': {
             'Meta': {'object_name': 'Donor'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '45L'})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'})
         },
         u'funds.grant': {
             'Meta': {'object_name': 'Grant'},
             'donor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['funds.Donor']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '128L'})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128L'})
         }
     }
 
