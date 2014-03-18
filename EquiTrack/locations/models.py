@@ -76,4 +76,4 @@ class Location(models.Model):
         )
 
     class Meta:
-        unique_together = ('name', 'p_code')
+        unique_together = ('name', 'gateway', 'p_code')

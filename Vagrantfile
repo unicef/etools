@@ -44,21 +44,32 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # backing providers for Vagrant. These expose provider-specific options.
   # Example for VirtualBox:
   #
-  # config.vm.provider :virtualbox do |vb|
-  #   # Don't boot with headless mode
-  #   vb.gui = true
-  #
-  #   # Use VBoxManage to customize the VM. For example to change memory:
-  #   vb.customize ["modifyvm", :id, "--memory", "1024"]
-  # end
-  #
+  config.vm.provider :virtualbox do |vb|
+
+    # Use VBoxManage to customize the VM. For example to change memory:
+    vb.customize ["modifyvm", :id, "--memory", "2048"]
+  end
+
+  config.vm.provider :digital_ocean do |provider, override|
+    override.ssh.private_key_path = '~/.ssh/id_rsa'
+    override.ssh.username = 'jcranwellward'
+    override.vm.box = 'digital_ocean'
+    override.vm.box_url = "https://github.com/smdahlen/vagrant-digitalocean/raw/master/box/digital_ocean.box"
+
+    provider.client_id = ''
+    provider.api_key = ''
+    provider.size = '2GB'
+    provider.ssh_key_name = 'James MBP'
+  end
+
   # View the documentation for the provider you're using for more
   # information on available options.
 
-  config.vm.provision :ansible do |ansible|
-    ansible.playbook = "deployment/site.yml"
-    ansible.verbose = 'vvvv'
-    ansible.extra_vars = { source_location: "/vagrant/EquiTrack", source_location_auto_remove: false }
+  config.vm.provision "docker"
+
+  config.vm.provision "shell" do |s|
+    s.path = "packer/install.sh"
+    s.args = "jcranwellward"
   end
 
 end
