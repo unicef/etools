@@ -1,3 +1,17 @@
+[supervisord]
+nodaemon=true
+
+[program:nginx]
+command=/usr/sbin/nginx -c /etc/nginx/nginx.conf
+redirect_stderr=true
+autorestart=true
+
+[program:postgres]
+command=/usr/lib/postgresql/9.1/bin/postgres -D /var/lib/postgresql/9.1/main -c config_file=/etc/postgresql/9.1/main/postgresql.conf
+user=postgres
+redirect_stderr=true
+autorestart=true
+
 [program:{{project_name}}]
 command={{project_root}}/run/gunicorn_start                       ; Command to start app
 user={{project_name}}                                             ; User to run as

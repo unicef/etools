@@ -1,7 +1,11 @@
 ---
 
+- name: create locales for {{locale}}
+  action: command locale-gen {{locale}}
+  sudo: yes
+
 - name: set locale to {{locale}}
-  action: command /usr/sbin/update-locale LANG={{locale}} LC_ALL={{locale}}
+  action: command dpkg-reconfigure locales
   sudo: yes
 
 - name: add key for postgres apt repository
