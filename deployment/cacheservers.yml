@@ -1,8 +1,0 @@
----
-# file: dbservers.yml
-- name: Configure all Cache servers
-  hosts: cacheservers
-  sudo: yes
-
-  roles:
-    - redis
