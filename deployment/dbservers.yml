@@ -1,8 +1,0 @@
----
-# file: dbservers.yml
-- name: Configure all database servers
-  hosts: dbservers
-  sudo: yes
-
-  roles:
-    - postgres

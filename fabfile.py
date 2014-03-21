@@ -9,7 +9,7 @@ def dump_db(name='EquiTrack'):
         dbname=name,
         dbuser=name,
     ))
-    get('/tmp/local.dump')
+    get('/tmp/latest.dump', local_path='deployment/{}-latest.dump'.format(name))
 
 
 def load_db_dump(name='equitrack'):
@@ -17,7 +17,3 @@ def load_db_dump(name='equitrack'):
     local('pg_restore --verbose --clean --no-acl --no-owner -h localhost -d {} latest.dump'.format(name))
 
 
-def dump_load_db(capture=False):
-
-    get_db_dump(capture)
-    load_db_dump()

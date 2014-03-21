@@ -1,4 +1,16 @@
 ---
+- name: Install required system packages.
+  action: apt pkg={{item}} state=installed update-cache=yes state=installed
+  sudo: yes
+  with_items:
+      - build-essential
+      - python-setuptools
+      - python-pip
+      - supervisor
+      - python-apt
+      - python-pycurl
+      - python-software-properties
+      - git
 
 - name: create locales for {{locale}}
   action: command locale-gen {{locale}}
@@ -20,15 +32,3 @@
   action: apt_repository repo='ppa:ubuntugis/ppa'
   sudo: yes
 
-- name: Install required system packages.
-  action: apt pkg={{item}} state=installed update-cache=yes state=installed
-  sudo: yes
-  with_items:
-      - build-essential
-      - python-setuptools
-      - python-pip
-      - supervisor
-      - python-apt
-      - python-pycurl
-      - python-software-properties
-      - git
