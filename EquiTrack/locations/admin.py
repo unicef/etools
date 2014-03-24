@@ -1,6 +1,8 @@
 __author__ = 'jcranwellward'
 
 from django.contrib.gis import admin
+from django.contrib.auth.models import User
+from django.contrib.auth.admin import UserAdmin
 
 from import_export import resources
 from import_export.admin import ImportExportMixin
@@ -12,6 +14,16 @@ class LocationResource(resources.ModelResource):
 
     class Meta:
         model = models.Location
+
+
+class UserResource(resources.ModelResource):
+
+    class Meta:
+        model = User
+
+
+class UserAdminPlus(ImportExportMixin, UserAdmin):
+    resource_class = UserResource
 
 
 class LocationAdmin(ImportExportMixin, admin.GeoModelAdmin):
@@ -40,7 +52,8 @@ class LocalityAdmin(admin.GeoModelAdmin):
     search_fields = ('name', 'cas_code')
     list_filter = ('region', 'cas_code')
 
-
+admin.site.unregister(User)
+admin.site.register(User, UserAdminPlus)
 admin.site.register(models.Governorate, admin.GeoModelAdmin)
 admin.site.register(models.Region, admin.GeoModelAdmin)
 admin.site.register(models.Locality, LocalityAdmin)

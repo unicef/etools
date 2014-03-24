@@ -38,10 +38,3 @@
   sudo: yes
   sudo_user: postgres
   action: postgresql_user db={{dbname}} user={{dbuser}} password={{dbpassword}} priv=ALL
-
-#- name: load exisitng data if it exists
-#  sudo: yes
-#  sudo_user: postgres
-#  command: pg_restore --verbose --clean --no-acl --no-owner -h localhost -d {{dbname}} -U {{dbuser}} {{dbname}}-latest.dump
-#  environment:
-#    PGPASSWORD: "{{dbpassword}}"
