@@ -129,8 +129,7 @@
 - name: ensure inital_data was loaded
   action: django_manage command=loaddata fixtures={{item}} app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
   with_items:
-    - data/locations.json
-    - data/users.json
+    - "{{project_name}}/data/users.json"
   sudo: yes
   sudo_user: "{{project_name}}"
   environment:
