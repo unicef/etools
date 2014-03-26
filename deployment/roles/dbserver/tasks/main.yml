@@ -7,14 +7,17 @@
     - libgeos-dev
     - python-psycopg2
 
+- name: start postgres server for the next steps
+  sudo: yes
+  command: service postgresql start
 
 - name: Create postgresql user
-  action: postgresql_user user={{dbuser}} password={{dbpassword}} role_attr_flags=CREATEDB,NOSUPERUSER
+  action: postgresql_user user={{dbuser}} password={{dbpassword}} role_attr_flags=SUPERUSER
   sudo_user: postgres
   sudo: yes
 
 - name: ensure database is created
-  action: postgresql_db db={{dbname}} owner={{dbuser}} encoding='UTF-8' lc_ctype='en_US.UTF-8' lc_collate='en_US.UTF-8'
+  action: postgresql_db db={{dbname}} owner={{dbuser}}
   sudo_user: postgres
   sudo: yes
   register: db_created
@@ -35,8 +38,3 @@
   sudo: yes
   sudo_user: postgres
   action: postgresql_user db={{dbname}} user={{dbuser}} password={{dbpassword}} priv=ALL
-
-- name: ensure user does not have unnecessary privilege
-  sudo: yes
-  sudo_user: postgres
-  action: postgresql_user user={{dbuser}} role_attr_flags=NOSUPERUSER,NOCREATEDB

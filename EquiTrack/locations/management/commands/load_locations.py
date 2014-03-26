@@ -2,17 +2,19 @@ __author__ = 'jcranwellward'
 
 import os
 from django.contrib.gis.gdal import DataSource
+from django.contrib.gis.geos import Point
 from django.contrib.gis.utils import LayerMapping
+from django.contrib.gis.geos import GEOSGeometry
 from django.core.management.base import BaseCommand, CommandError
 
 from locations.models import Location, GatewayType, Locality
 
 location_mapping = {
 
-    'name': 'ACS_NAME',
+    'name': 'ACS_NAME_1',
     #'p_code': 'CERD',
-    'longitude': 'VILLAGELON',
-    'latitude': 'VILLAGELAT',
+    #'longitude': 'X_Location',
+    #'latitude': 'Y_Location',
     #'point': 'POINT',
 }
 
@@ -56,7 +58,7 @@ class Command(BaseCommand):
 
                 print "\nImporting values: {}".format(field_values)
 
-                cad_code = feat.get('CAD_CODE').encode('utf-8').split('.')[0]
+                cad_code = feat.get('CAD_CODE_1').encode('utf-8').split('.')[0]
 
                 try:
                     locality = Locality.objects.get(cad_code=cad_code)
@@ -72,8 +74,8 @@ class Command(BaseCommand):
                 )
                 location.name = field_values['name'].encode('utf-8')
                 #location.p_code = str(field_values['p_code'])
-                location.longitude = field_values['longitude']
-                location.latitude = field_values['latitude']
+                #location.longitude = field_values['longitude']
+                #location.latitude = field_values['latitude']
                 location.point = feat.geom.wkt
                 location.save()
 

@@ -15,10 +15,6 @@ SITE_ROOT = dirname(DJANGO_ROOT)
 # for Django 1.6
 BASE_DIR = dirname(SITE_ROOT)
 
-HEROKU_APP_NAME = "equitrack"
-
-HEROKU_BUILDPACK_URL = "https://github.com/ddollar/heroku-buildpack-multi.git"
-
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
 SUIT_CONFIG = {
@@ -63,7 +59,13 @@ path.append(DJANGO_ROOT)
 
 ########## DEBUG CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
-DEBUG = False
+DEBUG = os.environ.get('DJANGO_DEBUG', False)
+
+if isinstance(DEBUG, str):
+    if DEBUG.lower() == "true":
+        DEBUG = True
+    else:
+        DEBUG = False
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-debug
 TEMPLATE_DEBUG = DEBUG

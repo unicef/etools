@@ -38,3 +38,5 @@ packer_cache
 *.box
 
 packer.json
+
+Vagrantfile

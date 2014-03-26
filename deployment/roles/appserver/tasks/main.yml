@@ -72,9 +72,9 @@
   sudo: yes
   action: file path={{project_root}}/run/gunicorn_start mode=0755 owner={{project_name}} group={{project_name}}
 
-- name: Install app scripts.
+- name: Install supervisord script.
   sudo: yes
-  action: template src=gunicorn.conf.j2 dest=/etc/supervisor/conf.d/{{project_name}}_gunicorn.conf
+  action: template src=supervisord.conf.j2 dest=/etc/supervisor/conf.d/{{project_name}}_supervisord.conf
 
 - name: ensure pip for python is installed
   sudo: yes
@@ -129,8 +129,7 @@
 - name: ensure inital_data was loaded
   action: django_manage command=loaddata fixtures={{item}} app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
   with_items:
-    - data/locations.json
-    - data/users.json
+    - "{{project_name}}/data/users.json"
   sudo: yes
   sudo_user: "{{project_name}}"
   environment:
@@ -147,13 +146,8 @@
     - fixture
   when: inital_data.stat.exists == false
 
-- name: make sure app is present
-  sudo: yes
-  action: supervisorctl name={{project_name}} state=present
-
-- name: app is started
-  sudo: yes
-  action: supervisorctl name={{project_name}} state=restarted
+- name: make nginx run in non-daemon mode
+  lineinfile: state=present dest=/etc/nginx/nginx.conf line='daemon off;'
 
 - name: remove default nginx site
   sudo: yes
@@ -162,10 +156,6 @@
 - name: Install nginx configuration file.
   sudo: yes
   action: template src=nginx.conf.j2 dest=/etc/nginx/sites-enabled/{{project_name}}
-
-- name: restart nginx
-  action: service name=nginx state=restarted
-  sudo: yes
 
 - name: collect static
   action: django_manage command=collectstatic app_path={{project_root}}/src settings={{project_settings}} virtualenv={{project_root}}/venv
