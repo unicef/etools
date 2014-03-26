@@ -1,7 +1,23 @@
 ---
+- name: Install required system packages.
+  action: apt pkg={{item}} state=installed update-cache=yes state=installed
+  sudo: yes
+  with_items:
+      - build-essential
+      - python-setuptools
+      - python-pip
+      - supervisor
+      - python-apt
+      - python-pycurl
+      - python-software-properties
+      - git
+
+- name: create locales for {{locale}}
+  action: command locale-gen {{locale}}
+  sudo: yes
 
 - name: set locale to {{locale}}
-  action: command /usr/sbin/update-locale LANG={{locale}} LC_ALL={{locale}}
+  action: command dpkg-reconfigure locales
   sudo: yes
 
 - name: add key for postgres apt repository
@@ -16,15 +32,3 @@
   action: apt_repository repo='ppa:ubuntugis/ppa'
   sudo: yes
 
-- name: Install required system packages.
-  action: apt pkg={{item}} state=installed update-cache=yes state=installed
-  sudo: yes
-  with_items:
-      - build-essential
-      - python-setuptools
-      - python-pip
-      - supervisor
-      - python-apt
-      - python-pycurl
-      - python-software-properties
-      - git
