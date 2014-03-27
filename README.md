@@ -73,6 +73,6 @@ If you want to run a docker server and deploy EquiTrack you can get going quickl
 1. Get a server running docker. Digital Ocean have great packages for this at $10 a month: https://www.digitalocean.com/community/articles/how-to-use-the-digitalocean-docker-application
 2. Login into your docker server and pull the EquiTrack image from the index: ````docker pull unicef/equitrack````
 3. Run a container once the image has finished downloading: ````docker run -d -p 80:80 -e "DJANGO_ALLOWED_HOST=yourdomin.org" unicef/equitrack supervisord````
-4. Go to yourdomain.org/admin and login with user ````admin```` and ````pass```` then CHANGE YOUR PASSWORD!
+4. Go to yourdomain.org/admin and login with user ````admin```` and password ````admin```` then CHANGE YOUR PASSWORD NOW!
 5. Start adding data!
 
