@@ -63,6 +63,9 @@ Mapping of partner activities:
 
 ![PCA map](/screenshots/equitrack_map.png "Map of PCAs")
 
+Deploy
+------
+
 **How do I get it for my office?**
 
 EquiTrack is distributed as a lightweight container using [Docker](https://www.docker.io/)
