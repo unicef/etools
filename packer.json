@@ -1,0 +1,36 @@
+{
+    "builders": [
+        {
+            "type": "docker",
+            "image": "egghead/ubuntu-ansible-1.4",
+            "export_path": "EquiTrack-docker-image.tar"
+        }
+    ],
+    "provisioners": [
+        {
+            "type": "file",
+            "source": "EquiTrack",
+            "destination": "/tmp"
+        },
+        {
+            "type": "file",
+            "source": "deployment",
+            "destination": "/tmp"
+        },
+        {
+            "type": "ansible-local",
+            "playbook_file": "deployment/site.yml",
+            "staging_directory": "/tmp/deployment"
+        }
+    ],
+    "post-processors": [
+        [
+            {
+              "type": "docker-import",
+              "repository": "unicef/equitrack",
+              "tag": "latest"
+            },
+            "docker-push"
+        ]
+    ]
+}

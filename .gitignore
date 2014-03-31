@@ -37,6 +37,4 @@ packer_cache
 *.iso
 *.box
 
-packer.json
-
 Vagrantfile
