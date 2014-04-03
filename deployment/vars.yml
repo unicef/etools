@@ -9,6 +9,3 @@ dbpassword: 4EjuzuHaBeyAPhuxeq3wragA6ECRUk9SUSpaspEdrUnu9rAXEpurE92ucRefr5fr
 dbname: ${project_name}
 database_url: postgis://{{dbuser}}:{{dbpassword}}@localhost:5432/{{dbname}}
 locale: en_US.UTF-8
-aws_id: ""
-aws_key: ""
-aws_bucket: ""
