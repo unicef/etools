@@ -2,7 +2,8 @@
     "builders": [
         {
             "type": "docker",
-            "image": "egghead/ubuntu-ansible-1.4",
+            "pull": false,
+            "image": "unicef/equitrack",
             "export_path": "EquiTrack-docker-image.tar"
         }
     ],
@@ -29,8 +30,7 @@
               "type": "docker-import",
               "repository": "unicef/equitrack",
               "tag": "latest"
-            },
-            "docker-push"
+            }
         ]
     ]
 }
