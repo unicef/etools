@@ -11,16 +11,6 @@ ALLOWED_HOSTS = [
 ]
 ########## END HOST CONFIGURATION
 
-########## DATABASE CONFIGURATION
-import dj_database_url
-DATABASES = {
-    'default': dj_database_url.config(
-        env="DATABASE_URL",
-        default='postgis://localhost:5432/equitrack'
-    )
-}
-########## END DATABASE CONFIGURATION
-
 # Sentry config
 RAVEN_CONFIG = {
     'dsn': 'https://02b60c5ae099494d8ffe93d1701f9448:d55afaa1a9cb498180f112e41deb34e9@app.getsentry.com/20023',

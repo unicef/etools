@@ -14,6 +14,6 @@ def dump_db(name='EquiTrack'):
 
 def load_db_dump(name='equitrack'):
 
-    local('pg_restore --verbose --clean --no-acl --no-owner -h localhost -d {} latest.dump'.format(name))
+    local('pg_restore --verbose --clean --no-acl --no-owner -d {} latest.dump'.format(name))
 
 

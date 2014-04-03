@@ -71,6 +71,16 @@ if isinstance(DEBUG, str):
 TEMPLATE_DEBUG = DEBUG
 ########## END DEBUG CONFIGURATION
 
+########## DATABASE CONFIGURATION
+POSTGIS_VERSION = ( 2, 1 )
+import dj_database_url
+DATABASES = {
+    'default': dj_database_url.config(
+        env="DATABASE_URL",
+        default='postgis:///equitrack'
+    )
+}
+########## END DATABASE CONFIGURATION
 
 ########## MANAGER CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
