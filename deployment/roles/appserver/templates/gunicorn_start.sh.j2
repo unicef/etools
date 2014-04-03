@@ -17,9 +17,6 @@ source {{project_root}}/venv/bin/activate
 export DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
 export PYTHONPATH=$DJANGODIR:$PYTHONPATH
 export DATABASE_URL={{database_url}}
-export AWS_ACCESS_KEY_ID={{aws_id}}
-export AWS_SECRET_ACCESS_KEY={{aws_key}}
-export AWS_STORAGE_BUCKET_NAME={{aws_bucket}}
 
 # Start your Django Unicorn
 # Programs meant to be run under supervisor should not daemonize themselves (do not use --daemon)
