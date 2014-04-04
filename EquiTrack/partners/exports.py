@@ -40,34 +40,74 @@ class SHPFormat(Format):
         """
         Returns format representation for given dataset.
         """
-
-        props = {
+        attribs = {
+            'ID': 'str',
+            'Title': 'str',
+            'PCA_Number': 'str',
+            'Unicef_mng': 'str',
+            'Total_budg': 'str',
+            'Amendment': 'str',
+            'Signed_by': 'str',
+            'Partner': 'str',
+            'Partner_mn': 'str',
+            'Sectors': 'str',
+            'Status': 'str',
             'Locality': 'str',
             'CAS_CODE': 'str',
             'CAD_CODE': 'str',
             'Gateway': 'str',
-            'Location Name': 'str',
+            'Loc_Name': 'str',
+            'PCode/CERD': 'str'
         }
-        for key in dataset.headers:
-            props[key] = 'str'
 
-        schema = {'geometry': 'Point', 'properties': props}
+        # find all keys related to donors,
+        # this dynamically changes with each dataset
+        donors = {}
+        for key in dataset.headers:
+            if 'Donor' in key:
+                donors[key] = 'str'
+        attribs.update(donors)
+
+        schema = {'geometry': 'Point', 'properties': attribs}
         with collection("PCAs.shp", "w", "ESRI Shapefile", schema) as output:
 
             for pca_data in dataset.dict:
+                # copy donor data once for the pca
+                donor_copy = donors.copy()
+                for key,value in pca_data.iteritems():
+                    if 'Donor' in key:
+                        donor_copy[key] = value
 
                 locations = GwPCALocation.objects.filter(pca__id=pca_data['ID'])
                 for loc in locations:
 
-                    data_copy = pca_data.copy()
-                    data_copy['Locality'] = loc.locality.name
-                    data_copy['CAD_CODE'] = loc.locality.cad_code
-                    data_copy['CAS_CODE'] = loc.locality.cas_code
-                    data_copy['Gateway'] = loc.gateway.name
-                    data_copy['Location Name'] = loc.location.name
+                    data = dict()
+                    data['ID'] = loc.pca.id
+                    data['Title'] = loc.pca.title
+                    data['PCA_Number'] = loc.pca.number
+                    data['Unicef_mng'] = '{} {}'.format(loc.pca.unicef_mng_first_name, loc.pca.unicef_mng_last_name)
+                    data['Total_budg'] = loc.pca.total_cash
+                    data['Amendment'] = loc.pca.amendment
+                    data['Signed_by'] = loc.pca.signed_by_unicef_date.strftime("%d-%m-%Y") or ''
+                    data['Partner'] = loc.pca.partner.name
+                    data['Partner_mn'] = '{} {}'.format(loc.pca.partner_mng_first_name, loc.pca.partner_mng_last_name)
+                    data['Sectors'] = loc.pca.sectors
+                    data['Status'] = loc.pca.status
+                    data['Locality'] = loc.locality.name
+                    data['CAD_CODE'] = loc.locality.cad_code
+                    data['CAS_CODE'] = loc.locality.cas_code
+                    data['Gateway'] = loc.gateway.name
+                    data['Loc_Name'] = loc.location.name
+                    data['PCode/CERD'] = loc.location.p_code
+
+                    # add donors
+                    data.update(donor_copy)
+
+                    if len(data) != len(attribs):
+                        raise Exception("Number of values does not match num properties")
 
                     point = Point(loc.location.point.x, loc.location.point.y)
-                    output.write({'properties': data_copy, 'geometry': mapping(point)})
+                    output.write({'properties': data, 'geometry': mapping(point)})
 
         in_memory = StringIO.StringIO()
         zip = ZipFile(in_memory, "a")
@@ -138,9 +178,6 @@ class KMLFormat(Format):
                 data_copy['CAS_CODE'] = loc.locality.cas_code
                 data_copy['Gateway'] = loc.gateway.name
                 data_copy['Location Name'] = loc.location.name
-                # template = loader.get_template("pca_kml_description.html")
-                # context = Context({'data': data_copy})
-                # description = template.render(context)
 
                 data = KML.ExtendedData()
                 for key, value in data_copy.items():

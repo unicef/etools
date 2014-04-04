@@ -9,12 +9,10 @@ import autocomplete_light
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin, DEFAULT_FORMATS
 
-from funds.models import Grant, Donor
-from reports.admin import SectorListFilter
+from funds.models import Grant
 from reports.models import (
     WBS,
     Goal,
-    Sector,
     Activity,
     Indicator,
     Rrp5Output,
@@ -41,11 +39,17 @@ from partners.models import (
     PCASectorImmediateResult,
     PartnerOrganization
 )
-from locations.models import (
-    Governorate,
-    GatewayType,
-    Locality,
-    Region,
+
+from partners.filters import (
+    PCASectorFilter,
+    PCADonorFilter,
+    PCAGrantFilter,
+    PCAGovernorateFilter,
+    PCARegionFilter,
+    PCALocalityFilter,
+    PCAGatewayTypeFilter,
+    PCAIndicatorFilter,
+    PCAOutputFilter
 )
 
 
@@ -119,6 +123,15 @@ class PcaLocationInlineAdmin(admin.TabularInline):
         'view_location',
     )
     extra = 5
+
+    # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+    #     """
+    #     Put everything alpha order
+    #     """
+    #     kwargs['queryset'] = db_field.rel.to.objects.all().order_by('name')
+    #     return super(PcaLocationInlineAdmin, self).formfield_for_foreignkey(
+    #         db_field, request, **kwargs
+    #     )
 
 
 class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
@@ -283,136 +296,6 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
     )
 
 
-class PCASectorFilter(SectorListFilter):
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            sector = Sector.objects.get(pk=self.value())
-            return queryset.filter(sectors__icontains=sector.name)
-        return queryset
-
-
-class PCADonorFilter(admin.SimpleListFilter):
-
-    title = 'Donor'
-    parameter_name = 'donor'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (donor.id, donor.name) for donor in Donor.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            donor = Donor.objects.get(pk=self.value())
-            pca_ids = PCAGrant.objects.filter(grant__donor=donor).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCAGrantFilter(admin.SimpleListFilter):
-
-    title = 'Grant Number'
-    parameter_name = 'grant'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (grant.id, grant.name) for grant in Grant.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            grant = Grant.objects.get(pk=self.value())
-            pca_ids = PCAGrant.objects.filter(grant=grant).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCAGovernorateFilter(admin.SimpleListFilter):
-
-    title = 'Governorate'
-    parameter_name = 'governorate'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (governorate.id, governorate.name) for governorate in Governorate.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            governorate = Governorate.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(governorate=governorate).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCARegionFilter(admin.SimpleListFilter):
-
-    title = 'Caza'
-    parameter_name = 'caza'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (region.id, region.name) for region in Region.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            region = Region.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(region=region).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCALocalityFilter(admin.SimpleListFilter):
-
-    title = 'Locality'
-    parameter_name = 'locality'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (locality.id, locality.name) for locality in Locality.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            locality = Locality.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(locality=locality).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCAGatewayTypeFilter(admin.SimpleListFilter):
-
-    title = 'Gateway'
-    parameter_name = 'gateway'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (gateway.id, gateway.name) for gateway in GatewayType.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            gateway = GatewayType.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(location__gateway=gateway).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
 class PcaAdmin(ExportMixin, VersionAdmin):
     resource_class = PCAResource
     # Add a custom export class KML exports
@@ -445,6 +328,8 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         PCARegionFilter,
         PCALocalityFilter,
         PCAGatewayTypeFilter,
+        PCAIndicatorFilter,
+        PCAOutputFilter
     )
     search_fields = (
         'number',
@@ -497,12 +382,6 @@ class PcaAdmin(ExportMixin, VersionAdmin):
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
     created_date.admin_order_field = '-created_at'
-
-    def queryset(self, request):
-        return super(PcaAdmin, self).queryset(request).order_by(
-            '-number',
-            'amendment'
-        )
 
     def create_amendment(self, request, queryset):
         for pca in queryset:

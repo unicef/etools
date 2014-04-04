@@ -12,10 +12,10 @@ from locations.models import Location, GatewayType, Locality
 location_mapping = {
 
     'name': 'ACS_NAME_1',
-    #'p_code': 'CERD',
-    #'longitude': 'X_Location',
-    #'latitude': 'Y_Location',
-    #'point': 'POINT',
+    'p_code': 'CERD',
+    'longitude': 'X_Location',
+    'latitude': 'Y_Location',
+    'point': 'POINT',
 }
 
 
@@ -51,10 +51,10 @@ class Command(BaseCommand):
                 for key, value in field_values.items():
                     field_values[key] = feat.get(value)
 
-                # if not field_values['p_code'] or field_values['p_code'] == '0':
-                #     print 'No P_Code for location: {}'.format(field_values)
-                #     skipped_points.append(field_values)
-                #     continue
+                if not field_values['p_code'] or field_values['p_code'] == '0':
+                    print 'No P_Code for location: {}'.format(field_values)
+                    skipped_points.append(field_values)
+                    continue
 
                 print "\nImporting values: {}".format(field_values)
 
@@ -73,9 +73,9 @@ class Command(BaseCommand):
                     locality=locality
                 )
                 location.name = field_values['name'].encode('utf-8')
-                #location.p_code = str(field_values['p_code'])
-                #location.longitude = field_values['longitude']
-                #location.latitude = field_values['latitude']
+                location.p_code = str(field_values['p_code'])
+                location.longitude = field_values['longitude']
+                location.latitude = field_values['latitude']
                 location.point = feat.geom.wkt
                 location.save()
 

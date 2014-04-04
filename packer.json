@@ -4,7 +4,7 @@
             "type": "docker",
             "pull": false,
             "image": "unicef/equitrack",
-            "export_path": "EquiTrack-docker-image.tar"
+            "export_path": "equitrack-docker-image.tar"
         }
     ],
     "provisioners": [
