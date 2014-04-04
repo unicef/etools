@@ -12,6 +12,9 @@ class Governorate(models.Model):
     def __unicode__(self):
         return self.name
 
+    class Meta:
+        ordering = ['name']
+
 
 class Region(models.Model):
     governorate = models.ForeignKey(Governorate)
@@ -25,6 +28,7 @@ class Region(models.Model):
 
     class Meta:
         verbose_name = 'Caza'
+        ordering = ['name']
 
 
 class Locality(models.Model):
@@ -44,10 +48,14 @@ class Locality(models.Model):
     class Meta:
         verbose_name = 'Cadastral/Locality'
         unique_together = ('name', 'cas_code_un')
+        ordering = ['name']
 
 
 class GatewayType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
+
+    class Meta:
+        ordering = ['name']
 
     def __unicode__(self):
         return self.name
@@ -77,3 +85,4 @@ class Location(models.Model):
 
     class Meta:
         unique_together = ('name', 'gateway', 'p_code')
+        ordering = ['name']

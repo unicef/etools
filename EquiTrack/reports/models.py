@@ -6,6 +6,9 @@ from django.db import models
 class ResultStructure(models.Model):
     name = models.CharField(max_length=150)
 
+    class Meta:
+        ordering = ['name']
+
     def __unicode__(self):
         return self.name
 
@@ -14,6 +17,9 @@ class Sector(models.Model):
 
     name = models.CharField(max_length=45L, unique=True)
     description = models.CharField(max_length=256L, blank=True, null=True)
+
+    class Meta:
+        ordering = ['name']
 
     def __unicode__(self):
         return self.name
@@ -24,6 +30,9 @@ class RRPObjective(models.Model):
     result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector)
     name = models.CharField(max_length=256L)
+
+    class Meta:
+        ordering = ['name']
 
 
 class Rrp5Output(models.Model):
@@ -36,6 +45,7 @@ class Rrp5Output(models.Model):
     class Meta:
         verbose_name = 'Output'
         unique_together = ('result_structure', 'name')
+        ordering = ['name']
 
     def __unicode__(self):
         return u'({}) {}'.format(self.result_structure, self.name)
@@ -50,6 +60,7 @@ class Goal(models.Model):
 
     class Meta:
         verbose_name = 'CCC'
+        ordering = ['name']
 
     def __unicode__(self):
         return self.name
@@ -71,14 +82,24 @@ class Indicator(models.Model):
     total = models.IntegerField()
     in_activity_info = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['name']
+
     def __unicode__(self):
-        return u'({}) {}'.format(self.result_structure, self.name)
+        return u'({}) {} {}'.format(
+            self.result_structure,
+            self.name,
+            'ActivityInfo' if self.in_activity_info else ''
+        )
 
 
 class IntermediateResult(models.Model):
     sector = models.ForeignKey(Sector)
     ir_wbs_reference = models.CharField(max_length=50L)
     name = models.CharField(max_length=128L, unique=True)
+
+    class Meta:
+        ordering = ['name']
 
     def __unicode__(self):
         return self.name
@@ -89,6 +110,9 @@ class WBS(models.Model):
     name = models.CharField(max_length=128L, unique=True)
     code = models.CharField(max_length=10L)
 
+    class Meta:
+        ordering = ['name']
+
     def __unicode__(self):
         return self.name
 
@@ -97,6 +121,9 @@ class Activity(models.Model):
     sector = models.ForeignKey(Sector)
     name = models.CharField(max_length=128L, unique=True)
     type = models.CharField(max_length=30L, blank=True, null=True)
+
+    class Meta:
+        ordering = ['name']
 
     def __unicode__(self):
         return self.name

@@ -38,6 +38,9 @@ class PartnerOrganization(models.Model):
     contact_person = models.CharField(max_length=64L, blank=True)
     phone_number = models.CharField(max_length=32L, blank=True)
 
+    class Meta:
+        ordering = ['name']
+
     def __unicode__(self):
         return self.name
 
@@ -87,6 +90,7 @@ class PCA(models.Model):
     class Meta:
         verbose_name = 'PCA'
         verbose_name_plural = 'PCAs'
+        ordering = ['-number', 'amendment']
 
     def __unicode__(self):
         title = u'{}: {}'.format(
@@ -331,6 +335,10 @@ class PCASectorOutput(models.Model):
         verbose_name = 'Output'
         verbose_name_plural = 'Outputs'
 
+    @property
+    def pca(self):
+        return self.pca_sector.pca
+
 
 class PCASectorGoal(models.Model):
 
@@ -373,6 +381,10 @@ class IndicatorProgress(models.Model):
     def __unicode__(self):
         return self.indicator.name
 
+    @property
+    def pca(self):
+        return self.pca_sector.pca
+
     def shortfall(self):
         return self.programmed - self.current if self.id and self.current else 0
     shortfall.short_description = 'Shortfall'
@@ -396,7 +408,7 @@ class PCAFile(models.Model):
     file = FilerFileField()
 
     def __unicode__(self):
-        return file.name
+        return self.file.name
 
     def download_url(self):
         if self.file:
