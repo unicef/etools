@@ -42,3 +42,5 @@ Vagrantfile
 *.tar
 
 *.gz
+
+deployment/vars.yml
