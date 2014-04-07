@@ -3,6 +3,13 @@
 from os import environ
 from base import *
 
+########## HOST CONFIGURATION
+# See: https://docs.djangoproject.com/en/1.5/releases/1.5/#allowed-hosts-required-in-production
+ALLOWED_HOSTS = [
+    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+]
+########## END HOST CONFIGURATION
+
 # Sentry config
 RAVEN_CONFIG = {
     'dsn': 'https://02b60c5ae099494d8ffe93d1701f9448:d55afaa1a9cb498180f112e41deb34e9@app.getsentry.com/20023',
@@ -13,7 +20,7 @@ INSTALLED_APPS = INSTALLED_APPS + (
 )
 
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
-  'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
+    'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
 )
 
 AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
