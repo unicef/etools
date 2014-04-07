@@ -56,6 +56,12 @@ REST_FRAMEWORK = {
 path.append(DJANGO_ROOT)
 ########## END PATH CONFIGURATION
 
+########## HOST CONFIGURATION
+# See: https://docs.djangoproject.com/en/1.5/releases/1.5/#allowed-hosts-required-in-production
+ALLOWED_HOSTS = [
+    os.environ.get('DJANGO_ALLOWED_HOST', '*'),
+]
+########## END HOST CONFIGURATION
 
 ########## DEBUG CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
