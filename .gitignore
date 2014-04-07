@@ -38,3 +38,7 @@ packer_cache
 *.box
 
 Vagrantfile
+
+*.tar
+
+*.gz

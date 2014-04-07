@@ -68,9 +68,17 @@
   sudo: yes
   action: template src=gunicorn_start.sh.j2 dest={{project_root}}/run/gunicorn_start
 
+- name: Ensure postgres start script exists.
+  sudo: yes
+  action: template src=postgres_start.sh.j2 dest={{project_root}}/run/postgres_start
+
 - name: Set permissions for app script
   sudo: yes
   action: file path={{project_root}}/run/gunicorn_start mode=0755 owner={{project_name}} group={{project_name}}
+
+- name: Set permissions for postgres script
+  sudo: yes
+  action: file path={{project_root}}/run/postgres_start mode=0755 owner={{project_name}} group={{project_name}}
 
 - name: Install supervisord script.
   sudo: yes
@@ -162,6 +170,21 @@
   environment:
     DATABASE_URL: "{{database_url}}"
   sudo: yes
-  sudo_user: "{{project_name}}"
   tags:
     - static
+
+- name: stop postgres server
+  sudo: yes
+  command: service postgresql stop
+
+- name: delete existing lock files
+  file: name=/var/run/postgresql/.s.PGSQL.5432.lock state=absent
+
+- name: delete existing lock files
+  file: name=/var/run/postgresql/.s.PGSQL.5432 state=absent
+
+- name: remove postgres pid file
+  file: name=/var/lib/postgresql/9.1/main/postmaster.pid state=absent
+
+- name: remove gunicorn sock file
+  file: name=/tmp/{{project_name}}.gunicorn.sock state=absent
