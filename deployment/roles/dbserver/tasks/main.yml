@@ -7,6 +7,15 @@
     - libgeos-dev
     - python-psycopg2
 
+- name: delete existing lock files
+  file: name=/var/run/postgresql/.s.PGSQL.5432.lock state=absent
+
+- name: delete existing lock files
+  file: name=/var/run/postgresql/.s.PGSQL.5432 state=absent
+
+- name: remove postgres pid file
+  file: name=/var/lib/postgresql/9.1/main/postmaster.pid state=absent
+
 - name: start postgres server for the next steps
   sudo: yes
   command: service postgresql start
