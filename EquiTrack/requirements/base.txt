@@ -22,5 +22,4 @@ pykml==0.1.0
 Fiona==1.1.2
 Shapely==1.3.0
 gunicorn==18.0
-
-
+git+https://github.com/UNICEFLebanonInnovation/ActvityInfoPython.git

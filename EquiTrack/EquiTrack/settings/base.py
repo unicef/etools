@@ -298,6 +298,7 @@ LOCAL_APPS = (
     'reports',
     'locations',
     'partners',
+    'activityinfo',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
