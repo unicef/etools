@@ -7,7 +7,6 @@ from . import models
 
 class DatabaseAdmin(admin.ModelAdmin):
     readonly_fields = (
-        'name',
         'description',
         'country_name',
         'ai_country_id'

@@ -1,8 +1,6 @@
 __author__ = 'jcranwellward'
 
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes import generic
 
 from activtyinfo_client import ActivityInfoClient
 
@@ -11,12 +9,12 @@ from partners.models import PCA, IndicatorProgress
 
 class Database(models.Model):
 
-    ai_id = models.PositiveIntegerField()
+    ai_id = models.PositiveIntegerField(verbose_name='ActivityInfo ID')
+    name = models.CharField(max_length=254)
     username = models.CharField(max_length=254)
     password = models.CharField(max_length=254)
 
     # read only fields
-    name = models.CharField(max_length=254, null=True)
     description = models.CharField(max_length=254, null=True)
     country_name = models.CharField(max_length=254, null=True)
     ai_country_id = models.PositiveIntegerField(null=True)
@@ -82,24 +80,24 @@ class Database(models.Model):
 
         reports = 0
         for progress in IndicatorProgress.objects.filter(
-                activity_info_indicator__isnull=False):
+                indicator__activity_info_indicators__isnull=False):
 
-            ai_indicator = progress.indicator.activity_info_indicator
-            sites = client.get_sites(
-                activity=ai_indicator.activity.ai_id,
-                indicator=ai_indicator.ai_id
-            )
+            for ai_indicator in progress.indicator.activity_info_indicators.all():
+                sites = client.get_sites(
+                    activity=ai_indicator.activity.ai_id,
+                    indicator=ai_indicator.ai_id
+                )
 
-            for site in sites:
-                ai_partner = Partner.objects.get(ai_id=site['partner']['id'])
-                if progress.pca.partner.activity_info_partner == ai_partner:
-                    report, created = PartnerReport.objects.get_or_create(
-                        pca=progress.pca,
-                        indicator=progress.indicator,
-                        indicator_value=site['indicatorValues'][ai_indicator.ai_id]
-                    )
-                    if created:
-                        reports += 1
+                for site in sites:
+                    ai_partner = Partner.objects.get(ai_id=site['partner']['id'])
+                    if progress.pca.partner.activity_info_partner == ai_partner:
+                        report, created = PartnerReport.objects.get_or_create(
+                            pca=progress.pca,
+                            indicator=progress.indicator,
+                            indicator_value=site['indicatorValues'][ai_indicator.ai_id]
+                        )
+                        if created:
+                            reports += 1
         return reports
 
 
@@ -148,7 +146,3 @@ class PartnerReport(models.Model):
     pca = models.ForeignKey(PCA)
     indicator = models.ForeignKey(Indicator)
     indicator_value = models.IntegerField()
-
-    # content_type = models.ForeignKey(ContentType)
-    # object_id = models.PositiveIntegerField()
-    # content_object = generic.GenericForeignKey('content_type', 'object_id')

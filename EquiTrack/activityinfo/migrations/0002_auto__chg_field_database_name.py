@@ -8,76 +8,14 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'Database'
-        db.create_table(u'activityinfo_database', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
-            ('username', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('password', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
-            ('description', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
-            ('country_name', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
-            ('ai_country_id', self.gf('django.db.models.fields.PositiveIntegerField')(null=True)),
-        ))
-        db.send_create_signal(u'activityinfo', ['Database'])
 
-        # Adding model 'Partner'
-        db.create_table(u'activityinfo_partner', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
-            ('database', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Database'])),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('full_name', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
-        ))
-        db.send_create_signal(u'activityinfo', ['Partner'])
-
-        # Adding model 'Activity'
-        db.create_table(u'activityinfo_activity', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
-            ('database', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Database'])),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('location_type', self.gf('django.db.models.fields.CharField')(max_length=254)),
-        ))
-        db.send_create_signal(u'activityinfo', ['Activity'])
-
-        # Adding model 'Indicator'
-        db.create_table(u'activityinfo_indicator', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
-            ('activity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Activity'])),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('units', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('category', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
-        ))
-        db.send_create_signal(u'activityinfo', ['Indicator'])
-
-        # Adding model 'PartnerReport'
-        db.create_table(u'activityinfo_partnerreport', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('pca', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['partners.PCA'])),
-            ('indicator', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Indicator'])),
-            ('indicator_value', self.gf('django.db.models.fields.IntegerField')()),
-        ))
-        db.send_create_signal(u'activityinfo', ['PartnerReport'])
-
+        # Changing field 'Database.name'
+        db.alter_column(u'activityinfo_database', 'name', self.gf('django.db.models.fields.CharField')(default='none', max_length=254))
 
     def backwards(self, orm):
-        # Deleting model 'Database'
-        db.delete_table(u'activityinfo_database')
 
-        # Deleting model 'Partner'
-        db.delete_table(u'activityinfo_partner')
-
-        # Deleting model 'Activity'
-        db.delete_table(u'activityinfo_activity')
-
-        # Deleting model 'Indicator'
-        db.delete_table(u'activityinfo_indicator')
-
-        # Deleting model 'PartnerReport'
-        db.delete_table(u'activityinfo_partnerreport')
-
+        # Changing field 'Database.name'
+        db.alter_column(u'activityinfo_database', 'name', self.gf('django.db.models.fields.CharField')(max_length=254, null=True))
 
     models = {
         u'activityinfo.activity': {
@@ -95,7 +33,7 @@ class Migration(SchemaMigration):
             'country_name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
             'username': ('django.db.models.fields.CharField', [], {'max_length': '254'})
         },
