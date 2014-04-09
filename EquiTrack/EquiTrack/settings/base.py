@@ -296,11 +296,11 @@ THIRD_PARTY_APPS = (
 
 # Apps specific for this project go here.
 LOCAL_APPS = (
+    'activityinfo',
     'funds',
     'reports',
     'locations',
     'partners',
-    'activityinfo',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

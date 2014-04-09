@@ -81,6 +81,7 @@ class Indicator(models.Model):
     unit = models.ForeignKey(Unit)
     total = models.IntegerField()
     in_activity_info = models.BooleanField(default=False)
+    activity_info_indicators = models.ManyToManyField('activityinfo.Indicator')
 
     class Meta:
         ordering = ['name']
@@ -124,6 +125,7 @@ class Activity(models.Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name_plural = 'Activities'
 
     def __unicode__(self):
         return self.name

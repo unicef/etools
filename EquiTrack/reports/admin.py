@@ -58,6 +58,7 @@ class IndicatorAdmin(admin.ModelAdmin):
     list_editable = ('in_activity_info',)
     list_filter = (SectorListFilter, 'result_structure',)
     list_display = ('name', 'sector', 'result_structure', 'in_activity_info',)
+    filter_horizontal = ('activity_info_indicators',)
 
 
 admin.site.register(RRPObjective)

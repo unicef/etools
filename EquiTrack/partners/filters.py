@@ -167,7 +167,7 @@ class PCAIndicatorFilter(admin.SimpleListFilter):
             pca_ids = []
             for ip in IndicatorProgress.objects.filter(indicator=self.value()):
                 pca_ids.append(ip.pca.id)
-            return PCA.objects.filter(id__in=pca_ids)
+            return queryset.filter(id__in=pca_ids)
         return queryset
 
 
@@ -188,5 +188,5 @@ class PCAOutputFilter(admin.SimpleListFilter):
             pca_ids = []
             for ip in PCASectorOutput.objects.filter(output=self.value()):
                 pca_ids.append(ip.pca.id)
-            return PCA.objects.filter(id__in=pca_ids)
+            return queryset.filter(id__in=pca_ids)
         return queryset
