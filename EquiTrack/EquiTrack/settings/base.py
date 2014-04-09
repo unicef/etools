@@ -32,10 +32,12 @@ SUIT_CONFIG = {
 
         {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign'},
 
+        {'app': 'activityinfo', 'label': 'ActivityInfo'},
+
         {'label': 'Locations', 'icon': 'icon-globe', 'models': [
             {'label': 'Governorate', 'model': 'locations.governorate'},
             {'label': 'Cazas', 'model': 'locations.region'},
-            {'label': 'Localitys', 'model': 'locations.locality'},
+            {'label': 'Localities', 'model': 'locations.locality'},
             {'label': 'Gateways', 'model': 'locations.gatewaytype'},
             {'label': 'Locations', 'model': 'locations.location'},
         ]},
