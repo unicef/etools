@@ -29,7 +29,7 @@ then
 fi
 
 echo '>>> Starting new container'
-docker run -p 80:80 -d $PROJECT:latest supervisord
+docker run -p 80:80 -d -e "DJANGO_ALLOWED_HOST=equitrack.uniceflebanon.org" $PROJECT:latest supervisord
 
 echo '>>> Cleaning up containers'
 docker ps -a | grep "Exit" | awk '{print $1}' | while read -r id ; do
