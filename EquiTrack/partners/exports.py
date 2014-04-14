@@ -88,7 +88,7 @@ class SHPFormat(Format):
                     data['Unicef_mng'] = '{} {}'.format(loc.pca.unicef_mng_first_name, loc.pca.unicef_mng_last_name)
                     data['Total_budg'] = loc.pca.total_cash
                     data['Amendment'] = loc.pca.amendment
-                    data['Signed_by'] = loc.pca.signed_by_unicef_date.strftime("%d-%m-%Y") or ''
+                    data['Signed_by'] = loc.pca.signed_by_unicef_date.strftime("%d-%m-%Y") if loc.pca.signed_by_unicef_date else ''
                     data['Partner'] = loc.pca.partner.name
                     data['Partner_mn'] = '{} {}'.format(loc.pca.partner_mng_first_name, loc.pca.partner_mng_last_name)
                     data['Sectors'] = loc.pca.sectors
