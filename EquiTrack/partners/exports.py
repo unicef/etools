@@ -81,6 +81,10 @@ class SHPFormat(Format):
                 locations = GwPCALocation.objects.filter(pca__id=pca_data['ID'])
                 for loc in locations:
 
+                    # ignore locations with no point data
+                    if not loc.location.point:
+                        continue
+
                     data = dict()
                     data['ID'] = loc.pca.id
                     data['Title'] = loc.pca.title
