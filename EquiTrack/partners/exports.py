@@ -64,8 +64,9 @@ class SHPFormat(Format):
         # this dynamically changes with each dataset
         donors = {}
         for key in dataset.headers:
-            if 'Donor' in key:
-                donors[key] = 'str'
+            for patial_key in ['Donor', 'Grant', 'Amount']:
+                if patial_key in key:
+                    donors[key] = 'str'
         attribs.update(donors)
 
         schema = {'geometry': 'Point', 'properties': attribs}
@@ -74,9 +75,8 @@ class SHPFormat(Format):
             for pca_data in dataset.dict:
                 # copy donor data once for the pca
                 donor_copy = donors.copy()
-                for key,value in pca_data.iteritems():
-                    if 'Donor' in key:
-                        donor_copy[key] = value
+                for key in donors:
+                    donor_copy[key] = pca_data[key]
 
                 locations = GwPCALocation.objects.filter(pca__id=pca_data['ID'])
                 for loc in locations:
