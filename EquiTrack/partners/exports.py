@@ -6,12 +6,10 @@ import StringIO
 from lxml import etree
 from zipfile import ZipFile
 
-#from collections import OrderedDict
 from django.utils.datastructures import SortedDict
-from django.template import Context, loader
 
 from import_export import resources
-from import_export.formats.base_formats import Format, CSV
+from import_export.formats.base_formats import Format
 
 from pykml.factory import KML_ElementMaker as KML
 

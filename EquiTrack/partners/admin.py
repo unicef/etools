@@ -298,7 +298,7 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
 
 class PcaAdmin(ExportMixin, VersionAdmin):
     resource_class = PCAResource
-    # Add a custom export class KML exports
+    # Add a custom exports
     formats = DEFAULT_FORMATS + (KMLFormat, SHPFormat,)
     list_display = (
         'number',
