@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="main-content-wrapper">
+            <section id="main-content">
+                <!--tiles start-->
+                <div class="row">
+                    <div class="col-md-3 col-sm-6">
+                        <div class="dashboard-tile detail tile-red">
+                            <div class="content">
+                                <h1 class="text-left timer" data-from="0" data-to="180" data-speed="2500"> </h1>
+                                <p>Active</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-certificate"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="dashboard-tile detail tile-turquoise">
+                            <div class="content">
+                                <h1 class="text-left timer" data-from="0" data-to="56" data-speed="2500"> </h1>
+                                <p>Implemented</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-stop"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="dashboard-tile detail tile-blue">
+                            <div class="content">
+                                <h1 class="text-left timer" data-from="0" data-to="32" data-speed="2500"> </h1>
+                                <p>In-Process</p>
+                            </div>
+                            <div class="icon"><i class="fa fa fa-pencil"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6">
+                        <div class="dashboard-tile detail tile-purple">
+                            <div class="content">
+                                <h1 class="text-left timer" data-to="105" data-speed="2500"> </h1>
+                                <p>Cancelled</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-stop"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--tiles end-->
+
+                <!--ToDo start-->
+                <div class="row">
+
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">World</h3>
+                                <div class="actions pull-right">
+                                    <i class="fa fa-chevron-down"></i>
+                                    <i class="fa fa-times"></i>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                  <div id="world-map" style="height: 300px" class="map"></div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">Server Status</h3>
+                                        <div class="actions pull-right">
+                                            <i class="fa fa-chevron-down"></i>
+                                            <i class="fa fa-times"></i>
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+
+                                  <span class="sublabel">Memory Usage</span>
+                                  <div class="progress progress-striped">
+                                    <div class="progress-bar progress-bar-info" style="width: 20%">20%</div>
+                                  </div><!-- progress -->
+
+                                  <span class="sublabel">CPU Usage </span>
+                                  <div class="progress progress-striped">
+                                   <div class="progress-bar progress-bar-default" style="width: 60%">60%</div>
+                                  </div><!-- progress -->
+
+                                  <span class="sublabel">Disk Usage </span>
+                                  <div class="progress progress-striped">
+                                    <div class="progress-bar progress-bar-warning" style="width: 80%">80%</div>
+                                  </div><!-- progress -->
+                  
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!--ToDo end-->
+            </section>
+        </section>
+{% endblock content %}

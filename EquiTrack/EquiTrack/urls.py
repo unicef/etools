@@ -12,7 +12,7 @@ admin.autodiscover()
 
 urlpatterns = patterns(
     '',
-    url(r'^$', login_required(TemplateView.as_view(template_name='base.html'))),
+    url(r'^$', login_required(TemplateView.as_view(template_name='dashboard.html'))),
     url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
 
     url(r'partners/', include('partners.urls')),
