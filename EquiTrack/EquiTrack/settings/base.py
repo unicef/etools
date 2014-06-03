@@ -49,6 +49,10 @@ SUIT_CONFIG = {
 LOGIN_URL = '/login/'
 
 REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
     )
@@ -291,6 +295,7 @@ THIRD_PARTY_APPS = (
     'rest_framework',
     'import_export',
     'smart_selects',
+    'suit_ckeditor',
     'gunicorn',
 )
 
@@ -301,6 +306,7 @@ LOCAL_APPS = (
     'reports',
     'locations',
     'partners',
+    'trips',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
