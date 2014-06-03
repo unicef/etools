@@ -23,7 +23,6 @@ from reports.models import (
 )
 from locations.models import (
     Governorate,
-    GatewayType,
     Locality,
     Location,
     Region,
@@ -68,6 +67,7 @@ class PCA(models.Model):
     unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
+    unicef_managers = models.ManyToManyField('auth.User')
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
@@ -145,6 +145,8 @@ class PCA(models.Model):
                 self.number)
             )
 
+        #TODO: copy over existing managers
+
         # copy over grants
         for grant in original.pcagrant_set.all():
             PCAGrant.objects.create(
@@ -209,16 +211,10 @@ class PCA(models.Model):
         """
         Calculate total cash on save
         """
-        if self.partner_contribution_budget \
-            or self.unicef_cash_budget \
-            or self.in_kind_amount_budget:
-            self.total_cash = (
-                self.partner_contribution_budget +
-                self.unicef_cash_budget +
-                self.in_kind_amount_budget
-            )
-        else:
-            self.total_cash = 0
+        partner_budget = self.partner_contribution_budget or 0
+        unicef_budget = self.unicef_cash_budget or 0
+        in_kind = self.in_kind_amount_budget or 0
+        self.total_cash = partner_budget + unicef_budget + in_kind
 
         # populate sectors display string
         if self.pcasector_set.all().count():
@@ -259,7 +255,6 @@ class GwPCALocation(models.Model):
         show_all=False,
         auto_choose=True,
     )
-    gateway = models.ForeignKey(GatewayType, null=True, blank=True)
     location = ChainedForeignKey(
         Location,
         chained_field="locality",
@@ -367,6 +362,10 @@ class PCASectorImmediateResult(models.Model):
     Intermediate_result = models.ForeignKey(IntermediateResult)
 
     wbs_activities = models.ManyToManyField(WBS)
+
+    class Meta:
+        verbose_name = 'Intermediate Result'
+        verbose_name_plural = 'Intermediate Results'
 
     def __unicode__(self):
         return self.Intermediate_result.name
