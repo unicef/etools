@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 import autocomplete_light
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin, DEFAULT_FORMATS
+from generic_links.admin import GenericLinkStackedInline
 
 from funds.models import Grant
 from reports.models import (
@@ -367,6 +368,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         PcaSectorInlineAdmin,
         PcaLocationInlineAdmin,
         PCAFileInline,
+        GenericLinkStackedInline,
     )
 
     def created_date(self, obj):

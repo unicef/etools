@@ -28,6 +28,8 @@ SUIT_CONFIG = {
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
         ]},
 
+        {'app': 'trips', 'icon': 'icon-road'},
+
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
         {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign'},
@@ -296,6 +298,7 @@ THIRD_PARTY_APPS = (
     'import_export',
     'smart_selects',
     'suit_ckeditor',
+    'generic_links',
     'gunicorn',
 )
 

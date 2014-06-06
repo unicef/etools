@@ -5,11 +5,11 @@ from copy import deepcopy
 
 import reversion
 from django.db import models, transaction
-from django.core import urlresolvers
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 
+from EquiTrack.utils import get_changeform_link
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -276,17 +276,7 @@ class GwPCALocation(models.Model):
         )
 
     def view_location(self):
-        if self.id:
-            url_name = 'admin:{app_label}_{model_name}_{action}'.format(
-                app_label=self.location._meta.app_label,
-                model_name=self.location._meta.model_name,
-                action='change'
-            )
-            location_url = urlresolvers.reverse(url_name, args=(self.location.id,))
-            return u'<a class="btn btn-primary default" ' \
-                   u'onclick="return showAddAnotherPopup(this);" ' \
-                   u'href="{}" target="_blank">View</a>'.format(location_url)
-        return u''
+        return get_changeform_link(self)
     view_location.allow_tags = True
     view_location.short_description = 'View Location'
 
@@ -307,17 +297,7 @@ class PCASector(models.Model):
         )
 
     def changeform_link(self):
-        if self.id:
-            url_name = 'admin:{app_label}_{model_name}_{action}'.format(
-                app_label=self._meta.app_label,
-                model_name=self._meta.model_name,
-                action='change'
-            )
-            changeform_url = urlresolvers.reverse(url_name, args=(self.id,))
-            return u'<a class="btn btn-primary default" ' \
-                   u'onclick="return showAddAnotherPopup(this);" ' \
-                   u'href="{}" target="_blank">Details</a>'.format(changeform_url)
-        return u''
+        return get_changeform_link(self, link_name='Details')
     changeform_link.allow_tags = True
     changeform_link.short_description = 'View Sector Details'
 
@@ -375,7 +355,7 @@ class IndicatorProgress(models.Model):
 
     pca_sector = models.ForeignKey(PCASector)
     indicator = models.ForeignKey(Indicator)
-    programmed = models.IntegerField()
+    programmed = models.PositiveIntegerField()
     current = models.IntegerField(blank=True, null=True, default=0)
 
     def __unicode__(self):
@@ -392,6 +372,11 @@ class IndicatorProgress(models.Model):
     def unit(self):
         return self.indicator.unit.type if self.id else ''
     unit.short_description = 'Unit'
+
+    def changeform_link(self):
+        return get_changeform_link(self.pca_sector, link_name='View PCA')
+    changeform_link.allow_tags = True
+    changeform_link.short_description = 'View PCA Details'
 
 
 class FileType(models.Model):

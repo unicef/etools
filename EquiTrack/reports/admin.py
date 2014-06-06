@@ -2,6 +2,7 @@ __author__ = 'jcranwellward'
 
 from django.contrib import admin
 
+from partners.models import IndicatorProgress
 from reports.models import (
     Sector,
     WBS,
@@ -53,12 +54,46 @@ class ResultStructureAdmin(admin.ModelAdmin):
     list_display = ('name', 'sector', 'result_structure',)
 
 
+class IndicatorProgressInlineAdmin(admin.TabularInline):
+    can_delete = False
+    model = IndicatorProgress
+    extra = 0
+    fields = (
+        'pca_sector',
+        'programmed',
+        'changeform_link',
+    )
+    readonly_fields = (
+        'pca_sector',
+        'programmed',
+        'changeform_link',
+    )
+
+    def has_add_permission(self, request):
+        False
+
+
 class IndicatorAdmin(admin.ModelAdmin):
     search_fields = ('name',)
-    list_editable = ('in_activity_info',)
-    list_filter = (SectorListFilter, 'result_structure',)
-    list_display = ('name', 'sector', 'result_structure', 'in_activity_info',)
-    filter_horizontal = ('activity_info_indicators',)
+    list_editable = (
+        'in_activity_info',
+        'view_on_dashboard',
+    )
+    list_filter = (
+        SectorListFilter,
+        'result_structure',
+    )
+    list_display = (
+        'name',
+        'sector',
+        'result_structure',
+        'in_activity_info',
+        'view_on_dashboard',
+    )
+    filter_horizontal = (
+        'activity_info_indicators',
+    )
+    inlines = [IndicatorProgressInlineAdmin]
 
 
 admin.site.register(RRPObjective)
