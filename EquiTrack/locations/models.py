@@ -117,7 +117,8 @@ class LinkedLocation(models.Model):
         chained_field="locality",
         chained_model_field="locality",
         show_all=False,
-        auto_choose=True
+        auto_choose=False,
+        null=True, blank=True
     )
 
     content_type = models.ForeignKey(ContentType)
