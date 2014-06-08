@@ -145,7 +145,7 @@ class PCA(models.Model):
                 self.number)
             )
 
-        #TODO: copy over existing managers
+        amendment.unicef_managers = original.unicef_managers.all()
 
         # copy over grants
         for grant in original.pcagrant_set.all():
