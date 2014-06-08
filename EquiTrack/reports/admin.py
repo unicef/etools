@@ -70,7 +70,7 @@ class IndicatorProgressInlineAdmin(admin.TabularInline):
     )
 
     def has_add_permission(self, request):
-        False
+        return False
 
 
 class IndicatorAdmin(admin.ModelAdmin):
