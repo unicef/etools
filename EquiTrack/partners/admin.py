@@ -264,7 +264,7 @@ class PcaGrantInlineAdmin(admin.TabularInline):
     extra = 0
 
 
-class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
+class PcaSectorAdmin(SectorMixin, VersionAdmin):
     form = autocomplete_light.modelform_factory(
         PCASector
     )
