@@ -14,7 +14,9 @@ class DashboardView(TemplateView):
 
         sectors = {}
         for sector in Sector.objects.all():
-            indicators = sector.indicator_set.all()
+            indicators = sector.indicator_set.filter(
+                view_on_dashboard=True
+            )
             if not indicators:
                 continue
             sectors[sector.name] = [
