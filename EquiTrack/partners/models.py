@@ -5,11 +5,11 @@ from copy import deepcopy
 
 import reversion
 from django.db import models, transaction
-from django.core import urlresolvers
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 
+from EquiTrack.utils import get_changeform_link
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -23,7 +23,6 @@ from reports.models import (
 )
 from locations.models import (
     Governorate,
-    GatewayType,
     Locality,
     Location,
     Region,
@@ -68,6 +67,7 @@ class PCA(models.Model):
     unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
+    unicef_managers = models.ManyToManyField('auth.User')
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
@@ -145,6 +145,8 @@ class PCA(models.Model):
                 self.number)
             )
 
+        #TODO: copy over existing managers
+
         # copy over grants
         for grant in original.pcagrant_set.all():
             PCAGrant.objects.create(
@@ -209,16 +211,10 @@ class PCA(models.Model):
         """
         Calculate total cash on save
         """
-        if self.partner_contribution_budget \
-            or self.unicef_cash_budget \
-            or self.in_kind_amount_budget:
-            self.total_cash = (
-                self.partner_contribution_budget +
-                self.unicef_cash_budget +
-                self.in_kind_amount_budget
-            )
-        else:
-            self.total_cash = 0
+        partner_budget = self.partner_contribution_budget or 0
+        unicef_budget = self.unicef_cash_budget or 0
+        in_kind = self.in_kind_amount_budget or 0
+        self.total_cash = partner_budget + unicef_budget + in_kind
 
         # populate sectors display string
         if self.pcasector_set.all().count():
@@ -259,7 +255,6 @@ class GwPCALocation(models.Model):
         show_all=False,
         auto_choose=True,
     )
-    gateway = models.ForeignKey(GatewayType, null=True, blank=True)
     location = ChainedForeignKey(
         Location,
         chained_field="locality",
@@ -281,17 +276,7 @@ class GwPCALocation(models.Model):
         )
 
     def view_location(self):
-        if self.id:
-            url_name = 'admin:{app_label}_{model_name}_{action}'.format(
-                app_label=self.location._meta.app_label,
-                model_name=self.location._meta.model_name,
-                action='change'
-            )
-            location_url = urlresolvers.reverse(url_name, args=(self.location.id,))
-            return u'<a class="btn btn-primary default" ' \
-                   u'onclick="return showAddAnotherPopup(this);" ' \
-                   u'href="{}" target="_blank">View</a>'.format(location_url)
-        return u''
+        return get_changeform_link(self)
     view_location.allow_tags = True
     view_location.short_description = 'View Location'
 
@@ -312,17 +297,7 @@ class PCASector(models.Model):
         )
 
     def changeform_link(self):
-        if self.id:
-            url_name = 'admin:{app_label}_{model_name}_{action}'.format(
-                app_label=self._meta.app_label,
-                model_name=self._meta.model_name,
-                action='change'
-            )
-            changeform_url = urlresolvers.reverse(url_name, args=(self.id,))
-            return u'<a class="btn btn-primary default" ' \
-                   u'onclick="return showAddAnotherPopup(this);" ' \
-                   u'href="{}" target="_blank">Details</a>'.format(changeform_url)
-        return u''
+        return get_changeform_link(self, link_name='Details')
     changeform_link.allow_tags = True
     changeform_link.short_description = 'View Sector Details'
 
@@ -368,6 +343,10 @@ class PCASectorImmediateResult(models.Model):
 
     wbs_activities = models.ManyToManyField(WBS)
 
+    class Meta:
+        verbose_name = 'Intermediate Result'
+        verbose_name_plural = 'Intermediate Results'
+
     def __unicode__(self):
         return self.Intermediate_result.name
 
@@ -376,7 +355,7 @@ class IndicatorProgress(models.Model):
 
     pca_sector = models.ForeignKey(PCASector)
     indicator = models.ForeignKey(Indicator)
-    programmed = models.IntegerField()
+    programmed = models.PositiveIntegerField()
     current = models.IntegerField(blank=True, null=True, default=0)
 
     def __unicode__(self):
@@ -393,6 +372,11 @@ class IndicatorProgress(models.Model):
     def unit(self):
         return self.indicator.unit.type if self.id else ''
     unit.short_description = 'Unit'
+
+    def changeform_link(self):
+        return get_changeform_link(self.pca_sector, link_name='View PCA')
+    changeform_link.allow_tags = True
+    changeform_link.short_description = 'View PCA Details'
 
 
 class FileType(models.Model):

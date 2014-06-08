@@ -18,8 +18,8 @@ class GWLocationSerializer(serializers.ModelSerializer):
     longitude = serializers.CharField(source='location.point.x')
     location_name = serializers.CharField(source='location.name')
     location_type = serializers.CharField(source='location.gateway.name')
-    gateway_name = serializers.CharField(source='gateway.name')
-    gateway_id = serializers.CharField(source='gateway.id')
+    gateway_name = serializers.CharField(source='location.gateway.name')
+    gateway_id = serializers.CharField(source='location.gateway.id')
 
     class Meta:
         model = GwPCALocation

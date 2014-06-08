@@ -28,6 +28,8 @@ SUIT_CONFIG = {
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
         ]},
 
+        {'app': 'trips', 'icon': 'icon-road'},
+
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
         {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign'},
@@ -49,6 +51,10 @@ SUIT_CONFIG = {
 LOGIN_URL = '/login/'
 
 REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
     )
@@ -291,7 +297,11 @@ THIRD_PARTY_APPS = (
     'rest_framework',
     'import_export',
     'smart_selects',
+    'suit_ckeditor',
+    'generic_links',
     'gunicorn',
+    'post_office',
+    'djrill',
 )
 
 # Apps specific for this project go here.
@@ -301,6 +311,7 @@ LOCAL_APPS = (
     'reports',
     'locations',
     'partners',
+    'trips',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
@@ -339,6 +350,24 @@ LOGGING = {
     }
 }
 ########## END LOGGING CONFIGURATION
+
+
+########## CACHE CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+########## END CACHE CONFIGURATION
+
+
+########## EMAIL CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
+MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", '')
+POST_OFFICE_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+EMAIL_BACKEND = 'post_office.EmailBackend'
+########## END EMAIL CONFIGURATION
 
 
 ########## WSGI CONFIGURATION

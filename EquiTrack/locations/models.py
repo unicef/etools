@@ -1,6 +1,11 @@
 __author__ = 'jcranwellward'
 
+from django.core import urlresolvers
 from django.contrib.gis.db import models
+from django.contrib.contenttypes.generic import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
+from smart_selects.db_fields import ChainedForeignKey
 
 
 class Governorate(models.Model):
@@ -86,3 +91,60 @@ class Location(models.Model):
     class Meta:
         unique_together = ('name', 'gateway', 'p_code')
         ordering = ['name']
+
+
+class LinkedLocation(models.Model):
+    """
+    Generic model for linking locations to anything
+    """
+    governorate = models.ForeignKey(Governorate)
+    region = ChainedForeignKey(
+        Region,
+        chained_field="governorate",
+        chained_model_field="governorate",
+        show_all=False,
+        auto_choose=True,
+    )
+    locality = ChainedForeignKey(
+        Locality,
+        chained_field="region",
+        chained_model_field="region",
+        show_all=False,
+        auto_choose=True,
+    )
+    location = ChainedForeignKey(
+        Location,
+        chained_field="locality",
+        chained_model_field="locality",
+        show_all=False,
+        auto_choose=False,
+        null=True, blank=True
+    )
+
+    content_type = models.ForeignKey(ContentType)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def __unicode__(self):
+        return u'{} -> {} -> {} -> {} ({})'.format(
+            self.governorate.name,
+            self.region.name,
+            self.locality.name,
+            self.location.name,
+            self.location.gateway.name
+        )
+
+    def view_location(self):
+        if self.id:
+            url_name = 'admin:{app_label}_{model_name}_{action}'.format(
+                app_label=self.location._meta.app_label,
+                model_name=self.location._meta.model_name,
+                action='change'
+            )
+            location_url = urlresolvers.reverse(url_name, args=(self.location.id,))
+            return u'<a class="btn btn-primary default" ' \
+                   u'onclick="return showAddAnotherPopup(this);" ' \
+                   u'href="{}" target="_blank">View</a>'.format(location_url)
+        return u''
+    view_location.allow_tags = True
+    view_location.short_description = 'View Location'
