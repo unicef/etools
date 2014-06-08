@@ -52,6 +52,7 @@ class LocalityAdmin(admin.GeoModelAdmin):
     search_fields = ('name', 'cas_code')
     list_filter = ('region', 'cas_code')
 
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
 admin.site.register(models.Governorate, admin.GeoModelAdmin)

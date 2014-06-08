@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 import autocomplete_light
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin, DEFAULT_FORMATS
+from generic_links.admin import GenericLinkStackedInline
 
 from funds.models import Grant
 from reports.models import (
@@ -79,8 +80,6 @@ class SectorMixin(object):
 
 class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
     model = PCASectorImmediateResult
-    verbose_name = 'Immediate Result'
-    verbose_name_plural = 'Immediate Results'
     filter_horizontal = ('wbs_activities',)
     extra = 0
 
@@ -115,7 +114,6 @@ class PcaLocationInlineAdmin(admin.TabularInline):
         'governorate',
         'region',
         'locality',
-        'gateway',
         'location',
         'view_location',
     )
@@ -123,15 +121,6 @@ class PcaLocationInlineAdmin(admin.TabularInline):
         'view_location',
     )
     extra = 5
-
-    # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-    #     """
-    #     Put everything alpha order
-    #     """
-    #     kwargs['queryset'] = db_field.rel.to.objects.all().order_by('name')
-    #     return super(PcaLocationInlineAdmin, self).formfield_for_foreignkey(
-    #         db_field, request, **kwargs
-    #     )
 
 
 class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
@@ -275,7 +264,7 @@ class PcaGrantInlineAdmin(admin.TabularInline):
     extra = 0
 
 
-class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
+class PcaSectorAdmin(SectorMixin, VersionAdmin):
     form = autocomplete_light.modelform_factory(
         PCASector
     )
@@ -298,7 +287,7 @@ class PcaSectorAdmin(SectorMixin, admin.ModelAdmin):
 
 class PcaAdmin(ExportMixin, VersionAdmin):
     resource_class = PCAResource
-    # Add a custom exports
+    # Add custom exports
     formats = DEFAULT_FORMATS + (KMLFormat, SHPFormat,)
     list_display = (
         'number',
@@ -342,6 +331,9 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         'total_cash',
         'amendment',
     )
+    filter_horizontal = (
+        'unicef_managers',
+    )
     fieldsets = (
         (_('Info'), {
             'fields':
@@ -355,10 +347,10 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         (_('Dates'), {
             'fields':
                 (('start_date', 'end_date',),
-                 ('unicef_mng_first_name', 'unicef_mng_last_name', 'unicef_mng_email', 'signed_by_unicef_date', ),
-                 ('partner_mng_first_name', 'partner_mng_last_name', 'partner_mng_email', 'signed_by_partner_date', ),
+                 ('signed_by_unicef_date', 'signed_by_partner_date',),
+                 ('unicef_managers',),
+                 ('partner_mng_first_name', 'partner_mng_last_name', 'partner_mng_email',),
                 ),
-            'classes': ('grp-collapse', 'grp-close')
 
         }),
         (_('Budget'), {
@@ -367,7 +359,6 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                  ('unicef_cash_budget', 'in_kind_amount_budget', 'total_unicef_contribution',),
                  'total_cash',
                 ),
-            'classes': ('grp-collapse', 'grp-close')
         }),
     )
     actions = ['create_amendment']
@@ -377,6 +368,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         PcaSectorInlineAdmin,
         PcaLocationInlineAdmin,
         PCAFileInline,
+        GenericLinkStackedInline,
     )
 
     def created_date(self, obj):

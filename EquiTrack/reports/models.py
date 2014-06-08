@@ -80,6 +80,7 @@ class Indicator(models.Model):
     name = models.CharField(max_length=128L, unique=True)
     unit = models.ForeignKey(Unit)
     total = models.IntegerField()
+    view_on_dashboard = models.BooleanField(default=False)
     in_activity_info = models.BooleanField(default=False)
     activity_info_indicators = models.ManyToManyField('activityinfo.Indicator')
 
@@ -92,6 +93,11 @@ class Indicator(models.Model):
             self.name,
             'ActivityInfo' if self.in_activity_info else ''
         )
+
+    @property
+    def programmed(self):
+        total = self.indicatorprogress_set.aggregate(models.Sum('programmed'))
+        return total[total.keys()[0]] or 0
 
 
 class IntermediateResult(models.Model):
