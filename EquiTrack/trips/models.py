@@ -95,7 +95,8 @@ class Trip(AdminURLMixin, models.Model):
         u'auth.User',
         blank=True, null=True,
         verbose_name='Assistant Responsible for TA',
-        help_text='Needed if a Travel Authorisation (TA) is required'
+        help_text='Needed if a Travel Authorisation (TA) is required',
+        related_name='managed_trips'
     )
     wbs = models.ForeignKey(
         WBS,
