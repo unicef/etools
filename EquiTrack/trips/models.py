@@ -7,7 +7,6 @@ from django.contrib.contenttypes.generic import (
     GenericForeignKey, GenericRelation
 )
 
-import reversion
 from filer.fields.file import FilerFileField
 
 from EquiTrack.utils import AdminURLMixin
