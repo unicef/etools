@@ -300,6 +300,8 @@ THIRD_PARTY_APPS = (
     'suit_ckeditor',
     'generic_links',
     'gunicorn',
+    'post_office',
+    'djrill',
 )
 
 # Apps specific for this project go here.
@@ -348,6 +350,24 @@ LOGGING = {
     }
 }
 ########## END LOGGING CONFIGURATION
+
+
+########## CACHE CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+########## END CACHE CONFIGURATION
+
+
+########## EMAIL CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
+MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", '')
+POST_OFFICE_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+EMAIL_BACKEND = 'post_office.EmailBackend'
+########## END EMAIL CONFIGURATION
 
 
 ########## WSGI CONFIGURATION
