@@ -203,7 +203,6 @@ class PCA(models.Model):
                 governorate=location.governorate,
                 region=location.region,
                 locality=location.locality,
-                gateway=location.location.gateway,
                 location=location.location
             )
 
@@ -393,7 +392,7 @@ class PCAFile(models.Model):
     file = FilerFileField()
 
     def __unicode__(self):
-        return self.file.name
+        return self.file.file.name
 
     def download_url(self):
         if self.file:

@@ -7,7 +7,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
 from reversion import VersionAdmin
-from import_export.admin import ExportMixin, DEFAULT_FORMATS
+from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
 from funds.models import Grant
@@ -288,7 +288,11 @@ class PcaSectorAdmin(SectorMixin, VersionAdmin):
 class PcaAdmin(ExportMixin, VersionAdmin):
     resource_class = PCAResource
     # Add custom exports
-    formats = DEFAULT_FORMATS + (KMLFormat, SHPFormat,)
+    formats = (
+        base_formats.CSV,
+        KMLFormat,
+        SHPFormat,
+    )
     list_display = (
         'number',
         'status',
@@ -348,6 +352,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
             'fields':
                 (('start_date', 'end_date',),
                  ('signed_by_unicef_date', 'signed_by_partner_date',),
+                 ('unicef_mng_first_name', 'unicef_mng_last_name', 'unicef_mng_email',),
                  ('unicef_managers',),
                  ('partner_mng_first_name', 'partner_mng_last_name', 'partner_mng_email',),
                 ),
