@@ -9,7 +9,7 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>SpaceLab</title>
+    <title>EquiTrack</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <!-- Favicon -->
@@ -49,7 +49,7 @@
             <header id="header">
                 <!--logo start-->
                 <div class="brand">
-                    <a href="index.html" class="logo"><span>Equi</span>Track</a>
+                    <a href="{% url 'dashboard' %}" class="logo"><span>Equi</span>Track</a>
                 </div>
                 <!--logo end-->
 
@@ -70,10 +70,7 @@
                             </a>
                             <ul class="dropdown-menu animated fadeInDown">
                                 <li>
-                                    <a href="#"><i class="fa fa-user"></i> Profile</a>
-                                </li>
-                                <li>
-                                    <a href="#"><i class="fa fa-power-off"></i> Logout</a>
+                                    <a href="{% url "admin:logout" %}"><i class="fa fa-power-off"></i> Logout</a>
                                 </li>
                             </ul>
                         </li>

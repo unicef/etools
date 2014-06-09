@@ -141,8 +141,8 @@ class PCA(models.Model):
             # make manual revision point
             reversion.set_user(user)
             reversion.set_comment("Amendment {} created for PCA: {}".format(
-                self.amendment_number,
-                self.number)
+                amendment.amendment_number,
+                amendment.number)
             )
 
         amendment.unicef_managers = original.unicef_managers.all()
