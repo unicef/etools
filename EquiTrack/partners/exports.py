@@ -427,10 +427,6 @@ class PCAResource(resources.ModelResource):
 
         self.headers = fields
 
-        # temporarily raise an error if we exceed the currently column limit
-        if len(self.headers) > 256:
-            raise Exception("Too many columns for Excel export, limit is currently 256")
-
         # Iterate without the queryset cache, to avoid wasting memory when
         # exporting large datasets.
         for pca in queryset.iterator():
