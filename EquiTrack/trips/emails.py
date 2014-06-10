@@ -20,7 +20,7 @@ def _send_mail(sender, template, variables, *recipients):
     )
 
 
-@receiver(post_save, sender=Trip)
+#@receiver(post_save, sender=Trip)
 def send_trip_request(sender, instance, created, **kwargs):
     if created:
         current_site = Site.objects.get_current()

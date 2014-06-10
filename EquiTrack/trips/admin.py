@@ -32,11 +32,15 @@ class ActionPointInlineAdmin(admin.TabularInline):
 
 class SitesVisitedInlineAdmin(GenericTabularInline):
     model = LinkedLocation
-    suit_classes = u'suit-tab suit-tab-reporting'
+    suit_classes = u'suit-tab suit-tab-planning'
 
 
 class FileAttachmentInlineAdmin(GenericTabularInline):
     model = FileAttachment
+    suit_classes = u'suit-tab suit-tab-attachments'
+
+
+class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
 
 
@@ -123,7 +127,7 @@ class TripReportAdmin(VersionAdmin):
         SitesVisitedInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
-        GenericLinkStackedInline,
+        LinksInlineAdmin,
     )
     list_display = (
         u'purpose_of_travel',

@@ -47,5 +47,14 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
         },
     }
 
+
+########## EMAIL CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
+MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", '')
+POST_OFFICE_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+EMAIL_BACKEND = 'post_office.EmailBackend'
+########## END EMAIL CONFIGURATION
+
+
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
