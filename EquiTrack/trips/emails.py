@@ -19,6 +19,7 @@ def _send_mail(sender, template, variables, *recipients):
         priority='now',
     )
 
+
 @receiver(post_save, sender=Trip)
 def send_trip_request(sender, instance, created, **kwargs):
     if created:

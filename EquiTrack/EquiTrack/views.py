@@ -26,9 +26,21 @@ class DashboardView(TemplateView):
         return {
             'sectors': sectors,
             'pcas': {
-                'active': PCA.objects.filter(status='active').count(),
-                'implemented': PCA.objects.filter(status='implemented').count(),
-                'in_process': PCA.objects.filter(status='in_process').count(),
-                'cancelled': PCA.objects.filter(status='cancelled').count(),
+                'active': PCA.objects.filter(
+                    status='active',
+                    amendment_number=0,
+                ).count(),
+                'implemented': PCA.objects.filter(
+                    status='implemented',
+                    amendment_number=0,
+                ).count(),
+                'in_process': PCA.objects.filter(
+                    status='in_process',
+                    amendment_number=0,
+                ).count(),
+                'cancelled': PCA.objects.filter(
+                    status='cancelled',
+                    amendment_number=0,
+                ).count(),
             }
         }
