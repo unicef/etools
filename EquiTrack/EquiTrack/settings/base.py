@@ -362,14 +362,6 @@ CACHES = {
 ########## END CACHE CONFIGURATION
 
 
-########## EMAIL CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", '')
-POST_OFFICE_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
-EMAIL_BACKEND = 'post_office.EmailBackend'
-########## END EMAIL CONFIGURATION
-
-
 ########## WSGI CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
