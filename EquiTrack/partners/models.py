@@ -112,7 +112,8 @@ class PCA(models.Model):
         return 0
 
     def total_unicef_contribution(self):
-        return self.unicef_cash_budget + self.in_kind_amount_budget
+        return self.unicef_cash_budget + self.in_kind_amount_budget \
+            if self.in_kind_amount_budget else 0
     total_unicef_contribution.short_description = 'Total Unicef contribution budget'
 
     def make_amendment(self, user):
@@ -210,10 +211,9 @@ class PCA(models.Model):
         """
         Calculate total cash on save
         """
-        partner_budget = self.partner_contribution_budget or 0
-        unicef_budget = self.unicef_cash_budget or 0
-        in_kind = self.in_kind_amount_budget or 0
-        self.total_cash = partner_budget + unicef_budget + in_kind
+        partner_budget = self.partner_contribution_budget \
+            if self.partner_contribution_budget else 0
+        self.total_cash = partner_budget + self.total_unicef_contribution()
 
         # populate sectors display string
         if self.pcasector_set.all().count():

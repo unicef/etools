@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block body %}
+<body class="animated fadeIn">
+    <section id="login-container">
+
+        <div class="row">
+            <div class="col-md-3" id="login-wrapper">
+                <div class="panel panel-primary animated flipInY">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                           EquiTrack | Sign In
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                       <p> Login to access your account.</p>
+                        <form class="form-horizontal" role="form" method="post">
+                            {% csrf_token %}
+                            {% for error in form.non_field_errors %}
+                                <p class="text-danger">{{ error }}</p>
+                            {% endfor %}
+                            <div class="form-group">
+                                <div class="col-md-12">
+                                    <input type="text"
+                                           class="form-control"
+                                           name="{{ form.username.name }}"
+                                           id="{{ form.username.id_for_label }}"
+                                           placeholder="{{ form.username.label }}">
+{#                                    <i class="fa fa-user"></i>#}
+                                    {% for error in form.username.errors %}
+                                        <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="form-group">
+                               <div class="col-md-12">
+                                    <input type="password"
+                                           class="form-control"
+                                           name="{{ form.password.name }}"
+                                           id="{{ form.password.id_for_label }}"
+                                           placeholder="{{ form.password.label }}">
+{#                                    <i class="fa fa-lock"></i>#}
+                                    {% for error in form.password.errors %}
+                                        <span class="text-danger">{{ error }}</span>
+                                    {% endfor %}
+                                    <a href="{% url "password_reset" %}" class="help-block">Forgot Your Password?</a>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                               <div class="col-md-12">
+                                    <input type="submit" class="btn btn-primary btn-block" value="Sign In"/>
+{#                                    <hr />#}
+{#                                    <a href="pages-sign-up.html" class="btn btn-default btn-block">Not a member? Sign Up</a>#}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</body>
+{% endblock %}

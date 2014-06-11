@@ -64,16 +64,20 @@
                         <li class="profile-photo">
                             <img src="{{ STATIC_URL }}img/avatar.png" alt="" class="img-circle">
                         </li>
+                        {% if user.is_authenticated %}
                         <li class="dropdown settings">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                James Cranwell-Ward <i class="fa fa-angle-down"></i>
+                                {{ user.get_full_name }} <i class="fa fa-angle-down"></i>
                             </a>
                             <ul class="dropdown-menu animated fadeInDown">
                                 <li>
-                                    <a href="{% url "admin:logout" %}"><i class="fa fa-power-off"></i> Logout</a>
+                                    <a href="{% url "logout" %}"><i class="fa fa-power-off"></i> Logout</a>
                                 </li>
                             </ul>
                         </li>
+                        {% else %}
+                        <li><a href="{% url 'login' %}">Sign In</a></li>
+                        {% endif %}
                     </ul>
                 </div>
             </header>
@@ -107,6 +111,7 @@
 <script src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
 <script src="{{ STATIC_URL }}plugins/bootstrap/js/bootstrap.min.js"></script>
 <script src="{{ STATIC_URL }}plugins/waypoints/waypoints.min.js"></script>
+<script src="{{ STATIC_URL }}plugins/nanoScroller/jquery.nanoscroller.min.js"></script>
 <script src="{{ STATIC_URL }}js/application.js"></script>
 <!--Page Level JS-->
 <script src="{{ STATIC_URL }}plugins/countTo/jquery.countTo.js"></script>

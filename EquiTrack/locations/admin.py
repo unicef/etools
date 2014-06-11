@@ -32,13 +32,17 @@ class LocationAdmin(ImportExportMixin, admin.GeoModelAdmin):
         'name',
         'gateway',
         'p_code',
-        'point'
+        'point',
+        'point_lat_long',
     )
     list_display = (
         'name',
         'gateway',
         'p_code',
         'locality',
+    )
+    readonly_fields = (
+        'point_lat_long',
     )
     search_fields = ('name', 'p_code',)
     list_filter = ('gateway', 'locality',)
