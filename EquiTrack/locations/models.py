@@ -88,6 +88,13 @@ class Location(models.Model):
             )
         )
 
+    @property
+    def point_lat_long(self):
+        return "Lat: {}, Long: {}".format(
+            self.point.y,
+            self.point.x
+        )
+
     class Meta:
         unique_together = ('name', 'gateway', 'p_code')
         ordering = ['name']

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block body %}
+
+    <section id="error-container">
+
+        <div class="block-error">
+
+            <p class="text-center">Account activation failed</p>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <a class="btn btn-info btn-block btn-3d" href="{% url 'dashboard' %}">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+{% endblock %}

@@ -20,7 +20,10 @@ TEMPLATE_DEBUG = DEBUG
 
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", '')
+POST_OFFICE_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+EMAIL_BACKEND = 'post_office.EmailBackend'
 ########## END EMAIL CONFIGURATION
 
 

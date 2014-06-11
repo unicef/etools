@@ -23,6 +23,8 @@ SUIT_CONFIG = {
 
     'MENU': (
 
+        {'label': 'Dashboard', 'icon': 'icon-dashboard', 'url': 'dashboard'},
+
         {'label': 'PCAs', 'icon': 'icon-pencil', 'models': [
             {'model': 'partners.pca', 'label': 'List of PCAs'},
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
@@ -49,6 +51,11 @@ SUIT_CONFIG = {
 }
 
 LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+
+REGISTRATION_OPEN = False
+ACCOUNT_ACTIVATION_DAYS = 7
+DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
@@ -302,6 +309,8 @@ THIRD_PARTY_APPS = (
     'gunicorn',
     'post_office',
     'djrill',
+    'registration',
+    'djcelery',
 )
 
 # Apps specific for this project go here.

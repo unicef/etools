@@ -98,7 +98,7 @@ class SHPFormat(Format):
                     data['Locality'] = loc.locality.name
                     data['CAD_CODE'] = loc.locality.cad_code
                     data['CAS_CODE'] = loc.locality.cas_code
-                    data['Gateway'] = loc.gateway.name
+                    data['Gateway'] = loc.location.gateway.name
                     data['Loc_Name'] = loc.location.name
                     data['PCode/CERD'] = loc.location.p_code
 
