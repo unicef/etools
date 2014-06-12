@@ -1,4 +1,5 @@
 """Common settings and globals."""
+from __future__ import absolute_import
 
 import os
 from os.path import abspath, basename, dirname, join, normpath
@@ -52,8 +53,9 @@ SUIT_CONFIG = {
 
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
+AUTH_USER_MODEL = 'auth.User'
 
-REGISTRATION_OPEN = False
+REGISTRATION_OPEN = True
 ACCOUNT_ACTIVATION_DAYS = 7
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
@@ -99,8 +101,9 @@ DATABASES = {
     )
 }
 BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = BROKER_URL
-CELERY_ALWAYS_EAGER = True
+CELERY_ALWAYS_EAGER = False
+CELERY_RESULT_BACKEND='djcelery.backends.database:DatabaseBackend'
+CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 ########## END DATABASE CONFIGURATION
 
 ########## MANAGER CONFIGURATION
@@ -328,6 +331,7 @@ LOCAL_APPS = (
     'locations',
     'partners',
     'trips',
+    'emails',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

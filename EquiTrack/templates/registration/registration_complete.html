@@ -1,6 +1,21 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block content %}
-<p>{% trans "You are now registered. Activation email sent." %}</p>
+{% block body %}
+
+    <section id="error-container">
+
+        <div class="block-error">
+
+            <h1 class="text-center">The system administrator will activate your account shortly.</h1>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <a class="btn btn-info btn-block btn-3d" href="{% url 'login' %}">Sign In</a>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
 {% endblock %}
