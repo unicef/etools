@@ -5,26 +5,26 @@ from django.dispatch import receiver
 from django.contrib.sites.models import Site
 
 from post_office import mail
-
+from celery import shared_task
 
 from .models import Trip
 
 
+@shared_task
 def _send_mail(sender, template, variables, *recipients):
     mail.send(
         [recp for recp in recipients],
         sender,
         template=template,
         context=variables,
-        priority='now',
     )
 
 
-#@receiver(post_save, sender=Trip)
+@receiver(post_save, sender=Trip)
 def send_trip_request(sender, instance, created, **kwargs):
     if created:
         current_site = Site.objects.get_current()
-        _send_mail(
+        _send_mail.delay(
             instance.owner.email,
             'trips/trip/created',
             {

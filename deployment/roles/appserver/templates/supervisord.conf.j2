@@ -13,6 +13,21 @@ stdout_logfile={{project_root}}/run/postgres.log  ; Where to write log messages
 redirect_stderr=true
 autorestart=true
 
+{#[program:redis]#}
+{#command=/usr/bin/redis-server /etc/redis.conf#}
+{#autostart=true#}
+{#autorestart=true#}
+{#stdout_logfile={{project_root}}/run/redis.log#}
+{#stderr_logfile=true#}
+{##}
+{#[program:celery]#}
+{#directory={{project_root}}/{{project_name}}#}
+{#command={{project_root}}/venv/bin/celery -A {{project_name}} worker -l info#}
+{#user={{project_name}}#}
+{#stdout_logfile={{project_root}}/run/celery.log  ; Where to write log messages#}
+{#redirect_stderr=true#}
+{#autorestart=true#}
+
 [program:{{project_name}}]
 command={{project_root}}/run/gunicorn_start                       ; Command to start app
 user={{project_name}}                                             ; User to run as

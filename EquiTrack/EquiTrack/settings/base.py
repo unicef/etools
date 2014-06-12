@@ -56,6 +56,10 @@ LOGIN_REDIRECT_URL = '/'
 REGISTRATION_OPEN = False
 ACCOUNT_ACTIVATION_DAYS = 7
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
+POST_OFFICE = {
+    'DEFAULT_PRIORITY': 'now'
+}
+
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
@@ -94,6 +98,9 @@ DATABASES = {
         default='postgis:///equitrack'
     )
 }
+BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = BROKER_URL
+CELERY_ALWAYS_EAGER = True
 ########## END DATABASE CONFIGURATION
 
 ########## MANAGER CONFIGURATION
