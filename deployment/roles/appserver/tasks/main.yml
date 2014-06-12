@@ -20,6 +20,7 @@
     - python-psycopg2
     - python-setuptools
     - postgresql-server-dev-9.1
+    - redis-server
 
 - name: Create the project directory.
   sudo: yes
