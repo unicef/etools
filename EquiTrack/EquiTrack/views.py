@@ -50,6 +50,11 @@ class DashboardView(TemplateView):
         }
 
 
+class MapView(TemplateView):
+
+    template_name = 'map.html'
+
+
 class EquiTrackRegistrationView(RegistrationView):
 
     form_class = UnicefEmailRegistrationForm

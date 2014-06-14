@@ -10,11 +10,17 @@ autocomplete_light.autodiscover()
 from django.contrib import admin
 admin.autodiscover()
 
-from .views import DashboardView, EquiTrackRegistrationView
+from .views import (
+    MapView,
+    DashboardView,
+    EquiTrackRegistrationView
+)
 
 urlpatterns = patterns(
     '',
     url(r'^$', login_required(DashboardView.as_view()), name='dashboard'),
+    url(r'^map/$', login_required(MapView.as_view()), name='map'),
+
 
     # registration
     # url(r'^activate/complete/$',
