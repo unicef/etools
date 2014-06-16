@@ -1,0 +1,53 @@
+﻿
+      html, body, #leaflet-map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+      }
+
+      #layer_selector {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        padding: 0;
+      }
+
+      #layer_selector ul {
+        padding: 0; margin: 0;
+        list-style-type: none;
+      }
+
+      #layer_selector li {
+        border-bottom: 1px solid #999;
+        padding: 15px 30px;
+        font-family: "Helvetica", Arial;
+        font-size: 13px;
+        color: #444;
+        cursor: auto;
+      }
+
+      #layer_selector li:hover {
+        background-color: #F0F0F0;
+        cursor: pointer;
+      }
+
+      #layer_selector li.selected {
+        background-color: #EEE;
+      }
+
+    div.cartodb-popup.custom_infowindow {width:auto;padding-top:5px;margin-left:-POSITION_OF_THE_TIP;background:url("http://vizzuality.github.io/icij/img/map/infowindow-top.png") no-repeat}
+    div.cartodb-popup.custom_infowindow div.cartodb-popup-content-wrapper {width:407px;height:400px;max-width:407px;padding:0 5px;background:url("http://vizzuality.github.io/icij/img/map/infowindow-content.png") repeat-y}
+    div.cartodb-popup.custom_infowindow div.cartodb-popup-tip-container{width:407px;background:url("http://vizzuality.github.io/icij/img/map/infowindow-bottom.png") no-repeat}
+    div.cartodb-popup.custom_infowindow div.row{display:block;overflow:auto}
+    div.cartodb-popup.custom_infowindow div.row div.label,div.cartodb-popup.custom_infowindow div.row div.info{padding:20px 0;margin:0 20px}
+    div.cartodb-popup.custom_infowindow div.row div.label{float:left;width:407px}
+    div.cartodb-popup.custom_infowindow div.row div.info{float:right;width:407px}
+    div.cartodb-popup.custom_infowindow div.row div.info.border{border-bottom:1px solid #E1E2E4}
+    div.cartodb-popup.custom_infowindow div.row.no-pad div.info,div.cartodb-popup.custom_infowindow div.row.no-pad div.label{padding-top:0}
+    div.cartodb-popup.custom_infowindow a.cartodb-popup-close-button{display:-moz-inline-stack;display:inline-block;vertical-align:middle;*vertical-align:auto;zoom:1;*display:inline;top:10px;right:10px;width:20px !important;height:auto !important;padding:5px 0;text-align:center;background:0;text-indent:0;font:bold 11px "Helvetica",Arial;text-decoration:none}
+    div.cartodb-popup.custom_infowindow a.cartodb-popup-close-button:hover{text-decoration:underline}
+    div.cartodb-popup.custom_infowindow label{display:block;margin-top:2px;font:bold 11px "Helvetica",Arial;line-height:12px;color:#4CA7CC}
+    div.cartodb-popup.custom_infowindow p{display:block;max-width:none !important;width:auto !importantfont-size:14px;color:#999999}
+    div.cartodb-popup.custom_infowindow p strong{font-weight:bold}
+    div.cartodb-popup.custom_infowindow p.margin{margin-top:12px}
+    div.cartodb-popup.custom_infowindow p a{color:#459CBE;text-decoration:none}
