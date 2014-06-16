@@ -54,16 +54,40 @@ class PCA(models.Model):
         (u'cancelled', u"Cancelled"),
     )
 
-    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
+    result_structure = models.ForeignKey(
+        ResultStructure,
+        blank=True, null=True,
+        help_text=u'Which result structure does this PCA report under?'
+    )
     number = models.CharField(max_length=45L, blank=True)
     title = models.CharField(max_length=256L)
-    status = models.CharField(max_length=32L, blank=True, choices=PCA_STATUS, default=u'in_process')
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=PCA_STATUS,
+        default=u'in_process',
+        help_text=u'In Process = In discussion with partner, '
+                  u'Active = Currently ongoing, '
+                  u'Implemented = PCA was completed, '
+                  u'Cancelled = PCA was cancelled'
+    )
     partner = models.ForeignKey(PartnerOrganization)
-    start_date = models.DateField(null=True, blank=True)
-    end_date = models.DateField(null=True, blank=True)
-    initiation_date = models.DateField()
+    start_date = models.DateField(
+        null=True, blank=True,
+        help_text=u'The date the PCA will start'
+    )
+    end_date = models.DateField(
+        null=True, blank=True,
+        help_text=u'The date the PCA will end'
+    )
+    initiation_date = models.DateField(
+        help_text=u'The date when planning began with the partner'
+
+    )
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
+
+    # contacts
     unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
@@ -71,6 +95,8 @@ class PCA(models.Model):
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
+
+    # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
     unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
     in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -86,7 +112,7 @@ class PCA(models.Model):
     amendment = models.BooleanField(default=False)
     amended_at = models.DateTimeField(null=True)
     amendment_number = models.IntegerField(default=0)
-    original = models.ForeignKey('PCA', null=True)
+    original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
         verbose_name = 'PCA'
@@ -112,8 +138,9 @@ class PCA(models.Model):
         return 0
 
     def total_unicef_contribution(self):
-        return self.unicef_cash_budget + self.in_kind_amount_budget \
-            if self.in_kind_amount_budget else 0
+        cash = self.unicef_cash_budget if self.unicef_cash_budget else 0
+        in_kind = self.in_kind_amount_budget if self.in_kind_amount_budget else 0
+        return cash + in_kind
     total_unicef_contribution.short_description = 'Total Unicef contribution budget'
 
     def make_amendment(self, user):
@@ -196,16 +223,6 @@ class PCA(models.Model):
                     Intermediate_result=pca_ir.Intermediate_result
                 )
                 new_ir.wbs_activities = pca_ir.wbs_activities.all()
-
-        # copy over locations
-        for location in original.locations.all():
-            GwPCALocation.objects.create(
-                pca=amendment,
-                governorate=location.governorate,
-                region=location.region,
-                locality=location.locality,
-                location=location.location
-            )
 
     def save(self, **kwargs):
         """
