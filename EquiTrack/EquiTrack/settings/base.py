@@ -302,6 +302,7 @@ DJANGO_APPS = (
     'suit',
     'django.contrib.admin',
     # 'django.contrib.admindocs',
+    'django.contrib.humanize',
 )
 
 THIRD_PARTY_APPS = (
