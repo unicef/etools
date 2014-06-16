@@ -6,11 +6,11 @@
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
     <![endif]-->
     <!--Switch between the different themes changing the stylesheet below - light-theme.css |dark-theme.css -->
-    <link rel="stylesheet" href="../static/css/dark-theme.css">
-    <link rel="stylesheet" href="../static/css/makeitresponsive.css">
-    <link rel="stylesheet" href="../static/css/spongemap.css" />
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/dark-theme.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/makeitresponsive.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/spongemap.css" />
 <section class="main-content-wrapper">
-    <div class="map" id="map"></div>
+    <div id="leaflet-map"></div>
     <div id="layer_selector" class="cartodb-infobox" style="position:relative; margin-left:2em; margin-top:4em;">
         <ul>
             <!--<li data="all" class="selected">All Layers</li>-->
@@ -41,7 +41,6 @@
 
     </script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?sensor=false&v=3.8"></script>
     <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
     <!--<script src="App.js"></script> -->
     <!--Change the URL below in order to change the map that is being shown.
@@ -50,7 +49,7 @@
     http://developers.cartodb.com/documentation/cartodb-js.html-->
     <script>
     // create layer selector
-    var map = L.map('map', {
+    var map = L.map('leaflet-map', {
         zoomControl: true,
         center: [34, 36.1],
         zoom: 9
