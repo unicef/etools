@@ -10,15 +10,23 @@ from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
 
 from filer.fields.file import FilerFileField
+from post_office import mail
 
 from EquiTrack.utils import AdminURLMixin
 from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
 
-from emails.tasks import send_mail
-
 User = get_user_model()
+
+
+def send_mail(sender, template, variables, *recipients):
+    mail.send(
+        [recp for recp in recipients],
+        sender,
+        template=template,
+        context=variables,
+    )
 
 
 class Trip(AdminURLMixin, models.Model):
