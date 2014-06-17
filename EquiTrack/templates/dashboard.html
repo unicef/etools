@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block content %}
 <section class="main-content-wrapper">
@@ -87,8 +88,8 @@
                                             <span class="sublabel">{{ indicator.name }}</span>
                                         </a>
                                         <div>
-                                            <span class="sublabel" style="float: right;">Total: {{ indicator.total }}</span>
-                                            <span class="sublabel">Programmed: {{ indicator.programmed }}</span>
+                                            <span class="sublabel" style="float: right;">Target: {{ indicator.total|intcomma }}</span>
+                                            <span class="sublabel">Programmed: {{ indicator.programmed|intcomma }}</span>
                                         </div>
                                         <div class="progress">
                                             <div class="progress-bar progress-bar-{{ barcolor }}" style="width: {% widthratio indicator.programmed indicator.total 100 %}%">

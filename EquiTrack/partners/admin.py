@@ -10,6 +10,7 @@ from reversion import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
+from EquiTrack.utils import get_changeform_link
 from funds.models import Grant
 from reports.models import (
     WBS,
@@ -312,6 +313,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         'result_structure',
         PCASectorFilter,
         'status',
+        'amendment',
         'start_date',
         'end_date',
         'partner',
@@ -334,6 +336,8 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         'total_unicef_contribution',
         'total_cash',
         'amendment',
+        'amendment_number',
+        'view_original',
     )
     filter_horizontal = (
         'unicef_managers',
@@ -342,7 +346,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         (_('Info'), {
             'fields':
                 ('result_structure',
-                 ('number', 'amendment',),
+                 ('number', 'amendment', 'amendment_number', 'view_original',),
                  'title',
                  'status',
                  'partner',
@@ -384,6 +388,13 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         for pca in queryset:
             pca.make_amendment(request.user)
         self.message_user(request, "{} PCA amended.".format(queryset.count()))
+
+    def view_original(self, obj):
+        if obj.amendment:
+            return get_changeform_link(obj.original, link_name='View Original')
+        return ''
+    view_original.allow_tags = True
+    view_original.short_description = 'View Original PCA'
 
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
