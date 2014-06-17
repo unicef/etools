@@ -4,7 +4,10 @@ from django.db import models
 
 
 class ResultStructure(models.Model):
+
     name = models.CharField(max_length=150)
+    from_date = models.DateField()
+    to_date = models.DateField()
 
     class Meta:
         ordering = ['name']
@@ -16,7 +19,8 @@ class ResultStructure(models.Model):
 class Sector(models.Model):
 
     name = models.CharField(max_length=45L, unique=True)
-    description = models.CharField(max_length=256L, blank=True, null=True)
+    description = models.CharField(
+        max_length=256L, blank=True, null=True)
 
     class Meta:
         ordering = ['name']
@@ -27,19 +31,23 @@ class Sector(models.Model):
 
 class RRPObjective(models.Model):
 
-    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
+    result_structure = models.ForeignKey(
+        ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector)
     name = models.CharField(max_length=256L)
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Objective'
 
 
 class Rrp5Output(models.Model):
 
-    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
+    result_structure = models.ForeignKey(
+        ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector)
-    objective = models.ForeignKey(RRPObjective, blank=True, null=True)
+    objective = models.ForeignKey(
+        RRPObjective, blank=True, null=True)
     name = models.CharField(max_length=256L)
 
     class Meta:
@@ -53,7 +61,8 @@ class Rrp5Output(models.Model):
 
 class Goal(models.Model):
 
-    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
+    result_structure = models.ForeignKey(
+        ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector, related_name='goals')
     name = models.CharField(max_length=512L, unique=True)
     description = models.CharField(max_length=512L, blank=True)
@@ -76,13 +85,17 @@ class Unit(models.Model):
 class Indicator(models.Model):
 
     sector = models.ForeignKey(Sector)
-    result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
+    result_structure = models.ForeignKey(
+        ResultStructure, blank=True, null=True)
     name = models.CharField(max_length=128L, unique=True)
     unit = models.ForeignKey(Unit)
-    total = models.IntegerField()
+    total = models.IntegerField(verbose_name='Target')
     view_on_dashboard = models.BooleanField(default=False)
     in_activity_info = models.BooleanField(default=False)
-    activity_info_indicators = models.ManyToManyField('activityinfo.Indicator')
+    activity_info_indicators = models.ManyToManyField(
+        'activityinfo.Indicator',
+        blank=True, null=True
+    )
 
     class Meta:
         ordering = ['name']
@@ -96,11 +109,17 @@ class Indicator(models.Model):
 
     @property
     def programmed(self):
-        total = self.indicatorprogress_set.aggregate(models.Sum('programmed'))
+        from partners.models import PCA
+        total = self.indicatorprogress_set.filter(
+            pca_sector__pca__status=PCA.ACTIVE
+        ).aggregate(models.Sum('programmed'))
         return total[total.keys()[0]] or 0
 
 
 class IntermediateResult(models.Model):
+
+    result_structure = models.ForeignKey(
+        ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector)
     ir_wbs_reference = models.CharField(max_length=50L)
     name = models.CharField(max_length=128L, unique=True)
@@ -114,7 +133,7 @@ class IntermediateResult(models.Model):
 
 class WBS(models.Model):
     Intermediate_result = models.ForeignKey(IntermediateResult)
-    name = models.CharField(max_length=128L, unique=True)
+    name = models.CharField(max_length=128L)
     code = models.CharField(max_length=10L)
 
     class Meta:
