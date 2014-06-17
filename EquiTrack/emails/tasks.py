@@ -4,7 +4,6 @@ from EquiTrack.celery import app
 from post_office import mail
 
 
-@app.task
 def send_mail(sender, template, variables, *recipients):
     mail.send(
         [recp for recp in recipients],

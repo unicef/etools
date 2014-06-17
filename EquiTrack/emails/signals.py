@@ -13,7 +13,7 @@ from .tasks import send_mail
 @receiver(user_registered)
 def send_user_reg_email_to_admins(sender, user, request, **kwargs):
     current_site = Site.objects.get_current()
-    send_mail.delay(
+    send_mail(
         settings.DEFAULT_FROM_EMAIL,
         'registration/profile/created',
         {
@@ -29,7 +29,7 @@ def send_user_reg_email_to_admins(sender, user, request, **kwargs):
 def send_user_activated_email_to_user(sender, user, request, **kwargs):
 
     current_site = Site.objects.get_current()
-    send_mail.delay(
+    send_mail(
         settings.DEFAULT_FROM_EMAIL,
         'registration/profile/activated',
         {
