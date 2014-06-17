@@ -52,7 +52,14 @@
     var map = L.map('leaflet-map', {
         zoomControl: true,
         center: [34, 36.1],
-        zoom: 9
+        zoom: 9,
+        layers: [
+            L.tileLayer(
+                    'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', {
+                    attribution: 'Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">'
+                }
+            )
+        ]
     });
     var selectedli = 0;
     var adm1on = 0;
@@ -181,9 +188,6 @@
     function main() {
 
         //map quest baselayer
-        L.tileLayer('http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', {
-            attribution: 'Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">'
-        }).addTo(map);
 
         addadm1layer(adm1layerurl);
         addadm2layer(adm2layerurl);

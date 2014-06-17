@@ -156,6 +156,17 @@ class TripReportAdmin(VersionAdmin):
                  (u'activities_undertaken',
                  u'monitoring_supply_delivery'))
         }),
+        (u'Approval', {
+            u'classes': (u'suit-tab suit-tab-planning',),
+            u'fields':
+                ((u'travel_assistant', u'transport_booked',),
+                 (u'supervisor', u'approved_by_supervisor',),
+                 (u'budget_owner', u'approved_by_budget_owner',),
+                 u'approved_by_human_resources',
+                 u'representative_approval',
+                 u'status',
+                 u'approved_date',),
+        }),
         (u'Travel Authorisation', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
@@ -164,16 +175,6 @@ class TripReportAdmin(VersionAdmin):
                  (u'wbs', u'grant',),
                  u'ta_approved',
                  u'ta_approved_date',),
-        }),
-        (u'Approval', {
-            u'classes': (u'suit-tab suit-tab-planning',),
-            u'fields':
-                ((u'supervisor', u'approved_by_supervisor',),
-                 (u'budget_owner', u'approved_by_budget_owner',),
-                 u'approved_by_human_resources',
-                 u'representative_approval',
-                 u'status',
-                 u'approved_date',),
         }),
         (u'Report', {
             u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
@@ -209,23 +210,7 @@ class TripReportAdmin(VersionAdmin):
         """
         Only let certain users perform approvals
         """
-        permissions = {
-            u'supervisor': [u'approved_by_supervisor'],
-            u'budget_owner': [u'status', u'approved_by_budget_owner', u'approved_date'],
-            u'human_resources': [u'status', u'approved_by_human_resources', u'approved_date'],
-            u'representative': [u'status', u'representative_approval', u'approved_date'],
-        }
-        if report:
-            if request.user == report.supervisor:
-                return permissions[u'supervisor']
-            if request.user == report.budget_owner:
-                return permissions[u'budget_owner']
-            if request.user.groups.filter(name=u'HR').exists():
-                return permissions[u'human_resources']
-            if request.user.groups.filter(name=u'Rep').exists():
-                return permissions[u'representative']
-
-        return [
+        fields = [
             u'status',
             u'approved_by_supervisor',
             u'approved_by_budget_owner',
@@ -233,6 +218,12 @@ class TripReportAdmin(VersionAdmin):
             u'representative_approval',
             u'approved_date'
         ]
+
+        if report:
+            if request.user in [report.supervisor, report.budget_owner]:
+                return []
+
+        return fields
 
 
 admin.site.register(Trip, TripReportAdmin)

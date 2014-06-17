@@ -24,7 +24,7 @@ SUIT_CONFIG = {
 
     'MENU': (
 
-        {'label': 'Dashboard', 'icon': 'icon-dashboard', 'url': 'dashboard'},
+        {'label': 'Dashboard', 'icon': 'icon-dash', 'url': 'dashboard'},
 
         {'label': 'PCAs', 'icon': 'icon-pencil', 'models': [
             {'model': 'partners.pca', 'label': 'List of PCAs'},

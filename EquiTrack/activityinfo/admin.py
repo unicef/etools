@@ -35,9 +35,73 @@ class DatabaseAdmin(admin.ModelAdmin):
         )
 
 
+class AttributeGroupInlineAdmin(admin.TabularInline):
+    can_delete = False
+    model = models.AttributeGroup
+    extra = 0
+    fields = (
+        'ai_id',
+        'name',
+        'multiple_allowed',
+        'mandatory',
+        'choices',
+    )
+    readonly_fields = (
+        'ai_id',
+        'name',
+        'multiple_allowed',
+        'mandatory',
+        'choices',
+    )
+
+    def choices(self, obj):
+        return ", ".join(
+            [
+                '{} ({})'.format(
+                    attribute.name,
+                    attribute.ai_id
+                )
+                for attribute
+                in obj.attribute_set.all()
+            ]
+        )
+
+    def has_add_permission(self, request):
+        return False
+
+
+class IndicatorInlineAdmin(admin.TabularInline):
+    can_delete = False
+    model = models.Indicator
+    extra = 0
+    fields = (
+        'ai_id',
+        'name',
+        'units',
+    )
+    readonly_fields = (
+        'ai_id',
+        'name',
+        'units',
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+
 class ActivityAdmin(admin.ModelAdmin):
+    inlines = [
+        AttributeGroupInlineAdmin,
+        IndicatorInlineAdmin,
+    ]
     list_display = (
         'name',
+        'location_type',
+    )
+    readonly_fields = (
+        'ai_id',
+        'name',
+        'database',
         'location_type',
     )
 
@@ -57,11 +121,30 @@ class IndicatorAdmin(admin.ModelAdmin):
         'category',
     )
 
-class PartnerReportInlineAdmin(admin.TabularInline):
-    model = models.PartnerReport
-    readonly_fields = (
+
+class PartnerReportAdmin(admin.ModelAdmin):
+    list_filter = (
+        'pca',
         'indicator',
-        'indicator_value'
+        'ai_partner',
+        'ai_indicator',
+        'location',
+    )
+    list_display = (
+        'pca',
+        'indicator',
+        'ai_partner',
+        'ai_indicator',
+        'location',
+        'indicator_value',
+    )
+    readonly_fields = (
+        'pca',
+        'indicator',
+        'ai_partner',
+        'ai_indicator',
+        'location',
+        'indicator_value',
     )
 
 
@@ -69,4 +152,5 @@ admin.site.register(models.Database, DatabaseAdmin)
 admin.site.register(models.Partner)
 admin.site.register(models.Activity, ActivityAdmin)
 admin.site.register(models.Indicator, IndicatorAdmin)
+admin.site.register(models.PartnerReport, PartnerReportAdmin)
 
