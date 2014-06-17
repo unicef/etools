@@ -115,7 +115,13 @@ class Trip(AdminURLMixin, models.Model):
     locations = GenericRelation(LinkedLocation)
 
     owner = models.ForeignKey(User)
-    supervisor = models.ForeignKey(User, related_name='supervises_trips')
+    travel_assistant = models.ForeignKey(
+        User,
+        related_name='organised_trips',
+        blank=True, null=True,
+    )
+    transport_booked = models.BooleanField(default=False)
+    supervisor = models.ForeignKey(User, related_name='supervised_trips')
     approved_by_supervisor = models.BooleanField(default=False)
     budget_owner = models.ForeignKey(User, related_name='budgeted_trips')
     approved_by_budget_owner = models.BooleanField(default=False)

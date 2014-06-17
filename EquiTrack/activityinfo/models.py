@@ -9,7 +9,10 @@ from partners.models import PCA, IndicatorProgress
 
 class Database(models.Model):
 
-    ai_id = models.PositiveIntegerField(verbose_name='ActivityInfo ID')
+    ai_id = models.PositiveIntegerField(
+        unique=True,
+        verbose_name='ActivityInfo ID'
+    )
     name = models.CharField(max_length=254)
     username = models.CharField(max_length=254)
     password = models.CharField(max_length=254)
@@ -32,7 +35,10 @@ class Database(models.Model):
         dbs = client.get_databases()
         db_ids = [db['id'] for db in dbs]
         if self.ai_id not in db_ids:
-            raise Exception('self not found in ActivityInfo')
+            raise Exception(
+                'DB with ID {} not found in ActivityInfo'.format(
+                    self.ai_id
+                ))
 
         db_info = client.get_database(self.ai_id)
         self.name = db_info['name']
@@ -44,33 +50,54 @@ class Database(models.Model):
         for partner in db_info['partners']:
             ai_partner, created = Partner.objects.get_or_create(
                 ai_id=partner['id'],
-                name=partner['name'],
-                full_name=partner['fullName'],
-                database=self
             )
+            ai_partner.name = partner['name']
+            ai_partner.full_name = partner['fullName']
+            ai_partner.database = self
             if created:
                 objects += 1
 
         for activity in db_info['activities']:
             ai_activity, created = Activity.objects.get_or_create(
                 ai_id=activity['id'],
-                name=activity['name'],
-                location_type=activity['locationType']['name'],
-                database=self
             )
+            ai_activity.name = activity['name']
+            ai_activity.location_type = activity['locationType']['name']
+            ai_activity.database = self
             if created:
                 objects += 1
 
             for indicator in activity['indicators']:
                 ai_indicator, created = Indicator.objects.get_or_create(
                     ai_id=indicator['id'],
-                    name=indicator['name'],
-                    units=indicator['units'],
-                    category=indicator['category'],
-                    activity=ai_activity
                 )
+                ai_indicator.name = indicator['name']
+                ai_indicator.units = indicator['units']
+                ai_indicator.category = indicator['category']
+                ai_indicator.activity = ai_activity
                 if created:
                     objects += 1
+
+            for attribute_group in activity['attributeGroups']:
+                ai_attribute_group, created = AttributeGroup.objects.get_or_create(
+                    ai_id=attribute_group['id'],
+                )
+                ai_attribute_group.name = attribute_group['name']
+                ai_attribute_group.multiple_allowed = attribute_group['multipleAllowed']
+                ai_attribute_group.mandatory = attribute_group['mandatory']
+                ai_attribute_group.activity = ai_activity
+                if created:
+                    objects += 1
+
+                for attribute in attribute_group['attributes']:
+                    ai_attribute, created = Attribute.objects.get_or_create(
+                        ai_id=attribute['id'],
+                    )
+                    ai_attribute.name = attribute['name']
+                    ai_attribute.attribute_group = ai_attribute_group
+                    if created:
+                        objects += 1
+
         self.save()
         return objects
 
@@ -80,30 +107,39 @@ class Database(models.Model):
 
         reports = 0
         for progress in IndicatorProgress.objects.filter(
-                indicator__activity_info_indicators__isnull=False):
+                pca_sector__pca__status=PCA.ACTIVE,
+                indicator__activity_info_indicators__isnull=False,
+                pca_sector__pca__partner__activity_info_partner__isnull=False):
 
             for ai_indicator in progress.indicator.activity_info_indicators.all():
+                attributes = ai_indicator.activity.attributegroup_set.all()
+                funded_by = attributes.get(name='Funded by')
+
                 sites = client.get_sites(
+                    partner=progress.pca.partner.activity_info_partner.ai_id
+                    if progress.pca.partner.activity_info_partner else None,
                     activity=ai_indicator.activity.ai_id,
-                    indicator=ai_indicator.ai_id
+                    indicator=ai_indicator.ai_id,
+                    attribute=funded_by.attribute_set.get(name='UNICEF').ai_id
                 )
 
                 for site in sites:
-                    ai_partner = Partner.objects.get(ai_id=site['partner']['id'])
-                    if progress.pca.partner.activity_info_partner == ai_partner:
-                        report, created = PartnerReport.objects.get_or_create(
-                            pca=progress.pca,
-                            indicator=progress.indicator,
-                            indicator_value=site['indicatorValues'][ai_indicator.ai_id]
-                        )
-                        if created:
-                            reports += 1
+                    report, created = PartnerReport.objects.get_or_create(
+                        pca=progress.pca,
+                        ai_partner=progress.pca.partner.activity_info_partner,
+                        indicator=progress.indicator,
+                        ai_indicator=ai_indicator,
+                        location=site['location']['name'],
+                        indicator_value=site['indicatorValues'][str(ai_indicator.ai_id)]
+                    )
+                    if created:
+                        reports += 1
         return reports
 
 
 class Partner(models.Model):
 
-    ai_id = models.PositiveIntegerField()
+    ai_id = models.PositiveIntegerField(unique=True)
     database = models.ForeignKey(Database)
     name = models.CharField(max_length=254)
     full_name = models.CharField(max_length=254, null=True)
@@ -117,7 +153,7 @@ class Partner(models.Model):
 
 class Activity(models.Model):
 
-    ai_id = models.PositiveIntegerField()
+    ai_id = models.PositiveIntegerField(unique=True)
     database = models.ForeignKey(Database)
     name = models.CharField(max_length=254)
     location_type = models.CharField(max_length=254)
@@ -131,7 +167,7 @@ class Activity(models.Model):
 
 class Indicator(models.Model):
 
-    ai_id = models.PositiveIntegerField()
+    ai_id = models.PositiveIntegerField(unique=True)
     activity = models.ForeignKey(Activity)
     name = models.CharField(max_length=254)
     units = models.CharField(max_length=254)
@@ -141,8 +177,32 @@ class Indicator(models.Model):
         return self.name
 
 
+class AttributeGroup(models.Model):
+
+    activity = models.ForeignKey(Activity)
+    ai_id = models.PositiveIntegerField(unique=True)
+    name = models.CharField(max_length=254)
+    multiple_allowed = models.BooleanField()
+    mandatory = models.BooleanField()
+
+    def __unicode__(self):
+        return self.name
+
+
+class Attribute(models.Model):
+
+    attribute_group = models.ForeignKey(AttributeGroup)
+    ai_id = models.PositiveIntegerField(unique=True)
+    name = models.CharField(max_length=254)
+
+
 class PartnerReport(models.Model):
 
     pca = models.ForeignKey(PCA)
-    indicator = models.ForeignKey(Indicator)
+    indicator = models.ForeignKey('reports.Indicator')
+    ai_partner = models.ForeignKey(Partner)
+    ai_indicator = models.ForeignKey(Indicator)
+    location = models.CharField(max_length=254)
     indicator_value = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+

@@ -40,22 +40,3 @@ def send_user_activated_email_to_user(sender, user, request, **kwargs):
         user.email
     )
 
-
-@receiver(post_save)
-def send_trip_request(sender, instance, created, **kwargs):
-    from trips.models import Trip
-    if created and sender is Trip:
-        current_site = Site.objects.get_current()
-        send_mail.delay(
-            instance.owner.email,
-            'trips/trip/created',
-            {
-                'owner_name': instance.owner.get_full_name(),
-                'supervisor_name': instance.supervisor.get_full_name(),
-                'url': 'http://{}{}'.format(
-                    current_site.domain,
-                    instance.get_admin_url()
-                )
-            },
-            instance.supervisor.email
-        )
