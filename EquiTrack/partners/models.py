@@ -47,11 +47,15 @@ class PartnerOrganization(models.Model):
 
 class PCA(models.Model):
 
+    IN_PROCESS = u'in_process'
+    ACTIVE = u'active'
+    IMPLEMENTED = u'implemented'
+    CANCELLED = u'cancelled'
     PCA_STATUS = (
-        (u'in_process', u"In Process"),
-        (u'active', u"Active"),
-        (u'implemented', u"Implemented"),
-        (u'cancelled', u"Cancelled"),
+        (IN_PROCESS, u"In Process"),
+        (ACTIVE, u"Active"),
+        (IMPLEMENTED, u"Implemented"),
+        (CANCELLED, u"Cancelled"),
     )
 
     result_structure = models.ForeignKey(

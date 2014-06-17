@@ -2,107 +2,130 @@
 {% load humanize %}
 
 {% block content %}
-<section class="main-content-wrapper">
-            <section id="main-content">
-                <!--tiles start-->
-                <div class="row">
-                    <div class="col-md-3 col-sm-6">
-                        <a href="{% url 'admin:partners_pca_changelist' %}?q=&status__exact=active">
-                        <div class="dashboard-tile detail tile-red">
-                            <div class="content">
-                                <h1 class="text-left timer"
-                                    data-from="0"
-                                    data-to="{{ pcas.active }}"
-                                    data-speed="2500"> </h1>
-                                <p>Active</p>
-                            </div>
-                            <div class="icon"><i class="fa fa-certificate"></i>
-                            </div>
-                        </div>
-                        </a>
+    <section class="main-content-wrapper">
+    <section id="main-content">
+    <!--tiles start-->
+    <div class="row">
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'admin:partners_pca_changelist' %}?q=&status__exact=active">
+                <div class="dashboard-tile detail tile-red">
+                    <div class="content">
+                        <h1 class="text-left timer"
+                            data-from="0"
+                            data-to="{{ pcas.active }}"
+                            data-speed="2500"></h1>
+
+                        <p>Active</p>
                     </div>
-                    <div class="col-md-3 col-sm-6">
-                        <a href="{% url 'admin:partners_pca_changelist' %}?q=&status__exact=implemented">
-                        <div class="dashboard-tile detail tile-turquoise">
-                            <div class="content">
-                                <h1 class="text-left timer"
-                                    data-from="0"
-                                    data-to="{{ pcas.implemented }}"
-                                    data-speed="2500"> </h1>
-                                <p>Implemented</p>
-                            </div>
-                            <div class="icon"><i class="fa fa-stop"></i>
-                            </div>
-                        </div>
-                        </a>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <a href="{% url 'admin:partners_pca_changelist' %}?q=&status__exact=in_process">
-                        <div class="dashboard-tile detail tile-blue">
-                            <div class="content">
-                                <h1 class="text-left timer"
-                                    data-from="0"
-                                    data-to="{{ pcas.in_process }}"
-                                    data-speed="2500"> </h1>
-                                <p>In-Process</p>
-                            </div>
-                            <div class="icon"><i class="fa fa fa-pencil"></i>
-                            </div>
-                        </div>
-                        </a>
-                    </div>
-                    <div class="col-md-3 col-sm-6">
-                        <a href="{% url 'admin:partners_pca_changelist' %}?q=&status__exact=cancelled">
-                        <div class="dashboard-tile detail tile-purple">
-                            <div class="content">
-                                <h1 class="text-left timer"
-                                    data-to="{{ pcas.cancelled }}"
-                                    data-speed="2500"> </h1>
-                                <p>Cancelled</p>
-                            </div>
-                            <div class="icon"><i class="fa fa-stop"></i>
-                            </div>
-                        </div>
-                        </a>
+                    <div class="icon"><i class="fa fa-certificate"></i>
                     </div>
                 </div>
-                <!--tiles end-->
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'admin:partners_pca_changelist' %}?q=&status__exact=implemented">
+                <div class="dashboard-tile detail tile-turquoise">
+                    <div class="content">
+                        <h1 class="text-left timer"
+                            data-from="0"
+                            data-to="{{ pcas.implemented }}"
+                            data-speed="2500"></h1>
 
-                <!--Indicators start-->
-                <div class="row">
-                    {% for name,indicators in sectors.items %}
-                        {% cycle 'info' 'warning' 'success' 'danger' as barcolor silent %}
-                        <div class="col-md-6">
-                            <div class="panel panel-default">
-                                <div class="panel-heading">
-                                    <h3 class="panel-title">{{ name }}</h3>
+                        <p>Completed</p>
+                    </div>
+                    <div class="icon"><i class="fa fa-stop"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'admin:partners_pca_changelist' %}?q=&status__exact=in_process">
+                <div class="dashboard-tile detail tile-blue">
+                    <div class="content">
+                        <h1 class="text-left timer"
+                            data-from="0"
+                            data-to="{{ pcas.in_process }}"
+                            data-speed="2500"></h1>
 
-                                    <div class="actions pull-right">
-                                        <i class="fa fa-chevron-down"></i>
-                                        <i class="fa fa-times"></i>
-                                    </div>
-                                </div>
-                                <div class="panel-body">
-                                    {% for indicator in indicators %}
-                                        <a href="{% url 'admin:reports_indicator_change' indicator.id %}">
-                                            <span class="sublabel">{{ indicator.name }}</span>
-                                        </a>
-                                        <div>
-                                            <span class="sublabel" style="float: right;">Target: {{ indicator.total|intcomma }}</span>
-                                            <span class="sublabel">Programmed: {{ indicator.programmed|intcomma }}</span>
-                                        </div>
-                                        <div class="progress">
-                                            <div class="progress-bar progress-bar-{{ barcolor }}" style="width: {% widthratio indicator.programmed indicator.total 100 %}%">
-                                                {% widthratio indicator.programmed indicator.total 100 %}%
-                                            </div>
-                                        </div><!-- progress -->
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
+                        <p>Initiated</p>
+                    </div>
+                    <div class="icon"><i class="fa fa fa-pencil"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <a href="{% url 'admin:partners_pca_changelist' %}?q=&status__exact=cancelled">
+                <div class="dashboard-tile detail tile-purple">
+                    <div class="content">
+                        <h1 class="text-left timer"
+                            data-to="{{ pcas.cancelled }}"
+                            data-speed="2500"></h1>
+
+                        <p>Cancelled</p>
+                    </div>
+                    <div class="icon"><i class="fa fa-stop"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    <!--tiles end-->
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="btn-group">
+                <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                    Result Structure: {{ current_structure.name }} <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    {% for structure in structures %}
+                        <li><a href="{% url 'dashboard' %}?structure={{ structure.id }}">{{ structure.name }}</a></li>
                     {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!--Indicators start-->
+    <div class="row">
+        {% for name,indicators in sectors.items %}
+            {% cycle 'info' 'warning' 'success' 'danger' as barcolor silent %}
+            <div class="col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">{{ name }}</h3>
+
+                        <div class="actions pull-right">
+                            <i class="fa fa-chevron-down"></i>
+                            <i class="fa fa-times"></i>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        {% for indicator in indicators %}
+                            <a href="{% url 'admin:reports_indicator_change' indicator.id %}">
+                                <span class="sublabel">{{ indicator.name }} ({{ indicator.result_structure }})</span>
+                            </a>
+                            <div>
+                                <span class="sublabel"
+                                      style="float: right;">Target: {{ indicator.total|intcomma }}</span>
+                                <span class="sublabel">Programmed: {{ indicator.programmed|intcomma }}</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-{{ barcolor }}"
+                                     style="width: {% widthratio indicator.programmed indicator.total 100 %}%">
+                                    {% widthratio indicator.programmed indicator.total 100 %}%
+                                </div>
+                            </div><!-- progress -->
+                        {% endfor %}
+                    </div>
                 </div>
-                <!--indicators end-->
-            </section>
-        </section>
+            </div>
+        {% endfor %}
+    </div>
+    <!--indicators end-->
+    </section>
+    </section>
 {% endblock content %}

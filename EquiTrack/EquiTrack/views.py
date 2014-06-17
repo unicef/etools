@@ -5,7 +5,7 @@ from django.views.generic import TemplateView
 from registration.backends.default.views import RegistrationView
 
 from partners.models import PCA
-from reports.models import Sector
+from reports.models import Sector, ResultStructure
 
 from .forms import UnicefEmailRegistrationForm
 
@@ -17,9 +17,12 @@ class DashboardView(TemplateView):
     def get_context_data(self, **kwargs):
 
         sectors = {}
+        sructure = self.request.GET.get('structure', 1)
+        current_structure = ResultStructure.objects.get(id=sructure)
         for sector in Sector.objects.all():
             indicators = sector.indicator_set.filter(
-                view_on_dashboard=True
+                view_on_dashboard=True,
+                result_structure=current_structure
             )
             if not indicators:
                 continue
@@ -29,21 +32,23 @@ class DashboardView(TemplateView):
 
         return {
             'sectors': sectors,
+            'current_structure': current_structure,
+            'structures': ResultStructure.objects.all(),
             'pcas': {
                 'active': PCA.objects.filter(
-                    status='active',
+                    status=PCA.ACTIVE,
                     amendment_number=0,
                 ).count(),
                 'implemented': PCA.objects.filter(
-                    status='implemented',
+                    status=PCA.IMPLEMENTED,
                     amendment_number=0,
                 ).count(),
                 'in_process': PCA.objects.filter(
-                    status='in_process',
+                    status=PCA.IN_PROCESS,
                     amendment_number=0,
                 ).count(),
                 'cancelled': PCA.objects.filter(
-                    status='cancelled',
+                    status=PCA.CANCELLED,
                     amendment_number=0,
                 ).count(),
             }
