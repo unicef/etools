@@ -33,6 +33,7 @@ class RRPObjective(models.Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Objective'
 
 
 class Rrp5Output(models.Model):
@@ -79,10 +80,13 @@ class Indicator(models.Model):
     result_structure = models.ForeignKey(ResultStructure, blank=True, null=True)
     name = models.CharField(max_length=128L, unique=True)
     unit = models.ForeignKey(Unit)
-    total = models.IntegerField()
+    total = models.IntegerField(verbose_name='Target')
     view_on_dashboard = models.BooleanField(default=False)
     in_activity_info = models.BooleanField(default=False)
-    activity_info_indicators = models.ManyToManyField('activityinfo.Indicator')
+    activity_info_indicators = models.ManyToManyField(
+        'activityinfo.Indicator',
+        blank=True, null=True
+    )
 
     class Meta:
         ordering = ['name']

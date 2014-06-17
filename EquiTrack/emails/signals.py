@@ -1,7 +1,8 @@
 __author__ = 'jcranwellward'
 
 from django.conf import settings
-from django.db.models.signals import pre_save, post_save
+from django.core.urlresolvers import reverse
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.sites.models import Site
 
@@ -17,9 +18,9 @@ def send_user_reg_email_to_admins(sender, user, request, **kwargs):
         settings.DEFAULT_FROM_EMAIL,
         'registration/profile/created',
         {
-            'owner_name': user.get_full_name(),
+            'user_email': user.email,
             'domain': current_site.domain,
-            'url': 'admin:registration_registrationprofile_changelist'
+            'url': reverse('admin:registration_registrationprofile_changelist')
         },
         'jcranwellward@unicef.org'
     )
@@ -33,7 +34,7 @@ def send_user_activated_email_to_user(sender, user, request, **kwargs):
         settings.DEFAULT_FROM_EMAIL,
         'registration/profile/activated',
         {
-            'owner_name': user.get_full_name(),
+            'user_name': user.username,
             'domain': current_site.domain,
         },
         user.email
