@@ -177,7 +177,7 @@ class Trip(AdminURLMixin, models.Model):
         if sender is cls:
             current_site = Site.objects.get_current()
             if created:
-                send_mail.delay(
+                send_mail(
                     instance.owner.email,
                     'trips/trip/created',
                     {
@@ -193,7 +193,7 @@ class Trip(AdminURLMixin, models.Model):
 
             if instance.approved_by_supervisor:
                 if instance.travel_assistant and not instance.transport_booked:
-                    send_mail.delay(
+                    send_mail(
                         instance.owner.email,
                         'travel/trip/travel_or_admin_assistant',
                         {
@@ -208,7 +208,7 @@ class Trip(AdminURLMixin, models.Model):
                     )
 
                 if instance.ta_required and instance.programme_assistant and not instance.ta_approved:
-                    send_mail.delay(
+                    send_mail(
                         instance.owner.email,
                         'trips/trip/TA_request',
                         {
