@@ -6,6 +6,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
     GenericForeignKey, GenericRelation
 )
+from django.db.models.signals import post_save
+from django.contrib.sites.models import Site
+
 from filer.fields.file import FilerFileField
 
 from EquiTrack.utils import AdminURLMixin
@@ -13,6 +16,7 @@ from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
 
+from emails.tasks import send_mail
 
 User = get_user_model()
 
@@ -167,6 +171,59 @@ class Trip(AdminURLMixin, models.Model):
         and not self.representative_approval:
             return False
         return True
+
+    @classmethod
+    def send_trip_request(cls, sender, instance, created, **kwargs):
+        if sender is cls:
+            current_site = Site.objects.get_current()
+            if created:
+                send_mail.delay(
+                    instance.owner.email,
+                    'trips/trip/created',
+                    {
+                        'owner_name': instance.owner.get_full_name(),
+                        'supervisor_name': instance.supervisor.get_full_name(),
+                        'url': 'http://{}{}'.format(
+                            current_site.domain,
+                            instance.get_admin_url()
+                        )
+                    },
+                    instance.supervisor.email
+                )
+
+            if instance.approved_by_supervisor:
+                if instance.travel_assistant and not instance.transport_booked:
+                    send_mail.delay(
+                        instance.owner.email,
+                        'travel/trip/travel_or_admin_assistant',
+                        {
+                            'owner_name': instance.owner.get_full_name(),
+                            'travel_assistant': instance.travel_assistant.get_full_name(),
+                            'url': 'http://{}{}'.format(
+                                current_site.domain,
+                                instance.get_admin_url()
+                            )
+                        },
+                        instance.travel_assistant.email,
+                    )
+
+                if instance.ta_required and instance.programme_assistant and not instance.ta_approved:
+                    send_mail.delay(
+                        instance.owner.email,
+                        'trips/trip/TA_request',
+                        {
+                            'owner_name': instance.owner.get_full_name(),
+                            'pa_assistant': instance.programme_assistant.get_full_name(),
+                            'url': 'http://{}{}'.format(
+                                current_site.domain,
+                                instance.get_admin_url()
+                            )
+                        },
+                        instance.programme_assistant.email,
+                    )
+
+
+post_save.connect(Trip.send_trip_request, sender=Trip)
 
 
 class TravelRoutes(models.Model):
