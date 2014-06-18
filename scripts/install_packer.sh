@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 USER=$1
-DIST=0.5.2_linux_amd64.zip
+DIST=0.6.0_linux_amd64.zip
 DIRECTORY=packer
 
 cd /home/$USER

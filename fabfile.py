@@ -27,8 +27,9 @@ def snapshot_container_to_image(container, image, tag):
 
 def build_image_with_packer(from_image, to_image, tag='latest', packer_file='packer.json'):
     print('>>> Building new image with file {}'.format(packer_file))
-    with settings(sude_user='jcranwellward'):
-        run("packer build -var 'from_image={from_image}' -var 'to_image={to_image}' -var 'tag={tag}' {file}".format(
+    with cd('/vagrant'):
+        run("git pull")
+        run("/usr/local/packer/packer build -var 'from_image={from_image}' -var 'to_image={to_image}' -var 'tag={tag}' {file}".format(
             file=packer_file,
             from_image=from_image,
             to_image=to_image,
@@ -39,24 +40,17 @@ def build_image_with_packer(from_image, to_image, tag='latest', packer_file='pac
 def stop_container(container, name=''):
     print('>>> Stopping container {}'.format(container))
     run('docker stop {}'.format(container))
-    if name:
-        with warn_only():
-            run('rm {}'.format(name))
+    run('rm {}'.format(name), warn_only=True)
 
 
 def start_container(name, image, command, port, **envs):
     print('>>> Starting new container for image {}'.format(image))
     run(
-        'docker run --name={name} --cidfile={name} -p {port} -d {envs} {image} {command}'.format(
+        'docker run --name={name} --cidfile={name} --expose={port} -d {envs} {image} {command}'.format(
         name=name, image=image, port=port, command=command, envs='-e '.join(
             ['"{}={}" '.format(key, value) for key, value in envs])
         )
     )
-
-
-def remove_container(container):
-    print('>>> Removing container {}'.format(container))
-    run('docker rm -f {}'.format(container))
 
 
 def docker_ps(all=True):
@@ -65,6 +59,16 @@ def docker_ps(all=True):
 
 def docker_images():
     return run('docker images')
+
+
+def remove_image(image):
+    run('docker rmi {}'.format(image))
+
+
+def remove_container(container, name=''):
+    stop_container(container, name)
+    print('>>> Removing container {}'.format(container))
+    run('docker rm -f {}'.format(container))
 
 
 def deploy(name, image, branch='develop', git_dir='/vagrant'):
