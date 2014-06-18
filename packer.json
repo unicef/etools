@@ -7,7 +7,7 @@
     "builders": [
         {
             "type": "docker",
-            "pull": true,
+            "pull": false,
             "image": "{{user `from_image`}}",
             "export_path": "equitrack-docker-image.tar"
         }

@@ -25,10 +25,11 @@ def snapshot_container_to_image(container, image, tag):
     run('docker commit {} {}:{}'.format(container, image, tag))
 
 
-def build_image_with_packer(from_image, to_image, tag='latest', packer_file='packer.json'):
+def build_image_with_packer(from_image, to_image='', tag='latest', packer_file='packer.json'):
     print('>>> Building new image with file {}'.format(packer_file))
+    if not to_image:
+        to_image = from_image
     with cd('/vagrant'):
-        run("git pull")
         run("/usr/local/packer/packer build -var 'from_image={from_image}' -var 'to_image={to_image}' -var 'tag={tag}' {file}".format(
             file=packer_file,
             from_image=from_image,
