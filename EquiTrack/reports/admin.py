@@ -62,6 +62,7 @@ class IndicatorProgressInlineAdmin(admin.TabularInline):
     fields = (
         'pca_sector',
         'pca_status',
+        'result_structure',
         'amendment_number',
         'programmed',
         'changeform_link',
@@ -69,6 +70,7 @@ class IndicatorProgressInlineAdmin(admin.TabularInline):
     readonly_fields = (
         'pca_sector',
         'pca_status',
+        'result_structure',
         'amendment_number',
         'programmed',
         'changeform_link',
@@ -76,6 +78,9 @@ class IndicatorProgressInlineAdmin(admin.TabularInline):
 
     def has_add_permission(self, request):
         return False
+
+    def result_structure(self, obj):
+        return obj.pca_sector.pca.result_structure
 
     def amendment_number(self, obj):
         return obj.pca_sector.pca.amendment_number
