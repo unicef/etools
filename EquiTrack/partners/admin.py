@@ -157,7 +157,7 @@ class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
             )
             if self.get_pca(request).result_structure:
                 indicators.filter(
-                    result_structure__in=self.get_pca(request).result_structure.all()
+                    result_structure__in=self.get_pca(request).result_structure
                 )
             kwargs['queryset'] = indicators
         return super(PcaIndicatorInlineAdmin, self).formfield_for_foreignkey(
