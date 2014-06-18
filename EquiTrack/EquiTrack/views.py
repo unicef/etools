@@ -26,9 +26,18 @@ class DashboardView(TemplateView):
             )
             if not indicators:
                 continue
-            sectors[sector.name] = [
-                indicator for indicator in indicators
-            ]
+
+            sectors[sector.name] = []
+            for indicator in indicators:
+                programmed = indicator.programmed(
+                    result_structure=current_structure
+                )
+                sectors[sector.name].append(
+                    {
+                        'indicator': indicator,
+                        'programmed': programmed
+                    }
+                )
 
         return {
             'sectors': sectors,

@@ -104,19 +104,19 @@
                         </div>
                     </div>
                     <div class="panel-body">
-                        {% for indicator in indicators %}
-                            <a href="{% url 'admin:reports_indicator_change' indicator.id %}">
-                                <span class="sublabel">{{ indicator.name }} ({{ indicator.result_structure }})</span>
+                        {% for ind in indicators %}
+                            <a href="{% url 'admin:reports_indicator_change' ind.indicator.id %}">
+                                <span class="sublabel">{{ ind.indicator.name }} ({{ ind.indicator.result_structure }})</span>
                             </a>
                             <div>
                                 <span class="sublabel"
-                                      style="float: right;">Target: {{ indicator.total|intcomma }}</span>
-                                <span class="sublabel">Programmed: {{ indicator.programmed|intcomma }}</span>
+                                      style="float: right;">Target: {{ ind.indicator.total|intcomma }}</span>
+                                <span class="sublabel">Programmed: {{ ind.programmed|intcomma }}</span>
                             </div>
                             <div class="progress">
                                 <div class="progress-bar progress-bar-{{ barcolor }}"
-                                     style="width: {% widthratio indicator.programmed indicator.total 100 %}%">
-                                    {% widthratio indicator.programmed indicator.total 100 %}%
+                                     style="width: {% widthratio ind.programmed ind.indicator.total 100 %}%">
+                                    {% widthratio ind.programmed ind.indicator.total 100 %}%
                                 </div>
                             </div><!-- progress -->
                         {% endfor %}
