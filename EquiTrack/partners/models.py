@@ -393,11 +393,6 @@ class IndicatorProgress(models.Model):
         return self.indicator.unit.type if self.id else ''
     unit.short_description = 'Unit'
 
-    def changeform_link(self):
-        return get_changeform_link(self.pca_sector, link_name='View PCA')
-    changeform_link.allow_tags = True
-    changeform_link.short_description = 'View PCA Details'
-
 
 class FileType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
