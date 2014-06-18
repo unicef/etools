@@ -109,20 +109,17 @@ class Indicator(models.Model):
 
     @property
     def programmed(self):
-        from partners.models import PCA
-        total = self.indicatorprogress_set.filter(
-            pca_sector__pca__status=PCA.ACTIVE
-        ).aggregate(models.Sum('programmed'))
+        total = self.indicatorprogress_set.all().aggregate(models.Sum('programmed'))
         return total[total.keys()[0]] or 0
 
 
 class IntermediateResult(models.Model):
 
-    result_structure = models.ForeignKey(
-        ResultStructure, blank=True, null=True)
     sector = models.ForeignKey(Sector)
     ir_wbs_reference = models.CharField(max_length=50L)
     name = models.CharField(max_length=128L, unique=True)
+    from_date = models.DateField()
+    to_date = models.DateField()
 
     class Meta:
         ordering = ['name']
