@@ -18,12 +18,18 @@ class DashboardView(TemplateView):
 
         sectors = {}
         sructure = self.request.GET.get('structure', 1)
-        current_structure = ResultStructure.objects.get(id=sructure)
+        try:
+            current_structure = ResultStructure.objects.get(id=sructure)
+        except ResultStructure.DoesNotExist:
+            current_structure = None
         for sector in Sector.objects.all():
             indicators = sector.indicator_set.filter(
                 view_on_dashboard=True,
-                result_structure=current_structure
             )
+            if current_structure:
+                indicators = indicators.filter(
+                    result_structure=current_structure
+                )
             if not indicators:
                 continue
 
