@@ -1,9 +1,14 @@
 {
+    "variables": {
+        "from_image": "unicef/equitrack",
+        "to_image": "unicef/equitrack",
+        "tag": "latest"
+    },
     "builders": [
         {
             "type": "docker",
-            "pull": false,
-            "image": "unicef/equitrack",
+            "pull": true,
+            "image": "{{user `from_image`}}",
             "export_path": "equitrack-docker-image.tar"
         }
     ],
@@ -28,8 +33,8 @@
         [
             {
               "type": "docker-import",
-              "repository": "unicef/equitrack",
-              "tag": "latest"
+              "repository": "{{user `to_image`}}",
+              "tag": "{{user `tag`}}"
             }
         ]
     ]
