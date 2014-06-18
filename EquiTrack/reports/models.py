@@ -107,9 +107,13 @@ class Indicator(models.Model):
             'ActivityInfo' if self.in_activity_info else ''
         )
 
-    @property
-    def programmed(self):
-        total = self.indicatorprogress_set.all().aggregate(models.Sum('programmed'))
+    def programmed(self, result_structure=None):
+        progress = self.indicatorprogress_set.all()
+        if result_structure:
+            progress = progress.filter(
+                pca_sector__pca__result_structure=result_structure
+            )
+        total = progress.aggregate(models.Sum('programmed'))
         return total[total.keys()[0]] or 0
 
 

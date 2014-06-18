@@ -1,6 +1,7 @@
 __author__ = 'jcranwellward'
 
 import re
+import datetime
 
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
@@ -86,10 +87,13 @@ class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         """
-        Only show IRs for the chosen Sector
+        Only show IRs for the chosen Sector and valid time range
         """
         if db_field.rel.to is IntermediateResult:
-            kwargs['queryset'] = self.get_sector(request).intermediateresult_set.all()
+            kwargs['queryset'] = self.get_sector(request).intermediateresult_set.filter(
+                from_date__lte=datetime.datetime.today(),
+                to_date__gte=datetime.datetime.today(),
+            )
         return super(PcaIRInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
@@ -145,13 +149,17 @@ class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         """
-        Only show Indicators for the chosen Sector and Result Structure
+        Only show Indicators for the chosen Sector and optional Result Structure
         """
         if db_field.rel.to is Indicator:
-            kwargs['queryset'] = Indicator.objects.filter(
+            indicators = Indicator.objects.filter(
                 sector=self.get_sector(request),
-                result_structure=self.get_pca(request).result_structure
             )
+            if self.get_pca(request).result_structure:
+                indicators.filter(
+                    result_structure__in=self.get_pca(request).result_structure.all()
+                )
+            kwargs['queryset'] = indicators
         return super(PcaIndicatorInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
