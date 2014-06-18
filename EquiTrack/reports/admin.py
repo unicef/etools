@@ -2,6 +2,7 @@ __author__ = 'jcranwellward'
 
 from django.contrib import admin
 
+from EquiTrack.utils import get_changeform_link
 from partners.models import IndicatorProgress
 from reports.models import (
     Sector,
@@ -60,17 +61,28 @@ class IndicatorProgressInlineAdmin(admin.TabularInline):
     extra = 0
     fields = (
         'pca_sector',
+        'pca_status',
         'programmed',
         'changeform_link',
     )
     readonly_fields = (
         'pca_sector',
+        'pca_status',
         'programmed',
         'changeform_link',
     )
 
     def has_add_permission(self, request):
         return False
+
+    def pca_status(self, obj):
+        return obj.pca_sector.pca.status
+
+    def changeform_link(self, obj):
+        return get_changeform_link(obj.pca_sector.pca,
+                                   link_name='View PCA')
+    changeform_link.allow_tags = True
+    changeform_link.short_description = 'View PCA Details'
 
 
 class IndicatorAdmin(admin.ModelAdmin):
