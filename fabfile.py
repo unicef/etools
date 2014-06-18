@@ -1,6 +1,12 @@
 __author__ = 'jcranwellward'
 
-from fabric.api import local, sudo, get, run, shell_env
+from fabric.api import local, sudo, get, run, shell_env, env
+
+env.roledefs = {
+    'dev': ['localhost'],
+    'staging': ['staging.equitrack.uniceflebanon.org'],
+    'production': ['equitrack.uniceflebanon.org']
+}
 
 
 def dump_db(name='EquiTrack'):
