@@ -95,7 +95,7 @@ class PCA(models.Model):
     unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
-    unicef_managers = models.ManyToManyField('auth.User')
+    unicef_managers = models.ManyToManyField('auth.User', blank=True)
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
