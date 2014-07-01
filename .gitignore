@@ -43,4 +43,4 @@ Vagrantfile
 
 *.gz
 
-server_config.yml
+server_config.yaml

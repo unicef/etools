@@ -59,8 +59,7 @@ def _load_config(**kwargs):
     'server_config.yaml' or 'server_config.json' file.
 
     """
-    config, ext = os.path.splitext(
-        'server_config.yaml' if os.path.exists('server_config.yaml') else 'server_config.json')
+    config, ext = os.path.splitext('server_config.yaml' if os.path.exists('server_config.yaml') else 'server_config.json')
 
     if not os.path.exists(config + ext):
         print colors.red('Error. "%s" file not found.' % (config + ext))
@@ -190,22 +189,6 @@ def build_image_with_packer(from_image, to_image='', tag='latest', packer_file='
     ))
 
 
-def stop_container(container):
-    print('>>> Stopping container {}'.format(container))
-    run('docker stop {}'.format(container))
-
-
-def start_container(image, command, port):
-    envs = env.envs
-    print('>>> Starting new container for image {}'.format(image))
-    run(
-        'docker run --expose={port} -d {envs} {image} {command}'.format(
-        image=image, port=port, command=command, envs='-e '.join(
-            ['"{}={}" '.format(key, value) for key, value in envs])
-        )
-    )
-
-
 def docker_ps(all=False):
     run('docker ps {}'.format('-a' if all else ''))
 
@@ -218,10 +201,26 @@ def remove_image(image):
     run('docker rmi {}'.format(image))
 
 
-def remove_container(container, name=''):
-    stop_container(container, name)
+def remove_container(container):
+    stop_container(container)
     print('>>> Removing container {}'.format(container))
     run('docker rm -f {}'.format(container))
+
+
+def stop_container(container):
+    print('>>> Stopping container {}'.format(container))
+    run('docker stop {}'.format(container))
+
+
+@_setup
+def start_container(name, image, command, port):
+    print('>>> Starting new container for image {}'.format(image))
+    run(
+        'docker run --name={name} -p={port} {envs} -d {image} {command}'.format(
+        name=name, image=image, port=port, command=command, envs=' '.join(
+            ['-e "{}={}"'.format(key, value) for key, value in env.envs.items()])
+        )
+    )
 
 
 @_setup
@@ -236,7 +235,7 @@ def deploy(image, branch='develop', git_dir='/vagrant'):
             snapshot_container_to_image(current, image, 'latest')
             build_image_with_packer(image, image)
             snapshot_container_to_image(current, image, 'backup')
-            stop_container(current)
+            remove_container(current)
 
         start_container(image, 'supervisord', '80')
 
