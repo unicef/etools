@@ -156,7 +156,7 @@ class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
                 sector=self.get_sector(request),
             )
             if self.get_pca(request).result_structure:
-                indicators.filter(
+                indicators = indicators.filter(
                     result_structure=self.get_pca(request).result_structure
                 )
             kwargs['queryset'] = indicators

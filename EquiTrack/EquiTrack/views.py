@@ -60,7 +60,6 @@ class DashboardView(TemplateView):
                 ).count(),
                 'in_process': PCA.objects.filter(
                     status=PCA.IN_PROCESS,
-                    amendment_number=0,
                 ).count(),
                 'cancelled': PCA.objects.filter(
                     status=PCA.CANCELLED,

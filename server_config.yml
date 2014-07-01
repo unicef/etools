@@ -1,0 +1,14 @@
+staging:
+      host: staging.equitrack.uniceflebanon.org
+      envs:
+        DJANGO_ALLOWED_HOST: staging.equitrack.uniceflebanon.org
+        MANDRILL_KEY: dh8rl9eRlHmrHIGiP5ldVQ
+
+production:
+      host: equitrack.uniceflebanon.org
+      envs:
+        DJANGO_ALLOWED_HOST: equitrack.uniceflebanon.org
+        MANDRILL_KEY: xwx1Wy_0ZBmZEhcNyl7C1Q
+        AWS_ACCESS_KEY_ID: AKIAI4W2YD7DJHKTWV5A
+        AWS_SECRET_ACCESS_KEY: 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
+        AWS_STORAGE_BUCKET_NAME: pcafiles
