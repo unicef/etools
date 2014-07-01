@@ -59,8 +59,8 @@ def _load_config(**kwargs):
     'server_config.yaml' or 'server_config.json' file.
 
     """
-    config, ext = os.path.splitext(kwargs.get('config',
-        'server_config.yaml' if os.path.exists('server_config.yaml') else 'server_config.json'))
+    config, ext = os.path.splitext(
+        'server_config.yaml' if os.path.exists('server_config.yaml') else 'server_config.json')
 
     if not os.path.exists(config + ext):
         print colors.red('Error. "%s" file not found.' % (config + ext))
@@ -190,18 +190,17 @@ def build_image_with_packer(from_image, to_image='', tag='latest', packer_file='
     ))
 
 
-def stop_container(container, name=''):
+def stop_container(container):
     print('>>> Stopping container {}'.format(container))
     run('docker stop {}'.format(container))
-    run('rm {}'.format(name), warn_only=True)
 
 
-def start_container(name, image, command, port):
+def start_container(image, command, port):
     envs = env.envs
     print('>>> Starting new container for image {}'.format(image))
     run(
-        'docker run --name={name} --cidfile={name} --expose={port} -d {envs} {image} {command}'.format(
-        name=name, image=image, port=port, command=command, envs='-e '.join(
+        'docker run --expose={port} -d {envs} {image} {command}'.format(
+        image=image, port=port, command=command, envs='-e '.join(
             ['"{}={}" '.format(key, value) for key, value in envs])
         )
     )
@@ -226,20 +225,20 @@ def remove_container(container, name=''):
 
 
 @_setup
-def deploy(name, image, branch='develop', git_dir='/vagrant'):
+def deploy(image, branch='develop', git_dir='/vagrant'):
     # pull new code from github
     with cd(git_dir):
         run("git pull origin {}".format(branch))
-        current = get_id_of_running_image(name)
+        current = get_id_of_running_image(image)
         if not current:
             build_image_with_packer(image, image)
         else:
             snapshot_container_to_image(current, image, 'latest')
             build_image_with_packer(image, image)
             snapshot_container_to_image(current, image, 'backup')
-            stop_container(current, name)
+            stop_container(current)
 
-        start_container(name, image, 'supervisord', '80')
+        start_container(image, 'supervisord', '80')
 
 
 
