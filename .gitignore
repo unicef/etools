@@ -43,4 +43,4 @@ Vagrantfile
 
 *.gz
 
-deployment/vars.yml
+server_config.yml
