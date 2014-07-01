@@ -52,6 +52,8 @@ class TripForm(ModelForm):
         trip_status = cleaned_data.get("status")
         from_date = cleaned_data.get('from_date')
         to_date = cleaned_data.get('to_date')
+        owner = cleaned_data.get('owner')
+        supervisor = cleaned_data.get('supervisor')
         over_ten_hours = cleaned_data.get('over_ten_hours')
         wbs = cleaned_data.get('wbs')
         grant = cleaned_data.get('wbs')
@@ -62,6 +64,9 @@ class TripForm(ModelForm):
         programme_assistant = cleaned_data.get(u'programme_assistant')
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         representative_approval = cleaned_data.get(u'representative_approval')
+
+        if owner == supervisor:
+            raise ValidationError('You cant supervise your own trips')
 
         if not pcas and not no_pca:
             raise ValidationError(
@@ -133,6 +138,7 @@ class TripReportAdmin(VersionAdmin):
         u'purpose_of_travel',
         u'from_date',
         u'to_date',
+        u'owner',
         u'supervisor',
         u'status',
         u'approved_date',
@@ -195,16 +201,6 @@ class TripReportAdmin(VersionAdmin):
         if not change:
             obj.owner = request.user
         obj.save()
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show Activities for the chosen Sector
-        """
-        if db_field.rel.to is User:
-            kwargs['queryset'] = User.objects.exclude(id=request.user.id)
-        return super(TripReportAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
 
     def get_readonly_fields(self, request, report=None):
         """

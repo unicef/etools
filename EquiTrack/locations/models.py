@@ -133,25 +133,16 @@ class LinkedLocation(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
-        return u'{} -> {} -> {} -> {} ({})'.format(
+        desc = u'{} -> {} -> {}'.format(
             self.governorate.name,
             self.region.name,
             self.locality.name,
-            self.location.name,
-            self.location.gateway.name
         )
-
-    def view_location(self):
-        if self.id:
-            url_name = 'admin:{app_label}_{model_name}_{action}'.format(
-                app_label=self.location._meta.app_label,
-                model_name=self.location._meta.model_name,
-                action='change'
+        if self.location:
+            desc = u'{} -> {} ({})'.format(
+                desc,
+                self.location.name,
+                self.location.gateway.name
             )
-            location_url = urlresolvers.reverse(url_name, args=(self.location.id,))
-            return u'<a class="btn btn-primary default" ' \
-                   u'onclick="return showAddAnotherPopup(this);" ' \
-                   u'href="{}" target="_blank">View</a>'.format(location_url)
-        return u''
-    view_location.allow_tags = True
-    view_location.short_description = 'View Location'
+
+        return desc
