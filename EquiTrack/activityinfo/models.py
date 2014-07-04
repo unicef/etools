@@ -142,7 +142,7 @@ class Database(models.Model):
                 for site in sites:
                     for month, indicators in site['monthlyReports'].items():
                         for indicator in indicators:
-                            if indicator['indicatorId'] == ai_indicator.ai_id:
+                            if indicator['indicatorId'] == ai_indicator.ai_id and indicator['value']:
                                 report, created = PartnerReport.objects.get_or_create(
                                     pca=progress.pca,
                                     ai_partner=progress.pca.partner.activity_info_partner,
