@@ -1,5 +1,7 @@
 __author__ = 'jcranwellward'
 
+from datetime import datetime
+
 from django.db import models
 
 from activtyinfo_client import ActivityInfoClient
@@ -106,34 +108,43 @@ class Database(models.Model):
         client = ActivityInfoClient(self.username, self.password)
 
         reports = 0
+        # Select all indicators that are included in Active PCAs,
+        # and have linked indicators and a matching partner in AI
         for progress in IndicatorProgress.objects.filter(
                 pca_sector__pca__status=PCA.ACTIVE,
                 indicator__activity_info_indicators__isnull=False,
                 pca_sector__pca__partner__activity_info_partner__isnull=False):
 
+            # for each selected indicator get the values of linked AI indicators
             for ai_indicator in progress.indicator.activity_info_indicators.all():
                 attributes = ai_indicator.activity.attributegroup_set.all()
                 funded_by = attributes.get(name='Funded by')
 
+                # query AI for matching site records for partner, activity, indicator
                 sites = client.get_sites(
                     partner=progress.pca.partner.activity_info_partner.ai_id
                     if progress.pca.partner.activity_info_partner else None,
                     activity=ai_indicator.activity.ai_id,
                     indicator=ai_indicator.ai_id,
-                    attribute=funded_by.attribute_set.get(name='UNICEF').ai_id
+                    attribute=funded_by.attribute_set.get(name='UNICEF').ai_id,
                 )
 
+                # for those marching sites, create partner report instances
                 for site in sites:
-                    report, created = PartnerReport.objects.get_or_create(
-                        pca=progress.pca,
-                        ai_partner=progress.pca.partner.activity_info_partner,
-                        indicator=progress.indicator,
-                        ai_indicator=ai_indicator,
-                        location=site['location']['name'],
-                        indicator_value=site['indicatorValues'][str(ai_indicator.ai_id)]
-                    )
-                    if created:
-                        reports += 1
+                    for month, indicators in site['monthlyReports'].items():
+                        for indicator in indicators:
+                            if indicator['indicatorId'] == ai_indicator.ai_id:
+                                report, created = PartnerReport.objects.get_or_create(
+                                    pca=progress.pca,
+                                    ai_partner=progress.pca.partner.activity_info_partner,
+                                    indicator=progress.indicator,
+                                    ai_indicator=ai_indicator,
+                                    location=site['location']['name'],
+                                    month=datetime.strptime(month+'-15', '%Y-%m-%d'),
+                                    indicator_value=indicator['value']
+                                )
+                                if created:
+                                    reports += 1
         return reports
 
 
@@ -203,6 +214,10 @@ class PartnerReport(models.Model):
     ai_partner = models.ForeignKey(Partner)
     ai_indicator = models.ForeignKey(Indicator)
     location = models.CharField(max_length=254)
+    month = models.DateField()
     indicator_value = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        ordering = ['-month']
 

@@ -224,7 +224,7 @@ def start_container(name, image, command, port):
 
 
 @_setup
-def deploy(image, branch='develop', git_dir='/vagrant'):
+def deploy(name, image, branch='develop', git_dir='/vagrant'):
     # pull new code from github
     with cd(git_dir):
         run("git pull origin {}".format(branch))
@@ -237,7 +237,7 @@ def deploy(image, branch='develop', git_dir='/vagrant'):
             snapshot_container_to_image(current, image, 'backup')
             remove_container(current)
 
-        start_container(image, 'supervisord', '80')
+        start_container(name, image, 'supervisord', '80:80')
 
 
 

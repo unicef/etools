@@ -1,10 +1,13 @@
 __author__ = 'jcranwellward'
 
+import random
+
 from django.core import urlresolvers
 from django.contrib.gis.db import models
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
+from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey
 
 

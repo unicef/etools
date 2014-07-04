@@ -129,6 +129,7 @@ class PartnerReportAdmin(admin.ModelAdmin):
         'ai_partner',
         'ai_indicator',
         'location',
+        'month',
     )
     list_display = (
         'pca',
@@ -136,6 +137,7 @@ class PartnerReportAdmin(admin.ModelAdmin):
         'ai_partner',
         'ai_indicator',
         'location',
+        'month',
         'indicator_value',
     )
     readonly_fields = (
@@ -144,6 +146,7 @@ class PartnerReportAdmin(admin.ModelAdmin):
         'ai_partner',
         'ai_indicator',
         'location',
+        'month',
         'indicator_value',
     )
 

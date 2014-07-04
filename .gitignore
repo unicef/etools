@@ -44,3 +44,9 @@ Vagrantfile
 *.gz
 
 server_config.yaml
+robots/*.png
+robots/log.html
+
+robots/output.xml
+
+robots/report.html

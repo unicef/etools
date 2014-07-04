@@ -118,7 +118,21 @@
                                      style="width: {% widthratio ind.programmed ind.indicator.total 100 %}%">
                                     {% widthratio ind.programmed ind.indicator.total 100 %}%
                                 </div>
-                            </div><!-- progress -->
+                            </div>
+                            {% if ind.indicator.in_activity_info %}
+                                {% with actual=ind.indicator.progress %}
+                                    <div>
+                                        <span class="sublabel">Reached: {{ actual|intcomma }}</span>
+                                    </div>
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-{{ barcolor }}"
+                                             style="width: {% widthratio actual ind.indicator.total 100 %}%">
+                                            {% widthratio actual ind.indicator.total 100 %}%
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% endif %}
+                            <!-- progress -->
                         {% endfor %}
                     </div>
                 </div>

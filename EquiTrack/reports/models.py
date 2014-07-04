@@ -107,14 +107,27 @@ class Indicator(models.Model):
             'ActivityInfo' if self.in_activity_info else ''
         )
 
+    def programmed_amounts(self):
+        from partners.models import PCA
+        return self.indicatorprogress_set.filter(
+            pca_sector__pca__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
+        )
+
     def programmed(self, result_structure=None):
-        progress = self.indicatorprogress_set.all()
+        programmed = self.programmed_amounts()
         if result_structure:
-            progress = progress.filter(
-                pca_sector__pca__result_structure=result_structure
+            programmed = programmed.filter(
+                pca_sector__pca__result_structure=result_structure,
+
             )
-        total = progress.aggregate(models.Sum('programmed'))
+        total = programmed.aggregate(models.Sum('programmed'))
         return total[total.keys()[0]] or 0
+
+    def progress(self):
+        reported = 0
+        for report in self.partnerreport_set.all():
+            reported += report.indicator_value
+        return reported
 
 
 class IntermediateResult(models.Model):
