@@ -35,6 +35,21 @@ class DatabaseAdmin(admin.ModelAdmin):
         )
 
 
+class PartnerAdmin(admin.ModelAdmin):
+    readonly_fields = (
+        'ai_id',
+        'name',
+        'full_name',
+        'database'
+    )
+    list_display = (
+        'ai_id',
+        'name',
+        'full_name',
+        'database'
+    )
+
+
 class AttributeGroupInlineAdmin(admin.TabularInline):
     can_delete = False
     model = models.AttributeGroup
@@ -152,7 +167,7 @@ class PartnerReportAdmin(admin.ModelAdmin):
 
 
 admin.site.register(models.Database, DatabaseAdmin)
-admin.site.register(models.Partner)
+admin.site.register(models.Partner, PartnerAdmin)
 admin.site.register(models.Activity, ActivityAdmin)
 admin.site.register(models.Indicator, IndicatorAdmin)
 admin.site.register(models.PartnerReport, PartnerReportAdmin)
