@@ -22,6 +22,7 @@ export DATABASE_URL={{database_url}}
 # Start your Django Unicorn
 # Programs meant to be run under supervisor should not daemonize themselves (do not use --daemon)
 exec {{project_root}}/venv/bin/gunicorn ${DJANGO_WSGI_MODULE}:application \
+  --timeout=300 \
   --name $NAME \
   --workers $NUM_WORKERS \
   --user=$USER --group=$GROUP \
