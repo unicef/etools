@@ -120,6 +120,7 @@ class Database(models.Model):
         # Select all indicators that are included in Active PCAs,
         # and have linked indicators and a matching partner in AI
         for progress in IndicatorProgress.objects.filter(
+                programmed__gt=0,
                 pca_sector__pca__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
                 indicator__activity_info_indicators__isnull=False,
                 pca_sector__pca__partner__activity_info_partner__isnull=False):
