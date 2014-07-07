@@ -19,7 +19,7 @@ from .views import (
 urlpatterns = patterns(
     '',
     url(r'^$', login_required(DashboardView.as_view()), name='dashboard'),
-    # url(r'^map/$', login_required(MapView.as_view()), name='map'),
+    url(r'^map/$', login_required(MapView.as_view()), name='map'),
 
 
     # registration

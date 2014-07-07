@@ -1,0 +1,27 @@
+<div class="cartodb-popup custom_infowindow">\
+    <a href="#close" class="cartodb-popup-close-button close">x</a>\
+    <div class="cartodb-popup-content-wrapper">\
+        <div>\
+            <h4>{{ location.pca_number }}</h4>\
+            <table cellpadding="4" cellspacing="0" border="0">\
+                <tr>\
+                    <td style="vertical-align:top; white-space:nowrap;">PCA title:</td>\
+                    <td style="vertical-align:top;">{{ location.pca_title }}</td>\
+                </tr>\
+                <tr>\
+                    <td style="vertical-align:top; white-space:nowrap;">Gateway:</td>\
+                    <td style="vertical-align:top;">{{ location.gateway_name }}</td>\
+                </tr>\
+                <tr>\
+                    <td style="vertical-align:top; white-space:nowrap;">Partner:</td>\
+                    <td style="vertical-align:top;">{{ location.partner_name }}</td>\
+                </tr>\
+                <tr>\
+                    <td style="vertical-align:top; white-space:nowrap;">Sector:</td>\
+                    <td style="vertical-align:top;">{{ location.sector_name }}</td>\
+                </tr>\
+            </table>\
+        </div>\
+    </div>\
+    <div class="cartodb-popup-tip-container"></div>\
+</div>\

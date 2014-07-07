@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css"/>
     <!--[if lte IE 8]>
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
     <![endif]-->
@@ -9,20 +9,19 @@
     <link rel="stylesheet" href="{{ STATIC_URL }}css/dark-theme.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/makeitresponsive.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/spongemap.css" />
-<section class="main-content-wrapper">
-    <div id="leaflet-map"></div>
-    <div id="layer_selector" class="cartodb-infobox" style="position:relative; margin-left:2em; margin-top:4em;">
-        <ul>
-            <!--<li data="all" class="selected">All Layers</li>-->
-            <li data="1">Governorate</li>
-            <li data="2">District</li>
-            <li data="3">Cadastrals</li>
-            <li data="4">Villages/Localities</li>
-            <li data="5">Informal Settlements</li>
-            <li data="6">Schools</li>
-        </ul>
-    </div>
-    <script type="infowindow/html" id="infowindow_template">
+    <section class="main-content-wrapper">
+        <section id="main-content">
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div id="leaflet-map"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script type="infowindow/html" id="infowindow_template">
           <span> custom </span>
           <div class="cartodb-popup custom_infowindow">
             <a href="#close" class="cartodb-popup-close-button close">x</a>
@@ -39,257 +38,83 @@
              <div class="cartodb-popup-tip-container"></div>
           </div>
 
-    </script>
 
-    <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
-    <!--<script src="App.js"></script> -->
-    <!--Change the URL below in order to change the map that is being shown.
-    Go to your map in CartoDB, click on share, and copy the URL undert the API section
-    Check the cartodb.js documentation for more info
-    http://developers.cartodb.com/documentation/cartodb-js.html-->
-    <script>
-    // create layer selector
-    var map = L.map('leaflet-map', {
-        zoomControl: true,
-        center: [34, 36.1],
-        zoom: 9,
-        layers: [
-            L.tileLayer(
-                    'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', {
-                    attribution: 'Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">'
+            </script>
+
+            <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
+            <!--<script src="App.js"></script> -->
+            <!--Change the URL below in order to change the map that is being shown.
+            Go to your map in CartoDB, click on share, and copy the URL undert the API section
+            Check the cartodb.js documentation for more info
+            http://developers.cartodb.com/documentation/cartodb-js.html-->
+            <script>
+                function main() {
+                    // create layer selector
+                    var map = L.map('leaflet-map', {
+                        zoomControl: true,
+                        center: [33.9, 36],
+                        zoom: 9,
+                        layers: [
+                            L.tileLayer(
+                                    'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', {
+                                        attribution: 'Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">'
+                                    }
+                            )
+                        ]
+                    });
+
+                    cartodb.createLayer(map, 'http://equitrack.cartodb.com/api/v2/viz/ad1eac74-f4c0-11e3-8057-0edbca4b5057/viz.json')
+                            .addTo(map)
+                            .on('done', function (layer) {
+
+                                layer.setInteraction(true);
+
+                                layer.on('featureOver', function (e, pos, latlng, data) {
+                                    cartodb.log.log(e, pos, latlng, data);
+                                });
+
+                                layer.on('error', function (err) {
+                                    cartodb.log.log('error: ' + err);
+                                });
+                            }).on('error', function () {
+                                cartodb.log.log("some error occurred");
+                            });
+
+
+                    $.get("{% url 'locations' %}", function (data) {
+                        $.each(data, function (index, location) {
+                            var marker_content = '\
+                                <h4 style="font-weight: strong;">' + location.pca_number + '</h4>\
+                                <table cellpadding="4" cellspacing="0" border="0">\
+                                    <tr>\
+                                        <td style="vertical-align:top; white-space:nowrap;">PCA title:</td>\
+                                        <td style="vertical-align:top;">' + location.pca_title + '</td>\
+                                    </tr>\
+                                    <tr>\
+                                        <td style="vertical-align:top; white-space:nowrap;">Gateway:</td>\
+                                        <td style="vertical-align:top;">' + location.gateway_name + '</td>\
+                                    </tr>\
+                                    <tr>\
+                                        <td style="vertical-align:top; white-space:nowrap;">Partner:</td>\
+                                        <td style="vertical-align:top;">' + location.partner_name + '</td>\
+                                    </tr>\
+                                    <tr>\
+                                        <td style="vertical-align:top; white-space:nowrap;">Sector:</td>\
+                                        <td style="vertical-align:top;">' + location.sector_name + '</td>\
+                                    </tr>\
+                                </table>\
+                                ';
+                            var marker = L.marker(new L.LatLng(location.latitude, location.longitude));
+                            marker.bindPopup(marker_content);
+                            marker.addTo(map)
+                        });
+                    });
                 }
-            )
-        ]
-    });
-    var selectedli = 0;
-    var adm1on = 0;
-    var adm2on = 0;
-    var adm3on = 0;
-    var adm4on = 0;
-    var itson = 0;
-    var adm1layer;
-    var adm2layer;
-    var adm3layer;
-    var adm4layer;
-    var itslayer;
-    var itslayerurl = 'http://unhcr.cartodb.com/api/v2/viz/6d01148e-ebbe-11e3-8ccb-0e230854a1cb/viz.json';
-    var adm1layerurl = 'http://unhcr.cartodb.com/api/v2/viz/37b3bf66-ed76-11e3-abe6-0e230854a1cb/viz.json';
-    var adm2layerurl = 'http://unhcr.cartodb.com/api/v2/viz/80a4de6a-f2eb-11e3-aea2-0e230854a1cb/viz.json';
-    var adm3layerurl = 'http://unhcr.cartodb.com/api/v2/viz/2a7fe946-efe7-11e3-abb9-0e73339ffa50/viz.json';
-    var adm4layerurl = 'http://unhcr.cartodb.com/api/v2/viz/fbdd74de-f2eb-11e3-b154-0e10bcd91c2b/viz.json';
 
-    function createSelector(origin) {
-
-        var $options = $('#layer_selector li');
-        $options.click(function (e) {
-            // get the area of the selected layer
-            var $li = $(e.target);
-            var area = $li.attr('data');
-
-            // deselect all and select the clicked one
-            //$options.removeClass('selected');
-
-            //$li.addClass('selected');
-
-            if (origin == 'adm1') {
-                if (area == '1' && adm1on == 0) {
-                    //show adm1 layer
-                    adm1on = 1;
-                    adm1layer.show();
-                    $li.addClass('selected');
-                }
-                else if (area == '1' && adm1on == 1) {
-                    $li.removeClass('selected');
-                    //hide layer
-                    adm1layer.hide();
-                    adm1on = 0;
-                }
-            }
-
-            if (origin == 'adm3') {
-                if (area == '3' && adm3on == 0) {
-                    //show adm3 layer
-                    adm3on = 1;
-                    adm3layer.show();
-                    $li.addClass('selected');
-                }
-                else if (area == '3' && adm3on == 1) {
-                    //hide layer
-                    $li.removeClass('selected');
-                    adm3layer.hide();
-                    adm3on = 0;
-                }
-            }
-            if (origin == 'adm4') {
-                if (area == '4' && adm4on == 0) {
-                    //show adm3 layer
-                    adm4on = 1;
-                    adm4layer.show();
-                    $li.addClass('selected');
-                }
-                else if (area == '4' && adm4on == 1) {
-                    //hide layer
-                    $li.removeClass('selected');
-                    adm4layer.hide();
-                    adm4on = 0;
-                }
-            }
-
-            if (origin == 'adm2') {
-                if (area == '2' && adm2on == 0) {
-                    //show adm3 layer
-                    adm2on = 1;
-                    adm2layer.show();
-                    $li.addClass('selected');
-                }
-                else if (area == '2' && adm2on == 1) {
-                    //hide layer
-                    $li.removeClass('selected');
-                    adm2layer.hide();
-                    adm2on = 0;
-                }
-            }
-
-
-            if (origin == 'its') {
-                if (area == '5' && itson == 0) {
-                    //show adm1 layer
-                    itson = 1;
-                    itslayer.show();
-                    $li.addClass('selected');
-                }
-                else if (area == '5' && itson == 1) {
-                    //hide layer
-                    $li.removeClass('selected');
-                    itslayer.hide();
-                    itson = 0;
-                }
-            }
-
-            selectedli = area;
-            // change the query in the layer to update the map
-
-        });
-    }
-
-    function clearMap() {
-        for (i in map._layers) {
-            try {
-                if (i !== '18') {
-                    map.removeLayer(map._layers[i]);
-                }
-            }
-            catch (e) {
-                console.log("problem with " + e + map._layers[i]);
-            }
-        }
-    }
-
-    function main() {
-
-        //map quest baselayer
-
-        addadm1layer(adm1layerurl);
-        addadm2layer(adm2layerurl);
-        addadm3layer(adm3layerurl);
-        addadm4layer(adm4layerurl);
-        additslayer(itslayerurl);
-
-    }
-    //Custom Layer
-
-    //function to add new adm1 layer
-    function addadm1layer(layerurl) {
-        cartodb.createLayer(map, layerurl).addTo(map)
-                .on('done',
-                function (layer) {
-                    // get sublayer 0 and set the infowindow template
-                    adm1layer = layer.getSubLayer(0);
-                    adm1layer.infowindow.set('template', $('#infowindow_template').html());
-                    adm1layer.hide();
-                }).on('error', function () {
-                    console.log("some error occurred");
-                });
-
-
-        createSelector('adm1');
-
-    }
-
-    //function to add new adm1 layer
-    function addadm2layer(layerurl) {
-        cartodb.createLayer(map, layerurl).addTo(map)
-                .on('done',
-                function (layer) {
-                    // get sublayer 0 and set the infowindow template
-                    adm2layer = layer.getSubLayer(0);
-                    adm2layer.infowindow.set('template', $('#infowindow_template').html());
-                    adm2layer.hide();
-                }).on('error', function () {
-                    console.log("some error occurred");
-                });
-
-
-        createSelector('adm2');
-
-    }
-
-    function addadm4layer(layerurl) {
-        cartodb.createLayer(map, layerurl).addTo(map)
-                .on('done',
-                function (layer) {
-                    // get sublayer 0 and set the infowindow template
-                    adm4layer = layer.getSubLayer(0);
-                    adm4layer.infowindow.set('template', $('#infowindow_template').html());
-                    adm4layer.hide();
-                }).on('error', function () {
-                    console.log("some error occurred");
-                });
-
-
-        createSelector('adm4');
-
-    }
-
-
-    function addadm3layer(layerurl) {
-        cartodb.createLayer(map, layerurl).addTo(map)
-                .on('done',
-                function (layer) {
-                    // get sublayer 0 and set the infowindow template
-                    adm3layer = layer.getSubLayer(0);
-                    adm3layer.infowindow.set('template', $('#infowindow_template').html());
-                    adm3layer.hide();
-                }).on('error', function () {
-                    console.log("some error occurred");
-                });
-
-
-        createSelector('adm3');
-    }
-
-    //function to add new ITS layer
-    function additslayer(layerurl) {
-        cartodb.createLayer(map, layerurl).addTo(map)
-                .on('done',
-                function (layer) {
-                    // get sublayer 0 and set the infowindow template
-                    itslayer = layer.getSubLayer(0);
-                    itslayer.infowindow.set('template', $('#infowindow_template').html());
-                    itslayer.hide();
-                }).on('error', function () {
-                    console.log("some error occurred");
-                });
-
-        createSelector('its');
-
-
-    }
-
-
-    window.onload = main;
-</script>
-</section>
+                window.onload = main;
+            </script>
+        </section>
+    </section>
 
 
 {% endblock %}

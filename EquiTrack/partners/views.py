@@ -16,6 +16,7 @@ from locations.models import (
     GatewayType
 )
 from partners.models import (
+    PCA,
     PartnerOrganization,
     GwPCALocation,
     IndicatorProgress,
@@ -63,17 +64,6 @@ class LocationView(ListAPIView):
         Return locations with GPS points only
         """
         return self.model.objects.filter(
+            pca__status=PCA.ACTIVE,
             location__point__isnull=False
         )
-
-    def list(self, request, *args, **kwargs):
-        """
-        Override parent and cache the location list
-        unless new locations have been added
-        """
-        data = cache.get('locations')
-        if not data or len(data) < self.get_queryset().count():
-            response = super(LocationView, self).list(request, *args, **kwargs)
-            cache.set('locations', response.data, 0)
-            return response
-        return Response(data)

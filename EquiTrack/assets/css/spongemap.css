@@ -1,6 +1,6 @@
 ﻿
-      html, body, #leaflet-map {
-        height: 100%;
+      #leaflet-map {
+        height: 800px;
         padding: 0;
         margin: 0;
       }
@@ -35,7 +35,7 @@
         background-color: #EEE;
       }
 
-    div.cartodb-popup.custom_infowindow {width:auto;padding-top:5px;margin-left:-POSITION_OF_THE_TIP;background:url("http://vizzuality.github.io/icij/img/map/infowindow-top.png") no-repeat}
+     div.cartodb-popup.custom_infowindow {width:auto;padding-top:5px;margin-left:-POSITION_OF_THE_TIP;background:url("http://vizzuality.github.io/icij/img/map/infowindow-top.png") no-repeat}
     div.cartodb-popup.custom_infowindow div.cartodb-popup-content-wrapper {width:407px;height:400px;max-width:407px;padding:0 5px;background:url("http://vizzuality.github.io/icij/img/map/infowindow-content.png") repeat-y}
     div.cartodb-popup.custom_infowindow div.cartodb-popup-tip-container{width:407px;background:url("http://vizzuality.github.io/icij/img/map/infowindow-bottom.png") no-repeat}
     div.cartodb-popup.custom_infowindow div.row{display:block;overflow:auto}

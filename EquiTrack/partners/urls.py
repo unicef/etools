@@ -15,5 +15,5 @@ urlpatterns = patterns(
     '',
     url(r'sector/$', SectorView.as_view()),
     url(r'partner/$', PartnerView.as_view()),
-    url(r'location/$', LocationView.as_view()),
+    url(r'location/$', LocationView.as_view(), name='locations'),
 )

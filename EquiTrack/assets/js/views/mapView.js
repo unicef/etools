@@ -67,4 +67,3 @@ define([
   });
   return mapView;
 });
-  
