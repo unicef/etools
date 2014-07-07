@@ -234,6 +234,7 @@ def deploy(name, image, branch='develop', git_dir='/vagrant'):
         else:
             snapshot_container_to_image(current, image, 'latest')
             build_image_with_packer(image, image)
+            stop_container(current)
             snapshot_container_to_image(current, image, 'backup')
             remove_container(current)
 
