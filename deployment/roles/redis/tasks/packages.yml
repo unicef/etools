@@ -1,8 +1,0 @@
----
-- name: Commmon | Install required system packages.
-  apt: >
-    pkg=${item}
-    state=installed
-    update-cache=yes
-  with_items:
-    - redis-server

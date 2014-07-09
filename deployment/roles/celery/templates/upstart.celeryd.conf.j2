@@ -1,8 +1,0 @@
-# simple celerybeat upstart job
-
-description "celery_{{ project.name }} instance"
-start on runlevel [2345]
-stop on runlevel [06]
-
-
-exec {{ project.virtualenv }}bin/python {{ django.root }}code/application/manage.py celeryd --loglevel=INFO --settings=base.settings.live

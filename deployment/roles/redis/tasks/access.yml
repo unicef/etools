@@ -1,7 +1,0 @@
----
-- name: Listen on public interface
-  lineinfile: >
-    dest=/etc/redis/redis.conf
-    regexp="^bind"
-    line="#bind"
-  notify: restart redis

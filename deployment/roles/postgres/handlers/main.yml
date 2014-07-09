@@ -1,8 +1,0 @@
----
-- name: reload postgresql
-  service: name=postgresql state=reloaded
-  sudo_user: root
-
-- name: restart postgresql
-  service: name=postgresql state=restarted
-  sudo_user: root

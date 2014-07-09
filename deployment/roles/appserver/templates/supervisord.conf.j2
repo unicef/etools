@@ -13,13 +13,6 @@ stdout_logfile={{project_root}}/run/postgres.log  ; Where to write log messages
 redirect_stderr=true
 autorestart=true
 
-{#[program:redis]#}
-{#command=/usr/bin/redis-server /etc/redis.conf#}
-{#autostart=true#}
-{#autorestart=true#}
-{#stdout_logfile={{project_root}}/run/redis.log#}
-{#stderr_logfile=true#}
-{##}
 {#[program:celery]#}
 {#directory={{project_root}}/{{project_name}}#}
 {#command={{project_root}}/venv/bin/celery -A {{project_name}} worker -l info#}

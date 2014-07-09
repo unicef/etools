@@ -1,8 +1,0 @@
----
-- name: django-haystackrefreshindex
-  shell: ${django.virtualenv}/bin/python2.7 ${django.root}/manage.py ${item} --noinput --settings=${django.settings}
-  sudo_user: project.user
-  with_items:
-    - clear_index
-    - update_index
-
