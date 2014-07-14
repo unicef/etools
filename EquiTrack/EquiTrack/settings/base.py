@@ -320,7 +320,6 @@ THIRD_PARTY_APPS = (
     'gunicorn',
     'post_office',
     'djrill',
-    'registration',
     'djcelery',
 )
 
@@ -334,6 +333,7 @@ LOCAL_APPS = (
     'emails',
     'trips',
     'users',
+    'registration',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
