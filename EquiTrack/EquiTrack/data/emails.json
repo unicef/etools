@@ -1,0 +1,67 @@
+[
+    {
+        "pk": 1,
+        "model": "post_office.emailtemplate",
+        "fields": {
+            "last_updated": "2014-06-10T06:18:06.890Z",
+            "name": "trips/trip/created",
+            "created": "2014-06-10T06:18:06.890Z",
+            "html_content": "",
+            "description": "The email that is send to the supervisor once a new trip request has been created",
+            "content": "Dear {{supervisor_name}},\r\n\r\nA new trip request has bee created by {{owner_name}} and awaits your approval here:\r\n\r\n{{url}}\r\n\r\nThank you.",
+            "subject": "New Trip Request Created for {{owner_name}}"
+        }
+    },
+    {
+        "pk": 2,
+        "model": "post_office.emailtemplate",
+        "fields": {
+            "last_updated": "2014-06-13T06:31:00.890Z",
+            "name": "registration/profile/created",
+            "created": "2014-06-13T06:31:00.890Z",
+            "html_content": "",
+            "description": "",
+            "content": "A new registration has been created by {{owner_name}} and awaits your approval here:\r\n\r\nhttp://{{ domain }}{{url}}\r\n\r\nThank you.",
+            "subject": "New Registration at: {{domain}}"
+        }
+    },
+    {
+        "pk": 3,
+        "model": "post_office.emailtemplate",
+        "fields": {
+            "last_updated": "2014-06-13T06:32:27.420Z",
+            "name": "registration/profile/activated",
+            "created": "2014-06-13T06:32:27.420Z",
+            "html_content": "",
+            "description": "",
+            "content": "Dear {{owner_name}},\r\n\r\nYour account has been activated and you can log in here:\r\n\r\nhttp://{{ domain }}\r\n\r\nThank you.",
+            "subject": "Your account has been activated for: {{domain}}"
+        }
+    },
+    {
+        "pk": 4,
+        "model": "post_office.emailtemplate",
+        "fields": {
+            "last_updated": "2014-06-17T20:25:44.255Z",
+            "name": "trips/trip/TA_request",
+            "created": "2014-06-17T10:33:32.793Z",
+            "html_content": "",
+            "description": "This email is to be sent to the relevant programme assistant to create the TA for the staff in concern after the approval of the supervisor.",
+            "content": "Dear {{pa_assistant}},\r\n\r\nKindly draft my Travel Authorization in Vision based on the approved travel request posted in here:\r\n\r\n{{url}}\r\n\r\nBest,\r\n{{owner_name}}",
+            "subject": "Travel Authorization request for {{owner_name}}"
+        }
+    },
+    {
+        "pk": 5,
+        "model": "post_office.emailtemplate",
+        "fields": {
+            "last_updated": "2014-06-17T20:54:12.383Z",
+            "name": "travel/trip/travel_or_admin_assistant",
+            "created": "2014-06-17T10:53:29.226Z",
+            "html_content": "",
+            "description": "This is the e-mail that will be generated when the trip is approved by the supervisor. It will go to the travel assistant (for Beirut based staff) and the Admin Assitant from the relevant field office for field based staff to prompt them to organise the travel (vehicles, flights etc.) and request security clearance.",
+            "content": "Dear {{travel_assistant}},\r\n\r\nPlease organise the travel for {{owner_name}} and request security clearance as per this approved travel request:\r\n\r\n{{url}}\r\n\r\nThanks",
+            "subject": "Travel for {{owner_name}}"
+        }
+    }
+]

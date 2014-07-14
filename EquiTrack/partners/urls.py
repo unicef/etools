@@ -1,7 +1,6 @@
 __author__ = 'jcranwellward'
 
 from django.conf.urls import patterns, url
-from django.views.decorators.cache import cache_page
 
 from .views import (
     SectorView,

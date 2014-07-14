@@ -177,6 +177,12 @@ def dump_image_to_archive(image, name):
     get('{}.tar.gz'.format(name))
 
 
+def load_image_from_archive(name):
+    with warn_only():
+        local('gunzip {}.tar.gz'.format(name))
+    local('docker load < {}.tar'.format(name))
+
+
 def build_image_with_packer(from_image, to_image='', tag='latest', packer_file='packer.json'):
     print('>>> Building new image with file {}'.format(packer_file))
     if not to_image:

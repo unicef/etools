@@ -333,6 +333,7 @@ LOCAL_APPS = (
     'partners',
     'emails',
     'trips',
+    'users',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

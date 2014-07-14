@@ -55,7 +55,6 @@ class Trip(AdminURLMixin, models.Model):
         (STAFF_DEVELOPMENT, u"STAFF DEVELOPMENT"),
     )
 
-
     status = models.CharField(
         max_length=32L,
         choices=TRIP_STATUS,

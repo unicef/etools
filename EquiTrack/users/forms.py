@@ -17,7 +17,10 @@ class UnicefEmailRegistrationForm(EmailRegistrationForm):
         error_messages={
             'invalid':
             "This value may contain only letters, "
-              "numbers and @/./+/-/_ characters."})
+            "numbers and @/./+/-/_ characters."})
+
+    first_name = forms.CharField(max_length=254)
+    last_name = forms.CharField(max_length=254)
 
     def clean_email(self):
 

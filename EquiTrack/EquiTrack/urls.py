@@ -10,10 +10,10 @@ autocomplete_light.autodiscover()
 from django.contrib import admin
 admin.autodiscover()
 
+from users.views import EquiTrackRegistrationView
 from .views import (
     MapView,
-    DashboardView,
-    EquiTrackRegistrationView
+    DashboardView
 )
 
 urlpatterns = patterns(
@@ -21,6 +21,8 @@ urlpatterns = patterns(
     url(r'^$', login_required(DashboardView.as_view()), name='dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
 
+    url(r'partners/', include('partners.urls')),
+    url(r'trips/', include('trips.urls')),
 
     # registration
     # url(r'^activate/complete/$',
@@ -48,8 +50,6 @@ urlpatterns = patterns(
 
     # auth
     url(r'', include('registration.auth_urls')),
-
-    url(r'partners/', include('partners.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
