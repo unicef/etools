@@ -219,32 +219,33 @@ def stop_container(container):
 
 
 @_setup
-def start_container(name, image, command, port):
-    print('>>> Starting new container for image {}'.format(image))
+def start_container():
+    print('>>> Starting new container for image {}'.format(env.image))
     run(
         'docker run --name={name} -p={port} {envs} -d {image} {command}'.format(
-        name=name, image=image, port=port, command=command, envs=' '.join(
+        name=env.name, image=env.image, port=env.ports, command=env.run, envs=' '.join(
             ['-e "{}={}"'.format(key, value) for key, value in env.envs.items()])
         )
     )
 
 
 @_setup
-def deploy(name, image, branch='develop', git_dir='/vagrant'):
+def deploy():
     # pull new code from github
-    with cd(git_dir):
-        run("git pull origin {}".format(branch))
-        current = get_id_of_running_image(image)
+    with cd(env.git_dir):
+        run("git pull origin {}".format(env.branch))
+        current = get_id_of_running_image(env.image)
+        print current
         if not current:
-            build_image_with_packer(image, image)
+            build_image_with_packer(env.image, env.image)
         else:
-            snapshot_container_to_image(current, image, 'latest')
-            build_image_with_packer(image, image)
+            snapshot_container_to_image(current, env.image, 'latest')
+            build_image_with_packer(env.image, env.image)
             stop_container(current)
-            snapshot_container_to_image(current, image, 'backup')
+            snapshot_container_to_image(current, env.image, 'backup')
             remove_container(current)
 
-        start_container(name, image, 'supervisord', '80:80')
+        start_container()
 
 
 

@@ -1,5 +1,6 @@
 
-from registration.compat import User
+from django.contrib.auth import get_user_model
+
 from registration.models import RegistrationManager, RegistrationProfile
 
 
@@ -20,7 +21,7 @@ class EquiTrackRegistrationManager(RegistrationManager):
             cleaned_data['email'], \
             cleaned_data['password1']
 
-        new_user = User.objects.create_user(username, email, password)
+        new_user = get_user_model().objects.create_user(username, email, password)
         new_user.is_active = False
         new_user.first_name = cleaned_data['first_name']
         new_user.last_name = cleaned_data['last_name']
