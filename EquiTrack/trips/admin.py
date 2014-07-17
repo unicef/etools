@@ -135,24 +135,40 @@ class TripReportAdmin(VersionAdmin):
         LinksInlineAdmin,
     )
     list_display = (
+        u'reference',
         u'purpose_of_travel',
+        u'owner',
+        u'section',
         u'from_date',
         u'to_date',
-        u'owner',
         u'supervisor',
         u'status',
         u'approved_date',
         u'outstanding_actions',
     )
+    list_filter = (
+        u'owner',
+        u'section',
+        u'from_date',
+        u'to_date',
+        u'supervisor',
+        u'status',
+        u'approved_date',
+    )
     filter_horizontal = (
         u'pcas',
         u'partners',
+    )
+    readonly_fields = (
+        u'reference',
     )
     fieldsets = (
         (u'Planning', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (u'purpose_of_travel',
+                (#u'owner',
+                 u'section',
+                 u'purpose_of_travel',
                  (u'from_date', u'to_date',),
                  u'travel_type',
                  u'international_travel',
@@ -161,6 +177,16 @@ class TripReportAdmin(VersionAdmin):
                  u'partners',
                  (u'activities_undertaken',
                  u'monitoring_supply_delivery'))
+        }),
+        (u'Travel Authorisation', {
+            u'classes': (u'suit-tab suit-tab-planning',),
+            u'fields':
+                (u'ta_required',
+                 u'programme_assistant',
+                 (u'wbs', u'grant',),
+                 u'ta_approved',
+                 u'ta_reference',
+                 u'ta_approved_date',),
         }),
         (u'Approval', {
             u'classes': (u'suit-tab suit-tab-planning',),
@@ -171,16 +197,8 @@ class TripReportAdmin(VersionAdmin):
                  u'approved_by_human_resources',
                  u'representative_approval',
                  u'status',
-                 u'approved_date',),
-        }),
-        (u'Travel Authorisation', {
-            u'classes': (u'suit-tab suit-tab-planning',),
-            u'fields':
-                (u'ta_required',
-                 u'programme_assistant',
-                 (u'wbs', u'grant',),
-                 u'ta_approved',
-                 u'ta_approved_date',),
+                 u'approved_date',
+                 u'security_clearance'),
         }),
         (u'Report', {
             u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
