@@ -28,9 +28,6 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, default=datetime.datetime(2014, 7, 15, 0, 0), blank=True),
                       keep_default=False)
 
-
-        # Changing field 'Trip.travel_assistant'
-        db.alter_column(u'trips_trip', 'travel_assistant_id', self.gf('django.db.models.fields.related.ForeignKey')(default=1, to=orm['auth.User']))
         # Adding field 'ActionPoint.actions_taken'
         db.add_column(u'trips_actionpoint', 'actions_taken',
                       self.gf('django.db.models.fields.TextField')(null=True, blank=True),

@@ -132,7 +132,11 @@ class Trip(AdminURLMixin, models.Model):
     owner = models.ForeignKey(User, verbose_name='Traveller')
     section = models.ForeignKey('reports.Sector', blank=True, null=True)
 
-    travel_assistant = models.ForeignKey(User, related_name='organised_trips')
+    travel_assistant = models.ForeignKey(
+        User,
+        blank=True, null=True,
+        related_name='organised_trips'
+    )
     transport_booked = models.BooleanField(default=False)
     security_clearance = models.BooleanField(default=False)
     supervisor = models.ForeignKey(User, related_name='supervised_trips')
