@@ -54,12 +54,12 @@ class Migration(SchemaMigration):
         # Deleting field 'TravelRoutes.arrive'
         db.delete_column(u'trips_travelroutes', 'arrive')
         # Changing field 'TravelRoutes.arrive'
-        db.add_column(u'trips_travelroutes', 'arrive', self.gf('django.db.models.fields.DateTimeField')())
+        db.add_column(u'trips_travelroutes', 'arrive', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime(2014, 7, 15, 0, 0),))
 
         # Deleting field 'TravelRoutes.depart'
         db.delete_column(u'trips_travelroutes', 'depart')
         # Changing field 'TravelRoutes.depart'
-        db.add_column(u'trips_travelroutes', 'depart', self.gf('django.db.models.fields.DateTimeField')())
+        db.add_column(u'trips_travelroutes', 'depart', self.gf('django.db.models.fields.DateTimeField')(default=datetime.datetime(2014, 7, 15, 0, 0),))
 
     def backwards(self, orm):
         # Deleting field 'Trip.ta_reference'
