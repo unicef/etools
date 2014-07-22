@@ -111,12 +111,12 @@ class Trip(AdminURLMixin, models.Model):
         help_text='Needed if a Travel Authorisation (TA) is required',
         related_name='managed_trips'
     )
-    wbs = models.ForeignKey(
+    wbs = models.ManyToManyField(
         WBS,
         blank=True, null=True,
         help_text='Needed if trip is over 10 hours and requires overnight stay'
     )
-    grant = models.ForeignKey(
+    grant = models.ManyToManyField(
         Grant,
         blank=True, null=True
     )
@@ -259,7 +259,7 @@ class Trip(AdminURLMixin, models.Model):
                 instance.owner.email,
                 template,
                 {
-                    'trip_reference': instance.trip.reference(),
+                    'trip_reference': instance.reference(),
                     'url': 'http://{}{}'.format(
                         current_site.domain,
                         instance.get_admin_url()

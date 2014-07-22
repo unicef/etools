@@ -2,12 +2,18 @@ __author__ = 'jcranwellward'
 
 import random
 
+import logging
+from django.conf import settings
 from django.core import urlresolvers
+from django.db import IntegrityError
 from django.contrib.gis.db import models
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
+from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey
+
+logger = logging.getLogger('locations.models')
 
 
 class Governorate(models.Model):
@@ -81,6 +87,7 @@ class Location(models.Model):
     objects = models.GeoManager()
 
     def __unicode__(self):
+        #TODO: Make generic
         return u'{} ({} {})'.format(
             self.name,
             self.gateway.name,
@@ -152,107 +159,72 @@ class LinkedLocation(models.Model):
 
 class CartoDBTable(models.Model):
 
-    def update_sites_from_cartodb(
-            self,
-            api_key,
-            username,
-            table_name,
-            name_col,
-            pcode_col,
-            latitude_col,
-            longitude_col,
-            prepend_to_name,
-            location_type):
+    table_name = models.CharField(max_length=254)
+    location_type = models.ForeignKey(GatewayType)
+    name_col = models.CharField(max_length=254, default='name')
+    pcode_col = models.CharField(max_length=254, default='pcode')
+    latitude_col = models.CharField(max_length=254, default='latitude')
+    longitude_col = models.CharField(max_length=254, default='longitude')
 
-        types = {}
-        for type in self.get_location_types('LB'):
-            types[type['name']] = type
-        type_id = types[location_type]['id']
+    def update_sites_from_cartodb(self):
 
-        admin_levels = {}
-        for level in self.get_admin_levels('LB'):
-            admin_levels[level['name']] = level
+        domain = settings.CARTODB_DOMAIN
+        api_key = settings.CARTODB_APIKEY
+        client = CartoDBAPIKey(api_key, domain)
 
-        mapped_locations = {}
-        for location in self.get_locations(type_id):
-            mapped_locations[str(location['name'].encode('UTF-8'))] = location
-
-        govs_id = admin_levels['Governorate']['id']
-        cazas_id = admin_levels['Caza']['id']
-        cads_id = admin_levels['Cadastral Area']['id']
-
-        govs = {}
-        for gov in self.get_entities(govs_id):
-            govs[gov['id']] = gov
-
-        cazas = {}
-        for caza in self.get_entities(cazas_id):
-            cazas[caza['id']] = caza
-
-        cadastas = {}
-        for cada in self.get_entities(cads_id):
-            cadastas[cada['code']] = cada
-
-        sites_created = sites_not_added = 0
-
-        cl = CartoDBAPIKey(api_key, username)
+        sites_created = sites_updated = sites_not_added = 0
         try:
-            sites = cl.sql('select * from {}'.format(table_name))
+            sites = client.sql(
+                'select * from {}'.format(self.table_name)
+            )
         except CartoDBException as e:
-            print ("some error ocurred", e)
+            print ("CartoDB exception occured", e)
         else:
 
             for row in sites['rows']:
-                pcode = row[pcode_col]
+                pcode = row[self.pcode_col]
                 cad_code = row['cad_code']
-                site_name = row[name_col].encode('UTF-8')
+                site_name = row[self.name_col].encode('UTF-8')
 
                 if not cad_code:
-                    print "No cad code for: {}".format(site_name)
+                    logger.warn("No cad code for: {}".format(site_name))
                     sites_not_added += 1
                     continue
 
                 if not site_name or site_name.isspace():
-                    print "No name for site with PCode: {}".format(pcode)
+                    logger.warn("No name for site with PCode: {}".format(pcode))
                     sites_not_added += 1
                     continue
 
-                site_name = '{}: {}'.format(prepend_to_name, site_name)
-                ai_id = None
-                if site_name in mapped_locations.keys():
-                    print "Existing match for {}, updating...".format(site_name)
-                    ai_id = mapped_locations[site_name]['id']
+                try:
+                    cad = Locality.objects.get(cad_code=cad_code)
+                except Locality.DoesNotExist:
+                    logger.warn("No locality found for cad code: {}".format(cad_code))
+
+                location, created = Location.objects.get_or_create(
+                    gateway=self.location_type,
+                    p_code=pcode,
+                    locality=cad
+                )
+                if created:
+                    sites_created += 1
                 else:
-                    print "No existing match for {}, adding...".format(site_name)
+                    sites_updated += 1
 
-                    try:
-                        cad = cadastas[cad_code]
-                        caza = cazas[cad['parentId']]
-                        govn = govs[caza['parentId']]
-                    except KeyError as e:
-                        raise e
+                location.name = site_name
+                location.latitude = row[self.latitude_col]
+                location.longitude = row[self.longitude_col]
+                location.point = row['the_geom']
 
-                    print 'Adding site: {} -> {} -> {} -> {}'.format(
-                        govn['name'], caza['name'], cad['name'].encode('UTF-8'), site_name
-                    )
+                try:
+                    location.save()
+                except IntegrityError as e:
+                    logger.exception('')
 
-                    response = self.call_command(
-                        'CreateLocation',
-                        **{
-                            'id': ai_id if ai_id else random.getrandbits(31),
-                            'locationTypeId': type_id,
-                            'name': site_name,
-                            'axe': 'cerd: {}'.format(pcode),
-                            'latitude': row[latitude_col],
-                            'longitude': row[longitude_col],
-                            'E{}'.format(cads_id): cad['id'],
-                            'E{}'.format(cazas_id): caza['id'],
-                            'E{}'.format(govs_id): govn['id']
-                        }
-                    )
+                logger.info('{}: {} ({})'.format(
+                    'Added' if created else 'Updated',
+                    location.name,
+                    self.location_type.name
+                ))
 
-                    print response.status_code
-                    if response.status_code == 200:
-                        sites_created += 1
-
-        return sites_created
+        return sites_created, sites_updated, sites_not_added

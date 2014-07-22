@@ -154,7 +154,10 @@ class WBS(models.Model):
         ordering = ['name']
 
     def __unicode__(self):
-        return self.name
+        return u'{}/{}'.format(
+            self.Intermediate_result.ir_wbs_reference,
+            self.name
+        )
 
 
 class Activity(models.Model):

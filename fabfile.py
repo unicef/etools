@@ -218,6 +218,11 @@ def stop_container(container):
     run('docker stop {}'.format(container))
 
 
+def clean_containers():
+    print('>>> Cleaning up containers')
+    run("docker ps -a | grep 'Exit' | awk '{print $1}' | while read -r id ; do\n docker rm $id \ndone")
+
+
 @_setup
 def start_container():
     print('>>> Starting new container for image {}'.format(env.image))

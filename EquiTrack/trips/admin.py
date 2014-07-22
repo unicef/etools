@@ -61,6 +61,7 @@ class TripForm(ModelForm):
         no_pca = cleaned_data.get('no_pca')
         international_travel = cleaned_data.get('international_travel')
         approved_by_budget_owner = cleaned_data.get('approved_by_budget_owner')
+        approved_date = cleaned_data.get('approved_date')
         programme_assistant = cleaned_data.get(u'programme_assistant')
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         representative_approval = cleaned_data.get(u'representative_approval')
@@ -113,6 +114,9 @@ class TripForm(ModelForm):
                     code='invalid'
                 )
 
+            if not approved_date:
+                raise ValidationError('Please specify the date this trip was approved')
+
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
 
@@ -158,35 +162,31 @@ class TripReportAdmin(VersionAdmin):
     filter_horizontal = (
         u'pcas',
         u'partners',
+        u'wbs',
+        u'grant',
     )
     readonly_fields = (
         u'reference',
     )
     fieldsets = (
-        (u'Planning', {
+        (u'Traveler', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (#u'owner',
+                (u'status',
+                 u'owner',
                  u'section',
                  u'purpose_of_travel',
                  (u'from_date', u'to_date',),
                  u'travel_type',
                  u'international_travel',
+                 (u'ta_required', u'programme_assistant',),
+                 u'wbs',
+                 u'grant',
                  u'no_pca',
                  u'pcas',
                  u'partners',
                  (u'activities_undertaken',
                  u'monitoring_supply_delivery'))
-        }),
-        (u'Travel Authorisation', {
-            u'classes': (u'suit-tab suit-tab-planning',),
-            u'fields':
-                (u'ta_required',
-                 u'programme_assistant',
-                 (u'wbs', u'grant',),
-                 u'ta_approved',
-                 u'ta_reference',
-                 u'ta_approved_date',),
         }),
         (u'Approval', {
             u'classes': (u'suit-tab suit-tab-planning',),
@@ -196,10 +196,18 @@ class TripReportAdmin(VersionAdmin):
                  (u'budget_owner', u'approved_by_budget_owner',),
                  u'approved_by_human_resources',
                  u'representative_approval',
-                 u'status',
                  u'approved_date',
-                 u'security_clearance'),
+                 ),
         }),
+        (u'Travel', {
+            u'classes': (u'suit-tab suit-tab-planning',),
+            u'fields':
+                (u'security_clearance',
+                 u'ta_approved',
+                 u'ta_reference',
+                 u'ta_approved_date',),
+        }),
+
         (u'Report', {
             u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
             u'fields': (
@@ -211,14 +219,6 @@ class TripReportAdmin(VersionAdmin):
         (u'reporting', u'Reporting'),
         (u'attachments', u'Attachments')
     )
-
-    def save_model(self, request, obj, form, change):
-        """
-        When creating a new trip, set the owner field.
-        """
-        if not change:
-            obj.owner = request.user
-        obj.save()
 
     def get_readonly_fields(self, request, report=None):
         """

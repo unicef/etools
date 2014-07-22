@@ -12,7 +12,7 @@ from locations.models import Location, GatewayType, Locality
 location_mapping = {
 
     'name': 'ACS_NAME_1',
-    'p_code': 'CERD',
+    'pcode': 'CERD',
     'longitude': 'X_Location',
     'latitude': 'Y_Location',
     'point': 'POINT',

@@ -45,6 +45,7 @@ SUIT_CONFIG = {
             {'label': 'Localities', 'model': 'locations.locality'},
             {'label': 'Gateways', 'model': 'locations.gatewaytype'},
             {'label': 'Locations', 'model': 'locations.location'},
+            {'label': 'Carto DB', 'model': 'locations.cartodbtable'},
         ]},
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
@@ -92,7 +93,7 @@ TEMPLATE_DEBUG = DEBUG
 ########## END DEBUG CONFIGURATION
 
 ########## DATABASE CONFIGURATION
-POSTGIS_VERSION = ( 2, 1 )
+POSTGIS_VERSION = (2, 1)
 import dj_database_url
 DATABASES = {
     'default': dj_database_url.config(
@@ -104,6 +105,9 @@ BROKER_URL = 'redis://localhost:6379/0'
 CELERY_ALWAYS_EAGER = os.environ.get('CELERY_EAGER', True)
 CELERY_RESULT_BACKEND='djcelery.backends.database:DatabaseBackend'
 CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+CARTODB_DOMAIN = 'equitrack'
+CARTODB_APIKEY = os.environ.get('CARTODB_APIKEY')
 ########## END DATABASE CONFIGURATION
 
 ########## MANAGER CONFIGURATION

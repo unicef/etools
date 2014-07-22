@@ -57,6 +57,29 @@ class LocalityAdmin(admin.GeoModelAdmin):
     list_filter = ('region', 'cas_code')
 
 
+class CartoDBTableAdmin(admin.ModelAdmin):
+    list_display = (
+        'table_name',
+        'location_type',
+        'name_col',
+        'pcode_col',
+        'latitude_col',
+        'longitude_col'
+    )
+
+    actions = ('import_sites',)
+
+    def import_sites(self, request, queryset):
+
+        for table in queryset:
+            created, updated, skipped = table.update_sites_from_cartodb()
+            self.message_user(
+                request, "{} sites created, {} sites updated, {} sites skipped".format(
+                    created, updated, skipped
+                )
+            )
+
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
 admin.site.register(models.Governorate, admin.GeoModelAdmin)
@@ -64,3 +87,4 @@ admin.site.register(models.Region, admin.GeoModelAdmin)
 admin.site.register(models.Locality, LocalityAdmin)
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.GatewayType)
+admin.site.register(models.CartoDBTable, CartoDBTableAdmin)
