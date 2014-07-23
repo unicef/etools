@@ -1,5 +1,7 @@
 __author__ = 'jcranwellward'
 
+import datetime
+
 from django.contrib import admin
 from django.forms import ModelForm, ValidationError
 from django.contrib.auth import get_user_model
@@ -29,6 +31,20 @@ class ActionPointInlineAdmin(admin.TabularInline):
     model = ActionPoint
     suit_classes = u'suit-tab suit-tab-reporting'
 
+    def get_readonly_fields(self, request, report=None):
+        """
+        Only let certain users perform approvals
+        """
+        fields = [
+            u'closed'
+        ]
+
+        if report:
+            if request.user == report.supervisor or request.user.is_superuser:
+                return []
+
+        return fields
+
 
 class SitesVisitedInlineAdmin(GenericTabularInline):
     model = LinkedLocation
@@ -54,7 +70,7 @@ class TripForm(ModelForm):
         to_date = cleaned_data.get('to_date')
         owner = cleaned_data.get('owner')
         supervisor = cleaned_data.get('supervisor')
-        over_ten_hours = cleaned_data.get('over_ten_hours')
+        ta_required = cleaned_data.get('ta_required')
         wbs = cleaned_data.get('wbs')
         grant = cleaned_data.get('wbs')
         pcas = cleaned_data.get('pcas')
@@ -76,7 +92,7 @@ class TripForm(ModelForm):
             )
 
         # trips over 10 hours need a TA, WBS and Grant for over night stay
-        if over_ten_hours:
+        if ta_required:
 
             if not programme_assistant:
                 raise ValidationError(
@@ -94,28 +110,10 @@ class TripForm(ModelForm):
                     'This trip is greater than 10 hours and needs a Grant'
                 )
 
-        # some strict rules must be applied before a trip can be approved
-        if trip_status == Trip.APPROVED:
-            needs_approval_by = ''
+        if trip_status != Trip.APPROVED and self.instance.can_be_approved:
+            cleaned_data['approved_date'] = datetime.datetime.today()
+            cleaned_data['status'] = Trip.APPROVED
 
-            if not approved_by_budget_owner:
-                needs_approval_by = 'The budget owner'
-
-            if self.instance.requires_hr_approval and not approved_by_human_resources:
-                needs_approval_by = 'Human Resources'
-
-            if international_travel and not representative_approval:
-                needs_approval_by = 'The representative'
-
-            if needs_approval_by:
-                raise ValidationError(
-                    '{person} needs to approve this trip before it can be marked as Approved'
-                    .format(person=needs_approval_by),
-                    code='invalid'
-                )
-
-            if not approved_date:
-                raise ValidationError('Please specify the date this trip was approved')
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
@@ -174,35 +172,44 @@ class TripReportAdmin(VersionAdmin):
             u'fields':
                 (u'status',
                  u'owner',
+                 u'supervisor',
+                 u'budget_owner',
                  u'section',
                  u'purpose_of_travel',
                  (u'from_date', u'to_date',),
-                 u'travel_type',
+                 (u'travel_type', u'travel_assistant',),
                  u'international_travel',
-                 (u'ta_required', u'programme_assistant',),
-                 u'wbs',
-                 u'grant',
                  u'no_pca',
-                 u'pcas',
-                 u'partners',
                  (u'activities_undertaken',
                  u'monitoring_supply_delivery'))
+        }),
+        (u'Travel Authorisation', {
+            u'classes': (u'collapse', u'wide',),
+            u'fields':
+                ((u'ta_required', u'programme_assistant',),
+                 u'wbs',
+                 u'grant',),
+        }),
+        (u'PCA Details', {
+            u'classes': (u'collapse', u'wide',),
+            u'fields':
+                (u'pcas',
+                 u'partners',),
         }),
         (u'Approval', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                ((u'travel_assistant', u'transport_booked',),
-                 (u'supervisor', u'approved_by_supervisor',),
-                 (u'budget_owner', u'approved_by_budget_owner',),
+                (u'approved_by_supervisor',
+                 u'approved_by_budget_owner',
                  u'approved_by_human_resources',
                  u'representative_approval',
-                 u'approved_date',
-                 ),
+                 u'approved_date',),
         }),
         (u'Travel', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (u'security_clearance',
+                (u'transport_booked',
+                 u'security_clearance',
                  u'ta_approved',
                  u'ta_reference',
                  u'ta_approved_date',),
@@ -234,7 +241,7 @@ class TripReportAdmin(VersionAdmin):
         ]
 
         if report:
-            if request.user in [report.supervisor, report.budget_owner]:
+            if request.user == report.supervisor or request.user.is_superuser:
                 return []
 
         return fields

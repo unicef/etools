@@ -167,7 +167,7 @@ class Trip(AdminURLMixin, models.Model):
 
     def outstanding_actions(self):
         return self.actionpoint_set.filter(
-            completed_date__isnull=True).count()
+            closed=False).count()
 
     @property
     def requires_hr_approval(self):
@@ -193,19 +193,6 @@ class Trip(AdminURLMixin, models.Model):
         and not self.representative_approval:
             return False
         return True
-
-    @classmethod
-    def get_email_template_or_default(cls, name, instance):
-        try:
-            template = EmailTemplate.objects.get(name=name)
-        except EmailTemplate.DoesNotExist:
-            template = EmailTemplate(
-                subject='Trip {}: {}'.format(
-                    instance.status,
-                    instance.reference
-                )
-            )
-        return template
 
     @classmethod
     def send_trip_request(cls, sender, instance, created, **kwargs):
@@ -237,35 +224,8 @@ class Trip(AdminURLMixin, models.Model):
                         instance.get_admin_url()
                     )
                 },
-                instance.supervisor.email
-            )
-
-        if instance.status == Trip.APPROVED:
-            email_name = 'trips/trip/approved'
-            try:
-                template = EmailTemplate.objects.get(
-                    name=email_name
-                )
-            except EmailTemplate.DoesNotExist:
-                template = EmailTemplate.objects.create(
-                    name=email_name,
-                    description='The email that is sent to the traveller if a trip has been approved',
-                    subject="Trip Approved: {{trip_reference}}",
-                    content="The following trip has been approved: {{trip_reference}}"
-                            "\r\n\r\n{{url}}"
-                            "\r\n\r\nThank you."
-                )
-            send_mail(
-                instance.owner.email,
-                template,
-                {
-                    'trip_reference': instance.reference(),
-                    'url': 'http://{}{}'.format(
-                        current_site.domain,
-                        instance.get_admin_url()
-                    )
-                },
-                instance.owner.email,
+                instance.supervisor.email,
+                instance.budget_owner.email
             )
 
         if instance.status == Trip.CANCELLED:
@@ -299,7 +259,35 @@ class Trip(AdminURLMixin, models.Model):
                 instance.travel_assistant.email,
             )
 
-        if instance.approved_by_supervisor:
+        if instance.status == Trip.APPROVED:
+            email_name = 'trips/trip/approved'
+            try:
+                template = EmailTemplate.objects.get(
+                    name=email_name
+                )
+            except EmailTemplate.DoesNotExist:
+                template = EmailTemplate.objects.create(
+                    name=email_name,
+                    description='The email that is sent to the traveller if a trip has been approved',
+                    subject="Trip Approved: {{trip_reference}}",
+                    content="The following trip has been approved: {{trip_reference}}"
+                            "\r\n\r\n{{url}}"
+                            "\r\n\r\nThank you."
+                )
+            send_mail(
+                instance.owner.email,
+                template,
+                {
+                    'trip_reference': instance.reference(),
+                    'url': 'http://{}{}'.format(
+                        current_site.domain,
+                        instance.get_admin_url()
+                    )
+                },
+                instance.owner.email,
+                instance.supervisor.email,
+                instance.budget_owner.email
+            )
             if instance.travel_assistant and not instance.transport_booked:
                 email_name = "travel/trip/travel_or_admin_assistant"
                 try:
@@ -372,7 +360,6 @@ post_save.connect(Trip.send_trip_request, sender=Trip)
 class TravelRoutes(models.Model):
 
     trip = models.ForeignKey(Trip)
-    date = models.DateField()
     origin = models.CharField(max_length=254)
     destination = models.CharField(max_length=254)
     depart = models.DateTimeField()
@@ -392,6 +379,7 @@ class ActionPoint(models.Model):
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
+    closed = models.BooleanField(default=False)
 
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
@@ -409,6 +397,33 @@ class ActionPoint(models.Model):
                     subject='Trip action point created for trip: {{trip_reference}}',
                     content="A new trip action point has been created "
                             "and awaits your action here:"
+                            "\r\n\r\n{{url}}"
+                            "\r\n\r\nThank you."
+                )
+            send_mail(
+                instance.owner.email,
+                template,
+                {
+                    'trip_reference': instance.trip.reference(),
+                    'url': 'http://{}{}#reporting'.format(
+                        current_site.domain,
+                        instance.trip.get_admin_url()
+                    )
+                },
+                [user.email for user in instance.persons_responsible.all()]
+            )
+        if instance.closed:
+            email_name = 'trips/action/closed'
+            try:
+                template = EmailTemplate.objects.get(
+                    name=email_name
+                )
+            except EmailTemplate.DoesNotExist:
+                template = EmailTemplate.objects.create(
+                    name=email_name,
+                    description='Sent when trip action points are closed',
+                    subject='Trip action point closed for trip: {{trip_reference}}',
+                    content="A trip action point has been closed here:"
                             "\r\n\r\n{{url}}"
                             "\r\n\r\nThank you."
                 )

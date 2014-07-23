@@ -179,8 +179,14 @@ def dump_image_to_archive(image, name):
 
 def load_image_from_archive(name):
     with warn_only():
-        local('gunzip {}.tar.gz'.format(name))
-    local('docker load < {}.tar'.format(name))
+        run('gunzip {}.tar.gz'.format(name))
+    run('docker load < {}.tar'.format(name))
+
+
+def get_latest_image(image, name):
+    current = get_id_of_running_image(image)
+    snapshot_container_to_image(current, image, 'latest')
+    dump_image_to_archive(env.image, name)
 
 
 def build_image_with_packer(from_image, to_image='', tag='latest', packer_file='packer.json'):
@@ -221,6 +227,12 @@ def stop_container(container):
 def clean_containers():
     print('>>> Cleaning up containers')
     run("docker ps -a | grep 'Exit' | awk '{print $1}' | while read -r id ; do\n docker rm $id \ndone")
+
+
+def clean_images():
+    print('>>> Cleaning up images')
+    run('docker images | grep "^<none>" | awk \'BEGIN { FS = "[ \t]+" } { print $3 }\'  | while read -r id ; '
+        'do\n docker rmi $id\n done')
 
 
 @_setup
