@@ -49,6 +49,7 @@ class ActionPointInlineAdmin(admin.TabularInline):
 class SitesVisitedInlineAdmin(GenericTabularInline):
     model = LinkedLocation
     suit_classes = u'suit-tab suit-tab-planning'
+    verbose_name = u'Sites to visit'
 
 
 class FileAttachmentInlineAdmin(GenericTabularInline):
@@ -82,8 +83,11 @@ class TripForm(ModelForm):
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         representative_approval = cleaned_data.get(u'representative_approval')
 
+        if to_date < from_date:
+            raise ValidationError('The to date must be greater than the from date')
+
         if owner == supervisor:
-            raise ValidationError('You cant supervise your own trips')
+            raise ValidationError('You can\'t supervise your own trips')
 
         if not pcas and not no_pca:
             raise ValidationError(
@@ -175,23 +179,21 @@ class TripReportAdmin(VersionAdmin):
                  u'supervisor',
                  u'budget_owner',
                  u'section',
-                 u'purpose_of_travel',
+                 (u'purpose_of_travel', u'monitoring_supply_delivery',),
                  (u'from_date', u'to_date',),
                  (u'travel_type', u'travel_assistant',),
                  u'international_travel',
-                 u'no_pca',
-                 (u'activities_undertaken',
-                 u'monitoring_supply_delivery'))
+                 u'no_pca',)
         }),
-        (u'Travel Authorisation', {
-            u'classes': (u'collapse', u'wide',),
+        (u'TA Details', {
+            u'classes': (u'collapse', u'suit-tab suit-tab-planning',),
             u'fields':
                 ((u'ta_required', u'programme_assistant',),
                  u'wbs',
                  u'grant',),
         }),
         (u'PCA Details', {
-            u'classes': (u'collapse', u'wide',),
+            u'classes': (u'collapse', u'suit-tab suit-tab-planning',),
             u'fields':
                 (u'pcas',
                  u'partners',),
@@ -199,17 +201,17 @@ class TripReportAdmin(VersionAdmin):
         (u'Approval', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (u'approved_by_supervisor',
-                 u'approved_by_budget_owner',
-                 u'approved_by_human_resources',
-                 u'representative_approval',
+                ((u'approved_by_supervisor', u'date_supervisor_approved',),
+                 (u'approved_by_budget_owner', u'date_budget_owner_approved',),
+                 (u'approved_by_human_resources', u'date_human_resources_approved',),
+                 (u'representative_approval', u'date_representative_approved',),
                  u'approved_date',),
         }),
         (u'Travel', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (u'transport_booked',
-                 u'security_clearance',
+                 u'security_granted',
                  u'ta_approved',
                  u'ta_reference',
                  u'ta_approved_date',),
@@ -245,6 +247,16 @@ class TripReportAdmin(VersionAdmin):
                 return []
 
         return fields
+
+
+class ActionPointsAdmin(admin.ModelAdmin):
+
+    list_display = (
+
+    )
+
+    def get_queryset(self, request):
+        return ActionPoint.objects.filter(closed=False)
 
 
 admin.site.register(Trip, TripReportAdmin)

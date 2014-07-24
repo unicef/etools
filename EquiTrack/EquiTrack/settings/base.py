@@ -29,6 +29,7 @@ SUIT_CONFIG = {
         {'label': 'PCAs', 'icon': 'icon-pencil', 'models': [
             {'model': 'partners.pca', 'label': 'List of PCAs'},
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
+            {'model': 'partners.face', 'label': 'FACE'},
         ]},
 
         {'app': 'trips', 'icon': 'icon-road'},

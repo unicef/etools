@@ -12,6 +12,8 @@ Create Trip
     Input Password    ${VALID PASS}
     Submit Credentials
 
+
+
 *** Keywords ***
 Provided precondition
     Setup system under test

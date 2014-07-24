@@ -29,10 +29,10 @@ from partners.exports import (
 )
 from partners.models import (
     PCA,
+    FACE,
     PCAFile,
     FileType,
     PCAGrant,
-    PCAReport,
     PCASector,
     GwPCALocation,
     PCASectorOutput,
@@ -220,20 +220,6 @@ class PcaActivityInlineAdmin(SectorMixin, admin.TabularInline):
         )
 
 
-class PcaReportInlineAdmin(admin.StackedInline):
-    model = PCAReport
-    classes = ('grp-collapse grp-open',)
-    inline_classes = ('grp-collapse grp-open',)
-    extra = 0
-    fields = (
-        'title',
-        'description',
-        'start_period',
-        'end_period',
-        'received_date',
-    )
-
-
 class PcaSectorInlineAdmin(admin.TabularInline):
     model = PCASector
     verbose_name = 'Sector'
@@ -407,6 +393,24 @@ class PcaAdmin(ExportMixin, VersionAdmin):
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = PartnerResource
+    list_display = (
+        u'name',
+        u'description',
+        u'email',
+        u'contact_person',
+        u'phone_number'
+    )
+
+
+class FACEAdmin(admin.ModelAdmin):
+    list_display = (
+        u'ref',
+        u'pca',
+        u'submited_on',
+        u'amount',
+        u'status',
+        u'date_paid'
+    )
 
 
 admin.site.register(GwPCALocation)
@@ -414,7 +418,4 @@ admin.site.register(PCA, PcaAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
-
-
-
-
+admin.site.register(FACE, FACEAdmin)

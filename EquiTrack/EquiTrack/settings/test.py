@@ -17,9 +17,10 @@ DATABASES = {
 ########## END DATABASE CONFIGURATION
 
 SOUTH_TESTS_MIGRATE = False
+SKIP_SOUTH_TESTS = True
 
 INSTALLED_APPS += (
-    #'django_nose',
+    'django_nose',
 )
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'

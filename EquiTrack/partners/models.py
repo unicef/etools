@@ -419,10 +419,32 @@ class PCAFile(models.Model):
     download_url.short_description = 'Download Files'
 
 
-class PCAReport(models.Model):
-    pca = models.ForeignKey(PCA)
-    title = models.CharField(max_length=128L)
-    description = models.CharField(max_length=512L)
-    start_period = models.DateField(null=True, blank=True)
-    end_period = models.DateField(null=True, blank=True)
-    received_date = models.DateTimeField(null=True, blank=True)
+class FACE(models.Model):
+
+    REQUESTED = u'requested'
+    ACKNOWLEDGED = u'acknowledged'
+    PAID = u'paid'
+    CANCELLED = u'cancelled'
+    FACE_STATUS = (
+        (REQUESTED, u"Requested"),
+        (ACKNOWLEDGED, u"Acknowledged"),
+        (PAID, u"Paid"),
+        (CANCELLED, u"Cancelled"),
+    )
+
+    ref = models.CharField(max_length=100)
+    pca = models.ForeignKey(PCA, related_name='face_refs')
+    submited_on = models.DateTimeField(auto_now_add=True)
+    amount = models.CharField(max_length=100, default=0)
+    status = models.CharField(blank=True, choices=FACE_STATUS, max_length=100)
+    date_paid = models.DateField(verbose_name='Paid On', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'FACE'
+
+    def __unicode__(self):
+        return self.ref
+
+    @classmethod
+    def notify_face_change(cls):
+        pass

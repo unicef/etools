@@ -22,6 +22,8 @@ from funds.models import Grant
 
 User = get_user_model()
 
+User.__unicode__ = lambda user: user.get_full_name()
+
 
 def send_mail(sender, template, variables, *recipients):
     mail.send(
@@ -78,10 +80,6 @@ class Trip(AdminURLMixin, models.Model):
     from_date = models.DateField()
     to_date = models.DateField()
     monitoring_supply_delivery = models.BooleanField(default=False)
-    activities_undertaken = models.CharField(
-        max_length=254,
-        verbose_name='Activities'
-    )
     no_pca = models.BooleanField(
         default=False,
         verbose_name=u'Not related to a PCA',
@@ -122,7 +120,7 @@ class Trip(AdminURLMixin, models.Model):
     )
     ta_approved = models.BooleanField(
         default=False,
-        help_text='Has the TA been approved in vision?'
+        help_text='Has the TA been approved in vision if applicable?'
     )
     ta_approved_date = models.DateField(blank=True, null=True)
     ta_reference = models.CharField(max_length=254, blank=True, null=True)
@@ -138,13 +136,17 @@ class Trip(AdminURLMixin, models.Model):
         related_name='organised_trips'
     )
     transport_booked = models.BooleanField(default=False)
-    security_clearance = models.BooleanField(default=False)
+    security_granted = models.BooleanField(default=False)
     supervisor = models.ForeignKey(User, related_name='supervised_trips')
     approved_by_supervisor = models.BooleanField(default=False)
+    date_supervisor_approved = models.DateField(blank=True, null=True)
     budget_owner = models.ForeignKey(User, related_name='budgeted_trips')
     approved_by_budget_owner = models.BooleanField(default=False)
-    approved_by_human_resources = models.BooleanField(default=False)
-    representative_approval = models.BooleanField(default=False)
+    date_budget_owner_approved = models.DateField(blank=True, null=True)
+    approved_by_human_resources = models.NullBooleanField(default=None)
+    date_human_resources_approved = models.DateField(blank=True, null=True)
+    representative_approval = models.NullBooleanField(default=None)
+    date_representative_approved = models.DateField(blank=True, null=True)
     approved_date = models.DateField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
 

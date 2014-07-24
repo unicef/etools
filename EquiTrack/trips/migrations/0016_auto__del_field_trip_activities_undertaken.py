@@ -8,26 +8,18 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'ActionPoint.closed'
-        db.add_column(u'trips_actionpoint', 'closed',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Deleting field 'TravelRoutes.date'
-        db.delete_column(u'trips_travelroutes', 'date')
+        # Deleting field 'Trip.activities_undertaken'
+        db.delete_column(u'trips_trip', 'activities_undertaken')
 
 
     def backwards(self, orm):
-        # Deleting field 'ActionPoint.closed'
-        db.delete_column(u'trips_actionpoint', 'closed')
 
-
-        # User chose to not deal with backwards NULL issues for 'TravelRoutes.date'
-        raise RuntimeError("Cannot reverse this migration. 'TravelRoutes.date' and its values cannot be restored.")
+        # User chose to not deal with backwards NULL issues for 'Trip.activities_undertaken'
+        raise RuntimeError("Cannot reverse this migration. 'Trip.activities_undertaken' and its values cannot be restored.")
         
-        # The following code is provided here to aid in writing a correct migration        # Adding field 'TravelRoutes.date'
-        db.add_column(u'trips_travelroutes', 'date',
-                      self.gf('django.db.models.fields.DateField')(),
+        # The following code is provided here to aid in writing a correct migration        # Adding field 'Trip.activities_undertaken'
+        db.add_column(u'trips_trip', 'activities_undertaken',
+                      self.gf('django.db.models.fields.CharField')(max_length=254),
                       keep_default=False)
 
 
@@ -238,7 +230,6 @@ class Migration(SchemaMigration):
         },
         u'trips.trip': {
             'Meta': {'ordering': "['-from_date', '-to_date']", 'object_name': 'Trip'},
-            'activities_undertaken': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
             'approved_by_budget_owner': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'approved_by_human_resources': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'approved_by_supervisor': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),

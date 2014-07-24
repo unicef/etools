@@ -1,5 +1,7 @@
 __author__ = 'jcranwellward'
 
+import json
+
 from rest_framework import serializers
 
 from .models import GwPCALocation
@@ -23,3 +25,21 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GwPCALocation
+
+
+class RapidProRequest(serializers.Serializer):
+
+    relayer	= serializers.CharField()
+    phone = serializers.CharField(required=True)
+    text = serializers.CharField(required=True)
+    flow = serializers.CharField()
+    step = serializers.CharField()
+    time = serializers.DateTimeField()
+    values = serializers.CharField()
+
+    def restore_fields(self, data, files):
+
+        reverted_data = super(RapidProRequest, self).restore_fields(data, files)
+        if reverted_data['values']:
+            reverted_data['values'] = json.loads(reverted_data['values'])
+        return reverted_data
