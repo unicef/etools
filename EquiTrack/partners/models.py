@@ -1,9 +1,12 @@
 __author__ = 'jcranwellward'
 
+import json
 import datetime
 from copy import deepcopy
 
+import requests
 import reversion
+from django.conf import settings
 from django.db import models, transaction
 
 from filer.fields.file import FilerFileField
@@ -436,7 +439,7 @@ class FACE(models.Model):
     pca = models.ForeignKey(PCA, related_name='face_refs')
     submited_on = models.DateTimeField(auto_now_add=True)
     amount = models.CharField(max_length=100, default=0)
-    status = models.CharField(blank=True, choices=FACE_STATUS, max_length=100)
+    status = models.CharField(choices=FACE_STATUS, max_length=100, default=REQUESTED)
     date_paid = models.DateField(verbose_name='Paid On', null=True, blank=True)
 
     class Meta:
@@ -446,5 +449,26 @@ class FACE(models.Model):
         return self.ref
 
     @classmethod
-    def notify_face_change(cls):
-        pass
+    def notify_face_change(cls, sender, instance, created, **kwargs):
+        if instance.PAID and instance.date_paid:
+            response = requests.post(
+                'https://api.rapidpro.io/api/v1/sms.json',
+                headers={
+                    'Authorization': 'Token {}'.format(settings.RAPIDPRO_TOKEN),
+                    'content-type': 'application/json'
+                },
+                data=json.dumps(
+                    {
+                        "phone": [instance.pca.partner.phone_number],
+                        "text": "Hi {name}, payment for {pca} FACE Ref# {face} has been processed.".format(
+                            name=instance.pca.partner.name,
+                            pca=instance.pca.number,
+                            face=instance.ref
+                        )
+                    }
+                )
+
+            )
+            return response
+
+models.signals.post_save.connect(FACE.notify_face_change, sender=FACE)

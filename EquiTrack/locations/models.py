@@ -159,6 +159,8 @@ class LinkedLocation(models.Model):
 
 class CartoDBTable(models.Model):
 
+    domain = models.CharField(max_length=254)
+    api_key = models.CharField(max_length=254)
     table_name = models.CharField(max_length=254)
     location_type = models.ForeignKey(GatewayType)
     name_col = models.CharField(max_length=254, default='name')
@@ -168,9 +170,7 @@ class CartoDBTable(models.Model):
 
     def update_sites_from_cartodb(self):
 
-        domain = settings.CARTODB_DOMAIN
-        api_key = settings.CARTODB_APIKEY
-        client = CartoDBAPIKey(api_key, domain)
+        client = CartoDBAPIKey(self.api_key, self.domain)
 
         sites_created = sites_updated = sites_not_added = 0
         try:

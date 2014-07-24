@@ -106,9 +106,6 @@ BROKER_URL = 'redis://localhost:6379/0'
 CELERY_ALWAYS_EAGER = os.environ.get('CELERY_EAGER', True)
 CELERY_RESULT_BACKEND='djcelery.backends.database:DatabaseBackend'
 CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
-
-CARTODB_DOMAIN = 'equitrack'
-CARTODB_APIKEY = os.environ.get('CARTODB_APIKEY')
 ########## END DATABASE CONFIGURATION
 
 ########## MANAGER CONFIGURATION
@@ -227,6 +224,7 @@ REQUIRE_ENVIRONMENT = "auto"
 SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"
 ########## END SECRET CONFIGURATION
 
+RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN')
 
 ########## SITE CONFIGURATION
 # Hosts/domain names that are valid for this site

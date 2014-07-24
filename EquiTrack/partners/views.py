@@ -94,7 +94,8 @@ class ValidatePCANumberView(RapidProWebHookMixin, APIView):
                 number=data.object['text'],
                 status=PCA.ACTIVE,
                 partner__phone_number=data.object['phone']).exists()
-            return Response('valid' if valid else 'invalid', status.HTTP_200_OK)
+            return Response({'valid': 'valid' if valid else 'invalid'},
+                            status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -106,7 +107,7 @@ class CreateFACERequestView(RapidProWebHookMixin, APIView):
             if data.object['values']:
                 pca_number = amount = None
                 for val in data.object['values']:
-                    if val["label"] == "PCA Number":
+                    if val["label"] == "pca_number":
                         pca_number = val['text']
                     if val["label"] == "amount":
                         amount = val['text']
@@ -122,5 +123,6 @@ class CreateFACERequestView(RapidProWebHookMixin, APIView):
                             amount=amount,
                             pca=pca,
                         )
-                        return Response(face.ref, status=status.HTTP_200_OK)
+                        return Response({'faceref': face.ref},
+                                        status=status.HTTP_200_OK)
         return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
