@@ -21,7 +21,7 @@ class TripSerializer(serializers.ModelSerializer):
         return ', '.join(obj.partners.all())
 
     def transform_url(self, obj, value):
-        return '{}{}'.format(
+        return 'http://{}{}'.format(
             Site.objects.get_current(),
             obj.get_admin_url()
         )
