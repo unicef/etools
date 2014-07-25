@@ -12,12 +12,16 @@ class TripSerializer(serializers.ModelSerializer):
     section = serializers.CharField(source='section.name')
     related_to_pca = serializers.CharField(source='no_pca')
 
+    def transform_traveller(self, obj, value):
+        return obj.owner.get_full_name()
+
     def transform_partners(self, obj, value):
         return ', '.join(obj.partners.all())
 
     class Meta:
         model = Trip
         fields = (
+            'id',
             'traveller',
             'section',
             'purpose_of_travel',
@@ -25,6 +29,5 @@ class TripSerializer(serializers.ModelSerializer):
             'to_date',
             'related_to_pca',
             'partners',
-            'activities_undertaken',
         )
 
