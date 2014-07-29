@@ -121,6 +121,7 @@ class PcaLocationInlineAdmin(admin.TabularInline):
         'locality',
         'location',
         'view_location',
+        'tpm_visit',
     )
     readonly_fields = (
         'view_location',

@@ -50,6 +50,8 @@ SUIT_CONFIG = {
         ]},
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
+
+        {'app': 'tpm', 'label': 'TPM Portal',},
     )
 }
 
@@ -336,6 +338,7 @@ LOCAL_APPS = (
     'emails',
     'trips',
     'users',
+    'tpm',
     'registration',
 )
 

@@ -30,6 +30,7 @@ from locations.models import (
     Location,
     Region,
 )
+from tpm.models import TPMVisit
 
 
 class PartnerOrganization(models.Model):
@@ -39,7 +40,10 @@ class PartnerOrganization(models.Model):
     email = models.CharField(max_length=128L, blank=True)
     contact_person = models.CharField(max_length=64L, blank=True)
     phone_number = models.CharField(max_length=32L, blank=True)
-    activity_info_partner = models.ForeignKey('activityinfo.Partner', blank=True, null=True)
+    activity_info_partner = models.ForeignKey(
+        'activityinfo.Partner',
+        blank=True, null=True
+    )
 
     class Meta:
         ordering = ['name']
@@ -285,6 +289,7 @@ class GwPCALocation(models.Model):
         show_all=False,
         auto_choose=True
     )
+    tpm_visit = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'Activity Location'
@@ -302,6 +307,14 @@ class GwPCALocation(models.Model):
         return get_changeform_link(self)
     view_location.allow_tags = True
     view_location.short_description = 'View Location'
+
+    def save(self, **kwargs):
+        super(GwPCALocation, self).save(**kwargs)
+        if self.tpm_visit:
+            TPMVisit.objects.get_or_create(
+                pca=self.pca,
+                location=self.location
+            )
 
 
 class PCASector(models.Model):
