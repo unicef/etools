@@ -183,11 +183,11 @@ class CartoDBTable(models.Model):
 
             for row in sites['rows']:
                 pcode = row[self.pcode_col]
-                cad_code = row['cad_code']
+                cas_code = row['cas_code']
                 site_name = row[self.name_col].encode('UTF-8')
 
-                if not cad_code:
-                    logger.warning("No cad code for: {}".format(site_name))
+                if not cas_code:
+                    logger.warning("No cas code for: {}".format(site_name))
                     sites_not_added += 1
                     continue
 
@@ -197,9 +197,9 @@ class CartoDBTable(models.Model):
                     continue
 
                 try:
-                    cad = Locality.objects.get(cad_code=cad_code)
+                    cad = Locality.objects.get(cas_code=cas_code)
                 except Locality.DoesNotExist:
-                    logger.warning("No locality found for cad code: {}".format(cad_code))
+                    logger.warning("No locality found for cas code: {}".format(cas_code))
                     sites_not_added += 1
                     continue
 
