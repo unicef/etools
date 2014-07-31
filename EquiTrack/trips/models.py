@@ -109,15 +109,7 @@ class Trip(AdminURLMixin, models.Model):
         help_text='Needed if a Travel Authorisation (TA) is required',
         related_name='managed_trips'
     )
-    wbs = models.ManyToManyField(
-        WBS,
-        blank=True, null=True,
-        help_text='Needed if trip is over 10 hours and requires overnight stay'
-    )
-    grant = models.ManyToManyField(
-        Grant,
-        blank=True, null=True
-    )
+
     ta_approved = models.BooleanField(
         default=False,
         help_text='Has the TA been approved in vision if applicable?'
@@ -137,16 +129,23 @@ class Trip(AdminURLMixin, models.Model):
     )
     transport_booked = models.BooleanField(default=False)
     security_granted = models.BooleanField(default=False)
-    supervisor = models.ForeignKey(User, related_name='supervised_trips')
+
+    supervisor = models.ForeignKey(User, related_name='supervised_trips', blank=True, null=True)
     approved_by_supervisor = models.BooleanField(default=False)
     date_supervisor_approved = models.DateField(blank=True, null=True)
-    budget_owner = models.ForeignKey(User, related_name='budgeted_trips')
+
+    budget_owner = models.ForeignKey(User, related_name='budgeted_trips', blank=True, null=True)
     approved_by_budget_owner = models.BooleanField(default=False)
     date_budget_owner_approved = models.DateField(blank=True, null=True)
-    approved_by_human_resources = models.NullBooleanField(default=None)
+
+    human_resources = models.ForeignKey(User, related_name='certified_trips', blank=True, null=True)
+    approved_by_human_resources = models.NullBooleanField(default=None, verbose_name='Certified by human resources')
     date_human_resources_approved = models.DateField(blank=True, null=True)
+
+    representative = models.ForeignKey(User, related_name='approved_trips', blank=True, null=True)
     representative_approval = models.NullBooleanField(default=None)
     date_representative_approved = models.DateField(blank=True, null=True)
+
     approved_date = models.DateField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
 
@@ -154,7 +153,8 @@ class Trip(AdminURLMixin, models.Model):
         ordering = ['-from_date', '-to_date']
 
     def __unicode__(self):
-        return u'{} - {}: {}'.format(
+        return u'{} {} - {}: {}'.format(
+            self.reference(),
             self.from_date,
             self.to_date,
             self.purpose_of_travel
@@ -359,6 +359,14 @@ class Trip(AdminURLMixin, models.Model):
 post_save.connect(Trip.send_trip_request, sender=Trip)
 
 
+class TripFunds(models.Model):
+
+    trip = models.ForeignKey(Trip)
+    wbs = models.ForeignKey(WBS)
+    grant = models.ForeignKey(Grant)
+    amount = models.PositiveIntegerField()
+
+
 class TravelRoutes(models.Model):
 
     trip = models.ForeignKey(Trip)
@@ -366,10 +374,7 @@ class TravelRoutes(models.Model):
     destination = models.CharField(max_length=254)
     depart = models.DateTimeField()
     arrive = models.DateTimeField()
-
-    class Meta:
-        verbose_name = 'Travel Route'
-        verbose_name_plural = 'Travel Routes'
+    remarks = models.CharField(max_length=254, null=True, blank=True)
 
 
 class ActionPoint(models.Model):
@@ -380,7 +385,7 @@ class ActionPoint(models.Model):
     persons_responsible = models.ManyToManyField(User)
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
-    comments = models.TextField(blank=True, null=True)
+    comments = models.TextField(blank=True, null=True, verbose_name='Supervisors Comments')
     closed = models.BooleanField(default=False)
 
     @classmethod
@@ -403,7 +408,7 @@ class ActionPoint(models.Model):
                             "\r\n\r\nThank you."
                 )
             send_mail(
-                instance.owner.email,
+                instance.trip.owner.email,
                 template,
                 {
                     'trip_reference': instance.trip.reference(),
@@ -412,6 +417,7 @@ class ActionPoint(models.Model):
                         instance.trip.get_admin_url()
                     )
                 },
+                *[instance.trip.budget_owner.email, instance.trip.supervisor.email] +
                 [user.email for user in instance.persons_responsible.all()]
             )
         if instance.closed:
@@ -430,7 +436,7 @@ class ActionPoint(models.Model):
                             "\r\n\r\nThank you."
                 )
             send_mail(
-                instance.owner.email,
+                instance.trip.owner.email,
                 template,
                 {
                     'trip_reference': instance.trip.reference(),
@@ -439,6 +445,7 @@ class ActionPoint(models.Model):
                         instance.trip.get_admin_url()
                     )
                 },
+                *[instance.trip.budget_owner.email, instance.trip.supervisor.email] +
                 [user.email for user in instance.persons_responsible.all()]
             )
 

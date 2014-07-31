@@ -14,6 +14,7 @@ from generic_links.admin import GenericLinkStackedInline
 from locations.models import LinkedLocation
 from .models import (
     Trip,
+    TripFunds,
     ActionPoint,
     TravelRoutes,
     FileAttachment
@@ -25,17 +26,30 @@ User = get_user_model()
 class TravelRoutesInlineAdmin(admin.TabularInline):
     model = TravelRoutes
     suit_classes = u'suit-tab suit-tab-planning'
+    verbose_name = u'Travel Itinerary'
 
 
-class ActionPointInlineAdmin(admin.TabularInline):
+class TripFundsInlineAdmin(admin.TabularInline):
+    model = TripFunds
+    suit_classes = u'suit-tab suit-tab-planning'
+
+
+class ActionPointInlineAdmin(admin.StackedInline):
     model = ActionPoint
     suit_classes = u'suit-tab suit-tab-reporting'
+    filter_horizontal = (u'persons_responsible',)
+    fields = (
+        (u'description', u'due_date',),
+        u'persons_responsible',
+        (u'actions_taken', u'completed_date', u'comments', u'closed',),
+    )
 
     def get_readonly_fields(self, request, report=None):
         """
         Only let certain users perform approvals
         """
         fields = [
+            u'comments',
             u'closed'
         ]
 
@@ -72,8 +86,6 @@ class TripForm(ModelForm):
         owner = cleaned_data.get('owner')
         supervisor = cleaned_data.get('supervisor')
         ta_required = cleaned_data.get('ta_required')
-        wbs = cleaned_data.get('wbs')
-        grant = cleaned_data.get('wbs')
         pcas = cleaned_data.get('pcas')
         no_pca = cleaned_data.get('no_pca')
         international_travel = cleaned_data.get('international_travel')
@@ -95,29 +107,27 @@ class TripForm(ModelForm):
                 ' or select the "Not related to a PCA" option'
             )
 
-        # trips over 10 hours need a TA, WBS and Grant for over night stay
-        if ta_required:
+        if ta_required and not programme_assistant:
+            raise ValidationError(
+                'This trip needs a programme assistant '
+                'to create a Travel Authorisation (TA)'
+            )
 
-            if not programme_assistant:
+        if self.instance:
+
+            if self.instance.requires_hr_approval and not approved_by_human_resources:
                 raise ValidationError(
-                    'This trip is greater than 10 hours and needs a '
-                    'programme assistant to create a Travel Authorisation (TA)'
+                    'This trip needs HR approval'
                 )
 
-            if not wbs:
+            if self.instance.requires_rep_approval and not representative_approval:
                 raise ValidationError(
-                    'This trip is greater than 10 hours and needs a WBS'
+                    'This trip requires approval from the representative'
                 )
 
-            if not grant:
-                raise ValidationError(
-                    'This trip is greater than 10 hours and needs a Grant'
-                )
-
-        if trip_status != Trip.APPROVED and self.instance.can_be_approved:
-            cleaned_data['approved_date'] = datetime.datetime.today()
-            cleaned_data['status'] = Trip.APPROVED
-
+            if trip_status != Trip.APPROVED and self.instance.can_be_approved:
+                cleaned_data['approved_date'] = datetime.datetime.today()
+                cleaned_data['status'] = Trip.APPROVED
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
@@ -135,6 +145,7 @@ class TripReportAdmin(VersionAdmin):
     form = TripForm
     inlines = (
         TravelRoutesInlineAdmin,
+        TripFundsInlineAdmin,
         SitesVisitedInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
@@ -164,8 +175,6 @@ class TripReportAdmin(VersionAdmin):
     filter_horizontal = (
         u'pcas',
         u'partners',
-        u'wbs',
-        u'grant',
     )
     readonly_fields = (
         u'reference',
@@ -188,9 +197,7 @@ class TripReportAdmin(VersionAdmin):
         (u'TA Details', {
             u'classes': (u'collapse', u'suit-tab suit-tab-planning',),
             u'fields':
-                ((u'ta_required', u'programme_assistant',),
-                 u'wbs',
-                 u'grant',),
+                ((u'ta_required', u'programme_assistant',),),
         }),
         (u'PCA Details', {
             u'classes': (u'collapse', u'suit-tab suit-tab-planning',),
@@ -203,11 +210,11 @@ class TripReportAdmin(VersionAdmin):
             u'fields':
                 ((u'approved_by_supervisor', u'date_supervisor_approved',),
                  (u'approved_by_budget_owner', u'date_budget_owner_approved',),
-                 (u'approved_by_human_resources', u'date_human_resources_approved',),
-                 (u'representative_approval', u'date_representative_approved',),
+                 (u'approved_by_human_resources', u'date_human_resources_approved', u'human_resources'),
+                 (u'representative_approval', u'date_representative_approved', u'representative'),
                  u'approved_date',),
         }),
-        (u'Travel', {
+        (u'Travel/Admin', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (u'transport_booked',
@@ -252,11 +259,17 @@ class TripReportAdmin(VersionAdmin):
 class ActionPointsAdmin(admin.ModelAdmin):
 
     list_display = (
-
+        u'trip',
+        u'description',
+        u'due_date',
     )
+
+    def trip(self, obj):
+        return unicode(obj.trip)
 
     def get_queryset(self, request):
         return ActionPoint.objects.filter(closed=False)
 
 
 admin.site.register(Trip, TripReportAdmin)
+admin.site.register(ActionPoint, ActionPointsAdmin)
