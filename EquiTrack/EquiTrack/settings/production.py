@@ -12,7 +12,7 @@ ALLOWED_HOSTS = [
 
 # Sentry config
 RAVEN_CONFIG = {
-    'dsn': 'https://02b60c5ae099494d8ffe93d1701f9448:d55afaa1a9cb498180f112e41deb34e9@app.getsentry.com/20023',
+    'dsn': environ.get('SENTRY_DSN', None),
 }
 
 INSTALLED_APPS = INSTALLED_APPS + (
@@ -58,3 +58,8 @@ EMAIL_BACKEND = 'post_office.EmailBackend'
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
+LOGGING['handlers']['sentry'] = {
+    'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+    'level': 'WARNING'
+}
+LOGGING['root']['handlers'].append('sentry')

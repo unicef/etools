@@ -361,3 +361,20 @@ CACHES = {
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 ########## END WSGI CONFIGURATION
+
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        # Send all messages to console
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'INFO'
+        },
+    },
+    'root': {
+        'handlers': ['console', ],
+        'level': 'INFO'
+    },
+}

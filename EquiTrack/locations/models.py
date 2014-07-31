@@ -178,7 +178,7 @@ class CartoDBTable(models.Model):
                 'select * from {}'.format(self.table_name)
             )
         except CartoDBException as e:
-            print ("CartoDB exception occured", e)
+            logging.exception("CartoDB exception occured", exc_info=True)
         else:
 
             for row in sites['rows']:
@@ -187,19 +187,21 @@ class CartoDBTable(models.Model):
                 site_name = row[self.name_col].encode('UTF-8')
 
                 if not cad_code:
-                    logger.warn("No cad code for: {}".format(site_name))
+                    logger.warning("No cad code for: {}".format(site_name))
                     sites_not_added += 1
                     continue
 
                 if not site_name or site_name.isspace():
-                    logger.warn("No name for site with PCode: {}".format(pcode))
+                    logger.warning("No name for site with PCode: {}".format(pcode))
                     sites_not_added += 1
                     continue
 
                 try:
                     cad = Locality.objects.get(cad_code=cad_code)
                 except Locality.DoesNotExist:
-                    logger.warn("No locality found for cad code: {}".format(cad_code))
+                    logger.warning("No locality found for cad code: {}".format(cad_code))
+                    sites_not_added += 1
+                    continue
 
                 location, created = Location.objects.get_or_create(
                     gateway=self.location_type,
@@ -219,7 +221,9 @@ class CartoDBTable(models.Model):
                 try:
                     location.save()
                 except IntegrityError as e:
-                    logger.exception('')
+                    logger.exception('Error whilst saving location: {}'.format(site_name))
+                    sites_not_added += 1
+                    continue
 
                 logger.info('{}: {} ({})'.format(
                     'Added' if created else 'Updated',
