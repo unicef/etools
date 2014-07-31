@@ -3,3 +3,4 @@
 -r base.txt
 
 raven
+loggly-handler
