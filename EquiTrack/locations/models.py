@@ -203,15 +203,23 @@ class CartoDBTable(models.Model):
                     sites_not_added += 1
                     continue
 
-                location, created = Location.objects.get_or_create(
-                    gateway=self.location_type,
-                    p_code=pcode,
-                    locality=cad
-                )
-                if created:
-                    sites_created += 1
+                try:
+                    location, created = Location.objects.get_or_create(
+                        gateway=self.location_type,
+                        p_code=pcode,
+                        locality=cad
+                    )
+                except Location.MultipleObjectsReturned:
+                    logger.warning("Multiple locations found for: {}, {} ({})".format(
+                        self.location_type, site_name, pcode
+                    ))
+                    sites_not_added += 1
+                    continue
                 else:
-                    sites_updated += 1
+                    if created:
+                        sites_created += 1
+                    else:
+                        sites_updated += 1
 
                 location.name = site_name
                 location.latitude = row[self.latitude_col]

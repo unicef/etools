@@ -58,8 +58,10 @@ EMAIL_BACKEND = 'post_office.EmailBackend'
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
-LOGGING['handlers']['sentry'] = {
-    'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
-    'level': 'WARNING'
+LOGGING['handlers']['loggly'] = {
+      "class": "loggly.handlers.HTTPSHandler",
+      "level": "INFO",
+      "url": "https://logs-01.loggly.com/inputs/b0c67376-f044-4e1e-9140-96dde130ac51/tag/app/",
+      "facility": "equitrack"
 }
-LOGGING['root']['handlers'].append('sentry')
+LOGGING['root']['handlers'].append('loggly')
