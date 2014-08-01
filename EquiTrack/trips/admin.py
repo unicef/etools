@@ -252,15 +252,24 @@ class TripReportAdmin(VersionAdmin):
         fields = [
             u'status',
             u'approved_by_supervisor',
+            u'date_supervisor_approved'
             u'approved_by_budget_owner',
+            u'date_budget_owner_approved',
+            u'human_resources',
             u'approved_by_human_resources',
+            u'date_human_resources_approved',
+            u'representative',
             u'representative_approval',
+            u'date_representative_approved',
             u'approved_date'
         ]
 
-        if report:
-            if request.user == report.supervisor or request.user.is_superuser:
-                return []
+        if report and (request.user in [
+            report.owner,
+            report.supervisor,
+            report.budget_owner,
+        ] or request.user.is_superuser):
+            return []
 
         return fields
 
