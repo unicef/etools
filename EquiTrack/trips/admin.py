@@ -40,6 +40,7 @@ class TravelRoutesForm(ModelForm):
 
 class TravelRoutesInlineAdmin(admin.TabularInline):
     model = TravelRoutes
+    form = TravelRoutesForm
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Travel Itinerary'
 
@@ -47,6 +48,8 @@ class TravelRoutesInlineAdmin(admin.TabularInline):
 class TripFundsInlineAdmin(admin.TabularInline):
     model = TripFunds
     suit_classes = u'suit-tab suit-tab-planning'
+    extra = 3
+    max_num = 3
 
 
 class ActionPointInlineAdmin(admin.StackedInline):
