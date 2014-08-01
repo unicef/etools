@@ -130,11 +130,11 @@ class Trip(AdminURLMixin, models.Model):
     transport_booked = models.BooleanField(default=False)
     security_granted = models.BooleanField(default=False)
 
-    supervisor = models.ForeignKey(User, related_name='supervised_trips', blank=True, null=True)
+    supervisor = models.ForeignKey(User, related_name='supervised_trips')
     approved_by_supervisor = models.BooleanField(default=False)
     date_supervisor_approved = models.DateField(blank=True, null=True)
 
-    budget_owner = models.ForeignKey(User, related_name='budgeted_trips', blank=True, null=True)
+    budget_owner = models.ForeignKey(User, related_name='budgeted_trips')
     approved_by_budget_owner = models.BooleanField(default=False)
     date_budget_owner_approved = models.DateField(blank=True, null=True)
 
@@ -195,6 +195,12 @@ class Trip(AdminURLMixin, models.Model):
         and not self.representative_approval:
             return False
         return True
+
+    def save(self, **kwargs):
+        if self.status == Trip.PLANNED and self.can_be_approved:
+            self.approved_date = datetime.datetime.today()
+            self.status = Trip.APPROVED
+        super(Trip, self).save(**kwargs)
 
     @classmethod
     def send_trip_request(cls, sender, instance, created, **kwargs):
@@ -375,6 +381,10 @@ class TravelRoutes(models.Model):
     depart = models.DateTimeField()
     arrive = models.DateTimeField()
     remarks = models.CharField(max_length=254, null=True, blank=True)
+
+    class Meta:
+        verbose_name = u'Travel Itinerary'
+        verbose_name_plural = u'Travel Itinerary'
 
 
 class ActionPoint(models.Model):

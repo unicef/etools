@@ -23,6 +23,21 @@ from .models import (
 User = get_user_model()
 
 
+class TravelRoutesForm(ModelForm):
+
+    def clean(self):
+        cleaned_data = super(TravelRoutesForm, self).clean()
+        depart = cleaned_data.get('depart')
+        arrive = cleaned_data.get('arrive')
+
+        if arrive < depart:
+            raise ValidationError(
+                'Arrival must be greater than departure'
+            )
+
+        return cleaned_data
+
+
 class TravelRoutesInlineAdmin(admin.TabularInline):
     model = TravelRoutes
     suit_classes = u'suit-tab suit-tab-planning'
@@ -79,8 +94,6 @@ class TripForm(ModelForm):
 
     def clean(self):
         cleaned_data = super(TripForm, self).clean()
-        trip_type = cleaned_data.get("trip_type")
-        trip_status = cleaned_data.get("status")
         from_date = cleaned_data.get('from_date')
         to_date = cleaned_data.get('to_date')
         owner = cleaned_data.get('owner')
@@ -88,9 +101,6 @@ class TripForm(ModelForm):
         ta_required = cleaned_data.get('ta_required')
         pcas = cleaned_data.get('pcas')
         no_pca = cleaned_data.get('no_pca')
-        international_travel = cleaned_data.get('international_travel')
-        approved_by_budget_owner = cleaned_data.get('approved_by_budget_owner')
-        approved_date = cleaned_data.get('approved_date')
         programme_assistant = cleaned_data.get(u'programme_assistant')
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         representative_approval = cleaned_data.get(u'representative_approval')
@@ -124,10 +134,6 @@ class TripForm(ModelForm):
                 raise ValidationError(
                     'This trip requires approval from the representative'
                 )
-
-            if trip_status != Trip.APPROVED and self.instance.can_be_approved:
-                cleaned_data['approved_date'] = datetime.datetime.today()
-                cleaned_data['status'] = Trip.APPROVED
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
