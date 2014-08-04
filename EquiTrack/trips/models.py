@@ -24,6 +24,12 @@ User = get_user_model()
 
 User.__unicode__ = lambda user: user.get_full_name()
 
+BOOL_CHOICES = (
+    (None, "N/A"),
+    (True, "Yes"),
+    (False, "No")
+)
+
 
 def send_mail(sender, template, variables, *recipients):
     mail.send(
@@ -139,11 +145,14 @@ class Trip(AdminURLMixin, models.Model):
     date_budget_owner_approved = models.DateField(blank=True, null=True)
 
     human_resources = models.ForeignKey(User, related_name='certified_trips', blank=True, null=True)
-    approved_by_human_resources = models.NullBooleanField(default=None, verbose_name='Certified by human resources')
+    approved_by_human_resources = models.NullBooleanField(
+        default=None,
+        choices=BOOL_CHOICES,
+        verbose_name='Certified by human resources')
     date_human_resources_approved = models.DateField(blank=True, null=True)
 
     representative = models.ForeignKey(User, related_name='approved_trips', blank=True, null=True)
-    representative_approval = models.NullBooleanField(default=None)
+    representative_approval = models.NullBooleanField(default=None, choices=BOOL_CHOICES)
     date_representative_approved = models.DateField(blank=True, null=True)
 
     approved_date = models.DateField(blank=True, null=True)
@@ -370,7 +379,13 @@ class TripFunds(models.Model):
     trip = models.ForeignKey(Trip)
     wbs = models.ForeignKey(WBS)
     grant = models.ForeignKey(Grant)
-    amount = models.PositiveIntegerField()
+    amount = models.PositiveIntegerField(
+        verbose_name='Percentage (%)'
+    )
+
+    class Meta:
+        verbose_name = u'Funding'
+        verbose_name_plural = u'Funding'
 
 
 class TravelRoutes(models.Model):

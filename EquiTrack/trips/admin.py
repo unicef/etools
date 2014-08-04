@@ -1,14 +1,10 @@
 __author__ = 'jcranwellward'
 
-import datetime
-
 from django.contrib import admin
-from django.forms import ModelForm, ValidationError
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.generic import GenericTabularInline
 
 from reversion import VersionAdmin
-from suit_ckeditor.widgets import CKEditorWidget
 from generic_links.admin import GenericLinkStackedInline
 
 from locations.models import LinkedLocation
@@ -19,23 +15,12 @@ from .models import (
     TravelRoutes,
     FileAttachment
 )
+from .forms import (
+    TripForm,
+    TravelRoutesForm
+)
 
 User = get_user_model()
-
-
-class TravelRoutesForm(ModelForm):
-
-    def clean(self):
-        cleaned_data = super(TravelRoutesForm, self).clean()
-        depart = cleaned_data.get('depart')
-        arrive = cleaned_data.get('arrive')
-
-        if arrive < depart:
-            raise ValidationError(
-                'Arrival must be greater than departure'
-            )
-
-        return cleaned_data
 
 
 class TravelRoutesInlineAdmin(admin.TabularInline):
@@ -43,6 +28,7 @@ class TravelRoutesInlineAdmin(admin.TabularInline):
     form = TravelRoutesForm
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Travel Itinerary'
+    extra = 2
 
 
 class TripFundsInlineAdmin(admin.TabularInline):
@@ -56,6 +42,7 @@ class ActionPointInlineAdmin(admin.StackedInline):
     model = ActionPoint
     suit_classes = u'suit-tab suit-tab-reporting'
     filter_horizontal = (u'persons_responsible',)
+    extra = 1
     fields = (
         (u'description', u'due_date',),
         u'persons_responsible',
@@ -91,62 +78,6 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
 
 class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
-
-
-class TripForm(ModelForm):
-
-    def clean(self):
-        cleaned_data = super(TripForm, self).clean()
-        from_date = cleaned_data.get('from_date')
-        to_date = cleaned_data.get('to_date')
-        owner = cleaned_data.get('owner')
-        supervisor = cleaned_data.get('supervisor')
-        ta_required = cleaned_data.get('ta_required')
-        pcas = cleaned_data.get('pcas')
-        no_pca = cleaned_data.get('no_pca')
-        programme_assistant = cleaned_data.get(u'programme_assistant')
-        approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
-        representative_approval = cleaned_data.get(u'representative_approval')
-
-        if to_date < from_date:
-            raise ValidationError('The to date must be greater than the from date')
-
-        if owner == supervisor:
-            raise ValidationError('You can\'t supervise your own trips')
-
-        if not pcas and not no_pca:
-            raise ValidationError(
-                'You must select the PCAs related to this trip'
-                ' or select the "Not related to a PCA" option'
-            )
-
-        if ta_required and not programme_assistant:
-            raise ValidationError(
-                'This trip needs a programme assistant '
-                'to create a Travel Authorisation (TA)'
-            )
-
-        if self.instance:
-
-            if self.instance.requires_hr_approval and not approved_by_human_resources:
-                raise ValidationError(
-                    'This trip needs HR approval'
-                )
-
-            if self.instance.requires_rep_approval and not representative_approval:
-                raise ValidationError(
-                    'This trip requires approval from the representative'
-                )
-
-        #TODO: this can be removed once we upgrade to 1.7
-        return cleaned_data
-
-    class Meta:
-        model = Trip
-        widgets = {
-            'main_observations':
-                CKEditorWidget(editor_options={'startupFocus': False})
-        }
 
 
 class TripReportAdmin(VersionAdmin):
@@ -200,13 +131,10 @@ class TripReportAdmin(VersionAdmin):
                  (u'purpose_of_travel', u'monitoring_supply_delivery',),
                  (u'from_date', u'to_date',),
                  (u'travel_type', u'travel_assistant',),
+                 u'approved_by_human_resources',
+                 (u'ta_required', u'programme_assistant',),
                  u'international_travel',
                  u'no_pca',)
-        }),
-        (u'TA Details', {
-            u'classes': (u'collapse', u'suit-tab suit-tab-planning',),
-            u'fields':
-                ((u'ta_required', u'programme_assistant',),),
         }),
         (u'PCA Details', {
             u'classes': (u'collapse', u'suit-tab suit-tab-planning',),
@@ -219,7 +147,7 @@ class TripReportAdmin(VersionAdmin):
             u'fields':
                 ((u'approved_by_supervisor', u'date_supervisor_approved',),
                  (u'approved_by_budget_owner', u'date_budget_owner_approved',),
-                 (u'approved_by_human_resources', u'date_human_resources_approved', u'human_resources'),
+                 (u'date_human_resources_approved', u'human_resources'),
                  (u'representative_approval', u'date_representative_approved', u'representative'),
                  u'approved_date',),
         }),
@@ -252,7 +180,7 @@ class TripReportAdmin(VersionAdmin):
         fields = [
             u'status',
             u'approved_by_supervisor',
-            u'date_supervisor_approved'
+            u'date_supervisor_approved',
             u'approved_by_budget_owner',
             u'date_budget_owner_approved',
             u'human_resources',
@@ -280,13 +208,35 @@ class ActionPointsAdmin(admin.ModelAdmin):
         u'trip',
         u'description',
         u'due_date',
+        u'responsible',
+        u'supervisor',
+    )
+    readonly_fields = (
+        u'trip',
+        u'description',
+        u'due_date',
+        u'persons_responsible',
+        u'comments',
+        u'closed',
     )
 
     def trip(self, obj):
         return unicode(obj.trip)
 
-    def get_queryset(self, request):
-        return ActionPoint.objects.filter(closed=False)
+    def supervisor(self, obj):
+        return obj.trip.supervisor
+
+    def responsible(self, obj):
+        return ', '.join(
+            [
+                user.get_full_name()
+                for user in
+                obj.persons_responsible.all()
+            ]
+        )
+
+    def has_add_permission(self, request):
+        return False
 
 
 admin.site.register(Trip, TripReportAdmin)

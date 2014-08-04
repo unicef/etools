@@ -326,6 +326,7 @@ THIRD_PARTY_APPS = (
     'post_office',
     'djrill',
     'djcelery',
+    'datetimewidget',
 )
 
 # Apps specific for this project go here.
