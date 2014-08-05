@@ -26,16 +26,16 @@ class TravelRoutesForm(ModelForm):
                 'Departure must be greater than arrival'
             )
 
-        if self.instance:
-            from_date = self.instance.trip.from_date
-            to_date = self.instance.trip.to_date
-            depart = depart.date()
-            arrive = arrive.date()
-
-            if depart < from_date or to_date < arrive:
-                raise ValidationError(
-                    'Travel dates must be within overall trip dates'
-                )
+        # if self.instance:
+        #     from_date = self.instance.trip.from_date
+        #     to_date = self.instance.trip.to_date
+        #     depart = depart.date()
+        #     arrive = arrive.date()
+        #
+        #     if depart < from_date or to_date < arrive:
+        #         raise ValidationError(
+        #             'Travel dates must be within overall trip dates'
+        #         )
 
         return cleaned_data
 
