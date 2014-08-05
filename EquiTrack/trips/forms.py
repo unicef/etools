@@ -13,8 +13,8 @@ from .models import Trip
 
 class TravelRoutesForm(ModelForm):
 
-    depart = fields.DateTimeField(widget=DateTimeWidget(bootstrap_version=3))
-    arrive = fields.DateTimeField(widget=DateTimeWidget(bootstrap_version=3))
+    depart = fields.DateTimeField(label='Depart', widget=DateTimeWidget(bootstrap_version=3))
+    arrive = fields.DateTimeField(label='Arrive', widget=DateTimeWidget(bootstrap_version=3))
 
     def clean(self):
         cleaned_data = super(TravelRoutesForm, self).clean()
