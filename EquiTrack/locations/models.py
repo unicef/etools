@@ -198,8 +198,12 @@ class CartoDBTable(models.Model):
 
                 try:
                     cad = Locality.objects.get(cas_code=cas_code)
-                except Locality.DoesNotExist:
-                    logger.warning("No locality found for cas code: {}".format(cas_code))
+                except (Locality.DoesNotExist, Locality.MultipleObjectsReturned) as exp:
+                    msg = "{} locality found for cas code: {}".format(
+                        'Multiple' if exp is Locality.MultipleObjectsReturned else 'No',
+                        cas_code
+                    )
+                    logger.warning(msg)
                     sites_not_added += 1
                     continue
 
