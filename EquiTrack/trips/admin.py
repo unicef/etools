@@ -158,7 +158,9 @@ class TripReportAdmin(VersionAdmin):
                  u'security_granted',
                  u'ta_approved',
                  u'ta_reference',
-                 u'ta_approved_date',),
+                 u'ta_approved_date',
+                 u'vision_approver',
+                 u'vision_administrator'),
         }),
 
         (u'Report', {
@@ -209,7 +211,11 @@ class ActionPointsAdmin(admin.ModelAdmin):
         u'description',
         u'due_date',
         u'responsible',
+        u'actions_taken',
         u'supervisor',
+        u'comments',
+        u'closed',
+
     )
     readonly_fields = (
         u'trip',

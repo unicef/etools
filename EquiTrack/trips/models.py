@@ -14,6 +14,7 @@ from django.contrib.sites.models import Site
 from filer.fields.file import FilerFileField
 from post_office import mail
 from post_office.models import EmailTemplate
+import reversion
 
 from EquiTrack.utils import AdminURLMixin
 from locations.models import LinkedLocation
@@ -111,7 +112,7 @@ class Trip(AdminURLMixin, models.Model):
     programme_assistant = models.ForeignKey(
         User,
         blank=True, null=True,
-        verbose_name='Assistant Responsible for TA',
+        verbose_name='Staff Responsible for TA',
         help_text='Needed if a Travel Authorisation (TA) is required',
         related_name='managed_trips'
     )
@@ -122,6 +123,8 @@ class Trip(AdminURLMixin, models.Model):
     )
     ta_approved_date = models.DateField(blank=True, null=True)
     ta_reference = models.CharField(max_length=254, blank=True, null=True)
+    vision_approver = models.ForeignKey(User, blank=True, null=True)
+    vision_administrator = models.ForeignKey(User, blank=True, null=True)
 
     locations = GenericRelation(LinkedLocation)
 
@@ -131,7 +134,8 @@ class Trip(AdminURLMixin, models.Model):
     travel_assistant = models.ForeignKey(
         User,
         blank=True, null=True,
-        related_name='organised_trips'
+        related_name='organised_trips',
+        verbose_name='Travel focal point'
     )
     transport_booked = models.BooleanField(default=False)
     security_granted = models.BooleanField(default=False)
@@ -162,7 +166,7 @@ class Trip(AdminURLMixin, models.Model):
         ordering = ['-from_date', '-to_date']
 
     def __unicode__(self):
-        return u'{} {} - {}: {}'.format(
+        return u'{} - {} - {}: {}'.format(
             self.reference(),
             self.from_date,
             self.to_date,
@@ -170,15 +174,20 @@ class Trip(AdminURLMixin, models.Model):
         )
 
     def reference(self):
-        return '{}/{}'.format(
+        return '{}/{}-{}'.format(
             self.created_date.year,
-            self.id
+            self.id,
+            self.trip_revision
         ) if self.id else None
     reference.short_description = 'Reference'
 
     def outstanding_actions(self):
         return self.actionpoint_set.filter(
             closed=False).count()
+
+    @property
+    def trip_revision(self):
+        return reversion.get_for_object(self).count()
 
     @property
     def requires_hr_approval(self):
@@ -214,36 +223,31 @@ class Trip(AdminURLMixin, models.Model):
     @classmethod
     def send_trip_request(cls, sender, instance, created, **kwargs):
         current_site = Site.objects.get_current()
-        if created:
-            email_name = 'trips/trip/created'
-            try:
-                template = EmailTemplate.objects.get(
-                    name=email_name
+        state = 'Created' if created else 'Updated'
+        template = EmailTemplate(
+            name='trips/trip/create/update',
+            subject="Trip {{number}} has been {{state}} for {{owner_name}}",
+            content="Dear Colleague,"
+                    "\r\n\r\nTrip {{number}} has been {{state}} for {{owner_name}} and awaits your approval here:"
+                    "\r\n\r\n{{url}}"
+                    "\r\n\r\nThank you.".format(state=state)
+        )
+
+        send_mail(
+            instance.owner.email,
+            template,
+            {
+                'owner_name': instance.owner.get_full_name(),
+                'number': instance.reference,
+                'state': state,
+                'url': 'http://{}{}'.format(
+                    current_site.domain,
+                    instance.get_admin_url()
                 )
-            except EmailTemplate.DoesNotExist:
-                template = EmailTemplate.objects.create(
-                    name=email_name,
-                    description='The email that is send to the supervisor once a new trip has been created',
-                    subject="New Trip Created for {{owner_name}}",
-                    content="Dear {{supervisor_name}},"
-                            "\r\n\r\nA new trip has been created by {{owner_name}} and awaits your approval here:"
-                            "\r\n\r\n{{url}}"
-                            "\r\n\r\nThank you."
-                )
-            send_mail(
-                instance.owner.email,
-                template,
-                {
-                    'owner_name': instance.owner.get_full_name(),
-                    'supervisor_name': instance.supervisor.get_full_name(),
-                    'url': 'http://{}{}'.format(
-                        current_site.domain,
-                        instance.get_admin_url()
-                    )
-                },
-                instance.supervisor.email,
-                instance.budget_owner.email
-            )
+            },
+            instance.supervisor.email,
+            instance.budget_owner.email
+        )
 
         if instance.status == Trip.CANCELLED:
             email_name = 'trips/trip/cancelled'
