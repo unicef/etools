@@ -117,14 +117,17 @@ class Trip(AdminURLMixin, models.Model):
         related_name='managed_trips'
     )
 
-    ta_approved = models.BooleanField(
+    ta_drafted = models.BooleanField(
         default=False,
-        help_text='Has the TA been approved in vision if applicable?'
+        help_text='Has the TA been drafted in vision if applicable?'
     )
-    ta_approved_date = models.DateField(blank=True, null=True)
+    ta_drafted_date = models.DateField(blank=True, null=True)
     ta_reference = models.CharField(max_length=254, blank=True, null=True)
-    vision_approver = models.ForeignKey(User, blank=True, null=True)
-    vision_administrator = models.ForeignKey(User, blank=True, null=True)
+    vision_approver = models.ForeignKey(
+        User,
+        blank=True, null=True,
+        verbose_name='VISION Approver'
+    )
 
     locations = GenericRelation(LinkedLocation)
 
@@ -166,7 +169,7 @@ class Trip(AdminURLMixin, models.Model):
         ordering = ['-from_date', '-to_date']
 
     def __unicode__(self):
-        return u'{} - {} - {}: {}'.format(
+        return u'{}   {} - {}: {}'.format(
             self.reference(),
             self.from_date,
             self.to_date,
@@ -203,8 +206,7 @@ class Trip(AdminURLMixin, models.Model):
 
     @property
     def can_be_approved(self):
-        if not self.approved_by_supervisor\
-        or not self.approved_by_budget_owner:
+        if not self.approved_by_supervisor:
             return False
         if self.requires_hr_approval\
         and not self.approved_by_human_resources:
@@ -228,7 +230,7 @@ class Trip(AdminURLMixin, models.Model):
             name='trips/trip/create/update',
             subject="Trip {{number}} has been {{state}} for {{owner_name}}",
             content="Dear Colleague,"
-                    "\r\n\r\nTrip {{number}} has been {{state}} for {{owner_name}} and awaits your approval here:"
+                    "\r\n\r\nTrip {{number}} has been {{state}} for {{owner_name}} here:"
                     "\r\n\r\n{{url}}"
                     "\r\n\r\nThank you.".format(state=state)
         )
@@ -238,13 +240,14 @@ class Trip(AdminURLMixin, models.Model):
             template,
             {
                 'owner_name': instance.owner.get_full_name(),
-                'number': instance.reference,
+                'number': instance.reference(),
                 'state': state,
                 'url': 'http://{}{}'.format(
                     current_site.domain,
                     instance.get_admin_url()
                 )
             },
+            instance.owner.email,
             instance.supervisor.email,
             instance.budget_owner.email
         )
@@ -268,7 +271,7 @@ class Trip(AdminURLMixin, models.Model):
                 instance.owner.email,
                 template,
                 {
-                    'trip_reference': instance.trip.reference(),
+                    'trip_reference': instance.reference(),
                     'url': 'http://{}{}'.format(
                         current_site.domain,
                         instance.get_admin_url()
@@ -366,6 +369,39 @@ class Trip(AdminURLMixin, models.Model):
                     {
                         'owner_name': instance.owner.get_full_name(),
                         'pa_assistant': instance.programme_assistant.get_full_name(),
+                        'url': 'http://{}{}'.format(
+                            current_site.domain,
+                            instance.get_admin_url()
+                        )
+                    },
+                    instance.programme_assistant.email,
+                )
+
+            if instance.ta_drafted and instance.vision_approver:
+                email_name = 'trips/trip/TA_drafted'
+                try:
+                    template = EmailTemplate.objects.get(
+                        name=email_name
+                    )
+                except EmailTemplate.DoesNotExist:
+                    template = EmailTemplate.objects.create(
+                        name=email_name,
+                        description="This email is sent to the relevant colleague to approve "
+                                    "the TA for the staff in concern after the TA has been drafted in VISION.",
+                        subject="Travel Authorization drafted for {{owner_name}}",
+                        content="Dear {{vision_approver}},"
+                                "\r\n\r\nKindly approve my Travel Authorization ({{ta_ref}}) in VISION based on the approved trip:"
+                                "\r\n\r\n{{url}}"
+                                "\r\n\r\nThanks,"
+                                "\r\n{{owner_name}}"
+                    )
+                send_mail(
+                    instance.owner.email,
+                    template,
+                    {
+                        'owner_name': instance.owner.get_full_name(),
+                        'vision_approver': instance.vision_approver.get_full_name(),
+                        'ta_ref': instance.ta_reference,
                         'url': 'http://{}{}'.format(
                             current_site.domain,
                             instance.get_admin_url()

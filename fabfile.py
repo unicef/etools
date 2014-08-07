@@ -170,11 +170,11 @@ def snapshot_container_to_image(container, image, tag):
     print('>>> Committing current container')
     run('docker commit {} {}:{}'.format(container, image, tag))
 
-
-def dump_image_to_archive(image, name):
-    run('docker save {} > {}.tar'.format(image, name))
-    run('gzip {}.tar'.format(name))
-    get('{}.tar.gz'.format(name))
+@_setup
+def dump_image_to_archive():
+    run('docker save {} > {}.tar'.format(env.image, env.name))
+    run('gzip {}.tar'.format(env.name))
+    get('{}.tar.gz'.format(env.name))
 
 
 def load_image_from_archive(name):
