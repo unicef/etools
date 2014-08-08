@@ -135,7 +135,7 @@ class Trip(AdminURLMixin, models.Model):
 
     locations = GenericRelation(LinkedLocation)
 
-    owner = models.ForeignKey(User, verbose_name='Traveller')
+    owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
     section = models.ForeignKey('reports.Sector', blank=True, null=True)
     office = models.ForeignKey(Office, blank=True, null=True)
     travel_assistant = models.ForeignKey(
