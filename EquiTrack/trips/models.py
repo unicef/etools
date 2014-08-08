@@ -41,6 +41,10 @@ def send_mail(sender, template, variables, *recipients):
     )
 
 
+class Office(models.Model):
+    name = models.CharField(max_length=254)
+
+
 class Trip(AdminURLMixin, models.Model):
 
     PLANNED = u'planned'
@@ -133,7 +137,7 @@ class Trip(AdminURLMixin, models.Model):
 
     owner = models.ForeignKey(User, verbose_name='Traveller')
     section = models.ForeignKey('reports.Sector', blank=True, null=True)
-
+    office = models.ForeignKey(Office, blank=True, null=True)
     travel_assistant = models.ForeignKey(
         User,
         blank=True, null=True,
@@ -147,7 +151,7 @@ class Trip(AdminURLMixin, models.Model):
     approved_by_supervisor = models.BooleanField(default=False)
     date_supervisor_approved = models.DateField(blank=True, null=True)
 
-    budget_owner = models.ForeignKey(User, related_name='budgeted_trips')
+    budget_owner = models.ForeignKey(User, related_name='budgeted_trips', blank=True, null=True,)
     approved_by_budget_owner = models.BooleanField(default=False)
     date_budget_owner_approved = models.DateField(blank=True, null=True)
 
@@ -235,6 +239,11 @@ class Trip(AdminURLMixin, models.Model):
                     "\r\n\r\nThank you.".format(state=state)
         )
 
+        recipients = [
+            instance.owner.email,
+            instance.supervisor.email]
+        if instance.budget_owner:
+            recipients.append(instance.budget_owner.email)
         send_mail(
             instance.owner.email,
             template,
@@ -247,9 +256,7 @@ class Trip(AdminURLMixin, models.Model):
                     instance.get_admin_url()
                 )
             },
-            instance.owner.email,
-            instance.supervisor.email,
-            instance.budget_owner.email
+            *recipients
         )
 
         if instance.status == Trip.CANCELLED:
@@ -267,6 +274,9 @@ class Trip(AdminURLMixin, models.Model):
                             "\r\n\r\n{{url}}"
                             "\r\n\r\nThank you."
                 )
+
+            if instance.travel_assistant:
+                recipients.append(instance.travel_assistant.email)
             send_mail(
                 instance.owner.email,
                 template,
@@ -277,10 +287,7 @@ class Trip(AdminURLMixin, models.Model):
                         instance.get_admin_url()
                     )
                 },
-                instance.owner.email,
-                instance.supervisor.email,
-                instance.budget_owner.email,
-                instance.travel_assistant.email,
+                *recipients
             )
 
         if instance.status == Trip.APPROVED:
@@ -308,9 +315,7 @@ class Trip(AdminURLMixin, models.Model):
                         instance.get_admin_url()
                     )
                 },
-                instance.owner.email,
-                instance.supervisor.email,
-                instance.budget_owner.email
+                *recipients
             )
             if instance.travel_assistant and not instance.transport_booked:
                 email_name = "travel/trip/travel_or_admin_assistant"
@@ -345,7 +350,7 @@ class Trip(AdminURLMixin, models.Model):
                     instance.travel_assistant.email,
                 )
 
-            if instance.ta_required and instance.programme_assistant and not instance.ta_approved:
+            if instance.ta_required and instance.programme_assistant and not instance.ta_drafted:
                 email_name = 'trips/trip/TA_request'
                 try:
                     template = EmailTemplate.objects.get(
@@ -407,7 +412,7 @@ class Trip(AdminURLMixin, models.Model):
                             instance.get_admin_url()
                         )
                     },
-                    instance.programme_assistant.email,
+                    instance.vision_approver.email,
                 )
 
 

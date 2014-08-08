@@ -2,6 +2,7 @@ __author__ = 'jcranwellward'
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.contrib.contenttypes.generic import GenericTabularInline
 
 from reversion import VersionAdmin
@@ -10,6 +11,7 @@ from generic_links.admin import GenericLinkStackedInline
 from locations.models import LinkedLocation
 from .models import (
     Trip,
+    Office,
     TripFunds,
     ActionPoint,
     TravelRoutes,
@@ -126,8 +128,7 @@ class TripReportAdmin(VersionAdmin):
                 (u'status',
                  u'owner',
                  u'supervisor',
-                 u'budget_owner',
-                 u'section',
+                 (u'section', u'office',),
                  (u'purpose_of_travel', u'monitoring_supply_delivery',),
                  (u'from_date', u'to_date',),
                  (u'travel_type', u'travel_assistant',),
@@ -146,7 +147,7 @@ class TripReportAdmin(VersionAdmin):
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 ((u'approved_by_supervisor', u'date_supervisor_approved',),
-                 (u'approved_by_budget_owner', u'date_budget_owner_approved',),
+                 (u'approved_by_budget_owner', u'date_budget_owner_approved', u'budget_owner',),
                  (u'date_human_resources_approved', u'human_resources'),
                  (u'representative_approval', u'date_representative_approved', u'representative'),
                  u'approved_date',),
@@ -156,11 +157,10 @@ class TripReportAdmin(VersionAdmin):
             u'fields':
                 (u'transport_booked',
                  u'security_granted',
-                 u'ta_approved',
+                 u'ta_drafted',
                  u'ta_reference',
-                 u'ta_approved_date',
-                 u'vision_approver',
-                 u'vision_administrator'),
+                 u'ta_drafted_date',
+                 u'vision_approver',),
         }),
 
         (u'Report', {
@@ -175,7 +175,7 @@ class TripReportAdmin(VersionAdmin):
         (u'attachments', u'Attachments')
     )
 
-    def get_readonly_fields(self, request, report=None):
+    def get_readonly_fields(self, request, trip=None):
         """
         Only let certain users perform approvals
         """
@@ -194,11 +194,35 @@ class TripReportAdmin(VersionAdmin):
             u'approved_date'
         ]
 
-        if report and (request.user in [
-            report.owner,
-            report.supervisor,
-            report.budget_owner,
-        ] or request.user.is_superuser):
+        if trip and request.user == trip.owner:
+            if trip.status == trip.APPROVED:
+                fields.remove(u'status')
+
+        if trip and request.user == trip.supervisor:
+            fields.remove(u'approved_by_supervisor')
+            fields.remove(u'date_supervisor_approved')
+
+        if trip and request.user == trip.budget_owner:
+            fields.remove(u'approved_by_budget_owner')
+            fields.remove(u'date_budget_owner_approved')
+
+        hr_group, created = Group.objects.get_or_create(
+            name=u'Human Resources'
+        )
+        if trip and hr_group in request.user.groups.all():
+            fields.remove(u'human_resources')
+            fields.remove(u'approved_by_human_resources')
+            fields.remove(u'date_human_resources_approved')
+
+        rep_group, created = Group.objects.get_or_create(
+            name=u'Representative Office'
+        )
+        if trip and rep_group in request.user.groups.all():
+            fields.remove(u'representative')
+            fields.remove(u'representative_approval')
+            fields.remove(u'date_representative_approved')
+
+        if trip and request.user.is_superuser:
             return []
 
         return fields
@@ -245,5 +269,6 @@ class ActionPointsAdmin(admin.ModelAdmin):
         return False
 
 
+admin.site.register(Office)
 admin.site.register(Trip, TripReportAdmin)
 admin.site.register(ActionPoint, ActionPointsAdmin)

@@ -48,6 +48,7 @@ class TripForm(ModelForm):
         to_date = cleaned_data.get('to_date')
         owner = cleaned_data.get('owner')
         supervisor = cleaned_data.get('supervisor')
+        budget_owner = cleaned_data.get('budget_owner')
         ta_required = cleaned_data.get('ta_required')
         pcas = cleaned_data.get('pcas')
         no_pca = cleaned_data.get('no_pca')
