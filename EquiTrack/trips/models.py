@@ -44,6 +44,9 @@ def send_mail(sender, template, variables, *recipients):
 class Office(models.Model):
     name = models.CharField(max_length=254)
 
+    def __unicode__(self):
+        return self.name
+
 
 class Trip(AdminURLMixin, models.Model):
 
@@ -230,14 +233,6 @@ class Trip(AdminURLMixin, models.Model):
     def send_trip_request(cls, sender, instance, created, **kwargs):
         current_site = Site.objects.get_current()
         state = 'Created' if created else 'Updated'
-        template = EmailTemplate(
-            name='trips/trip/create/update',
-            subject="Trip {{number}} has been {{state}} for {{owner_name}}",
-            content="Dear Colleague,"
-                    "\r\n\r\nTrip {{number}} has been {{state}} for {{owner_name}} here:"
-                    "\r\n\r\n{{url}}"
-                    "\r\n\r\nThank you.".format(state=state)
-        )
 
         recipients = [
             instance.owner.email,
@@ -246,7 +241,7 @@ class Trip(AdminURLMixin, models.Model):
             recipients.append(instance.budget_owner.email)
         send_mail(
             instance.owner.email,
-            template,
+            'trips/trip/created/updated',
             {
                 'owner_name': instance.owner.get_full_name(),
                 'number': instance.reference(),
