@@ -8,13 +8,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
     GenericForeignKey, GenericRelation
 )
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.contrib.sites.models import Site
 
 from filer.fields.file import FilerFileField
 from post_office import mail
 from post_office.models import EmailTemplate
 import reversion
+from raven import Client
 
 from EquiTrack.utils import AdminURLMixin
 from locations.models import LinkedLocation
@@ -30,6 +31,15 @@ BOOL_CHOICES = (
     (True, "Yes"),
     (False, "No")
 )
+
+
+def notify_on_delete(sender, instance, using, **kwargs):
+    client = Client()
+    client.captureMessage('An instance of {} was deleted: {}'.format(
+        sender, instance
+    ))
+
+post_delete.connect(notify_on_delete)
 
 
 def send_mail(sender, template, variables, *recipients):
@@ -173,7 +183,7 @@ class Trip(AdminURLMixin, models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-from_date', '-to_date']
+        ordering = ['-created_date']
 
     def __unicode__(self):
         return u'{}   {} - {}: {}'.format(

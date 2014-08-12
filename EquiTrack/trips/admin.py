@@ -94,6 +94,7 @@ class TripReportAdmin(VersionAdmin):
         LinksInlineAdmin,
     )
     list_display = (
+        u'created_date',
         u'reference',
         u'purpose_of_travel',
         u'owner',

@@ -3,6 +3,8 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 from django.contrib.contenttypes.generic import GenericTabularInline
 
+from reversion import VersionAdmin
+
 from trips.models import FileAttachment
 from .models import TPMVisit
 
@@ -11,7 +13,7 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
     model = FileAttachment
 
 
-class TPMVisitAdmin(admin.ModelAdmin):
+class TPMVisitAdmin(VersionAdmin):
     list_display = (
         'status',
         'pca',
