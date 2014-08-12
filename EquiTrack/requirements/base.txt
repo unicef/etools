@@ -13,7 +13,7 @@ django-filer==0.9.5
 django-storages
 django-suit==0.2.8
 django-suit-ckeditor==0.0.2
-django-reversion==1.8.0
+django-reversion==1.8.2
 django-import-export==0.1.5
 django-autocomplete-light==2.0.0a6
 django-generic-links==0.2.0
