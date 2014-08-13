@@ -327,6 +327,7 @@ THIRD_PARTY_APPS = (
     'djrill',
     'djcelery',
     'datetimewidget',
+    'logentry_admin',
 )
 
 # Apps specific for this project go here.
