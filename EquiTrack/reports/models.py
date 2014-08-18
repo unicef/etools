@@ -125,8 +125,12 @@ class Indicator(models.Model):
 
     def progress(self):
         reported = 0
-        for report in self.partnerreport_set.all():
-            reported += report.indicator_value
+        if self.in_activity_info:
+            for report in self.partnerreport_set.all():
+                reported += report.indicator_value
+        else:
+            for progess in self.indicatorprogress_set.all():
+                reported += progess.current
         return reported
 
 
