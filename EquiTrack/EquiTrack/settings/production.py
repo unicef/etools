@@ -27,8 +27,8 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', None)
 
+# use S3 for file storage if all AWS settings are set in this environment
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
-    # use S3 for file storage if all AWS settings are set in this environment
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
     MEDIA_URL = 'https://{}.s3.amazonaws.com/'.format(AWS_STORAGE_BUCKET_NAME)
     FILER_IS_PUBLIC_DEFAULT = False
@@ -47,7 +47,7 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
         },
     }
 
-    STATICFILES_STORAGE = DEFAULT_FILE_STORAGE
+    #STATICFILES_STORAGE = DEFAULT_FILE_STORAGE
     STATIC_URL = '{}/{}'.format(MEDIA_URL, 'static')
 
 
