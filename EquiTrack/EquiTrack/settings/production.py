@@ -47,6 +47,9 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
         },
     }
 
+    STATICFILES_STORAGE = DEFAULT_FILE_STORAGE
+    STATIC_URL = '{}/{}'.format(MEDIA_URL, 'static')
+
 
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
