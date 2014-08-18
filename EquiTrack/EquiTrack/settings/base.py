@@ -174,7 +174,6 @@ STATIC_URL = '/static/'
 
 ########## END MEDIA CONFIGURATION
 
-
 ########## STATIC FILE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
 STATIC_ROOT = normpath(join(BASE_DIR, 'static'))
