@@ -247,6 +247,21 @@ def start_container():
 
 
 @_setup
+def dokku_get_app_env_vars():
+    run('dokku config {}'.format(env.name))
+
+
+@_setup
+def dokku_set_app_env_vars():
+    run('dokku config:set {app} {envs}'.format(
+        app=env.name,
+        envs=' '.join(
+            ['{}={}'.format(key, value)
+             for key, value in env.envs.items()])
+    ))
+
+
+@_setup
 def deploy():
     # pull new code from github
     with cd(env.git_dir):
