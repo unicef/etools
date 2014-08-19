@@ -265,5 +265,64 @@ def deploy():
         start_container()
 
 
+@_setup
+def dokku_get_app_env_vars():
+    run('dokku config {}'.format(env.name))
+
+
+@_setup
+def dokku_set_app_env_vars():
+    run('dokku config:set {app} {envs}'.format(
+        app=env.name,
+        envs=' '.join(
+            ['{}={}'.format(key, value)
+             for key, value in env.envs.items()])
+    ))
+
+
+@_setup
+def create_db(restore=False):
+    cmd = 'dokku postgis:{} ' + env.name
+    if restore:
+        with settings(warn_only=True):
+            run(cmd.format('delete'))
+    run(cmd.format('create'))
+    if restore:
+        run(cmd.format('restore')+' < /home/dokku/{}/backup.sql'.format(env.name))
+
+
+@_setup
+def migrate_db(backup=True):
+    if backup:
+        run('dokku postgis:dump {} > /home/dokku/{}/backup.sql'.format(env.name))
+    run('dokku run {} python EquiTrack/manage.py syncdb --migrate'.format(env.name))
+
+
+@_setup
+def create():
+    local('git remote add {app} dokku@{host}:{app}'.format(
+        app=env.name, host=env.host
+    ))
+    create_db()
+    deploy_app()
+    rebuild()
+
+
+@_setup
+def rebuild():
+    run('dokku rebuild {}'.format(env.name))
+    clean_containers()
+    clean_images()
+
+
+@_setup
+def deploy_app(migrate=True):
+    local('git push {app} {branch}:master'.format(
+        app=env.name, branch=env.branch
+    ))
+    dokku_set_app_env_vars()
+    if migrate: migrate_db()
+    clean_containers()
+    clean_images()
 
 

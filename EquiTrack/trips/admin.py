@@ -30,7 +30,7 @@ class TravelRoutesInlineAdmin(admin.TabularInline):
     form = TravelRoutesForm
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Travel Itinerary'
-    extra = 2
+    extra = 4
 
 
 class TripFundsInlineAdmin(admin.TabularInline):
@@ -80,6 +80,7 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
 
 class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
+    extra = 5
 
 
 class TripReportAdmin(VersionAdmin):
