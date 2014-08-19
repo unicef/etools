@@ -1,32 +1,18 @@
 __author__ = 'jcranwellward'
 
-import json
-import logging
-
-from django.core.cache import cache
 
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
-from rest_framework.parsers import FormParser, JSONParser
+from rest_framework.parsers import FormParser
 
-from partners.models import PCA, FACE
-from .models import Sector
+from partners.models import FACE
 from .serializers import GWLocationSerializer, RapidProRequest
-from reports.serializers import SectorSerializer
-from reports.models import (
-    Rrp5Output,
-    Unit
-)
-from locations.models import (
-    GatewayType
-)
+
 from partners.models import (
     PCA,
-    PartnerOrganization,
     GwPCALocation,
-    IndicatorProgress,
 )
 
 

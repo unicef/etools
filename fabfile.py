@@ -280,5 +280,17 @@ def deploy():
         start_container()
 
 
+@_setup
+def deploy_app():
+    with settings(warn_only=True):
+        local('git remote add {app} dokku@{host}:{app}'.format(
+            app=env.name, host=env.host
+        ))
+    dokku_set_app_env_vars()
+    local('git push {app} {branch}:master'.format(
+        app=env.name, branch=env.branch
+    ))
+    clean_containers()
+    clean_images()
 
 
