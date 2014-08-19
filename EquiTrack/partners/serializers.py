@@ -39,7 +39,7 @@ class RapidProRequest(serializers.Serializer):
 
     def restore_fields(self, data, files):
 
-        reverted_data = super(RapidProRequest, self).restore_fields(data, files)
-        if reverted_data['values']:
-            reverted_data['values'] = json.loads(reverted_data['values'])
-        return reverted_data
+        restored_data = super(RapidProRequest, self).restore_fields(data, files)
+        if restored_data['values']:
+            restored_data['values'] = json.loads(restored_data['values'])
+        return restored_data

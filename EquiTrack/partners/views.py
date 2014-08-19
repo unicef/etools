@@ -30,37 +30,6 @@ from partners.models import (
 )
 
 
-class SectorView(ListAPIView):
-
-    model = Sector
-    serializer_class = SectorSerializer
-
-
-class IndicatorProgressView(ListAPIView):
-
-    model = IndicatorProgress
-
-
-class GatewayView(ListAPIView):
-
-    model = GatewayType
-
-
-class OutputViews(ListAPIView):
-
-    model = Rrp5Output
-
-
-class UnitView(ListAPIView):
-
-    model = Unit
-
-
-class PartnerView(ListAPIView):
-
-    model = PartnerOrganization
-
-
 class LocationView(ListAPIView):
 
     model = GwPCALocation
