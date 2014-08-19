@@ -294,15 +294,16 @@ def create_db(restore=False):
 @_setup
 def migrate_db(backup=True):
     if backup:
-        run('dokku postgis:dump {} > /home/dokku/{}/backup.sql'.format(env.name))
+        run('dokku postgis:dump {} > /home/dokku/{}/backup.sql'.format(env.name, env.name))
     run('dokku run {} python EquiTrack/manage.py syncdb --migrate'.format(env.name))
 
 
 @_setup
 def create():
-    local('git remote add {app} dokku@{host}:{app}'.format(
-        app=env.name, host=env.host
-    ))
+    with settings(warn_only=True):
+        local('git remote add {app} dokku@{host}:{app}'.format(
+            app=env.name, host=env.host
+        ))
     create_db()
     deploy_app()
     rebuild()
@@ -311,8 +312,6 @@ def create():
 @_setup
 def rebuild():
     run('dokku rebuild {}'.format(env.name))
-    clean_containers()
-    clean_images()
 
 
 @_setup
@@ -321,8 +320,7 @@ def deploy_app(migrate=True):
         app=env.name, branch=env.branch
     ))
     dokku_set_app_env_vars()
-    if migrate: migrate_db()
-    clean_containers()
-    clean_images()
+    if migrate:
+        migrate_db()
 
 
