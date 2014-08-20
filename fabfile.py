@@ -283,6 +283,9 @@ def dokku_set_app_env_vars():
 @_setup
 def create_db(restore=False):
     cmd = 'dokku postgis:{} ' + env.name
+    if restore:
+        with settings(warn_only=True):
+            run(cmd.format('delete'))
     run(cmd.format('create'))
     if restore:
         run(cmd.format('restore')+' < /home/dokku/{}/backup.sql'.format(env.name))
@@ -290,7 +293,7 @@ def create_db(restore=False):
 
 @_setup
 def link_db():
-    run('dokku postgis:link {} {}'.format(env.host, env.db))
+    run('dokku postgis:link {} {}'.format(env.name, env.name))
 
 
 @_setup
