@@ -178,7 +178,7 @@ class KMLFormat(Format):
                 data_copy['Locality'] = loc.locality.name
                 data_copy['CAD_CODE'] = loc.locality.cad_code
                 data_copy['CAS_CODE'] = loc.locality.cas_code
-                data_copy['Gateway'] = loc.gateway.name
+                data_copy['Gateway'] = loc.location.gateway.name
                 data_copy['Location Name'] = loc.location.name
 
                 data = KML.ExtendedData()

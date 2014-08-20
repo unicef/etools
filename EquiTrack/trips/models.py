@@ -8,14 +8,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
     GenericForeignKey, GenericRelation
 )
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
 
 from filer.fields.file import FilerFileField
 from post_office import mail
 from post_office.models import EmailTemplate
 import reversion
-from raven import Client
 
 from EquiTrack.utils import AdminURLMixin
 from locations.models import LinkedLocation
@@ -31,15 +30,6 @@ BOOL_CHOICES = (
     (True, "Yes"),
     (False, "No")
 )
-
-
-def notify_on_delete(sender, instance, using, **kwargs):
-    client = Client()
-    client.captureMessage('An instance of {} was deleted: {}'.format(
-        sender, instance
-    ))
-
-post_delete.connect(notify_on_delete)
 
 
 def send_mail(sender, template, variables, *recipients):
@@ -492,7 +482,7 @@ class ActionPoint(models.Model):
                         instance.trip.get_admin_url()
                     )
                 },
-                *[instance.trip.budget_owner.email, instance.trip.supervisor.email] +
+                *[instance.trip.supervisor.email] +
                 [user.email for user in instance.persons_responsible.all()]
             )
         if instance.closed:
@@ -520,7 +510,7 @@ class ActionPoint(models.Model):
                         instance.trip.get_admin_url()
                     )
                 },
-                *[instance.trip.budget_owner.email, instance.trip.supervisor.email] +
+                *[instance.trip.supervisor.email] +
                 [user.email for user in instance.persons_responsible.all()]
             )
 

@@ -18,7 +18,9 @@ class TripSerializer(serializers.ModelSerializer):
         return obj.owner.get_full_name()
 
     def transform_partners(self, obj, value):
-        return ', '.join(obj.partners.all())
+        return ', '.join([
+            partner.name for partner in obj.partners.all()
+        ])
 
     def transform_url(self, obj, value):
         return 'http://{}{}'.format(
