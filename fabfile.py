@@ -282,10 +282,10 @@ def dokku_set_app_env_vars():
 
 @_setup
 def create_db(restore=False):
-    cmd = 'dokku postgis:{} ' + env.host
+    cmd = 'dokku postgis:{} ' + env.name
     run(cmd.format('create'))
     if restore:
-        run(cmd.format('restore')+' < /home/dokku/{}/backup.sql'.format(env.host))
+        run(cmd.format('restore')+' < /home/dokku/{}/backup.sql'.format(env.name))
 
 
 @_setup
@@ -303,12 +303,11 @@ def migrate_db(backup=True):
 @_setup
 def create():
     with settings(warn_only=True):
-        local('git remote add {app} dokku@{host}:{host}'.format(
+        local('git remote add {app} dokku@{host}:{app}'.format(
             app=env.name, host=env.host
         ))
     create_db()
     deploy_app()
-    rebuild()
 
 
 @_setup
@@ -321,7 +320,6 @@ def deploy_app(migrate=True):
     local('git push {app} {branch}:master'.format(
         app=env.name, branch=env.branch
     ))
-    dokku_set_app_env_vars()
     if migrate:
         migrate_db()
 
