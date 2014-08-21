@@ -92,8 +92,8 @@ class PCAGovernorateFilter(admin.SimpleListFilter):
 
 class PCARegionFilter(admin.SimpleListFilter):
 
-    title = 'Caza'
-    parameter_name = 'caza'
+    title = 'District'
+    parameter_name = 'district'
 
     def lookups(self, request, model_admin):
 
@@ -112,8 +112,8 @@ class PCARegionFilter(admin.SimpleListFilter):
 
 class PCALocalityFilter(admin.SimpleListFilter):
 
-    title = 'Locality'
-    parameter_name = 'locality'
+    title = 'Sub-district'
+    parameter_name = 'sub'
 
     def lookups(self, request, model_admin):
 

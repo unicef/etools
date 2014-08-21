@@ -289,6 +289,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         KMLFormat,
         SHPFormat,
     )
+    date_hierarchy = 'start_date'
     list_display = (
         'number',
         'status',

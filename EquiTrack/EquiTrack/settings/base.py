@@ -40,14 +40,7 @@ SUIT_CONFIG = {
 
         {'app': 'activityinfo', 'label': 'ActivityInfo'},
 
-        {'label': 'Locations', 'icon': 'icon-globe', 'models': [
-            {'label': 'Governorate', 'model': 'locations.governorate'},
-            {'label': 'Cazas', 'model': 'locations.region'},
-            {'label': 'Localities', 'model': 'locations.locality'},
-            {'label': 'Gateways', 'model': 'locations.gatewaytype'},
-            {'label': 'Locations', 'model': 'locations.location'},
-            {'label': 'Carto DB', 'model': 'locations.cartodbtable'},
-        ]},
+        {'app': 'locations', 'icon': 'icon-globe'},
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 

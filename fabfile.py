@@ -319,7 +319,7 @@ def rebuild():
 
 
 @_setup
-def deploy_app(migrate=True):
+def deploy_app(migrate=False):
     local('git push {app} {branch}:master'.format(
         app=env.name, branch=env.branch
     ))
