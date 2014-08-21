@@ -40,7 +40,7 @@ class Region(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Caza'
+        verbose_name = 'District'
         ordering = ['name']
 
 
@@ -59,7 +59,7 @@ class Locality(models.Model):
         return self.name
 
     class Meta:
-        verbose_name = 'Cadastral/Locality'
+        verbose_name = 'Sub-district'
         unique_together = ('name', 'cas_code_un')
         ordering = ['name']
 
