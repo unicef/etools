@@ -266,12 +266,12 @@ def deploy():
 
 
 @_setup
-def dokku_get_app_env_vars():
+def get_env_vars():
     run('dokku config {}'.format(env.name))
 
 
 @_setup
-def dokku_set_app_env_vars():
+def set_env_vars():
     run('dokku config:set {app} {envs}'.format(
         app=env.name,
         envs=' '.join(
@@ -309,8 +309,9 @@ def create():
         local('git remote add {app} dokku@{host}:{app}'.format(
             app=env.name, host=env.host
         ))
-    create_db()
     deploy_app()
+    create_db()
+    migrate_db()
 
 
 @_setup
