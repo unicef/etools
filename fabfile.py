@@ -316,7 +316,7 @@ def create():
 
 @_setup
 def rebuild():
-    run('dokku rebuild {}'.format(env.host))
+    run('dokku rebuild {}'.format(env.name))
 
 
 @_setup
