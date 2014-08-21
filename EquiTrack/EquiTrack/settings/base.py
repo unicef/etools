@@ -106,7 +106,7 @@ CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 ########## MANAGER CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
 ADMINS = (
-    ('James Cranwell-Ward', 'jcranwellwardl@unicef.org'),
+    ('James Cranwell-Ward', 'jcranwellward@unicef.org'),
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
