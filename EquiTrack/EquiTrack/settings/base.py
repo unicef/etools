@@ -359,7 +359,7 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': True,
     'handlers': {
         # Send all messages to console
         'console': {
