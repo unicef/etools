@@ -40,6 +40,15 @@ class PartnerOrganization(models.Model):
     email = models.CharField(max_length=128L, blank=True)
     contact_person = models.CharField(max_length=64L, blank=True)
     phone_number = models.CharField(max_length=32L, blank=True)
+    alternate_id = models.IntegerField(
+        blank=True,
+        null=True
+    )
+    alternate_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
     activity_info_partner = models.ForeignKey(
         'activityinfo.Partner',
         blank=True, null=True

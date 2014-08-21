@@ -20,13 +20,28 @@ class Sector(models.Model):
 
     name = models.CharField(max_length=45L, unique=True)
     description = models.CharField(
-        max_length=256L, blank=True, null=True)
+        max_length=256L,
+        blank=True,
+        null=True
+    )
+    alternate_id = models.IntegerField(
+        blank=True,
+        null=True
+    )
+    alternate_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
 
     class Meta:
         ordering = ['name']
 
     def __unicode__(self):
-        return self.name
+        return u'{}{}'.format(
+            self.alternate_id if self.alternate_id else '',
+            self.name
+        )
 
 
 class RRPObjective(models.Model):
@@ -141,6 +156,15 @@ class IntermediateResult(models.Model):
     name = models.CharField(max_length=128L, unique=True)
     from_date = models.DateField()
     to_date = models.DateField()
+    alternate_id = models.IntegerField(
+        blank=True,
+        null=True
+    )
+    alternate_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
 
     class Meta:
         ordering = ['name']
@@ -166,8 +190,24 @@ class WBS(models.Model):
 
 class Activity(models.Model):
     sector = models.ForeignKey(Sector)
-    name = models.CharField(max_length=128L, unique=True)
-    type = models.CharField(max_length=30L, blank=True, null=True)
+    name = models.CharField(
+        max_length=128L,
+        unique=True
+    )
+    type = models.CharField(
+        max_length=30L,
+        blank=True,
+        null=True
+    )
+    alternate_id = models.IntegerField(
+        blank=True,
+        null=True
+    )
+    alternate_name = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True
+    )
 
     class Meta:
         ordering = ['name']

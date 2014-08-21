@@ -267,13 +267,13 @@ def deploy():
 
 @_setup
 def dokku_get_app_env_vars():
-    run('dokku config {}'.format(env.host))
+    run('dokku config {}'.format(env.name))
 
 
 @_setup
 def dokku_set_app_env_vars():
     run('dokku config:set {app} {envs}'.format(
-        app=env.host,
+        app=env.name,
         envs=' '.join(
             ['{}={}'.format(key, value)
              for key, value in env.envs.items()])
@@ -325,5 +325,7 @@ def deploy_app(migrate=True):
     ))
     if migrate:
         migrate_db()
+    clean_containers()
+    clean_images()
 
 

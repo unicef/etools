@@ -2,6 +2,8 @@ __author__ = 'jcranwellward'
 
 from django.contrib import admin
 
+from import_export.admin import ImportExportModelAdmin
+
 from EquiTrack.utils import get_changeform_link
 from partners.models import IndicatorProgress
 from activityinfo.models import PartnerReport
@@ -124,7 +126,7 @@ class IndicatorProgressInlineAdmin(admin.TabularInline):
     changeform_link.short_description = 'View PCA Details'
 
 
-class IndicatorAdmin(admin.ModelAdmin):
+class IndicatorAdmin(ImportExportModelAdmin):
     search_fields = ('name',)
     list_editable = (
         'in_activity_info',
@@ -150,13 +152,13 @@ class IndicatorAdmin(admin.ModelAdmin):
     ]
 
 
-admin.site.register(RRPObjective)
-admin.site.register(ResultStructure)
-admin.site.register(Sector)
-admin.site.register(Activity)
-admin.site.register(IntermediateResult)
+admin.site.register(RRPObjective, ImportExportModelAdmin)
+admin.site.register(ResultStructure, ImportExportModelAdmin)
+admin.site.register(Sector, ImportExportModelAdmin)
+admin.site.register(Activity, ImportExportModelAdmin)
+admin.site.register(IntermediateResult, ImportExportModelAdmin)
 admin.site.register(Rrp5Output, ResultStructureAdmin)
-admin.site.register(Goal)
-admin.site.register(Unit)
+admin.site.register(Goal, ImportExportModelAdmin)
+admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-admin.site.register(WBS)
+admin.site.register(WBS, ImportExportModelAdmin)

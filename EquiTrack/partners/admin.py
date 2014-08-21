@@ -8,7 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
 from reversion import VersionAdmin
-from import_export.admin import ExportMixin, base_formats
+from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.utils import get_changeform_link
@@ -392,7 +392,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
     view_original.short_description = 'View Original PCA'
 
 
-class PartnerAdmin(ExportMixin, admin.ModelAdmin):
+class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = PartnerResource
     list_display = (
         u'name',
