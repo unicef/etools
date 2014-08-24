@@ -116,7 +116,7 @@ class TripReportAdmin(VersionAdmin):
         u'status',
         u'approved_date',
     )
-    filter_horizontal = (
+    filter_vertical = (
         u'pcas',
         u'partners',
     )
@@ -135,8 +135,10 @@ class TripReportAdmin(VersionAdmin):
                  (u'from_date', u'to_date',),
                  (u'travel_type', u'travel_assistant',),
                  u'approved_by_human_resources',
-                 (u'ta_required', u'programme_assistant',),
-                 u'international_travel',
+                 u'ta_required',
+                 u'budget_owner',
+                 u'programme_assistant',
+                 (u'international_travel', u'representative',),
                  u'no_pca',)
         }),
         (u'PCA Details', {
@@ -149,9 +151,9 @@ class TripReportAdmin(VersionAdmin):
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 ((u'approved_by_supervisor', u'date_supervisor_approved',),
-                 (u'approved_by_budget_owner', u'date_budget_owner_approved', u'budget_owner',),
+                 (u'approved_by_budget_owner', u'date_budget_owner_approved',),
                  (u'date_human_resources_approved', u'human_resources'),
-                 (u'representative_approval', u'date_representative_approved', u'representative'),
+                 (u'representative_approval', u'date_representative_approved',),
                  u'approved_date',),
         }),
         (u'Travel/Admin', {
@@ -201,6 +203,7 @@ class TripReportAdmin(VersionAdmin):
                 fields.remove(u'status')
 
         if trip and request.user == trip.supervisor:
+            fields.remove(u'status')
             fields.remove(u'approved_by_supervisor')
             fields.remove(u'date_supervisor_approved')
 
@@ -220,6 +223,7 @@ class TripReportAdmin(VersionAdmin):
             name=u'Representative Office'
         )
         if trip and rep_group in request.user.groups.all():
+            fields.remove(u'status')
             fields.remove(u'representative')
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
@@ -228,6 +232,11 @@ class TripReportAdmin(VersionAdmin):
             return []
 
         return fields
+
+    # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+    #     if db_field.name == u'representative':
+    #         rep_group = Group.objects.get(name=u'Representative Office')
+    #         kwargs['queryset'] = rep_group.user_set.all()
 
 
 class ActionPointsAdmin(admin.ModelAdmin):

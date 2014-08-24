@@ -5,6 +5,7 @@ from datetime import datetime
 from django.forms import ModelForm, fields
 from django.core.exceptions import ValidationError
 
+from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget
 
@@ -41,6 +42,15 @@ class TravelRoutesForm(ModelForm):
 
 
 class TripForm(ModelForm):
+
+    class Meta:
+        model = Trip
+        widgets = {
+            'purpose_of_travel':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'main_observations':
+                CKEditorWidget(editor_options={'startupFocus': False}),
+        }
 
     def clean(self):
         cleaned_data = super(TripForm, self).clean()
@@ -88,10 +98,3 @@ class TripForm(ModelForm):
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
-
-    class Meta:
-        model = Trip
-        widgets = {
-            'main_observations':
-                CKEditorWidget(editor_options={'startupFocus': False}),
-        }

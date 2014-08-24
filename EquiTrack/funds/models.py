@@ -19,7 +19,7 @@ class Grant(models.Model):
     name = models.CharField(max_length=128L, unique=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['donor']
 
     def __unicode__(self):
         return u"{}: {}".format(

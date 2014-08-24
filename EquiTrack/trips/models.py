@@ -231,14 +231,21 @@ class Trip(AdminURLMixin, models.Model):
 
     @classmethod
     def send_trip_request(cls, sender, instance, created, **kwargs):
+        """
+        Trip emails alerts are sent at various stages...
+        """
+
         current_site = Site.objects.get_current()
         state = 'Created' if created else 'Updated'
 
+        # default list of recipients
         recipients = [
             instance.owner.email,
             instance.supervisor.email]
         if instance.budget_owner:
             recipients.append(instance.budget_owner.email)
+
+        # 1. send an email each time the trip is modified
         send_mail(
             instance.owner.email,
             'trips/trip/created/updated',
@@ -254,6 +261,25 @@ class Trip(AdminURLMixin, models.Model):
             *recipients
         )
 
+        if created:
+            # send an email to representative on trip creation to the representative only once
+            if instance.international_travel and instance.representative:
+                send_mail(
+                    instance.owner.email,
+                    'trips/trip/created/updated',
+                    {
+                        'owner_name': instance.owner.get_full_name(),
+                        'number': instance.reference(),
+                        'state': state,
+                        'url': 'http://{}{}'.format(
+                            current_site.domain,
+                            instance.get_admin_url()
+                        )
+                    },
+                    instance.representative
+                )
+
+        # send an email to everyone if the trip is cancelled
         if instance.status == Trip.CANCELLED:
             email_name = 'trips/trip/cancelled'
             try:
@@ -272,6 +298,7 @@ class Trip(AdminURLMixin, models.Model):
 
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
+
             send_mail(
                 instance.owner.email,
                 template,
