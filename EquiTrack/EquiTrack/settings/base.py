@@ -44,7 +44,7 @@ SUIT_CONFIG = {
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 
-        {'app': 'tpm', 'label': 'TPM Portal',},
+        {'app': 'tpm', 'label': 'TPM Portal'},
     )
 }
 

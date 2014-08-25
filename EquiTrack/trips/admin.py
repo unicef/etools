@@ -223,7 +223,8 @@ class TripReportAdmin(VersionAdmin):
             name=u'Representative Office'
         )
         if trip and rep_group in request.user.groups.all():
-            fields.remove(u'status')
+            if u'status' in fields:
+                fields.remove(u'status')
             fields.remove(u'representative')
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')

@@ -6,6 +6,7 @@ from django.contrib.contenttypes.generic import GenericTabularInline
 from reversion import VersionAdmin
 
 from trips.models import FileAttachment
+from partners.models import GwPCALocation
 from .models import TPMVisit
 
 
@@ -50,4 +51,35 @@ class TPMVisitAdmin(VersionAdmin):
         )
 
 
+class TPMLocationsAdmin(admin.ModelAdmin):
+
+    list_display = (
+        'governorate',
+        'region',
+        'locality',
+        'location',
+        'view_location',
+        'tpm_visit',
+    )
+    list_filter = (
+        'governorate',
+        'region',
+        'locality',
+        'location',
+    )
+    search_fields = (
+        'governorate',
+        'region',
+        'locality',
+        'location',
+    )
+    readonly_fields = (
+        'view_location',
+    )
+    list_editable = (
+        'tpm_visit',
+    )
+
+
 admin.site.register(TPMVisit, TPMVisitAdmin)
+admin.site.register(GwPCALocation, TPMLocationsAdmin)

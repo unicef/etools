@@ -120,11 +120,6 @@ class PcaLocationInlineAdmin(admin.TabularInline):
         'region',
         'locality',
         'location',
-        'view_location',
-        'tpm_visit',
-    )
-    readonly_fields = (
-        'view_location',
     )
     extra = 5
 
@@ -415,7 +410,6 @@ class FACEAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(GwPCALocation)
 admin.site.register(PCA, PcaAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
