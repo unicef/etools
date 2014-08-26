@@ -183,11 +183,11 @@ class CartoDBTable(models.Model):
 
             for row in sites['rows']:
                 pcode = row[self.pcode_col]
-                cas_code = row['cas_code']
+                parent_code = row['parent_code']
                 site_name = row[self.name_col].encode('UTF-8')
 
-                if not cas_code:
-                    logger.warning("No cas code for: {}".format(site_name))
+                if not parent_code:
+                    logger.warning("No parent code for: {}".format(site_name))
                     sites_not_added += 1
                     continue
 
@@ -197,11 +197,11 @@ class CartoDBTable(models.Model):
                     continue
 
                 try:
-                    cad = Locality.objects.get(cas_code=cas_code)
+                    parent = Locality.objects.get(cas_code=parent_code)
                 except (Locality.DoesNotExist, Locality.MultipleObjectsReturned) as exp:
-                    msg = "{} locality found for cas code: {}".format(
+                    msg = "{} locality found for parent code: {}".format(
                         'Multiple' if exp is Locality.MultipleObjectsReturned else 'No',
-                        cas_code
+                        parent_code
                     )
                     logger.warning(msg)
                     sites_not_added += 1
@@ -211,7 +211,7 @@ class CartoDBTable(models.Model):
                     location, created = Location.objects.get_or_create(
                         gateway=self.location_type,
                         p_code=pcode,
-                        locality=cad
+                        locality=parent
                     )
                 except Location.MultipleObjectsReturned:
                     logger.warning("Multiple locations found for: {}, {} ({})".format(
