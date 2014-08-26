@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 from django.db import models
 
 from EquiTrack.utils import AdminURLMixin
+from partners.models import GwPCALocation
 
 
 class TPMVisit(AdminURLMixin, models.Model):
@@ -23,7 +24,7 @@ class TPMVisit(AdminURLMixin, models.Model):
         default=PLANNED,
     )
     location = models.ForeignKey(
-        'locations.Location'
+        'partners.GwPCALocation'
     )
     tentative_date = models.DateField(
         blank=True, null=True
@@ -34,3 +35,15 @@ class TPMVisit(AdminURLMixin, models.Model):
     comments = models.TextField(
         blank=True, null=True
     )
+
+    class Meta:
+        verbose_name = u'TPM Visit'
+        verbose_name_plural = u'TPM Visits'
+
+
+class PCALocation(GwPCALocation):
+
+    class Meta:
+        proxy = True
+        verbose_name = u'PCA Location'
+        verbose_name_plural = u'PCA Locations'

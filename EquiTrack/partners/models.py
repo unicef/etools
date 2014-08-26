@@ -30,7 +30,6 @@ from locations.models import (
     Location,
     Region,
 )
-from tpm.models import TPMVisit
 
 
 class PartnerOrganization(models.Model):
@@ -301,29 +300,20 @@ class GwPCALocation(models.Model):
     tpm_visit = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = 'Activity Location'
+        verbose_name = 'PCA Location'
 
     def __unicode__(self):
-        return u'{} -> {} -> {} -> {} ({})'.format(
+        return u'{} -> {} -> {} -> {}'.format(
             self.governorate.name,
             self.region.name,
             self.locality.name,
-            self.location.name,
-            self.location.gateway.name
+            self.location.__unicode__(),
         )
 
     def view_location(self):
         return get_changeform_link(self)
     view_location.allow_tags = True
     view_location.short_description = 'View Location'
-
-    def save(self, **kwargs):
-        super(GwPCALocation, self).save(**kwargs)
-        if self.tpm_visit:
-            TPMVisit.objects.get_or_create(
-                pca=self.pca,
-                location=self.location
-            )
 
 
 class PCASector(models.Model):

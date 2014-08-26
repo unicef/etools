@@ -324,6 +324,7 @@ THIRD_PARTY_APPS = (
 
 # Apps specific for this project go here.
 LOCAL_APPS = (
+    'tpm',
     'funds',
     'locations',
     'reports',
@@ -332,7 +333,6 @@ LOCAL_APPS = (
     'emails',
     'trips',
     'users',
-    'tpm',
     'registration',
 )
 

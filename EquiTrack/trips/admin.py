@@ -94,12 +94,15 @@ class TripReportAdmin(VersionAdmin):
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
     )
+    ordering = (u'created_date',)
+    date_hierarchy = u'created_date'
     list_display = (
-        u'created_date',
         u'reference',
+        u'created_date',
         u'purpose_of_travel',
         u'owner',
         u'section',
+        u'office',
         u'from_date',
         u'to_date',
         u'supervisor',

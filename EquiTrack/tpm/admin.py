@@ -6,8 +6,48 @@ from django.contrib.contenttypes.generic import GenericTabularInline
 from reversion import VersionAdmin
 
 from trips.models import FileAttachment
-from partners.models import GwPCALocation, PartnerOrganization
-from .models import TPMVisit
+from reports.models import Sector
+from partners.models import PartnerOrganization
+from .models import TPMVisit, PCALocation
+
+
+class SectorListFilter(admin.SimpleListFilter):
+
+    title = 'Sector'
+    parameter_name = 'sector'
+    filter_by = 'pca__sector__id'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (sector.id, sector.name) for sector in Sector.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            filter_dict = {}
+            filter_dict[self.filter_by] = self.value()
+            return queryset.filter(**filter_dict)
+        return queryset
+
+
+class TPMPartnerFilter(admin.SimpleListFilter):
+
+    title = 'Partner'
+    parameter_name = 'partner'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (partner.id, partner.name) for partner in PartnerOrganization.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            return queryset.filter(pca__partner__id=self.value())
+        return queryset
 
 
 class FileAttachmentInlineAdmin(GenericTabularInline):
@@ -22,6 +62,11 @@ class TPMVisitAdmin(VersionAdmin):
         u'location',
         u'tentative_date',
         u'completed_date'
+    )
+    list_filter = (
+        u'pca',
+        SectorListFilter,
+        TPMPartnerFilter,
     )
     readonly_fields = (
         u'pca',
@@ -51,24 +96,6 @@ class TPMVisitAdmin(VersionAdmin):
         )
 
 
-class TPMPartnerFilter(admin.SimpleListFilter):
-
-    title = 'Partner'
-    parameter_name = 'partner'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (partner.id, partner.name) for partner in PartnerOrganization.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            return queryset.filter(pca__partner__id=self.value())
-        return queryset
-
-
 class TPMLocationsAdmin(admin.ModelAdmin):
 
     list_display = (
@@ -82,6 +109,8 @@ class TPMLocationsAdmin(admin.ModelAdmin):
     )
     list_filter = (
         u'pca',
+        SectorListFilter,
+        TPMPartnerFilter,
         u'governorate',
         u'region',
         u'locality',
@@ -104,4 +133,4 @@ class TPMLocationsAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TPMVisit, TPMVisitAdmin)
-admin.site.register(GwPCALocation, TPMLocationsAdmin)
+admin.site.register(PCALocation, TPMLocationsAdmin)

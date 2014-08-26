@@ -92,7 +92,7 @@ class Location(models.Model):
             self.name,
             self.gateway.name,
             "{}: {}".format(
-                'CERD' if self.gateway.name == 'School' else 'P Code',
+                'CERD' if self.gateway.name == 'School' else 'PCode',
                 self.p_code if self.p_code else ''
             )
         )
