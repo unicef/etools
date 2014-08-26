@@ -6,7 +6,7 @@ from django.contrib.contenttypes.generic import GenericTabularInline
 from reversion import VersionAdmin
 
 from trips.models import FileAttachment
-from partners.models import GwPCALocation
+from partners.models import GwPCALocation, PartnerOrganization
 from .models import TPMVisit
 
 
@@ -16,18 +16,18 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
 
 class TPMVisitAdmin(VersionAdmin):
     list_display = (
-        'status',
-        'pca',
-        'sectors',
-        'location',
-        'tentative_date',
-        'completed_date'
+        u'status',
+        u'pca',
+        u'sectors',
+        u'location',
+        u'tentative_date',
+        u'completed_date'
     )
     readonly_fields = (
-        'pca',
-        'location',
-        'unicef_manager',
-        'partner_manager',
+        u'pca',
+        u'location',
+        u'unicef_manager',
+        u'partner_manager',
     )
     inlines = (
         FileAttachmentInlineAdmin,
@@ -51,33 +51,55 @@ class TPMVisitAdmin(VersionAdmin):
         )
 
 
+class TPMPartnerFilter(admin.SimpleListFilter):
+
+    title = 'Partner'
+    parameter_name = 'partner'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (partner.id, partner.name) for partner in PartnerOrganization.objects.all()
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            return queryset.filter(pca__partner__id=self.value())
+        return queryset
+
+
 class TPMLocationsAdmin(admin.ModelAdmin):
 
     list_display = (
-        'governorate',
-        'region',
-        'locality',
-        'location',
-        'view_location',
-        'tpm_visit',
+        u'pca',
+        u'governorate',
+        u'region',
+        u'locality',
+        u'location',
+        u'view_location',
+        u'tpm_visit',
     )
     list_filter = (
-        'governorate',
-        'region',
-        'locality',
-        'location',
+        u'pca',
+        u'governorate',
+        u'region',
+        u'locality',
+        u'location',
     )
     search_fields = (
-        'governorate',
-        'region',
-        'locality',
-        'location',
+        u'pca__number',
+        u'governorate__name',
+        u'region__name',
+        u'locality__name',
+        u'location__name',
+        u'location__gateway__name',
     )
     readonly_fields = (
-        'view_location',
+        u'view_location',
     )
     list_editable = (
-        'tpm_visit',
+        u'tpm_visit',
     )
 
 

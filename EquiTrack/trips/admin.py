@@ -110,6 +110,7 @@ class TripReportAdmin(VersionAdmin):
     list_filter = (
         u'owner',
         u'section',
+        u'office',
         u'from_date',
         u'to_date',
         u'supervisor',
