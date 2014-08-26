@@ -15,7 +15,6 @@ class SectorListFilter(admin.SimpleListFilter):
 
     title = 'Sector'
     parameter_name = 'sector'
-    filter_by = 'pca__sector__id'
 
     def lookups(self, request, model_admin):
 
@@ -26,9 +25,8 @@ class SectorListFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
 
         if self.value():
-            filter_dict = {}
-            filter_dict[self.filter_by] = self.value()
-            return queryset.filter(**filter_dict)
+            sector = Sector.objects.get(pk=self.value())
+            return queryset.filter(pca__sectors__icontains=sector.name)
         return queryset
 
 

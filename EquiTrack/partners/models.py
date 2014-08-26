@@ -34,10 +34,10 @@ from locations.models import (
 
 class PartnerOrganization(models.Model):
 
-    name = models.CharField(max_length=45L, unique=True)
+    name = models.CharField(max_length=255, unique=True)
     description = models.CharField(max_length=256L, blank=True)
-    email = models.CharField(max_length=128L, blank=True)
-    contact_person = models.CharField(max_length=64L, blank=True)
+    email = models.CharField(max_length=255, blank=True)
+    contact_person = models.CharField(max_length=255, blank=True)
     phone_number = models.CharField(max_length=32L, blank=True)
     alternate_id = models.IntegerField(
         blank=True,

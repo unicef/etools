@@ -395,7 +395,9 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
         u'description',
         u'email',
         u'contact_person',
-        u'phone_number'
+        u'phone_number',
+        u'alternate_id',
+        u'alternate_name',
     )
 
 
