@@ -128,6 +128,20 @@ class TPMLocationsAdmin(admin.ModelAdmin):
     list_editable = (
         u'tpm_visit',
     )
+    actions = [u'create_tpm_visits']
+
+    def create_tpm_vists(self, request, queryset):
+        for pca_location in queryset:
+            TPMVisit.objects.create(
+                pca=pca_location.pca,
+                pca_location=pca_location
+            )
+        self.message_user(
+            request,
+            u'{} TPM visits created'.format(
+                queryset.count()
+            )
+        )
 
 
 admin.site.register(TPMVisit, TPMVisitAdmin)

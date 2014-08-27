@@ -21,6 +21,7 @@ SITE_NAME = basename(DJANGO_ROOT)
 SUIT_CONFIG = {
     'ADMIN_NAME': 'EquiTrack',
     'SEARCH_URL': '/admin/partners/pca/',
+    'CONFIRM_UNSAVED_CHANGES': False,
 
     'MENU': (
 
