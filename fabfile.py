@@ -320,6 +320,11 @@ def rebuild():
 
 
 @_setup
+def shell():
+    run('dokku run {} python EquiTrack/manage.py shell'.format(env.name))
+
+
+@_setup
 def deploy_app(migrate=False):
     local('git push {app} {branch}:master'.format(
         app=env.name, branch=env.branch
