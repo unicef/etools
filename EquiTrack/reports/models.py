@@ -179,7 +179,7 @@ class IntermediateResult(models.Model):
 class WBS(models.Model):
     Intermediate_result = models.ForeignKey(IntermediateResult)
     name = models.CharField(max_length=128L)
-    code = models.CharField(max_length=10L)
+    code = models.CharField(max_length=128L)
 
     class Meta:
         ordering = ['name']
