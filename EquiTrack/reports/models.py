@@ -38,7 +38,7 @@ class Sector(models.Model):
         ordering = ['name']
 
     def __unicode__(self):
-        return u'{}{}'.format(
+        return u'{} {}'.format(
             self.alternate_id if self.alternate_id else '',
             self.name
         )
@@ -54,6 +54,9 @@ class RRPObjective(models.Model):
     class Meta:
         ordering = ['name']
         verbose_name = 'Objective'
+
+    def __unicode__(self):
+        return self.name
 
 
 class Rrp5Output(models.Model):

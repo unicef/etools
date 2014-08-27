@@ -57,7 +57,7 @@ class TPMVisitAdmin(VersionAdmin):
         u'status',
         u'pca',
         u'sectors',
-        u'location',
+        u'pca_location',
         u'tentative_date',
         u'completed_date'
     )
@@ -68,7 +68,7 @@ class TPMVisitAdmin(VersionAdmin):
     )
     readonly_fields = (
         u'pca',
-        u'location',
+        u'pca_location',
         u'unicef_manager',
         u'partner_manager',
     )

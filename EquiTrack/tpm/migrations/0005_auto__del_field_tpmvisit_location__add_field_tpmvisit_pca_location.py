@@ -8,14 +8,28 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Deleting field 'TPMVisit.location'
+        db.delete_column(u'tpm_tpmvisit', 'location_id')
 
-        # Changing field 'TPMVisit.location'
-        db.alter_column(u'tpm_tpmvisit', 'location_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['partners.GwPCALocation']))
+        # Adding field 'TPMVisit.pca_location'
+        db.add_column(u'tpm_tpmvisit', 'pca_location',
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['partners.GwPCALocation'], null=True, blank=True),
+                      keep_default=False)
+
 
     def backwards(self, orm):
 
-        # Changing field 'TPMVisit.location'
-        db.alter_column(u'tpm_tpmvisit', 'location_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['locations.Location']))
+        # User chose to not deal with backwards NULL issues for 'TPMVisit.location'
+        raise RuntimeError("Cannot reverse this migration. 'TPMVisit.location' and its values cannot be restored.")
+        
+        # The following code is provided here to aid in writing a correct migration        # Adding field 'TPMVisit.location'
+        db.add_column(u'tpm_tpmvisit', 'location',
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['locations.Location']),
+                      keep_default=False)
+
+        # Deleting field 'TPMVisit.pca_location'
+        db.delete_column(u'tpm_tpmvisit', 'pca_location_id')
+
 
     models = {
         u'activityinfo.database': {
@@ -80,19 +94,23 @@ class Migration(SchemaMigration):
         },
         u'locations.governorate': {
             'Meta': {'ordering': "['name']", 'object_name': 'Governorate'},
-            'area': ('django.contrib.gis.db.models.fields.PolygonField', [], {'null': 'True', 'blank': 'True'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.PolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'})
         },
         u'locations.locality': {
             'Meta': {'ordering': "['name']", 'unique_together': "(('name', 'cas_code_un'),)", 'object_name': 'Locality'},
-            'area': ('django.contrib.gis.db.models.fields.PolygonField', [], {'null': 'True', 'blank': 'True'}),
             'cad_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_code_un': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_village_name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.PolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'}),
             'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Region']"})
         },
         u'locations.location': {
@@ -108,10 +126,12 @@ class Migration(SchemaMigration):
         },
         u'locations.region': {
             'Meta': {'ordering': "['name']", 'object_name': 'Region'},
-            'area': ('django.contrib.gis.db.models.fields.PolygonField', [], {'null': 'True', 'blank': 'True'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.PolygonField', [], {'null': 'True', 'blank': 'True'}),
             'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'})
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'})
         },
         u'partners.gwpcalocation': {
             'Meta': {'object_name': 'GwPCALocation'},
@@ -128,11 +148,11 @@ class Migration(SchemaMigration):
             'activity_info_partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Partner']", 'null': 'True', 'blank': 'True'}),
             'alternate_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'alternate_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'contact_person': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
+            'contact_person': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '256L', 'blank': 'True'}),
-            'email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
+            'email': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'blank': 'True'})
         },
         u'partners.pca': {
@@ -181,8 +201,8 @@ class Migration(SchemaMigration):
             'comments': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'completed_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.GwPCALocation']"}),
             'pca': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']"}),
+            'pca_location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.GwPCALocation']", 'null': 'True', 'blank': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'default': "u'planned'", 'max_length': '32L'}),
             'tentative_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'})
         }

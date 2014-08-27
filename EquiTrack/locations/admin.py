@@ -63,8 +63,7 @@ class CartoDBTableAdmin(admin.ModelAdmin):
         'location_type',
         'name_col',
         'pcode_col',
-        'latitude_col',
-        'longitude_col'
+        'parent_code_col',
     )
 
     actions = ('import_sites',)

@@ -16,10 +16,26 @@ from smart_selects.db_fields import ChainedForeignKey
 logger = logging.getLogger('locations.models')
 
 
+class GatewayType(models.Model):
+    name = models.CharField(max_length=64L, unique=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __unicode__(self):
+        return self.name
+
+
 class Governorate(models.Model):
     name = models.CharField(max_length=45L, unique=True)
-    area = models.PolygonField(null=True, blank=True)
+    p_code = models.CharField(max_length=32L, blank=True, null=True)
+    gateway = models.ForeignKey(
+        GatewayType,
+        blank=True, null=True,
+        verbose_name='Admin type'
+    )
 
+    geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
 
     def __unicode__(self):
@@ -32,8 +48,14 @@ class Governorate(models.Model):
 class Region(models.Model):
     governorate = models.ForeignKey(Governorate)
     name = models.CharField(max_length=45L, unique=True)
-    area = models.PolygonField(null=True, blank=True)
+    p_code = models.CharField(max_length=32L, blank=True, null=True)
+    gateway = models.ForeignKey(
+        GatewayType,
+        blank=True, null=True,
+        verbose_name='Admin type'
+    )
 
+    geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
 
     def __unicode__(self):
@@ -51,8 +73,15 @@ class Locality(models.Model):
     cas_code_un = models.CharField(max_length=11L)
     name = models.CharField(max_length=128L)
     cas_village_name = models.CharField(max_length=128L)
-    area = models.PolygonField(null=True, blank=True)
+    p_code = models.CharField(max_length=32L, blank=True, null=True)
+    gateway = models.ForeignKey(
+        GatewayType,
+        blank=True, null=True,
+        verbose_name='Admin type'
+    )
 
+
+    geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
 
     def __unicode__(self):
@@ -60,18 +89,7 @@ class Locality(models.Model):
 
     class Meta:
         verbose_name = 'Sub-district'
-        unique_together = ('name', 'cas_code_un')
         ordering = ['name']
-
-
-class GatewayType(models.Model):
-    name = models.CharField(max_length=64L, unique=True)
-
-    class Meta:
-        ordering = ['name']
-
-    def __unicode__(self):
-        return self.name
 
 
 class Location(models.Model):
@@ -165,8 +183,7 @@ class CartoDBTable(models.Model):
     location_type = models.ForeignKey(GatewayType)
     name_col = models.CharField(max_length=254, default='name')
     pcode_col = models.CharField(max_length=254, default='pcode')
-    latitude_col = models.CharField(max_length=254, default='latitude')
-    longitude_col = models.CharField(max_length=254, default='longitude')
+    parent_code_col = models.CharField(max_length=254, null=True, blank=True)
 
     def update_sites_from_cartodb(self):
 
@@ -181,39 +198,46 @@ class CartoDBTable(models.Model):
             logging.exception("CartoDB exception occured", exc_info=True)
         else:
 
+            if self.location_type.name == 'Governorate':
+                parent, level = None, Governorate
+            elif self.location_type.name == 'District':
+                parent, level = Governorate, Region
+            elif self.location_type.name == 'Sub-district':
+                parent, level = Region, Locality
+            else:
+                parent, level = Locality, Location
+
             for row in sites['rows']:
                 pcode = row[self.pcode_col]
-                parent_code = row['parent_code']
                 site_name = row[self.name_col].encode('UTF-8')
-
-                if not parent_code:
-                    logger.warning("No parent code for: {}".format(site_name))
-                    sites_not_added += 1
-                    continue
 
                 if not site_name or site_name.isspace():
                     logger.warning("No name for site with PCode: {}".format(pcode))
                     sites_not_added += 1
                     continue
 
-                try:
-                    parent = Locality.objects.get(cas_code=parent_code)
-                except (Locality.DoesNotExist, Locality.MultipleObjectsReturned) as exp:
-                    msg = "{} locality found for parent code: {}".format(
-                        'Multiple' if exp is Locality.MultipleObjectsReturned else 'No',
-                        parent_code
-                    )
-                    logger.warning(msg)
-                    sites_not_added += 1
-                    continue
+                if self.parent_code_col and parent:
+                    try:
+                        parent_code = row[self.parent_code_col]
+                        parent_instance = parent.objects.get(p_code=parent_code)
+                    except (parent.DoesNotExist, parent.MultipleObjectsReturned) as exp:
+                        msg = "{} locality found for parent code: {}".format(
+                            'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
+                            parent_code
+                        )
+                        logger.warning(msg)
+                        sites_not_added += 1
+                        continue
 
                 try:
-                    location, created = Location.objects.get_or_create(
-                        gateway=self.location_type,
-                        p_code=pcode,
-                        locality=parent
-                    )
-                except Location.MultipleObjectsReturned:
+                    create_args = {
+                        'p_code': pcode,
+                        'gateway': self.location_type
+                    }
+                    if parent:
+                        create_args[parent.__name__.lower()] = parent_instance
+                    location, created = level.objects.get_or_create(**create_args)
+                except level.MultipleObjectsReturned:
                     logger.warning("Multiple locations found for: {}, {} ({})".format(
                         self.location_type, site_name, pcode
                     ))
@@ -226,9 +250,10 @@ class CartoDBTable(models.Model):
                         sites_updated += 1
 
                 location.name = site_name
-                location.latitude = row[self.latitude_col]
-                location.longitude = row[self.longitude_col]
-                location.point = row['the_geom']
+                if level is Location:
+                    location.point = row['the_geom']
+                else:
+                    location.geom = row['the_geom']
 
                 try:
                     location.save()

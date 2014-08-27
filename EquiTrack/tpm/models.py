@@ -23,8 +23,9 @@ class TPMVisit(AdminURLMixin, models.Model):
         choices=TPM_STATUS,
         default=PLANNED,
     )
-    location = models.ForeignKey(
-        'partners.GwPCALocation'
+    pca_location = models.ForeignKey(
+        'partners.GwPCALocation',
+        blank=True, null=True
     )
     tentative_date = models.DateField(
         blank=True, null=True
