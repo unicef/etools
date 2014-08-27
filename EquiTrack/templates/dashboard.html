@@ -119,7 +119,6 @@
                                     {% widthratio ind.programmed ind.indicator.total 100 %}%
                                 </div>
                             </div>
-                            {% if ind.indicator.in_activity_info %}
                                 {% with actual=ind.indicator.progress %}
                                     <div>
                                         <span class="sublabel">Reached: {{ actual|intcomma }}</span>
@@ -131,7 +130,6 @@
                                         </div>
                                     </div>
                                 {% endwith %}
-                            {% endif %}
                             <!-- progress -->
                         {% endfor %}
                     </div>
