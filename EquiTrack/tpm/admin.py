@@ -104,7 +104,6 @@ class TPMLocationsAdmin(admin.ModelAdmin):
         u'locality',
         u'location',
         u'view_location',
-        u'tpm_visit',
     )
     list_filter = (
         u'pca',
@@ -126,12 +125,9 @@ class TPMLocationsAdmin(admin.ModelAdmin):
     readonly_fields = (
         u'view_location',
     )
-    list_editable = (
-        u'tpm_visit',
-    )
-    actions = [u'create_tpm_visits']
+    actions = ['create_tpm_visits']
 
-    def create_tpm_vists(self, request, queryset):
+    def create_tpm_visits(self, request, queryset):
         for pca_location in queryset:
             TPMVisit.objects.create(
                 pca=pca_location.pca,

@@ -297,7 +297,6 @@ class GwPCALocation(models.Model):
         show_all=False,
         auto_choose=True
     )
-    tpm_visit = models.BooleanField(default=False)
 
     class Meta:
         verbose_name = 'PCA Location'
