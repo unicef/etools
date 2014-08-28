@@ -8,7 +8,7 @@ from import_export.admin import ExportMixin
 
 from trips.models import FileAttachment
 from reports.models import Sector
-from partners.models import PartnerOrganization, GwPCALocation
+from partners.models import PCA, PartnerOrganization, GwPCALocation
 from locations.models import Governorate, Region, Locality
 from .models import TPMVisit, PCALocation
 
@@ -160,7 +160,6 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
 
 
 class TPMLocationsAdmin(admin.ModelAdmin):
-
     list_display = (
         u'pca',
         u'governorate',
@@ -192,6 +191,11 @@ class TPMLocationsAdmin(admin.ModelAdmin):
         u'tpm_visit',
     )
     actions = ['create_tpm_visits']
+
+    def get_queryset(self, request):
+        return PCALocation.objects.filter(
+            pca__status=PCA.ACTIVE
+        )
 
     def create_tpm_visits(self, request, queryset):
         for pca_location in queryset:
