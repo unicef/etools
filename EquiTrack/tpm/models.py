@@ -36,6 +36,9 @@ class TPMVisit(AdminURLMixin, models.Model):
     comments = models.TextField(
         blank=True, null=True
     )
+    assigned_by = models.ForeignKey(
+        'auth.User'
+    )
 
     class Meta:
         verbose_name = u'TPM Visit'

@@ -120,6 +120,7 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
         u'pca',
         u'sectors',
         u'pca_location',
+        u'assigned_by',
         u'tentative_date',
         u'completed_date'
     )
@@ -134,6 +135,7 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
     readonly_fields = (
         u'pca',
         u'pca_location',
+        u'assigned_by',
         u'unicef_manager',
         u'partner_manager',
     )
@@ -201,7 +203,8 @@ class TPMLocationsAdmin(admin.ModelAdmin):
         for pca_location in queryset:
             TPMVisit.objects.create(
                 pca=pca_location.pca,
-                pca_location=pca_location
+                pca_location=pca_location,
+                assigned_by=request.user
             )
             pca_location.tpm_visit = True
             pca_location.save()
