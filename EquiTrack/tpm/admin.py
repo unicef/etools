@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib.contenttypes.generic import GenericTabularInline
 
 from reversion import VersionAdmin
+from import_export.admin import ExportMixin
 
 from trips.models import FileAttachment
 from reports.models import Sector
@@ -52,7 +53,7 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
     model = FileAttachment
 
 
-class TPMVisitAdmin(VersionAdmin):
+class TPMVisitAdmin(ExportMixin, VersionAdmin):
     list_display = (
         u'status',
         u'pca',
