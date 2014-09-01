@@ -47,6 +47,11 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
         },
     }
 
+    DBBACKUP_STORAGE = 'dbbackup.storage.s3_storage'
+    DBBACKUP_S3_BUCKET = AWS_STORAGE_BUCKET_NAME
+    DBBACKUP_S3_ACCESS_KEY = AWS_ACCESS_KEY_ID
+    DBBACKUP_S3_SECRET_KEY = AWS_SECRET_ACCESS_KEY
+
 
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend

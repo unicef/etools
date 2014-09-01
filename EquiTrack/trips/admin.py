@@ -30,7 +30,7 @@ class TravelRoutesInlineAdmin(admin.TabularInline):
     form = TravelRoutesForm
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Travel Itinerary'
-    extra = 4
+    extra = 5
 
 
 class TripFundsInlineAdmin(admin.TabularInline):
@@ -71,6 +71,7 @@ class SitesVisitedInlineAdmin(GenericTabularInline):
     model = LinkedLocation
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
+    extra = 5
 
 
 class FileAttachmentInlineAdmin(GenericTabularInline):
@@ -94,7 +95,7 @@ class TripReportAdmin(VersionAdmin):
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
     )
-    ordering = (u'created_date',)
+    ordering = (u'-created_date',)
     date_hierarchy = u'created_date'
     list_display = (
         u'reference',
@@ -202,7 +203,9 @@ class TripReportAdmin(VersionAdmin):
             u'approved_date'
         ]
 
-        if trip and request.user == trip.owner:
+        if trip and request.user in [
+            trip.owner,
+            trip.travel_assistant]:
             if trip.status == trip.APPROVED:
                 fields.remove(u'status')
 

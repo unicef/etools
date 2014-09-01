@@ -164,6 +164,7 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
 class TPMLocationsAdmin(admin.ModelAdmin):
     list_display = (
         u'pca',
+        u'sectors',
         u'governorate',
         u'region',
         u'locality',
@@ -193,6 +194,9 @@ class TPMLocationsAdmin(admin.ModelAdmin):
         u'tpm_visit',
     )
     actions = ['create_tpm_visits']
+
+    def sectors(self, obj):
+        return obj.pca.sectors
 
     def get_queryset(self, request):
         return PCALocation.objects.filter(
