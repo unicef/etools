@@ -11,6 +11,7 @@ To get specific command help type:
 """
 
 import os
+from datetime import datetime
 
 from fabric.utils import puts
 from fabric import colors
@@ -301,6 +302,15 @@ def migrate_db(backup=True):
     if backup:
         run('dokku postgis:dump {} > /home/dokku/{}/backup.sql'.format(env.name, env.name))
     run('dokku run {} python EquiTrack/manage.py syncdb --migrate'.format(env.name))
+
+
+@_setup
+def backup_db():
+    run('dokku postgis:dump {} > /home/dokku/{}/backup.sql.{}'.format(
+        env.name,
+        env.name,
+        datetime.now().strftime('%d-%m-%Y')
+    ))
 
 
 @_setup
