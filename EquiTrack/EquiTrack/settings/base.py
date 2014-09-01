@@ -321,6 +321,7 @@ THIRD_PARTY_APPS = (
     'djcelery',
     'datetimewidget',
     'logentry_admin',
+    'dbbackup',
 )
 
 # Apps specific for this project go here.
