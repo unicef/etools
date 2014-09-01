@@ -261,24 +261,6 @@ class Trip(AdminURLMixin, models.Model):
             *recipients
         )
 
-        if created:
-            # send an email to representative on trip creation to the representative only once
-            if instance.international_travel and instance.representative:
-                send_mail(
-                    instance.owner.email,
-                    'trips/trip/created/updated',
-                    {
-                        'owner_name': instance.owner.get_full_name(),
-                        'number': instance.reference(),
-                        'state': state,
-                        'url': 'http://{}{}'.format(
-                            current_site.domain,
-                            instance.get_admin_url()
-                        )
-                    },
-                    instance.representative
-                )
-
         # send an email to everyone if the trip is cancelled
         if instance.status == Trip.CANCELLED:
             email_name = 'trips/trip/cancelled'
@@ -435,6 +417,23 @@ class Trip(AdminURLMixin, models.Model):
                         )
                     },
                     instance.vision_approver.email,
+                )
+
+            # send an email to representative on trip approval to the representative
+            if instance.international_travel and instance.representative and not instance.representative_approval:
+                send_mail(
+                    instance.owner.email,
+                    'trips/trip/created/updated',
+                    {
+                        'owner_name': instance.owner.get_full_name(),
+                        'number': instance.reference(),
+                        'state': state,
+                        'url': 'http://{}{}'.format(
+                            current_site.domain,
+                            instance.get_admin_url()
+                        )
+                    },
+                    instance.representative
                 )
 
 

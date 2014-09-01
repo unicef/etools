@@ -117,6 +117,8 @@ class TripReportAdmin(VersionAdmin):
         u'office',
         u'from_date',
         u'to_date',
+        u'no_pca',
+        u'international_travel',
         u'supervisor',
         u'status',
         u'approved_date',
@@ -197,7 +199,6 @@ class TripReportAdmin(VersionAdmin):
             u'human_resources',
             u'approved_by_human_resources',
             u'date_human_resources_approved',
-            u'representative',
             u'representative_approval',
             u'date_representative_approved',
             u'approved_date'
@@ -205,7 +206,8 @@ class TripReportAdmin(VersionAdmin):
 
         if trip and request.user in [
             trip.owner,
-            trip.travel_assistant]:
+            trip.travel_assistant
+        ]:
             if trip.status == trip.APPROVED:
                 fields.remove(u'status')
 
