@@ -289,13 +289,17 @@ class GwPCALocation(models.Model):
         chained_model_field="region",
         show_all=False,
         auto_choose=True,
+        null=True,
+        blank=True
     )
     location = ChainedForeignKey(
         Location,
         chained_field="locality",
         chained_model_field="locality",
         show_all=False,
-        auto_choose=True
+        auto_choose=True,
+        null=True,
+        blank=True
     )
     tpm_visit = models.BooleanField(default=False)
 
