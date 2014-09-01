@@ -81,8 +81,7 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
 
 class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
-    extra = 5
-
+    extra = 1
 
 class TripReportAdmin(VersionAdmin):
     save_as = True
