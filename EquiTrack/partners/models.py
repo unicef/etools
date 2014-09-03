@@ -307,11 +307,11 @@ class GwPCALocation(models.Model):
         verbose_name = 'PCA Location'
 
     def __unicode__(self):
-        return u'{} -> {} -> {} -> {}'.format(
+        return u'{} -> {}{}{]'.format(
             self.governorate.name,
             self.region.name,
-            self.locality.name,
-            self.location.__unicode__(),
+            u'-> {}'.format(self.locality.name) if self.locality else u'',
+            self.location.__unicode__() if self.location else u'',
         )
 
     def view_location(self):
