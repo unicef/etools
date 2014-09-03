@@ -18,37 +18,21 @@
                             <div id="leaflet-map"></div>
                             <div id="layer_selector" class="cartodb-infobox">
                               <ul>
-                                <li data="all" class="selected">All countries</li>
-                                <li data="1000">area >1000 km<sup>2</sup></li>
-                                <li data="6000">area >6000 km<sup>2</sup></li>
-                                <li data="10000">area >10000 km<sup>2</sup></li>
-                                <li data="50000">area >50000 km<sup>2</sup></li>
+                                {% for table in tables %}
+                                    <li data="{{ table.table_name }}"
+                                        {% if forloop.first %}
+                                            class="selected"
+                                        {% endif %}
+                                        >
+                                        {{ table.table_name }}
+                                    </li>
+                                {% endfor %}
                               </ul>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <script type="infowindow/html" id="infowindow_template">
-          <span> custom </span>
-          <div class="cartodb-popup custom_infowindow">
-            <a href="#close" class="cartodb-popup-close-button close">x</a>
-
-             <div class="cartodb-popup-content-wrapper" >
-               <div >
-                 <img style="width: 100%" src="http://data.unhcr.org/syrianrefugees/uploads/uploadssyria/images/documents/dt_syria_5904.jpg">
-                 <!-- content.data contains the field info -->
-                 <h4>{{ content.data.p_code }}</h4>
-                 <iframe src="http://sandbox.raisunhcr.org/3W/ermap/test.html"></iframe>
-
-               </div>
-             </div>
-             <div class="cartodb-popup-tip-container"></div>
-          </div>
-
-
-            </script>
 
             <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
             <!--<script src="App.js"></script> -->
@@ -57,6 +41,27 @@
             Check the cartodb.js documentation for more info
             http://developers.cartodb.com/documentation/cartodb-js.html-->
             <script>
+
+                function createSelector(layer) {
+
+                    var $options = $('#layer_selector li');
+                    $options.click(function (e) {
+                        // get the area of the selected layer
+                        var $li = $(e.target);
+                        var area = $li.attr('data');
+
+                        // deselect all and select the clicked one
+                        $options.removeClass('selected');
+                        $li.addClass('selected');
+
+                        // create query based on data from the layer
+                        var query = "select * from "+ area;
+
+                        // change the query in the layer to update the map
+                        layer.setSQL(query);
+                    });
+                }
+
                 function main() {
                     // create layer selector
                     var map = L.map('leaflet-map', {
@@ -72,23 +77,46 @@
                         ]
                     });
 
-                    cartodb.createLayer(map, 'http://equitrack.cartodb.com/api/v2/viz/ad1eac74-f4c0-11e3-8057-0edbca4b5057/viz.json')
-                            .addTo(map)
-                            .on('done', function (layer) {
+                    var $options = $('#layer_selector li');
 
-                                layer.setInteraction(true);
+                    {% for table in tables %}
 
-                                layer.on('featureOver', function (e, pos, latlng, data) {
-                                    cartodb.log.log(e, pos, latlng, data);
+                    cartodb.createLayer(
+                            map,
+                            {
+                                user_name: '{{ table.domain }}',
+                                type: 'cartodb',
+                                sublayers: [
+                                    {
+                                        sql: "SELECT * FROM {{ table.table_name }}",
+                                        cartocss: '#{{ table.table_name }} {marker-fill: #c5e3fd;}',
+                                        interactivity: '{{ table.name_col }}, {{ table.code_col }}'
+                                    }]
+                            })
+                        .addTo(map)
+                        .on('done', function(layer) {
+                                var sublayer = layer.getSubLayer(0);
+
+                                cdb.vis.Vis.addInfowindow(map, sublayer, ['cartodb_id', '{{ table.name_col }}', '{{ table.code_col }}'], {
+                                     // we provide a nice default template, if you want yours uncomment this
+                                     //infowindowTemplate: $('#infowindow_template').html()
+                                   });
+                                   sublayer.setInteraction(true);
+
+                                layer.hide();
+                                var option = $("#layer_selector li[data={{ table.table_name }}]");
+                                option.click(function (e) {
+                                    if (option.hasClass('selected')) {
+                                        layer.hide();
+                                        option.removeClass('selected');
+                                    }
+                                    else {
+                                        layer.show();
+                                        option.addClass('selected');
+                                    }
                                 });
-
-                                layer.on('error', function (err) {
-                                    cartodb.log.log('error: ' + err);
-                                });
-                            }).on('error', function () {
-                                cartodb.log.log("some error occurred");
                             });
-
+                    {% endfor %}
 
                     $.get("{% url 'locations' %}", function (data) {
                         $.each(data, function (index, location) {
