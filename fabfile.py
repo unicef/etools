@@ -320,6 +320,7 @@ def create():
             app=env.name, host=env.host
         ))
     deploy_app()
+    set_env_vars()
     create_db()
     migrate_db()
 

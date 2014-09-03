@@ -11,6 +11,7 @@ from reversion import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
+from tpm.models import TPMVisit
 from EquiTrack.utils import get_changeform_link
 from funds.models import Grant
 from reports.models import (
@@ -120,6 +121,7 @@ class PcaLocationInlineAdmin(admin.TabularInline):
         'region',
         'locality',
         'location',
+        'tpm_visit',
     )
     extra = 5
 
@@ -386,6 +388,28 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         return ''
     view_original.allow_tags = True
     view_original.short_description = 'View Original PCA'
+
+    def save_formset(self, request, form, formset, change):
+        """
+        Overriding this to create TPM visits on location records
+        """
+        formset.save()
+        if change:
+            for form in formset.forms:
+                obj = form.instance
+                if isinstance(obj, GwPCALocation) and obj.tpm_visit:
+                    visits = TPMVisit.objects.filter(
+                        pca=obj.pca,
+                        pca_location=obj,
+                        assigned_by=request.user,
+                        completed_date__isnull=True
+                    )
+                    if not visits:
+                        TPMVisit.objects.create(
+                            pca=obj.pca,
+                            pca_location=obj,
+                            assigned_by=request.user
+                        )
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):

@@ -115,8 +115,10 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
 
 
 class TPMVisitAdmin(ExportMixin, VersionAdmin):
+    date_hierarchy = u'tentative_date'
     list_display = (
         u'status',
+        u'cycle_number',
         u'pca',
         u'sectors',
         u'pca_location',

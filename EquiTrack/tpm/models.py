@@ -10,11 +10,11 @@ class TPMVisit(AdminURLMixin, models.Model):
 
     PLANNED = u'planned'
     COMPLETED = u'completed'
-    CANCELLED = u'cancelled'
+    RESCHEDULED = u'rescheduled'
     TPM_STATUS = (
         (PLANNED, u"Planned"),
         (COMPLETED, u"Completed"),
-        (CANCELLED, u"Cancelled"),
+        (RESCHEDULED, u"Rescheduled"),
     )
 
     pca = models.ForeignKey('partners.PCA')
@@ -22,6 +22,9 @@ class TPMVisit(AdminURLMixin, models.Model):
         max_length=32L,
         choices=TPM_STATUS,
         default=PLANNED,
+    )
+    cycle_number = models.PositiveIntegerField(
+        blank=True, null=True
     )
     pca_location = models.ForeignKey(
         'partners.GwPCALocation',
@@ -43,6 +46,11 @@ class TPMVisit(AdminURLMixin, models.Model):
     class Meta:
         verbose_name = u'TPM Visit'
         verbose_name_plural = u'TPM Visits'
+
+    def save(self, **kwargs):
+        if self.completed_date:
+            self.status = self.COMPLETED
+        super(TPMVisit, self).save(**kwargs)
 
 
 class PCALocation(GwPCALocation):

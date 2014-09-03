@@ -83,6 +83,7 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
 
+
 class TripReportAdmin(VersionAdmin):
     save_as = True
     form = TripForm
@@ -240,6 +241,16 @@ class TripReportAdmin(VersionAdmin):
             return []
 
         return fields
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+
+        try:
+            return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
+        except IndexError:
+
+            request.POST['linkedlocation_set-TOTAL_FORMS'] = 0
+
+            return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
 
     # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
     #     if db_field.name == u'representative':
