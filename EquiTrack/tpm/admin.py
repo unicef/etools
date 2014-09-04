@@ -223,4 +223,4 @@ class TPMLocationsAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TPMVisit, TPMVisitAdmin)
-admin.site.register(PCALocation, TPMLocationsAdmin)
+#admin.site.register(PCALocation, TPMLocationsAdmin)
