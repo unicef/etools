@@ -42,6 +42,7 @@ class LocationAdmin(ImportExportMixin, admin.GeoModelAdmin):
         'locality',
     )
     readonly_fields = (
+        'point',
         'point_lat_long',
     )
     search_fields = ('name', 'p_code',)
