@@ -212,7 +212,8 @@ class TripReportAdmin(VersionAdmin):
                 fields.remove(u'status')
 
         if trip and request.user == trip.supervisor:
-            fields.remove(u'status')
+            if u'status' in fields:
+                fields.remove(u'status')
             fields.remove(u'approved_by_supervisor')
             fields.remove(u'date_supervisor_approved')
 

@@ -1,9 +1,14 @@
 __author__ = 'jcranwellward'
 
 from django.db import models
+from django.db.models.signals import post_save
+from django.contrib.sites.models import Site
+from django.contrib.auth.models import Group
+
+from post_office import mail
+from post_office.models import EmailTemplate
 
 from EquiTrack.utils import AdminURLMixin
-from partners.models import GwPCALocation
 
 
 class TPMVisit(AdminURLMixin, models.Model):
@@ -52,10 +57,71 @@ class TPMVisit(AdminURLMixin, models.Model):
             self.status = self.COMPLETED
         super(TPMVisit, self).save(**kwargs)
 
+    @classmethod
+    def send_emails(cls, sender, instance, created, **kwargs):
 
-class PCALocation(GwPCALocation):
+        current_site = Site.objects.get_current()
 
-    class Meta:
-        proxy = True
-        verbose_name = u'PCA Location'
-        verbose_name_plural = u'PCA Locations'
+        if created:
+            email_name = 'tpm/visit/created'
+            try:
+                template = EmailTemplate.objects.get(
+                    name=email_name
+                )
+            except EmailTemplate.DoesNotExist:
+                template = EmailTemplate.objects.create(
+                    name=email_name,
+                    description='The email that is sent to TPM company when a visit request is created',
+                    subject="TPM Visit Created",
+                    content="The following TPM Visit has been created:"
+                            "\r\n\r\n{{url}}"
+                            "\r\n\r\nThank you."
+                )
+
+            tpm_group, created = Group.objects.get_or_create(
+                name='Third Party Monitor'
+            )
+
+            tpm_users = tpm_group.users_set.all()
+            if tpm_users:
+                mail.send(
+                    [tpm for tpm in tpm_users],
+                    instance.assigned_by.email,
+                    template=template,
+                    context={
+                        'url': 'http://{}{}'.format(
+                            current_site.domain,
+                            instance.get_admin_url()
+                        )
+                    },
+                )
+        else:
+            email_name = 'tpm/visit/updated'
+            try:
+                template = EmailTemplate.objects.get(
+                    name=email_name
+                )
+            except EmailTemplate.DoesNotExist:
+                template = EmailTemplate.objects.create(
+                    name=email_name,
+                    description='The email that is sent to the user who created the TPM Visit',
+                    subject="TPM Visit Updated",
+                    content="The following TPM Visit has been updated:"
+                            "\r\n\r\n{{url}}"
+                            "\r\n\r\nThank you."
+                )
+
+            mail.send(
+                ['no-reply@unicef.org'],
+                instance.assigned_by.email,
+                template=template,
+                context={
+                    'url': 'http://{}{}'.format(
+                        current_site.domain,
+                        instance.get_admin_url()
+                    )
+                },
+            )
+
+
+post_save.connect(TPMVisit.send_emails, sender=TPMVisit)
