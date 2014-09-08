@@ -10,7 +10,7 @@ from trips.models import FileAttachment
 from reports.models import Sector
 from partners.models import PCA, PartnerOrganization, GwPCALocation
 from locations.models import Governorate, Region, Locality
-from .models import TPMVisit, PCALocation
+from .models import TPMVisit
 
 
 class SectorListFilter(admin.SimpleListFilter):
@@ -115,8 +115,10 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
 
 
 class TPMVisitAdmin(ExportMixin, VersionAdmin):
+    date_hierarchy = u'tentative_date'
     list_display = (
         u'status',
+        u'cycle_number',
         u'pca',
         u'sectors',
         u'pca_location',
@@ -221,4 +223,4 @@ class TPMLocationsAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TPMVisit, TPMVisitAdmin)
-admin.site.register(PCALocation, TPMLocationsAdmin)
+#admin.site.register(PCALocation, TPMLocationsAdmin)

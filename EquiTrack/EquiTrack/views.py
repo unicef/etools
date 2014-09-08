@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 
 from partners.models import PCA
 from reports.models import Sector, ResultStructure
+from locations.models import CartoDBTable
 
 
 class DashboardView(TemplateView):
@@ -69,4 +70,8 @@ class MapView(TemplateView):
 
     template_name = 'map.html'
 
+    def get_context_data(self, **kwargs):
+        return {
+            'tables': CartoDBTable.objects.all()
+        }
 

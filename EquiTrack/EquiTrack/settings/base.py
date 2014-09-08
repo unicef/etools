@@ -25,7 +25,9 @@ SUIT_CONFIG = {
 
     'MENU': (
 
-        {'label': 'Dashboard', 'icon': 'icon-dash', 'url': 'dashboard'},
+        {'app': 'auth', 'label': 'Users', 'icon': 'icon-user'},
+
+        {'label': 'Dashboard', 'icon': 'icon-dashboard', 'url': 'dashboard'},
 
         {'label': 'PCAs', 'icon': 'icon-pencil', 'models': [
             {'model': 'partners.pca', 'label': 'List of PCAs'},
@@ -45,7 +47,7 @@ SUIT_CONFIG = {
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 
-        {'app': 'tpm', 'label': 'TPM Portal'},
+        {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
 
