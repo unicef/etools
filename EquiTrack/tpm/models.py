@@ -82,7 +82,7 @@ class TPMVisit(AdminURLMixin, models.Model):
                 name='Third Party Monitor'
             )
 
-            tpm_users = tpm_group.users_set.all()
+            tpm_users = tpm_group.user_set.all()
             if tpm_users:
                 mail.send(
                     [tpm for tpm in tpm_users],
