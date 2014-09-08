@@ -10,7 +10,7 @@ from trips.models import FileAttachment
 from reports.models import Sector
 from partners.models import PCA, PartnerOrganization, GwPCALocation
 from locations.models import Governorate, Region, Locality
-from .models import TPMVisit, PCALocation
+from .models import TPMVisit
 
 
 class SectorListFilter(admin.SimpleListFilter):
