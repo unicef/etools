@@ -1,4 +1,12 @@
 {% extends "base.html" %}
+{% load leaflet_tags %}
+
+{% block extra_head %}
+
+    {% leaflet_js %}
+    {% leaflet_css %}
+
+{% endblock %}
 
 {% block content %}
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css"/>
@@ -15,20 +23,7 @@
                 <div class="col-md-12">
                     <div class="panel panel-default">
                         <div class="panel-body">
-                            <div id="leaflet-map"></div>
-                            <div id="layer_selector" class="cartodb-infobox">
-                              <ul>
-                                {% for table in tables %}
-                                    <li data="{{ table.table_name }}"
-                                        {% if forloop.first %}
-                                            class="selected"
-                                        {% endif %}
-                                        >
-                                        {{ table.table_name }}
-                                    </li>
-                                {% endfor %}
-                              </ul>
-                            </div>
+                            {% leaflet_map "leaflet-map" callback="window.main" %}
                         </div>
                     </div>
                 </div>
@@ -42,81 +37,27 @@
             http://developers.cartodb.com/documentation/cartodb-js.html-->
             <script>
 
-                function createSelector(layer) {
+                function main(map, options) {
 
-                    var $options = $('#layer_selector li');
-                    $options.click(function (e) {
-                        // get the area of the selected layer
-                        var $li = $(e.target);
-                        var area = $li.attr('data');
+                    layer_control = L.control.layers().addTo(map);
 
-                        // deselect all and select the clicked one
-                        $options.removeClass('selected');
-                        $li.addClass('selected');
-
-                        // create query based on data from the layer
-                        var query = "select * from "+ area;
-
-                        // change the query in the layer to update the map
-                        layer.setSQL(query);
-                    });
-                }
-
-                function main() {
-                    // create layer selector
-                    var map = L.map('leaflet-map', {
-                        zoomControl: true,
-                        center: [33.9, 36],
-                        zoom: 9,
-                        layers: [
-                            L.tileLayer(
-                                    'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', {
-                                        attribution: 'Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">'
-                                    }
-                            )
-                        ]
+                    // Download GeoJSON via Ajax
+                    $.getJSON('{% url 'governorates' %}', function (data) {
+                        // Add GeoJSON layer
+                        layer_control.addOverlay(L.geoJson(data), 'Governorates');
                     });
 
-                    var $options = $('#layer_selector li');
+                    // Download GeoJSON via Ajax
+                    $.getJSON('{% url 'districts' %}', function (data) {
+                        // Add GeoJSON layer
+                        layer_control.addOverlay(L.geoJson(data), 'Districts');
+                    });
 
-                    {% for table in tables %}
-
-                    cartodb.createLayer(
-                            map,
-                            {
-                                user_name: '{{ table.domain }}',
-                                type: 'cartodb',
-                                sublayers: [
-                                    {
-                                        sql: "SELECT * FROM {{ table.table_name }}",
-                                        cartocss: '#{{ table.table_name }} {marker-fill: #c5e3fd;}',
-                                        interactivity: '{{ table.name_col }}, {{ table.code_col }}'
-                                    }]
-                            })
-                        .addTo(map)
-                        .on('done', function(layer) {
-                                var sublayer = layer.getSubLayer(0);
-
-                                cdb.vis.Vis.addInfowindow(map, sublayer, ['cartodb_id', '{{ table.name_col }}', '{{ table.code_col }}'], {
-                                     // we provide a nice default template, if you want yours uncomment this
-                                     //infowindowTemplate: $('#infowindow_template').html()
-                                   });
-                                   sublayer.setInteraction(true);
-
-                                layer.hide();
-                                var option = $("#layer_selector li[data={{ table.table_name }}]");
-                                option.click(function (e) {
-                                    if (option.hasClass('selected')) {
-                                        layer.hide();
-                                        option.removeClass('selected');
-                                    }
-                                    else {
-                                        layer.show();
-                                        option.addClass('selected');
-                                    }
-                                });
-                            });
-                    {% endfor %}
+                    // Download GeoJSON via Ajax
+                    $.getJSON('{% url 'sub-districts' %}', function (data) {
+                        // Add GeoJSON layer
+                        layer_control.addOverlay(L.geoJson(data), 'Sub-districts');
+                    });
 
                     $.get("{% url 'locations' %}", function (data) {
                         $.each(data, function (index, location) {
@@ -148,7 +89,6 @@
                     });
                 }
 
-                window.onload = main;
             </script>
         </section>
     </section>

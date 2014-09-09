@@ -85,7 +85,7 @@ class TPMVisit(AdminURLMixin, models.Model):
             tpm_users = tpm_group.user_set.all()
             if tpm_users:
                 mail.send(
-                    [tpm for tpm in tpm_users],
+                    [tpm.email for tpm in tpm_users],
                     instance.assigned_by.email,
                     template=template,
                     context={

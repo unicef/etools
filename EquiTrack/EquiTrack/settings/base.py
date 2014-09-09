@@ -324,6 +324,8 @@ THIRD_PARTY_APPS = (
     'datetimewidget',
     'logentry_admin',
     'dbbackup',
+    'leaflet',
+    'djgeojson',
 )
 
 # Apps specific for this project go here.
@@ -339,6 +341,15 @@ LOCAL_APPS = (
     'users',
     'registration',
 )
+
+LEAFLET_CONFIG = {
+    'TILES':  'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg',
+    'ATTRIBUTION_PREFIX': 'Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">',
+    'DEFAULT_CENTER': (33.9, 36),
+    'DEFAULT_ZOOM': 9,
+    'MIN_ZOOM': 3,
+    'MAX_ZOOM': 18,
+}
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

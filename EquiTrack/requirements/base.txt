@@ -34,5 +34,7 @@ cartodb==0.8.1
 gunicorn==18.0
 django-dbbackup
 django-datetime-widget
+django-leaflet
+django-geojson
 git+https://github.com/UNICEFLebanonInnovation/ActvityInfoPython.git
 git+https://github.com/UNICEFLebanonInnovation/django-registration.git@0.9.2b7
