@@ -202,6 +202,7 @@ def build_image_with_packer(from_image, to_image='', tag='latest', packer_file='
     ))
 
 
+@_setup
 def docker_ps(all=False):
     run('docker ps {}'.format('-a' if all else ''))
 
