@@ -6,6 +6,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from import_export import resources
 from import_export.admin import ImportExportMixin
+from leaflet.admin import LeafletGeoAdmin
 
 from . import models
 
@@ -26,7 +27,7 @@ class UserAdminPlus(ImportExportMixin, UserAdmin):
     resource_class = UserResource
 
 
-class LocationAdmin(ImportExportMixin, admin.GeoModelAdmin):
+class LocationAdmin(ImportExportMixin, LeafletGeoAdmin):
     resource_class = LocationResource
     fields = (
         'name',
@@ -49,11 +50,34 @@ class LocationAdmin(ImportExportMixin, admin.GeoModelAdmin):
     list_filter = ('gateway', 'locality',)
 
 
-class LocalityAdmin(admin.GeoModelAdmin):
+class GovernorateAdmin(LeafletGeoAdmin):
     list_display = (
         'name',
-        'region',
+        'p_code',
+        'color',
     )
+    list_editable = ['color']
+
+
+class RegionAdmin(LeafletGeoAdmin):
+    list_display = (
+        'name',
+        'p_code',
+        'governorate',
+        'color',
+    )
+    list_editable = ['color']
+    list_filter = ['governorate']
+
+
+class LocalityAdmin(LeafletGeoAdmin):
+    list_display = (
+        'name',
+        'p_code',
+        'region',
+        'color',
+    )
+    list_editable = ['color']
     search_fields = ('name', 'cas_code')
     list_filter = ('region', 'cas_code')
 
@@ -82,8 +106,8 @@ class CartoDBTableAdmin(admin.ModelAdmin):
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
-admin.site.register(models.Governorate, admin.GeoModelAdmin)
-admin.site.register(models.Region, admin.GeoModelAdmin)
+admin.site.register(models.Governorate, GovernorateAdmin)
+admin.site.register(models.Region, RegionAdmin)
 admin.site.register(models.Locality, LocalityAdmin)
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.GatewayType)

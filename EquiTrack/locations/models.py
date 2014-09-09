@@ -12,6 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey
+from paintstore.fields import ColorPickerField
 
 logger = logging.getLogger('locations.models')
 
@@ -34,6 +35,7 @@ class Governorate(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
+    color = ColorPickerField(null=True, blank=True)
 
     geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
@@ -54,6 +56,7 @@ class Region(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
+    color = ColorPickerField(null=True, blank=True)
 
     geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
@@ -79,6 +82,7 @@ class Locality(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
+    color = ColorPickerField(null=True, blank=True)
 
 
     geom = models.MultiPolygonField(null=True, blank=True)

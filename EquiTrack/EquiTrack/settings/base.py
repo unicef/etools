@@ -326,6 +326,7 @@ THIRD_PARTY_APPS = (
     'dbbackup',
     'leaflet',
     'djgeojson',
+    'paintstore',
 )
 
 # Apps specific for this project go here.
