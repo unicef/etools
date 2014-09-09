@@ -97,7 +97,7 @@ class Unit(models.Model):
     type = models.CharField(max_length=45L, unique=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['type']
 
     def __unicode__(self):
         return self.type
