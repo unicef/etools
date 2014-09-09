@@ -22,13 +22,11 @@ class TravelRoutesForm(ModelForm):
         depart = cleaned_data.get('depart')
         arrive = cleaned_data.get('arrive')
 
-        if arrive and depart:
-            if arrive < depart:
-                raise ValidationError(
-                    'Arrival must be greater than departure'
-                )
+        if arrive < depart:
+            raise ValidationError(
+                'Departure must be greater than arrival'
+            )
 
-        #TODO: Make this work
         # if self.instance:
         #     from_date = self.instance.trip.from_date
         #     to_date = self.instance.trip.to_date

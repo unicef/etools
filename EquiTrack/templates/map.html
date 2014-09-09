@@ -44,19 +44,19 @@
                     // Download GeoJSON via Ajax
                     $.getJSON('{% url 'governorates' %}', function (data) {
                         // Add GeoJSON layer
-                        layer_control.addOverlay(L.geometryToLayer(data), 'Governorates');
+                        layer_control.addOverlay(L.geoJson(data), 'Governorates');
                     });
 
                     // Download GeoJSON via Ajax
                     $.getJSON('{% url 'districts' %}', function (data) {
                         // Add GeoJSON layer
-                        layer_control.addOverlay(L.geometryToLayer(data), 'Districts');
+                        layer_control.addOverlay(L.geoJson(data), 'Districts');
                     });
 
                     // Download GeoJSON via Ajax
                     $.getJSON('{% url 'sub-districts' %}', function (data) {
                         // Add GeoJSON layer
-                        layer_control.addOverlay(L.geometryToLayer(data), 'Sub-districts');
+                        layer_control.addOverlay(L.geoJson(data), 'Sub-districts');
                     });
 
                     $.get("{% url 'locations' %}", function (data) {
