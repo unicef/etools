@@ -347,7 +347,7 @@ LEAFLET_CONFIG = {
     'TILES':  'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg',
     'ATTRIBUTION_PREFIX': 'Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">',
     'DEFAULT_CENTER': (os.environ.get('MAP_LAT', 33.9), os.environ.get('MAP_LONG', 36)),
-    'DEFAULT_ZOOM': os.environ.get('MAP_ZOOM', 9),
+    'DEFAULT_ZOOM': int(os.environ.get('MAP_ZOOM', 9)),
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
 }
