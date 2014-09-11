@@ -27,17 +27,19 @@ class TripsView(ListAPIView):
 
 class TripsByOfficeView(APIView):
 
-
     def get(self, request):
 
         by_office = []
+        sections = Sector.objects.filter(
+            dashboard=True
+        )
         for office in Office.objects.all():
             trips = office.trip_set.filter(
                 Q(status=Trip.APPROVED) |
                 Q(status=Trip.COMPLETED)
             )
             office = {'name': office.name}
-            for sector in Sector.objects.filter(dashboard=True):
+            for sector in sections:
                 office[sector.name] = trips.filter(
                     section=sector).count()
             by_office.append(office)
@@ -46,8 +48,8 @@ class TripsByOfficeView(APIView):
         payload = {
             'data': by_office,
             'xkey': 'name',
-            'ykeys': [sector.name for sector in Sector.objects.all()],
-            'labels': [sector.name for sector in Sector.objects.all()],
+            'ykeys': [sector.name for sector in sections],
+            'labels': [sector.name for sector in sections],
             'barColors': ['#1abc9c', '#2dcc70', '#e84c3d']
         }
 
