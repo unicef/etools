@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="main-content-wrapper">
+        <section id="main-content">
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Trips by office</h3>
+
+                            <div class="actions pull-right">
+                                <i class="fa fa-chevron-down"></i>
+                                <i class="fa fa-times"></i>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="bar"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="application/javascript">
+        // Use Morris.Bar
+        $.getJSON('/trips/offices/', function(data){
+            data.element = 'bar';
+            Morris.Bar(data);
+
+        });
+
+    </script>
+
+{% endblock %}

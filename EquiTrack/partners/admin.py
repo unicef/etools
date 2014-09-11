@@ -401,7 +401,6 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                     visits = TPMVisit.objects.filter(
                         pca=obj.pca,
                         pca_location=obj,
-                        assigned_by=request.user,
                         completed_date__isnull=True
                     )
                     if not visits:
