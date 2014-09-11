@@ -33,6 +33,9 @@ class Sector(models.Model):
         blank=True,
         null=True
     )
+    dashboard = models.BooleanField(
+        default=False
+    )
 
     class Meta:
         ordering = ['name']

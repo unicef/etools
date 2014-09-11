@@ -37,7 +37,7 @@ class TripsByOfficeView(APIView):
                 Q(status=Trip.COMPLETED)
             )
             office = {'name': office.name}
-            for sector in Sector.objects.all():
+            for sector in Sector.objects.filter(dashboard-True):
                 office[sector.name] = trips.filter(
                     section=sector).count()
             by_office.append(office)
