@@ -142,6 +142,11 @@ class TripTravelAssistantEmail(TripCreatedEmail):
         {{owner_name}}
         """
 
+    def get_context(self):
+        context = super(TripTravelAssistantEmail, self).get_context()
+        context['travel_assistant'] = self.trip.travel_assistant.first_name
+        return context
+
 
 class TripTAEmail(TripCreatedEmail):
 

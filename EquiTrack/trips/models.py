@@ -271,7 +271,7 @@ class Trip(AdminURLMixin, models.Model):
                     instance.representative.email
                 )
 
-            if not instance.appoved_email_sent:
+            if not instance.approved_email_sent:
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
                     *recipients
