@@ -54,7 +54,7 @@ class BaseEmail(object):
         send_mail(
             sender,
             self.get_email_template(),
-            self.get_context()
+            self.get_context(),
             *recipients
         )
 
