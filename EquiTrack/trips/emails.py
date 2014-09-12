@@ -66,14 +66,14 @@ class TripCreatedEmail(BaseEmail):
                    ' budget owner, traveller for any update')
     subject = 'Trip {{number}} has been {{state}} for {{owner_name}}'
     content = """
-        Dear Colleague,
+    Dear Colleague,
 
-        Trip {{number}} has been {{state}} for {{owner_name}} here:
+    Trip {{number}} has been {{state}} for {{owner_name}} here:
 
-        {{url}}
+    {{url}}
 
-        Thank you.
-        """
+    Thank you.
+    """
 
     def get_context(self):
         return {
@@ -99,15 +99,15 @@ class TripUpdatedEmail(TripCreatedEmail):
 class TripApprovedEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/approved'
-    description = 'The email that is sent to the traveller if a trip has been approved',
-    subject = "Trip Approved: {{trip_reference}}",
+    description = 'The email that is sent to the traveller if a trip has been approved'
+    subject = "Trip Approved: {{trip_reference}}"
     content = """
-        The following trip has been approved: {{trip_reference}}
+    The following trip has been approved: {{trip_reference}}
 
-        {{url}}
+    {{url}}
 
-        Thank you.
-        """
+    Thank you.
+    """
 
 
 class TripCancelledEmail(TripCreatedEmail):
@@ -116,12 +116,12 @@ class TripCancelledEmail(TripCreatedEmail):
     description = 'The email that is sent to everyone if a trip has been cancelled'
     subject = "Trip Cancelled: {{trip_reference}}"
     content = """
-        The following trip has been cancelled: {{trip_reference}}
+    The following trip has been cancelled: {{trip_reference}}
 
-        {{url}}
+    {{url}}
 
-        Thank you.
-        """
+    Thank you.
+    """
 
 
 class TripTravelAssistantEmail(TripCreatedEmail):
@@ -132,15 +132,15 @@ class TripTravelAssistantEmail(TripCreatedEmail):
                    "(vehicles, flights etc.) and request security clearance.")
     subject = "Travel for {{owner_name}}"
     content = """
-        Dear {{travel_assistant}},
+    Dear {{travel_assistant}},
 
-        Please organise the travel and security clearance (if needed) for the following trip:
+    Please organise the travel and security clearance (if needed) for the following trip:
 
-        {{url}}
+    {{url}}
 
-        Thanks,
-        {{owner_name}}
-        """
+    Thanks,
+    {{owner_name}}
+    """
 
     def get_context(self):
         context = super(TripTravelAssistantEmail, self).get_context()
@@ -155,15 +155,15 @@ class TripTAEmail(TripCreatedEmail):
                     "the TA for the staff in concern after the approval of the supervisor.")
     subject = "Travel Authorization request for {{owner_name}}"
     content = """
-        Dear {{pa_assistant}},
+    Dear {{pa_assistant}},
 
-        Kindly draft my Travel Authorization in Vision based on the approved trip:
+    Kindly draft my Travel Authorization in Vision based on the approved trip:
 
-        {{url}}
+    {{url}}
 
-        Thanks,
-        {{owner_name}}
-        """
+    Thanks,
+    {{owner_name}}
+    """
 
     def get_context(self):
         context = super(TripTAEmail, self).get_context()
@@ -178,15 +178,15 @@ class TripTADraftedEmail(TripCreatedEmail):
                    "the TA for the staff in concern after the TA has been drafted in VISION.")
     subject = "Travel Authorization drafted for {{owner_name}}"
     content = """
-        Dear {{vision_approver}},"
+    Dear {{vision_approver}},"
 
-        Kindly approve my Travel Authorization ({{ta_ref}}) in VISION based on the approved trip:
+    Kindly approve my Travel Authorization ({{ta_ref}}) in VISION based on the approved trip:
 
-        {{url}}"
+    {{url}}"
 
-        Thanks,
-        {{owner_name}}
-        """
+    Thanks,
+    {{owner_name}}
+    """
 
     def get_context(self):
         context = super(TripTADraftedEmail, self).get_context()
@@ -201,12 +201,12 @@ class TripActionPointCreated(BaseEmail):
     description = 'Sent when trip action points are created'
     subject = 'Trip action point {{state}} for trip: {{trip_reference}}'
     content = """
-        Trip action point by {{owner_name}} for {{responsible}} was {{state}}:"
+    Trip action point by {{owner_name}} for {{responsible}} was {{state}}:"
 
-        {{url}}
+    {{url}}
 
-        Thank you.
-        """
+    Thank you.
+    """
 
     def __init__(self, action):
         super(TripActionPointCreated, self).__init__(action.trip)
