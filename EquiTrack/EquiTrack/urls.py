@@ -21,6 +21,7 @@ urlpatterns = patterns(
     url(r'^$', login_required(DashboardView.as_view()), name='dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
 
+    url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),
     url(r'trips/', include('trips.urls')),
 

@@ -270,15 +270,16 @@ class ActionPointsAdmin(admin.ModelAdmin):
         u'supervisor',
         u'comments',
         u'closed',
-
     )
-    readonly_fields = (
-        u'trip',
-        u'description',
-        u'due_date',
-        u'persons_responsible',
-        u'comments',
+    list_filter = (
+        u'trip__owner',
+        u'trip__supervisor',
         u'closed',
+    )
+    search_fields = (
+        u'trip__name',
+        u'description',
+        u'actions_taken',
     )
 
     def trip(self, obj):
@@ -298,6 +299,23 @@ class ActionPointsAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def get_readonly_fields(self, request, obj=None):
+
+        readonly_fields = [
+            u'trip',
+            u'description',
+            u'due_date',
+            u'persons_responsible',
+            u'comments',
+            u'closed',
+        ]
+
+        if obj and obj.trip.supervisor == request.user:
+            readonly_fields.remove(u'comments')
+            readonly_fields.remove(u'closed')
+
+        return readonly_fields
 
 
 admin.site.register(Office)
