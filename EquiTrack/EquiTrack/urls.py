@@ -59,6 +59,7 @@ urlpatterns = patterns(
     url(r'^admin/', include(admin.site.urls)),
 
     # helper urls
+    url(r'^messages/', include('messages_extends.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),

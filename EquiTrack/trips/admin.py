@@ -1,12 +1,14 @@
 __author__ = 'jcranwellward'
 
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.generic import GenericTabularInline
 
 from reversion import VersionAdmin
 from generic_links.admin import GenericLinkStackedInline
+from messages_extends import constants as constants_messages
 
 from locations.models import LinkedLocation
 from .models import (
@@ -243,6 +245,14 @@ class TripReportAdmin(VersionAdmin):
 
         return fields
 
+    def save_model(self, request, obj, form, change):
+        messages.add_message(
+            request,
+            constants_messages.INFO_PERSISTENT,
+            "Hola abc desde test",
+            user=request.user
+        )
+
     def change_view(self, request, object_id, form_url='', extra_context=None):
 
         try:
@@ -316,6 +326,14 @@ class ActionPointsAdmin(admin.ModelAdmin):
             readonly_fields.remove(u'closed')
 
         return readonly_fields
+
+    def save_model(self, request, obj, form, change):
+        messages.add_message(
+            request,
+            constants_messages.INFO_PERSISTENT,
+            "Hola abc desde test",
+            user=request.user
+        )
 
 
 admin.site.register(Office)

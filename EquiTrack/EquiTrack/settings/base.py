@@ -327,6 +327,7 @@ THIRD_PARTY_APPS = (
     'leaflet',
     'djgeojson',
     'paintstore',
+    'messages_extends',
 )
 
 # Apps specific for this project go here.
@@ -342,6 +343,8 @@ LOCAL_APPS = (
     'users',
     'registration',
 )
+
+MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
 
 LEAFLET_CONFIG = {
     'TILES':  'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg',
