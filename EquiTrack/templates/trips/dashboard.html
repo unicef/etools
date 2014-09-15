@@ -102,24 +102,6 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h3 class="panel-title">Trips by office</h3>
-
-                            <div class="actions pull-right">
-                                <i class="fa fa-chevron-down"></i>
-                                <i class="fa fa-times"></i>
-                            </div>
-                        </div>
-                        <div class="panel-body">
-                            <div id="line"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </section>
     </section>
 {% endblock %}
@@ -130,10 +112,6 @@
         $.getJSON('/trips/offices/', function (data) {
             data.element = 'bar';
             Morris.Bar(data);
-
-            data.element = 'line';
-            data.behaveLikeLine = false;
-            Morris.Area(data);
         });
 
     </script>

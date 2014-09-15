@@ -1,6 +1,7 @@
 __author__ = 'jcranwellward'
 
 from django.db.models import Q
+from django.views.generic import TemplateView
 
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
@@ -44,7 +45,6 @@ class TripsByOfficeView(APIView):
                     section=sector).count()
             by_office.append(office)
 
-
         payload = {
             'data': by_office,
             'xkey': 'name',
@@ -54,3 +54,27 @@ class TripsByOfficeView(APIView):
         }
 
         return Response(data=payload)
+
+
+class TripsDashboard(TemplateView):
+
+    template_name = 'trips/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+
+        return {
+            'trips': {
+                'planned': Trip.objects.filter(
+                    status=Trip.PLANNED,
+                ).count(),
+                'approved': Trip.objects.filter(
+                    status=Trip.APPROVED,
+                ).count(),
+                'completed': Trip.objects.filter(
+                    status=Trip.COMPLETED,
+                ).count(),
+                'cancelled': Trip.objects.filter(
+                    status=Trip.CANCELLED,
+                ).count(),
+            }
+        }
