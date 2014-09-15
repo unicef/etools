@@ -136,7 +136,7 @@ class TripReportAdmin(VersionAdmin):
         (u'Traveler', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (u'status',
+                ((u'status', u'cancelled_reason'),
                  u'owner',
                  u'supervisor',
                  (u'section', u'office',),

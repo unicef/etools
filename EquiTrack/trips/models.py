@@ -71,6 +71,11 @@ class Trip(AdminURLMixin, models.Model):
         choices=TRIP_STATUS,
         default=PLANNED,
     )
+    cancelled_reason = models.CharField(
+        max_length=254,
+        blank=True, null=True,
+        help_text='Please provide a reason if the mission is cancelled'
+    )
     purpose_of_travel = models.CharField(
         max_length=254
     )

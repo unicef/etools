@@ -10,8 +10,9 @@ urlpatterns = patterns(
     '',
     url(r'approved/$', TripsView.as_view()),
     url(r'offices/$', TripsByOfficeView.as_view()),
-    url(r'dashboard/$', TemplateView.as_view(
+    url(r'$', TemplateView.as_view(
             template_name='trips/dashboard.html'
-        )
+        ),
+        name='trips_dashboard'
     ),
 )
