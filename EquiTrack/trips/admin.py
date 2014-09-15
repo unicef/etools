@@ -245,23 +245,23 @@ class TripReportAdmin(VersionAdmin):
 
         return fields
 
-    def save_model(self, request, obj, form, change):
-        messages.add_message(
-            request,
-            constants_messages.INFO_PERSISTENT,
-            "Hola abc desde test",
-            user=request.user
-        )
+    # def save_model(self, request, obj, form, change):
+    #     messages.add_message(
+    #         request,
+    #         constants_messages.INFO_PERSISTENT,
+    #         "Hola abc desde test",
+    #         user=request.user
+    #     )
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
-
-        try:
-            return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
-        except IndexError:
-
-            request.POST['linkedlocation_set-TOTAL_FORMS'] = 0
-
-            return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
+    # def change_view(self, request, object_id, form_url='', extra_context=None):
+    #
+    #     try:
+    #         return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
+    #     except IndexError:
+    #
+    #         request.POST['linkedlocation_set-TOTAL_FORMS'] = 0
+    #
+    #         return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
 
     # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
     #     if db_field.name == u'representative':
@@ -326,14 +326,14 @@ class ActionPointsAdmin(admin.ModelAdmin):
             readonly_fields.remove(u'closed')
 
         return readonly_fields
-
-    def save_model(self, request, obj, form, change):
-        messages.add_message(
-            request,
-            constants_messages.INFO_PERSISTENT,
-            "Hola abc desde test",
-            user=request.user
-        )
+    #
+    # def save_model(self, request, obj, form, change):
+    #     messages.add_message(
+    #         request,
+    #         constants_messages.INFO_PERSISTENT,
+    #         "Hola abc desde test",
+    #         user=request.user
+    #     )
 
 
 admin.site.register(Office)
