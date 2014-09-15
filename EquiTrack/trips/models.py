@@ -233,6 +233,8 @@ class Trip(AdminURLMixin, models.Model):
             instance.supervisor.email]
         if instance.budget_owner:
             recipients.append(instance.budget_owner.email)
+        if instance.instance.international_travel:
+            recipients.append(instance.representative.email)
 
         if created:
             emails.TripCreatedEmail(instance).send(
@@ -263,12 +265,6 @@ class Trip(AdminURLMixin, models.Model):
                 emails.TripTADraftedEmail(instance).send(
                     instance.programme_assistant.email,
                     instance.vision_approver.email
-                )
-
-            if instance.international_travel and instance.representative and not instance.representative_approval:
-                emails.TripCreatedEmail(instance).send(
-                    instance.owner.email,
-                    instance.representative.email
                 )
 
             if not instance.approved_email_sent:
