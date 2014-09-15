@@ -9,5 +9,5 @@ urlpatterns = patterns(
     '',
     url(r'approved/$', TripsView.as_view()),
     url(r'offices/$', TripsByOfficeView.as_view()),
-    url(r'/$', TripsDashboard.as_view()),
+    url(r'^$', TripsDashboard.as_view(), name='trips_dashboard'),
 )
