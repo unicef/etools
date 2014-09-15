@@ -233,7 +233,7 @@ class TripActionPointCreated(BaseEmail):
 class TripActionPointUpdated(TripActionPointCreated):
 
     def get_context(self):
-        context = super(TripActionPointCreated, self).get_context()
+        context = super(TripActionPointUpdated, self).get_context()
         context['state'] = 'Updated'
         return context
 
@@ -241,7 +241,7 @@ class TripActionPointUpdated(TripActionPointCreated):
 class TripActionPointClosed(TripActionPointUpdated):
 
     def get_context(self):
-        context = super(TripActionPointUpdated, self).get_context()
+        context = super(TripActionPointClosed, self).get_context()
         context['state'] = 'Closed'
         return context
 
