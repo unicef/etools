@@ -238,7 +238,7 @@ class Trip(AdminURLMixin, models.Model):
             instance.supervisor.email]
         if instance.budget_owner:
             recipients.append(instance.budget_owner.email)
-        if instance.instance.international_travel:
+        if instance.international_travel:
             recipients.append(instance.representative.email)
 
         if created:
