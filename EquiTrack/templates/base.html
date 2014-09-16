@@ -88,12 +88,6 @@
 
                                 </ul>
                             {% endif %}
-                            <script>
-                                $("a.close[close-href]").click(function (e) {
-                                    e.preventDefault();
-                                    $.post($(this).attr("close-href"), "", function () {});
-                                });
-                            </script>
 
                         </li>
                         <li class="profile-photo">
@@ -190,9 +184,6 @@
 <script>
     $(document).ready(function () {
         app.timer();
-        app.map();
-        app.weather();
-        app.morrisPie();
     });
 </script>
 {% block extra_js %}
