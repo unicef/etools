@@ -96,7 +96,7 @@
                             </div>
                         </div>
                         <div class="panel-body">
-                            <div id="bar"></div>
+                            <div id="bar-offices"></div>
                         </div>
                     </div>
                 </div>
@@ -110,7 +110,7 @@
     <script type="application/javascript">
         // Use Morris.Bar
         $.getJSON('/trips/offices/', function (data) {
-            data.element = 'bar';
+            data.element = 'bar-offices';
             Morris.Bar(data);
         });
 

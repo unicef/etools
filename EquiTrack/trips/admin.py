@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 from django.contrib.contenttypes.generic import GenericTabularInline
 
 from reversion import VersionAdmin
+from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 from messages_extends import constants as constants_messages
 
@@ -23,6 +24,7 @@ from .forms import (
     TripForm,
     TravelRoutesForm
 )
+from .exports import TripResource
 
 User = get_user_model()
 
@@ -86,7 +88,8 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
-class TripReportAdmin(VersionAdmin):
+class TripReportAdmin(ExportMixin, VersionAdmin):
+    resource_class = TripResource
     save_as = True
     form = TripForm
     inlines = (
