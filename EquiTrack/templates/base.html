@@ -63,22 +63,49 @@
                 </div>
                 <div class="user-nav">
                     <ul>
+                        <li class="dropdown messages">
+                            <span class="badge badge-danager animated bounceIn" id="new-messages">5</span>
+                            <button type="button" class="btn btn-default dropdown-toggle options" id="toggle-mail" data-toggle="dropdown">
+                                <i class="fa fa-envelope"></i>
+                            </button>
+                            {% if messages %}
+                                <ul class="dropdown-menu alert animated fadeInDown">
+                                    <li>
+                                        <h1>You have <strong>{{ messages.count }}</strong> new messages</h1>
+                                    </li>
+                                    {% for message in messages %}
+                                    <li>
+                                        <a href="#">
+                                            <div class="message-info">
+                                                <span class="time">30 mins</span>
+                                                <div class="message-content">{{ message }}</div>
+                                            </div>
+                                        </a>
+                                    </li>
+                                    {% endfor %}
+
+                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i class="fa fa-angle-right"></i></a>
+
+                                </ul>
+                            {% endif %}
+
+                        </li>
                         <li class="profile-photo">
                             <img src="{{ STATIC_URL }}img/avatar.png" alt="" class="img-circle">
                         </li>
                         {% if user.is_authenticated %}
-                        <li class="dropdown settings">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                                {{ user.get_full_name }} <i class="fa fa-angle-down"></i>
-                            </a>
-                            <ul class="dropdown-menu animated fadeInDown">
-                                <li>
-                                    <a href="{% url "logout" %}"><i class="fa fa-power-off"></i> Logout</a>
-                                </li>
-                            </ul>
-                        </li>
+                            <li class="dropdown settings">
+                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                    {{ user.get_full_name }} <i class="fa fa-angle-down"></i>
+                                </a>
+                                <ul class="dropdown-menu animated fadeInDown">
+                                    <li>
+                                        <a href="{% url "logout" %}"><i class="fa fa-power-off"></i> Logout</a>
+                                    </li>
+                                </ul>
+                            </li>
                         {% else %}
-                        <li><a href="{% url 'login' %}">Sign In</a></li>
+                            <li><a href="{% url 'login' %}">Sign In</a></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -100,7 +127,7 @@
                             <a href="{% url 'admin:partners_pca_changelist' %}"><i class="fa fa-pencil"></i><span>PCAs</span></a>
                         </li>
                         <li>
-                            <a href="{% url 'admin:trips_trip_changelist' %}"><i class="fa fa-road"></i><span>Trips</span></a>
+                            <a href="{% url 'trips_dashboard' %}"><i class="fa fa-road"></i><span>Trips</span></a>
                         </li>
                         <li>
                             <a href="{% url 'admin:tpm_tpmvisit_changelist' %}"><i class="fa fa-calendar"></i><span>TPM Portal</span></a>
@@ -157,11 +184,10 @@
 <script>
     $(document).ready(function () {
         app.timer();
-        app.map();
-        app.weather();
-        app.morrisPie();
     });
 </script>
+{% block extra_js %}
+{% endblock %}
 
 </body>
 

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <section class="main-content-wrapper">
+        <section id="main-content">
+
+            <!--tiles start-->
+            <div class="row">
+                <div class="col-md-3 col-sm-6">
+                    <a href="{% url 'admin:trips_trip_changelist' %}?q=&status__exact=planned">
+                        <div class="dashboard-tile detail tile-red">
+                            <div class="content">
+                                <h1 class="text-left timer"
+                                    data-from="0"
+                                    data-to="{{ trips.planned }}"
+                                    data-speed="2500"></h1>
+
+                                <p>Planned</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-pencil"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <a href="{% url 'admin:trips_trip_changelist' %}?q=&status__exact=approved">
+                        <div class="dashboard-tile detail tile-turquoise">
+                            <div class="content">
+                                <h1 class="text-left timer"
+                                    data-from="0"
+                                    data-to="{{ trips.approved }}"
+                                    data-speed="2500"></h1>
+
+                                <p>Approved</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-thumbs-up"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <a href="{% url 'admin:trips_trip_changelist' %}?q=&status__exact=completed">
+                        <div class="dashboard-tile detail tile-blue">
+                            <div class="content">
+                                <h1 class="text-left timer"
+                                    data-from="0"
+                                    data-to="{{ trips.completed }}"
+                                    data-speed="2500"></h1>
+
+                                <p>Completed</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-ok"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="col-md-3 col-sm-6">
+                    <a href="{% url 'admin:trips_trip_changelist' %}?q=&status__exact=cancelled">
+                        <div class="dashboard-tile detail tile-purple">
+                            <div class="content">
+                                <h1 class="text-left timer"
+                                    data-to="{{ trips.cancelled }}"
+                                    data-speed="2500"></h1>
+
+                                <p>Cancelled</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-stop"></i>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            <!--tiles end-->
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="btn-group">
+                        <a href="{% url 'admin:trips_trip_add' %}">
+                            <button type="button" class="btn btn-success">Add Trip</button>
+                        </a>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Trips by office</h3>
+
+                            <div class="actions pull-right">
+                                <i class="fa fa-chevron-down"></i>
+                                <i class="fa fa-times"></i>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="bar-offices"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script type="application/javascript">
+        // Use Morris.Bar
+        $.getJSON('/trips/offices/', function (data) {
+            data.element = 'bar-offices';
+            Morris.Bar(data);
+        });
+
+    </script>
+
+{% endblock %}

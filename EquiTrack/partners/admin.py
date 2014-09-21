@@ -116,6 +116,7 @@ class PcaLocationInlineAdmin(admin.TabularInline):
     model = GwPCALocation
     verbose_name = 'Location'
     verbose_name_plural = 'Locations'
+    suit_classes = u'suit-tab suit-tab-locations'
     fields = (
         'governorate',
         'region',
@@ -222,6 +223,7 @@ class PcaSectorInlineAdmin(admin.TabularInline):
     model = PCASector
     verbose_name = 'Sector'
     verbose_name_plural = 'Sectors'
+    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
         'sector',
@@ -236,6 +238,7 @@ class PCAFileInline(admin.TabularInline):
     model = PCAFile
     verbose_name = 'File'
     verbose_name_plural = 'Files'
+    suit_classes = u'suit-tab suit-tab-attachments'
     extra = 0
     fields = (
         'type',
@@ -254,6 +257,7 @@ class PcaGrantInlineAdmin(admin.TabularInline):
     model = PCAGrant
     verbose_name = 'Grant'
     verbose_name_plural = 'Grants'
+    suit_classes = u'suit-tab suit-tab-budget'
     extra = 0
 
 
@@ -276,6 +280,11 @@ class PcaSectorAdmin(SectorMixin, VersionAdmin):
         PcaIndicatorInlineAdmin,
         PcaActivityInlineAdmin,
     )
+
+
+class LinksInlineAdmin(GenericLinkStackedInline):
+    suit_classes = u'suit-tab suit-tab-attachments'
+    extra = 1
 
 
 class PcaAdmin(ExportMixin, VersionAdmin):
@@ -337,6 +346,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
     )
     fieldsets = (
         (_('Info'), {
+            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 ('result_structure',
                  ('number', 'amendment', 'amendment_number', 'view_original',),
@@ -346,6 +356,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                  'initiation_date',)
         }),
         (_('Dates'), {
+            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 (('start_date', 'end_date',),
                  ('signed_by_unicef_date', 'signed_by_partner_date',),
@@ -356,6 +367,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
 
         }),
         (_('Budget'), {
+            u'classes': (u'suit-tab suit-tab-budget',),
             'fields':
                 ('partner_contribution_budget',
                  ('unicef_cash_budget', 'in_kind_amount_budget', 'total_unicef_contribution',),
@@ -370,7 +382,14 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         PcaSectorInlineAdmin,
         PcaLocationInlineAdmin,
         PCAFileInline,
-        GenericLinkStackedInline,
+        LinksInlineAdmin,
+    )
+
+    suit_form_tabs = (
+        (u'info', u'Info'),
+        (u'budget', u'Budget'),
+        (u'locations', u'Locations'),
+        (u'attachments', u'Attachments')
     )
 
     def created_date(self, obj):
@@ -401,7 +420,6 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                     visits = TPMVisit.objects.filter(
                         pca=obj.pca,
                         pca_location=obj,
-                        assigned_by=request.user,
                         completed_date__isnull=True
                     )
                     if not visits:

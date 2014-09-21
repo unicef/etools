@@ -47,6 +47,9 @@ class TPMVisit(AdminURLMixin, models.Model):
     assigned_by = models.ForeignKey(
         'auth.User'
     )
+    created_date = models.DateTimeField(
+        auto_now_add=True
+    )
 
     class Meta:
         verbose_name = u'TPM Visit'

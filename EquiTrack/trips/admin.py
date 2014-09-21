@@ -1,12 +1,15 @@
 __author__ = 'jcranwellward'
 
 from django.contrib import admin
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.generic import GenericTabularInline
 
 from reversion import VersionAdmin
+from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
+from messages_extends import constants as constants_messages
 
 from locations.models import LinkedLocation
 from .models import (
@@ -21,6 +24,7 @@ from .forms import (
     TripForm,
     TravelRoutesForm
 )
+from .exports import TripResource
 
 User = get_user_model()
 
@@ -84,7 +88,8 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
-class TripReportAdmin(VersionAdmin):
+class TripReportAdmin(ExportMixin, VersionAdmin):
+    resource_class = TripResource
     save_as = True
     form = TripForm
     inlines = (
@@ -134,7 +139,7 @@ class TripReportAdmin(VersionAdmin):
         (u'Traveler', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (u'status',
+                ((u'status', u'cancelled_reason'),
                  u'owner',
                  u'supervisor',
                  (u'section', u'office',),
@@ -243,15 +248,23 @@ class TripReportAdmin(VersionAdmin):
 
         return fields
 
-    def change_view(self, request, object_id, form_url='', extra_context=None):
+    # def save_model(self, request, obj, form, change):
+    #     messages.add_message(
+    #         request,
+    #         constants_messages.INFO_PERSISTENT,
+    #         "Hola abc desde test",
+    #         user=request.user
+    #     )
 
-        try:
-            return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
-        except IndexError:
-
-            request.POST['linkedlocation_set-TOTAL_FORMS'] = 0
-
-            return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
+    # def change_view(self, request, object_id, form_url='', extra_context=None):
+    #
+    #     try:
+    #         return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
+    #     except IndexError:
+    #
+    #         request.POST['linkedlocation_set-TOTAL_FORMS'] = 0
+    #
+    #         return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
 
     # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
     #     if db_field.name == u'representative':
@@ -316,6 +329,14 @@ class ActionPointsAdmin(admin.ModelAdmin):
             readonly_fields.remove(u'closed')
 
         return readonly_fields
+    #
+    # def save_model(self, request, obj, form, change):
+    #     messages.add_message(
+    #         request,
+    #         constants_messages.INFO_PERSISTENT,
+    #         "Hola abc desde test",
+    #         user=request.user
+    #     )
 
 
 admin.site.register(Office)
