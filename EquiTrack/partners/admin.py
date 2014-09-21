@@ -312,6 +312,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         'total_cash',
     )
     list_filter = (
+        'agreement_type',
         'result_structure',
         PCASectorFilter,
         'status',
@@ -348,7 +349,8 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         (_('Info'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
-                ('result_structure',
+                ('agreement_type',
+                 'result_structure',
                  ('number', 'amendment', 'amendment_number', 'view_original',),
                  'title',
                  'status',
