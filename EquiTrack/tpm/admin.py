@@ -129,6 +129,8 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
     list_filter = (
         u'pca',
         u'status',
+        u'assigned_by',
+        u'created_date',
         u'cycle_number',
         SectorListFilter,
         TPMPartnerFilter,

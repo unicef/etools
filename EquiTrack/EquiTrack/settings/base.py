@@ -35,7 +35,11 @@ SUIT_CONFIG = {
             {'model': 'partners.face', 'label': 'FACE'},
         ]},
 
-        {'app': 'trips', 'icon': 'icon-road'},
+        {'app': 'trips', 'icon': 'icon-road', 'models': [
+            {'model': 'trips.trip'},
+            {'model': 'trips.actionpoint'},
+            {'model': 'trips.office'},
+        ]},
 
         {'app': 'funds', 'icon': 'icon-briefcase'},
 

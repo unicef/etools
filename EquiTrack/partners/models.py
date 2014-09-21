@@ -72,7 +72,23 @@ class PCA(models.Model):
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
     )
+    PCA = u'pca'
+    MOU = u'mou'
+    SSFA = u'ssfa'
+    AWP = u'awp'
+    AGREEMENT_TYPES = (
+        (PCA, u'Partner Cooperation Agreement'),
+        (MOU, u'Memorandum of Understanding'),
+        (SSFA, u'Small Scale Funding Agreement'),
+        (AWP, u'Annual Work Plan'),
+    )
 
+    agreement_type = models.CharField(
+        choices=AGREEMENT_TYPES,
+        default=PCA,
+        blank=True, null=True,
+        max_length=255
+    )
     result_structure = models.ForeignKey(
         ResultStructure,
         blank=True, null=True,
