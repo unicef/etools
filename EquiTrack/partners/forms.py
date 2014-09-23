@@ -4,6 +4,7 @@ __author__ = 'jcranwellward'
 from django import forms
 #from autocomplete_light import forms
 
+from reports.models import Sector
 from partners.models import (
     PCA,
     GwPCALocation,
@@ -38,7 +39,11 @@ class IndicatorAdminModelForm(forms.ModelForm):
 
 class PCAForm(forms.ModelForm):
 
-    p_codes = forms.CharField(widget=forms.Textarea)
+    p_codes = forms.CharField(widget=forms.Textarea, required=False)
+    location_sector = forms.ModelChoiceField(
+        queryset=Sector.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = PCA

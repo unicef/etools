@@ -121,6 +121,7 @@ class PcaLocationInlineAdmin(admin.TabularInline):
     verbose_name_plural = 'Locations'
     suit_classes = u'suit-tab suit-tab-locations'
     fields = (
+        'sector',
         'governorate',
         'region',
         'locality',
@@ -381,8 +382,8 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                 ),
         }),
         (_('Add sites by P Code'), {
-            u'classes': (u'suit-tab suit-tab-locations', u'full-width',),
-            'fields': ('p_codes',),
+            u'classes': (u'suit-tab suit-tab-locations',),
+            'fields': ('location_sector', 'p_codes',),
         }),
     )
     actions = ['create_amendment']
@@ -442,6 +443,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         Overriding this to create locations from p_codes
         """
         p_codes = form.cleaned_data['p_codes']
+        location_sector = form.cleaned_data['location_sector']
         if p_codes:
             p_codes_list = p_codes.split()
             created, notfound = 0, 0
@@ -451,6 +453,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                         p_code=p_code
                     )
                     loc, new = GwPCALocation.objects.get_or_create(
+                        sector=location_sector,
                         governorate=location.locality.region.governorate,
                         region=location.locality.region,
                         locality=location.locality,

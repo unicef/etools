@@ -291,6 +291,7 @@ class PCAGrant(models.Model):
 class GwPCALocation(models.Model):
 
     pca = models.ForeignKey(PCA, related_name='locations')
+    sector = models.ForeignKey(Sector, null=True, blank=True)
     governorate = models.ForeignKey(Governorate)
     region = ChainedForeignKey(
         Region,
