@@ -381,7 +381,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                 ),
         }),
         (_('Add sites by P Code'), {
-            u'classes': (u'suit-tab suit-tab-locations',),
+            u'classes': (u'suit-tab suit-tab-locations', u'full-width',),
             'fields': ('p_codes',),
         }),
     )
@@ -443,7 +443,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
         """
         p_codes = form.cleaned_data['p_codes']
         if p_codes:
-            p_codes_list = p_codes.split(' ')
+            p_codes_list = p_codes.split()
             created, notfound = 0, 0
             for p_code in p_codes_list:
                 try:
