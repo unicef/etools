@@ -4,6 +4,7 @@ import re
 import datetime
 
 from django.contrib import admin
+from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
@@ -11,8 +12,10 @@ from reversion import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
+from .forms import PCAForm
 from tpm.models import TPMVisit
 from EquiTrack.utils import get_changeform_link
+from locations.models import Location
 from funds.models import Grant
 from reports.models import (
     WBS,
@@ -238,7 +241,7 @@ class PCAFileInline(admin.TabularInline):
     model = PCAFile
     verbose_name = 'File'
     verbose_name_plural = 'Files'
-    suit_classes = u'suit-tab suit-tab-attachments'
+    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
         'type',
@@ -257,7 +260,7 @@ class PcaGrantInlineAdmin(admin.TabularInline):
     model = PCAGrant
     verbose_name = 'Grant'
     verbose_name_plural = 'Grants'
-    suit_classes = u'suit-tab suit-tab-budget'
+    suit_classes = u'suit-tab suit-tab-info'
     extra = 0
 
 
@@ -283,11 +286,12 @@ class PcaSectorAdmin(SectorMixin, VersionAdmin):
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
-    suit_classes = u'suit-tab suit-tab-attachments'
+    suit_classes = u'suit-tab suit-tab-info'
     extra = 1
 
 
 class PcaAdmin(ExportMixin, VersionAdmin):
+    form = PCAForm
     resource_class = PCAResource
     # Add custom exports
     formats = (
@@ -369,12 +373,16 @@ class PcaAdmin(ExportMixin, VersionAdmin):
 
         }),
         (_('Budget'), {
-            u'classes': (u'suit-tab suit-tab-budget',),
+            u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 ('partner_contribution_budget',
                  ('unicef_cash_budget', 'in_kind_amount_budget', 'total_unicef_contribution',),
                  'total_cash',
                 ),
+        }),
+        (_('Add sites by P Code'), {
+            u'classes': (u'suit-tab suit-tab-locations',),
+            'fields': ('p_codes',),
         }),
     )
     actions = ['create_amendment']
@@ -389,9 +397,7 @@ class PcaAdmin(ExportMixin, VersionAdmin):
 
     suit_form_tabs = (
         (u'info', u'Info'),
-        (u'budget', u'Budget'),
         (u'locations', u'Locations'),
-        (u'attachments', u'Attachments')
     )
 
     def created_date(self, obj):
@@ -430,6 +436,37 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                             pca_location=obj,
                             assigned_by=request.user
                         )
+
+    def save_model(self, request, obj, form, change):
+        """
+        Overriding this to create locations from p_codes
+        """
+        p_codes = form.cleaned_data['p_codes']
+        if p_codes:
+            p_codes_list = p_codes.split(' ')
+            created, notfound = 0, 0
+            for p_code in p_codes_list:
+                try:
+                    location = Location.objects.get(
+                        p_code=p_code
+                    )
+                    loc, new = GwPCALocation.objects.get_or_create(
+                        governorate=location.locality.region.governorate,
+                        region=location.locality.region,
+                        locality=location.locality,
+                        location=location,
+                        pca=obj
+                    )
+                    if new:
+                        created += 1
+                except Location.DoesNotExist:
+                    notfound += 1
+
+            messages.info(
+                request,
+                'Assigned {} locations, {} were not found'.format(
+                    created, notfound
+                ))
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
