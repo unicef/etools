@@ -90,7 +90,7 @@ class LinksInlineAdmin(GenericLinkStackedInline):
 
 class TripReportAdmin(ExportMixin, VersionAdmin):
     resource_class = TripResource
-    save_as = True
+    save_as = True #TODO: There is a bug using this
     form = TripForm
     inlines = (
         TravelRoutesInlineAdmin,
