@@ -28,7 +28,7 @@ class GatewayType(models.Model):
 
 
 class Governorate(models.Model):
-    name = models.CharField(max_length=45L, unique=True)
+    name = models.CharField(max_length=45L)
     p_code = models.CharField(max_length=32L, blank=True, null=True)
     gateway = models.ForeignKey(
         GatewayType,
@@ -49,7 +49,7 @@ class Governorate(models.Model):
 
 class Region(models.Model):
     governorate = models.ForeignKey(Governorate)
-    name = models.CharField(max_length=45L, unique=True)
+    name = models.CharField(max_length=45L)
     p_code = models.CharField(max_length=32L, blank=True, null=True)
     gateway = models.ForeignKey(
         GatewayType,
@@ -235,6 +235,7 @@ class CartoDBTable(models.Model):
 
                 try:
                     create_args = {
+                        'name': site_name,
                         'p_code': pcode,
                         'gateway': self.location_type
                     }
