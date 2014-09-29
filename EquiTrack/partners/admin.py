@@ -471,6 +471,8 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                     created, notfound
                 ))
 
+        super(PcaAdmin, self).save_model(request, obj, form, change)
+
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = PartnerResource
