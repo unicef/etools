@@ -2,6 +2,7 @@ __author__ = 'jcranwellward'
 
 from django.contrib import admin
 from django.contrib import messages
+from django.contrib.sites.models import Site
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.generic import GenericTabularInline
@@ -251,11 +252,15 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     def save_model(self, request, obj, form, change):
 
         user = obj.owner
+        url = 'http://{}{}'.format(
+            Site.objects.get_current().domain,
+            obj.trip.get_admin_url()
+        )
         status = "Trip {} for {} has been {}: {}".format(
             obj.reference(),
             obj.owner.get_full_name(),
             obj.status,
-            obj.get_admin_url()
+            url
         )
 
         messages.add_message(
@@ -269,7 +274,14 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             user = obj.supervisor
             status = 'Please approve the trip for {}: {}'.format(
                 obj.owner.get_full_name(),
-                obj.get_admin_url()
+                url
+            )
+
+            messages.add_message(
+                request,
+                constants_messages.INFO_PERSISTENT,
+                status,
+                user=user
             )
 
         elif obj.status == Trip.APPROVED:
@@ -277,27 +289,41 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             if obj.travel_assistant and not obj.transport_booked:
                 user = obj.travel_assistant,
                 status = 'Please book the transport for trip: {}'.format(
-                    obj.get_admin_url()
+                    url
+                )
+
+                messages.add_message(
+                    request,
+                    constants_messages.INFO_PERSISTENT,
+                    status,
+                    user=user
                 )
 
             if obj.ta_required and obj.programme_assistant and not obj.ta_drafted:
                 user = obj.programme_assistant
                 status = 'Please draft the TA for trip: {}'.format(
-                    obj.get_admin_url()
+                    url
+                )
+
+                messages.add_message(
+                    request,
+                    constants_messages.INFO_PERSISTENT,
+                    status,
+                    user=user
                 )
 
             if obj.ta_drafted and obj.vision_approver:
                 user = obj.vision_approver
                 status = 'Please approve the TA for trip: {}'.format(
-                    obj.get_admin_url()
+                    url
                 )
 
-        messages.add_message(
-            request,
-            constants_messages.INFO_PERSISTENT,
-            status,
-            user=user
-        )
+                messages.add_message(
+                    request,
+                    constants_messages.INFO_PERSISTENT,
+                    status,
+                    user=user
+                )
 
         super(TripReportAdmin, self).save_model(request, obj, form, change)
 
