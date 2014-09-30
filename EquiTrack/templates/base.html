@@ -63,33 +63,38 @@
                 </div>
                 <div class="user-nav">
                     <ul>
-                        <li class="dropdown messages">
-                            <span class="badge badge-danager animated bounceIn" id="new-messages">5</span>
-                            <button type="button" class="btn btn-default dropdown-toggle options" id="toggle-mail" data-toggle="dropdown">
-                                <i class="fa fa-envelope"></i>
-                            </button>
-                            {% if messages %}
+                        {% if messages %}
+
+                            <li class="dropdown messages">
+                                <span class="badge badge-danager animated bounceIn" id="new-messages">{{ messages|length }}</span>
+                                <button type="button" class="btn btn-default dropdown-toggle options" id="toggle-mail"
+                                        data-toggle="dropdown">
+                                    <i class="fa fa-envelope"></i>
+                                </button>
+
                                 <ul class="dropdown-menu alert animated fadeInDown">
                                     <li>
-                                        <h1>You have <strong>{{ messages.count }}</strong> new messages</h1>
+                                        <h1>You have <strong>{{ messages|length }}</strong> new messages</h1>
                                     </li>
                                     {% for message in messages %}
-                                    <li>
-                                        <a href="#">
-                                            <div class="message-info">
-                                                <span class="time">30 mins</span>
-                                                <div class="message-content">{{ message }}</div>
-                                            </div>
-                                        </a>
-                                    </li>
+                                        <li>
+                                            <a href="#">
+                                                <div class="message-info">
+                                                    <span class="time">{{ message.created|date:"D d M Y" }} {{ message.created|time:"H:i" }}</span>
+
+                                                    <div class="message-content">{{ message }}</div>
+                                                </div>
+                                            </a>
+                                        </li>
                                     {% endfor %}
 
-                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i class="fa fa-angle-right"></i></a>
+                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i
+                                            class="fa fa-angle-right"></i></a>
 
                                 </ul>
-                            {% endif %}
 
-                        </li>
+                            </li>
+                        {% endif %}
                         <li class="profile-photo">
                             <img src="{{ STATIC_URL }}img/avatar.png" alt="" class="img-circle">
                         </li>
@@ -124,7 +129,8 @@
                             <a href="{% url 'map' %}"><i class="fa fa-map-marker"></i><span>Map</span></a>
                         </li>
                         <li>
-                            <a href="{% url 'admin:partners_pca_changelist' %}"><i class="fa fa-pencil"></i><span>PCAs</span></a>
+                            <a href="{% url 'admin:partners_pca_changelist' %}"><i
+                                    class="fa fa-pencil"></i><span>PCAs</span></a>
                         </li>
                         <li>
                             <a href="{% url 'trips_dashboard' %}"><i class="fa fa-road"></i><span>Trips</span></a>
