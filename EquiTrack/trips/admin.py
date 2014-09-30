@@ -254,7 +254,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         user = obj.owner
         url = 'http://{}{}'.format(
             Site.objects.get_current().domain,
-            obj.trip.get_admin_url()
+            obj.get_admin_url()
         )
         status = "Trip {} for {} has been {}: {}".format(
             obj.reference(),
