@@ -287,7 +287,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         elif obj.status == Trip.APPROVED:
 
             if obj.travel_assistant and not obj.transport_booked:
-                user = obj.travel_assistant,
+                user = obj.travel_assistant
                 status = 'Please book the transport for trip: {}'.format(
                     url
                 )
