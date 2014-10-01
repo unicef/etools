@@ -270,7 +270,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             user=user
         )
 
-        if obj.status == Trip.PLANNED:
+        if obj.status == Trip.SUBMITTED:
             user = obj.supervisor
             status = 'Please approve the trip for {}: {}'.format(
                 obj.owner.get_full_name(),
