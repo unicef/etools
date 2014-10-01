@@ -224,7 +224,7 @@ class Trip(AdminURLMixin, models.Model):
         return True
 
     def save(self, **kwargs):
-        if self.status == Trip.PLANNED and self.can_be_approved:
+        if self.status == Trip.SUBMITTED and self.can_be_approved:
             self.approved_date = datetime.datetime.today()
             self.status = Trip.APPROVED
         super(Trip, self).save(**kwargs)

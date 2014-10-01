@@ -214,8 +214,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             trip.owner,
             trip.travel_assistant
         ]:
-            if trip.status == trip.APPROVED:
-                fields.remove(u'status')
+            fields.remove(u'status')
 
         if trip and request.user == trip.supervisor:
             if u'status' in fields:
