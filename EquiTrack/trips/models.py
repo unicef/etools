@@ -43,11 +43,13 @@ class Office(models.Model):
 class Trip(AdminURLMixin, models.Model):
 
     PLANNED = u'planned'
+    SUBMITTED = u'submitted'
     APPROVED = u'approved'
     COMPLETED = u'completed'
     CANCELLED = u'cancelled'
     TRIP_STATUS = (
         (PLANNED, u"Planned"),
+        (SUBMITTED, u"Submitted"),
         (APPROVED, u"Approved"),
         (COMPLETED, u"Completed"),
         (CANCELLED, u"Cancelled"),
@@ -222,7 +224,7 @@ class Trip(AdminURLMixin, models.Model):
         return True
 
     def save(self, **kwargs):
-        if self.status == Trip.PLANNED and self.can_be_approved:
+        if self.status == Trip.SUBMITTED and self.can_be_approved:
             self.approved_date = datetime.datetime.today()
             self.status = Trip.APPROVED
         super(Trip, self).save(**kwargs)
@@ -241,7 +243,7 @@ class Trip(AdminURLMixin, models.Model):
         if instance.international_travel:
             recipients.append(instance.representative.email)
 
-        if created:
+        if instance.status == Trip.SUBMITTED:
             emails.TripCreatedEmail(instance).send(
                 instance.owner.email,
                 *recipients

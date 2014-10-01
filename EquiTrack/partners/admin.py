@@ -5,7 +5,9 @@ import datetime
 
 from django.contrib import admin
 from django.contrib import messages
+from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.admin.util import flatten_fieldsets
 
 import autocomplete_light
 from reversion import VersionAdmin
@@ -60,6 +62,44 @@ from partners.filters import (
 )
 
 
+class ReadOnlyMixin(object):
+
+    read_only_group_name = u'read_only'
+    remove_fields_if_read_only = ()
+
+    def remove_from_fieldsets(self, fieldsets, fields):
+        for fieldset in fieldsets:
+            for field in fields:
+                if field in fieldset[1]['fields']:
+                    new_fields = []
+                    for new_field in fieldset[1]['fields']:
+                        if not new_field in fields:
+                            new_fields.append(new_field)
+
+                    fieldset[1]['fields'] = tuple(new_fields)
+                    break
+
+    def get_readonly_fields(self, request, obj=None):
+
+        read_only, created = Group.objects.get_or_create(
+            name=self.read_only_group_name
+        )
+        if obj and read_only in request.user.groups.all():
+
+            if self.declared_fieldsets:
+                fieldsets = self.declared_fieldsets
+                self.remove_from_fieldsets(fieldsets, self.remove_fields_if_read_only)
+                fields = flatten_fieldsets(fieldsets)
+            else:
+                fields = list(set(
+                    [field.name for field in self.opts.local_fields] +
+                    [field.name for field in self.opts.local_many_to_many]
+                ))
+            return fields
+
+        return self.readonly_fields
+
+
 class SectorMixin(object):
     """
     Mixin class to get the sector from the admin URL
@@ -84,7 +124,7 @@ class SectorMixin(object):
         return self._pca
 
 
-class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
+class PcaIRInlineAdmin(ReadOnlyMixin, SectorMixin, admin.StackedInline):
     model = PCASectorImmediateResult
     filter_horizontal = ('wbs_activities',)
     extra = 0
@@ -115,7 +155,7 @@ class PcaIRInlineAdmin(SectorMixin, admin.StackedInline):
         )
 
 
-class PcaLocationInlineAdmin(admin.TabularInline):
+class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = GwPCALocation
     verbose_name = 'Location'
     verbose_name_plural = 'Locations'
@@ -131,7 +171,7 @@ class PcaLocationInlineAdmin(admin.TabularInline):
     extra = 5
 
 
-class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
+class PcaIndicatorInlineAdmin(ReadOnlyMixin, SectorMixin, admin.StackedInline):
 
     model = IndicatorProgress
     verbose_name = 'Indicator'
@@ -168,7 +208,7 @@ class PcaIndicatorInlineAdmin(SectorMixin, admin.StackedInline):
         )
 
 
-class PcaGoalInlineAdmin(SectorMixin, admin.TabularInline):
+class PcaGoalInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
     verbose_name = 'CCC'
     verbose_name_plural = 'CCCs'
     model = PCASectorGoal
@@ -187,7 +227,7 @@ class PcaGoalInlineAdmin(SectorMixin, admin.TabularInline):
         )
 
 
-class PcaOutputInlineAdmin(SectorMixin, admin.TabularInline):
+class PcaOutputInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
     verbose_name = 'Output'
     model = PCASectorOutput
     extra = 0
@@ -206,7 +246,7 @@ class PcaOutputInlineAdmin(SectorMixin, admin.TabularInline):
         )
 
 
-class PcaActivityInlineAdmin(SectorMixin, admin.TabularInline):
+class PcaActivityInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
     model = PCASectorActivity
     extra = 0
 
@@ -223,7 +263,7 @@ class PcaActivityInlineAdmin(SectorMixin, admin.TabularInline):
         )
 
 
-class PcaSectorInlineAdmin(admin.TabularInline):
+class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = PCASector
     verbose_name = 'Sector'
     verbose_name_plural = 'Sectors'
@@ -238,7 +278,7 @@ class PcaSectorInlineAdmin(admin.TabularInline):
     )
 
 
-class PCAFileInline(admin.TabularInline):
+class PCAFileInline(ReadOnlyMixin, admin.TabularInline):
     model = PCAFile
     verbose_name = 'File'
     verbose_name_plural = 'Files'
@@ -254,7 +294,7 @@ class PCAFileInline(admin.TabularInline):
     )
 
 
-class PcaGrantInlineAdmin(admin.TabularInline):
+class PcaGrantInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     form = autocomplete_light.modelform_factory(
         Grant
     )
@@ -265,7 +305,7 @@ class PcaGrantInlineAdmin(admin.TabularInline):
     extra = 0
 
 
-class PcaSectorAdmin(SectorMixin, VersionAdmin):
+class PcaSectorAdmin(ReadOnlyMixin, SectorMixin, VersionAdmin):
     form = autocomplete_light.modelform_factory(
         PCASector
     )
@@ -286,12 +326,12 @@ class PcaSectorAdmin(SectorMixin, VersionAdmin):
     )
 
 
-class LinksInlineAdmin(GenericLinkStackedInline):
+class LinksInlineAdmin(ReadOnlyMixin, GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-info'
     extra = 1
 
 
-class PcaAdmin(ExportMixin, VersionAdmin):
+class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PCAForm
     resource_class = PCAResource
     # Add custom exports
@@ -386,6 +426,8 @@ class PcaAdmin(ExportMixin, VersionAdmin):
             'fields': ('location_sector', 'p_codes',),
         }),
     )
+    remove_fields_if_read_only = ('location_sector', 'p_codes',)
+
     actions = ['create_amendment']
 
     inlines = (
@@ -470,6 +512,8 @@ class PcaAdmin(ExportMixin, VersionAdmin):
                 'Assigned {} locations, {} were not found'.format(
                     created, notfound
                 ))
+
+        super(PcaAdmin, self).save_model(request, obj, form, change)
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):

@@ -58,6 +58,9 @@ class TPMVisit(AdminURLMixin, models.Model):
     def save(self, **kwargs):
         if self.completed_date:
             self.status = self.COMPLETED
+            location = self.pca_location
+            location.tpm_visit = False
+            location.save()
         super(TPMVisit, self).save(**kwargs)
 
     @classmethod
@@ -66,6 +69,7 @@ class TPMVisit(AdminURLMixin, models.Model):
         current_site = Site.objects.get_current()
 
         if created:
+
             email_name = 'tpm/visit/created'
             try:
                 template = EmailTemplate.objects.get(
@@ -99,7 +103,13 @@ class TPMVisit(AdminURLMixin, models.Model):
                     },
                 )
         else:
-            email_name = 'tpm/visit/updated'
+
+            if instance.status == TPMVisit.COMPLETED:
+                state = 'Completed'
+            else:
+                state = 'Updated'
+
+            email_name = 'tpm/visit/updated/completed'
             try:
                 template = EmailTemplate.objects.get(
                     name=email_name
@@ -108,8 +118,8 @@ class TPMVisit(AdminURLMixin, models.Model):
                 template = EmailTemplate.objects.create(
                     name=email_name,
                     description='The email that is sent to the user who created the TPM Visit',
-                    subject="TPM Visit Updated",
-                    content="The following TPM Visit has been updated:"
+                    subject="TPM Visit {{state}}",
+                    content="The following TPM Visit has been {{state}}:"
                             "\r\n\r\n{{url}}"
                             "\r\n\r\nThank you."
                 )
@@ -119,6 +129,7 @@ class TPMVisit(AdminURLMixin, models.Model):
                 instance.assigned_by.email,
                 template=template,
                 context={
+                    'state': state,
                     'url': 'http://{}{}'.format(
                         current_site.domain,
                         instance.get_admin_url()

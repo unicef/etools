@@ -56,6 +56,7 @@ class TripForm(ModelForm):
 
     def clean(self):
         cleaned_data = super(TripForm, self).clean()
+        status = cleaned_data.get('status')
         from_date = cleaned_data.get('from_date')
         to_date = cleaned_data.get('to_date')
         owner = cleaned_data.get('owner')
@@ -96,6 +97,16 @@ class TripForm(ModelForm):
         if approved_by_budget_owner and not date_budget_owner_approved:
             raise ValidationError(
                 'Please put the date the budget owner approved this Trip'
+            )
+
+        if status == Trip.APPROVED and not approved_by_supervisor:
+            raise ValidationError(
+                'Only the supervisor can approve this trip'
+            )
+
+        if status == Trip.COMPLETED and not approved_by_supervisor:
+            raise ValidationError(
+                'The trip must be approved before it can be completed'
             )
 
         #TODO: this can be removed once we upgrade to 1.7
