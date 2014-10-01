@@ -80,7 +80,7 @@ class TripCreatedEmail(BaseEmail):
             'trip_reference': self.trip.reference(),
             'owner_name': self.trip.owner.get_full_name(),
             'number': self.trip.reference(),
-            'state': 'Created',
+            'state': 'Submitted',
             'url': 'http://{}{}'.format(
                 self.get_current_site().domain,
                 self.trip.get_admin_url()
