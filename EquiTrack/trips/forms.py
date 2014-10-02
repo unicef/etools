@@ -104,10 +104,11 @@ class TripForm(ModelForm):
                 'Only the supervisor can approve this trip'
             )
 
-        if status == Trip.COMPLETED and not approved_by_supervisor:
-            raise ValidationError(
-                'The trip must be approved before it can be completed'
-            )
+        #TODO: Debug this
+        # if status == Trip.COMPLETED and not approved_by_supervisor:
+        #     raise ValidationError(
+        #         'The trip must be approved before it can be completed'
+        #     )
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
