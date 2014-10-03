@@ -73,7 +73,7 @@ class TripsByOfficeView(APIView):
             'xkey': 'name',
             'ykeys': [sector.name for sector in sections],
             'labels': [sector.name for sector in sections],
-            'barColors': ['#1abc9c', '#2dcc70', '#e84c3d']
+            'barColors': ['#1abc9c', '#2dcc70', '#e84c3d', '#3abc9c', '#5dcc70', '#684c3d']
         }
 
         return Response(data=payload)
@@ -92,7 +92,7 @@ class TripsDashboard(TemplateView):
         return {
             'months': months,
             'current_month': month,
-            'current_month_num': len(months)-1,
+            'current_month_num': month_num,
             'trips': {
                 'planned': Trip.objects.filter(
                     status=Trip.PLANNED,
