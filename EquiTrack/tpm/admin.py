@@ -131,6 +131,7 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
         u'status',
         u'assigned_by',
         u'created_date',
+        u'completed_date',
         u'cycle_number',
         SectorListFilter,
         TPMPartnerFilter,

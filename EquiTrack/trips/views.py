@@ -26,7 +26,7 @@ def get_trip_months():
 
     months = list(set([datetime(date.year, date.month, 1) for date in dates]))
 
-    return sorted(months)
+    return sorted(months, reverse=True)
 
 
 class TripsView(ListAPIView):
@@ -86,7 +86,7 @@ class TripsDashboard(TemplateView):
     def get_context_data(self, **kwargs):
 
         months = get_trip_months()
-        month_num = self.request.GET.get('month', -1)
+        month_num = self.request.GET.get('month', 0)
         month = months[int(month_num)]
 
         return {
