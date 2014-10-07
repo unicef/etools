@@ -2,6 +2,8 @@ __author__ = 'jcranwellward'
 
 from django.db import models
 
+from paintstore.fields import ColorPickerField
+
 
 class ResultStructure(models.Model):
 
@@ -36,6 +38,7 @@ class Sector(models.Model):
     dashboard = models.BooleanField(
         default=False
     )
+    color = ColorPickerField(null=True, blank=True)
 
     class Meta:
         ordering = ['name']

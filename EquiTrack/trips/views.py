@@ -18,9 +18,9 @@ from .serializers import TripSerializer
 def get_trip_months():
 
     trips = Trip.objects.filter(
-            Q(status=Trip.APPROVED) |
-            Q(status=Trip.COMPLETED)
-        )
+        Q(status=Trip.APPROVED) |
+        Q(status=Trip.COMPLETED)
+    )
 
     dates = set(trips.values_list('from_date', flat=True))
 
