@@ -73,7 +73,7 @@ class TripsByOfficeView(APIView):
             'xkey': 'name',
             'ykeys': [sector.name for sector in sections],
             'labels': [sector.name for sector in sections],
-            'barColors': ['#1abc9c', '#2dcc70', '#e84c3d', '#3abc9c', '#0b8eff', '#fdff00']
+            'barColors': ['#1abc9c', '#2dcc70', '#e84c3d', '#c41cff', '#0b8eff', '#fdff00']
         }
 
         return Response(data=payload)
