@@ -99,12 +99,13 @@ class TripForm(ModelForm):
                 'Please put the date the budget owner approved this Trip'
             )
 
-        if status == Trip.APPROVED and not approved_by_supervisor:
-            raise ValidationError(
-                'Only the supervisor can approve this trip'
-            )
-
         #TODO: Debug this
+        # if status == Trip.APPROVED and not approved_by_supervisor:
+        #     raise ValidationError(
+        #         'Only the supervisor can approve this trip'
+        #     )
+
+
         # if status == Trip.COMPLETED and not approved_by_supervisor:
         #     raise ValidationError(
         #         'The trip must be approved before it can be completed'
