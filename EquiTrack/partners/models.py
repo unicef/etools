@@ -150,8 +150,8 @@ class PCA(models.Model):
     original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
-        verbose_name = 'PCA'
-        verbose_name_plural = 'PCAs'
+        verbose_name = 'Partnership'
+        verbose_name_plural = 'Partnerships'
         ordering = ['-number', 'amendment']
 
     def __unicode__(self):
