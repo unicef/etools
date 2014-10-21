@@ -29,8 +29,8 @@ SUIT_CONFIG = {
 
         {'label': 'Dashboard', 'icon': 'icon-dashboard', 'url': 'dashboard'},
 
-        {'label': 'PCAs', 'icon': 'icon-pencil', 'models': [
-            {'model': 'partners.pca', 'label': 'List of PCAs'},
+        {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
+            {'model': 'partners.pca', 'label': 'Partnerships'},
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
             {'model': 'partners.face', 'label': 'FACE'},
         ]},
