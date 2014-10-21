@@ -11,6 +11,7 @@ from reports.models import Sector
 from partners.models import PCA, PartnerOrganization, GwPCALocation
 from locations.models import Governorate, Region, Locality
 from .models import TPMVisit
+from .exports import TPMResource
 
 
 class SectorListFilter(admin.SimpleListFilter):
@@ -115,6 +116,7 @@ class FileAttachmentInlineAdmin(GenericTabularInline):
 
 
 class TPMVisitAdmin(ExportMixin, VersionAdmin):
+    resource_class = TPMResource
     date_hierarchy = u'tentative_date'
     list_display = (
         u'status',
@@ -131,6 +133,7 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
         u'status',
         u'assigned_by',
         u'created_date',
+        u'completed_date',
         u'cycle_number',
         SectorListFilter,
         TPMPartnerFilter,

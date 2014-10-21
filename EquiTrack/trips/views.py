@@ -18,15 +18,15 @@ from .serializers import TripSerializer
 def get_trip_months():
 
     trips = Trip.objects.filter(
-            Q(status=Trip.APPROVED) |
-            Q(status=Trip.COMPLETED)
-        )
+        Q(status=Trip.APPROVED) |
+        Q(status=Trip.COMPLETED)
+    )
 
     dates = set(trips.values_list('from_date', flat=True))
 
     months = list(set([datetime(date.year, date.month, 1) for date in dates]))
 
-    return sorted(months)
+    return sorted(months, reverse=True)
 
 
 class TripsView(ListAPIView):
@@ -73,7 +73,7 @@ class TripsByOfficeView(APIView):
             'xkey': 'name',
             'ykeys': [sector.name for sector in sections],
             'labels': [sector.name for sector in sections],
-            'barColors': ['#1abc9c', '#2dcc70', '#e84c3d']
+            'barColors': ['#1abc9c', '#2dcc70', '#e84c3d', '#c41cff', '#0b8eff', '#fdff00']
         }
 
         return Response(data=payload)
@@ -86,13 +86,13 @@ class TripsDashboard(TemplateView):
     def get_context_data(self, **kwargs):
 
         months = get_trip_months()
-        month_num = self.request.GET.get('month', -1)
+        month_num = self.request.GET.get('month', 0)
         month = months[int(month_num)]
 
         return {
             'months': months,
             'current_month': month,
-            'current_month_num': len(months)-1,
+            'current_month_num': month_num,
             'trips': {
                 'planned': Trip.objects.filter(
                     status=Trip.PLANNED,
