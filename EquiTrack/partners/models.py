@@ -34,11 +34,40 @@ from locations.models import (
 
 class PartnerOrganization(models.Model):
 
-    name = models.CharField(max_length=255, unique=True)
-    description = models.CharField(max_length=256L, blank=True)
-    email = models.CharField(max_length=255, blank=True)
-    contact_person = models.CharField(max_length=255, blank=True)
-    phone_number = models.CharField(max_length=32L, blank=True)
+    NATIONAL = u'national'
+    INTERNATIONAL = u'international'
+    UNAGENCY = u'un-agency'
+    PARTNER_TYPES = (
+        (NATIONAL, u"National"),
+        (INTERNATIONAL, u"International"),
+        (UNAGENCY, u"UN Agency"),
+    )
+
+    type = models.CharField(
+        max_length=50,
+        choices=PARTNER_TYPES,
+        default=NATIONAL
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    description = models.CharField(
+        max_length=256L,
+        blank=True
+    )
+    email = models.CharField(
+        max_length=255,
+        blank=True
+    )
+    contact_person = models.CharField(
+        max_length=255,
+        blank=True
+    )
+    phone_number = models.CharField(
+        max_length=32L,
+        blank=True
+    )
     alternate_id = models.IntegerField(
         blank=True,
         null=True
@@ -58,6 +87,68 @@ class PartnerOrganization(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class Assessment(models.Model):
+
+    QUICK = u'quick'
+    MICRO = u'micro'
+    MACRO = u'macro'
+    HIGH = u'high'
+    SIGNIFICANT = u'significant'
+    MODERATE = u'moderate'
+    LOW = u'low'
+    ASSESSMENT_TYPES = (
+        (QUICK, u"Quick-Assessment"),
+        (MICRO, u"Micro-Assessment"),
+        (MACRO, u"Macro-Assessment"),
+    )
+    RISK_RATINGS = (
+        (HIGH, u'High'),
+        (SIGNIFICANT, u'Significant'),
+        (MODERATE, u'Moderate'),
+        (LOW, u'Low'),
+    )
+
+    partner = models.ForeignKey(
+        PartnerOrganization
+    )
+    type = models.CharField(
+        max_length=50,
+        choices=ASSESSMENT_TYPES,
+    )
+    planned_date = models.DateField()
+    completed_date = models.DateField(
+        blank=True, null=True
+    )
+    rating = models.CharField(
+        max_length=50,
+        choices=RISK_RATINGS,
+        default=HIGH,
+    )
+    notes = models.TextField(
+        blank=True, null=True
+    )
+    report = FilerFileField(
+        blank=True, null=True
+    )
+
+    def __unicode__(self):
+        return u'{type}: {partner} {rating} {date}'.format(
+            type=self.type,
+            partner=self.partner.name,
+            rating=self.rating,
+            date=self.completed_date.strftime("%d-%m-%Y") if
+            self.completed_date else u'NOT COMPLETED'
+        )
+
+    def download_url(self):
+        if self.report:
+            return u'<a class="btn btn-primary default" ' \
+                   u'href="{}" >Download</a>'.format(self.report.file.url)
+        return u''
+    download_url.allow_tags = True
+    download_url.short_description = 'Download Report'
 
 
 class PCA(models.Model):

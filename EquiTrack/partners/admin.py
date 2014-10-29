@@ -1,13 +1,10 @@
 __author__ = 'jcranwellward'
 
-import re
 import datetime
 
 from django.contrib import admin
 from django.contrib import messages
-from django.contrib.auth.models import Group
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.admin.util import flatten_fieldsets
 
 import autocomplete_light
 from reversion import VersionAdmin
@@ -46,7 +43,8 @@ from partners.models import (
     PCASectorActivity,
     IndicatorProgress,
     PCASectorImmediateResult,
-    PartnerOrganization
+    PartnerOrganization,
+    Assessment
 )
 
 from partners.filters import (
@@ -60,68 +58,7 @@ from partners.filters import (
     PCAIndicatorFilter,
     PCAOutputFilter
 )
-
-
-class ReadOnlyMixin(object):
-
-    read_only_group_name = u'read_only'
-    remove_fields_if_read_only = ()
-
-    def remove_from_fieldsets(self, fieldsets, fields):
-        for fieldset in fieldsets:
-            for field in fields:
-                if field in fieldset[1]['fields']:
-                    new_fields = []
-                    for new_field in fieldset[1]['fields']:
-                        if not new_field in fields:
-                            new_fields.append(new_field)
-
-                    fieldset[1]['fields'] = tuple(new_fields)
-                    break
-
-    def get_readonly_fields(self, request, obj=None):
-
-        read_only, created = Group.objects.get_or_create(
-            name=self.read_only_group_name
-        )
-        if obj and read_only in request.user.groups.all():
-
-            if self.declared_fieldsets:
-                fieldsets = self.declared_fieldsets
-                self.remove_from_fieldsets(fieldsets, self.remove_fields_if_read_only)
-                fields = flatten_fieldsets(fieldsets)
-            else:
-                fields = list(set(
-                    [field.name for field in self.opts.local_fields] +
-                    [field.name for field in self.opts.local_many_to_many]
-                ))
-            return fields
-
-        return self.readonly_fields
-
-
-class SectorMixin(object):
-    """
-    Mixin class to get the sector from the admin URL
-    """
-    model_admin_re = re.compile(r'^/admin/(?P<app>\w*)/(?P<model>\w*)/(?P<id>\w+)/$')
-
-    def get_sector_from_request(self, request):
-        results = self.model_admin_re.search(request.path)
-        if results:
-            pca_sector_id = results.group('id')
-            return PCASector.objects.get(id=pca_sector_id)
-        return None
-
-    def get_sector(self, request):
-        if not getattr(self, '_sector', False):
-            self._sector = self.get_sector_from_request(request).sector
-        return self._sector
-
-    def get_pca(self, request):
-        if not getattr(self, '_pca', False):
-            self._pca = self.get_sector_from_request(request).pca
-        return self._pca
+from partners.mixins import ReadOnlyMixin, SectorMixin
 
 
 class PcaIRInlineAdmin(ReadOnlyMixin, SectorMixin, admin.StackedInline):
@@ -517,10 +454,28 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         super(PcaAdmin, self).save_model(request, obj, form, change)
 
 
+class AssessmentAdminInline(admin.StackedInline):
+    model = Assessment
+    extra = 1
+    fields = (
+        u'type',
+        u'planned_date',
+        u'completed_date',
+        u'rating',
+        u'notes',
+        u'report',
+        u'download_url',
+    )
+    readonly_fields = (
+        u'download_url',
+    )
+
+
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = PartnerResource
     list_display = (
         u'name',
+        u'type',
         u'description',
         u'email',
         u'contact_person',
@@ -528,6 +483,9 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
         u'alternate_id',
         u'alternate_name',
     )
+    inlines = [
+        AssessmentAdminInline,
+    ]
 
 
 class FACEAdmin(admin.ModelAdmin):
