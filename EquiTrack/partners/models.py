@@ -129,6 +129,10 @@ class Assessment(models.Model):
     notes = models.TextField(
         blank=True, null=True
     )
+    actions = models.TextField(
+        blank=True, null=True,
+        verbose_name=u'Follow up actions'
+    )
     report = FilerFileField(
         blank=True, null=True
     )
@@ -540,6 +544,31 @@ class PCAFile(models.Model):
         return u''
     download_url.allow_tags = True
     download_url.short_description = 'Download Files'
+
+
+class SpotCheck(models.Model):
+
+    pca = models.ForeignKey(PCA)
+    sector = models.ForeignKey(
+        Sector,
+        blank=True, null=True
+    )
+    planned_date = models.DateField(
+        blank=True, null=True
+    )
+    completed_date = models.DateField(
+        blank=True, null=True
+    )
+    amount = models.IntegerField(
+        null=True, blank=True,
+        default=0
+    )
+    recommendations = models.TextField(
+        blank=True, null=True
+    )
+    partner_agrees = models.BooleanField(
+        default=False
+    )
 
 
 class FACE(models.Model):
