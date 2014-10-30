@@ -44,7 +44,8 @@ from partners.models import (
     IndicatorProgress,
     PCASectorImmediateResult,
     PartnerOrganization,
-    Assessment
+    Assessment,
+    SpotCheck,
 )
 
 from partners.filters import (
@@ -268,6 +269,11 @@ class LinksInlineAdmin(ReadOnlyMixin, GenericLinkStackedInline):
     extra = 1
 
 
+class SpotChecksAdminInline(ReadOnlyMixin, admin.StackedInline):
+    suit_classes = u'suit-tab suit-tab-checks'
+    model = SpotCheck
+
+
 class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PCAForm
     resource_class = PCAResource
@@ -374,11 +380,13 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
+        SpotChecksAdminInline,
     )
 
     suit_form_tabs = (
         (u'info', u'Info'),
         (u'locations', u'Locations'),
+        (u'checks', u'Spot Checks'),
     )
 
     def created_date(self, obj):
