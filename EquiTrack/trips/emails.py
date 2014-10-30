@@ -1,62 +1,6 @@
 __author__ = 'jcranwellward'
 
-from django.contrib.sites.models import Site
-
-from post_office import mail
-from post_office.models import EmailTemplate
-
-
-def send_mail(sender, template, variables, *recipients):
-    mail.send(
-        [recp for recp in recipients],
-        sender,
-        template=template,
-        context=variables,
-    )
-
-
-class BaseEmail(object):
-
-    template_name = None
-    description = None
-    subject = None
-    content = None
-
-    def __init__(self, trip):
-        self.trip = trip
-
-    @classmethod
-    def get_current_site(cls):
-        return Site.objects.get_current()
-
-    @classmethod
-    def get_email_template(cls):
-        if cls.template_name is None:
-            raise NotImplemented()
-        try:
-            template = EmailTemplate.objects.get(
-                name=cls.template_name
-            )
-        except EmailTemplate.DoesNotExist:
-            template = EmailTemplate.objects.create(
-                name=cls.template_name,
-                description=cls.description,
-                subject=cls.subject,
-                content=cls.content
-            )
-        return template
-
-    def get_context(self):
-        raise NotImplemented()
-
-    def send(self, sender, *recipients):
-
-        send_mail(
-            sender,
-            self.get_email_template(),
-            self.get_context(),
-            *recipients
-        )
+from EquiTrack.utils import BaseEmail
 
 
 class TripCreatedEmail(BaseEmail):
@@ -77,13 +21,13 @@ class TripCreatedEmail(BaseEmail):
 
     def get_context(self):
         return {
-            'trip_reference': self.trip.reference(),
-            'owner_name': self.trip.owner.get_full_name(),
-            'number': self.trip.reference(),
+            'trip_reference': self.object.reference(),
+            'owner_name': self.object.owner.get_full_name(),
+            'number': self.object.reference(),
             'state': 'Submitted',
             'url': 'http://{}{}'.format(
                 self.get_current_site().domain,
-                self.trip.get_admin_url()
+                self.object.get_admin_url()
             )
         }
 
@@ -144,7 +88,7 @@ class TripTravelAssistantEmail(TripCreatedEmail):
 
     def get_context(self):
         context = super(TripTravelAssistantEmail, self).get_context()
-        context['travel_assistant'] = self.trip.travel_assistant.first_name
+        context['travel_assistant'] = self.object.travel_assistant.first_name
         return context
 
 
@@ -167,7 +111,7 @@ class TripTAEmail(TripCreatedEmail):
 
     def get_context(self):
         context = super(TripTAEmail, self).get_context()
-        context['pa_assistant'] = self.trip.programme_assistant.first_name
+        context['pa_assistant'] = self.object.programme_assistant.first_name
         return context
 
 
@@ -190,8 +134,8 @@ class TripTADraftedEmail(TripCreatedEmail):
 
     def get_context(self):
         context = super(TripTADraftedEmail, self).get_context()
-        context['vision_approver'] = self.trip.vision_approver.first_name
-        context['ta_ref'] = self.trip.ta_reference
+        context['vision_approver'] = self.object.vision_approver.first_name
+        context['ta_ref'] = self.object.ta_reference
         return context
 
 
@@ -214,12 +158,12 @@ class TripActionPointCreated(BaseEmail):
 
     def get_context(self):
         return {
-            'trip_reference': self.trip.reference(),
+            'trip_reference': self.object.reference(),
             'url': 'http://{}{}#reporting'.format(
                 self.get_current_site().domain,
-                self.trip.get_admin_url()
+                self.object.get_admin_url()
             ),
-            'owner_name': self.trip.owner.get_full_name(),
+            'owner_name': self.object.owner.get_full_name(),
             'responsible': ', '.join(
                 [
                     user.get_full_name()

@@ -7,7 +7,7 @@ from django.contrib.sites.models import Site
 
 from registration.signals import user_activated, user_registered
 
-from .tasks import send_mail
+from EquiTrack.utils import send_mail
 
 
 @receiver(user_registered)

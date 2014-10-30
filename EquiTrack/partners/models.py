@@ -8,11 +8,13 @@ import requests
 import reversion
 from django.conf import settings
 from django.db import models, transaction
+from django.contrib.auth.models import Group
+from django.db.models.signals import post_save
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 
-from EquiTrack.utils import get_changeform_link
+from EquiTrack.utils import get_changeform_link, AdminURLMixin
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -30,6 +32,7 @@ from locations.models import (
     Location,
     Region,
 )
+from partners import emails
 
 
 class PartnerOrganization(models.Model):
@@ -155,7 +158,7 @@ class Assessment(models.Model):
     download_url.short_description = 'Download Report'
 
 
-class PCA(models.Model):
+class PCA(AdminURLMixin, models.Model):
 
     IN_PROCESS = u'in_process'
     ACTIVE = u'active'
@@ -369,6 +372,30 @@ class PCA(models.Model):
             )
 
         super(PCA, self).save(**kwargs)
+
+    @classmethod
+    def send_changes(cls, sender, instance, created, **kwargs):
+        # send emails to managers on changes
+        manager, created = Group.objects.get_or_create(
+            name=u'Partnership Manager'
+        )
+        managers = manager.user_set.all() | instance.unicef_managers.all()
+        recipients = [user.email for user in managers]
+
+        if created:  # new partnership
+            emails.PartnershipCreatedEmail(instance).send(
+                settings.DEFAULT_FROM_EMAIL,
+                *recipients
+            )
+
+        else:  # change to existing
+            emails.PartnershipUpdatedEmail(instance).send(
+                settings.DEFAULT_FROM_EMAIL,
+                *recipients
+            )
+
+
+post_save.connect(PCA.send_changes, sender=PCA)
 
 
 class PCAGrant(models.Model):
