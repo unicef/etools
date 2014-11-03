@@ -53,8 +53,8 @@ class SectorListFilter(admin.SimpleListFilter):
 
 
 class SectorAdmin(ImportExportModelAdmin):
-    list_display = ('color',)
-    list_editable = ('color',)
+    list_display = ('name', 'color', 'dashboard',)
+    list_editable = ('color', 'dashboard',)
 
 
 class ResultStructureAdmin(admin.ModelAdmin):
