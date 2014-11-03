@@ -117,6 +117,42 @@
                 </div>
             </div>
 
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">Total Trips by Section</h3>
+
+                            <div class="actions pull-right">
+                                <i class="fa fa-chevron-down"></i>
+                                <i class="fa fa-times"></i>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <table class="table">
+                                <thead>
+                                <tr>
+                                    <th>Section</th>
+                                    <th>Total</th>
+                                    <th>Color</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    {% for section in by_month %}
+                                        <tr>
+                                            <td>{{ section.section }}</td>
+                                            <td>{{ section.total }}</td>
+                                            <td style="background-color: {{ section.color }};"></td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                        </div>
+                    </div>
+                </div>
+
         </section>
     </section>
 {% endblock %}
@@ -126,7 +162,7 @@
 
         function get_month_data(month) {
             // Use Morris.Bar
-            $.getJSON('/trips/offices/?month='+month, function (data) {
+            $.getJSON('/trips/offices/?month=' + month, function (data) {
                 $('#bar-offices').empty();
                 data.element = 'bar-offices';
                 Morris.Bar(data);
