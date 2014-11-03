@@ -46,6 +46,7 @@ from partners.models import (
     PartnerOrganization,
     Assessment,
     SpotCheck,
+    Recommendation,
 )
 
 from partners.filters import (
@@ -507,8 +508,35 @@ class FACEAdmin(admin.ModelAdmin):
     )
 
 
+class ReccomnedationsInlineAdmin(admin.TabularInline):
+    model = Recommendation
+    extra = 0
+
+
+class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
+    inlines = [ReccomnedationsInlineAdmin]
+    readonly_fields = (
+        u'download_url',
+        u'requested_date',
+        u'requesting_officer',
+        u'approving_officer',
+
+    )
+
+    def save_model(self, request, obj, form, change):
+
+        if not change:
+            obj.requesting_officer = request.user
+
+        super(AssessmentAdmin, self).save_model(
+            request, obj, form, change
+        )
+
+
 admin.site.register(PCA, PcaAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 admin.site.register(FACE, FACEAdmin)
+admin.site.register(Assessment, AssessmentAdmin)
+

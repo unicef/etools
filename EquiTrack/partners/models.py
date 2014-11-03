@@ -59,6 +59,10 @@ class PartnerOrganization(models.Model):
         max_length=256L,
         blank=True
     )
+    address = models.TextField(
+        blank=True,
+        null=True
+    )
     email = models.CharField(
         max_length=255,
         blank=True
@@ -70,6 +74,10 @@ class PartnerOrganization(models.Model):
     phone_number = models.CharField(
         max_length=32L,
         blank=True
+    )
+    vendor_number = models.BigIntegerField(
+        blank=True,
+        null=True
     )
     alternate_id = models.IntegerField(
         blank=True,
@@ -94,7 +102,7 @@ class PartnerOrganization(models.Model):
 
 class Assessment(models.Model):
 
-    QUICK = u'quick'
+    SFMC = u'checklist'
     MICRO = u'micro'
     MACRO = u'macro'
     HIGH = u'high'
@@ -102,7 +110,7 @@ class Assessment(models.Model):
     MODERATE = u'moderate'
     LOW = u'low'
     ASSESSMENT_TYPES = (
-        (QUICK, u"Quick-Assessment"),
+        (SFMC, u"Simplified financial management checklist"),
         (MICRO, u"Micro-Assessment"),
         (MACRO, u"Macro-Assessment"),
     )
@@ -120,7 +128,39 @@ class Assessment(models.Model):
         max_length=50,
         choices=ASSESSMENT_TYPES,
     )
-    planned_date = models.DateField()
+    previous_value_with_UN = models.IntegerField(
+        default=0,
+        help_text=u'Value of agreements with other '
+                  u'UN agencies in the last 5 years'
+    )
+    names_of_other_agencies = models.CharField(
+        max_length=255,
+        blank=True, null=True,
+        help_text=u'List the names of the other '
+                  u'agencies they have worked with'
+    )
+    expected_budget = models.IntegerField()
+    notes = models.CharField(
+        max_length=255,
+        blank=True, null=True,
+        verbose_name=u'Special requests',
+        help_text=u'Note any special requests to be '
+                  u'considered during the assessment'
+    )
+    requested_date = models.DateField(
+        auto_now_add=True
+    )
+    requesting_officer = models.ForeignKey(
+        'auth.User',
+        related_name='requested_assessments'
+    )
+    approving_officer = models.ForeignKey(
+        'auth.User',
+        blank=True, null=True
+    )
+    planned_date = models.DateField(
+        blank=True, null=True
+    )
     completed_date = models.DateField(
         blank=True, null=True
     )
@@ -128,13 +168,6 @@ class Assessment(models.Model):
         max_length=50,
         choices=RISK_RATINGS,
         default=HIGH,
-    )
-    notes = models.TextField(
-        blank=True, null=True
-    )
-    actions = models.TextField(
-        blank=True, null=True,
-        verbose_name=u'Follow up actions'
     )
     report = FilerFileField(
         blank=True, null=True
@@ -156,6 +189,45 @@ class Assessment(models.Model):
         return u''
     download_url.allow_tags = True
     download_url.short_description = 'Download Report'
+
+
+class Recommendation(models.Model):
+
+    PARTNER = u'partner'
+    FUNDS = u'funds'
+    STAFF = u'staff'
+    POLICY = u'policy'
+    INT_AUDIT = u'int-audit'
+    EXT_AUDIT = u'ext-audit'
+    REPORTING = u'reporting'
+    SYSTEMS = u'systems'
+    SUBJECT_AREAS = (
+        (PARTNER, u'Implementing Partner'),
+        (FUNDS, u'Funds Flow'),
+        (STAFF, u'Staffing'),
+        (POLICY, u'Acct Policies & Procedures'),
+        (INT_AUDIT, u'Internal Audit'),
+        (EXT_AUDIT, u'External Audit'),
+        (REPORTING, u'Reporting and Monitoring'),
+        (SYSTEMS, u'Information Systems'),
+    )
+
+    assessment = models.ForeignKey(Assessment)
+    subject_area = models.CharField(max_length=50, choices=SUBJECT_AREAS)
+    description = models.CharField(max_length=254)
+    level = models.CharField(max_length=50, choices=Assessment.RISK_RATINGS,
+                             verbose_name=u'Priority Flag')
+    closed = models.BooleanField(default=False, verbose_name=u'Closed?')
+    completed_date = models.DateField(blank=True, null=True)
+
+
+    @classmethod
+    def send_action(cls, sender, instance, created, **kwargs):
+        pass
+
+    class Meta:
+        verbose_name = 'Key recommendation'
+        verbose_name_plural = 'Key recommendations'
 
 
 class PCA(AdminURLMixin, models.Model):

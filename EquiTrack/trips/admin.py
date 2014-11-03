@@ -53,23 +53,9 @@ class ActionPointInlineAdmin(admin.StackedInline):
     fields = (
         (u'description', u'due_date',),
         u'persons_responsible',
-        (u'actions_taken', u'completed_date', u'comments', u'closed',),
+        (u'actions_taken',),
+        (u'completed_date', u'closed',),
     )
-
-    def get_readonly_fields(self, request, report=None):
-        """
-        Only let certain users perform approvals
-        """
-        fields = [
-            u'comments',
-            u'closed'
-        ]
-
-        if report:
-            if request.user == report.supervisor or request.user.is_superuser:
-                return []
-
-        return fields
 
 
 class SitesVisitedInlineAdmin(GenericTabularInline):
