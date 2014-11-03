@@ -52,6 +52,11 @@ class SectorListFilter(admin.SimpleListFilter):
         return queryset
 
 
+class SectorAdmin(ImportExportModelAdmin):
+    list_display = ('color',)
+    list_editable = ('color',)
+
+
 class ResultStructureAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = ('result_structure', SectorListFilter,)
@@ -154,7 +159,7 @@ class IndicatorAdmin(ImportExportModelAdmin):
 
 admin.site.register(RRPObjective, ImportExportModelAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
-admin.site.register(Sector, ImportExportModelAdmin)
+admin.site.register(Sector, SectorAdmin)
 admin.site.register(Activity, ImportExportModelAdmin)
 admin.site.register(IntermediateResult, ImportExportModelAdmin)
 admin.site.register(Rrp5Output, ResultStructureAdmin)
