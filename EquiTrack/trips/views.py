@@ -73,7 +73,7 @@ class TripsByOfficeView(APIView):
             'xkey': 'name',
             'ykeys': [sector.name for sector in sections],
             'labels': [sector.name for sector in sections],
-            'barColors': ['#1abc9c', '#2dcc70', '#e84c3d', '#c41cff', '#0b8eff', '#fdff00']
+            'barColors': [sector.color for sector in sections]
         }
 
         return Response(data=payload)
@@ -88,6 +88,23 @@ class TripsDashboard(TemplateView):
         months = get_trip_months()
         month_num = self.request.GET.get('month', 0)
         month = months[int(month_num)]
+
+        by_month = []
+        for section in Sector.objects.filter(
+                dashboard=True
+        ):
+            row = {
+                'section': section.name,
+                'color': section.color,
+                'total': section.trip_set.filter(
+                    Q(status=Trip.APPROVED) |
+                    Q(status=Trip.COMPLETED)
+                ).filter(
+                    from_date__year=month.year,
+                    from_date__month=month.month
+                ).count()
+            }
+            by_month.append(row)
 
         return {
             'months': months,
@@ -106,5 +123,6 @@ class TripsDashboard(TemplateView):
                 'cancelled': Trip.objects.filter(
                     status=Trip.CANCELLED,
                 ).count(),
-            }
+            },
+            'by_month': by_month
         }

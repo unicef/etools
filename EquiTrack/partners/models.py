@@ -8,11 +8,13 @@ import requests
 import reversion
 from django.conf import settings
 from django.db import models, transaction
+from django.contrib.auth.models import Group
+from django.db.models.signals import post_save
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 
-from EquiTrack.utils import get_changeform_link
+from EquiTrack.utils import get_changeform_link, AdminURLMixin
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -30,15 +32,53 @@ from locations.models import (
     Location,
     Region,
 )
+from partners import emails
 
 
 class PartnerOrganization(models.Model):
 
-    name = models.CharField(max_length=255, unique=True)
-    description = models.CharField(max_length=256L, blank=True)
-    email = models.CharField(max_length=255, blank=True)
-    contact_person = models.CharField(max_length=255, blank=True)
-    phone_number = models.CharField(max_length=32L, blank=True)
+    NATIONAL = u'national'
+    INTERNATIONAL = u'international'
+    UNAGENCY = u'un-agency'
+    PARTNER_TYPES = (
+        (NATIONAL, u"National"),
+        (INTERNATIONAL, u"International"),
+        (UNAGENCY, u"UN Agency"),
+    )
+
+    type = models.CharField(
+        max_length=50,
+        choices=PARTNER_TYPES,
+        default=NATIONAL
+    )
+    name = models.CharField(
+        max_length=255,
+        unique=True
+    )
+    description = models.CharField(
+        max_length=256L,
+        blank=True
+    )
+    address = models.TextField(
+        blank=True,
+        null=True
+    )
+    email = models.CharField(
+        max_length=255,
+        blank=True
+    )
+    contact_person = models.CharField(
+        max_length=255,
+        blank=True
+    )
+    phone_number = models.CharField(
+        max_length=32L,
+        blank=True
+    )
+    vendor_number = models.BigIntegerField(
+        blank=True,
+        null=True
+    )
     alternate_id = models.IntegerField(
         blank=True,
         null=True
@@ -60,7 +100,137 @@ class PartnerOrganization(models.Model):
         return self.name
 
 
-class PCA(models.Model):
+class Assessment(models.Model):
+
+    SFMC = u'checklist'
+    MICRO = u'micro'
+    MACRO = u'macro'
+    HIGH = u'high'
+    SIGNIFICANT = u'significant'
+    MODERATE = u'moderate'
+    LOW = u'low'
+    ASSESSMENT_TYPES = (
+        (SFMC, u"Simplified financial management checklist"),
+        (MICRO, u"Micro-Assessment"),
+        (MACRO, u"Macro-Assessment"),
+    )
+    RISK_RATINGS = (
+        (HIGH, u'High'),
+        (SIGNIFICANT, u'Significant'),
+        (MODERATE, u'Moderate'),
+        (LOW, u'Low'),
+    )
+
+    partner = models.ForeignKey(
+        PartnerOrganization
+    )
+    type = models.CharField(
+        max_length=50,
+        choices=ASSESSMENT_TYPES,
+    )
+    previous_value_with_UN = models.IntegerField(
+        default=0,
+        help_text=u'Value of agreements with other '
+                  u'UN agencies in the last 5 years'
+    )
+    names_of_other_agencies = models.CharField(
+        max_length=255,
+        blank=True, null=True,
+        help_text=u'List the names of the other '
+                  u'agencies they have worked with'
+    )
+    expected_budget = models.IntegerField()
+    notes = models.CharField(
+        max_length=255,
+        blank=True, null=True,
+        verbose_name=u'Special requests',
+        help_text=u'Note any special requests to be '
+                  u'considered during the assessment'
+    )
+    requested_date = models.DateField(
+        auto_now_add=True
+    )
+    requesting_officer = models.ForeignKey(
+        'auth.User',
+        related_name='requested_assessments'
+    )
+    approving_officer = models.ForeignKey(
+        'auth.User',
+        blank=True, null=True
+    )
+    planned_date = models.DateField(
+        blank=True, null=True
+    )
+    completed_date = models.DateField(
+        blank=True, null=True
+    )
+    rating = models.CharField(
+        max_length=50,
+        choices=RISK_RATINGS,
+        default=HIGH,
+    )
+    report = FilerFileField(
+        blank=True, null=True
+    )
+
+    def __unicode__(self):
+        return u'{type}: {partner} {rating} {date}'.format(
+            type=self.type,
+            partner=self.partner.name,
+            rating=self.rating,
+            date=self.completed_date.strftime("%d-%m-%Y") if
+            self.completed_date else u'NOT COMPLETED'
+        )
+
+    def download_url(self):
+        if self.report:
+            return u'<a class="btn btn-primary default" ' \
+                   u'href="{}" >Download</a>'.format(self.report.file.url)
+        return u''
+    download_url.allow_tags = True
+    download_url.short_description = 'Download Report'
+
+
+class Recommendation(models.Model):
+
+    PARTNER = u'partner'
+    FUNDS = u'funds'
+    STAFF = u'staff'
+    POLICY = u'policy'
+    INT_AUDIT = u'int-audit'
+    EXT_AUDIT = u'ext-audit'
+    REPORTING = u'reporting'
+    SYSTEMS = u'systems'
+    SUBJECT_AREAS = (
+        (PARTNER, u'Implementing Partner'),
+        (FUNDS, u'Funds Flow'),
+        (STAFF, u'Staffing'),
+        (POLICY, u'Acct Policies & Procedures'),
+        (INT_AUDIT, u'Internal Audit'),
+        (EXT_AUDIT, u'External Audit'),
+        (REPORTING, u'Reporting and Monitoring'),
+        (SYSTEMS, u'Information Systems'),
+    )
+
+    assessment = models.ForeignKey(Assessment)
+    subject_area = models.CharField(max_length=50, choices=SUBJECT_AREAS)
+    description = models.CharField(max_length=254)
+    level = models.CharField(max_length=50, choices=Assessment.RISK_RATINGS,
+                             verbose_name=u'Priority Flag')
+    closed = models.BooleanField(default=False, verbose_name=u'Closed?')
+    completed_date = models.DateField(blank=True, null=True)
+
+
+    @classmethod
+    def send_action(cls, sender, instance, created, **kwargs):
+        pass
+
+    class Meta:
+        verbose_name = 'Key recommendation'
+        verbose_name_plural = 'Key recommendations'
+
+
+class PCA(AdminURLMixin, models.Model):
 
     IN_PROCESS = u'in_process'
     ACTIVE = u'active'
@@ -275,6 +445,30 @@ class PCA(models.Model):
 
         super(PCA, self).save(**kwargs)
 
+    @classmethod
+    def send_changes(cls, sender, instance, created, **kwargs):
+        # send emails to managers on changes
+        manager, created = Group.objects.get_or_create(
+            name=u'Partnership Manager'
+        )
+        managers = manager.user_set.all() | instance.unicef_managers.all()
+        recipients = [user.email for user in managers]
+
+        if created:  # new partnership
+            emails.PartnershipCreatedEmail(instance).send(
+                settings.DEFAULT_FROM_EMAIL,
+                *recipients
+            )
+
+        else:  # change to existing
+            emails.PartnershipUpdatedEmail(instance).send(
+                settings.DEFAULT_FROM_EMAIL,
+                *recipients
+            )
+
+
+post_save.connect(PCA.send_changes, sender=PCA)
+
 
 class PCAGrant(models.Model):
     pca = models.ForeignKey(PCA)
@@ -453,6 +647,31 @@ class PCAFile(models.Model):
         return u''
     download_url.allow_tags = True
     download_url.short_description = 'Download Files'
+
+
+class SpotCheck(models.Model):
+
+    pca = models.ForeignKey(PCA)
+    sector = models.ForeignKey(
+        Sector,
+        blank=True, null=True
+    )
+    planned_date = models.DateField(
+        blank=True, null=True
+    )
+    completed_date = models.DateField(
+        blank=True, null=True
+    )
+    amount = models.IntegerField(
+        null=True, blank=True,
+        default=0
+    )
+    recommendations = models.TextField(
+        blank=True, null=True
+    )
+    partner_agrees = models.BooleanField(
+        default=False
+    )
 
 
 class FACE(models.Model):

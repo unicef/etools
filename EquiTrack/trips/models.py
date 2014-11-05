@@ -1,5 +1,3 @@
-from trips.emails import send_mail
-
 __author__ = 'jcranwellward'
 
 import datetime
