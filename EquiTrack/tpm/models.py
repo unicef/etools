@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group
 
 from post_office import mail
 from post_office.models import EmailTemplate
+from filer.fields.file import FilerFileField
 
 from EquiTrack.utils import AdminURLMixin
 
@@ -50,6 +51,9 @@ class TPMVisit(AdminURLMixin, models.Model):
     created_date = models.DateTimeField(
         auto_now_add=True
     )
+    report = FilerFileField(
+        blank=True, null=True
+    )
 
     class Meta:
         verbose_name = u'TPM Visit'
@@ -62,6 +66,14 @@ class TPMVisit(AdminURLMixin, models.Model):
             location.tpm_visit = False
             location.save()
         super(TPMVisit, self).save(**kwargs)
+
+    def download_url(self):
+        if self.report:
+            return u'<a class="btn btn-primary default" ' \
+                   u'href="{}" >Download</a>'.format(self.report.file.url)
+        return u''
+    download_url.allow_tags = True
+    download_url.short_description = 'Download Report'
 
     @classmethod
     def send_emails(cls, sender, instance, created, **kwargs):
@@ -125,8 +137,7 @@ class TPMVisit(AdminURLMixin, models.Model):
                 )
 
             mail.send(
-                ['no-reply@unicef.org'],
-                instance.assigned_by.email,
+                [instance.assigned_by.email],
                 template=template,
                 context={
                     'state': state,
