@@ -143,7 +143,6 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
         u'assigned_by',
         u'unicef_manager',
         u'partner_manager',
-        u'download_url'
     )
 
     def sectors(self, obj):

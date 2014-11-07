@@ -67,14 +67,6 @@ class TPMVisit(AdminURLMixin, models.Model):
             location.save()
         super(TPMVisit, self).save(**kwargs)
 
-    def download_url(self):
-        if self.report:
-            return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" >Download</a>'.format(self.report.file.url)
-        return u''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Report'
-
     @classmethod
     def send_emails(cls, sender, instance, created, **kwargs):
 
