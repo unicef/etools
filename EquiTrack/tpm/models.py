@@ -7,7 +7,6 @@ from django.contrib.auth.models import Group
 
 from post_office import mail
 from post_office.models import EmailTemplate
-from filer.fields.file import FilerFileField
 
 from EquiTrack.utils import AdminURLMixin
 
@@ -51,8 +50,9 @@ class TPMVisit(AdminURLMixin, models.Model):
     created_date = models.DateTimeField(
         auto_now_add=True
     )
-    report = FilerFileField(
-        blank=True, null=True
+    report = models.FileField(
+        blank=True, null=True,
+        upload_to=u'tpm_reports'
     )
 
     class Meta:
