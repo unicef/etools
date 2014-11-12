@@ -50,6 +50,10 @@ class TPMVisit(AdminURLMixin, models.Model):
     created_date = models.DateTimeField(
         auto_now_add=True
     )
+    report = models.FileField(
+        blank=True, null=True,
+        upload_to=u'tpm_reports'
+    )
 
     class Meta:
         verbose_name = u'TPM Visit'
@@ -125,8 +129,7 @@ class TPMVisit(AdminURLMixin, models.Model):
                 )
 
             mail.send(
-                ['no-reply@unicef.org'],
-                instance.assigned_by.email,
+                [instance.assigned_by.email],
                 template=template,
                 context={
                     'state': state,

@@ -445,13 +445,14 @@ class PCA(AdminURLMixin, models.Model):
 
         super(PCA, self).save(**kwargs)
 
+
     @classmethod
     def send_changes(cls, sender, instance, created, **kwargs):
         # send emails to managers on changes
         manager, created = Group.objects.get_or_create(
             name=u'Partnership Manager'
         )
-        managers = manager.user_set.all() | instance.unicef_managers.all()
+        managers = manager.user_set.all()  # | instance.unicef_managers.all()
         recipients = [user.email for user in managers]
 
         if created:  # new partnership

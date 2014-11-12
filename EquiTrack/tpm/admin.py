@@ -111,10 +111,6 @@ class TPMLocalityFilter(admin.SimpleListFilter):
         return queryset
 
 
-class FileAttachmentInlineAdmin(GenericTabularInline):
-    model = FileAttachment
-
-
 class TPMVisitAdmin(ExportMixin, VersionAdmin):
     resource_class = TPMResource
     date_hierarchy = u'tentative_date'
@@ -147,9 +143,6 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
         u'assigned_by',
         u'unicef_manager',
         u'partner_manager',
-    )
-    inlines = (
-        FileAttachmentInlineAdmin,
     )
 
     def sectors(self, obj):
