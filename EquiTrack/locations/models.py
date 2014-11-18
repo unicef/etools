@@ -149,6 +149,7 @@ class LinkedLocation(models.Model):
         chained_model_field="region",
         show_all=False,
         auto_choose=True,
+        null=True, blank=True
     )
     location = ChainedForeignKey(
         Location,
