@@ -10,10 +10,6 @@ from django.contrib.auth.models import Group
 from pymongo import MongoClient
 from cartodb import CartoDBAPIKey, CartoDBException
 
-mongo = MongoClient(
-    os.environ.get('MONGO_URL', 'mongodb://localhost:27017'))[
-    os.environ.get('MONGODB_DATABASE', 'winter')]
-
 
 def set_docs(docs):
 
@@ -97,6 +93,10 @@ def import_docs(
         bucket=bucket,
         query=query
     )).json()
+
+    mongo = MongoClient(
+        os.environ.get('MONGO_URL', 'mongodb://localhost:27017'))[
+        os.environ.get('MONGODB_DATABASE', 'winter')]
 
     for row in data['rows']:
         doc = row['doc']
