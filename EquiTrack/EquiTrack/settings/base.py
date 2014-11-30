@@ -347,6 +347,7 @@ LOCAL_APPS = (
     'tpm',
     'users',
     'registration',
+    'winter',
 )
 
 MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
