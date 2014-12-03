@@ -2,7 +2,7 @@ __author__ = 'jcranwellward'
 
 from django.core.management.base import BaseCommand, CommandError
 
-import tasks
+from winter import tasks
 
 
 class Command(BaseCommand):
@@ -14,10 +14,19 @@ class Command(BaseCommand):
         task = args[0]
         if task == 'users':
             tasks.set_users()
-        if task == 'sites':
+
+        if task == 'get_sites':
+            tasks.get_sites()
+
+        if task == 'set_sites':
             tasks.set_sites()
+
         if task == 'import':
             tasks.import_docs()
+
+        if task == 'manifest':
+            tasks.prepare_manifest()
+
 
 
 
