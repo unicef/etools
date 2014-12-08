@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 import os
 import json
 import requests
+import dateutil.parser
 
 from requests.auth import HTTPBasicAuth
 from django.contrib.auth.models import Group
@@ -18,6 +19,13 @@ client = CartoDBAPIKey(
     '12d24a4f231dc516f83a3045ce133ab2977ee77e',
     'equitrack'
 )
+
+
+def send(message):
+    requests.post(
+        'https://hooks.slack.com/services/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',
+        data=json.dumps({'text': message})
+    )
 
 
 def set_docs(docs):
@@ -126,9 +134,27 @@ def get_kits_by_pcode(p_code):
 
 def prepare_manifest():
 
+    existing = winter.data.find({'type': 'assessment'}).count()
     import_docs()
-    for assessement in winter.data.find({'type': 'assessment'}):
-        p_code = assessement['location']['p_code']
+    imported = winter.data.find({'type': 'assessment'}).count()
+    data = winter.data.aggregate([
+        {'$group': {
+            '_id': "$location.p_code",
+            "assessments": {"$push": "$$ROOT"}}
+        }])
+    no_p_code = 0
+    for result in data['result']:
+        p_code = result['_id']
+        if not p_code:
+            no_p_code += 1
+            continue
+        not_completed = winter.data.find(
+            {
+                'type': 'assessment',
+                '$location.p_code': p_code,
+                'completed': {'$ne': True}
+            }
+        )
         kits = get_kits_by_pcode(p_code)
         if kits:
             site = winter.sites.find_one(
@@ -145,10 +171,15 @@ def prepare_manifest():
                     'long': 1,
                     'elevation': 1,
                     'confirmed_ip': 1,
-                    'comments': 1,
                     'unicef_priority': 1
                 }
             )
+            date = dateutil.parser.parse(
+                result['assessments'][0]['creation_date']
+            )
+            site['assessment_date'] = date.strftime('%d-%m-%Y')
+            site['num_assessments'] = len(result['assessments'])
+            site['completed'] = False if not_completed else True
             total = 0
             for kit in kits:
                 site[kit['_id']] = kit['count']
@@ -156,3 +187,9 @@ def prepare_manifest():
             site['total_kits'] = total
 
             winter.manifest.update({'_id': p_code}, site, upsert=True)
+
+    send('Import finished: '
+         '{} new assessments, '
+         'total now {}, including {} with no assigned site'.format(
+        imported - existing, imported, no_p_code
+    ))
