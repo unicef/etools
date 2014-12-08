@@ -56,6 +56,7 @@ class SiteListJson(BaseDatatableView):
         'confirmed_ip',
         'unicef_priority',
         'assessment_date',
+        'num_assessments',
         'completed',
         '3 months',
         '12 months',
@@ -157,7 +158,7 @@ class SiteListJson(BaseDatatableView):
             pseudo_buffer = Echo()
             writer = csv.writer(pseudo_buffer)
             response = StreamingHttpResponse(
-                (writer.writerow(row) for row in rows),
+                (writer.writerow([unicode(s).encode("utf-8") for s in row]) for row in rows),
                 content_type="text/csv")
             response['Content-Disposition'] = 'attachment; filename="manifest-{}.csv"'.format(
                 datetime.datetime.now().strftime('%d-%m-%Y')
