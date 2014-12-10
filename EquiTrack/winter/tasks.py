@@ -179,12 +179,20 @@ def prepare_manifest():
             )
             site['assessment_date'] = date.strftime('%d-%m-%Y')
             site['num_assessments'] = len(result['assessments'])
-            site['completed'] = False if not_completed else True
+            site['completed'] = 'pending' if not_completed else 'completed'
             total = 0
             for kit in kits:
                 site[kit['_id']] = kit['count']
                 total += kit['count']
             site['total_kits'] = total
+
+            client.sql(
+                "UPDATE {} SET status = \'{}\' WHERE p_code = \'{}\'".format(
+                    'winterazation_master_list_v8_zn',
+                    site['completed'],
+                    p_code
+                )
+            )
 
             winter.manifest.update({'_id': p_code}, site, upsert=True)
 
