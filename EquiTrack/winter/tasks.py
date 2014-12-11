@@ -128,15 +128,15 @@ def import_docs(
             {'completion_date': {'$ne': ''}},
             {'completion_date': {'$exists': True}}
         ]}
-    )
+    ).count()
 
     send('Import finished: '
          '{} new assessments, '
          'total now {}, '
          '{} completed'.format(
-        imported - existing,
-        imported,
-        completed
+         imported - existing,
+         imported,
+         completed
     ))
 
 
@@ -196,8 +196,7 @@ def prepare_manifest():
                 sorted(assessments, key=itemgetter('creation_date'), reverse=True)[0]['creation_date']
             )
             end_date = sorted(assessments, key=itemgetter('completion_date'), reverse=True)[0]['completion_date']
-            if end_date:
-                end_date = dateutil.parser.parse(end_date)
+            end_date = dateutil.parser.parse(end_date).strftime('%Y-%m-%d') if end_date else ''
             site['assessment_date'] = start_date.strftime('%Y-%m-%d')
             site['num_assessments'] = len(assessments)
             site['completed'] = completed
