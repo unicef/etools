@@ -23,7 +23,7 @@ class WinterDashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         return {
             'assessed': winter.data.find({'type': 'assessment'}).count(),
-            'completed': winter.data.find({'type': 'assessment', 'completed': 1}).count()
+            'completed': winter.data.find({'type': 'assessment', 'completed': True}).count()
         }
 
 
