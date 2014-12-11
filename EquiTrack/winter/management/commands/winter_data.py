@@ -27,6 +27,10 @@ class Command(BaseCommand):
         if task == 'manifest':
             tasks.prepare_manifest()
 
+        if task == 'full':
+            tasks.import_docs()
+            tasks.prepare_manifest()
+
 
 
 

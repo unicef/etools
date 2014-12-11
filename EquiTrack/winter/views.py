@@ -22,8 +22,15 @@ class WinterDashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         return {
-            'assessed': winter.data.find({'type': 'assessment'}).count(),
-            'completed': winter.data.find({'type': 'assessment', 'completed': True}).count()
+            'assessed': winter.data.find(
+                {'type': 'assessment',
+                 'completion_date': {'$exists': True}}
+            ).count(),
+            'completed': winter.data.find(
+                {'$and': [
+                    {'completion_date': {'$ne': ''}},
+                    {'completion_date': {'$exists': True}}
+                ]}).count()
         }
 
 
@@ -58,6 +65,7 @@ class SiteListJson(BaseDatatableView):
         'assessment_date',
         'num_assessments',
         'completed',
+        'distribution_date',
         '3 months',
         '12 months',
         '2 years',

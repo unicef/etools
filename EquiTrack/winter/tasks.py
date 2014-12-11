@@ -4,6 +4,7 @@ import os
 import json
 import requests
 import dateutil.parser
+from operator import itemgetter
 
 from requests.auth import HTTPBasicAuth
 from django.contrib.auth.models import Group
@@ -116,9 +117,27 @@ def import_docs(
         query=query
     )).json()
 
+    existing = winter.data.find({'type': 'assessment'}).count()
     for row in data['rows']:
         doc = row['doc']
         winter.data.update({'_id': doc['_id']}, doc, upsert=True)
+
+    imported = winter.data.find({'type': 'assessment'}).count()
+    completed = winter.data.find(
+        {'$and': [
+            {'completion_date': {'$ne': ''}},
+            {'completion_date': {'$exists': True}}
+        ]}
+    )
+
+    send('Import finished: '
+         '{} new assessments, '
+         'total now {}, '
+         '{} completed'.format(
+        imported - existing,
+        imported,
+        completed
+    ))
 
 
 def get_kits_by_pcode(p_code):
@@ -134,10 +153,8 @@ def get_kits_by_pcode(p_code):
 
 def prepare_manifest():
 
-    existing = winter.data.find({'type': 'assessment'}).count()
-    import_docs()
-    imported = winter.data.find({'type': 'assessment'}).count()
     data = winter.data.aggregate([
+        {'$match': {'completion_date': {'$exists': True}}},
         {'$group': {
             '_id': "$location.p_code",
             "assessments": {"$push": "$$ROOT"}}
@@ -148,13 +165,13 @@ def prepare_manifest():
         if not p_code:
             no_p_code += 1
             continue
-        not_completed = winter.data.find(
-            {
-                'type': 'assessment',
-                '$location.p_code': p_code,
-                'completed': {'$ne': True}
-            }
-        )
+        completed = winter.data.find(
+            {'$and': [
+                {'type': 'assessment'},
+                {'location.p_code': p_code},
+                {'completed': True},
+                {'completed': {'$exists': True}}
+        ]}).count()
         kits = get_kits_by_pcode(p_code)
         if kits:
             site = winter.sites.find_one(
@@ -174,30 +191,39 @@ def prepare_manifest():
                     'unicef_priority': 1
                 }
             )
-            date = dateutil.parser.parse(
-                result['assessments'][0]['creation_date']
+            assessments = result['assessments']
+            start_date = dateutil.parser.parse(
+                sorted(assessments, key=itemgetter('creation_date'), reverse=True)[0]['creation_date']
             )
-            site['assessment_date'] = date.strftime('%d-%m-%Y')
-            site['num_assessments'] = len(result['assessments'])
-            site['completed'] = 'pending' if not_completed else 'completed'
+            end_date = sorted(assessments, key=itemgetter('completion_date'), reverse=True)[0]['completion_date']
+            if end_date:
+                end_date = dateutil.parser.parse(end_date)
+            site['assessment_date'] = start_date.strftime('%Y-%m-%d')
+            site['num_assessments'] = len(assessments)
+            site['completed'] = completed
+            site['distribution_date'] = end_date
             total = 0
             for kit in kits:
                 site[kit['_id']] = kit['count']
                 total += kit['count']
             site['total_kits'] = total
 
+            status = 'assessed'
+            if completed == len(assessments):
+                status = 'completed'
+            elif completed < len(assessments):
+                status = 'distributing'
+
             client.sql(
                 "UPDATE {} SET status = \'{}\' WHERE p_code = \'{}\'".format(
                     'winterazation_master_list_v8_zn',
-                    site['completed'],
+                    status,
                     p_code
                 )
             )
 
             winter.manifest.update({'_id': p_code}, site, upsert=True)
 
-    send('Import finished: '
-         '{} new assessments, '
-         'total now {}, including {} with no assigned site'.format(
-        imported - existing, imported, no_p_code
+    send('Manifest prepared for {} sites'.format(
+        winter.manifest.find().count()
     ))
