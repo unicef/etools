@@ -215,7 +215,7 @@ def prepare_manifest():
             site['status'] = status
 
             client.sql(
-                "UPDATE {} SET winterazation_status = \'{}\' WHERE p_code_winter = \'{}\'".format(
+                "UPDATE {} SET winterization_status = \'{}\' WHERE p_code_winter = \'{}\'".format(
                     'imap8_winter',
                     status,
                     p_code
