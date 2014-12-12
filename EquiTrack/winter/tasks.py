@@ -212,10 +212,11 @@ def prepare_manifest():
                 status = 'completed'
             elif completed < len(assessments):
                 status = 'distributing'
+            site['status'] = status
 
             client.sql(
-                "UPDATE {} SET status = \'{}\' WHERE p_code = \'{}\'".format(
-                    'winterazation_master_list_v8_zn',
+                "UPDATE {} SET winterazation_status = \'{}\' WHERE p_code_winter = \'{}\'".format(
+                    'imap8_winter',
                     status,
                     p_code
                 )
