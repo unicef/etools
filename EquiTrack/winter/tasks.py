@@ -210,7 +210,7 @@ def prepare_manifest():
             status = 'assessed'
             if completed == len(assessments):
                 status = 'completed'
-            elif completed < len(assessments):
+            elif completed:
                 status = 'distributing'
             site['status'] = status
 

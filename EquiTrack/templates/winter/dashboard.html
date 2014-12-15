@@ -14,7 +14,7 @@
 
             <!--tiles start-->
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                         <div class="dashboard-tile detail tile-red">
                             <div class="content">
                                 <h1 class="text-left timer"
@@ -22,13 +22,13 @@
                                     data-to="{{ assessed }}"
                                     data-speed="2500"></h1>
 
-                                <p>Assessed</p>
+                                <p>Families Assessed</p>
                             </div>
                             <div class="icon"><i class="fa fa-pencil"></i>
                             </div>
                         </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                         <div class="dashboard-tile detail tile-turquoise">
                             <div class="content">
                                 <h1 class="text-left timer"
@@ -36,9 +36,23 @@
                                     data-to="{{ completed }}"
                                     data-speed="2500"></h1>
 
-                                <p>Completed</p>
+                                <p>Families Completed</p>
                             </div>
                             <div class="icon"><i class="fa fa-thumbs-up"></i>
+                            </div>
+                        </div>
+                </div>
+                <div class="col-md-4">
+                        <div class="dashboard-tile detail tile-blue">
+                            <div class="content">
+                                <h1 class="text-left timer"
+                                    data-from="0"
+                                    data-to="{{ children }}"
+                                    data-speed="2500"></h1>
+
+                                <p>Children Reached</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-users"></i>
                             </div>
                         </div>
                 </div>
