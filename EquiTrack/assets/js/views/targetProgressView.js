@@ -17,7 +17,7 @@ define([
     initialize: function(arguments) {
       var self = this;
       this.target_id = arguments.target_id;
-      this.unit_id = arguments.unit_id
+      this.unit_id = arguments.unit_id;
       this.collection = new targetProgressList({
         "target_id": this.target_id,
         "unit_id": this.unit_id

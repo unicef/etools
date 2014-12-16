@@ -200,6 +200,7 @@ def prepare_manifest():
             site['assessment_date'] = start_date.strftime('%Y-%m-%d')
             site['num_assessments'] = len(assessments)
             site['completed'] = completed
+            site['remaining'] = len(assessments) - completed
             site['distribution_date'] = end_date
             total = 0
             for kit in kits:

@@ -36,7 +36,7 @@ define([
       _.each(this.views, function(view) {
         if (view instanceof sectorsView) {
           sectors_view = view;
-          return;
+
         } else {
 //          view.remove();
         }
@@ -58,7 +58,7 @@ define([
         if (view instanceof targetProgressView) {
           if (view.targetModel.attributes.target_id == target_id && view.targetModel.attributes.unit_id == unit_id) {
             target_progress_view = view;
-            return;
+
           }
         } else {
 //          view.remove();
@@ -126,7 +126,7 @@ define([
         if (view instanceof pcaTargetShareView) {
           if (view.target_id == target_id && view.unit_id == unit_id) {
             pca_view = view;
-            return;
+
           }
         }
       });
@@ -161,7 +161,7 @@ define([
         if (view instanceof goalView) {
           if (view.goal_id == goal_id) {
             goal_view = view;
-            return;
+
           }
         }
       });
@@ -186,7 +186,7 @@ define([
       _.each(router.views, function(view) {
         if (view instanceof mapFilterView) {
           map_view = view;
-          return;
+
         }
       });
       if (!map_view) {

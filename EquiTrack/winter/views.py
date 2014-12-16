@@ -72,6 +72,7 @@ class SiteListJson(BaseDatatableView):
         'assessment_date',
         'num_assessments',
         'completed',
+        'remaining',
         'distribution_date',
         '3 months',
         '12 months',
