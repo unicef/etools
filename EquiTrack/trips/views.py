@@ -93,31 +93,16 @@ class TripsDashboard(TemplateView):
         for section in Sector.objects.filter(
                 dashboard=True
         ):
-            trips = section.trip_set.filter(
-                from_date__year=month.year,
-                from_date__month=month.month
-            )
-            action_points = [
-                action for trip in trips
-                for action in trip.actionpoint_set.all()
-            ]
-            closed_action_points = [
-                action for trip in trips
-                for action in trip.actionpoint_set.filter(
-                    closed=True
-                )
-            ]
             row = {
                 'section': section.name,
                 'color': section.color,
-                'total_approved': trips.filter(
-                    status=Trip.APPROVED
-                ).count(),
-                'total_completed': trips.filter(
-                    status=Trip.COMPLETED
-                ).count(),
-                'actions': len(action_points),
-                'closed_actions': len(closed_action_points)
+                'total': section.trip_set.filter(
+                    Q(status=Trip.APPROVED) |
+                    Q(status=Trip.COMPLETED)
+                ).filter(
+                    from_date__year=month.year,
+                    from_date__month=month.month
+                ).count()
             }
             by_month.append(row)
 

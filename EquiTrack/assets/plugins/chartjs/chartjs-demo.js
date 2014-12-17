@@ -44,7 +44,7 @@
 				}
 			]
 			
-		};
+		}
 
 	var myLine = new Chart(document.getElementById("line").getContext("2d")).Line(lineChartData);
 
@@ -64,7 +64,7 @@
 				}
 			]
 			
-		};
+		}
 
 	var myLine = new Chart(document.getElementById("bar").getContext("2d")).Bar(barChartData);
 

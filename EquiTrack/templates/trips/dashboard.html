@@ -122,7 +122,7 @@
                 <div class="col-md-12">
                     <div class="panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Trips by Section</h3>
+                            <h3 class="panel-title">Total Trips by Section</h3>
 
                             <div class="actions pull-right">
                                 <i class="fa fa-chevron-down"></i>
@@ -134,11 +134,7 @@
                                 <thead>
                                 <tr>
                                     <th>Section</th>
-                                    <th>Total Approved</th>
-                                    <th>Total Completed</th>
-                                    <th>Open Actions</th>
-                                    <th>Closed Actions</th>
-                                    <th>Percentage</th>
+                                    <th>Total</th>
                                     <th>Color</th>
                                 </tr>
                                 </thead>
@@ -146,11 +142,7 @@
                                     {% for section in by_month %}
                                         <tr>
                                             <td>{{ section.section }}</td>
-                                            <td>{{ section.total_approved }}</td>
-                                            <td>{{ section.total_completed }}</td>
-                                            <td>{{ section.actions }}</td>
-                                            <td>{{ section.closed_actions }}</td>
-                                            <td>{% widthratio section.closed_actions section.actions 100 %}%</td>
+                                            <td>{{ section.total }}</td>
                                             <td style="background-color: {{ section.color }};"></td>
                                         </tr>
                                     {% endfor %}

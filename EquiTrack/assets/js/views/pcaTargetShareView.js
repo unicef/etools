@@ -68,7 +68,7 @@ define([
         "target_name": this.model.attributes.target_name,
         "month": utils.getMonth(this.model.attributes.month),
         "year": this.model.attributes.year
-      };
+      }
       $('body').append(this.template(data));
 
       // show modal window
