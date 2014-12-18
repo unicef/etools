@@ -68,6 +68,7 @@ class SiteListJson(BaseDatatableView):
         'long',
         'elevation',
         'confirmed_ip',
+        'actual_ip',
         'unicef_priority',
         'assessment_date',
         'num_assessments',
