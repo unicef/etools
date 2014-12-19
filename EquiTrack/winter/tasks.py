@@ -153,17 +153,21 @@ def get_kits_by_pcode(p_code):
 
 def prepare_manifest():
 
-    data = winter.data.aggregate([
-        {'$match': {'completion_date': {'$exists': True}}},
-        {'$group': {
-            '_id': "$location.p_code",
-            "assessments": {"$push": "$$ROOT"}}
-        }])
-    no_p_code = 0
-    for result in data['result']:
-        p_code = result['_id']
+    sites = winter.data.aggregate([
+        {'$project': {'site': '$location.p_code'}},
+        {'$group': {'_id': '$site'}}
+    ])['result']
+    for location in sites:
+        p_code = location['_id']
         if not p_code:
-            no_p_code += 1
+            continue
+        assessments = list(winter.data.find(
+            {'$and': [
+                {'type': 'assessment'},
+                {'location.p_code': p_code},
+                {'completed': {'$exists': True}}
+        ]}))
+        if not assessments:
             continue
         completed = winter.data.find(
             {'$and': [
@@ -191,7 +195,6 @@ def prepare_manifest():
                     'unicef_priority': 1
                 }
             )
-            assessments = result['assessments']
             start_date = dateutil.parser.parse(
                 sorted(assessments, key=itemgetter('creation_date'), reverse=True)[0]['creation_date']
             )
