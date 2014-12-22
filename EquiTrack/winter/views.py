@@ -31,7 +31,13 @@ class WinterDashboardView(TemplateView):
                     {'completion_date': {'$ne': ''}},
                     {'completion_date': {'$exists': True}}
                 ]}).count(),
-            'children': winter.data.aggregate([
+            'children_targeted': winter.data.aggregate([
+                {'$project': {'children': '$child_list.age'}},
+                {'$unwind': '$children'},
+                {'$group': {'_id': "$children", 'count': {'$sum': 1}}},
+                {'$group': {'_id': None, 'total': {'$sum': "$count"}}}
+            ])['result'][0]['total'],
+            'children_completed': winter.data.aggregate([
                 {'$match': {'child_list': {'$elemMatch': {'status': "COMPLETED"}}}},
                 {'$project': {'children': '$child_list.age'}},
                 {'$unwind': '$children'},

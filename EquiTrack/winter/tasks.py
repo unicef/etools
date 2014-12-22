@@ -222,9 +222,9 @@ def prepare_manifest():
             site['total_kits'] = total
 
             total_remaining = 0
-            for kit in get_kits_by_pcode(p_code, status="ALLOCATED"):
-                site['Remaining ' + kit['_id']] = kit['count']
-                total_remaining += kit['count']
+            for remaining in get_kits_by_pcode(p_code, status='ALLOCATED'):
+                site['Remaining ' + remaining['_id']] = remaining['count']
+                total_remaining += remaining['count']
             site['total_remaining'] = total_remaining
 
             status = 'assessed'
