@@ -140,14 +140,21 @@ def import_docs(
     ))
 
 
-def get_kits_by_pcode(p_code):
+def get_kits_by_pcode(p_code, status=""):
 
-    kits = winter.data.aggregate([
+    query = [
         {'$match': {'type': 'assessment', 'location.p_code': p_code}},
         {'$project': {'kits': '$child_list.kit'}},
         {'$unwind': '$kits'},
         {'$group': {'_id': "$kits", 'count': {'$sum': 1}}},
-    ])
+    ]
+    if status:
+        query.insert(
+            0,
+            {'$match': {'child_list': {'$elemMatch': {'status': status}}}}
+        )
+
+    kits = winter.data.aggregate(query)
     return kits['result']
 
 
@@ -206,11 +213,18 @@ def prepare_manifest():
             site['completed'] = completed
             site['remaining'] = len(assessments) - completed
             site['distribution_date'] = end_date
+
             total = 0
             for kit in kits:
                 site[kit['_id']] = kit['count']
                 total += kit['count']
             site['total_kits'] = total
+
+            total_remaining = 0
+            for kit in get_kits_by_pcode(p_code, status="ALLOCATED"):
+                site['Remaining ' + kit['_id']] = kit['count']
+                total_remaining += kit['count']
+            site['total_remaining'] = total_remaining
 
             status = 'assessed'
             if completed == len(assessments):
