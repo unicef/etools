@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 import os
 import json
 import requests
+import unidecode
 import dateutil.parser
 from operator import itemgetter
 
@@ -202,13 +203,13 @@ def prepare_manifest():
                     'unicef_priority': 1
                 }
             )
-            start_date = dateutil.parser.parse(
-                sorted(assessments, key=itemgetter('creation_date'), reverse=True)[0]['creation_date']
-            )
+            start_date = sorted(assessments, key=itemgetter('creation_date'), reverse=True)[0]['creation_date']
+            start_date = unidecode.unidecode(start_date)
+            start_date = dateutil.parser.parse(start_date).strftime('%Y-%m-%d') if start_date else ''
             end_date = sorted(assessments, key=itemgetter('completion_date'), reverse=True)[0]['completion_date']
             end_date = dateutil.parser.parse(end_date).strftime('%Y-%m-%d') if end_date else ''
             site['actual_ip'] = assessments[0]['history'][0]['organisation']
-            site['assessment_date'] = start_date.strftime('%Y-%m-%d')
+            site['assessment_date'] = start_date
             site['num_assessments'] = len(assessments)
             site['completed'] = completed
             site['remaining'] = len(assessments) - completed
