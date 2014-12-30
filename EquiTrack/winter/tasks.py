@@ -221,6 +221,12 @@ def prepare_manifest():
                 total += kit['count']
             site['total_kits'] = total
 
+            total_completed = 0
+            for completed in get_kits_by_pcode(p_code, status='COMPLETED'):
+                site['Completed ' + completed['_id']] = completed['count']
+                total_completed += completed['count']
+            site['total_completed'] = total_completed
+
             total_remaining = 0
             for remaining in get_kits_by_pcode(p_code, status='ALLOCATED'):
                 site['Remaining ' + remaining['_id']] = remaining['count']
