@@ -102,7 +102,12 @@ class SiteListJson(BaseDatatableView):
         'total_kits',
         'total_remaining',
     ]
-    order_columns = columns
+    order_columns = {
+        'district': 'asc',
+        'pcodename': 'asc',
+        'actual_ip': 'asc',
+        'distribution_date': 'asc'
+    }
 
     def get_initial_queryset(self):
         # return queryset used as base for futher sorting/filtering
@@ -124,51 +129,11 @@ class SiteListJson(BaseDatatableView):
     def ordering(self, qs):
         """ Get parameters from the request and prepare order by clause
         """
-        request = self.request
-
-        # Number of columns that are used in sorting
-        sorting_cols = 0
-        if self.pre_camel_case_notation:
-            try:
-                sorting_cols = int(request.REQUEST.get('iSortingCols', 0))
-            except ValueError:
-                sorting_cols = 0
-        else:
-            sort_key = 'order[{0}][column]'.format(sorting_cols)
-            while sort_key in self.request.REQUEST:
-                sorting_cols += 1
-                sort_key = 'order[{0}][column]'.format(sorting_cols)
-
         order = []
-        order_columns = self.get_order_columns()
-
-        for i in range(sorting_cols):
-            # sorting column
-            sort_dir = 'asc'
-            try:
-                if self.pre_camel_case_notation:
-                    sort_col = int(request.REQUEST.get('iSortCol_{0}'.format(i)))
-                    # sorting order
-                    sort_dir = request.REQUEST.get('sSortDir_{0}'.format(i))
-                else:
-                    sort_col = int(request.REQUEST.get('order[{0}][column]'.format(i)))
-                    # sorting order
-                    sort_dir = request.REQUEST.get('order[{0}][dir]'.format(i))
-            except ValueError:
-                sort_col = 0
-
-            sdir = -1 if sort_dir == 'desc' else 1
-            sortcol = order_columns[sort_col]
-
-            if isinstance(sortcol, list):
-                for sc in sortcol:
-                    order.append((sc, sdir))
-            else:
-                order.append((sortcol, sdir))
-
-        if order:
-            return qs.sort(order)
-        return qs
+        for col, direct in self.order_columns.iteritems():
+            sdir = -1 if direct == 'desc' else 1
+            order.append((col, sdir))
+        return qs.sort(order)
 
     def paging(self, qs):
         # disable server side paging
