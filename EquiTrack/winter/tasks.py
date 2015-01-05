@@ -177,7 +177,7 @@ def prepare_manifest():
         ]}))
         if not assessments:
             continue
-        completed = winter.data.find(
+        completed_num = winter.data.find(
             {'$and': [
                 {'type': 'assessment'},
                 {'location.p_code': p_code},
@@ -211,8 +211,8 @@ def prepare_manifest():
             site['actual_ip'] = assessments[0]['history'][0]['organisation']
             site['assessment_date'] = start_date
             site['num_assessments'] = len(assessments)
-            site['completed'] = completed
-            site['remaining'] = len(assessments) - completed
+            site['completed'] = completed_num
+            site['remaining'] = len(assessments) - completed_num
             site['distribution_date'] = end_date
 
             total = 0
@@ -234,9 +234,9 @@ def prepare_manifest():
             site['total_remaining'] = total_remaining
 
             status = 'assessed'
-            if completed == len(assessments):
+            if completed_num == len(assessments):
                 status = 'completed'
-            elif completed:
+            elif completed_num:
                 status = 'distributing'
             site['status'] = status
 
