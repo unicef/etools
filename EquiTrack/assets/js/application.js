@@ -48,7 +48,8 @@ var app = function() {
             if ( $(window).width() < 660 ) {
                 $('.sidebar').removeClass('sidebar-toggle');
                 $('.main-content-wrapper').removeClass('main-content-toggle-left main-content-toggle-right');
-            }
+             };
+
             e.stopPropagation();
         });
     };
@@ -58,7 +59,7 @@ var app = function() {
             $(this).parent().parent().parent().fadeOut();
         });
 
-    };
+    }
 
     var menu = function() {
         $("#leftside-navigation .sub-menu > a").click(function(e) {
@@ -154,7 +155,7 @@ var app = function() {
         icons.set("fog", Skycons.FOG);
 
         icons.play();
-    };
+    }
 
     //morris pie chart
     var morrisPie = function() {
@@ -191,7 +192,7 @@ var app = function() {
                 '#f1c40f'
             ]
         });
-    };
+    }
 
     //Sliders
     var sliders = function() {

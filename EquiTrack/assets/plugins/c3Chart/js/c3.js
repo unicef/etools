@@ -440,7 +440,7 @@
                 if (! found && t.data.id === d.data.id) {
                     found = true;
                     d = t;
-
+                    return;
                 }
             });
             return found ? d : null;
@@ -3095,7 +3095,7 @@
             return tickOffset;
         };
         axis.ticks = function () {
-             // TODO: implement
+            return; // TODO: implement
         };
         return axis;
     }

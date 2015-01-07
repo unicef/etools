@@ -39,8 +39,8 @@ define([
     render: function() {
       var self = this;
       this.$el.html(this.template());
-      var col1 = $('#sector-container-1');
-      var col2 = $('#sector-container-2');
+      var col1 = $('#sector-container-1')
+      var col2 = $('#sector-container-2')
       col1.empty();
       col2.empty();
 
