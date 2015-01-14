@@ -323,6 +323,9 @@ class ActionPoint(models.Model):
     comments = models.TextField(blank=True, null=True, verbose_name='Supervisors Comments')
     closed = models.BooleanField(default=False)
 
+    def __unicode__(self):
+        return self.description
+
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
 
@@ -340,12 +343,12 @@ class ActionPoint(models.Model):
             )
         elif instance.closed:
             emails.TripActionPointClosed(instance).send(
-                'no-reply@unicef.org',
+                instance.trip.owner.email,
                 *recipients
             )
         else:
             emails.TripActionPointUpdated(instance).send(
-                'no-reply@unicef.org',
+                instance.trip.owner.email,
                 *recipients
             )
 
