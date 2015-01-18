@@ -170,5 +170,4 @@ admin.site.register(models.Database, DatabaseAdmin)
 admin.site.register(models.Partner, PartnerAdmin)
 admin.site.register(models.Activity, ActivityAdmin)
 admin.site.register(models.Indicator, IndicatorAdmin)
-admin.site.register(models.PartnerReport, PartnerReportAdmin)
 
