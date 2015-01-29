@@ -208,7 +208,7 @@ def prepare_manifest():
             start_date = dateutil.parser.parse(start_date).strftime('%Y-%m-%d') if start_date else ''
             end_date = sorted(assessments, key=itemgetter('completion_date'), reverse=True)[0]['completion_date']
             end_date = dateutil.parser.parse(end_date).strftime('%Y-%m-%d') if end_date else ''
-            site['actual_ip'] = assessments[0]['history'][0]['organisation']
+            site['actual_ip'] = assessments[-1]['history'][-1]['organisation']
             site['assessment_date'] = start_date
             site['num_assessments'] = len(assessments)
             site['completed'] = completed_num
