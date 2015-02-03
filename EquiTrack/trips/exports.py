@@ -44,6 +44,19 @@ class TripResource(resources.ModelResource):
 
         return row
 
+    def fill_trip_partners(self, row, trip):
+
+        partners = [pca.partner.name for pca in trip.pcas.all()]
+        partners.extend(
+            [partner.name for partner in trip.partners.all()]
+        )
+
+        self.insert_column(
+            row,
+            'Partners',
+            ', '.join(set(partners))
+        )
+
     def fill_trip_row(self, row, trip):
 
         self.insert_column(row, 'Status', trip.status)
@@ -60,6 +73,7 @@ class TripResource(resources.ModelResource):
     def fill_row(self, trip, row):
 
         self.fill_trip_row(row, trip)
+        self.fill_trip_partners(row, trip)
         self.fill_trip_routes(row, trip)
 
     def export(self, queryset=None):
