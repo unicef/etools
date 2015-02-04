@@ -141,19 +141,31 @@ def import_docs(
     ))
 
 
-def get_kits_by_pcode(p_code, status=""):
+def get_kits_by_pcode(p_code, completed_status=None, kit_status=None):
 
     query = [
         {'$match': {'type': 'assessment', 'location.p_code': p_code}},
+        {'$unwind': '$child_list'},
         {'$project': {'kits': '$child_list.kit'}},
-        {'$unwind': '$kits'},
-        {'$group': {'_id': "$kits", 'count': {'$sum': 1}}},
+        {'$group': {'_id': "$kits", 'count': {'$sum': 1}}}
     ]
-    if status:
+    if completed_status is not None:
         query.insert(
-            0,
-            {'$match': {'child_list': {'$elemMatch': {'status': status}}}}
+            1,
+            {'$match': {'completed': completed_status}}
         )
+
+    if kit_status is not None:
+        clause = {}
+        if type(kit_status) is list:
+            clause['$or'] = [
+                {'child_list.status': state}
+                for state in kit_status
+            ]
+        else:
+            clause = {'child_list.status': kit_status}
+
+        query.insert(2, {'$match': clause})
 
     kits = winter.data.aggregate(query)
     return kits['result']
@@ -222,13 +234,19 @@ def prepare_manifest():
             site['total_kits'] = total
 
             total_completed = 0
-            for completed in get_kits_by_pcode(p_code, status='COMPLETED'):
+            for completed in get_kits_by_pcode(
+                    p_code,
+                    completed_status=True,
+                    kit_status=['COMPLETED', 'EDITED', 'NOT_DISTRIBUTED']):
                 site['Completed ' + completed['_id']] = completed['count']
                 total_completed += completed['count']
             site['total_completed'] = total_completed
 
             total_remaining = 0
-            for remaining in get_kits_by_pcode(p_code, status='ALLOCATED'):
+            for remaining in get_kits_by_pcode(
+                    p_code,
+                    completed_status=False,
+                    kit_status=['ALLOCATED', 'NOT_DISTRIBUTED']):
                 site['Remaining ' + remaining['_id']] = remaining['count']
                 total_remaining += remaining['count']
             site['total_remaining'] = total_remaining
