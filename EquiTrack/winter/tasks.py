@@ -144,16 +144,18 @@ def import_docs(
 def get_kits_by_pcode(p_code, completed_status=None, kit_status=None):
 
     query = [
-        {'$match': {'type': 'assessment', 'location.p_code': p_code}},
         {'$unwind': '$child_list'},
         {'$project': {'kits': '$child_list.kit'}},
         {'$group': {'_id': "$kits", 'count': {'$sum': 1}}}
     ]
+    filters = {
+        'type': 'assessment',
+        'location.p_code': p_code
+    }
     if completed_status is not None:
-        query.insert(
-            1,
-            {'$match': {'completed': completed_status}}
-        )
+        filters['completed'] = completed_status
+
+    query.insert(0, {'$match': filters})
 
     if kit_status is not None:
         clause = {}
