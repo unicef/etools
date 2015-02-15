@@ -1,13 +1,19 @@
+"""
+Base classes and utility functions for EquiTrack apps
+"""
 __author__ = 'jcranwellward'
 
-from django.contrib.contenttypes.models import ContentType
+import tablib
+
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
+from django.utils.datastructures import SortedDict
 
+from import_export.resources import ModelResource
 from post_office.models import EmailTemplate
 from post_office import mail
 
-admin_url_name = 'admin:{app_label}_{model_name}_{action}'
+from .mixins import AdminURLMixin
 
 
 def send_mail(sender, template, variables, *recipients):
@@ -63,21 +69,9 @@ class BaseEmail(object):
         )
 
 
-class AdminURLMixin(object):
-    def get_admin_url(self):
-        content_type = ContentType \
-            .objects \
-            .get_for_model(self.__class__)
-        return reverse(admin_url_name.format(
-            app_label=content_type.app_label,
-            model_name=content_type.model,
-            action='change'
-        ), args=(self.id,))
-
-
 def get_changeform_link(model, link_name='View', action='change'):
     if model.id:
-        url_name = admin_url_name.format(
+        url_name = AdminURLMixin.admin_url_name.format(
             app_label=model._meta.app_label,
             model_name=model._meta.model_name,
             action=action
@@ -87,3 +81,69 @@ def get_changeform_link(model, link_name='View', action='change'):
                u'onclick="return showAddAnotherPopup(this);" ' \
                u'href="{}" target="_blank">{}</a>'.format(changeform_url, link_name)
     return u''
+
+
+class BaseExportResource(ModelResource):
+
+    headers = []
+
+    def insert_column(self, row, field_name, value):
+
+        row[field_name] = value if self.headers else ''
+
+    def insert_columns_inplace(self, row, fields, after_column):
+
+        keys = row.keys()
+        before_column = None
+        if after_column in row:
+            index = keys.index(after_column)
+            offset = index + 1
+            if offset < len(row):
+                before_column = keys[offset]
+
+        for key, value in fields.items():
+            if before_column:
+                row.insert(offset, key, value)
+                offset += 1
+            else:
+                row[key] = value
+
+    def fill_row(self, resource, fields):
+        """
+        This performs the actual work of translating
+        a model into a fields dictionary for exporting.]
+        Inheriting classes must implement this.
+        """
+        return NotImplementedError()
+
+    def export(self, queryset=None):
+        """
+        Exports a resource.
+        """
+        rows = []
+
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        fields = SortedDict()
+
+        for resource in queryset.iterator():
+            # first pass creates table shape
+            self.fill_row(resource, fields)
+
+        self.headers = fields
+
+        # Iterate without the queryset cache, to avoid wasting memory when
+        # exporting large datasets.
+        for resource in queryset.iterator():
+            # second pass creates rows from the known table shape
+            row = fields.copy()
+
+            self.fill_row(resource, row)
+
+            rows.append(row)
+
+        data = tablib.Dataset(headers=fields.keys())
+        for row in rows:
+            data.append(row.values())
+        return data
