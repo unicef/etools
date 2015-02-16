@@ -13,12 +13,16 @@ class Migration(DataMigration):
         # and orm['appname.ModelName'] for models in other applications.
 
         for action in orm['trips.ActionPoint'].objects.all():
-            responsible = [person for person in action.persons_responsible.all()]
+            responsible = list(action.persons_responsible.all())
             action.responsible_person = responsible.pop(0)
             if responsible:
                 action.description = '{} (Related persons: {})'.format(
                     action.description,
-                    ', '.join([person.get_full_name() for person in responsible])
+                    ', '.join([
+                        person.get_full_name() if
+                        hasattr(person, 'get_full_name') else person.first_name
+                        for person in responsible
+                    ])
                 )
             action.save()
 
