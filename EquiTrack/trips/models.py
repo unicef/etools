@@ -355,7 +355,7 @@ class ActionPoint(models.Model):
             )
 
 
-post_save.connect(ActionPoint.send_action, sender=ActionPoint)
+#post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 
 class FileAttachment(models.Model):

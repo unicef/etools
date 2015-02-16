@@ -112,6 +112,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'no_pca',
         u'international_travel',
         u'supervisor',
+        u'budget_owner',
         u'status',
         u'approved_date',
     )
