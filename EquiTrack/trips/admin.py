@@ -52,7 +52,7 @@ class ActionPointInlineAdmin(admin.StackedInline):
     extra = 1
     fields = (
         (u'description', u'due_date',),
-        u'persons_responsible',
+        u'person_responsible',
         (u'actions_taken',),
         (u'completed_date', u'closed',),
     )

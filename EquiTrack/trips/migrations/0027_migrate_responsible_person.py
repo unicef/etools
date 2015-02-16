@@ -13,7 +13,7 @@ class Migration(DataMigration):
         # and orm['appname.ModelName'] for models in other applications.
 
         for action in orm['trips.ActionPoint'].objects.all():
-            action.responsible_person = action.persons_responsible.all()[0]
+            action.person_responsible = action.persons_responsible.all()[0]
             action.save()
 
     def backwards(self, orm):

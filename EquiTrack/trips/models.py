@@ -319,7 +319,7 @@ class ActionPoint(models.Model):
     description = models.CharField(max_length=254)
     due_date = models.DateField()
     person_responsible = models.ForeignKey(User, related_name='for_action')
-    persons_responsible = models.ManyToManyField(User)
+    persons_responsible = models.ManyToManyField(User, blank=True, null=True)
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
