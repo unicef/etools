@@ -31,17 +31,8 @@ class WinterDashboardView(TemplateView):
                     {'completion_date': {'$ne': ''}},
                     {'completion_date': {'$exists': True}}
                 ]}).count(),
-            'children_targeted': winter.data.aggregate([
-                {'$project': {'children': '$child_list.age'}},
-                {'$unwind': '$children'},
-                {'$group': {'_id': "$children", 'count': {'$sum': 1}}},
-                {'$group': {'_id': None, 'total': {'$sum': "$count"}}}
-            ])['result'][0]['total'],
-            'children_completed': winter.data.aggregate([
-                {'$match': {'$or': [
-                    {'child_list': {'$elemMatch': {'status': "COMPLETED"}}},
-                    {'child_list': {'$elemMatch': {'status': "EDITED"}}}
-                ]}},
+            'children': winter.data.aggregate([
+                {'$match': {'child_list': {'$elemMatch': {'status': "COMPLETED"}}}},
                 {'$project': {'children': '$child_list.age'}},
                 {'$unwind': '$children'},
                 {'$group': {'_id': "$children", 'count': {'$sum': 1}}},
@@ -77,7 +68,6 @@ class SiteListJson(BaseDatatableView):
         'long',
         'elevation',
         'confirmed_ip',
-        'actual_ip',
         'unicef_priority',
         'assessment_date',
         'num_assessments',
@@ -85,42 +75,17 @@ class SiteListJson(BaseDatatableView):
         'remaining',
         'distribution_date',
         '3 months',
-        'Completed 3 months',
-        'Remaining 3 months',
         '12 months',
-        'Completed 12 months',
-        'Remaining 12 months',
         '2 years',
-        'Completed 2 years',
-        'Remaining 2 years',
         '3 years',
-        'Completed 3 years',
-        'Remaining 3 years',
         '5 years',
-        'Completed 5 years',
-        'Remaining 5 years',
         '7 years',
-        'Completed 7 years',
-        'Remaining 7 years',
         '9 years',
-        'Completed 9 years',
-        'Remaining 9 years',
         '12 years',
-        'Completed 12 years',
-        'Remaining 12 years',
         '14 years',
-        'Completed 14 years',
-        'Remaining 14 years',
         'total_kits',
-        'total_completed',
-        'total_remaining',
     ]
-    order_columns = {
-        'district': 'asc',
-        'pcodename': 'asc',
-        'actual_ip': 'asc',
-        'distribution_date': 'asc'
-    }
+    order_columns = columns
 
     def get_initial_queryset(self):
         # return queryset used as base for futher sorting/filtering
@@ -142,11 +107,51 @@ class SiteListJson(BaseDatatableView):
     def ordering(self, qs):
         """ Get parameters from the request and prepare order by clause
         """
+        request = self.request
+
+        # Number of columns that are used in sorting
+        sorting_cols = 0
+        if self.pre_camel_case_notation:
+            try:
+                sorting_cols = int(request.REQUEST.get('iSortingCols', 0))
+            except ValueError:
+                sorting_cols = 0
+        else:
+            sort_key = 'order[{0}][column]'.format(sorting_cols)
+            while sort_key in self.request.REQUEST:
+                sorting_cols += 1
+                sort_key = 'order[{0}][column]'.format(sorting_cols)
+
         order = []
-        for col, direct in self.order_columns.iteritems():
-            sdir = -1 if direct == 'desc' else 1
-            order.append((col, sdir))
-        return qs.sort(order)
+        order_columns = self.get_order_columns()
+
+        for i in range(sorting_cols):
+            # sorting column
+            sort_dir = 'asc'
+            try:
+                if self.pre_camel_case_notation:
+                    sort_col = int(request.REQUEST.get('iSortCol_{0}'.format(i)))
+                    # sorting order
+                    sort_dir = request.REQUEST.get('sSortDir_{0}'.format(i))
+                else:
+                    sort_col = int(request.REQUEST.get('order[{0}][column]'.format(i)))
+                    # sorting order
+                    sort_dir = request.REQUEST.get('order[{0}][dir]'.format(i))
+            except ValueError:
+                sort_col = 0
+
+            sdir = -1 if sort_dir == 'desc' else 1
+            sortcol = order_columns[sort_col]
+
+            if isinstance(sortcol, list):
+                for sc in sortcol:
+                    order.append((sc, sdir))
+            else:
+                order.append((sortcol, sdir))
+
+        if order:
+            return qs.sort(order)
+        return qs
 
     def paging(self, qs):
         # disable server side paging

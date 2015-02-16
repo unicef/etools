@@ -508,13 +508,13 @@ class FACEAdmin(admin.ModelAdmin):
     )
 
 
-class RecommendationsInlineAdmin(admin.TabularInline):
+class ReccomnedationsInlineAdmin(admin.TabularInline):
     model = Recommendation
     extra = 0
 
 
 class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
-    inlines = [RecommendationsInlineAdmin]
+    inlines = [ReccomnedationsInlineAdmin]
     readonly_fields = (
         u'download_url',
         u'requested_date',

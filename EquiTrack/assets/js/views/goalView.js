@@ -57,7 +57,7 @@ define([
       </div>\
     '),
     render: function() {
-      var self = this
+      var self = this;
 
       // write modal into container      
       $('body').append(this.template());

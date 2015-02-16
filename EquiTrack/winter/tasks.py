@@ -3,7 +3,6 @@ __author__ = 'jcranwellward'
 import os
 import json
 import requests
-import unidecode
 import dateutil.parser
 from operator import itemgetter
 
@@ -141,50 +140,32 @@ def import_docs(
     ))
 
 
-def get_kits_by_pcode(p_code, kit_status=None):
+def get_kits_by_pcode(p_code):
 
-    query = [
+    kits = winter.data.aggregate([
         {'$match': {'type': 'assessment', 'location.p_code': p_code}},
-        {'$unwind': '$child_list'},
         {'$project': {'kits': '$child_list.kit'}},
-        {'$group': {'_id': "$kits", 'count': {'$sum': 1}}}
-    ]
-
-    if kit_status is not None:
-        clause = {}
-        if type(kit_status) is list:
-            clause['$or'] = [
-                {'child_list.status': state}
-                for state in kit_status
-            ]
-        else:
-            clause = {'child_list.status': kit_status}
-
-        query.insert(2, {'$match': clause})
-
-    kits = winter.data.aggregate(query)
+        {'$unwind': '$kits'},
+        {'$group': {'_id': "$kits", 'count': {'$sum': 1}}},
+    ])
     return kits['result']
 
 
 def prepare_manifest():
 
-    sites = winter.data.aggregate([
-        {'$project': {'site': '$location.p_code'}},
-        {'$group': {'_id': '$site'}}
-    ])['result']
-    for location in sites:
-        p_code = location['_id']
+    data = winter.data.aggregate([
+        {'$match': {'completion_date': {'$exists': True}}},
+        {'$group': {
+            '_id': "$location.p_code",
+            "assessments": {"$push": "$$ROOT"}}
+        }])
+    no_p_code = 0
+    for result in data['result']:
+        p_code = result['_id']
         if not p_code:
+            no_p_code += 1
             continue
-        assessments = list(winter.data.find(
-            {'$and': [
-                {'type': 'assessment'},
-                {'location.p_code': p_code},
-                {'completed': {'$exists': True}}
-        ]}))
-        if not assessments:
-            continue
-        completed_num = winter.data.find(
+        completed = winter.data.find(
             {'$and': [
                 {'type': 'assessment'},
                 {'location.p_code': p_code},
@@ -210,44 +191,27 @@ def prepare_manifest():
                     'unicef_priority': 1
                 }
             )
-            start_date = sorted(assessments, key=itemgetter('creation_date'), reverse=True)[0]['creation_date']
-            start_date = unidecode.unidecode(start_date)
-            start_date = dateutil.parser.parse(start_date).strftime('%Y-%m-%d') if start_date else ''
+            assessments = result['assessments']
+            start_date = dateutil.parser.parse(
+                sorted(assessments, key=itemgetter('creation_date'), reverse=True)[0]['creation_date']
+            )
             end_date = sorted(assessments, key=itemgetter('completion_date'), reverse=True)[0]['completion_date']
             end_date = dateutil.parser.parse(end_date).strftime('%Y-%m-%d') if end_date else ''
-            site['actual_ip'] = assessments[-1]['history'][-1]['organisation']
-            site['assessment_date'] = start_date
+            site['assessment_date'] = start_date.strftime('%Y-%m-%d')
             site['num_assessments'] = len(assessments)
-            site['completed'] = completed_num
-            site['remaining'] = len(assessments) - completed_num
+            site['completed'] = completed
+            site['remaining'] = len(assessments) - completed
             site['distribution_date'] = end_date
-
             total = 0
             for kit in kits:
                 site[kit['_id']] = kit['count']
                 total += kit['count']
             site['total_kits'] = total
 
-            total_completed = 0
-            for completed in get_kits_by_pcode(
-                    p_code,
-                    kit_status=['COMPLETED', 'EDITED']):
-                site['Completed ' + completed['_id']] = completed['count']
-                total_completed += completed['count']
-            site['total_completed'] = total_completed
-
-            total_remaining = 0
-            for remaining in get_kits_by_pcode(
-                    p_code,
-                    kit_status=['ALLOCATED', 'NOT_DISTRIBUTED']):
-                site['Remaining ' + remaining['_id']] = remaining['count']
-                total_remaining += remaining['count']
-            site['total_remaining'] = total_remaining
-
             status = 'assessed'
-            if completed_num == len(assessments):
+            if completed == len(assessments):
                 status = 'completed'
-            elif completed_num:
+            elif completed:
                 status = 'distributing'
             site['status'] = status
 

@@ -8,7 +8,7 @@ from django.contrib.auth.models import Group
 from post_office import mail
 from post_office.models import EmailTemplate
 
-from EquiTrack.mixins import AdminURLMixin
+from EquiTrack.utils import AdminURLMixin
 
 
 class TPMVisit(AdminURLMixin, models.Model):

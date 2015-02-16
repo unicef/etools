@@ -9028,7 +9028,7 @@ wysihtml5.views.Textarea = wysihtml5.views.View.extend(
     dom.insert(wrapper).into(link);
     
     dom.setStyles(inputStyles).on(input);
-    dom.setAttributes(inputAttributes).on(input)
+    dom.setAttributes(inputAttributes).on(input);
     
     dom.setStyles(wrapperStyles).on(wrapper);
     dom.setStyles(linkStyles).on(link);

@@ -46,7 +46,7 @@ define([
       element_id = _.uniqueId("raphael-container-");
     
       // append container for bar chart
-      hover_box.append('<div id="'+element_id+'" class="target-bar"></div>')
+      hover_box.append('<div id="'+element_id+'" class="target-bar"></div>');
 
       // assign element to raphael
       var r = Raphael($('#'+element_id)[0]); // access actual DOM element via [0]

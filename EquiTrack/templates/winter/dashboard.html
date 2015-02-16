@@ -3,7 +3,7 @@
 
 {% block extra_head %}
     <!-- DataTables-->
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.11/themes/css/cartodb.css"/>
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.11/themes/css/cartodb.css" />
     <link rel="stylesheet" href="{{ STATIC_URL }}plugins/dataTables/css/dataTables.css">
 
 {% endblock %}
@@ -14,61 +14,47 @@
 
             <!--tiles start-->
             <div class="row">
-                <div class="col-md-3 col-sm-6">
-                    <div class="dashboard-tile detail tile-red">
-                        <div class="content">
-                            <h1 class="text-left timer"
-                                data-from="0"
-                                data-to="{{ assessed }}"
-                                data-speed="2500"></h1>
+                <div class="col-md-4">
+                        <div class="dashboard-tile detail tile-red">
+                            <div class="content">
+                                <h1 class="text-left timer"
+                                    data-from="0"
+                                    data-to="{{ assessed }}"
+                                    data-speed="2500"></h1>
 
-                            <p>Families Assessed</p>
+                                <p>Families Assessed</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-pencil"></i>
+                            </div>
                         </div>
-                        <div class="icon"><i class="fa fa-pencil"></i>
-                        </div>
-                    </div>
                 </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="dashboard-tile detail tile-turquoise">
-                        <div class="content">
-                            <h1 class="text-left timer"
-                                data-from="0"
-                                data-to="{{ completed }}"
-                                data-speed="2500"></h1>
+                <div class="col-md-4">
+                        <div class="dashboard-tile detail tile-turquoise">
+                            <div class="content">
+                                <h1 class="text-left timer"
+                                    data-from="0"
+                                    data-to="{{ completed }}"
+                                    data-speed="2500"></h1>
 
-                            <p>Families Completed</p>
+                                <p>Families Completed</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-thumbs-up"></i>
+                            </div>
                         </div>
-                        <div class="icon"><i class="fa fa-thumbs-up"></i>
-                        </div>
-                    </div>
                 </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="dashboard-tile detail tile-purple">
-                        <div class="content">
-                            <h1 class="text-left timer"
-                                data-from="0"
-                                data-to="{{ children_targeted }}"
-                                data-speed="2500"></h1>
+                <div class="col-md-4">
+                        <div class="dashboard-tile detail tile-blue">
+                            <div class="content">
+                                <h1 class="text-left timer"
+                                    data-from="0"
+                                    data-to="{{ children }}"
+                                    data-speed="2500"></h1>
 
-                            <p>Children Targeted</p>
+                                <p>Children Reached</p>
+                            </div>
+                            <div class="icon"><i class="fa fa-users"></i>
+                            </div>
                         </div>
-                        <div class="icon"><i class="fa fa-users"></i>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6">
-                    <div class="dashboard-tile detail tile-blue">
-                        <div class="content">
-                            <h1 class="text-left timer"
-                                data-from="0"
-                                data-to="{{ children_completed }}"
-                                data-speed="2500"></h1>
-
-                            <p>Children Reached</p>
-                        </div>
-                        <div class="icon"><i class="fa fa-users"></i>
-                        </div>
-                    </div>
                 </div>
             </div>
             <!--tiles end-->
@@ -77,10 +63,7 @@
                 <div class="col-md-12">
                     <div class="panel panel-default">
                         <div class="panel-body">
-                            <iframe width='100%' height='520' frameborder='0'
-                                    src='http://equitrack.cartodb.com/viz/d15efba2-6685-11e4-8061-0e853d047bba/embed_map'
-                                    allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen
-                                    msallowfullscreen></iframe>
+                            <iframe width='100%' height='520' frameborder='0' src='http://equitrack.cartodb.com/viz/d15efba2-6685-11e4-8061-0e853d047bba/embed_map' allowfullscreen webkitallowfullscreen mozallowfullscreen oallowfullscreen msallowfullscreen></iframe>
                         </div>
                     </div>
                 </div>
@@ -100,57 +83,36 @@
                         <div class="panel-body">
                             <table id="kits" class="table table-striped table-bordered" cellspacing="0" width="100%">
                                 <thead>
-                                <tr>
-                                    <th>PCode</th>
-                                    <th>PCodeName</th>
-                                    <th>Mohafaza</th>
-                                    <th>District</th>
-                                    <th>Cadastral</th>
-                                    <th>Municipaliy</th>
-                                    <th>No. Tent</th>
-                                    <th>No. Ind</th>
-                                    <th>Lat</th>
-                                    <th>Long</th>
-                                    <th>Elevation</th>
-                                    <th>Confirmed IP</th>
-                                    <th>Actual IP</th>
-                                    <th>UNICEF Priority</th>
-                                    <th>Assessment Date</th>
-                                    <th>No. Assessments</th>
-                                    <th>Distributed</th>
-                                    <th>Remaining</th>
-                                    <th>Distribution Date</th>
-                                    <th>3 months</th>
-                                    <th>Completed 3 months</th>
-                                    <th>Remaining 3 months</th>
-                                    <th>12 months</th>
-                                    <th>Completed 12 months</th>
-                                    <th>Remaining 12 months</th>
-                                    <th>2 years</th>
-                                    <th>Completed 2 years</th>
-                                    <th>Remaining 2 years</th>
-                                    <th>3 years</th>
-                                    <th>Completed 3 years</th>
-                                    <th>Remaining 3 years</th>
-                                    <th>5 years</th>
-                                    <th>Completed 5 years</th>
-                                    <th>Remaining 5 years</th>
-                                    <th>7 years</th>
-                                    <th>Completed 7 years</th>
-                                    <th>Remaining 7 years</th>
-                                    <th>9 years</th>
-                                    <th>Completed 9 years</th>
-                                    <th>Remaining 9 years</th>
-                                    <th>12 years</th>
-                                    <th>Completed 12 years</th>
-                                    <th>Remaining 12 years</th>
-                                    <th>14 years</th>
-                                    <th>Completed 14 years</th>
-                                    <th>Remaining 14 years</th>
-                                    <th>Total Kits</th>
-                                    <th>Total Completed</th>
-                                    <th>Total Remaining</th>
-                                </tr>
+                                    <tr>
+                                        <th>PCode</th>
+                                        <th>PCodeName</th>
+                                        <th>Mohafaza</th>
+                                        <th>District</th>
+                                        <th>Cadastral</th>
+                                        <th>Municipaliy</th>
+                                        <th>No. Tent</th>
+                                        <th>No. Ind</th>
+                                        <th>Lat</th>
+                                        <th>Long</th>
+                                        <th>Elevation</th>
+                                        <th>Confirmed IP</th>
+                                        <th>UNICEF Priority</th>
+                                        <th>Assessment Date</th>
+                                        <th>No. Assessments</th>
+                                        <th>Distributed</th>
+                                        <th>Remaining</th>
+                                        <th>Distribution Date</th>
+                                        <th>3 months</th>
+                                        <th>12 months</th>
+                                        <th>2 years</th>
+                                        <th>3 years</th>
+                                        <th>5 years</th>
+                                        <th>7 years</th>
+                                        <th>9 years</th>
+                                        <th>12 years</th>
+                                        <th>14 years</th>
+                                        <th>Total Kits</th>
+                                    </tr>
                                 </thead>
                                 <tbody>
                                 </tbody>
@@ -162,18 +124,18 @@
 
             <div class="row">
                 <div class="col-md-6">
-                    <a href="{% url 'winter_app' %}">
-                        <button type="button" class="btn btn-success btn-trans">
-                            Download App
-                        </button>
-                    </a>
+                        <a href="{% url 'winter_app' %}">
+                            <button type="button" class="btn btn-success btn-trans">
+                                Download App
+                            </button>
+                        </a>
                 </div>
                 <div class="col-md-6">
-                    <a href="{% url 'winter_site_list' %}?format=csv">
-                        <button style="float: right;" type="button" class="btn btn-info btn-trans">
-                            Download Data
-                        </button>
-                    </a>
+                        <a href="{% url 'winter_site_list' %}?format=csv">
+                            <button style="float: right;" type="button" class="btn btn-info btn-trans">
+                                Download Data
+                            </button>
+                        </a>
                 </div>
             </div>
 
@@ -185,14 +147,14 @@
     <script src="//libs.cartocdn.com/cartodb.js/v3/3.11/cartodb.js"></script>
     <script src="{{ STATIC_URL }}plugins/dataTables/js/jquery.dataTables.js"></script>
     <script src="{{ STATIC_URL }}plugins/dataTables/js/dataTables.bootstrap.js"></script>
-    {#    <script src="//cdn.datatables.net/tabletools/2.2.3/js/dataTables.tableTools.min.js"></script>#}
+{#    <script src="//cdn.datatables.net/tabletools/2.2.3/js/dataTables.tableTools.min.js"></script>#}
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             $('#kits').dataTable({
-                {#                "dom": 'T<"clear">lfrtip',#}
-                {#                "tableTools": {#}
-                {#                    "sSwfPath": "//cdn.datatables.net/tabletools/2.2.3/swf/copy_csv_xls_pdf.swf"#}
-                {#                },#}
+{#                "dom": 'T<"clear">lfrtip',#}
+{#                "tableTools": {#}
+{#                    "sSwfPath": "//cdn.datatables.net/tabletools/2.2.3/swf/copy_csv_xls_pdf.swf"#}
+{#                },#}
                 "scrollX": true,
                 //"processing": true,
                 //"serverSide": true,
@@ -204,6 +166,7 @@
                     'http://equitrack.cartodb.com/api/v2/viz/d15efba2-6685-11e4-8061-0e853d047bba/viz.json'
             );
         });
+
 
 
     </script>

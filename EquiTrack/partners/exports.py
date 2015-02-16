@@ -16,7 +16,6 @@ from pykml.factory import KML_ElementMaker as KML
 from shapely.geometry import Point, mapping
 from fiona import collection
 
-from EquiTrack.utils import BaseExportResource
 from partners.models import (
     PCA,
     GwPCALocation,
@@ -234,10 +233,30 @@ class PartnerResource(resources.ModelResource):
         model = PartnerOrganization
 
 
-class PCAResource(BaseExportResource):
+class PCAResource(resources.ModelResource):
 
-    class Meta:
-        model = PCA
+    headers = []
+
+    def insert_column(self, row, field_name, value):
+
+        row[field_name] = value if self.headers else ''
+
+    def insert_columns_inplace(self, row, fields, after_column):
+
+        keys = row.keys()
+        before_column = None
+        if after_column in row:
+            index = keys.index(after_column)
+            offset = index + 1
+            if offset < len(row):
+                before_column = keys[offset]
+
+        for key, value in fields.items():
+            if before_column:
+                row.insert(offset, key, value)
+                offset += 1
+            else:
+                row[key] = value
 
     def fill_pca_grants(self, row, pca):
 
@@ -379,9 +398,6 @@ class PCAResource(BaseExportResource):
         return row
 
     def fill_row(self, pca, row):
-        """
-        Controls the order in which fields are exported
-        """
 
         self.fill_pca_row(row, pca)
         self.fill_pca_grants(row, pca)
@@ -394,3 +410,37 @@ class PCAResource(BaseExportResource):
             self.fill_sector_wbs(row, sector)
             self.fill_sector_activities(row, sector)
 
+    def export(self, queryset=None):
+        """
+        Exports a resource.
+        """
+        rows = []
+
+        if queryset is None:
+            queryset = self.get_queryset()
+
+        fields = SortedDict()
+
+        for pca in queryset.iterator():
+
+            self.fill_row(pca, fields)
+
+        self.headers = fields
+
+        # Iterate without the queryset cache, to avoid wasting memory when
+        # exporting large datasets.
+        for pca in queryset.iterator():
+            # second pass creates rows from the known table shape
+            row = fields.copy()
+
+            self.fill_row(pca, row)
+
+            rows.append(row)
+
+        data = tablib.Dataset(headers=fields.keys())
+        for row in rows:
+            data.append(row.values())
+        return data
+
+    class Meta:
+        model = PCA

@@ -14,7 +14,7 @@ from django.contrib.sites.models import Site
 from filer.fields.file import FilerFileField
 import reversion
 
-from EquiTrack.mixins import AdminURLMixin
+from EquiTrack.utils import AdminURLMixin
 from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
@@ -23,7 +23,6 @@ from . import emails
 User = get_user_model()
 
 User.__unicode__ = lambda user: user.get_full_name()
-User._meta.ordering = ['first_name']
 
 BOOL_CHOICES = (
     (None, "N/A"),
@@ -318,15 +317,11 @@ class ActionPoint(models.Model):
     trip = models.ForeignKey(Trip)
     description = models.CharField(max_length=254)
     due_date = models.DateField()
-    person_responsible = models.ForeignKey(User, related_name='for_action')
     persons_responsible = models.ManyToManyField(User)
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
-    comments = models.TextField(blank=True, null=True)
+    comments = models.TextField(blank=True, null=True, verbose_name='Supervisors Comments')
     closed = models.BooleanField(default=False)
-
-    def __unicode__(self):
-        return self.description
 
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
@@ -345,12 +340,12 @@ class ActionPoint(models.Model):
             )
         elif instance.closed:
             emails.TripActionPointClosed(instance).send(
-                instance.trip.owner.email,
+                'no-reply@unicef.org',
                 *recipients
             )
         else:
             emails.TripActionPointUpdated(instance).send(
-                instance.trip.owner.email,
+                'no-reply@unicef.org',
                 *recipients
             )
 

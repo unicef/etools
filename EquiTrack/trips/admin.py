@@ -25,7 +25,7 @@ from .forms import (
     TripForm,
     TravelRoutesForm
 )
-from .exports import TripResource, ActionPointResource
+from .exports import TripResource
 
 User = get_user_model()
 
@@ -235,22 +235,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
         return fields
 
-    # def add_view(self, request, form_url='', extra_context=None):
-    #     """
-    #     Don't allow users to create new trips if they have outstanding
-    #     """
-    #     # trips = request.user.trips.filter(
-    #     #     status=Trip.APPROVED,
-    #     #
-    #     # )
-    #     #
-    #     # for trip in trips:
-    #     #     pass
-    #
-    #     return super(TripReportAdmin, self).add_view(
-    #         self, request, form_url, extra_context
-    #     )
-
     # def save_model(self, request, obj, form, change):
     #
     #     user = obj.owner
@@ -345,21 +329,21 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     #         kwargs['queryset'] = rep_group.user_set.all()
 
 
-class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
-    resource_class = ActionPointResource
-    exclude = [u'persons_responsible']
+class ActionPointsAdmin(admin.ModelAdmin):
+
     list_display = (
         u'trip',
         u'description',
         u'due_date',
-        u'person_responsible',
+        u'responsible',
         u'actions_taken',
+        u'supervisor',
         u'comments',
         u'closed',
     )
     list_filter = (
         u'trip__owner',
-        u'person_responsible',
+        u'trip__supervisor',
         u'closed',
     )
     search_fields = (
@@ -371,19 +355,33 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
     def trip(self, obj):
         return unicode(obj.trip)
 
+    def supervisor(self, obj):
+        return obj.trip.supervisor
+
+    def responsible(self, obj):
+        return ', '.join(
+            [
+                user.get_full_name()
+                for user in
+                obj.persons_responsible.all()
+            ]
+        )
+
+    def has_add_permission(self, request):
+        return False
+
     def get_readonly_fields(self, request, obj=None):
 
         readonly_fields = [
             u'trip',
             u'description',
             u'due_date',
-            u'person_responsible',
             u'persons_responsible',
             u'comments',
             u'closed',
         ]
 
-        if obj and obj.person_responsible == request.user:
+        if obj and obj.trip.supervisor == request.user:
             readonly_fields.remove(u'comments')
             readonly_fields.remove(u'closed')
 
