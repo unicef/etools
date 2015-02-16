@@ -19,7 +19,7 @@ class Migration(DataMigration):
                 action.description = '{} (Related persons: {})'.format(
                     action.description,
                     ', '.join([
-                        person.get_full_name() if
+                        person.get_full_name()[0:254] if
                         hasattr(person, 'get_full_name') else person.first_name
                         for person in responsible
                     ])
