@@ -235,21 +235,21 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
         return fields
 
-    def add_view(self, request, form_url='', extra_context=None):
-        """
-        Don't allow users to create new trips if they have outstanding
-        """
-        # trips = request.user.trips.filter(
-        #     status=Trip.APPROVED,
-        #
-        # )
-        #
-        # for trip in trips:
-        #     pass
-
-        return super(TripReportAdmin, self).add_view(
-            self, request, form_url, extra_context
-        )
+    # def add_view(self, request, form_url='', extra_context=None):
+    #     """
+    #     Don't allow users to create new trips if they have outstanding
+    #     """
+    #     # trips = request.user.trips.filter(
+    #     #     status=Trip.APPROVED,
+    #     #
+    #     # )
+    #     #
+    #     # for trip in trips:
+    #     #     pass
+    #
+    #     return super(TripReportAdmin, self).add_view(
+    #         self, request, form_url, extra_context
+    #     )
 
     # def save_model(self, request, obj, form, change):
     #
@@ -353,7 +353,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         u'description',
         u'due_date',
         u'person_responsible',
-        u'persons_responsible',
         u'actions_taken',
         u'comments',
         u'closed',
