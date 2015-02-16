@@ -217,17 +217,17 @@ class Attribute(models.Model):
     name = models.CharField(max_length=254)
 
 
-class PartnerReport(models.Model):
-
-    pca = models.ForeignKey(PCA)
-    indicator = models.ForeignKey('reports.Indicator')
-    ai_partner = models.ForeignKey(Partner)
-    ai_indicator = models.ForeignKey(Indicator)
-    location = models.CharField(max_length=254)
-    month = models.DateField()
-    indicator_value = models.IntegerField()
-    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-
-    class Meta:
-        ordering = ['-month']
+# class PartnerReport(models.Model):
+#
+#     pca = models.ForeignKey(PCA)
+#     indicator = models.ForeignKey('reports.Indicator')
+#     ai_partner = models.ForeignKey(Partner)
+#     ai_indicator = models.ForeignKey(Indicator)
+#     location = models.CharField(max_length=254)
+#     month = models.DateField()
+#     indicator_value = models.IntegerField()
+#     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+#
+#     class Meta:
+#         ordering = ['-month']
 

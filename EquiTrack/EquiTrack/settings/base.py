@@ -339,9 +339,9 @@ THIRD_PARTY_APPS = (
 LOCAL_APPS = (
     'funds',
     'locations',
+    'activityinfo',
     'reports',
     'partners',
-    'activityinfo',
     'emails',
     'trips',
     'tpm',
