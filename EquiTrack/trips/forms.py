@@ -114,7 +114,7 @@ class TripForm(ModelForm):
 
             if not trip_report:
                 raise ValidationError(
-                    'You must supply a trip report before it can be completed'
+                    'You must provide a narrative report before the trip can be completed'
                 )
 
 
