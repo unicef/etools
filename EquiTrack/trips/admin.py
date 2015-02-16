@@ -239,13 +239,13 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         """
         Don't allow users to create new trips if they have outstanding
         """
-        trips = request.user.trips.filter(
-            status=Trip.APPROVED,
-
-        )
-
-        for trip in trips:
-            pass
+        # trips = request.user.trips.filter(
+        #     status=Trip.APPROVED,
+        #
+        # )
+        #
+        # for trip in trips:
+        #     pass
 
         return super(TripReportAdmin, self).add_view(
             self, request, form_url, extra_context
