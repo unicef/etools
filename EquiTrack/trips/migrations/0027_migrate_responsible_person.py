@@ -13,17 +13,7 @@ class Migration(DataMigration):
         # and orm['appname.ModelName'] for models in other applications.
 
         for action in orm['trips.ActionPoint'].objects.all():
-            responsible = list(action.persons_responsible.all())
-            action.responsible_person = responsible.pop(0)
-            if responsible:
-                action.description = '{} (Related persons: {})'.format(
-                    action.description,
-                    ', '.join([
-                        person.get_full_name()[0:254] if
-                        hasattr(person, 'get_full_name') else person.first_name
-                        for person in responsible
-                    ])
-                )
+            action.responsible_person = action.persons_responsible.all()[0]
             action.save()
 
     def backwards(self, orm):

@@ -353,6 +353,7 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         u'description',
         u'due_date',
         u'person_responsible',
+        u'persons_responsible',
         u'actions_taken',
         u'comments',
         u'closed',
@@ -378,6 +379,7 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
             u'description',
             u'due_date',
             u'person_responsible',
+            u'persons_responsible',
             u'comments',
             u'closed',
         ]
