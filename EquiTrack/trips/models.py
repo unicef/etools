@@ -171,6 +171,11 @@ class Trip(AdminURLMixin, models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     approved_email_sent = models.BooleanField(default=False)
 
+    ta_trip_took_place_as_planned = models.BooleanField(
+        default=False,
+        help_text='Did the trip take place as planned and therefore no claim is required?'
+    )
+
     class Meta:
         ordering = ['-created_date']
 
@@ -355,7 +360,7 @@ class ActionPoint(models.Model):
             )
 
 
-#post_save.connect(ActionPoint.send_action, sender=ActionPoint)
+post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 
 class FileAttachment(models.Model):

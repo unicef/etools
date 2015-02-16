@@ -89,6 +89,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     )
     ordering = (u'-created_date',)
     date_hierarchy = u'from_date'
+    search_fields = (
+        u'owner',
+        u'section',
+        u'office',
+        u'purpose_of_travel',
+    )
     list_display = (
         u'reference',
         u'created_date',
@@ -110,6 +116,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'from_date',
         u'to_date',
         u'no_pca',
+        u'travel_type',
         u'international_travel',
         u'supervisor',
         u'budget_owner',
@@ -171,6 +178,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
             u'fields': (
                 u'main_observations',),
+        }),
+
+        (u'Travel Claim', {
+            u'classes': (u'suit-tab suit-tab-reporting',),
+            u'fields': (
+                u'ta_trip_took_place_as_planned',),
         }),
     )
     suit_form_tabs = (
@@ -349,11 +362,13 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = ActionPointResource
     exclude = [u'persons_responsible']
+    date_hierarchy = u'due_date'
     list_display = (
         u'trip',
         u'description',
         u'due_date',
         u'person_responsible',
+        u'originally_responsible',
         u'actions_taken',
         u'comments',
         u'closed',
@@ -371,6 +386,15 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
 
     def trip(self, obj):
         return unicode(obj.trip)
+
+    def originally_responsible(self, obj):
+        return ', '.join(
+            [
+                user.get_full_name()
+                for user in
+                obj.persons_responsible.all()
+            ]
+        )
 
     def get_readonly_fields(self, request, obj=None):
 
