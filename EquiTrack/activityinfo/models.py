@@ -6,7 +6,7 @@ from django.db import models
 
 from activtyinfo_client import ActivityInfoClient
 
-from partners.models import PCA, IndicatorProgress
+#from partners.models import PCA, IndicatorProgress
 
 
 class Database(models.Model):
