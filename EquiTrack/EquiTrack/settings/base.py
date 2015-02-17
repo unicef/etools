@@ -347,7 +347,6 @@ LOCAL_APPS = (
     'tpm',
     'users',
     'registration',
-    'winter',
 )
 
 SOUTH_MIGRATION_MODULES = {
