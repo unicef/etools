@@ -6,14 +6,20 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.parsers import FormParser
+from rest_framework.renderers import JSONPRenderer
 
 from partners.models import FACE
 from .serializers import GWLocationSerializer, RapidProRequest
 
 from partners.models import (
     PCA,
-    GwPCALocation,
+    GwPCALocation
 )
+
+
+class PartnersView(ListAPIView):
+    model = PCA
+    renderer_classes = (JSONPRenderer,)
 
 
 class LocationView(ListAPIView):

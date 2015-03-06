@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import datetime
+from south.utils import datetime_utils as datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
@@ -11,10 +11,10 @@ class Migration(SchemaMigration):
         # Adding model 'Database'
         db.create_table(u'activityinfo_database', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
+            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')(unique=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
             ('username', self.gf('django.db.models.fields.CharField')(max_length=254)),
             ('password', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('name', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
             ('description', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
             ('country_name', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
             ('ai_country_id', self.gf('django.db.models.fields.PositiveIntegerField')(null=True)),
@@ -24,7 +24,7 @@ class Migration(SchemaMigration):
         # Adding model 'Partner'
         db.create_table(u'activityinfo_partner', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
+            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')(unique=True)),
             ('database', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Database'])),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
             ('full_name', self.gf('django.db.models.fields.CharField')(max_length=254, null=True)),
@@ -34,7 +34,7 @@ class Migration(SchemaMigration):
         # Adding model 'Activity'
         db.create_table(u'activityinfo_activity', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
+            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')(unique=True)),
             ('database', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Database'])),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
             ('location_type', self.gf('django.db.models.fields.CharField')(max_length=254)),
@@ -44,7 +44,7 @@ class Migration(SchemaMigration):
         # Adding model 'Indicator'
         db.create_table(u'activityinfo_indicator', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
+            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')(unique=True)),
             ('activity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Activity'])),
             ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
             ('units', self.gf('django.db.models.fields.CharField')(max_length=254)),
@@ -52,14 +52,25 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'activityinfo', ['Indicator'])
 
-        # Adding model 'PartnerReport'
-        db.create_table(u'activityinfo_partnerreport', (
+        # Adding model 'AttributeGroup'
+        db.create_table(u'activityinfo_attributegroup', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('pca', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['partners.PCA'])),
-            ('indicator', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Indicator'])),
-            ('indicator_value', self.gf('django.db.models.fields.IntegerField')()),
+            ('activity', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Activity'])),
+            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')(unique=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
+            ('multiple_allowed', self.gf('django.db.models.fields.BooleanField')()),
+            ('mandatory', self.gf('django.db.models.fields.BooleanField')()),
         ))
-        db.send_create_signal(u'activityinfo', ['PartnerReport'])
+        db.send_create_signal(u'activityinfo', ['AttributeGroup'])
+
+        # Adding model 'Attribute'
+        db.create_table(u'activityinfo_attribute', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('attribute_group', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.AttributeGroup'])),
+            ('ai_id', self.gf('django.db.models.fields.PositiveIntegerField')(unique=True)),
+            ('name', self.gf('django.db.models.fields.CharField')(max_length=254)),
+        ))
+        db.send_create_signal(u'activityinfo', ['Attribute'])
 
 
     def backwards(self, orm):
@@ -75,34 +86,53 @@ class Migration(SchemaMigration):
         # Deleting model 'Indicator'
         db.delete_table(u'activityinfo_indicator')
 
-        # Deleting model 'PartnerReport'
-        db.delete_table(u'activityinfo_partnerreport')
+        # Deleting model 'AttributeGroup'
+        db.delete_table(u'activityinfo_attributegroup')
+
+        # Deleting model 'Attribute'
+        db.delete_table(u'activityinfo_attribute')
 
 
     models = {
         u'activityinfo.activity': {
             'Meta': {'object_name': 'Activity'},
-            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
             'database': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Database']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'location_type': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '254'})
         },
+        u'activityinfo.attribute': {
+            'Meta': {'object_name': 'Attribute'},
+            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
+            'attribute_group': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.AttributeGroup']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '254'})
+        },
+        u'activityinfo.attributegroup': {
+            'Meta': {'object_name': 'AttributeGroup'},
+            'activity': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Activity']"}),
+            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'mandatory': ('django.db.models.fields.BooleanField', [], {}),
+            'multiple_allowed': ('django.db.models.fields.BooleanField', [], {}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '254'})
+        },
         u'activityinfo.database': {
             'Meta': {'object_name': 'Database'},
             'ai_country_id': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True'}),
-            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
             'country_name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
             'password': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
             'username': ('django.db.models.fields.CharField', [], {'max_length': '254'})
         },
         u'activityinfo.indicator': {
             'Meta': {'object_name': 'Indicator'},
             'activity': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Activity']"}),
-            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
             'category': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
@@ -110,66 +140,11 @@ class Migration(SchemaMigration):
         },
         u'activityinfo.partner': {
             'Meta': {'ordering': "['name']", 'object_name': 'Partner'},
-            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
             'database': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Database']"}),
             'full_name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '254'})
-        },
-        u'activityinfo.partnerreport': {
-            'Meta': {'object_name': 'PartnerReport'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'indicator': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Indicator']"}),
-            'indicator_value': ('django.db.models.fields.IntegerField', [], {}),
-            'pca': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']"})
-        },
-        u'partners.partnerorganization': {
-            'Meta': {'ordering': "['name']", 'object_name': 'PartnerOrganization'},
-            'activity_info_partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Partner']", 'null': 'True', 'blank': 'True'}),
-            'contact_person': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '256L', 'blank': 'True'}),
-            'email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'}),
-            'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'blank': 'True'})
-        },
-        u'partners.pca': {
-            'Meta': {'ordering': "['-number', 'amendment']", 'object_name': 'PCA'},
-            'amended_at': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'amendment': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'amendment_number': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'cash_for_supply_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'current': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'end_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'in_kind_amount_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'initiation_date': ('django.db.models.fields.DateField', [], {}),
-            'number': ('django.db.models.fields.CharField', [], {'max_length': '45L', 'blank': 'True'}),
-            'original': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']", 'null': 'True'}),
-            'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
-            'partner_contribution_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'partner_mng_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
-            'partner_mng_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'partner_mng_last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'result_structure': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.ResultStructure']", 'null': 'True', 'blank': 'True'}),
-            'sectors': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'signed_by_partner_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'signed_by_unicef_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'start_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'status': ('django.db.models.fields.CharField', [], {'default': "u'in_process'", 'max_length': '32L', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '256L'}),
-            'total_cash': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'unicef_cash_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'unicef_mng_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
-            'unicef_mng_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'unicef_mng_last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
-        },
-        u'reports.resultstructure': {
-            'Meta': {'ordering': "['name']", 'object_name': 'ResultStructure'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '150'})
         }
     }
 

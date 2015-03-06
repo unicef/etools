@@ -9,6 +9,7 @@ from django.db import IntegrityError
 from django.contrib.gis.db import models
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.forms import forms
 
 from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey
@@ -19,12 +20,22 @@ logger = logging.getLogger('locations.models')
 
 class GatewayType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
-
     class Meta:
         ordering = ['name']
 
     def __unicode__(self):
         return self.name
+
+#test nik
+def get_my_choices():
+    choices_list = GatewayType.objects
+    return choices_list
+
+class MyForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(MyForm, self).__init__(*args, **kwargs)
+        self.fields['my_choice_field'] = forms.ChoiceField(
+            choices=get_my_choices() )
 
 
 class Governorate(models.Model):

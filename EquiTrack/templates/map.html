@@ -6,28 +6,206 @@
     {% leaflet_js %}
     {% leaflet_css %}
 
+    
+
 {% endblock %}
 
 {% block content %}
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css"/>
-    <!--[if lte IE 8]>
+    <!--[if lte IE 8 -->
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
     <![endif]-->
     <!--Switch between the different themes changing the stylesheet below - light-theme.css |dark-theme.css -->
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/dark-theme.css">
+   <!-- <link rel="stylesheet" href="{{ STATIC_URL }}css/dark-theme.css"> -->
     <link rel="stylesheet" href="{{ STATIC_URL }}css/makeitresponsive.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/spongemap.css" />
+
     <section class="main-content-wrapper">
         <section id="main-content">
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button type="button" class="col-md-10 btn btn-info">
+                           Gateways
+                        </button>
+
+                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown" type="button">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-10" role="menu">
+                                <li><a class="col-md-10" href="CollectiveShelter.html">Collecctive Shelter</a><button class="col-md-2 btn" style="background-color: green; min-height: 23px;"></button></li>
+                                <li><a class="col-md-10" href="CollectiveShelter.html">Community Center</a><button class="col-md-2 btn" style="background-color: blue; min-height: 20px;"></button></li>
+                                 <li><a class="col-md-10" href="CollectiveShelter.html">Informal Settlement</a><button class="col-md-2 btn" style="background-color: red; min-height: 20px;"></button></li>
+                            <li><a href="test3.html">test3</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button type="button" class="col-md-10 btn btn-success">
+                           Governorate
+                        </button>
+
+                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-10" role="menu">
+                                <li><a href="test1.html">test1</a></li>
+                                <li><a href="test2.html">test2</a></li>
+                                <li><a href="test3.html">test3</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button type="button" class="col-md-10 btn btn-primary">
+                           Donor
+                        </button>
+
+                        <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-10" role="menu">
+                                <li><a href="test1.html">test1</a></li>
+                                <li><a href="test2.html">test2</a></li>
+                                <li><a href="test3.html">test3</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button type="button" class="col-md-10 btn btn-warning">
+                           Partner
+                        </button>
+
+                        <button class="col-md-2 btn btn-warning dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-10" role="menu">
+                                <li><a href="test1.html">test1</a></li>
+                                <li><a href="test2.html">test2</a></li>
+                                <li><a href="test3.html">test3</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button type="button" class="col-md-10 btn btn-danger">
+                           Sector
+                        </button>
+
+                        <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-10" role="menu">
+                                <li><a href="test1.html">test1</a></li>
+                                <li><a href="test2.html">test2</a></li>
+                                <li><a href="test3.html">test3</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button type="button" class="col-md-10 btn btn-info">
+                           Indicator
+                        </button>
+
+                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-10" role="menu">
+                                <li><a href="test1.html">test1</a></li>
+                                <li><a href="test2.html">test2</a></li>
+                                <li><a href="test3.html">test3</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button type="button" class="col-md-10 btn btn-success">
+                           Output
+                        </button>
+
+                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-10" role="menu">
+                                <li><a href="test1.html">test1</a></li>
+                                <li><a href="test2.html">test2</a></li>
+                                <li><a href="test3.html">test3</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button type="button" class="col-md-10 btn btn-primary">
+                           District
+                        </button>
+
+                        <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu col-md-10" role="menu">
+                                <li><a href="test1.html">test1</a></li>
+                                <li><a href="test2.html">test2</a></li>
+                                <li><a href="test3.html">test3</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class='col-md-2'>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label nopadding">Date From</label>
+                        <div class='input-group input-append date col-md-10' id='datetimepicker6'>
+                            <input type='text' class="form-control" name="date" />
+                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class='col-md-2'>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label no nopadding">Date To</label>
+                        <div class='input-group input-append date col-md-10' id='datetimepicker7'>
+                            <input type='text' class="form-control" name="date" />
+                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <script type="text/javascript">
+                    $(document).ready(function() {
+                        //$('#datetimepicker6').datepicker({ format: 'mm/dd/yyyy' });
+                        //$('#datetimepicker7').datepicker({ format: 'mm/dd/yyyy' });
+                        /*
+                        $("#datetimepicker6").on("dp.change",function (e) {
+                            $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
+                        });
+                        $("#datetimepicker7").on("dp.change",function (e) {
+                            $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
+                        });
+                        */
+                        $('#datetimepicker6').click(function() {
+                            alert("test");
+                        });
+                    });
+                </script>
+            </div>
             <div class="row">
                 <div class="col-md-12">
                     <div class="panel panel-default">
                         <div class="panel-body">
-                            {% leaflet_map "leaflet-map" callback="window.main" %}
+
+                             {% leaflet_map "leaflet-map" callback="window.main" %}
+
+                            <div id='cartodb-map'></div>
                         </div>
                     </div>
                 </div>
             </div>
+
+
 
             <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
             <!--<script src="App.js"></script> -->
@@ -36,11 +214,44 @@
             Check the cartodb.js documentation for more info
             http://developers.cartodb.com/documentation/cartodb-js.html-->
             <script>
+                var map;
+                function init(){
+                    // initiate leaflet map
+                    map = new L.Map('cartodb-map', {
+                        center: [33.87554649361947, 36.00975036621094],
+                        zoom: 9
+                    });
+
+                    // add a nice baselayer from Nokia
+                    L.tileLayer('https://maps.nlp.nokia.com/maptiler/v2/maptile/newest/normal.day.grey/{z}/{x}/{y}/256/png8?lg=eng&token=61YWYROufLu_f8ylE0vn0Q&app_id=qIWDkliFCtLntLma2e6O', {
+                    attribution: 'Nokia'
+                    }).addTo(map);
+
+                    var layerUrl = 'http://documentation.cartodb.com/api/v2/viz/236085de-ea08-11e2-958c-5404a6a683d5/viz.json';
+
+                    // change the query for the first layer
+
+                    var subLayerOptions = {
+                    sql: "SELECT * FROM example_cartodbjs_1  where adm0_a3 = 'MEX'",
+                    cartocss: "#example_cartodbjs_1{marker-fill: #109DCD; marker-width: 5; marker-line-color: white; marker-line-width: 0;}"
+                    };
+
+                    cartodb.createLayer(map, layerUrl)
+                    .addTo(map)
+                    .on('done', function(layer) {
+                        //layer.getSubLayer(0).set(subLayerOptions);
+                    }).on('error', function() {
+                        //log the error
+                    });
+                }
+
+
 
                 function main(map, options) {
 
                     layer_control = L.control.layers().addTo(map);
 
+                    /*
                     // Download GeoJSON via Ajax
                     $.getJSON('{% url 'governorates' %}', function (data) {
                         // Add GeoJSON layer
@@ -82,6 +293,7 @@
                                     }
                                 }), 'Sub-districts');
                     });
+                    */
 
                     $.get("{% url 'locations' %}", function (data) {
                         $.each(data, function (index, location) {
@@ -90,7 +302,7 @@
                                 <table cellpadding="4" cellspacing="0" border="0">\
                                     <tr>\
                                         <td style="vertical-align:top; white-space:nowrap;">PCA title:</td>\
-                                        <td style="vertical-align:top;">' + location.pca_title + '</td>\
+                                        <td style="vertical-align:top;">' + location.pca_title'</td>\
                                     </tr>\
                                     <tr>\
                                         <td style="vertical-align:top; white-space:nowrap;">Gateway:</td>\
@@ -108,10 +320,11 @@
                                 ';
                             var marker = L.marker(new L.LatLng(location.latitude, location.longitude));
                             marker.bindPopup(marker_content);
-                            marker.addTo(map)
+                            //marker.addTo(map)
                         });
                     });
                 }
+
 
             </script>
         </section>

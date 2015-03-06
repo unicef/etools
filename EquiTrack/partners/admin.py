@@ -25,7 +25,6 @@ from reports.models import (
     IntermediateResult
 )
 from partners.exports import (
-    SHPFormat,
     KMLFormat,
     PCAResource,
     PartnerResource,
@@ -282,7 +281,6 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     formats = (
         base_formats.CSV,
         KMLFormat,
-        SHPFormat,
     )
     date_hierarchy = 'start_date'
     list_display = (
@@ -345,7 +343,7 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
                  'title',
                  'status',
                  'partner',
-                 'initiation_date',)
+                 'initiation_date')
         }),
         (_('Dates'), {
             u'classes': (u'suit-tab suit-tab-info',),

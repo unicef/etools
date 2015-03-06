@@ -16,6 +16,7 @@
     <link rel="shortcut icon" href="{{ STATIC_URL }}img/favicon.ico" type="image/x-icon">
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="{{ STATIC_URL }}plugins/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}plugins/bootstrap-datepicker/css/datepicker.css">
     <!-- Fonts from Font Awsome -->
     <link rel="stylesheet" href="{{ STATIC_URL }}css/font-awesome.min.css">
     <!-- CSS Animate -->
@@ -50,7 +51,9 @@
         {% block header %}
             <header id="header">
                 <!--logo start-->
+                <div></div>
                 <div class="brand">
+                    <img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="150px" >
                     <a href="{% url 'dashboard' %}" class="logo"><span>Equi</span>Track</a>
                 </div>
                 <!--logo end-->
@@ -152,11 +155,26 @@
         {% endblock content %}
         <!--main content end-->
 
+        <!--main content start-->
+        {% block footer %}
+            <footer id="footer">
+                <div class="brand col-md-1">
+                    <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="130px"></a>
+                </div>
+                <div class="col-md-11 brand msg">
+                    <span>© Copyright 2015 UNICEF. All Rights Reserved.</span>
+                </div>
+
+            </footer>
+        {% endblock footer %}
+        <!--main content end-->
+
     </section>
 {% endblock %}
 <!--Global JS-->
 <script src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
 <script src="{{ STATIC_URL }}plugins/bootstrap/js/bootstrap.min.js"></script>
+<script src="{{ STATIC_URL }}plugins/bootstrap-datepicker/js/bootstrap-datepicker.js"></script>
 <script src="{{ STATIC_URL }}plugins/waypoints/waypoints.min.js"></script>
 <script src="{{ STATIC_URL }}plugins/nanoScroller/jquery.nanoscroller.min.js"></script>
 <script src="{{ STATIC_URL }}js/application.js"></script>

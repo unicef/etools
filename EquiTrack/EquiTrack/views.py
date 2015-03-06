@@ -4,8 +4,10 @@ from django.views.generic import TemplateView
 
 from partners.models import PCA
 from reports.models import Sector, ResultStructure
-from locations.models import CartoDBTable
-
+from locations.models import CartoDBTable, GatewayType
+from django.shortcuts import render_to_response
+from django.http import HttpResponse
+from django.core import serializers
 
 class DashboardView(TemplateView):
 
@@ -75,3 +77,21 @@ class MapView(TemplateView):
             'tables': CartoDBTable.objects.all()
         }
 
+
+class NikMapView(TemplateView):
+
+    template_name = 'map_nik.html'
+
+    def get_context_data(self, **kwargs):
+        return {'gateway_list': GatewayType.objects.all()}
+
+
+def gateway_model_select(request):
+        return render_to_response('map_nik.html', {'gateway_list': GatewayType.objects.all()})
+
+
+def all_json_models(request, gateway):
+    current_gateway = GatewayType.objects.get(code=gateway)
+    gateways = GatewayType.objects.all().filter(brand=current_gateway)
+    json_gateways = serializers.serialize("json", gateways)
+    return HttpResponse(json_gateways, mimetype="application/javascript")

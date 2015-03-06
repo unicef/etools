@@ -6,7 +6,6 @@ from import_export.admin import ImportExportModelAdmin
 
 from EquiTrack.utils import get_changeform_link
 from partners.models import IndicatorProgress
-from activityinfo.models import PartnerReport
 from reports.models import (
     Sector,
     WBS,
@@ -61,32 +60,6 @@ class ResultStructureAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = ('result_structure', SectorListFilter,)
     list_display = ('name', 'sector', 'result_structure',)
-
-
-class PartnerReportInlineAdmin(admin.TabularInline):
-    model = PartnerReport
-    extra = 0
-    fields = (
-        'pca',
-        'indicator',
-        'ai_partner',
-        'ai_indicator',
-        'location',
-        'month',
-        'indicator_value',
-    )
-    readonly_fields = (
-        'pca',
-        'indicator',
-        'ai_partner',
-        'ai_indicator',
-        'location',
-        'month',
-        'indicator_value',
-    )
-
-    def has_add_permission(self, request):
-        return False
 
 
 class IndicatorProgressInlineAdmin(admin.TabularInline):
@@ -153,7 +126,6 @@ class IndicatorAdmin(ImportExportModelAdmin):
     )
     inlines = [
         IndicatorProgressInlineAdmin,
-        PartnerReportInlineAdmin
     ]
 
 

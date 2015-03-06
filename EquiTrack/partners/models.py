@@ -1,3 +1,4 @@
+
 __author__ = 'jcranwellward'
 
 import json
@@ -301,6 +302,8 @@ class PCA(AdminURLMixin, models.Model):
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
+
+
 
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)

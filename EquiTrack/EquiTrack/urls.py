@@ -13,13 +13,18 @@ admin.autodiscover()
 from users.views import EquiTrackRegistrationView
 from .views import (
     MapView,
-    DashboardView
+    DashboardView,
+    NikMapView,
+    all_json_models
+
 )
 
 urlpatterns = patterns(
     '',
     url(r'^$', login_required(DashboardView.as_view()), name='dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
+    url(r'^nikmap/$', login_required(NikMapView.as_view()), name='nikmap'),
+    url(r'^nikmap/(?P<gateway>[-\w]+)/all_json_models/$', all_json_models),
 
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),
