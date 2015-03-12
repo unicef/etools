@@ -30,5 +30,6 @@ urlpatterns = patterns(
         ),
         name='sub-districts'),
     url(r'^location$', 'locations.views.gateway_model_select'),
-    url(r'^location/(?P<gateway>[-\w]+)/all_json_models/$', views.all_json_models)
+    url(r'^location/(?P<gateway>[-\w]+)/all_json_models/$', views.all_json_models),
+    url(r'^cartodbtables/$', views.CartoDBTablesView.as_view())
 )

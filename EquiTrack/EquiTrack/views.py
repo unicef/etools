@@ -4,7 +4,7 @@ from django.views.generic import TemplateView
 
 from partners.models import PCA
 from reports.models import Sector, ResultStructure
-from locations.models import CartoDBTable, GatewayType
+from locations.models import CartoDBTable, GatewayType, Governorate
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.core import serializers
@@ -74,7 +74,9 @@ class MapView(TemplateView):
 
     def get_context_data(self, **kwargs):
         return {
-            'tables': CartoDBTable.objects.all()
+            'tables': CartoDBTable.objects.all(),
+            'gateway_list': GatewayType.objects.all(),
+            'governorate_list': Governorate.objects.all()
         }
 
 
@@ -83,15 +85,14 @@ class NikMapView(TemplateView):
     template_name = 'map_nik.html'
 
     def get_context_data(self, **kwargs):
-        return {'gateway_list': GatewayType.objects.all()}
+        return {'gateway_list': GatewayType.objects.all(),
+                'governorate_list': Governorate.objects.all(),
+                'tables': CartoDBTable.objects.all()
+                }
 
 
-def gateway_model_select(request):
-        return render_to_response('map_nik.html', {'gateway_list': GatewayType.objects.all()})
-
-
-def all_json_models(request, gateway):
-    current_gateway = GatewayType.objects.get(code=gateway)
-    gateways = GatewayType.objects.all().filter(brand=current_gateway)
-    json_gateways = serializers.serialize("json", gateways)
-    return HttpResponse(json_gateways, mimetype="application/javascript")
+def all_json_governorates(request, gateway):
+    current_gateway = GatewayType.objects.get(id=gateway)
+    gs = Governorate.objects.all().filter(gateway=current_gateway)
+    json_gs = serializers.serialize("json", gs)
+    return HttpResponse(json_gs, mimetype="application/javascript")

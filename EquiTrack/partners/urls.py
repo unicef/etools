@@ -17,4 +17,5 @@ urlpatterns = patterns(
     url(r'pca/info/$', PartnersView.as_view(), name='partners'),
     url(r'pca/validate/$', ValidatePCANumberView.as_view()),
     url(r'face/create/$', CreateFACERequestView.as_view())
+
 )
