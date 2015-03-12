@@ -15,7 +15,7 @@
     <![endif]-->
     <style>
     html, body {height:100%; padding: 0;}
-    #leaflet-map {height:100%; margin-left: 250px; background: white;}
+    #cartodb-map {height:100%; margin-left: 250px; background: white;}
     #mapmenu { position: absolute; top: 170px; right: 10px; height:60px; background: transparent; z-index:10;}
     #mapmenu a {
       margin: 15px 10px 0 0;
@@ -108,6 +108,7 @@
     </script>
 
     <script>
+    //window.onload = main;
 
     //querying JSON
     function getObjects(obj, key, val) {
@@ -153,18 +154,18 @@
     var color;
 
 
-    function main(map, options) {
+    $(document).ready(function() {
 
         // initiate leaflet map
-        //map = new L.Map('cartodb-map', {
-        //    center: [33.9, 36.1],
-        //    zoom: 9
-        //});
+        map = new L.Map('cartodb-map', {
+            center: [33.9, 36.1],
+            zoom: 9
+        });
 
         // add a nice baselayer from Nokia
-        //L.tileLayer('https://maps.nlp.nokia.com/maptiler/v2/maptile/newest/normal.day.grey/{z}/{x}/{y}/256/png8?lg=eng&token=61YWYROufLu_f8ylE0vn0Q&app_id=qIWDkliFCtLntLma2e6O', {
-        //    attribution: 'Nokia'
-        //}).addTo(map);
+        L.tileLayer('https://maps.nlp.nokia.com/maptiler/v2/maptile/newest/normal.day.grey/{z}/{x}/{y}/256/png8?lg=eng&token=61YWYROufLu_f8ylE0vn0Q&app_id=qIWDkliFCtLntLma2e6O', {
+            attribution: 'Nokia'
+        }).addTo(map);
 
 
 
@@ -184,8 +185,7 @@
             cartodb.createLayer(map, {
             user_name: user,
             type: 'cartodb',
-            sublayers: [{sql: "SELECT * FROM ai_is",
-                cartocss: "#ai_is{marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: #5CA2D1; marker-allow-overlap: true; polygon-fill: #FFFFB2; polygon-opacity: 0.8; line-color: #FFF; line-width: 1; line-opacity: 1;}"}]
+            sublayers:  sublayerArr //[{sql: "SELECT * FROM ai_is", cartocss: "#ai_is{marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: #5CA2D1; marker-allow-overlap: true; polygon-fill: #FFFFB2; polygon-opacity: 0.8; line-color: #FFF; line-width: 1; line-opacity: 1;}"}]
             })
             .addTo(map)
             .done(function(layer) {
@@ -231,7 +231,7 @@
         });
 
 
-    }
+    });
 
     </script>
 
@@ -523,7 +523,7 @@
     </div>
 
     <div class="row" style="height:100%;">
-        {% leaflet_map "leaflet-map" callback="window.main" %}
+{#        {% leaflet_map "leaflet-map" callback="window.main" %}#}
 
         <div id='cartodb-map' class="col-md-10"></div>
     </div>
