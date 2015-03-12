@@ -39,13 +39,24 @@
       color: #f09;
     }
 
+    blockquote {
+        display: hidden;
+    }
+
+    .leaflet-popup-content{
+        min-width: 300px !important;
+        width: inherit !important;
+    }
+
+    /*
+    Used for cartodb style popups
+
     .infowindow-custom{
         position: relative;
         width: 500px;
         background-color: white;
         margin-bottom: 11px;
-
-      }
+    }
 
     .cartodb-popup-close-button {
         position: absolute;
@@ -75,14 +86,11 @@
         opacity: 1;
         z-index: 3;
       }
-
-      blockquote {
-        display: hidden;
-      }
-
-      .cartodb-popup-content {
+    .cartodb-popup-content {
         min-height: 100px;
-      }
+    }
+    */
+
     </style>
 
 
@@ -1735,27 +1743,96 @@
                 //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
                 var count = 0;
                 $.each( pca_qry, function( keyq, valueq ) {
+                    var popup_content_start = '<div class="content" id="mytab" style="padding:20px">' +
+                                                '<div role="tabpanel">';
+                    var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
+                    var popup_content_tabs = '<div class="tab-content" id="infotabs">';
                     var popup_content='';
+                    //looping through all PCAs for one location
                     $.each( valueq.parterships, function( keyp, valuep ) {
-                        //alert(valuep.pca_number);
-                        popup_content = '<div class="content" style="padding:20px">' +
-                                '<div role="tabpanel">' +
-                                    <!-- Nav tabs -->
-                                '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">' +
-                                '<li id="link"' + key + '" role="presentation" class="active"><a href="#tab' + key + '">' + value.pca_number + '</a></li>' +
-                                '</ul>' +
-                                    <!-- Tab panes -->
-                                '<div class="tab-content" id="infotabs">' +
-                                "<div role='tabpanel' class='tab-pane active' id='tab" + key + "'>" +
-                                "<h4>PCA Title</h4><p id='pca_title'>" + valuep.pca_title + "</p>" +
-                                "<h4>Gateway:</h4><p id='gateway_name'>" + valuep.gateway_name + "</p>" +
-                                "<h4>Partner:</h4><p id='partner_name'>" + valuep.partner_name + "</p>" +
-                                "<h4>Sector:</h4><p id='sector'>" + valuep.sector + "</p>" +
-                                "</div>" +
-                                '</div>' +
-                                '</div>' +
-                                '</div>';
+
+                        //if(keyp == 0)
+                        //{
+                            popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
+                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in ' id='tab" + keyp + "'>" +
+                            "<h4>PCA Title</h4><p id='pca_title'>" + valuep.pca_title + "</p>" +
+                            "<h4>Gateway:</h4><p id='gateway_name'>" + valuep.gateway_name + "</p>" +
+                            "<h4>Partner:</h4><p id='partner_name'>" + valuep.partner_name + "</p>";
+
+
+                            //looping for sectors for one PCA
+                            $.each( valuep.sectors, function( keys, valueSec ) {
+                                var popup_content_tabs_indicator='';
+
+                                var popup_content_tabs_sec =  '<div class="panel panel-default">' +
+                                                                    '<div class="panel-heading">' +
+                                                                        '<h3 class="panel-title">' + valueSec.sector_name +'</h3>' +
+                                                                    '</div>';
+
+                                $.each( valueSec.indicators, function( keyi, valuei ) {
+                                    popup_content_tabs_indicator += '<div class="panel-body">' +
+                                                                        '<a href=""><span class="sublabel">' + valuei.indicator+ '</span></a>' +
+                                                                        '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
+                                                                        '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
+                                                                        '<div class="progress progress-striped">' +
+                                                                            '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current/valuei.programmed*100 +'%">' + valuei.current/valuei.programmed*100 + '% </div>' +
+                                                                        '</div>' +
+                                                                    '</div>';
+
+
+                                });
+                                popup_content_tabs_indicator += '</div>' + '</div>';
+
+                            popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
+                            console.log(popup_content_tabs);
+                            });
+
+                            //alert(popup_content_tabs);
+                        //}
+                        /*
+                        else {
+                            popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
+                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade' id='tab" + keyp + "'>" +
+                            "<h4>PCA Title</h4><p id='pca_title'>" + valuep.pca_title + "</p>" +
+                            "<h4>Gateway:</h4><p id='gateway_name'>" + valuep.gateway_name + "</p>" +
+                            "<h4>Partner:</h4><p id='partner_name'>" + valuep.partner_name + "</p>" +
+                            "<h4>Sector:</h4><p id='sector'>" + valuep.sector + "</p>";
+
+                            //looping for sectors for one PCA
+                            $.each( valuep.sectors, function( keys, values ) {
+                                //var sector_name = values.sector_name;
+                                popup_content_tabs += '<div class="">' +
+                                                            '<div class="panel panel-default">' +
+                                                                '<div class="panel-heading">' +
+                                                                    '<h3 class="panel-title">' + values.sector_name +'</h3>' +
+                                                                    '<div class="actions pull-right">' +
+                                                                        '<i class="fa fa-chevron-down"></i>' +
+                                                                        '<i class="fa fa-times"></i>' +
+                                                                    '</div>' +
+                                                                '</div>' +
+
+                                $.each( values.indicators, function( keyi, valuei ) {
+                                    //alert(valuei.programmed);
+                                    popup_content_tabs += '<div class="panel-body">' +
+                                                            '<a href=""><span class="sublabel"># of girls and boys benefitting from psychosocial support</span></a>' +
+                                                            '<div><span class="sublabel" style="float: right;">Programmed: 34830 </span></div>' +
+                                                            '<div><span class="sublabel">Reached: 1000</span></div>' +
+                                                            '<div class="progress progress-striped">' +
+                                                                '<div class="progress-bar progress-bar-blue" style="width: 30%"> 30% </div>' +
+                                                            '</div>' +
+                                                           '</div>' +
+                                                        '</div>' +
+                                                    '</div>';
+
+                                });
+                            });
+                        }
+                                             */
                     });
+                    popup_content_navs += '</ul>';
+                    popup_content_tabs += '</div>';
+                    popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
+
                     var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {
                         icon: L.AwesomeMarkers.icon({
                             icon: 'building-o',
@@ -1767,6 +1844,15 @@
                     marker.bindPopup(popup_content);
                     marker.addTo(map);
                 });
+                $('#tab0').addClass("active");
+                $('#link0').addClass("active");
+
+                //create tabs in info window
+                    $("#myTab a").click(function (e) {
+                        alert("tab");
+                        e.preventDefault();
+                        $(this).tab('show');
+                    });
 
                    /*
                     $.each( value, function( key1, value1 ) {
@@ -2015,6 +2101,18 @@
     </div>
 
     <div id='mapmenu' class="col-md-10">
+    </div>
+    <div class="col-md-10">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a href="{"><span class="sublabel"># of girls and boys benefitting from psychosocial support</span></a>
+                <div><span class="sublabel" style="float: right;">Programmed: 34830 </span></div>
+                <div><span class="sublabel">Reached: 1000</span></div>
+                <div class="progress progress-striped">
+                    <div class="progress-bar progress-bar-blue" style="width: 30%"> 30% </div>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}
 
