@@ -21,4 +21,5 @@ urlpatterns = patterns(
 >>>>>>> locations_api
     url(r'pca/validate/$', ValidatePCANumberView.as_view()),
     url(r'face/create/$', CreateFACERequestView.as_view())
+
 )

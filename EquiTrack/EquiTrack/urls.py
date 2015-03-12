@@ -15,7 +15,7 @@ from .views import (
     MapView,
     DashboardView,
     NikMapView,
-    all_json_models
+    all_json_governorates
 
 )
 
@@ -24,7 +24,7 @@ urlpatterns = patterns(
     url(r'^$', login_required(DashboardView.as_view()), name='dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^nikmap/$', login_required(NikMapView.as_view()), name='nikmap'),
-    url(r'^nikmap/(?P<gateway>[-\w]+)/all_json_models/$', all_json_models),
+    url(r'^nikmap/(?P<gateway>[-\w]+)/all_json_governorates/$', all_json_governorates),
 
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),

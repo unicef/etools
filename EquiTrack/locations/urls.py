@@ -4,6 +4,7 @@ from django.conf.urls import patterns, url
 
 from djgeojson.views import GeoJSONLayerView
 
+from locations import views
 from .models import Governorate, Region, Locality
 
 
@@ -28,4 +29,7 @@ urlpatterns = patterns(
             properties=['name', 'color']
         ),
         name='sub-districts'),
+    url(r'^location$', 'locations.views.gateway_model_select'),
+    url(r'^location/(?P<gateway>[-\w]+)/all_json_models/$', views.all_json_models),
+    url(r'^cartodbtables/$', views.CartoDBTablesView.as_view())
 )
