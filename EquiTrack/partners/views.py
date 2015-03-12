@@ -9,7 +9,8 @@ from rest_framework.parsers import FormParser
 from rest_framework.renderers import JSONPRenderer
 
 from partners.models import FACE
-from .serializers import GWLocationSerializer, RapidProRequest
+from locations.models import Location
+from .serializers import LocationSerializer, RapidProRequest
 
 from partners.models import (
     PCA,
@@ -25,16 +26,20 @@ class PartnersView(ListAPIView):
 class LocationView(ListAPIView):
 
     model = GwPCALocation
-    serializer_class = GWLocationSerializer
+    serializer_class = LocationSerializer
 
     def get_queryset(self):
         """
         Return locations with GPS points only
         """
-        return self.model.objects.filter(
+        pca_locs = self.model.objects.filter(
             pca__status=PCA.ACTIVE,
             location__point__isnull=False
+        ).values_list('location', flat=True)
+        locs = Location.objects.filter(
+            id__in=pca_locs
         )
+        return locs
 
 
 class RapidProWebHookMixin(object):
