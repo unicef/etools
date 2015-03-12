@@ -3,14 +3,12 @@
 
 {% block extra_head %}
 
-    {% leaflet_js %}
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
+    <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
+
+
     {% leaflet_css %}
 
-
-
-{% endblock %}
-
-{% block content %}
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css"/>
     <!--[if lte IE 8 -->
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
@@ -20,6 +18,83 @@
     <link rel="stylesheet" href="{{ STATIC_URL }}css/makeitresponsive.css">
     <link rel="stylesheet" href="{{ STATIC_URL }}css/spongemap.css" />
     <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.awesome-markers.css" />
+
+    <style>
+        html, body {height:100%; padding: 0;}
+        #cartodb-map {height:100%; margin-left: 250px; background: white;}
+        #mapmenu { position: absolute; top: 10px; right: 10px; height:60px; background: transparent; z-index:10;}
+        #mapmenu a {
+          margin: 15px 10px 0 0;
+          float: right;
+          vertical-align: baseline;
+          width: 100px;
+          padding: 10px;
+          text-align: center;
+          font: bold 11px "Helvetica",Arial;
+          line-height: normal;
+          color: #FFF;
+          border-radius: 4px;
+          border: 1px solid #777777;
+          /*background: #ffffff; */
+          text-decoration: none;
+          cursor: pointer;
+        }
+        #mapmenu a.selected {
+           background: #777; }
+        #mapmenu a:hover {
+          color: #f09;
+        }
+
+        .infowindow-custom{
+            position: relative;
+            width: 500px;
+            background-color: white;
+            margin-bottom: 11px;
+
+          }
+
+        .cartodb-popup-close-button {
+            position: absolute;
+            top: -12px;
+            right: -11px;
+            width: 26px;
+            height: 26px;
+            background: url('http://libs.cartodb.com/cartodb.js/v3/themes/img/light.png') no-repeat 0 -23px;
+            text-indent: -9999px;
+            font-size: 0;
+            line-height: 0;
+            opacity: 1;
+            text-transform: uppercase;
+            z-index: 3;
+          }
+
+          .cartodb-popup-tip-container {
+            position: absolute;
+            bottom: -3px;
+            left: 23px;
+            width: 16px;
+            height: 14px;
+            background: url('http://libs.cartodb.com/cartodb.js/v3/themes/img/light.png') no-repeat -23px -7px;
+            text-indent: -9999px;
+            font-size: 0;
+            line-height: 0;
+            opacity: 1;
+            z-index: 3;
+          }
+
+          blockquote {
+            display: hidden;
+          }
+
+          .cartodb-popup-content {
+            min-height: 100px;
+          }
+    </style>
+
+{% endblock %}
+
+{% block content %}
+
 
     <section class="main-content-wrapper">
         <section id="main-content">
@@ -185,19 +260,7 @@
                         </div>
                     </div>
                 </div>
-                <script type="text/javascript">
-                    $(document).ready(function() {
-                        $('#datetimepicker6').datepicker({ format: 'mm/dd/yyyy' });
-                        $('#datetimepicker7').datepicker({ format: 'mm/dd/yyyy' });
 
-                        $("#datetimepicker6").on("dp.change",function (e) {
-                            $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
-                        });
-                        $("#datetimepicker7").on("dp.change",function (e) {
-                            $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
-                        });
-                    });
-                </script>
             </div>
             <div class="row">
                 <div class="col-md-12">
@@ -206,7 +269,9 @@
 
                              {% leaflet_map "leaflet-map" callback="window.main" %}
 
-                            <div id='cartodb-map'></div>
+{#                            <div id='cartodb-map'></div>#}
+                            <div id='mapmenu' class="col-md-10">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -215,231 +280,188 @@
     </section>
 
 
-            <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
-            <!--<script src="App.js"></script> -->
-            <!--Change the URL below in order to change the map that is being shown.
-            Go to your map in CartoDB, click on share, and copy the URL undert the API section
-            Check the cartodb.js documentation for more info
-            http://developers.cartodb.com/documentation/cartodb-js.html-->
-            <script>
+{% endblock %}
 
-                //querying JSON
-                function getObjects(obj, key, val) {
-                    var objects = [];
-                    for (var i in obj) {
-                        if (!obj.hasOwnProperty(i)) continue;
-                        if (typeof obj[i] == 'object') {
-                            objects = objects.concat(getObjects(obj[i], key, val));
-                        } else if (i == key && obj[key] == val) {
-                            objects.push(obj);
-                        }
-                    }
-                    return objects;
+{% block extra_js %}
+
+    {% leaflet_js %}
+
+    <script type="text/javascript">
+
+        //querying JSON
+        function getObjects(obj, key, val) {
+            var objects = [];
+            for (var i in obj) {
+                if (!obj.hasOwnProperty(i)) continue;
+                if (typeof obj[i] == 'object') {
+                    objects = objects.concat(getObjects(obj[i], key, val));
+                } else if (i == key && obj[key] == val) {
+                    objects.push(obj);
                 }
-
-                //sample PCA json function
-                var pca_locations = {"pcalocations":[
-                    {"pca_title": "Adolescents Benefiting Communities", "pca_number": "PCA/LEBA/2013/62", "pca_id": 120, "partner_name": "Lebanese Red Cross", "partner_id": 47, "sector_name": "Education", "sector_id": 1, "latitude": 33.89057, "longitude": 35.5029, "location_name": "Bachoura", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 1632, "pca": 120, "sector": null, "governorate": 1, "region": 1, "locality": 5, "location": 31, "tpm_visit": false, "pcode": "53333-01-002"},
-                    {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.87379, "longitude": 35.50219, "location_name": "Tariq El Jdide", "location_type": "Village", "gateway_name": "Village", "gateway_id": 9, "id": 4892, "pca": 473, "sector": 4, "governorate": 1, "region": 1, "locality": 9, "location": 60, "tpm_visit": false, "pcode": "32191-01-007"},
-                    {"pca_title": "Strengthening Resilience Among Vulnerable Children", "pca_number": "PCA/LEBA/2014/49", "pca_id": 439, "partner_name": "Himaya", "partner_id": 87, "sector_name": "Child Protection", "sector_id": 4, "latitude": 33.87379, "longitude": 35.50219, "location_name": "Tariq El Jdide", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4501, "pca": 439, "sector": 4, "governorate": 1, "region": 1, "locality": 9, "location": 60, "tpm_visit": true, "pcode": "23267-01-005"},
-                    {"pca_title": "Multi-sectoral response in informal tented settlements across Lebanon", "pca_number": "PCA/LEBA/2014/01", "pca_id": 172, "partner_name": "BEYOND Association", "partner_id": 2, "sector_name": "Education, Health and Nutrition, Child Protection, WASH", "sector_id": 1, "latitude": 33.87278, "longitude": 35.52083, "location_name": "Furn ech Chebak", "location_type": "Village", "gateway_name": "Village", "gateway_id": 9, "id": 2790, "pca": 172, "sector": null, "governorate": 2, "region": 2, "locality": 16, "location": 95, "tpm_visit": false, "pcode": "32169-01-006"},
-                    {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.86113, "longitude": 35.51024, "location_name": "Ghobeire", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4895, "pca": 473, "sector": 4, "governorate": 2, "region": 2, "locality": 20, "location": 104, "tpm_visit": false, "pcode": "53333-01-002"}
-                ]};
-
-                function getRandomColor() {
-                    var letters = '0123456789ABCDEF'.split('');
-                    var color = '#';
-                    for (var i = 0; i < 6; i++ ) {
-                        color += letters[Math.floor(Math.random() * 16)];
-                    }
-                    return color;
-                }
-
-                var map;
-                var sublayer;
-                var table;
-                var uniqueID;
-                var sublayerArr = [];
-                var subLayerOptions = '[';
-                var count = 0;
-                var tableArr = [];
-                var cartoSubLayers = [];
-                var color;
-
-
-                function main(map, options) {
-
-                    //get all cartodb tables from equitrack and pull data from CartoDB
-                    $.getJSON("/locations/cartodbtables/", function (data) {
-                        $.each(data, function( key, val ) {
-                            color = getRandomColor();
-                            sublayerArr.push({
-                                sql: 'SELECT * FROM ' + val.table_name,
-                                cartocss: '#' + val.table_name + '{ marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: ' + color.toString() + '; marker-allow-overlap: true; }',
-                                interactivity: val.pcode_col + ', cartodb_id, the_geom'
-                            });
-                            tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color});
-                            user = val.domain;
-                            $('#mapmenu').append("<a href=#" + val.table_name + " id='" + val.table_name + "' class='mapbutton " + val.table_name + "' style='background:" + color +"'>" + val.table_name + "</a>");
-                        });
-                        cartodb.createLayer(map, {
-                        user_name: user,
-                        type: 'cartodb',
-                        sublayers: sublayerArr //[{sql: "SELECT * FROM icrc_winter", cartocss: "#icrc_winter{marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: #5CA2D1; marker-allow-overlap: true; polygon-fill: #FFFFB2; polygon-opacity: 0.8; line-color: #FFF; line-width: 1; line-opacity: 1;}"}]
-                        })
-                        .addTo(map)
-                        .done(function(layer) {
-                            for (var i = 0; i < layer.getSubLayerCount(); i++) {
-                                cartoSubLayers.push(layer.getSubLayer(i));
-                            }
-                            //sublayer = layer.getSubLayer(0);
-
-                            $('.mapbutton').click(function() {
-                               $('.mapbutton').removeClass('selected');
-                               $(this).addClass('selected');
-                               var buttonId = $(this).attr('id');
-
-                                $.each(tableArr, function (key, value){
-                                   if(value.table_name == buttonId ){
-                                       layer.getSubLayer(key).toggle();
-                                       if($("#" + value.table_name).css("background-color") == "rgb(192, 192, 192)") {
-                                           $("#" + value.table_name).css("background-color", value.color);
-                                       }
-                                       else
-                                       {
-                                           $("#" + value.table_name).css("background-color", "#C0C0C0");
-                                       }
-                                   }
-                                });
-                            });
-                        })
-                        .error(function(err){
-                            alert("error");
-                        });
-                    })
-                    .done(function() {
-                        //change css of sublayers that have polygons
-                        $.each(tableArr, function (key, value) {
-                            $.getJSON("http://unhcr.cartodb.com/api/v2/sql?q=SELECT%20the_geom%20FROM%20" + value.table_name + "%20WHERE%20cartodb_id=1&format=GeoJSON", function (cartodata) {
-                                $.each(cartodata.features, function (key1, val1) {
-                                    //check if table is a polygon or point type
-                                    if (val1.geometry.type == "MultiPolygon" || val1.geometry.type == "Polygon") {
-                                        cartoSubLayers[key].setCartoCSS('#' + value.table_name + '{ polygon-fill: ' + color.toString() + '; polygon-opacity: 0.3; line-color: #FFF; line-width: 1; line-opacity: 0.5; }');
-                                    }
-                                });
-                            });
-                        });
-                    });
-                }
-
-            function GatewayGetData(id){
-                if(id==''){
-
-                }
-                else{
-                    var rowId = id.substring(id.length-1);
-                    var url = "/nikmap/" + rowId + "/all_json_governorates";
-                    $.getJSON(url, function (governorates) {
-                         var options = '';
-                         for (var i = 0; i < governorates.length; i++) {
-                            options += '<li><a href="javascript:void(0);" id="governorate' + governorates[i].pk + '" onclick="GovernorateGetData(this.id);">' + governorates[i].fields['name'] + '</a></li>';
-                         }
-                         $("#governorate_ul").html(options);
-                    });
-                }
-                UpdateMap();
             }
+            return objects;
+        }
 
-            //getting all pcodes and creating SQL statement
-            function UpdateMap(){
-                $.each(tableArr, function (key, val){
-                    var pca_qry = getObjects(pca_locations, 'gateway_id', '1');
-                    //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
-                    var count = 0;
-                    $.each( pca_qry, function( keyp, value ) {
-                        var popup_content = '<div class="content" style="padding:20px">' +
-                                            '<div role="tabpanel">' +
-                                            <!-- Nav tabs -->
-                                                '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">' +
-                                                '<li id="link"' + key + '" role="presentation" class="active"><a href="#tab' + key + '">' + value.pca_number + '</a></li>' +
-                                                '</ul>' +
-                                                <!-- Tab panes -->
-                                                '<div class="tab-content" id="infotabs">' +
-                                                    "<div role='tabpanel' class='tab-pane active' id='tab" + key + "'>" +
-                                                        "<h4>PCA Title</h4><p id='pca_title'>" + value.pca_title + "</p>" +
-                                                        "<h4>Gateway:</h4><p id='gateway_name'>" + value.gateway_name + "</p>" +
-                                                        "<h4>Partner:</h4><p id='partner_name'>" + value.partner_name + "</p>" +
-                                                        "<h4>Sector:</h4><p id='sector'>" + value.sector + "</p>" +
-                                                    "</div>" +
-                                                '</div>' +
-                                            '</div>' +
-                                        '</div>';
+        //sample PCA json function
+        var pca_locations = {"pcalocations":[
+            {"pca_title": "Adolescents Benefiting Communities", "pca_number": "PCA/LEBA/2013/62", "pca_id": 120, "partner_name": "Lebanese Red Cross", "partner_id": 47, "sector_name": "Education", "sector_id": 1, "latitude": 33.89057, "longitude": 35.5029, "location_name": "Bachoura", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 1632, "pca": 120, "sector": null, "governorate": 1, "region": 1, "locality": 5, "location": 31, "tpm_visit": false, "pcode": "53333-01-002"},
+            {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.87379, "longitude": 35.50219, "location_name": "Tariq El Jdide", "location_type": "Village", "gateway_name": "Village", "gateway_id": 9, "id": 4892, "pca": 473, "sector": 4, "governorate": 1, "region": 1, "locality": 9, "location": 60, "tpm_visit": false, "pcode": "32191-01-007"},
+            {"pca_title": "Strengthening Resilience Among Vulnerable Children", "pca_number": "PCA/LEBA/2014/49", "pca_id": 439, "partner_name": "Himaya", "partner_id": 87, "sector_name": "Child Protection", "sector_id": 4, "latitude": 33.87379, "longitude": 35.50219, "location_name": "Tariq El Jdide", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4501, "pca": 439, "sector": 4, "governorate": 1, "region": 1, "locality": 9, "location": 60, "tpm_visit": true, "pcode": "23267-01-005"},
+            {"pca_title": "Multi-sectoral response in informal tented settlements across Lebanon", "pca_number": "PCA/LEBA/2014/01", "pca_id": 172, "partner_name": "BEYOND Association", "partner_id": 2, "sector_name": "Education, Health and Nutrition, Child Protection, WASH", "sector_id": 1, "latitude": 33.87278, "longitude": 35.52083, "location_name": "Furn ech Chebak", "location_type": "Village", "gateway_name": "Village", "gateway_id": 9, "id": 2790, "pca": 172, "sector": null, "governorate": 2, "region": 2, "locality": 16, "location": 95, "tpm_visit": false, "pcode": "32169-01-006"},
+            {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.86113, "longitude": 35.51024, "location_name": "Ghobeire", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4895, "pca": 473, "sector": 4, "governorate": 2, "region": 2, "locality": 20, "location": 104, "tpm_visit": false, "pcode": "53333-01-002"}
+        ]};
 
-                         var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: L.AwesomeMarkers.icon({icon: 'building-o', prefix: 'fa', markerColor: 'blue'}) });
-                        //var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: redMarker});
-                        marker.bindPopup(popup_content);
-                        marker.addTo(map);
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF'.split('');
+            var color = '#';
+            for (var i = 0; i < 6; i++ ) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        var map;
+        var sublayer;
+        var table;
+        var uniqueID;
+        var sublayerArr = [];
+        var subLayerOptions = '[';
+        var count = 0;
+        var tableArr = [];
+        var cartoSubLayers = [];
+        var color;
+
+        function main(map, options) {
+
+            //get all cartodb tables from equitrack and pull data from CartoDB
+            $.getJSON("/locations/cartodbtables/", function (data) {
+                $.each(data, function( key, val ) {
+                    color = getRandomColor();
+                    sublayerArr.push({
+                        sql: 'SELECT * FROM ' + val.table_name,
+                        cartocss: '#' + val.table_name + '{ marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: ' + color.toString() + '; marker-allow-overlap: true; }',
+                        interactivity: val.pcode_col + ', cartodb_id, the_geom'
                     });
+                    tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color});
+                    user = val.domain;
+                    $('#mapmenu').append("<a href=#" + val.table_name + " id='" + val.table_name + "' class='mapbutton " + val.table_name + "' style='background:" + color +"'>" + val.table_name + "</a>");
+                });
+                cartodb.createLayer(map, {
+                user_name: user,
+                type: 'cartodb',
+                sublayers: sublayerArr //[{sql: "SELECT * FROM icrc_winter", cartocss: "#icrc_winter{marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: #5CA2D1; marker-allow-overlap: true; polygon-fill: #FFFFB2; polygon-opacity: 0.8; line-color: #FFF; line-width: 1; line-opacity: 1;}"}]
+                })
+                .addTo(map)
+                .done(function(layer) {
+                    for (var i = 0; i < layer.getSubLayerCount(); i++) {
+                        cartoSubLayers.push(layer.getSubLayer(i));
+                    }
+                    //sublayer = layer.getSubLayer(0);
+                    $('.mapbutton').click(function() {
+                       $('.mapbutton').removeClass('selected');
+                       $(this).addClass('selected');
+                       var buttonId = $(this).attr('id');
 
-                       /*
-                        $.each( value, function( key1, value1 ) {
-                            //alert(key1 + " : " + value1)
-                            if(key1 == "pcode") {
-                                if(count==0) {
-                                    sql_stmt = sql_stmt + "'" + value1 + "'";
-                                }
-                                else{
-                                    sql_stmt = sql_stmt + ", '" + value1 + "'";
-                                }
-                                count++;
+                        $.each(tableArr, function (key, value){
+                           if(value.table_name == buttonId ){
+                               layer.getSubLayer(key).toggle();
+                               if($("#" + value.table_name).css("background-color") == "rgb(192, 192, 192)") {
+                                   $("#" + value.table_name).css("background-color", value.color);
+                               }
+                               else
+                               {
+                                   $("#" + value.table_name).css("background-color", "#C0C0C0");
+                               }
+                           }
+                        });
+                    });
+                })
+                .error(function(err){
+                    alert("error");
+                });
+            })
+            .done(function() {
+                //change css of sublayers that have polygons
+                $.each(tableArr, function (key, value) {
+                    $.getJSON("http://unhcr.cartodb.com/api/v2/sql?q=SELECT%20the_geom%20FROM%20" + value.table_name + "%20WHERE%20cartodb_id=1&format=GeoJSON", function (cartodata) {
+                        $.each(cartodata.features, function (key1, val1) {
+                            //check if table is a polygon or point type
+                            if (val1.geometry.type == "MultiPolygon" || val1.geometry.type == "Polygon") {
+                                cartoSubLayers[key].setCartoCSS('#' + value.table_name + '{ polygon-fill: ' + color.toString() + '; polygon-opacity: 0.3; line-color: #FFF; line-width: 1; line-opacity: 0.5; }');
                             }
                         });
                     });
-                    sql_stmt = sql_stmt + ")";
-                    //alert(sql_stmt);
+                });
+            });
+        }
 
-                    //change SQL statement
-                    cartoSubLayers[key].setSQL(sql_stmt);
+        function GatewayGetData(id){
+            if(id==''){
 
-                    //set infowindow to PCA data
-                    cdb.vis.Vis.addInfowindow(map, cartoSubLayers[key], [val.pcode_col], {infowindowTemplate: $('#infowindow_template').html() });
-
-                    cartoSubLayers[key].on('featureClick', function (e, pos, latlng, data) {
-                        //clear infowindow
-                        $('#infotabs').html('');
-                        $('.nav-tabs').html('');
-
-                        //getting pca info from json PCAs and update info window
-                        var pca_qry = getObjects(pca_locations, 'pcode', data.pcode);
-                        $.each(pca_qry, function (key, value) {
-
-                                $('#infotabs').append("<div role='tabpanel' class='tab-pane ' id='tab" + key + "'>" +
-                                    "<h4>PCA Title</h4><p id='pca_title'>" + value.pca_title + "</p>" +
-                                    "<h4>Gateway:</h4><p id='gateway_name'>" + value.gateway_name + "</p>" +
-                                    "<h4>Partner:</h4><p id='partner_name'>" + value.partner_name + "</p>" +
-                                    "<h4>Sector:</h4><p id='sector'>" + value.sector + "</p></div>");
-                                    $('.nav-tabs').append("<li id='link" + key + "' role='presentation' class=''><a href='#tab" + key + "'>" + value.pca_number + "</a></li>");
-
-                            if(key==0){
-                                $('#tab' + key).addClass("active");
-                                $('#link' + key).addClass("active");
-                            }
-                        });
-                        //create tabs in info window
-                        $("#myTab a").click(function (e) {
-                            e.preventDefault();
-                            $(this).tab('show');
-                        });
-                    });
-                    */
-
-
+            }
+            else{
+                var rowId = id.substring(id.length-1);
+                var url = "/nikmap/" + rowId + "/all_json_governorates";
+                $.getJSON(url, function (governorates) {
+                     var options = '';
+                     for (var i = 0; i < governorates.length; i++) {
+                        options += '<li><a href="javascript:void(0);" id="governorate' + governorates[i].pk + '" onclick="GovernorateGetData(this.id);">' + governorates[i].fields['name'] + '</a></li>';
+                     }
+                     $("#governorate_ul").html(options);
                 });
             }
+            UpdateMap();
+        }
+
+        //getting all pcodes and creating SQL statement
+        function UpdateMap(){
+            $.each(tableArr, function (key, val){
+                var pca_qry = getObjects(pca_locations, 'gateway_id', '1');
+                //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
+                var count = 0;
+                $.each( pca_qry, function( keyp, value ) {
+                    var popup_content = '<div class="content" style="padding:20px">' +
+                                        '<div role="tabpanel">' +
+                                        <!-- Nav tabs -->
+                                            '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">' +
+                                            '<li id="link"' + key + '" role="presentation" class="active"><a href="#tab' + key + '">' + value.pca_number + '</a></li>' +
+                                            '</ul>' +
+                                            <!-- Tab panes -->
+                                            '<div class="tab-content" id="infotabs">' +
+                                                "<div role='tabpanel' class='tab-pane active' id='tab" + key + "'>" +
+                                                    "<h4>PCA Title</h4><p id='pca_title'>" + value.pca_title + "</p>" +
+                                                    "<h4>Gateway:</h4><p id='gateway_name'>" + value.gateway_name + "</p>" +
+                                                    "<h4>Partner:</h4><p id='partner_name'>" + value.partner_name + "</p>" +
+                                                    "<h4>Sector:</h4><p id='sector'>" + value.sector + "</p>" +
+                                                "</div>" +
+                                            '</div>' +
+                                        '</div>' +
+                                    '</div>';
+
+                     var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: L.AwesomeMarkers.icon({icon: 'building-o', prefix: 'fa', markerColor: 'blue'}) });
+                    //var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: redMarker});
+                    marker.bindPopup(popup_content);
+                    marker.addTo(map);
+                });
+            });
+        }
 
 
-            </script>
+    </script>
 
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#datetimepicker6').datepicker({ format: 'mm/dd/yyyy' });
+            $('#datetimepicker7').datepicker({ format: 'mm/dd/yyyy' });
+
+            $("#datetimepicker6").on("dp.change",function (e) {
+                $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
+            });
+            $("#datetimepicker7").on("dp.change",function (e) {
+                $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
+            });
+        });
+    </script>
 
 
 {% endblock %}
