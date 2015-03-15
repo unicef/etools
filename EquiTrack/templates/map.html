@@ -6,7 +6,6 @@
     <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
     <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
 
-
     {% leaflet_css %}
 
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css"/>
@@ -115,15 +114,6 @@
                         {% endfor %}
                     </ul>
 
-                <!--
-                {% url 'nikmap' %}?gateway={{ gateway.id }}
-                    <ul class="dropdown-menu col-md-10" role="menu">
-                            <li><a class="col-md-10" href="CollectiveShelter.html">Collecctive Shelter</a><button class="col-md-2 btn" style="background-color: green; min-height: 23px;"></button></li>
-                            <li><a class="col-md-10" href="CollectiveShelter.html">Community Center</a><button class="col-md-2 btn" style="background-color: blue; min-height: 20px;"></button></li>
-                             <li><a class="col-md-10" href="CollectiveShelter.html">Informal Settlement</a><button class="col-md-2 btn" style="background-color: red; min-height: 20px;"></button></li>
-                        <li><a href="test3.html">test3</a></li>
-                    </ul>
-                -->
                 </div>
             </div>
             <div class="col-md-2">
@@ -136,9 +126,7 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu col-md-10" role="menu" id="governorate_ul">
-                        {% for governorate in governorate_list %}
-                            <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="GovernorateGetData(this.id);">{{ governorate.name }}</a></li>
-                        {% endfor %}
+
                     </ul>
                 </div>
             </div>
@@ -269,7 +257,6 @@
 
                              {% leaflet_map "leaflet-map" callback="window.main" %}
 
-{#                            <div id='cartodb-map'></div>#}
                             <div id='mapmenu' class="col-md-10">
                             </div>
                         </div>
@@ -330,70 +317,105 @@
         var tableArr = [];
         var cartoSubLayers = [];
         var color;
+        var layers = {};
 
         function main(map, options) {
 
+            layer_control = L.control.layers().addTo(map);
             //get all cartodb tables from equitrack and pull data from CartoDB
-            $.getJSON("/locations/cartodbtables/", function (data) {
-                $.each(data, function( key, val ) {
-                    color = getRandomColor();
-                    sublayerArr.push({
-                        sql: 'SELECT * FROM ' + val.table_name,
-                        cartocss: '#' + val.table_name + '{ marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: ' + color.toString() + '; marker-allow-overlap: true; }',
-                        interactivity: val.pcode_col + ', cartodb_id, the_geom'
-                    });
-                    tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color});
-                    user = val.domain;
-                    $('#mapmenu').append("<a href=#" + val.table_name + " id='" + val.table_name + "' class='mapbutton " + val.table_name + "' style='background:" + color +"'>" + val.table_name + "</a>");
-                });
-                cartodb.createLayer(map, {
-                user_name: user,
-                type: 'cartodb',
-                sublayers: sublayerArr //[{sql: "SELECT * FROM icrc_winter", cartocss: "#icrc_winter{marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: #5CA2D1; marker-allow-overlap: true; polygon-fill: #FFFFB2; polygon-opacity: 0.8; line-color: #FFF; line-width: 1; line-opacity: 1;}"}]
-                })
-                .addTo(map)
-                .done(function(layer) {
-                    for (var i = 0; i < layer.getSubLayerCount(); i++) {
-                        cartoSubLayers.push(layer.getSubLayer(i));
-                    }
-                    //sublayer = layer.getSubLayer(0);
-                    $('.mapbutton').click(function() {
-                       $('.mapbutton').removeClass('selected');
-                       $(this).addClass('selected');
-                       var buttonId = $(this).attr('id');
-
-                        $.each(tableArr, function (key, value){
-                           if(value.table_name == buttonId ){
-                               layer.getSubLayer(key).toggle();
-                               if($("#" + value.table_name).css("background-color") == "rgb(192, 192, 192)") {
-                                   $("#" + value.table_name).css("background-color", value.color);
-                               }
-                               else
-                               {
-                                   $("#" + value.table_name).css("background-color", "#C0C0C0");
-                               }
-                           }
-                        });
-                    });
-                })
-                .error(function(err){
-                    alert("error");
-                });
-            })
-            .done(function() {
-                //change css of sublayers that have polygons
-                $.each(tableArr, function (key, value) {
-                    $.getJSON("http://unhcr.cartodb.com/api/v2/sql?q=SELECT%20the_geom%20FROM%20" + value.table_name + "%20WHERE%20cartodb_id=1&format=GeoJSON", function (cartodata) {
-                        $.each(cartodata.features, function (key1, val1) {
-                            //check if table is a polygon or point type
-                            if (val1.geometry.type == "MultiPolygon" || val1.geometry.type == "Polygon") {
-                                cartoSubLayers[key].setCartoCSS('#' + value.table_name + '{ polygon-fill: ' + color.toString() + '; polygon-opacity: 0.3; line-color: #FFF; line-width: 1; line-opacity: 0.5; }');
-                            }
-                        });
-                    });
+            $.getJSON("{% url 'cartodbtables' %}", function (data) {
+                $.each(data, function (key, val) {
+{#                    color = getRandomColor();#}
+{#                    var sql = new cartodb.SQL({user: val.domain});#}
+                    $.getJSON(
+                            "https://"+ val.domain +".cartodb.com/api/v2/sql?q=SELECT * FROM " + val.table_name +
+                            "&format=GeoJSON&api_key=" + val.api_key
+                    ).done(function (data) {
+                                layer_control.addOverlay(L.geoJson(data), val.table_name);
+                            })
+                            .error(function (errors) {
+                                // errors contains a list of errors
+                                console.log("errors:" + errors);
+                            });
                 });
             });
         }
+
+{#                    var layer_config = {#}
+{#                        sql: 'SELECT * FROM ' + val.table_name,#}
+{#                        cartocss: '#' + val.table_name + '{ ' +#}
+{#                        'marker-fill-opacity: 0.9; ' +#}
+{#                        'marker-line-color: #FFF; ' +#}
+{#                        'marker-line-width: 1.5; ' +#}
+{#                        'marker-line-opacity: 1; ' +#}
+{#                        'marker-placement: point; ' +#}
+{#                        'marker-type: ellipse; ' +#}
+{#                        'marker-width: 10; ' +#}
+{#                        'marker-fill: ' + color.toString() + '; ' +#}
+{#                        'marker-allow-overlap: true; }',#}
+{#                        interactivity: val.pcode_col + ', cartodb_id, the_geom'#}
+{#                    };#}
+{#                    tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color, user: val.domain});#}
+{#                    user = val.domain;#}
+{#                    $('#mapmenu').append(#}
+{#                            "<a href=#" + val.table_name +#}
+{#                            " id='" + val.table_name +#}
+{#                            "' class='mapbutton " + val.table_name +#}
+{#                            "' style='background:" + color +"'>"#}
+{#                            + val.table_name + "</a>");#}
+{#                });#}
+{#                cartodb.createLayer(map, {#}
+{#                    user_name: user,#}
+{#                    type: 'cartodb',#}
+{#                    sublayers: sublayerArr#}
+{#                })#}
+{#                .addTo(map)#}
+{#                .done(function(layer) {#}
+{#                    for (var i = 0; i < layer.getSubLayerCount(); i++) {#}
+{#                        cartoSubLayers.push(layer.getSubLayer(i));#}
+{#                    }#}
+{#                    //sublayer = layer.getSubLayer(0);#}
+{#                    $('.mapbutton').click(function() {#}
+{#                       $('.mapbutton').removeClass('selected');#}
+{#                       $(this).addClass('selected');#}
+{#                       var buttonId = $(this).attr('id');#}
+{##}
+{#                        $.each(tableArr, function (key, value){#}
+{#                           if(value.table_name == buttonId ){#}
+{#                               layer.getSubLayer(key).toggle();#}
+{#                               if($("#" + value.table_name).css("background-color") == "rgb(192, 192, 192)") {#}
+{#                                   $("#" + value.table_name).css("background-color", value.color);#}
+{#                               }#}
+{#                               else#}
+{#                               {#}
+{#                                   $("#" + value.table_name).css("background-color", "#C0C0C0");#}
+{#                               }#}
+{#                           }#}
+{#                        });#}
+{#                    });#}
+{#                })#}
+{#                .error(function(err){#}
+{#                    alert("error");#}
+{#                });#}
+{#            })#}
+{#            .done(function() {#}
+{#                //change css of sublayers that have polygons#}
+{#                $.each(tableArr, function (key, value) {#}
+{#                    var sql = new cartodb.SQL({ user: value. });#}
+{##}
+{#                    $.getJSON("http://unhcr.cartodb.com/api/v2/sql?q=SELECT%20the_geom%20FROM%20" + value.table_name +#}
+{#                                "%20WHERE%20cartodb_id=1&format=GeoJSON", function (cartodata) {#}
+{#                        $.each(cartodata.features, function (key1, val1) {#}
+{#                            //check if table is a polygon or point type#}
+{#                            if (val1.geometry.type == "MultiPolygon" || val1.geometry.type == "Polygon") {#}
+{#                                cartoSubLayers[key].setCartoCSS('#' + value.table_name + '{ polygon-fill: ' + color.toString() +#}
+{#                                '; polygon-opacity: 0.3; line-color: #FFF; line-width: 1; line-opacity: 0.5; }');#}
+{#                            }#}
+{#                        });#}
+{#                    });#}
+{#                });#}
+{#            });#}
+{#        }#}
 
         function GatewayGetData(id){
             if(id==''){
