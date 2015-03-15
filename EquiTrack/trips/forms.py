@@ -70,6 +70,7 @@ class TripForm(ModelForm):
         date_supervisor_approved = cleaned_data.get(u'date_supervisor_approved')
         approved_by_budget_owner = cleaned_data.get(u'approved_by_budget_owner')
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
+        trip_report = cleaned_data.get(u'main_observations')
 
         if to_date < from_date:
             raise ValidationError('The to date must be greater than the from date')
@@ -105,11 +106,17 @@ class TripForm(ModelForm):
         #         'Only the supervisor can approve this trip'
         #     )
 
+        # if status == Trip.COMPLETED:
+        #     if not approved_by_supervisor:
+        #         raise ValidationError(
+        #             'The trip must be approved before it can be completed'
+        #         )
+        #
+        #     if not trip_report:
+        #         raise ValidationError(
+        #             'You must provide a narrative report before the trip can be completed'
+        #         )
 
-        # if status == Trip.COMPLETED and not approved_by_supervisor:
-        #     raise ValidationError(
-        #         'The trip must be approved before it can be completed'
-        #     )
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data

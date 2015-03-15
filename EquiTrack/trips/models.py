@@ -14,7 +14,7 @@ from django.contrib.sites.models import Site
 from filer.fields.file import FilerFileField
 import reversion
 
-from EquiTrack.utils import AdminURLMixin
+from EquiTrack.mixins import AdminURLMixin
 from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
@@ -23,6 +23,7 @@ from . import emails
 User = get_user_model()
 
 User.__unicode__ = lambda user: user.get_full_name()
+User._meta.ordering = ['first_name']
 
 BOOL_CHOICES = (
     (None, "N/A"),
@@ -169,6 +170,11 @@ class Trip(AdminURLMixin, models.Model):
     approved_date = models.DateField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     approved_email_sent = models.BooleanField(default=False)
+
+    ta_trip_took_place_as_planned = models.BooleanField(
+        default=False,
+        help_text='Did the trip take place as planned and therefore no claim is required?'
+    )
 
     class Meta:
         ordering = ['-created_date']
@@ -317,11 +323,15 @@ class ActionPoint(models.Model):
     trip = models.ForeignKey(Trip)
     description = models.CharField(max_length=254)
     due_date = models.DateField()
-    persons_responsible = models.ManyToManyField(User)
+    person_responsible = models.ForeignKey(User, related_name='for_action')
+    persons_responsible = models.ManyToManyField(User, blank=True, null=True)
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
-    comments = models.TextField(blank=True, null=True, verbose_name='Supervisors Comments')
+    comments = models.TextField(blank=True, null=True)
     closed = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.description
 
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
@@ -340,12 +350,12 @@ class ActionPoint(models.Model):
             )
         elif instance.closed:
             emails.TripActionPointClosed(instance).send(
-                'no-reply@unicef.org',
+                instance.trip.owner.email,
                 *recipients
             )
         else:
             emails.TripActionPointUpdated(instance).send(
-                'no-reply@unicef.org',
+                instance.trip.owner.email,
                 *recipients
             )
 

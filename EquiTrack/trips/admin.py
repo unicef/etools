@@ -52,7 +52,7 @@ class ActionPointInlineAdmin(admin.StackedInline):
     extra = 1
     fields = (
         (u'description', u'due_date',),
-        u'persons_responsible',
+        u'person_responsible',
         (u'actions_taken',),
         (u'completed_date', u'closed',),
     )
@@ -89,6 +89,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     )
     ordering = (u'-created_date',)
     date_hierarchy = u'from_date'
+    search_fields = (
+        u'owner',
+        u'section',
+        u'office',
+        u'purpose_of_travel',
+    )
     list_display = (
         u'reference',
         u'created_date',
@@ -110,8 +116,10 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'from_date',
         u'to_date',
         u'no_pca',
+        u'travel_type',
         u'international_travel',
         u'supervisor',
+        u'budget_owner',
         u'status',
         u'approved_date',
     )
@@ -170,6 +178,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
             u'fields': (
                 u'main_observations',),
+        }),
+
+        (u'Travel Claim', {
+            u'classes': (u'suit-tab suit-tab-reporting',),
+            u'fields': (
+                u'ta_trip_took_place_as_planned',),
         }),
     )
     suit_form_tabs = (
@@ -329,21 +343,22 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     #         kwargs['queryset'] = rep_group.user_set.all()
 
 
-class ActionPointsAdmin(admin.ModelAdmin):
-
+class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
+    resource_class = ActionPointResource
+    exclude = [u'persons_responsible']
     list_display = (
         u'trip',
         u'description',
         u'due_date',
-        u'responsible',
+        u'person_responsible',
+        u'originally_responsible',
         u'actions_taken',
-        u'supervisor',
         u'comments',
         u'closed',
     )
     list_filter = (
         u'trip__owner',
-        u'trip__supervisor',
+        u'person_responsible',
         u'closed',
     )
     search_fields = (
@@ -355,10 +370,7 @@ class ActionPointsAdmin(admin.ModelAdmin):
     def trip(self, obj):
         return unicode(obj.trip)
 
-    def supervisor(self, obj):
-        return obj.trip.supervisor
-
-    def responsible(self, obj):
+    def originally_responsible(self, obj):
         return ', '.join(
             [
                 user.get_full_name()
@@ -367,21 +379,19 @@ class ActionPointsAdmin(admin.ModelAdmin):
             ]
         )
 
-    def has_add_permission(self, request):
-        return False
-
     def get_readonly_fields(self, request, obj=None):
 
         readonly_fields = [
             u'trip',
             u'description',
             u'due_date',
+            u'person_responsible',
             u'persons_responsible',
             u'comments',
             u'closed',
         ]
 
-        if obj and obj.trip.supervisor == request.user:
+        if obj and obj.person_responsible == request.user:
             readonly_fields.remove(u'comments')
             readonly_fields.remove(u'closed')
 
