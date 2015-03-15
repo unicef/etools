@@ -445,6 +445,7 @@ class PCA(AdminURLMixin, models.Model):
 
         super(PCA, self).save(**kwargs)
 
+
     @classmethod
     def send_changes(cls, sender, instance, created, **kwargs):
         # send emails to managers on changes
@@ -500,13 +501,17 @@ class GwPCALocation(models.Model):
         chained_model_field="region",
         show_all=False,
         auto_choose=True,
+        null=True,
+        blank=True
     )
     location = ChainedForeignKey(
         Location,
         chained_field="locality",
         chained_model_field="locality",
         show_all=False,
-        auto_choose=True
+        auto_choose=True,
+        null=True,
+        blank=True
     )
     tpm_visit = models.BooleanField(default=False)
 
@@ -514,11 +519,11 @@ class GwPCALocation(models.Model):
         verbose_name = 'PCA Location'
 
     def __unicode__(self):
-        return u'{} -> {} -> {} -> {}'.format(
+        return u'{} -> {}{}{}'.format(
             self.governorate.name,
             self.region.name,
-            self.locality.name,
-            self.location.__unicode__(),
+            u'-> {}'.format(self.locality.name) if self.locality else u'',
+            self.location.__unicode__() if self.location else u'',
         )
 
     def view_location(self):
