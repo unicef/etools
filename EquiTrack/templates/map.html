@@ -3,12 +3,14 @@
 
 {% block extra_head %}
 
+
+    {% leaflet_css %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.awesome-markers.css" />
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
+
     <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
     <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
 
-    {% leaflet_css %}
-
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css"/>
     <!--[if lte IE 8 -->
     <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
     <![endif]-->
@@ -88,6 +90,12 @@
           .cartodb-popup-content {
             min-height: 100px;
           }
+        .leaflet-popup-content{
+        min-width: 300px !important;
+        width: inherit !important;
+        height: 500px;
+            height: inherit !important;
+    }
     </style>
 
 {% endblock %}
@@ -298,6 +306,1478 @@
             {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.86113, "longitude": 35.51024, "location_name": "Ghobeire", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4895, "pca": 473, "sector": 4, "governorate": 2, "region": 2, "locality": 20, "location": 104, "tpm_visit": false, "pcode": "53333-01-002"}
         ]};
 
+        var pca_locations1 = [
+    {
+        "latitude": 33.88354923,
+        "longitude": 35.99393762,
+        "location_name": "#N/A",
+        "location_type": "School",
+        "gateway_id": 1,
+        "parterships": [
+            {
+                "pca_title": "Inclusive and enabling learning environment for displaced Syrians and underprivileged Lebanese Learners",
+                "pca_number": "PCA/LEBA/2013/46",
+                "pca_id": 25,
+                "partner_name": "IQRA",
+                "partner_id": 19,
+                "sectors": [
+                    {
+                        "sector_name": "Education",
+                        "sector_id": 1,
+                        "indicators": [
+                            {
+                                "indicator": " # of children in non-formal learning opportunities (girls and boys) ",
+                                "programmed": 5000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 60,
+                                "pca_sector": 28
+                            },
+                            {
+                                "indicator": "# of children in psycho-social support in formal and non-formal education (girls and boys)",
+                                "programmed": 5000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 61,
+                                "pca_sector": 28
+                            }
+                        ],
+                        "id": 28,
+                        "pca": 25,
+                        "sector": 1
+                    }
+                ],
+                "id": 25,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/46",
+                "title": "Inclusive and enabling learning environment for displaced Syrians and underprivileged Lebanese Learners",
+                "status": "active",
+                "partner": 19,
+                "start_date": "2013-10-01",
+                "end_date": "2014-06-30",
+                "initiation_date": "2013-10-01",
+                "signed_by_unicef_date": "2014-10-11",
+                "signed_by_partner_date": "2013-10-11",
+                "unicef_mng_first_name": "Kumiko",
+                "unicef_mng_last_name": "Iwasawa",
+                "unicef_mng_email": "kiwasawa@unicef.org",
+                "partner_mng_first_name": "Amina",
+                "partner_mng_last_name": "Kleit",
+                "partner_mng_email": "",
+                "partner_contribution_budget": 67200,
+                "unicef_cash_budget": 930213,
+                "in_kind_amount_budget": 56494,
+                "cash_for_supply_budget": 873719,
+                "total_cash": 1053907,
+                "current": false,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-24T12:50:00.316Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 33.29851,
+        "longitude": 35.28217,
+        "location_name": "Aabbassiye",
+        "location_type": "Village",
+        "gateway_id": 9,
+        "parterships": [
+            {
+                "pca_title": "Emergency protection project in favour of conflict-affected children and their families in South Lebanon",
+                "pca_number": "PCA/LEBA/2013/55",
+                "pca_id": 99,
+                "partner_name": "Intersos",
+                "partner_id": 26,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 34830,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 207,
+                                "pca_sector": 107
+                            },
+                            {
+                                "indicator": "# of caregivers benefitting from psychosocial support",
+                                "programmed": 24000,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 208,
+                                "pca_sector": 107
+                            },
+                            {
+                                "indicator": "# of boys, girls, and women at risk or survivors of GBV identified and referred to multi-sectoral assistance",
+                                "programmed": 300,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 209,
+                                "pca_sector": 107
+                            },
+                            {
+                                "indicator": "# of frontline workers trained on SGBV prevention and response",
+                                "programmed": 39,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 428,
+                                "pca_sector": 107
+                            }
+                        ],
+                        "id": 107,
+                        "pca": 99,
+                        "sector": 4
+                    }
+                ],
+                "id": 99,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/55",
+                "title": "Emergency protection project in favour of conflict-affected children and their families in South Lebanon",
+                "status": "active",
+                "partner": 26,
+                "start_date": "2013-11-18",
+                "end_date": "2014-11-17",
+                "initiation_date": "2013-12-06",
+                "signed_by_unicef_date": "2013-12-06",
+                "signed_by_partner_date": "2013-12-06",
+                "unicef_mng_first_name": "Jihane",
+                "unicef_mng_last_name": "Latrous",
+                "unicef_mng_email": "jlatrous@unicef.org",
+                "partner_mng_first_name": "Valentino",
+                "partner_mng_last_name": "Pieretto",
+                "partner_mng_email": "lebanon@intersos.com",
+                "partner_contribution_budget": 190800,
+                "unicef_cash_budget": 1972270,
+                "in_kind_amount_budget": 228326,
+                "cash_for_supply_budget": 0,
+                "total_cash": 2391396,
+                "current": true,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-25T12:11:21.884Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Quality Learning Opportunities for Syrian Refugee Children in South of Lebanon",
+                "pca_number": "PCA/LEBA/2013/07",
+                "pca_id": 4,
+                "partner_name": "Norwegian Refugee Council",
+                "partner_id": 4,
+                "sectors": [
+                    {
+                        "sector_name": "Education",
+                        "sector_id": 1,
+                        "indicators": [
+                            {
+                                "indicator": "# and % of children with access to Humanitarian Education programmes that incorporate psychosocial support",
+                                "programmed": 1600,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 14,
+                                "pca_sector": 5
+                            },
+                            {
+                                "indicator": "# and % of school-aged children including pre-schoolers reached by schools",
+                                "programmed": 1000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 13,
+                                "pca_sector": 5
+                            },
+                            {
+                                "indicator": "# of schools rehabilitated",
+                                "programmed": 16,
+                                "current": 0,
+                                "unit": "Schools",
+                                "id": 421,
+                                "pca_sector": 5
+                            }
+                        ],
+                        "id": 5,
+                        "pca": 4,
+                        "sector": 1
+                    }
+                ],
+                "id": 4,
+                "agreement_type": "pca",
+                "result_structure": 3,
+                "number": "PCA/LEBA/2013/07",
+                "title": "Quality Learning Opportunities for Syrian Refugee Children in South of Lebanon",
+                "status": "implemented",
+                "partner": 4,
+                "start_date": "2013-03-21",
+                "end_date": "2013-12-31",
+                "initiation_date": "2013-03-21",
+                "signed_by_unicef_date": "2013-03-26",
+                "signed_by_partner_date": "2013-03-26",
+                "unicef_mng_first_name": "Kumiko",
+                "unicef_mng_last_name": "Iwasawa",
+                "unicef_mng_email": "kiwasawa@unicef.org",
+                "partner_mng_first_name": "Martino",
+                "partner_mng_last_name": "Costa",
+                "partner_mng_email": "martino.costa@nrc.no",
+                "partner_contribution_budget": 104370,
+                "unicef_cash_budget": 921075,
+                "in_kind_amount_budget": 89100,
+                "cash_for_supply_budget": 921075,
+                "total_cash": 1114545,
+                "current": false,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-13T15:28:26.117Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Direct health and nutrition interventions for displaced Syrians resident in tented settlements and collective shelters",
+                "pca_number": "PCA/LEBA/2013/41",
+                "pca_id": 45,
+                "partner_name": "BEYOND Association",
+                "partner_id": 2,
+                "sectors": [
+                    {
+                        "sector_name": "Health and Nutrition",
+                        "sector_id": 3,
+                        "indicators": [
+                            {
+                                "indicator": "# and % of children 6 mo- 18y vaccinated for measles",
+                                "programmed": 100000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 99,
+                                "pca_sector": 51
+                            },
+                            {
+                                "indicator": "# and % of targeted children <2 yrs fully covered with routine Expanded Programme on Immunisation",
+                                "programmed": 40000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 100,
+                                "pca_sector": 51
+                            }
+                        ],
+                        "id": 51,
+                        "pca": 45,
+                        "sector": 3
+                    }
+                ],
+                "id": 45,
+                "agreement_type": "pca",
+                "result_structure": 3,
+                "number": "PCA/LEBA/2013/41",
+                "title": "Direct health and nutrition interventions for displaced Syrians resident in tented settlements and collective shelters",
+                "status": "implemented",
+                "partner": 2,
+                "start_date": "2013-07-01",
+                "end_date": "2013-12-31",
+                "initiation_date": "2013-07-01",
+                "signed_by_unicef_date": "2013-07-09",
+                "signed_by_partner_date": "2013-07-10",
+                "unicef_mng_first_name": "Azzeddine",
+                "unicef_mng_last_name": "Zeroual",
+                "unicef_mng_email": "azeroual@unicef.org",
+                "partner_mng_first_name": "Joseph",
+                "partner_mng_last_name": "Awad",
+                "partner_mng_email": "j.awad@beyondassociation.com",
+                "partner_contribution_budget": 72011,
+                "unicef_cash_budget": 912220,
+                "in_kind_amount_budget": 350000,
+                "cash_for_supply_budget": 562220,
+                "total_cash": 1334231,
+                "current": false,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-01-17T16:10:19.596Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 33.56681,
+        "longitude": 35.40574,
+        "location_name": "Aabra",
+        "location_type": "Village",
+        "gateway_id": 9,
+        "parterships": [
+            {
+                "pca_title": "Integrated Child Protection/GBV Prevention, Referral, and Psychosocial Support for Children and Adolescents in South Lebanon",
+                "pca_number": "PCA/LEBA/2013/56",
+                "pca_id": 53,
+                "partner_name": "Terre des Hommes Lausanne",
+                "partner_id": 36,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 27850,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 113,
+                                "pca_sector": 59
+                            },
+                            {
+                                "indicator": "# of women and girls accessing support activities within mobile and static safe spaces",
+                                "programmed": 450,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 114,
+                                "pca_sector": 59
+                            },
+                            {
+                                "indicator": "# of service providers and community members sensitized or trained on child protection services and referral pathways",
+                                "programmed": 118,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 224,
+                                "pca_sector": 59
+                            }
+                        ],
+                        "id": 59,
+                        "pca": 53,
+                        "sector": 4
+                    }
+                ],
+                "id": 53,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/56",
+                "title": "Integrated Child Protection/GBV Prevention, Referral, and Psychosocial Support for Children and Adolescents in South Lebanon",
+                "status": "active",
+                "partner": 36,
+                "start_date": "2013-11-06",
+                "end_date": "2014-11-05",
+                "initiation_date": "2013-11-07",
+                "signed_by_unicef_date": "2013-11-13",
+                "signed_by_partner_date": "2013-11-13",
+                "unicef_mng_first_name": "Jihane",
+                "unicef_mng_last_name": "Latrous",
+                "unicef_mng_email": "jlatrous@unicef.org",
+                "partner_mng_first_name": "Gaelle",
+                "partner_mng_last_name": "Rennesson",
+                "partner_mng_email": "gre@tdh.ch",
+                "partner_contribution_budget": 118096,
+                "unicef_cash_budget": 1049615,
+                "in_kind_amount_budget": 157580,
+                "cash_for_supply_budget": 892035,
+                "total_cash": 1325291,
+                "current": true,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-25T12:08:53.451Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 33.40539,
+        "longitude": 35.27283,
+        "location_name": "Aadloun",
+        "location_type": "Village",
+        "gateway_id": 9,
+        "parterships": [
+            {
+                "pca_title": "Integrated Child Protection/GBV Prevention, Referral, and Psychosocial Support for Children and Adolescents in South Lebanon",
+                "pca_number": "PCA/LEBA/2013/56",
+                "pca_id": 53,
+                "partner_name": "Terre des Hommes Lausanne",
+                "partner_id": 36,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 27850,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 113,
+                                "pca_sector": 59
+                            },
+                            {
+                                "indicator": "# of women and girls accessing support activities within mobile and static safe spaces",
+                                "programmed": 450,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 114,
+                                "pca_sector": 59
+                            },
+                            {
+                                "indicator": "# of service providers and community members sensitized or trained on child protection services and referral pathways",
+                                "programmed": 118,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 224,
+                                "pca_sector": 59
+                            }
+                        ],
+                        "id": 59,
+                        "pca": 53,
+                        "sector": 4
+                    }
+                ],
+                "id": 53,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/56",
+                "title": "Integrated Child Protection/GBV Prevention, Referral, and Psychosocial Support for Children and Adolescents in South Lebanon",
+                "status": "active",
+                "partner": 36,
+                "start_date": "2013-11-06",
+                "end_date": "2014-11-05",
+                "initiation_date": "2013-11-07",
+                "signed_by_unicef_date": "2013-11-13",
+                "signed_by_partner_date": "2013-11-13",
+                "unicef_mng_first_name": "Jihane",
+                "unicef_mng_last_name": "Latrous",
+                "unicef_mng_email": "jlatrous@unicef.org",
+                "partner_mng_first_name": "Gaelle",
+                "partner_mng_last_name": "Rennesson",
+                "partner_mng_email": "gre@tdh.ch",
+                "partner_contribution_budget": 118096,
+                "unicef_cash_budget": 1049615,
+                "in_kind_amount_budget": 157580,
+                "cash_for_supply_budget": 892035,
+                "total_cash": 1325291,
+                "current": true,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-25T12:08:53.451Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 33.293288999999994,
+        "longitude": 35.612406,
+        "location_name": "Aain Aarab Marjaayoun 001",
+        "location_type": "Informal Tented Settlement",
+        "gateway_id": 5,
+        "parterships": [
+            {
+                "pca_title": "Support Syrian refugee and vulnerable Lebanese  children’s learning and wellbeing through inclusive  and participative approach ",
+                "pca_number": "PCA/LEBA/2013/59",
+                "pca_id": 194,
+                "partner_name": "AVSI",
+                "partner_id": 25,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 4000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 339,
+                                "pca_sector": 203
+                            },
+                            {
+                                "indicator": "# of caregivers benefitting from psychosocial support",
+                                "programmed": 400,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 340,
+                                "pca_sector": 203
+                            }
+                        ],
+                        "id": 203,
+                        "pca": 194,
+                        "sector": 4
+                    },
+                    {
+                        "sector_name": "Education",
+                        "sector_id": 1,
+                        "indicators": [],
+                        "id": 202,
+                        "pca": 194,
+                        "sector": 1
+                    }
+                ],
+                "id": 194,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/59",
+                "title": "Support Syrian refugee and vulnerable Lebanese  children’s learning and wellbeing through inclusive  and participative approach ",
+                "status": "active",
+                "partner": 25,
+                "start_date": "2013-11-10",
+                "end_date": "2014-11-10",
+                "initiation_date": "2013-11-10",
+                "signed_by_unicef_date": "2013-11-08",
+                "signed_by_partner_date": "2013-11-08",
+                "unicef_mng_first_name": "aurelia",
+                "unicef_mng_last_name": "Ardito",
+                "unicef_mng_email": "aardito@unicef.org",
+                "partner_mng_first_name": "Chiara",
+                "partner_mng_last_name": "Nava",
+                "partner_mng_email": "chiara.nava@avsi.org",
+                "partner_contribution_budget": 2300,
+                "unicef_cash_budget": 262385,
+                "in_kind_amount_budget": 47996,
+                "cash_for_supply_budget": 603158,
+                "total_cash": 312681,
+                "current": false,
+                "created_at": "2014-02-27T14:00:28.686Z",
+                "updated_at": "2014-03-18T14:08:37.843Z",
+                "amendment": true,
+                "amended_at": "2014-02-27T14:00:28.685Z",
+                "amendment_number": 1,
+                "original": 64,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Improving WASH conditions for Syrian refugees and affected populations in North and South Lebanon 2",
+                "pca_number": "PCA/LEBA/2013/35",
+                "pca_id": 183,
+                "partner_name": "CISP",
+                "partner_id": 11,
+                "sectors": [
+                    {
+                        "sector_name": "WASH",
+                        "sector_id": 2,
+                        "indicators": [
+                            {
+                                "indicator": "# of (Sanitation) facilities constructed/ rehabilitated",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 310,
+                                "pca_sector": 191
+                            },
+                            {
+                                "indicator": " # of individuals with improved water supply at an adequate level of service",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 311,
+                                "pca_sector": 191
+                            },
+                            {
+                                "indicator": " # Individuals with access to hygiene items",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 312,
+                                "pca_sector": 191
+                            }
+                        ],
+                        "id": 191,
+                        "pca": 183,
+                        "sector": 2
+                    }
+                ],
+                "id": 183,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/35",
+                "title": "Improving WASH conditions for Syrian refugees and affected populations in North and South Lebanon 2",
+                "status": "active",
+                "partner": 11,
+                "start_date": "2013-12-31",
+                "end_date": "2014-04-30",
+                "initiation_date": "2013-07-01",
+                "signed_by_unicef_date": "2013-12-21",
+                "signed_by_partner_date": "2013-12-27",
+                "unicef_mng_first_name": "Talal",
+                "unicef_mng_last_name": "Tabikh",
+                "unicef_mng_email": "ttabikh@unicef.org",
+                "partner_mng_first_name": "Simone ",
+                "partner_mng_last_name": "Abou Jaoude",
+                "partner_mng_email": "",
+                "partner_contribution_budget": 0,
+                "unicef_cash_budget": 0,
+                "in_kind_amount_budget": 0,
+                "cash_for_supply_budget": 900672,
+                "total_cash": 0,
+                "current": false,
+                "created_at": "2014-02-19T13:01:24.967Z",
+                "updated_at": "2014-03-19T10:57:10.430Z",
+                "amendment": true,
+                "amended_at": "2014-02-19T13:01:24.966Z",
+                "amendment_number": 1,
+                "original": 41,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 33.296006,
+        "longitude": 35.628439,
+        "location_name": "Aain Aarab Marjaayoun 002",
+        "location_type": "Informal Tented Settlement",
+        "gateway_id": 5,
+        "parterships": [
+            {
+                "pca_title": "Support Syrian refugee and vulnerable Lebanese  children’s learning and wellbeing through inclusive  and participative approach ",
+                "pca_number": "PCA/LEBA/2013/59",
+                "pca_id": 194,
+                "partner_name": "AVSI",
+                "partner_id": 25,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 4000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 339,
+                                "pca_sector": 203
+                            },
+                            {
+                                "indicator": "# of caregivers benefitting from psychosocial support",
+                                "programmed": 400,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 340,
+                                "pca_sector": 203
+                            }
+                        ],
+                        "id": 203,
+                        "pca": 194,
+                        "sector": 4
+                    },
+                    {
+                        "sector_name": "Education",
+                        "sector_id": 1,
+                        "indicators": [],
+                        "id": 202,
+                        "pca": 194,
+                        "sector": 1
+                    }
+                ],
+                "id": 194,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/59",
+                "title": "Support Syrian refugee and vulnerable Lebanese  children’s learning and wellbeing through inclusive  and participative approach ",
+                "status": "active",
+                "partner": 25,
+                "start_date": "2013-11-10",
+                "end_date": "2014-11-10",
+                "initiation_date": "2013-11-10",
+                "signed_by_unicef_date": "2013-11-08",
+                "signed_by_partner_date": "2013-11-08",
+                "unicef_mng_first_name": "aurelia",
+                "unicef_mng_last_name": "Ardito",
+                "unicef_mng_email": "aardito@unicef.org",
+                "partner_mng_first_name": "Chiara",
+                "partner_mng_last_name": "Nava",
+                "partner_mng_email": "chiara.nava@avsi.org",
+                "partner_contribution_budget": 2300,
+                "unicef_cash_budget": 262385,
+                "in_kind_amount_budget": 47996,
+                "cash_for_supply_budget": 603158,
+                "total_cash": 312681,
+                "current": false,
+                "created_at": "2014-02-27T14:00:28.686Z",
+                "updated_at": "2014-03-18T14:08:37.843Z",
+                "amendment": true,
+                "amended_at": "2014-02-27T14:00:28.685Z",
+                "amendment_number": 1,
+                "original": 64,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Improving WASH conditions for Syrian refugees and affected populations in North and South Lebanon 2",
+                "pca_number": "PCA/LEBA/2013/35",
+                "pca_id": 183,
+                "partner_name": "CISP",
+                "partner_id": 11,
+                "sectors": [
+                    {
+                        "sector_name": "WASH",
+                        "sector_id": 2,
+                        "indicators": [
+                            {
+                                "indicator": "# of (Sanitation) facilities constructed/ rehabilitated",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 310,
+                                "pca_sector": 191
+                            },
+                            {
+                                "indicator": " # of individuals with improved water supply at an adequate level of service",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 311,
+                                "pca_sector": 191
+                            },
+                            {
+                                "indicator": " # Individuals with access to hygiene items",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 312,
+                                "pca_sector": 191
+                            }
+                        ],
+                        "id": 191,
+                        "pca": 183,
+                        "sector": 2
+                    }
+                ],
+                "id": 183,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/35",
+                "title": "Improving WASH conditions for Syrian refugees and affected populations in North and South Lebanon 2",
+                "status": "active",
+                "partner": 11,
+                "start_date": "2013-12-31",
+                "end_date": "2014-04-30",
+                "initiation_date": "2013-07-01",
+                "signed_by_unicef_date": "2013-12-21",
+                "signed_by_partner_date": "2013-12-27",
+                "unicef_mng_first_name": "Talal",
+                "unicef_mng_last_name": "Tabikh",
+                "unicef_mng_email": "ttabikh@unicef.org",
+                "partner_mng_first_name": "Simone ",
+                "partner_mng_last_name": "Abou Jaoude",
+                "partner_mng_email": "",
+                "partner_contribution_budget": 0,
+                "unicef_cash_budget": 0,
+                "in_kind_amount_budget": 0,
+                "cash_for_supply_budget": 900672,
+                "total_cash": 0,
+                "current": false,
+                "created_at": "2014-02-19T13:01:24.967Z",
+                "updated_at": "2014-03-19T10:57:10.430Z",
+                "amendment": true,
+                "amended_at": "2014-02-19T13:01:24.966Z",
+                "amendment_number": 1,
+                "original": 41,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 33.31204999999999,
+        "longitude": 35.61935,
+        "location_name": "Aain Aarab Marjaayoun 003",
+        "location_type": "Informal Tented Settlement",
+        "gateway_id": 5,
+        "parterships": [
+            {
+                "pca_title": "Support Syrian refugee and vulnerable Lebanese  children’s learning and wellbeing through inclusive  and participative approach ",
+                "pca_number": "PCA/LEBA/2013/59",
+                "pca_id": 194,
+                "partner_name": "AVSI",
+                "partner_id": 25,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 4000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 339,
+                                "pca_sector": 203
+                            },
+                            {
+                                "indicator": "# of caregivers benefitting from psychosocial support",
+                                "programmed": 400,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 340,
+                                "pca_sector": 203
+                            }
+                        ],
+                        "id": 203,
+                        "pca": 194,
+                        "sector": 4
+                    },
+                    {
+                        "sector_name": "Education",
+                        "sector_id": 1,
+                        "indicators": [],
+                        "id": 202,
+                        "pca": 194,
+                        "sector": 1
+                    }
+                ],
+                "id": 194,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/59",
+                "title": "Support Syrian refugee and vulnerable Lebanese  children’s learning and wellbeing through inclusive  and participative approach ",
+                "status": "active",
+                "partner": 25,
+                "start_date": "2013-11-10",
+                "end_date": "2014-11-10",
+                "initiation_date": "2013-11-10",
+                "signed_by_unicef_date": "2013-11-08",
+                "signed_by_partner_date": "2013-11-08",
+                "unicef_mng_first_name": "aurelia",
+                "unicef_mng_last_name": "Ardito",
+                "unicef_mng_email": "aardito@unicef.org",
+                "partner_mng_first_name": "Chiara",
+                "partner_mng_last_name": "Nava",
+                "partner_mng_email": "chiara.nava@avsi.org",
+                "partner_contribution_budget": 2300,
+                "unicef_cash_budget": 262385,
+                "in_kind_amount_budget": 47996,
+                "cash_for_supply_budget": 603158,
+                "total_cash": 312681,
+                "current": false,
+                "created_at": "2014-02-27T14:00:28.686Z",
+                "updated_at": "2014-03-18T14:08:37.843Z",
+                "amendment": true,
+                "amended_at": "2014-02-27T14:00:28.685Z",
+                "amendment_number": 1,
+                "original": 64,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Improving WASH conditions for Syrian refugees and affected populations in North and South Lebanon 2",
+                "pca_number": "PCA/LEBA/2013/35",
+                "pca_id": 183,
+                "partner_name": "CISP",
+                "partner_id": 11,
+                "sectors": [
+                    {
+                        "sector_name": "WASH",
+                        "sector_id": 2,
+                        "indicators": [
+                            {
+                                "indicator": "# of (Sanitation) facilities constructed/ rehabilitated",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 310,
+                                "pca_sector": 191
+                            },
+                            {
+                                "indicator": " # of individuals with improved water supply at an adequate level of service",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 311,
+                                "pca_sector": 191
+                            },
+                            {
+                                "indicator": " # Individuals with access to hygiene items",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 312,
+                                "pca_sector": 191
+                            }
+                        ],
+                        "id": 191,
+                        "pca": 183,
+                        "sector": 2
+                    }
+                ],
+                "id": 183,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/35",
+                "title": "Improving WASH conditions for Syrian refugees and affected populations in North and South Lebanon 2",
+                "status": "active",
+                "partner": 11,
+                "start_date": "2013-12-31",
+                "end_date": "2014-04-30",
+                "initiation_date": "2013-07-01",
+                "signed_by_unicef_date": "2013-12-21",
+                "signed_by_partner_date": "2013-12-27",
+                "unicef_mng_first_name": "Talal",
+                "unicef_mng_last_name": "Tabikh",
+                "unicef_mng_email": "ttabikh@unicef.org",
+                "partner_mng_first_name": "Simone ",
+                "partner_mng_last_name": "Abou Jaoude",
+                "partner_mng_email": "",
+                "partner_contribution_budget": 0,
+                "unicef_cash_budget": 0,
+                "in_kind_amount_budget": 0,
+                "cash_for_supply_budget": 900672,
+                "total_cash": 0,
+                "current": false,
+                "created_at": "2014-02-19T13:01:24.967Z",
+                "updated_at": "2014-03-19T10:57:10.430Z",
+                "amendment": true,
+                "amended_at": "2014-02-19T13:01:24.966Z",
+                "amendment_number": 1,
+                "original": 41,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 34.23592,
+        "longitude": 36.37003,
+        "location_name": "Aain Baalbek 001",
+        "location_type": "Informal Tented Settlement",
+        "gateway_id": 5,
+        "parterships": [
+            {
+                "pca_title": "Provision of improved access to safe water and sanitation to under-served Syrian and Lebanese families in the Bekaa Valley",
+                "pca_number": "PCA/LEBA/2013/33",
+                "pca_id": 9,
+                "partner_name": "GVC",
+                "partner_id": 9,
+                "sectors": [
+                    {
+                        "sector_name": "WASH",
+                        "sector_id": 2,
+                        "indicators": [
+                            {
+                                "indicator": "# and % of displaced/affected people with access to appropriately designed  toilets and sanitation services",
+                                "programmed": 2786,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 24,
+                                "pca_sector": 10
+                            },
+                            {
+                                "indicator": "# and % of targeted population provided with access to safe water",
+                                "programmed": 2702,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 25,
+                                "pca_sector": 10
+                            },
+                            {
+                                "indicator": "# and % target population having access to hygiene promotion messages",
+                                "programmed": 14141,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 26,
+                                "pca_sector": 10
+                            }
+                        ],
+                        "id": 10,
+                        "pca": 9,
+                        "sector": 2
+                    }
+                ],
+                "id": 9,
+                "agreement_type": "pca",
+                "result_structure": 3,
+                "number": "PCA/LEBA/2013/33",
+                "title": "Provision of improved access to safe water and sanitation to under-served Syrian and Lebanese families in the Bekaa Valley",
+                "status": "implemented",
+                "partner": 9,
+                "start_date": "2013-06-30",
+                "end_date": "2013-12-31",
+                "initiation_date": "2013-06-27",
+                "signed_by_unicef_date": "2013-06-27",
+                "signed_by_partner_date": "2013-06-27",
+                "unicef_mng_first_name": "Olivier",
+                "unicef_mng_last_name": "Thonet",
+                "unicef_mng_email": "othonet@unicef.org",
+                "partner_mng_first_name": "Nada",
+                "partner_mng_last_name": "Ziwawi",
+                "partner_mng_email": "gvclibano@gvc-italia.org",
+                "partner_contribution_budget": 41653,
+                "unicef_cash_budget": 348609,
+                "in_kind_amount_budget": 155167,
+                "cash_for_supply_budget": 348609,
+                "total_cash": 545429,
+                "current": false,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-02-21T08:30:56.435Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Provision of improved access to safe water and sanitation to under-served Syrian and Lebanese families in the Bekaa Valley",
+                "pca_number": "PCA/LEBA/2013/33",
+                "pca_id": 186,
+                "partner_name": "GVC",
+                "partner_id": 9,
+                "sectors": [
+                    {
+                        "sector_name": "WASH",
+                        "sector_id": 2,
+                        "indicators": [
+                            {
+                                "indicator": "# of (Sanitation) facilities constructed/ rehabilitated",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 319,
+                                "pca_sector": 194
+                            },
+                            {
+                                "indicator": " # of individuals with improved water supply at an adequate level of service",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 320,
+                                "pca_sector": 194
+                            },
+                            {
+                                "indicator": "# of individuals who have experienced an HP session",
+                                "programmed": 0,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 321,
+                                "pca_sector": 194
+                            }
+                        ],
+                        "id": 194,
+                        "pca": 186,
+                        "sector": 2
+                    }
+                ],
+                "id": 186,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/33",
+                "title": "Provision of improved access to safe water and sanitation to under-served Syrian and Lebanese families in the Bekaa Valley",
+                "status": "active",
+                "partner": 9,
+                "start_date": "2013-12-31",
+                "end_date": "2014-02-28",
+                "initiation_date": "2013-06-27",
+                "signed_by_unicef_date": "2013-06-27",
+                "signed_by_partner_date": "2013-06-27",
+                "unicef_mng_first_name": "Olivier",
+                "unicef_mng_last_name": "Thonet",
+                "unicef_mng_email": "othonet@unicef.org",
+                "partner_mng_first_name": "Nada",
+                "partner_mng_last_name": "Ziwawi",
+                "partner_mng_email": "gvclibano@gvc-italia.org",
+                "partner_contribution_budget": 655,
+                "unicef_cash_budget": 44610,
+                "in_kind_amount_budget": 230770,
+                "cash_for_supply_budget": 348609,
+                "total_cash": 276035,
+                "current": false,
+                "created_at": "2014-02-21T08:42:01.052Z",
+                "updated_at": "2014-02-25T11:21:20.172Z",
+                "amendment": true,
+                "amended_at": "2014-02-21T08:42:01.051Z",
+                "amendment_number": 3,
+                "original": 185,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Support to Emergency-Affected Women and Children in Lebanon’s North, Bekaa and Mt. Lebanon Governorates",
+                "pca_number": "PCA/LEBA/2013/51 ",
+                "pca_id": 51,
+                "partner_name": "International Rescue Committee",
+                "partner_id": 28,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 50950,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 110,
+                                "pca_sector": 57
+                            },
+                            {
+                                "indicator": "# of service providers and community members sensitized or trained on child protection services and referral pathways",
+                                "programmed": 1508,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 109,
+                                "pca_sector": 57
+                            },
+                            {
+                                "indicator": "# of women and girls accessing support activities within mobile and static safe spaces",
+                                "programmed": 1000,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 419,
+                                "pca_sector": 57
+                            }
+                        ],
+                        "id": 57,
+                        "pca": 51,
+                        "sector": 4
+                    }
+                ],
+                "id": 51,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/51 ",
+                "title": "Support to Emergency-Affected Women and Children in Lebanon’s North, Bekaa and Mt. Lebanon Governorates",
+                "status": "active",
+                "partner": 28,
+                "start_date": "2013-10-08",
+                "end_date": "2014-11-08",
+                "initiation_date": "2013-10-08",
+                "signed_by_unicef_date": "2013-10-30",
+                "signed_by_partner_date": "2013-10-30",
+                "unicef_mng_first_name": "Catherine ",
+                "unicef_mng_last_name": "Jones",
+                "unicef_mng_email": "cajones@unicef.org",
+                "partner_mng_first_name": "Bryce",
+                "partner_mng_last_name": "Perry",
+                "partner_mng_email": "bryce.perry@rescue.org",
+                "partner_contribution_budget": 989677,
+                "unicef_cash_budget": 5991781,
+                "in_kind_amount_budget": 447352,
+                "cash_for_supply_budget": 5544429,
+                "total_cash": 7428810,
+                "current": true,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-25T15:02:28.960Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 33.22752,
+        "longitude": 35.30558,
+        "location_name": "Aaitit",
+        "location_type": "Village",
+        "gateway_id": 9,
+        "parterships": [
+            {
+                "pca_title": "Emergency protection project in favour of conflict-affected children and their families in South Lebanon",
+                "pca_number": "PCA/LEBA/2013/55",
+                "pca_id": 99,
+                "partner_name": "Intersos",
+                "partner_id": 26,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 34830,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 207,
+                                "pca_sector": 107
+                            },
+                            {
+                                "indicator": "# of caregivers benefitting from psychosocial support",
+                                "programmed": 24000,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 208,
+                                "pca_sector": 107
+                            },
+                            {
+                                "indicator": "# of boys, girls, and women at risk or survivors of GBV identified and referred to multi-sectoral assistance",
+                                "programmed": 300,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 209,
+                                "pca_sector": 107
+                            },
+                            {
+                                "indicator": "# of frontline workers trained on SGBV prevention and response",
+                                "programmed": 39,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 428,
+                                "pca_sector": 107
+                            }
+                        ],
+                        "id": 107,
+                        "pca": 99,
+                        "sector": 4
+                    }
+                ],
+                "id": 99,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/55",
+                "title": "Emergency protection project in favour of conflict-affected children and their families in South Lebanon",
+                "status": "active",
+                "partner": 26,
+                "start_date": "2013-11-18",
+                "end_date": "2014-11-17",
+                "initiation_date": "2013-12-06",
+                "signed_by_unicef_date": "2013-12-06",
+                "signed_by_partner_date": "2013-12-06",
+                "unicef_mng_first_name": "Jihane",
+                "unicef_mng_last_name": "Latrous",
+                "unicef_mng_email": "jlatrous@unicef.org",
+                "partner_mng_first_name": "Valentino",
+                "partner_mng_last_name": "Pieretto",
+                "partner_mng_email": "lebanon@intersos.com",
+                "partner_contribution_budget": 190800,
+                "unicef_cash_budget": 1972270,
+                "in_kind_amount_budget": 228326,
+                "cash_for_supply_budget": 0,
+                "total_cash": 2391396,
+                "current": true,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-25T12:11:21.884Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Quality Learning Opportunities for Syrian Refugee Children in South of Lebanon",
+                "pca_number": "PCA/LEBA/2013/07",
+                "pca_id": 4,
+                "partner_name": "Norwegian Refugee Council",
+                "partner_id": 4,
+                "sectors": [
+                    {
+                        "sector_name": "Education",
+                        "sector_id": 1,
+                        "indicators": [
+                            {
+                                "indicator": "# and % of children with access to Humanitarian Education programmes that incorporate psychosocial support",
+                                "programmed": 1600,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 14,
+                                "pca_sector": 5
+                            },
+                            {
+                                "indicator": "# and % of school-aged children including pre-schoolers reached by schools",
+                                "programmed": 1000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 13,
+                                "pca_sector": 5
+                            },
+                            {
+                                "indicator": "# of schools rehabilitated",
+                                "programmed": 16,
+                                "current": 0,
+                                "unit": "Schools",
+                                "id": 421,
+                                "pca_sector": 5
+                            }
+                        ],
+                        "id": 5,
+                        "pca": 4,
+                        "sector": 1
+                    }
+                ],
+                "id": 4,
+                "agreement_type": "pca",
+                "result_structure": 3,
+                "number": "PCA/LEBA/2013/07",
+                "title": "Quality Learning Opportunities for Syrian Refugee Children in South of Lebanon",
+                "status": "implemented",
+                "partner": 4,
+                "start_date": "2013-03-21",
+                "end_date": "2013-12-31",
+                "initiation_date": "2013-03-21",
+                "signed_by_unicef_date": "2013-03-26",
+                "signed_by_partner_date": "2013-03-26",
+                "unicef_mng_first_name": "Kumiko",
+                "unicef_mng_last_name": "Iwasawa",
+                "unicef_mng_email": "kiwasawa@unicef.org",
+                "partner_mng_first_name": "Martino",
+                "partner_mng_last_name": "Costa",
+                "partner_mng_email": "martino.costa@nrc.no",
+                "partner_contribution_budget": 104370,
+                "unicef_cash_budget": 921075,
+                "in_kind_amount_budget": 89100,
+                "cash_for_supply_budget": 921075,
+                "total_cash": 1114545,
+                "current": false,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-13T15:28:26.117Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            },
+            {
+                "pca_title": "Integrated Child Protection/GBV Prevention, Referral, and Psychosocial Support for Children and Adolescents in South Lebanon",
+                "pca_number": "PCA/LEBA/2013/56",
+                "pca_id": 53,
+                "partner_name": "Terre des Hommes Lausanne",
+                "partner_id": 36,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 27850,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 113,
+                                "pca_sector": 59
+                            },
+                            {
+                                "indicator": "# of women and girls accessing support activities within mobile and static safe spaces",
+                                "programmed": 450,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 114,
+                                "pca_sector": 59
+                            },
+                            {
+                                "indicator": "# of service providers and community members sensitized or trained on child protection services and referral pathways",
+                                "programmed": 118,
+                                "current": 0,
+                                "unit": "Individual",
+                                "id": 224,
+                                "pca_sector": 59
+                            }
+                        ],
+                        "id": 59,
+                        "pca": 53,
+                        "sector": 4
+                    }
+                ],
+                "id": 53,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/56",
+                "title": "Integrated Child Protection/GBV Prevention, Referral, and Psychosocial Support for Children and Adolescents in South Lebanon",
+                "status": "active",
+                "partner": 36,
+                "start_date": "2013-11-06",
+                "end_date": "2014-11-05",
+                "initiation_date": "2013-11-07",
+                "signed_by_unicef_date": "2013-11-13",
+                "signed_by_partner_date": "2013-11-13",
+                "unicef_mng_first_name": "Jihane",
+                "unicef_mng_last_name": "Latrous",
+                "unicef_mng_email": "jlatrous@unicef.org",
+                "partner_mng_first_name": "Gaelle",
+                "partner_mng_last_name": "Rennesson",
+                "partner_mng_email": "gre@tdh.ch",
+                "partner_contribution_budget": 118096,
+                "unicef_cash_budget": 1049615,
+                "in_kind_amount_budget": 157580,
+                "cash_for_supply_budget": 892035,
+                "total_cash": 1325291,
+                "current": true,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-25T12:08:53.451Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 34.628724000112584,
+        "longitude": 36.3863680001831,
+        "location_name": "Aamayer Ouadi Khaled",
+        "location_type": "Social Development Center",
+        "gateway_id": 3,
+        "parterships": [
+            {
+                "pca_title": "Emergency Child Protection Emergency for conflict affected population in Lebanon ",
+                "pca_number": "PCA/LEBA/2012/39",
+                "pca_id": 1,
+                "partner_name": "Danish Refugee Council",
+                "partner_id": 1,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 28000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 1,
+                                "pca_sector": 1
+                            },
+                            {
+                                "indicator": "# of boys and girls identified and referred (not GBV related) to multi-sectoral services",
+                                "programmed": 150000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 2,
+                                "pca_sector": 1
+                            }
+                        ],
+                        "id": 1,
+                        "pca": 1,
+                        "sector": 4
+                    }
+                ],
+                "id": 1,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2012/39",
+                "title": "Emergency Child Protection Emergency for conflict affected population in Lebanon ",
+                "status": "active",
+                "partner": 1,
+                "start_date": "2013-07-22",
+                "end_date": "2014-07-22",
+                "initiation_date": "2013-07-22",
+                "signed_by_unicef_date": "2013-07-22",
+                "signed_by_partner_date": "2013-07-22",
+                "unicef_mng_first_name": "Catherine ",
+                "unicef_mng_last_name": "Jones",
+                "unicef_mng_email": "cajones@unicef.org",
+                "partner_mng_first_name": "valentina",
+                "partner_mng_last_name": "Stivanello",
+                "partner_mng_email": "valentina.stivanello@drclebanon.dk",
+                "partner_contribution_budget": 510090,
+                "unicef_cash_budget": 2692937,
+                "in_kind_amount_budget": 241763,
+                "cash_for_supply_budget": 2451174,
+                "total_cash": 3444790,
+                "current": true,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-25T15:18:03.719Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    }
+];
+
         function getRandomColor() {
             var letters = '0123456789ABCDEF'.split('');
             var color = '#';
@@ -307,7 +1787,7 @@
             return color;
         }
 
-        var map;
+        var map1;
         var sublayer;
         var table;
         var uniqueID;
@@ -320,23 +1800,78 @@
         var layers = {};
 
         function main(map, options) {
-
+            map1=map;
             layer_control = L.control.layers().addTo(map);
             //get all cartodb tables from equitrack and pull data from CartoDB
             $.getJSON("{% url 'cartodbtables' %}", function (data) {
                 $.each(data, function (key, val) {
-{#                    color = getRandomColor();#}
-{#                    var sql = new cartodb.SQL({user: val.domain});#}
+                    tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color});
                     $.getJSON(
                             "https://"+ val.domain +".cartodb.com/api/v2/sql?q=SELECT * FROM " + val.table_name +
                             "&format=GeoJSON&api_key=" + val.api_key
-                    ).done(function (data) {
-                                layer_control.addOverlay(L.geoJson(data), val.table_name);
-                            })
-                            .error(function (errors) {
-                                // errors contains a list of errors
-                                console.log("errors:" + errors);
-                            });
+                    )
+                    .done(function (data) {
+                        var newlayer;
+                        if (data.features[0].geometry != null) {
+                            if (data.features[0].geometry.type == "MultiPolygon" || data.features[0].geometry.type == "Polygon") {
+                                newlayer = L.geoJson(data, {
+                                    style: {
+                                        color: "#fff",
+                                        weight: 2,
+                                        opacity: 0.5,
+                                        fillOpacity: 0.3,
+                                        fillColor: getRandomColor()
+                                    }
+                                });
+                            }
+                            else{
+                                var color = getRandomColor();
+                                newlayer = L.geoJson(data, {
+                                    style: function (feature) {
+                                        return feature.properties && feature.properties.style;
+                                    },
+
+                                    pointToLayer: function (feature, latlng) {
+                                        return L.circleMarker(latlng, {
+                                            radius: 5,
+                                            fillColor: color,
+                                            color: "#fff",
+                                            weight: 1,
+                                            opacity: 1,
+                                            fillOpacity: 0.8
+                                        });
+			                        }
+                                 });
+                            }
+                        }
+                        else{
+                            var color = getRandomColor();
+                            newlayer = L.geoJson(data, {
+                                style: function (feature) {
+                                    return feature.properties && feature.properties.style;
+                                },
+
+                                pointToLayer: function (feature, latlng) {
+                                    return L.circleMarker(latlng, {
+                                        radius: 5,
+                                        fillColor: color,
+                                        color: "#fff",
+                                        weight: 1,
+                                        opacity: 1,
+                                        fillOpacity: 0.8
+                                    });
+                                }
+                             });
+                        }
+
+
+                        layer_control.addOverlay(newlayer, val.table_name);
+
+                    })
+                    .error(function (errors) {
+                        // errors contains a list of errors
+                        console.log("errors:" + errors);
+                    });
                 });
             });
         }
@@ -436,37 +1971,98 @@
         }
 
         //getting all pcodes and creating SQL statement
+                //getting all pcodes and creating SQL statement
         function UpdateMap(){
-            $.each(tableArr, function (key, val){
-                var pca_qry = getObjects(pca_locations, 'gateway_id', '1');
+           // $.each(tableArr, function (key, val){
+                var pca_qry = getObjects(pca_locations1, 'gateway_id', '9');
                 //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
                 var count = 0;
-                $.each( pca_qry, function( keyp, value ) {
-                    var popup_content = '<div class="content" style="padding:20px">' +
-                                        '<div role="tabpanel">' +
-                                        <!-- Nav tabs -->
-                                            '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">' +
-                                            '<li id="link"' + key + '" role="presentation" class="active"><a href="#tab' + key + '">' + value.pca_number + '</a></li>' +
-                                            '</ul>' +
-                                            <!-- Tab panes -->
-                                            '<div class="tab-content" id="infotabs">' +
-                                                "<div role='tabpanel' class='tab-pane active' id='tab" + key + "'>" +
-                                                    "<h4>PCA Title</h4><p id='pca_title'>" + value.pca_title + "</p>" +
-                                                    "<h4>Gateway:</h4><p id='gateway_name'>" + value.gateway_name + "</p>" +
-                                                    "<h4>Partner:</h4><p id='partner_name'>" + value.partner_name + "</p>" +
-                                                    "<h4>Sector:</h4><p id='sector'>" + value.sector + "</p>" +
-                                                "</div>" +
-                                            '</div>' +
-                                        '</div>' +
-                                    '</div>';
+                $.each( pca_qry, function( keyq, valueq ) {
+                    var popup_content_start = '<div class="content" id="mytab" style="padding:20px">' +
+                                                '<div role="tabpanel">';
+                    var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
+                    var popup_content_tabs = '<div class="tab-content" id="infotabs">';
+                    var popup_content='';
+                    //looping through all PCAs for one location
+                    $.each( valueq.parterships, function( keyp, valuep ) {
+                            popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
+                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in ' id='tab" + keyp + "'>" +
+                            "<h4>PCA Title</h4><p id='pca_title'>" + valuep.pca_title + "</p>" +
+                            "<h4>Gateway:</h4><p id='gateway_name'>" + valuep.gateway_name + "</p>" +
+                            "<h4>Partner:</h4><p id='partner_name'>" + valuep.partner_name + "</p>";
 
-                     var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: L.AwesomeMarkers.icon({icon: 'building-o', prefix: 'fa', markerColor: 'blue'}) });
+
+                            //looping for sectors for one PCA
+                            $.each( valuep.sectors, function( keys, valueSec ) {
+                                var popup_content_tabs_indicator='';
+
+                                var popup_content_tabs_sec =  '<div class="panel-group" id="accordion">' +
+                                                                    '<div class="panel panel-default">' +
+                                                                        '<div class="panel-heading">' +
+                                                                            '<h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapse' + keyp + keys + '">' + valueSec.sector_name +'</a></h3>' +
+                                                                        '</div>' +
+                                                                        '<div id="collapse' + keyp + keys + '" class="panel-collapse collapse">';
+
+                                $.each( valueSec.indicators, function( keyi, valuei ) {
+                                    popup_content_tabs_indicator +=
+                                                                        '<div class="panel-body">' +
+                                                                            '<a href=""><span class="sublabel">' + valuei.indicator+ '</span></a>' +                                                                        '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
+                                                                            '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
+                                                                            '<div class="progress progress-striped">' +
+                                                                                '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current/valuei.programmed*100 +'%">' + valuei.current/valuei.programmed*100 + '% </div>' +
+                                                                            '</div>' +
+                                                                        '</div>';
+                                });
+                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div>';
+
+                            popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
+                            console.log(popup_content_tabs);
+                            });
+                    });
+                    popup_content_navs += '</ul>';
+                    popup_content_tabs += '</div>';
+                    popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
+
+                    var RedIcon = L.icon({
+    iconUrl: '../static/img/marker-icon.png'
+
+});
+
+
+
+{#                            L.Icon.Default.extend({#}
+{#                        options: {#}
+{#            	            iconUrl: '../static/img/marker-icon.png'#}
+{##}
+{#                        }#}
+{#                    });#}
+                    //var redIcon = new RedIcon();
+                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
+
+{#                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude)#}
+{#                            , {#}
+{#                        icon: L.AwesomeMarkers.icon({#}
+{#                            icon: 'building-o',#}
+{#                            prefix: 'fa',#}
+{#                            markerColor: 'blue'#}
+{#                        })#}
+{#                    });#}
                     //var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: redMarker});
                     marker.bindPopup(popup_content);
-                    marker.addTo(map);
+                    marker.addTo(map1);
                 });
-            });
+                $('#tab0').addClass("active");
+                $('#link0').addClass("active");
+
+                //create tabs in info window
+                $("#myTab a").click(function (e) {
+                    alert("tab");
+                    e.preventDefault();
+                    $(this).tab('show');
+                });
+           // });
         }
+
 
 
     </script>
