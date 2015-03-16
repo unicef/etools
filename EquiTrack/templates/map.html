@@ -109,10 +109,42 @@
             <div class="col-md-2">
                 <div class="btn-group btn-block">
                     <button type="button" class="col-md-10 btn btn-info">
+                       Result Structure
+                    </button>
+
+                    <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
+                         <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu col-md-10" role="menu">
+                            <li><a href="test1.html">test1</a></li>
+                            <li><a href="test2.html">test2</a></li>
+                            <li><a href="test3.html">test3</a></li>
+                    </ul>
+                </div>
+            </div>
+           <div class="col-md-2">
+                <div class="btn-group btn-block">
+                    <button type="button" class="col-md-10 btn btn-danger">
+                       Sector
+                    </button>
+
+                    <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
+                         <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu col-md-10" role="menu">
+                            <li><a href="test1.html">test1</a></li>
+                            <li><a href="test2.html">test2</a></li>
+                            <li><a href="test3.html">test3</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="btn-group btn-block">
+                    <button type="button" class="col-md-10 btn btn-primary">
                        Gateways
                     </button>
 
-                    <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown" type="button">
+                    <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
                          <span class="caret"></span>
                     </button>
 
@@ -138,60 +170,13 @@
                     </ul>
                 </div>
             </div>
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button type="button" class="col-md-10 btn btn-primary">
-                       Donor
-                    </button>
 
-                    <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu col-md-10" role="menu">
-                            <li><a href="test1.html">test1</a></li>
-                            <li><a href="test2.html">test2</a></li>
-                            <li><a href="test3.html">test3</a></li>
-                    </ul>
-                </div>
             </div>
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button type="button" class="col-md-10 btn btn-warning">
-                       Partner
-                    </button>
-
-                    <button class="col-md-2 btn btn-warning dropdown-toggle" data-toggle="dropdown">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu col-md-10" role="menu">
-                            <li><a href="test1.html">test1</a></li>
-                            <li><a href="test2.html">test2</a></li>
-                            <li><a href="test3.html">test3</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button type="button" class="col-md-10 btn btn-danger">
-                       Sector
-                    </button>
-
-                    <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu col-md-10" role="menu">
-                            <li><a href="test1.html">test1</a></li>
-                            <li><a href="test2.html">test2</a></li>
-                            <li><a href="test3.html">test3</a></li>
-                    </ul>
-                </div>
-            </div>
-            </div>
-            <div class="row" style="">
+            <div class="row">
                 <div class="col-md-2">
                     <div class="btn-group btn-block">
                         <button type="button" class="col-md-10 btn btn-info">
-                           Indicator
+                           District
                         </button>
 
                         <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
@@ -204,13 +189,13 @@
                         </ul>
                     </div>
                 </div>
-                <div class="col-md-2">
+               <div class="col-md-2">
                     <div class="btn-group btn-block">
-                        <button type="button" class="col-md-10 btn btn-success">
-                           Output
+                        <button type="button" class="col-md-10 btn btn-danger">
+                           Donor
                         </button>
 
-                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
+                        <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
                              <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu col-md-10" role="menu">
@@ -223,7 +208,7 @@
                 <div class="col-md-2">
                     <div class="btn-group btn-block">
                         <button type="button" class="col-md-10 btn btn-primary">
-                           District
+                           Partner
                         </button>
 
                         <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
@@ -236,24 +221,72 @@
                         </ul>
                     </div>
                 </div>
-                <div class='col-md-2'>
-                    <div class="form-group">
-                        <label class="col-md-2 control-label nopadding">Date From</label>
-                        <div class='input-group input-append date col-md-10' id='datetimepicker6'>
-                            <input type='text' class="form-control" name="date" />
-                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
-                            </span>
+            </div>
+            <div class="row" style="display:block">
+                <div id="accordion" class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Detailed Search</a>
+                            </h4>
                         </div>
-                    </div>
-                </div>
-                <div class='col-md-2'>
-                    <div class="form-group">
-                        <label class="col-md-2 control-label no nopadding">Date To</label>
-                        <div class='input-group input-append date col-md-10' id='datetimepicker7'>
-                            <input type='text' class="form-control" name="date" />
-                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
-                            </span>
-                        </div>
+                         <div id="collapseOne" class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <div class="col-md-2">
+                                    <div class="btn-group btn-block">
+                                        <button type="button" class="col-md-10 btn btn-info">
+                                           Indicator
+                                        </button>
+
+                                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
+                                             <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu col-md-10" role="menu">
+                                                <li><a href="test1.html">test1</a></li>
+                                                <li><a href="test2.html">test2</a></li>
+                                                <li><a href="test3.html">test3</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="btn-group btn-block">
+                                        <button type="button" class="col-md-10 btn btn-success">
+                                           Output
+                                        </button>
+
+                                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
+                                             <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu col-md-10" role="menu">
+                                                <li><a href="test1.html">test1</a></li>
+                                                <li><a href="test2.html">test2</a></li>
+                                                <li><a href="test3.html">test3</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class='col-md-2'>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label nopadding">Date From</label>
+                                        <div class='input-group input-append date col-md-10' id='datetimepicker6'>
+                                            <input type='text' class="form-control" name="date" />
+                                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='col-md-2'>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label no nopadding">Date To</label>
+                                        <div class='input-group input-append date col-md-10' id='datetimepicker7'>
+                                            <input type='text' class="form-control" name="date" />
+                                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                             </div>
+                         </div>
                     </div>
                 </div>
 
@@ -1978,7 +2011,7 @@
                 //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
                 var count = 0;
                 $.each( pca_qry, function( keyq, valueq ) {
-                    var popup_content_start = '<div class="content" id="mytab" style="padding:20px">' +
+                    var popup_content_start = '<div class="content" id="mytab" style="padding:20px col-md-11">' +
                                                 '<div role="tabpanel">';
                     var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
                     var popup_content_tabs = '<div class="tab-content" id="infotabs">';
@@ -1986,17 +2019,20 @@
                     //looping through all PCAs for one location
                     $.each( valueq.parterships, function( keyp, valuep ) {
                             popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
-                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in ' id='tab" + keyp + "'>" +
-                            "<h4>PCA Title</h4><p id='pca_title'>" + valuep.pca_title + "</p>" +
-                            "<h4>Gateway:</h4><p id='gateway_name'>" + valuep.gateway_name + "</p>" +
-                            "<h4>Partner:</h4><p id='partner_name'>" + valuep.partner_name + "</p>";
+                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
+                            "<div class='row'>" +
+                                "<div class='row col-md-12'><label class='col-md-3 control-label'>Title</label><div id='pca_title' class='col-md-9'>" + valuep.pca_title + "</div></div>" +
+                                "<div class='row col-md-12'><label class='col-md-3 control-label'>Gateway</label><div id='gateway_name' class='col-md-9'>" + valuep.gateway_name + "</div></div>" +
+                                "<div class='row col-md-12'><label class='col-md-3 control-label'>Partner</label><div id='partner_name' class='col-md-9'>" + valuep.partner_name + "</div></div>" +
+                                "<div class='row col-md-12'><label class='col-md-10 control-label'>Results by Sector:</label><div id='partner_name' class='col-md-2'></div></div>" +
+                            "</div>";
 
 
                             //looping for sectors for one PCA
                             $.each( valuep.sectors, function( keys, valueSec ) {
                                 var popup_content_tabs_indicator='';
 
-                                var popup_content_tabs_sec =  '<div class="panel-group" id="accordion">' +
+                                var popup_content_tabs_sec =  '<div class="row"><div class="panel-group col-md-12" id="accordion">' +
                                                                     '<div class="panel panel-default">' +
                                                                         '<div class="panel-heading">' +
                                                                             '<h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapse' + keyp + keys + '">' + valueSec.sector_name +'</a></h3>' +
@@ -2013,7 +2049,7 @@
                                                                             '</div>' +
                                                                         '</div>';
                                 });
-                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div>';
+                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div> </div>';
 
                             popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
                             console.log(popup_content_tabs);
