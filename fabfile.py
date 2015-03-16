@@ -306,6 +306,11 @@ def migrate_db(backup=True):
 
 
 @_setup
+def delete_ghost_migrations():
+    run('dokku run {} python EquiTrack/manage.py migrate --delete-ghost-migrations --merge'.format(env.name))
+
+
+@_setup
 def backup_db():
     run('dokku postgis:dump {} > /home/dokku/{}/backup.sql.{}'.format(
         env.name,
