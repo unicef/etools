@@ -25,7 +25,7 @@ from .forms import (
     TripForm,
     TravelRoutesForm
 )
-from .exports import TripResource
+from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
 
@@ -249,6 +249,22 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
         return fields
 
+    # def add_view(self, request, form_url='', extra_context=None):
+    #     """
+    #     Don't allow users to create new trips if they have outstanding
+    #     """
+    #     # trips = request.user.trips.filter(
+    #     #     status=Trip.APPROVED,
+    #     #
+    #     # )
+    #     #
+    #     # for trip in trips:
+    #     #     pass
+    #
+    #     return super(TripReportAdmin, self).add_view(
+    #         self, request, form_url, extra_context
+    #     )
+
     # def save_model(self, request, obj, form, change):
     #
     #     user = obj.owner
@@ -346,6 +362,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
     resource_class = ActionPointResource
     exclude = [u'persons_responsible']
+    date_hierarchy = u'due_date'
     list_display = (
         u'trip',
         u'description',

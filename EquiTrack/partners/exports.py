@@ -6,15 +6,48 @@ from lxml import etree
 from django.utils.datastructures import SortedDict
 
 from import_export import resources
-from import_export.formats.base_formats import Format
+from import_export.formats.base_formats import CSV, Format
 
 from pykml.factory import KML_ElementMaker as KML
 
+from EquiTrack.utils import BaseExportResource
+from locations.models import Location
 from partners.models import (
     PCA,
     GwPCALocation,
     PartnerOrganization,
 )
+
+
+class DonorsFormat(CSV):
+
+    def get_title(self):
+        return 'by donors'
+
+    def export_data(self, dataset):
+
+        locs = []
+        pcas = PCA.objects.filter(
+            id__in=dataset['ID']
+        )
+        for pca in pcas:
+            donors = set(pca.pcagrant_set.all().values_list('grant__donor__name', flat=True))
+            for loc in pca.locations.all():
+                locs.append(
+                    {
+                        'Donors': ', '.join([d for d in donors]),
+                        'Gateway Type': loc.location.gateway.name,
+                        'PCode': loc.location.p_code,
+                        'Locality': loc.locality.name,
+                        'Cad Code': loc.locality.cad_code
+                    }
+                )
+
+        data = tablib.Dataset(headers=['Donors', 'Gateway Type', 'PCode', 'Locality', 'Cad Code'])
+        for loc in locs:
+            data.append(loc.values())
+
+        return super(DonorsFormat, self).export_data(data)
 
 
 class KMLFormat(Format):
@@ -99,9 +132,10 @@ class PartnerResource(resources.ModelResource):
         model = PartnerOrganization
 
 
-class PCAResource(resources.ModelResource):
+class PCAResource(BaseExportResource):
 
-    headers = []
+    class Meta:
+        model = PCA
 
     def insert_column(self, row, field_name, value):
 
@@ -264,6 +298,9 @@ class PCAResource(resources.ModelResource):
         return row
 
     def fill_row(self, pca, row):
+        """
+        Controls the order in which fields are exported
+        """
 
         self.fill_pca_row(row, pca)
         self.fill_pca_grants(row, pca)
@@ -276,37 +313,3 @@ class PCAResource(resources.ModelResource):
             self.fill_sector_wbs(row, sector)
             self.fill_sector_activities(row, sector)
 
-    def export(self, queryset=None):
-        """
-        Exports a resource.
-        """
-        rows = []
-
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        fields = SortedDict()
-
-        for pca in queryset.iterator():
-
-            self.fill_row(pca, fields)
-
-        self.headers = fields
-
-        # Iterate without the queryset cache, to avoid wasting memory when
-        # exporting large datasets.
-        for pca in queryset.iterator():
-            # second pass creates rows from the known table shape
-            row = fields.copy()
-
-            self.fill_row(pca, row)
-
-            rows.append(row)
-
-        data = tablib.Dataset(headers=fields.keys())
-        for row in rows:
-            data.append(row.values())
-        return data
-
-    class Meta:
-        model = PCA

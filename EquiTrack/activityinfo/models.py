@@ -6,8 +6,6 @@ from django.db import models
 
 from activtyinfo_client import ActivityInfoClient
 
-#from partners.models import PCA, IndicatorProgress
-
 
 class Database(models.Model):
 
@@ -216,18 +214,4 @@ class Attribute(models.Model):
     ai_id = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=254)
 
-
-# class PartnerReport(models.Model):
-#
-#     pca = models.ForeignKey(PCA)
-#     indicator = models.ForeignKey('reports.Indicator')
-#     ai_partner = models.ForeignKey(Partner)
-#     ai_indicator = models.ForeignKey(Indicator)
-#     location = models.CharField(max_length=254)
-#     month = models.DateField()
-#     indicator_value = models.IntegerField()
-#     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
-#
-#     class Meta:
-#         ordering = ['-month']
 
