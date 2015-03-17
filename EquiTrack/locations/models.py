@@ -18,6 +18,11 @@ from paintstore.fields import ColorPickerField
 logger = logging.getLogger('locations.models')
 
 
+def get_random_color():
+    r = lambda: random.randint(0,255)
+    return '#%02X%02X%02X' % (r(), r(), r())
+
+
 class GatewayType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
     class Meta:
@@ -25,17 +30,6 @@ class GatewayType(models.Model):
 
     def __unicode__(self):
         return self.name
-
-#test nik
-def get_my_choices():
-    choices_list = GatewayType.objects
-    return choices_list
-
-class MyForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        super(MyForm, self).__init__(*args, **kwargs)
-        self.fields['my_choice_field'] = forms.ChoiceField(
-            choices=get_my_choices() )
 
 
 class Governorate(models.Model):
@@ -46,7 +40,7 @@ class Governorate(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True)
+    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
     geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
@@ -67,7 +61,7 @@ class Region(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True)
+    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
     geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
@@ -93,7 +87,7 @@ class Locality(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True)
+    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
 
     geom = models.MultiPolygonField(null=True, blank=True)
@@ -195,10 +189,12 @@ class CartoDBTable(models.Model):
     domain = models.CharField(max_length=254)
     api_key = models.CharField(max_length=254)
     table_name = models.CharField(max_length=254)
+    display_name = models.CharField(max_length=254, null=True, blank=True)
     location_type = models.ForeignKey(GatewayType)
     name_col = models.CharField(max_length=254, default='name')
     pcode_col = models.CharField(max_length=254, default='pcode')
     parent_code_col = models.CharField(max_length=254, null=True, blank=True)
+    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
     def update_sites_from_cartodb(self):
 

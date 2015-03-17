@@ -63,6 +63,7 @@ class LocationSerializer(serializers.Serializer):
     location_name = serializers.CharField(source='name')
     location_type = serializers.CharField(source='gateway.name')
     gateway_id = serializers.CharField(source='gateway.id')
+    p_code = serializers.CharField(source='p_code')
 
     parterships = serializers.SerializerMethodField('get_pcas')
 
