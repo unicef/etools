@@ -91,7 +91,7 @@
             min-height: 100px;
           }
         .leaflet-popup-content{
-        min-width: 300px !important;
+        min-width: 400px !important;
         width: inherit !important;
         height: 500px;
             height: inherit !important;
@@ -105,10 +105,10 @@
 
     <section class="main-content-wrapper">
         <section id="main-content">
-           <div class="row" style=" padding-top: 10px;">
+           <div class="row col-md-offset-1" style=" padding-top: 10px;">
             <div class="col-md-2">
                 <div class="btn-group btn-block">
-                    <button type="button" class="col-md-10 btn btn-info">
+                    <button id="btn-result-structure" type="button" class="col-md-10 btn btn-info">
                        Result Structure
                     </button>
 
@@ -116,15 +116,15 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu col-md-10" role="menu">
-                            <li><a href="test1.html">test1</a></li>
-                            <li><a href="test2.html">test2</a></li>
-                            <li><a href="test3.html">test3</a></li>
+                            <li><a href="javascript:void(0);" id="result-structure0" onclick="DropdownSelect(this.id);" itemid="0">test1</a></li>
+                            <li><a href="javascript:void(0);" id="result-structure1" onclick="DropdownSelect(this.id);" itemid="1">test2</a></li>
+                            <li><a href="javascript:void(0);" id="result-structure2" onclick="DropdownSelect(this.id);" itemid="2">test3</a></li>
                     </ul>
                 </div>
             </div>
            <div class="col-md-2">
                 <div class="btn-group btn-block">
-                    <button type="button" class="col-md-10 btn btn-danger">
+                    <button id="btn-sector" type="button" class="col-md-10 btn btn-danger">
                        Sector
                     </button>
 
@@ -132,15 +132,15 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu col-md-10" role="menu">
-                            <li><a href="test1.html">test1</a></li>
-                            <li><a href="test2.html">test2</a></li>
-                            <li><a href="test3.html">test3</a></li>
+                            <li><a href="javascript:void(0);" id ="sector1" onclick="DropdownSelect(this.id);" itemid="1">test1</a></li>
+                            <li><a href="javascript:void(0);" id ="sector10" onclick="DropdownSelect(this.id);" itemid="10">test10</a></li>
+                            <li><a href="javascript:void(0);" id ="sector100" onclick="DropdownSelect(this.id);" itemid="100">test100</a></li>
                     </ul>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="btn-group btn-block">
-                    <button type="button" class="col-md-10 btn btn-primary">
+                    <button id="btn-gateway" type="button" class="col-md-10 btn btn-primary">
                        Gateways
                     </button>
 
@@ -150,7 +150,7 @@
 
                     <ul class="dropdown-menu col-md-10" role="menu" id="gateway_ul">
                         {% for gateway in gateway_list %}
-                            <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="GatewayGetData(this.id);">{{ gateway.name }}</a></li>
+                            <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="DropdownSelect(this.id);" itemid="{{ gateway.id }}">{{ gateway.name }}</a></li>
                         {% endfor %}
                     </ul>
 
@@ -158,7 +158,7 @@
             </div>
             <div class="col-md-2">
                 <div class="btn-group btn-block">
-                    <button type="button" class="col-md-10 btn btn-success">
+                    <button id="btn-governorate" type="button" class="col-md-10 btn btn-success">
                        Governorate
                     </button>
 
@@ -172,10 +172,10 @@
             </div>
 
             </div>
-            <div class="row">
+            <div class="row col-md-offset-1">
                 <div class="col-md-2">
                     <div class="btn-group btn-block">
-                        <button type="button" class="col-md-10 btn btn-info">
+                        <button id="btn-district" type="button" class="col-md-10 btn btn-info">
                            District
                         </button>
 
@@ -191,7 +191,7 @@
                 </div>
                <div class="col-md-2">
                     <div class="btn-group btn-block">
-                        <button type="button" class="col-md-10 btn btn-danger">
+                        <button id="btn-donor" type="button" class="col-md-10 btn btn-danger">
                            Donor
                         </button>
 
@@ -207,7 +207,7 @@
                 </div>
                 <div class="col-md-2">
                     <div class="btn-group btn-block">
-                        <button type="button" class="col-md-10 btn btn-primary">
+                        <button id="btn-partner" type="button" class="col-md-10 btn btn-primary">
                            Partner
                         </button>
 
@@ -221,8 +221,24 @@
                         </ul>
                     </div>
                 </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button id="btn-status" type="button" class="col-md-10 btn btn-success">
+                           Status
+                        </button>
+
+                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
+                             <span class="caret"></span>
+                        </button>
+                            <ul class="dropdown-menu col-md-10" role="menu">
+                                    <li><a href="test1.html">ACTIVE</a></li>
+                                    <li><a href="test2.html">IMPLEMENTED</a></li>
+                                    <li><a href="test3.html">CANCELLED</a></li>
+                            </ul>
+                    </div>
+                </div>
             </div>
-            <div class="row" style="display:block">
+            <div class="row col-md-11 col-md-offset-1" style="display:block">
                 <div id="accordion" class="panel-group">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -232,9 +248,9 @@
                         </div>
                          <div id="collapseOne" class="panel-collapse collapse">
                             <div class="panel-body">
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <div class="btn-group btn-block">
-                                        <button type="button" class="col-md-10 btn btn-info">
+                                        <button id="btn-indicator" type="button" class="col-md-10 btn btn-info">
                                            Indicator
                                         </button>
 
@@ -248,9 +264,9 @@
                                         </ul>
                                     </div>
                                 </div>
-                                <div class="col-md-2">
+                                <div class="col-md-3">
                                     <div class="btn-group btn-block">
-                                        <button type="button" class="col-md-10 btn btn-success">
+                                        <button id="btn-output" type="button" class="col-md-10 btn btn-success">
                                            Output
                                         </button>
 
@@ -265,7 +281,7 @@
                                     </div>
                                 </div>
 
-                                <div class='col-md-2'>
+                                <div class='col-md-3'>
                                     <div class="form-group">
                                         <label class="col-md-2 control-label nopadding">Date From</label>
                                         <div class='input-group input-append date col-md-10' id='datetimepicker6'>
@@ -275,7 +291,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class='col-md-2'>
+                                <div class='col-md-3'>
                                     <div class="form-group">
                                         <label class="col-md-2 control-label no nopadding">Date To</label>
                                         <div class='input-group input-append date col-md-10' id='datetimepicker7'>
@@ -330,15 +346,15 @@
             return objects;
         }
 
-        //sample PCA json function
-        var pca_locations = {"pcalocations":[
-            {"pca_title": "Adolescents Benefiting Communities", "pca_number": "PCA/LEBA/2013/62", "pca_id": 120, "partner_name": "Lebanese Red Cross", "partner_id": 47, "sector_name": "Education", "sector_id": 1, "latitude": 33.89057, "longitude": 35.5029, "location_name": "Bachoura", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 1632, "pca": 120, "sector": null, "governorate": 1, "region": 1, "locality": 5, "location": 31, "tpm_visit": false, "pcode": "53333-01-002"},
-            {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.87379, "longitude": 35.50219, "location_name": "Tariq El Jdide", "location_type": "Village", "gateway_name": "Village", "gateway_id": 9, "id": 4892, "pca": 473, "sector": 4, "governorate": 1, "region": 1, "locality": 9, "location": 60, "tpm_visit": false, "pcode": "32191-01-007"},
-            {"pca_title": "Strengthening Resilience Among Vulnerable Children", "pca_number": "PCA/LEBA/2014/49", "pca_id": 439, "partner_name": "Himaya", "partner_id": 87, "sector_name": "Child Protection", "sector_id": 4, "latitude": 33.87379, "longitude": 35.50219, "location_name": "Tariq El Jdide", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4501, "pca": 439, "sector": 4, "governorate": 1, "region": 1, "locality": 9, "location": 60, "tpm_visit": true, "pcode": "23267-01-005"},
-            {"pca_title": "Multi-sectoral response in informal tented settlements across Lebanon", "pca_number": "PCA/LEBA/2014/01", "pca_id": 172, "partner_name": "BEYOND Association", "partner_id": 2, "sector_name": "Education, Health and Nutrition, Child Protection, WASH", "sector_id": 1, "latitude": 33.87278, "longitude": 35.52083, "location_name": "Furn ech Chebak", "location_type": "Village", "gateway_name": "Village", "gateway_id": 9, "id": 2790, "pca": 172, "sector": null, "governorate": 2, "region": 2, "locality": 16, "location": 95, "tpm_visit": false, "pcode": "32169-01-006"},
-            {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.86113, "longitude": 35.51024, "location_name": "Ghobeire", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4895, "pca": 473, "sector": 4, "governorate": 2, "region": 2, "locality": 20, "location": 104, "tpm_visit": false, "pcode": "53333-01-002"}
-        ]};
+        function DropdownSelect(id){
+            var selectVal = $('#' + id).html();
+            var itemId = $('#' + id).attr('itemid');
+            var btnId = "btn-" + id.substring(0, id.indexOf(itemId));
+            $('#' + btnId).html(selectVal);
+            //alert(btnId);
+        }
 
+        //sample PCA json function
         var pca_locations1 = [
     {
         "latitude": 33.88354923,
@@ -1845,6 +1861,7 @@
                     )
                     .done(function (data) {
                         var newlayer;
+                        var color = getRandomColor();
                         if (data.features[0].geometry != null) {
                             if (data.features[0].geometry.type == "MultiPolygon" || data.features[0].geometry.type == "Polygon") {
                                 newlayer = L.geoJson(data, {
@@ -1853,12 +1870,12 @@
                                         weight: 2,
                                         opacity: 0.5,
                                         fillOpacity: 0.3,
-                                        fillColor: getRandomColor()
+                                        fillColor: color
                                     }
                                 });
                             }
                             else{
-                                var color = getRandomColor();
+
                                 newlayer = L.geoJson(data, {
                                     style: function (feature) {
                                         return feature.properties && feature.properties.style;
@@ -1878,7 +1895,7 @@
                             }
                         }
                         else{
-                            var color = getRandomColor();
+                            //var color = getRandomColor();
                             newlayer = L.geoJson(data, {
                                 style: function (feature) {
                                     return feature.properties && feature.properties.style;
@@ -1899,7 +1916,9 @@
 
 
                         layer_control.addOverlay(newlayer, val.table_name);
-
+                                //alert($("span:contains(val.table_name)").html());
+                        //$("span:contains(val.table_name)").parent().css({"background-color": color, "opacity": "0.3"});
+                        UpdateMap();
                     })
                     .error(function (errors) {
                         // errors contains a list of errors
@@ -1908,82 +1927,6 @@
                 });
             });
         }
-
-{#                    var layer_config = {#}
-{#                        sql: 'SELECT * FROM ' + val.table_name,#}
-{#                        cartocss: '#' + val.table_name + '{ ' +#}
-{#                        'marker-fill-opacity: 0.9; ' +#}
-{#                        'marker-line-color: #FFF; ' +#}
-{#                        'marker-line-width: 1.5; ' +#}
-{#                        'marker-line-opacity: 1; ' +#}
-{#                        'marker-placement: point; ' +#}
-{#                        'marker-type: ellipse; ' +#}
-{#                        'marker-width: 10; ' +#}
-{#                        'marker-fill: ' + color.toString() + '; ' +#}
-{#                        'marker-allow-overlap: true; }',#}
-{#                        interactivity: val.pcode_col + ', cartodb_id, the_geom'#}
-{#                    };#}
-{#                    tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color, user: val.domain});#}
-{#                    user = val.domain;#}
-{#                    $('#mapmenu').append(#}
-{#                            "<a href=#" + val.table_name +#}
-{#                            " id='" + val.table_name +#}
-{#                            "' class='mapbutton " + val.table_name +#}
-{#                            "' style='background:" + color +"'>"#}
-{#                            + val.table_name + "</a>");#}
-{#                });#}
-{#                cartodb.createLayer(map, {#}
-{#                    user_name: user,#}
-{#                    type: 'cartodb',#}
-{#                    sublayers: sublayerArr#}
-{#                })#}
-{#                .addTo(map)#}
-{#                .done(function(layer) {#}
-{#                    for (var i = 0; i < layer.getSubLayerCount(); i++) {#}
-{#                        cartoSubLayers.push(layer.getSubLayer(i));#}
-{#                    }#}
-{#                    //sublayer = layer.getSubLayer(0);#}
-{#                    $('.mapbutton').click(function() {#}
-{#                       $('.mapbutton').removeClass('selected');#}
-{#                       $(this).addClass('selected');#}
-{#                       var buttonId = $(this).attr('id');#}
-{##}
-{#                        $.each(tableArr, function (key, value){#}
-{#                           if(value.table_name == buttonId ){#}
-{#                               layer.getSubLayer(key).toggle();#}
-{#                               if($("#" + value.table_name).css("background-color") == "rgb(192, 192, 192)") {#}
-{#                                   $("#" + value.table_name).css("background-color", value.color);#}
-{#                               }#}
-{#                               else#}
-{#                               {#}
-{#                                   $("#" + value.table_name).css("background-color", "#C0C0C0");#}
-{#                               }#}
-{#                           }#}
-{#                        });#}
-{#                    });#}
-{#                })#}
-{#                .error(function(err){#}
-{#                    alert("error");#}
-{#                });#}
-{#            })#}
-{#            .done(function() {#}
-{#                //change css of sublayers that have polygons#}
-{#                $.each(tableArr, function (key, value) {#}
-{#                    var sql = new cartodb.SQL({ user: value. });#}
-{##}
-{#                    $.getJSON("http://unhcr.cartodb.com/api/v2/sql?q=SELECT%20the_geom%20FROM%20" + value.table_name +#}
-{#                                "%20WHERE%20cartodb_id=1&format=GeoJSON", function (cartodata) {#}
-{#                        $.each(cartodata.features, function (key1, val1) {#}
-{#                            //check if table is a polygon or point type#}
-{#                            if (val1.geometry.type == "MultiPolygon" || val1.geometry.type == "Polygon") {#}
-{#                                cartoSubLayers[key].setCartoCSS('#' + value.table_name + '{ polygon-fill: ' + color.toString() +#}
-{#                                '; polygon-opacity: 0.3; line-color: #FFF; line-width: 1; line-opacity: 0.5; }');#}
-{#                            }#}
-{#                        });#}
-{#                    });#}
-{#                });#}
-{#            });#}
-{#        }#}
 
         function GatewayGetData(id){
             if(id==''){
@@ -2011,7 +1954,10 @@
                 //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
                 var count = 0;
                 $.each( pca_qry, function( keyq, valueq ) {
-                    var popup_content_start = '<div class="content" id="mytab" style="padding:20px col-md-11">' +
+                    var popup_content_start = "<div class='row col-md-12'><label class='col-md-3 control-label'>Location</label><div id='location_name' class='col-md-9'>" + valueq.location_name + "</div></div>" +
+                                    "<div class='row col-md-12'><label class='col-md-3 control-label'>Type</label><div id='location_type' class='col-md-9'>" + valueq.location_type + "</div></div>" +
+                                    "<div class='row col-md-12'><label class='col-md-8 control-label'>PCAs associated with this location:</label><div id='PCAs' class='col-md-4'>" +  "</div></div>" +
+                            '<div class="content" id="mytab" style="padding:20px col-md-11">' +
                                                 '<div role="tabpanel">';
                     var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
                     var popup_content_tabs = '<div class="tab-content" id="infotabs">';
@@ -2060,19 +2006,9 @@
                     popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
 
                     var RedIcon = L.icon({
-    iconUrl: '../static/img/marker-icon.png'
+                        iconUrl: '../static/img/marker-icon.png'
+                    });
 
-});
-
-
-
-{#                            L.Icon.Default.extend({#}
-{#                        options: {#}
-{#            	            iconUrl: '../static/img/marker-icon.png'#}
-{##}
-{#                        }#}
-{#                    });#}
-                    //var redIcon = new RedIcon();
                     var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
 
 {#                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude)#}
@@ -2087,8 +2023,6 @@
                     marker.bindPopup(popup_content);
                     marker.addTo(map1);
                 });
-                $('#tab0').addClass("active");
-                $('#link0').addClass("active");
 
                 //create tabs in info window
                 $("#myTab a").click(function (e) {
