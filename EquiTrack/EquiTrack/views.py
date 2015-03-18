@@ -2,9 +2,10 @@ __author__ = 'jcranwellward'
 
 from django.views.generic import TemplateView
 
-from partners.models import PCA
-from reports.models import Sector, ResultStructure
-from locations.models import CartoDBTable, GatewayType, Governorate
+from partners.models import PCA, PartnerOrganization, PCASectorOutput
+from reports.models import Sector, ResultStructure, Indicator
+from locations.models import CartoDBTable, GatewayType, Governorate, Region
+from funds.models import Donor
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.core import serializers
@@ -76,7 +77,14 @@ class MapView(TemplateView):
         return {
             'tables': CartoDBTable.objects.all(),
             'gateway_list': GatewayType.objects.all(),
-            'governorate_list': Governorate.objects.all()
+            'governorate_list': Governorate.objects.all(),
+            'sectors_list': Sector.objects.all(),
+            'result_structure_list': ResultStructure.objects.all(),
+            'region_list': Region.objects.all(),
+            'partner_list': PartnerOrganization.objects.all(),
+            'indicator_list': Indicator.objects.all(),
+            'output_list': PCASectorOutput.objects.all(),
+            'donor_list': Donor.objects.all()
         }
 
 
