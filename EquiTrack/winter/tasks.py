@@ -239,7 +239,7 @@ def prepare_manifest():
             total_remaining = 0
             for remaining in get_kits_by_pcode(
                     p_code,
-                    kit_status=['ALLOCATED', 'NOT_DISTRIBUTED']):
+                    kit_status=['ALLOCATED']):
                 site['Remaining ' + remaining['_id']] = remaining['count']
                 total_remaining += remaining['count']
             site['total_remaining'] = total_remaining

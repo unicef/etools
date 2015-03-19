@@ -28,14 +28,14 @@ class LocationView(ListAPIView):
         """
         Return locations with GPS points only
         """
-        status = self.request.DATA.get('status', PCA.ACTIVE)
-        result_structure = self.request.DATA.get('result_structure', None)
-        sector = self.request.DATA.get('sector', None)
-        gateway = self.request.DATA.get('gateway', None)
-        governorate = self.request.DATA.get('governorate', None)
-        donor = self.request.DATA.get('donor', None)
-        partner = self.request.DATA.get('partner', None)
-        district = self.request.DATA.get('district', None)
+        status = self.request.QUERY_PARAMS.get('status', PCA.ACTIVE)
+        result_structure = self.request.QUERY_PARAMS.get('result_structure', None)
+        sector = self.request.QUERY_PARAMS.get('sector', None)
+        gateway = self.request.QUERY_PARAMS.get('gateway', None)
+        governorate = self.request.QUERY_PARAMS.get('governorate', None)
+        donor = self.request.QUERY_PARAMS.get('donor', None)
+        partner = self.request.QUERY_PARAMS.get('partner', None)
+        district = self.request.QUERY_PARAMS.get('district', None)
 
         queryset = self.model.objects.filter(
             pca__status=status,
@@ -44,44 +44,37 @@ class LocationView(ListAPIView):
 
         if gateway is not None:
             queryset = queryset.filter(
-                gateway__id=gateway
+                location__gateway__id=int(gateway)
             )
         if governorate is not None:
             queryset = queryset.filter(
-                governorate__id=governorate
+                governorate__id=int(governorate)
             )
         if district is not None:
             queryset = queryset.filter(
-                district__id=district
+                district__id=int(district)
             )
         if result_structure is not None:
             queryset = queryset.filter(
-                pca__result_structure__id=result_structure
+                pca__result_structure__id=int(result_structure)
             )
         if partner is not None:
             queryset = queryset.filter(
-                pca__partner__id=partner
+                pca__partner__id=int(partner)
             )
         if sector is not None:
             # get the filtered pcas so far
-            pcas = queryset.values_list('pca', flat=True)
-            # get those that contain this sector
-            pcas = PCASector.objects.filter(
-                pca__id__in=pcas,
-                sector__id=sector
-            ).values_list('pca', flat=True)
-            # now filter the current query by the selected ids
             queryset = queryset.filter(
-                pca__id=pcas
+                sector__id=int(sector)
             )
 
         if donor is not None:
             # get the filtered pcas so far
-            pcas = queryset.values_list('pca', flat=True)
+            pcas = queryset.values_list('pca__id', flat=True)
             # get those that contain this donor
             pcas = PCAGrant.objects.filter(
                 pca__id__in=pcas,
-                donor__id=donor
+                donor__id=int(donor)
             ).values_list('pca', flat=True)
             # now filter the current query by the selected ids
             queryset = queryset.filter(
