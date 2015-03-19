@@ -2,12 +2,11 @@ __author__ = 'jcranwellward'
 
 from django.views.generic import TemplateView
 
-from partners.models import PCA
-from reports.models import Sector, ResultStructure
-from locations.models import CartoDBTable, GatewayType, Governorate
-from django.shortcuts import render_to_response
-from django.http import HttpResponse
-from django.core import serializers
+from partners.models import PCA, PartnerOrganization, PCASectorOutput
+from reports.models import Sector, ResultStructure, Indicator
+from locations.models import CartoDBTable, GatewayType, Governorate, Region
+from funds.models import Donor
+
 
 class DashboardView(TemplateView):
 
@@ -76,23 +75,12 @@ class MapView(TemplateView):
         return {
             'tables': CartoDBTable.objects.all(),
             'gateway_list': GatewayType.objects.all(),
-            'governorate_list': Governorate.objects.all()
+            'governorate_list': Governorate.objects.all(),
+            'sectors_list': Sector.objects.all(),
+            'result_structure_list': ResultStructure.objects.all(),
+            'region_list': Region.objects.all(),
+            'partner_list': PartnerOrganization.objects.all(),
+            'indicator_list': Indicator.objects.all(),
+            'output_list': PCASectorOutput.objects.all(),
+            'donor_list': Donor.objects.all()
         }
-
-
-class NikMapView(TemplateView):
-
-    template_name = 'map_nik.html'
-
-    def get_context_data(self, **kwargs):
-        return {'gateway_list': GatewayType.objects.all(),
-                'governorate_list': Governorate.objects.all(),
-                'tables': CartoDBTable.objects.all()
-                }
-
-
-def all_json_governorates(request, gateway):
-    current_gateway = GatewayType.objects.get(id=gateway)
-    gs = Governorate.objects.all().filter(gateway=current_gateway)
-    json_gs = serializers.serialize("json", gs)
-    return HttpResponse(json_gs, mimetype="application/javascript")

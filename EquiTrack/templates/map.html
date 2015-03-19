@@ -96,6 +96,12 @@
         height: 500px;
             height: inherit !important;
     }
+
+    .scrollable-menu {
+        height: auto;
+        max-height: 500px;
+        overflow-x: hidden;
+    }
     </style>
 
 {% endblock %}
@@ -108,17 +114,17 @@
            <div class="row col-md-offset-1" style=" padding-top: 10px;">
             <div class="col-md-2">
                 <div class="btn-group btn-block">
-                    <button id="btn-result-structure" type="button" class="col-md-10 btn btn-info">
+                    <button id="btn-result_structure" type="button" class="col-md-10 btn btn-info">
                        Result Structure
                     </button>
 
                     <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
                          <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu col-md-10" role="menu">
-                            <li><a href="javascript:void(0);" id="result-structure0" onclick="DropdownSelect(this.id);" itemid="0">test1</a></li>
-                            <li><a href="javascript:void(0);" id="result-structure1" onclick="DropdownSelect(this.id);" itemid="1">test2</a></li>
-                            <li><a href="javascript:void(0);" id="result-structure2" onclick="DropdownSelect(this.id);" itemid="2">test3</a></li>
+                    <ul class="dropdown-menu scrollable-menu" role="menu">
+                        {% for result_structure in result_structure_list %}
+                            <li><a href="javascript:void(0);" id="result_structure{{ result_structure.id }}" onclick="DropdownSelect(this.id);" itemid="{{ result_structure.id }}">{{ result_structure.name }}</a></li>
+                        {% endfor %}
                     </ul>
                 </div>
             </div>
@@ -131,10 +137,10 @@
                     <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
                          <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu col-md-10" role="menu">
-                            <li><a href="javascript:void(0);" id ="sector1" onclick="DropdownSelect(this.id);" itemid="1">test1</a></li>
-                            <li><a href="javascript:void(0);" id ="sector10" onclick="DropdownSelect(this.id);" itemid="10">test10</a></li>
-                            <li><a href="javascript:void(0);" id ="sector100" onclick="DropdownSelect(this.id);" itemid="100">test100</a></li>
+                    <ul class="dropdown-menu scrollable-menu" role="menu">
+                        {% for sector in sectors_list %}
+                            <li><a href="javascript:void(0);" id="sector{{ sector.id }}" onclick="DropdownSelect(this.id);" itemid="{{ sector.id }}">{{ sector.name }}</a></li>
+                        {% endfor %}
                     </ul>
                 </div>
             </div>
@@ -148,7 +154,7 @@
                          <span class="caret"></span>
                     </button>
 
-                    <ul class="dropdown-menu col-md-10" role="menu" id="gateway_ul">
+                    <ul class="dropdown-menu scrollable-menu" role="menu" id="gateway_ul">
                         {% for gateway in gateway_list %}
                             <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="DropdownSelect(this.id);" itemid="{{ gateway.id }}">{{ gateway.name }}</a></li>
                         {% endfor %}
@@ -165,28 +171,43 @@
                     <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
                          <span class="caret"></span>
                     </button>
-                    <ul class="dropdown-menu col-md-10" role="menu" id="governorate_ul">
-
+                    <ul class="dropdown-menu scrollable-menu" role="menu" id="governorate_ul">
+                       {% for governorate in governorate_list %}
+                            <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="DropdownSelect(this.id);" itemid="{{ governorate.id }}">{{ governorate.name }}</a></li>
+                        {% endfor %}
                     </ul>
+                </div>
+            </div>
+            <div class="col-md-2 col-md-offset-2">
+                <div class="btn-group btn-block">
+                    <button id="btn-submit" type="button" class="col-md-5 btn btn-warning" onclick="SubmitSearch();">
+                       Submit
+                    </button>
+                    <button id="btn-clear" type="button" class="col-md-5 btn btn-danger" onclick="ClearButtonClick();">
+                       Clear
+                    </button>
                 </div>
             </div>
 
             </div>
+
+            <!-- new row -->
             <div class="row col-md-offset-1">
                 <div class="col-md-2">
                     <div class="btn-group btn-block">
-                        <button id="btn-district" type="button" class="col-md-10 btn btn-info">
-                           District
+                        <button id="btn-status" type="button" class="col-md-10 btn btn-info">
+                           Status
                         </button>
 
-                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
+                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown" type="=button">
                              <span class="caret"></span>
                         </button>
-                        <ul class="dropdown-menu col-md-10" role="menu">
-                                <li><a href="test1.html">test1</a></li>
-                                <li><a href="test2.html">test2</a></li>
-                                <li><a href="test3.html">test3</a></li>
-                        </ul>
+                            <ul class="dropdown-menu scrollable-menu" role="menu">
+                                    <li><a href="javascript:void(0);" id="status0" onclick="DropdownSelect(this.id);" itemid="0">IN_PROCESS</a></li>
+                                    <li><a href="javascript:void(0);" id="status1" onclick="DropdownSelect(this.id);" itemid="1">ACTIVE</a></li>
+                                    <li><a href="javascript:void(0);" id="status2" onclick="DropdownSelect(this.id);" itemid="2">IMPLEMENTED</a></li>
+                                    <li><a href="javascript:void(0);" id="status3" onclick="DropdownSelect(this.id);" itemid="3">CANCELLED</a></li>
+                            </ul>
                     </div>
                 </div>
                <div class="col-md-2">
@@ -198,10 +219,10 @@
                         <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
                              <span class="caret"></span>
                         </button>
-                        <ul class="dropdown-menu col-md-10" role="menu">
-                                <li><a href="test1.html">test1</a></li>
-                                <li><a href="test2.html">test2</a></li>
-                                <li><a href="test3.html">test3</a></li>
+                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                           {% for donor in donor_list %}
+                                <li><a href="javascript:void(0);" id="donor{{ donor.id }}" onclick="DropdownSelect(this.id);" itemid="{{ donor.id }}">{{ donor.name }}</a></li>
+                            {% endfor %}
                         </ul>
                     </div>
                 </div>
@@ -214,30 +235,32 @@
                         <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
                              <span class="caret"></span>
                         </button>
-                        <ul class="dropdown-menu col-md-10" role="menu">
-                                <li><a href="test1.html">test1</a></li>
-                                <li><a href="test2.html">test2</a></li>
-                                <li><a href="test3.html">test3</a></li>
+                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                           {% for partner in partner_list %}
+                                <li><a href="javascript:void(0);" id="partner{{ partner.id }}" onclick="DropdownSelect(this.id);" itemid="{{ partner.id }}">{{ partner.name }}</a></li>
+                            {% endfor %}
                         </ul>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="btn-group btn-block">
-                        <button id="btn-status" type="button" class="col-md-10 btn btn-success">
-                           Status
+                        <button id="btn-district" type="button" class="col-md-10 btn btn-success">
+                           District
                         </button>
 
-                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
+                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
                              <span class="caret"></span>
                         </button>
-                            <ul class="dropdown-menu col-md-10" role="menu">
-                                    <li><a href="test1.html">ACTIVE</a></li>
-                                    <li><a href="test2.html">IMPLEMENTED</a></li>
-                                    <li><a href="test3.html">CANCELLED</a></li>
-                            </ul>
+                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                           {% for district in region_list %}
+                                <li><a href="javascript:void(0);" id="district{{ district.id }}" onclick="DropdownSelect(this.id);" itemid="{{ district.id }}">{{ district.name }}</a></li>
+                            {% endfor %}
+                        </ul>
                     </div>
                 </div>
             </div>
+
+        <!-- new row -->
             <div class="row col-md-11 col-md-offset-1" style="display:block">
                 <div id="accordion" class="panel-group">
                     <div class="panel panel-default">
@@ -248,7 +271,7 @@
                         </div>
                          <div id="collapseOne" class="panel-collapse collapse">
                             <div class="panel-body">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="btn-group btn-block">
                                         <button id="btn-indicator" type="button" class="col-md-10 btn btn-info">
                                            Indicator
@@ -257,14 +280,14 @@
                                         <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
                                              <span class="caret"></span>
                                         </button>
-                                        <ul class="dropdown-menu col-md-10" role="menu">
-                                                <li><a href="test1.html">test1</a></li>
-                                                <li><a href="test2.html">test2</a></li>
-                                                <li><a href="test3.html">test3</a></li>
+                                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                                           {% for indicator in indicator_list %}
+                                                <li><a href="javascript:void(0);" id="indicator{{ indicator.id }}" onclick="DropdownSelect(this.id);" itemid="{{ indicator.id }}">{{ indicator.name }}</a></li>
+                                            {% endfor %}
                                         </ul>
                                     </div>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <div class="btn-group btn-block">
                                         <button id="btn-output" type="button" class="col-md-10 btn btn-success">
                                            Output
@@ -273,10 +296,10 @@
                                         <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
                                              <span class="caret"></span>
                                         </button>
-                                        <ul class="dropdown-menu col-md-10" role="menu">
-                                                <li><a href="test1.html">test1</a></li>
-                                                <li><a href="test2.html">test2</a></li>
-                                                <li><a href="test3.html">test3</a></li>
+                                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                                           {% for output in output_list %}
+                                                <li><a href="javascript:void(0);" id="output{{ output.id }}" onclick="DropdownSelect(this.id);" itemid="{{ output.id }}">{{ output.name }}</a></li>
+                                            {% endfor %}
                                         </ul>
                                     </div>
                                 </div>
@@ -305,7 +328,6 @@
                          </div>
                     </div>
                 </div>
-
             </div>
             <div class="row">
                 <div class="col-md-12">
@@ -351,7 +373,67 @@
             var itemId = $('#' + id).attr('itemid');
             var btnId = "btn-" + id.substring(0, id.indexOf(itemId));
             $('#' + btnId).html(selectVal);
-            //alert(btnId);
+
+            //get the current color class and set the background of selected item
+            var colorClass = '';
+            var arr =  $('#' + btnId).attr('class').split(" ");
+
+            for (var i = 0; i < arr.length; i++){
+                if(arr[i].indexOf("btn-")>-1){
+                    colorClass = arr[i];
+                    break;
+                }
+            }
+            $('#' + btnId).next().next().find('*').removeClass(colorClass);
+            $('#' + btnId).next().next().find('*').css({"color": ""});
+
+            $('#' + id).addClass(colorClass);
+            $('#' + id).css({"color" : "#fff"})
+        }
+
+        function SubmitSearch(){
+            var resultStructure = $('#btn-result_structure').html();
+            var sector = $('#btn-sector').html();
+            var gateway = $('#btn-gateway').html();
+            var governorate = $('#btn-governorate').html();
+            var status = $('#btn-status').html();
+            var donor = $('#btn-donor').html();
+            var partner = $('#btn-partner').html();
+            var district = $('#btn-district').html();
+
+            var query='';
+            if(!resultStructure.includes('Result Structure'))
+                query += 'result_structure=' + $("a:contains(" + resultStructure + ")").attr("itemid") + '&';
+
+            if(!sector.includes('Sector'))
+                query += 'sector=' + $("a:contains(" + sector + ")").attr("itemid") + '&';
+
+            if(!gateway.includes('Gateways'))
+                query += 'gateway=' + $("a:contains(" + gateway + ")").attr("itemid") + '&';
+
+            if(!governorate.includes('Governorate'))
+                query += 'governorate=' + $("a:contains(" + governorate + ")").attr("itemid") + '&';
+
+            if(!status.includes('Status'))
+                query += 'status=' + $("a:contains(" + status + ")").html().toLowerCase() + '&';
+
+            if(!donor.includes('Donor'))
+                query += 'donor=' + $("a:contains(" + donor + ")").attr("itemid") + '&';
+
+            if(!partner.includes('Partner'))
+                query += 'partner=' + $("a:contains(" + partner + ")").attr("itemid") + '&';
+
+            if(!district.includes('District'))
+                query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';
+
+            history.pushState(query, "", "/map/?" + query);
+            console.log(query);
+
+        }
+
+        function ClearButtonClick(){
+            history.replaceState("", "", "/map/");
+            location.reload();
         }
 
         //sample PCA json function
@@ -1840,13 +1922,13 @@
         var sublayer;
         var table;
         var uniqueID;
-        var sublayerArr = [];
+        //var sublayerArr = [];
         var subLayerOptions = '[';
         var count = 0;
         var tableArr = [];
-        var cartoSubLayers = [];
-        var color;
-        var layers = {};
+        //var cartoSubLayers = [];
+        var color="";
+        //var layers = {};
 
         function main(map, options) {
             map1=map;
@@ -1854,14 +1936,14 @@
             //get all cartodb tables from equitrack and pull data from CartoDB
             $.getJSON("{% url 'cartodbtables' %}", function (data) {
                 $.each(data, function (key, val) {
-                    tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color});
                     $.getJSON(
                             "https://"+ val.domain +".cartodb.com/api/v2/sql?q=SELECT * FROM " + val.table_name +
                             "&format=GeoJSON&api_key=" + val.api_key
                     )
                     .done(function (data) {
                         var newlayer;
-                        var color = getRandomColor();
+                        color = val.color;
+                        tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color});
                         if (data.features[0].geometry != null) {
                             if (data.features[0].geometry.type == "MultiPolygon" || data.features[0].geometry.type == "Polygon") {
                                 newlayer = L.geoJson(data, {
@@ -1913,19 +1995,23 @@
                                 }
                              });
                         }
-
-
+                        //console.log(JSON.stringify(data));
                         layer_control.addOverlay(newlayer, val.table_name);
-                                //alert($("span:contains(val.table_name)").html());
-                        //$("span:contains(val.table_name)").parent().css({"background-color": color, "opacity": "0.3"});
-                        UpdateMap();
+                        $.each(tableArr, function(keyt,valt) {
+                            //alert($("span:contains(" + valt.table_name + ")").html());
+                            $("span:contains(" + valt.table_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
+                            $("span:contains(" + valt.table_name + ")").css("color", "#fff");
+                        });
                     })
                     .error(function (errors) {
                         // errors contains a list of errors
                         console.log("errors:" + errors);
                     });
                 });
+                $('.leaflet-top.leaflet-right').prepend('<div>Select Layers</div>');
             });
+
+            UpdateMap();
         }
 
         function GatewayGetData(id){
@@ -1950,12 +2036,13 @@
                 //getting all pcodes and creating SQL statement
         function UpdateMap(){
            // $.each(tableArr, function (key, val){
+            var layerGr = new L.layerGroup();
                 var pca_qry = getObjects(pca_locations1, 'gateway_id', '9');
                 //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
                 var count = 0;
                 $.each( pca_qry, function( keyq, valueq ) {
                     var popup_content_start = "<div class='row col-md-12'><label class='col-md-3 control-label'>Location</label><div id='location_name' class='col-md-9'>" + valueq.location_name + "</div></div>" +
-                                    "<div class='row col-md-12'><label class='col-md-3 control-label'>Type</label><div id='location_type' class='col-md-9'>" + valueq.location_type + "</div></div>" +
+                                    "<div class='row col-md-12'><label class='col-md-3 control-label'>Gateway</label><div id='location_type' class='col-md-9'>" + valueq.location_type + "</div></div>" +
                                     "<div class='row col-md-12'><label class='col-md-8 control-label'>PCAs associated with this location:</label><div id='PCAs' class='col-md-4'>" +  "</div></div>" +
                             '<div class="content" id="mytab" style="padding:20px col-md-11">' +
                                                 '<div role="tabpanel">';
@@ -1968,7 +2055,6 @@
                             popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
                             "<div class='row'>" +
                                 "<div class='row col-md-12'><label class='col-md-3 control-label'>Title</label><div id='pca_title' class='col-md-9'>" + valuep.pca_title + "</div></div>" +
-                                "<div class='row col-md-12'><label class='col-md-3 control-label'>Gateway</label><div id='gateway_name' class='col-md-9'>" + valuep.gateway_name + "</div></div>" +
                                 "<div class='row col-md-12'><label class='col-md-3 control-label'>Partner</label><div id='partner_name' class='col-md-9'>" + valuep.partner_name + "</div></div>" +
                                 "<div class='row col-md-12'><label class='col-md-10 control-label'>Results by Sector:</label><div id='partner_name' class='col-md-2'></div></div>" +
                             "</div>";
@@ -1998,7 +2084,7 @@
                                 popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div> </div>';
 
                             popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
-                            console.log(popup_content_tabs);
+                            //console.log(popup_content_tabs);
                             });
                     });
                     popup_content_navs += '</ul>';
@@ -2008,8 +2094,10 @@
                     var RedIcon = L.icon({
                         iconUrl: '../static/img/marker-icon.png'
                     });
-
                     var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
+                    marker.bindPopup(popup_content);
+                    layerGr.addLayer(marker);
+
 
 {#                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude)#}
 {#                            , {#}
@@ -2020,9 +2108,12 @@
 {#                        })#}
 {#                    });#}
                     //var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: redMarker});
-                    marker.bindPopup(popup_content);
-                    marker.addTo(map1);
+
+                    //marker.addTo(map1);
                 });
+                layer_control.addOverlay(layerGr, "Search Results");
+                layerGr.addTo(map1);
+                console.log(JSON.stringify(layerGr.toGeoJSON()));
 
                 //create tabs in info window
                 $("#myTab a").click(function (e) {
@@ -2032,8 +2123,6 @@
                 });
            // });
         }
-
-
 
     </script>
 
