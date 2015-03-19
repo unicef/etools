@@ -6,7 +6,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.parsers import FormParser
-from rest_framework.renderers import JSONPRenderer
 
 from partners.models import FACE
 from locations.models import Location
@@ -14,13 +13,10 @@ from .serializers import LocationSerializer, RapidProRequest
 
 from partners.models import (
     PCA,
+    PCAGrant,
+    PCASector,
     GwPCALocation
 )
-
-
-class PartnersView(ListAPIView):
-    model = PCA
-    renderer_classes = (JSONPRenderer,)
 
 
 class LocationView(ListAPIView):
@@ -32,10 +28,67 @@ class LocationView(ListAPIView):
         """
         Return locations with GPS points only
         """
-        pca_locs = self.model.objects.filter(
-            pca__status=PCA.ACTIVE,
+        status = self.request.DATA.get('status', PCA.ACTIVE)
+        result_structure = self.request.DATA.get('result_structure', None)
+        sector = self.request.DATA.get('sector', None)
+        gateway = self.request.DATA.get('gateway', None)
+        governorate = self.request.DATA.get('governorate', None)
+        donor = self.request.DATA.get('donor', None)
+        partner = self.request.DATA.get('partner', None)
+        district = self.request.DATA.get('district', None)
+
+        queryset = self.model.objects.filter(
+            pca__status=status,
             location__point__isnull=False
-        ).values_list('location', flat=True)
+        )
+
+        if gateway is not None:
+            queryset = queryset.filter(
+                gateway__id=gateway
+            )
+        if governorate is not None:
+            queryset = queryset.filter(
+                governorate__id=governorate
+            )
+        if district is not None:
+            queryset = queryset.filter(
+                district__id=district
+            )
+        if result_structure is not None:
+            queryset = queryset.filter(
+                pca__result_structure__id=result_structure
+            )
+        if partner is not None:
+            queryset = queryset.filter(
+                pca__partner__id=partner
+            )
+        if sector is not None:
+            # get the filtered pcas so far
+            pcas = queryset.values_list('pca', flat=True)
+            # get those that contain this sector
+            pcas = PCASector.objects.filter(
+                pca__id__in=pcas,
+                sector__id=sector
+            ).values_list('pca', flat=True)
+            # now filter the current query by the selected ids
+            queryset = queryset.filter(
+                pca__id=pcas
+            )
+
+        if donor is not None:
+            # get the filtered pcas so far
+            pcas = queryset.values_list('pca', flat=True)
+            # get those that contain this donor
+            pcas = PCAGrant.objects.filter(
+                pca__id__in=pcas,
+                donor__id=donor
+            ).values_list('pca', flat=True)
+            # now filter the current query by the selected ids
+            queryset = queryset.filter(
+                pca__id=pcas
+            )
+
+        pca_locs = queryset.values_list('location', flat=True)
         locs = Location.objects.filter(
             id__in=pca_locs
         )
