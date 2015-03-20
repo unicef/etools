@@ -456,7 +456,7 @@
 
         function main(map, options) {
             map1=map;
-            layer_control = L.control.layers().addTo(map);
+            var layer_control = L.control.layers().addTo(map);
             //get all cartodb tables from equitrack and pull data from CartoDB
             $.getJSON("{% url 'cartodbtables' %}", function (data) {
                 $.each(data, function (key, val) {
@@ -621,19 +621,6 @@
                     var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
                     marker.bindPopup(popup_content);
                     layerGr.addLayer(marker);
-
-
-{#                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude)#}
-{#                            , {#}
-{#                        icon: L.AwesomeMarkers.icon({#}
-{#                            icon: 'building-o',#}
-{#                            prefix: 'fa',#}
-{#                            markerColor: 'blue'#}
-{#                        })#}
-{#                    });#}
-                    //var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: redMarker});
-
-                    //marker.addTo(map1);
                 });
                 layer_control.addOverlay(layerGr, "Search Results");
                 layerGr.addTo(map1);
