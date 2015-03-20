@@ -64,8 +64,15 @@ class LocationView(ListAPIView):
             )
         if sector is not None:
             # get the filtered pcas so far
-            queryset = queryset.filter(
+            pcas = queryset.values_list('pca__id', flat=True)
+            # get those that contain this sector
+            pcas = PCASector.objects.filter(
+                pca__in=pcas,
                 sector__id=int(sector)
+            ).values_list('pca__id', flat=True)
+            # now filter the current query by the selected ids
+            queryset = queryset.filter(
+                pca__id__in=pcas
             )
 
         if donor is not None:
@@ -78,7 +85,7 @@ class LocationView(ListAPIView):
             ).values_list('pca', flat=True)
             # now filter the current query by the selected ids
             queryset = queryset.filter(
-                pca__id=pcas
+                pca__id__in=pcas
             )
 
         pca_locs = queryset.values_list('location', flat=True)
