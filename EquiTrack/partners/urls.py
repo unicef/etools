@@ -6,8 +6,6 @@ from .views import (
     LocationView,
     ValidatePCANumberView,
     CreateFACERequestView,
-    PartnersView
-
 )
 
 
