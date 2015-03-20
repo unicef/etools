@@ -83,6 +83,7 @@ class LocalityAdmin(LeafletGeoAdmin):
 
 
 class CartoDBTableAdmin(admin.ModelAdmin):
+    save_as = True
     list_display = (
         'table_name',
         'location_type',

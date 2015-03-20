@@ -190,6 +190,9 @@ class CartoDBTable(models.Model):
     pcode_col = models.CharField(max_length=254, default='pcode')
     parent_code_col = models.CharField(max_length=254, null=True, blank=True)
 
+    def __unicode__(self):
+        return self.table_name
+
     def update_sites_from_cartodb(self):
 
         client = CartoDBAPIKey(self.api_key, self.domain)
@@ -221,6 +224,8 @@ class CartoDBTable(models.Model):
                     sites_not_added += 1
                     continue
 
+                parent_code = None
+                parent_instance = None
                 if self.parent_code_col and parent:
                     try:
                         parent_code = row[self.parent_code_col]
@@ -240,7 +245,7 @@ class CartoDBTable(models.Model):
                         'p_code': pcode,
                         'gateway': self.location_type
                     }
-                    if parent:
+                    if parent and parent_instance:
                         create_args[parent.__name__.lower()] = parent_instance
                     location, created = level.objects.get_or_create(**create_args)
                 except level.MultipleObjectsReturned:
