@@ -81,7 +81,7 @@ class LocationView(ListAPIView):
             # get those that contain this donor
             pcas = PCAGrant.objects.filter(
                 pca__id__in=pcas,
-                donor__id=int(donor)
+                grant__donor__id=int(donor)
             ).values_list('pca', flat=True)
             # now filter the current query by the selected ids
             queryset = queryset.filter(
