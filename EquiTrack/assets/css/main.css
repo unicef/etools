@@ -87,12 +87,12 @@ img {
   color: #fff;
   font-size: 1.7em;
   text-transform: uppercase;
-  padding: 12px 0 0 35px;
+  padding: 12px 0 0 25px;
   display: inline-block;
 }
 
 #header .logoimg {
-    margin: 0px 0px 10px -115px;
+    margin: 0px 0px 10px 5px;
 }
 #header .logo span {
   font-weight: 700;

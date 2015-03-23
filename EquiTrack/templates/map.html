@@ -102,6 +102,38 @@
         max-height: 500px;
         overflow-x: hidden;
     }
+
+    /* Start by setting display:none to make this hidden.
+   Then we position it in relation to the viewport window
+   with position:fixed. Width, height, top and left speak
+   speak for themselves. Background we set to 80% white with
+   our animation centered, and no-repeating */
+    .modal {
+        display:    none;
+        position:   fixed;
+        z-index:    1000;
+        top:        0;
+        left:       0;
+        height:     100%;
+        width:      100%;
+        background: rgba( 255, 255, 255, .8 )
+                    url('http://i.stack.imgur.com/FhHRx.gif')
+                    50% 50%
+                    no-repeat;
+    }
+
+    /* When the body has the loading class, we turn
+       the scrollbar off with overflow:hidden */
+    body.loading {
+        overflow: hidden;
+    }
+
+    /* Anytime the body has the loading class, our
+       modal element will be visible */
+    body.loading .modal {
+        display: block;
+    }
+
     </style>
 
 {% endblock %}
@@ -122,6 +154,7 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu">
+                        <li><a href="javascript:void(0);" id="result_structure999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
                         {% for result_structure in result_structure_list %}
                             <li><a href="javascript:void(0);" id="result_structure{{ result_structure.id }}" onclick="DropdownSelect(this.id);" itemid="{{ result_structure.id }}">{{ result_structure.name }}</a></li>
                         {% endfor %}
@@ -138,6 +171,7 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu">
+                        <li><a href="javascript:void(0);" id="sector999" onclick="DropdownSelect(this.id);" itemid="999">All Sectors</a></li>
                         {% for sector in sectors_list %}
                             <li><a href="javascript:void(0);" id="sector{{ sector.id }}" onclick="DropdownSelect(this.id);" itemid="{{ sector.id }}">{{ sector.name }}</a></li>
                         {% endfor %}
@@ -155,6 +189,7 @@
                     </button>
 
                     <ul class="dropdown-menu scrollable-menu" role="menu" id="gateway_ul">
+                        <li><a href="javascript:void(0);" id="gateway999" onclick="DropdownSelect(this.id);" itemid="999">All Gateways</a></li>
                         {% for gateway in gateway_list %}
                             <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="DropdownSelect(this.id);" itemid="{{ gateway.id }}">{{ gateway.name }}</a></li>
                         {% endfor %}
@@ -172,7 +207,8 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu" id="governorate_ul">
-                       {% for governorate in governorate_list %}
+                       <li><a href="javascript:void(0);" id="governorate999" onclick="DropdownSelect(this.id);" itemid="999">All Governorates</a></li>
+                        {% for governorate in governorate_list %}
                             <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="DropdownSelect(this.id);" itemid="{{ governorate.id }}">{{ governorate.name }}</a></li>
                         {% endfor %}
                     </ul>
@@ -203,6 +239,7 @@
                              <span class="caret"></span>
                         </button>
                             <ul class="dropdown-menu scrollable-menu" role="menu">
+                                    <li><a href="javascript:void(0);" id="status999" onclick="DropdownSelect(this.id);" itemid="999">All Statuses</a></li>
                                     <li><a href="javascript:void(0);" id="status0" onclick="DropdownSelect(this.id);" itemid="0">IN_PROCESS</a></li>
                                     <li><a href="javascript:void(0);" id="status1" onclick="DropdownSelect(this.id);" itemid="1">ACTIVE</a></li>
                                     <li><a href="javascript:void(0);" id="status2" onclick="DropdownSelect(this.id);" itemid="2">IMPLEMENTED</a></li>
@@ -220,6 +257,7 @@
                              <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="donor999" onclick="DropdownSelect(this.id);" itemid="999">All Donors</a></li>
                            {% for donor in donor_list %}
                                 <li><a href="javascript:void(0);" id="donor{{ donor.id }}" onclick="DropdownSelect(this.id);" itemid="{{ donor.id }}">{{ donor.name }}</a></li>
                             {% endfor %}
@@ -236,6 +274,7 @@
                              <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="partner999" onclick="DropdownSelect(this.id);" itemid="999">All Partners</a></li>
                            {% for partner in partner_list %}
                                 <li><a href="javascript:void(0);" id="partner{{ partner.id }}" onclick="DropdownSelect(this.id);" itemid="{{ partner.id }}">{{ partner.name }}</a></li>
                             {% endfor %}
@@ -252,6 +291,7 @@
                              <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="district999" onclick="DropdownSelect(this.id);" itemid="999">All Districts</a></li>
                            {% for district in region_list %}
                                 <li><a href="javascript:void(0);" id="district{{ district.id }}" onclick="DropdownSelect(this.id);" itemid="{{ district.id }}">{{ district.name }}</a></li>
                             {% endfor %}
@@ -342,6 +382,7 @@
                     </div>
                 </div>
             </div>
+        <div id="loading" class="modal"></div>
         </section>
     </section>
 
@@ -372,7 +413,12 @@
             var selectVal = $('#' + id).html();
             var itemId = $('#' + id).attr('itemid');
             var btnId = "btn-" + id.substring(0, id.indexOf(itemId));
-            $('#' + btnId).html(selectVal);
+            //if(itemId != '999'){
+                $('#' + btnId).html(selectVal);
+           // }
+            //else{ //all is clicked
+                 //$('#' + btnId).html('Result Structure');
+            //}
 
             //get the current color class and set the background of selected item
             var colorClass = '';
@@ -427,9 +473,20 @@
                 query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';
 
             history.pushState(query, "", "/map/?" + query);
-            console.log(query);
+            //console.log(query);
+            //alert("{% url 'locations' %}?" + query);
+            $.getJSON("{% url 'locations' %}?" + query, function (data) {
+                UpdateMap(data);
+            }).done({
 
+            });
         }
+
+        $(document).ajaxStart(function(){
+            $('#loading').show();
+        }).ajaxStop(function(){
+            $('#loading').hide();
+        });
 
         function ClearButtonClick(){
             history.replaceState("", "", "/map/");
@@ -453,10 +510,12 @@
         var count = 0;
         var tableArr = [];
         var color="";
+        var searchLayerArr = [];
+        var markerColors = ['red', 'darkred', 'orange', 'green', 'darkgreen', 'blue', 'purple', 'darkpuple', 'cadetblue'];
 
         function main(map, options) {
             map1=map;
-            var layer_control = L.control.layers().addTo(map);
+            layer_control = L.control.layers().addTo(map);
             //get all cartodb tables from equitrack and pull data from CartoDB
             $.getJSON("{% url 'cartodbtables' %}", function (data) {
                 $.each(data, function (key, val) {
@@ -467,7 +526,7 @@
                     .done(function (data) {
                         var newlayer;
                         color = val.color;
-                        tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color});
+                          tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color, display_name: val.display_name});
                         if (data.features[0].geometry != null) {
                             if (data.features[0].geometry.type == "MultiPolygon" || data.features[0].geometry.type == "Polygon") {
                                 newlayer = L.geoJson(data, {
@@ -519,12 +578,12 @@
                                 }
                              });
                         }
-                        //console.log(JSON.stringify(data));
-                        layer_control.addOverlay(newlayer, val.table_name);
+                        layer_control.addOverlay(newlayer, val.display_name);
+
                         $.each(tableArr, function(keyt,valt) {
                             //alert($("span:contains(" + valt.table_name + ")").html());
-                            $("span:contains(" + valt.table_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
-                            $("span:contains(" + valt.table_name + ")").css("color", "#fff");
+                            $("span:contains(" + valt.display_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
+                            $("span:contains(" + valt.display_name + ")").css("color", "#fff");
                         });
                     })
                     .error(function (errors) {
@@ -538,38 +597,18 @@
             UpdateMap();
         }
 
-        function GatewayGetData(id){
-            if(id==''){
-
-            }
-            else{
-                var rowId = id.substring(id.length-1);
-                var url = "/nikmap/" + rowId + "/all_json_governorates";
-                $.getJSON(url, function (governorates) {
-                     var options = '';
-                     for (var i = 0; i < governorates.length; i++) {
-                        options += '<li><a href="javascript:void(0);" id="governorate' + governorates[i].pk + '" onclick="GovernorateGetData(this.id);">' + governorates[i].fields['name'] + '</a></li>';
-                     }
-                     $("#governorate_ul").html(options);
+        function UpdateMap(pca_locations1){
+                //remove previous search layer
+                $.each(searchLayerArr, function(keys,vals) {
+                    map1.removeLayer(vals);
                 });
-            }
-            UpdateMap();
-        }
-
-        //getting all pcodes and creating SQL statement
-                //getting all pcodes and creating SQL statement
-        function UpdateMap(){
-           // $.each(tableArr, function (key, val){
-            var layerGr = new L.layerGroup();
-                var pca_qry = getObjects(pca_locations1, 'gateway_id', '9');
-                //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
-                var count = 0;
-                $.each( pca_qry, function( keyq, valueq ) {
+                var layerGr = new L.layerGroup();
+                $.each( pca_locations1, function( keyq, valueq ) {
                     var popup_content_start = "<div class='row col-md-12'><label class='col-md-3 control-label'>Location</label><div id='location_name' class='col-md-9'>" + valueq.location_name + "</div></div>" +
                                     "<div class='row col-md-12'><label class='col-md-3 control-label'>Gateway</label><div id='location_type' class='col-md-9'>" + valueq.location_type + "</div></div>" +
                                     "<div class='row col-md-12'><label class='col-md-8 control-label'>PCAs associated with this location:</label><div id='PCAs' class='col-md-4'>" +  "</div></div>" +
                             '<div class="content" id="mytab" style="padding:20px col-md-11">' +
-                                                '<div role="tabpanel">';
+                                                '';
                     var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
                     var popup_content_tabs = '<div class="tab-content" id="infotabs">';
                     var popup_content='';
@@ -598,33 +637,86 @@
                                 $.each( valueSec.indicators, function( keyi, valuei ) {
                                     popup_content_tabs_indicator +=
                                                                         '<div class="panel-body">' +
-                                                                            '<a href=""><span class="sublabel">' + valuei.indicator+ '</span></a>' +                                                                        '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
+                                                                            '<a href=""><span class="sublabel">' + valuei.indicator+ '</span></a>' + '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
                                                                             '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
                                                                             '<div class="progress progress-striped">' +
-                                                                                '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current/valuei.programmed*100 +'%">' + valuei.current/valuei.programmed*100 + '% </div>' +
+                                                                                '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current/valuei.programmed*100 +'%">' + (valuei.current/valuei.programmed*100).toFixed(1) + '% </div>' +
                                                                             '</div>' +
                                                                         '</div>';
                                 });
-                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div> </div>';
+                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div>';
 
-                            popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
-                            //console.log(popup_content_tabs);
+                                popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
+
                             });
+                            popup_content_tabs += '</div>';
                     });
                     popup_content_navs += '</ul>';
-                    popup_content_tabs += '</div>';
                     popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
+                    console.log(popup_content);
 
                     var RedIcon = L.icon({
                         iconUrl: '../static/img/marker-icon.png'
                     });
-                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
+
+                    //var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
+                    var fIcon = 'building-o';
+
+                    switch(valueq.gateway_id){
+                        case 6: // Collective Shelter
+                            fIcon = 'home';
+                            break;
+                        case 2: //Community Center
+                            fIcon = 'building-o';
+                            break;
+                        case 5: //Informal Tented Settlement
+                            fIcon = 'home';
+                            break;
+                        case 8: //Palestinian Camps
+                            fIcon = 'home';
+                            break;
+                        case 4: //Primary Health Care Center
+                            fIcon = 'h-square';
+                            break;
+                        case 1: //School
+                            fIcon = 'book';
+                            break;
+                        case 4: //Social Development Center
+                            fIcon = 'building-o';
+                            break;
+                        case 7: //UNHCR Registration Site
+                            fIcon = 'flag';
+                            break;
+                        case 9: //Village
+                            fIcon = 'home';
+                            break;
+                    }
+
+                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude)
+                            , {
+                        icon: L.AwesomeMarkers.icon({
+                            icon: fIcon,
+                            prefix: 'fa',
+                            markerColor: markerColors[count]
+
+                        })
+                    });
                     marker.bindPopup(popup_content);
                     layerGr.addLayer(marker);
+
                 });
-                layer_control.addOverlay(layerGr, "Search Results");
+                searchLayerArr.push(layerGr);
+                layer_control.addOverlay(layerGr, "<span style='background:" + markerColors[count] + "; color:white;'>Search Results" + searchLayerArr.length + "</span>");
                 layerGr.addTo(map1);
                 console.log(JSON.stringify(layerGr.toGeoJSON()));
+
+                    count++;
+                $.each(tableArr, function(keyt,valt) {
+                    //alert($("span:contains(" + valt.table_name + ")").html());
+                    $("span:contains(" + valt.display_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
+                    $("span:contains(" + valt.display_name + ")").css("color", "#fff");
+                });
+
 
                 //create tabs in info window
                 $("#myTab a").click(function (e) {
@@ -651,5 +743,5 @@
         });
     </script>
 
-
+ <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
 {% endblock %}
