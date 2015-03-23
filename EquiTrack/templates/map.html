@@ -154,6 +154,7 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu">
+                        <li><a href="javascript:void(0);" id="result_structure999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
                         {% for result_structure in result_structure_list %}
                             <li><a href="javascript:void(0);" id="result_structure{{ result_structure.id }}" onclick="DropdownSelect(this.id);" itemid="{{ result_structure.id }}">{{ result_structure.name }}</a></li>
                         {% endfor %}
@@ -170,6 +171,7 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu">
+                        <li><a href="javascript:void(0);" id="sector999" onclick="DropdownSelect(this.id);" itemid="999">All Sectors</a></li>
                         {% for sector in sectors_list %}
                             <li><a href="javascript:void(0);" id="sector{{ sector.id }}" onclick="DropdownSelect(this.id);" itemid="{{ sector.id }}">{{ sector.name }}</a></li>
                         {% endfor %}
@@ -187,6 +189,7 @@
                     </button>
 
                     <ul class="dropdown-menu scrollable-menu" role="menu" id="gateway_ul">
+                        <li><a href="javascript:void(0);" id="gateway999" onclick="DropdownSelect(this.id);" itemid="999">All Gateways</a></li>
                         {% for gateway in gateway_list %}
                             <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="DropdownSelect(this.id);" itemid="{{ gateway.id }}">{{ gateway.name }}</a></li>
                         {% endfor %}
@@ -204,7 +207,8 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu" id="governorate_ul">
-                       {% for governorate in governorate_list %}
+                       <li><a href="javascript:void(0);" id="governorate999" onclick="DropdownSelect(this.id);" itemid="999">All Governorates</a></li>
+                        {% for governorate in governorate_list %}
                             <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="DropdownSelect(this.id);" itemid="{{ governorate.id }}">{{ governorate.name }}</a></li>
                         {% endfor %}
                     </ul>
@@ -235,6 +239,7 @@
                              <span class="caret"></span>
                         </button>
                             <ul class="dropdown-menu scrollable-menu" role="menu">
+                                    <li><a href="javascript:void(0);" id="status999" onclick="DropdownSelect(this.id);" itemid="999">All Statuses</a></li>
                                     <li><a href="javascript:void(0);" id="status0" onclick="DropdownSelect(this.id);" itemid="0">IN_PROCESS</a></li>
                                     <li><a href="javascript:void(0);" id="status1" onclick="DropdownSelect(this.id);" itemid="1">ACTIVE</a></li>
                                     <li><a href="javascript:void(0);" id="status2" onclick="DropdownSelect(this.id);" itemid="2">IMPLEMENTED</a></li>
@@ -252,6 +257,7 @@
                              <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="donor999" onclick="DropdownSelect(this.id);" itemid="999">All Donors</a></li>
                            {% for donor in donor_list %}
                                 <li><a href="javascript:void(0);" id="donor{{ donor.id }}" onclick="DropdownSelect(this.id);" itemid="{{ donor.id }}">{{ donor.name }}</a></li>
                             {% endfor %}
@@ -268,6 +274,7 @@
                              <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="partner999" onclick="DropdownSelect(this.id);" itemid="999">All Partners</a></li>
                            {% for partner in partner_list %}
                                 <li><a href="javascript:void(0);" id="partner{{ partner.id }}" onclick="DropdownSelect(this.id);" itemid="{{ partner.id }}">{{ partner.name }}</a></li>
                             {% endfor %}
@@ -284,6 +291,7 @@
                              <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="district999" onclick="DropdownSelect(this.id);" itemid="999">All Districts</a></li>
                            {% for district in region_list %}
                                 <li><a href="javascript:void(0);" id="district{{ district.id }}" onclick="DropdownSelect(this.id);" itemid="{{ district.id }}">{{ district.name }}</a></li>
                             {% endfor %}
@@ -405,7 +413,12 @@
             var selectVal = $('#' + id).html();
             var itemId = $('#' + id).attr('itemid');
             var btnId = "btn-" + id.substring(0, id.indexOf(itemId));
-            $('#' + btnId).html(selectVal);
+            //if(itemId != '999'){
+                $('#' + btnId).html(selectVal);
+           // }
+            //else{ //all is clicked
+                 //$('#' + btnId).html('Result Structure');
+            //}
 
             //get the current color class and set the background of selected item
             var colorClass = '';
@@ -595,7 +608,7 @@
                                     "<div class='row col-md-12'><label class='col-md-3 control-label'>Gateway</label><div id='location_type' class='col-md-9'>" + valueq.location_type + "</div></div>" +
                                     "<div class='row col-md-12'><label class='col-md-8 control-label'>PCAs associated with this location:</label><div id='PCAs' class='col-md-4'>" +  "</div></div>" +
                             '<div class="content" id="mytab" style="padding:20px col-md-11">' +
-                                                '<div role="tabpanel">';
+                                                '';
                     var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
                     var popup_content_tabs = '<div class="tab-content" id="infotabs">';
                     var popup_content='';
@@ -624,32 +637,65 @@
                                 $.each( valueSec.indicators, function( keyi, valuei ) {
                                     popup_content_tabs_indicator +=
                                                                         '<div class="panel-body">' +
-                                                                            '<a href=""><span class="sublabel">' + valuei.indicator+ '</span></a>' +                                                                        '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
+                                                                            '<a href=""><span class="sublabel">' + valuei.indicator+ '</span></a>' + '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
                                                                             '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
                                                                             '<div class="progress progress-striped">' +
-                                                                                '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current/valuei.programmed*100 +'%">' + valuei.current/valuei.programmed*100 + '% </div>' +
+                                                                                '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current/valuei.programmed*100 +'%">' + (valuei.current/valuei.programmed*100).toFixed(1) + '% </div>' +
                                                                             '</div>' +
                                                                         '</div>';
                                 });
-                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div> </div>';
+                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div>';
 
-                            popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
-                            //console.log(popup_content_tabs);
+                                popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
+
                             });
+                            popup_content_tabs += '</div>';
                     });
                     popup_content_navs += '</ul>';
-                    popup_content_tabs += '</div>';
                     popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
+                    console.log(popup_content);
 
                     var RedIcon = L.icon({
                         iconUrl: '../static/img/marker-icon.png'
                     });
+
                     //var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
+                    var fIcon = 'building-o';
+
+                    switch(valueq.gateway_id){
+                        case 6: // Collective Shelter
+                            fIcon = 'home';
+                            break;
+                        case 2: //Community Center
+                            fIcon = 'building-o';
+                            break;
+                        case 5: //Informal Tented Settlement
+                            fIcon = 'home';
+                            break;
+                        case 8: //Palestinian Camps
+                            fIcon = 'home';
+                            break;
+                        case 4: //Primary Health Care Center
+                            fIcon = 'h-square';
+                            break;
+                        case 1: //School
+                            fIcon = 'book';
+                            break;
+                        case 4: //Social Development Center
+                            fIcon = 'building-o';
+                            break;
+                        case 7: //UNHCR Registration Site
+                            fIcon = 'flag';
+                            break;
+                        case 9: //Village
+                            fIcon = 'home';
+                            break;
+                    }
 
                     var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude)
                             , {
                         icon: L.AwesomeMarkers.icon({
-                            icon: 'building-o',
+                            icon: fIcon,
                             prefix: 'fa',
                             markerColor: markerColors[count]
 
@@ -663,7 +709,8 @@
                 layer_control.addOverlay(layerGr, "<span style='background:" + markerColors[count] + "; color:white;'>Search Results" + searchLayerArr.length + "</span>");
                 layerGr.addTo(map1);
                 console.log(JSON.stringify(layerGr.toGeoJSON()));
-                count++;
+
+                    count++;
                 $.each(tableArr, function(keyt,valt) {
                     //alert($("span:contains(" + valt.table_name + ")").html());
                     $("span:contains(" + valt.display_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
