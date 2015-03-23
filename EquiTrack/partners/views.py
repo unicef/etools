@@ -52,7 +52,7 @@ class LocationView(ListAPIView):
             )
         if district is not None:
             queryset = queryset.filter(
-                district__id=int(district)
+                region__id=int(district)
             )
         if result_structure is not None:
             queryset = queryset.filter(
