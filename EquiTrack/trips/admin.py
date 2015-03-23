@@ -1,5 +1,6 @@
 __author__ = 'jcranwellward'
 
+from django.db.models import Q
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -75,6 +76,26 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
+class TripReportFilter(admin.SimpleListFilter):
+
+    title = 'Report'
+    parameter_name = 'report'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            ('Yes', 'Completed'),
+            ('No', 'Not-Completed'),
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            param = Q(main_observations='')
+            return queryset.filter(param if self.value() == 'No' else ~param)
+        return queryset
+
+
 class TripReportAdmin(ExportMixin, VersionAdmin):
     resource_class = TripResource
     save_as = True  # TODO: There is a bug using this
@@ -115,13 +136,13 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'office',
         u'from_date',
         u'to_date',
-        u'no_pca',
         u'travel_type',
         u'international_travel',
         u'supervisor',
         u'budget_owner',
         u'status',
         u'approved_date',
+        TripReportFilter,
     )
     filter_vertical = (
         u'pcas',
@@ -138,18 +159,18 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                  u'owner',
                  u'supervisor',
                  (u'section', u'office',),
-                 (u'purpose_of_travel', u'monitoring_supply_delivery',),
+                 (u'purpose_of_travel',),
                  (u'from_date', u'to_date',),
                  (u'travel_type', u'travel_assistant',),
-                 u'approved_by_human_resources',
+                 u'security_clearance_required',
                  u'ta_required',
                  u'budget_owner',
                  u'programme_assistant',
                  (u'international_travel', u'representative',),
-                 u'no_pca',)
+                 u'approved_by_human_resources',)
         }),
         (u'PCA Details', {
-            u'classes': (u'collapse', u'suit-tab suit-tab-planning',),
+            u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (u'pcas',
                  u'partners',),

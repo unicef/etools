@@ -445,6 +445,9 @@ class PCA(AdminURLMixin, models.Model):
 
         super(PCA, self).save(**kwargs)
 
+    @classmethod
+    def get_active_partnerships(cls):
+        return cls.objects.filter(current=True, status=cls.ACTIVE)
 
     @classmethod
     def send_changes(cls, sender, instance, created, **kwargs):
