@@ -54,12 +54,20 @@ class Trip(AdminURLMixin, models.Model):
         (CANCELLED, u"Cancelled"),
     )
 
+    PROGRAMME_MONITORING = u'programme_monitoring'
+    ADVOCACY = u'advocacy'
+    TECHNICAL_SUPPORT = u'technical_support'
+    MEETING = u'meeting'
     DUTY_TRAVEL = u'duty_travel'
     HOME_LEAVE = u'home_leave'
     FAMILY_VISIT = u'family_visit'
     EDUCATION_GRANT = u'education_grant'
     STAFF_DEVELOPMENT = u'staff_development'
     TRAVEL_TYPE = (
+        (PROGRAMME_MONITORING, u'PROGRAMME MONITORING'),
+        (ADVOCACY, u'ADVOCACY'),
+        (TECHNICAL_SUPPORT, u'TECHNICAL SUPPORT'),
+        (MEETING, u'MEETING'),
         (DUTY_TRAVEL, u"DUTY TRAVEL"),
         (HOME_LEAVE, u"HOME LEAVE"),
         (FAMILY_VISIT, u"FAMILY VISIT"),
@@ -83,7 +91,11 @@ class Trip(AdminURLMixin, models.Model):
     travel_type = models.CharField(
         max_length=32L,
         choices=TRAVEL_TYPE,
-        default=DUTY_TRAVEL
+        default=PROGRAMME_MONITORING
+    )
+    security_clearance_required = models.BooleanField(
+        default=False,
+        help_text='Do you need security clarance for this trip?'
     )
     international_travel = models.BooleanField(
         default=False,
@@ -91,12 +103,7 @@ class Trip(AdminURLMixin, models.Model):
     )
     from_date = models.DateField()
     to_date = models.DateField()
-    monitoring_supply_delivery = models.BooleanField(default=False)
-    no_pca = models.BooleanField(
-        default=False,
-        verbose_name=u'Not related to a PCA',
-        help_text='Tick this if this trip is not related to partner monitoring'
-    )
+
     pcas = models.ManyToManyField(
         u'partners.PCA',
         blank=True, null=True,
@@ -160,7 +167,8 @@ class Trip(AdminURLMixin, models.Model):
     approved_by_human_resources = models.NullBooleanField(
         default=None,
         choices=BOOL_CHOICES,
-        verbose_name='Certified by human resources')
+        verbose_name='Certified by human resources',
+        help_text='HR must approve all trips relating to training and staff development')
     date_human_resources_approved = models.DateField(blank=True, null=True)
 
     representative = models.ForeignKey(User, related_name='approved_trips', blank=True, null=True)

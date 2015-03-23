@@ -24,7 +24,6 @@ urlpatterns = patterns(
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),
     url(r'trips/', include('trips.urls')),
-    url(r'winter/', include('winter.urls')),
 
     # registration
     # url(r'^activate/complete/$',

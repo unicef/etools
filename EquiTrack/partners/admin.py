@@ -26,6 +26,7 @@ from reports.models import (
 )
 from partners.exports import (
     KMLFormat,
+    DonorsFormat,
     PCAResource,
     PartnerResource,
 )
@@ -280,6 +281,7 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     # Add custom exports
     formats = (
         base_formats.CSV,
+        DonorsFormat,
         KMLFormat,
     )
     date_hierarchy = 'start_date'

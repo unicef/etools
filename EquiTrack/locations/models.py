@@ -33,7 +33,7 @@ class GatewayType(models.Model):
 
 
 class Governorate(models.Model):
-    name = models.CharField(max_length=45L, unique=True)
+    name = models.CharField(max_length=45L)
     p_code = models.CharField(max_length=32L, blank=True, null=True)
     gateway = models.ForeignKey(
         GatewayType,
@@ -54,7 +54,7 @@ class Governorate(models.Model):
 
 class Region(models.Model):
     governorate = models.ForeignKey(Governorate)
-    name = models.CharField(max_length=45L, unique=True)
+    name = models.CharField(max_length=45L)
     p_code = models.CharField(max_length=32L, blank=True, null=True)
     gateway = models.ForeignKey(
         GatewayType,
@@ -154,6 +154,7 @@ class LinkedLocation(models.Model):
         chained_model_field="region",
         show_all=False,
         auto_choose=True,
+        null=True, blank=True
     )
     location = ChainedForeignKey(
         Location,
@@ -196,6 +197,9 @@ class CartoDBTable(models.Model):
     parent_code_col = models.CharField(max_length=254, null=True, blank=True)
     color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
+    def __unicode__(self):
+        return self.table_name
+
     def update_sites_from_cartodb(self):
 
         client = CartoDBAPIKey(self.api_key, self.domain)
@@ -227,6 +231,8 @@ class CartoDBTable(models.Model):
                     sites_not_added += 1
                     continue
 
+                parent_code = None
+                parent_instance = None
                 if self.parent_code_col and parent:
                     try:
                         parent_code = row[self.parent_code_col]
@@ -242,10 +248,11 @@ class CartoDBTable(models.Model):
 
                 try:
                     create_args = {
+                        'name': site_name,
                         'p_code': pcode,
                         'gateway': self.location_type
                     }
-                    if parent:
+                    if parent and parent_instance:
                         create_args[parent.__name__.lower()] = parent_instance
                     location, created = level.objects.get_or_create(**create_args)
                 except level.MultipleObjectsReturned:

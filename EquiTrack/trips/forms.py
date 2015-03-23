@@ -9,6 +9,7 @@ from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget, DateWidget
 
+from partners.models import PCA
 from .models import Trip
 
 
@@ -44,6 +45,10 @@ class TravelRoutesForm(ModelForm):
 
 
 class TripForm(ModelForm):
+
+    def __init__(self, **kwargs):
+        super(TripForm, self).__init__(**kwargs)
+        self.fields['pcas'].queryset = PCA.get_active_partnerships()
 
     class Meta:
         model = Trip
