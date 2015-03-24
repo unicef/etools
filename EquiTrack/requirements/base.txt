@@ -44,5 +44,5 @@ pymongo
 django-datatables-view
 python-dateutil
 unidecode
-GDAL==1.11.1
+#GDAL==1.11.1
 
