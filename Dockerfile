@@ -8,7 +8,7 @@ WORKDIR /code
 ADD . /code/
 RUN pip install -r requirements.txt
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
-RUN python EquiTrack/manage.py collectstatic
+RUN python EquiTrack/manage.py collectstatic --noinput
 # Start everything
 EXPOSE 8080
 ENTRYPOINT newrelic-admin run-program python EquiTrack/manage.py run_gunicorn -b "0.0.0.0:8080" -w 3 --timeout=1200
