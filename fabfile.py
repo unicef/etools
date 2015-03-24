@@ -348,7 +348,5 @@ def deploy_app(migrate=False):
     ))
     if migrate:
         migrate_db()
-    clean_containers()
-    clean_images()
 
 
