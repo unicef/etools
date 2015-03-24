@@ -74,16 +74,20 @@
 
             <div class="row">
                 <div class="col-md-4">
-
                     <div class="btn-group">
                         <button type="button" class="btn btn-info dropdown-toggle" data-toggle="dropdown">
-                            Month: {{ current_month|date:'F Y' }} <span class="caret"></span>
+                            Month: {% if current_month %}{{ current_month|date:'F Y' }}{% else %}All{% endif %}
+                            <span class="caret"></span>
                         </button>
                         <ul class="dropdown-menu" role="menu">
                             {% for month in months %}
                                 <li>
                                     <a href="{% url 'trips_dashboard' %}?month={{ forloop.counter0 }}">
-                                        {{ month|date:'F Y' }}
+                                        {% if month %}
+                                            {{ month|date:'F Y' }}
+                                        {% else %}
+                                            All
+                                        {% endif %}
                                     </a>
                                 </li>
                             {% endfor %}
@@ -94,10 +98,18 @@
                             <button type="button" class="btn btn-success">Add Trip</button>
                         </a>
                     </div>
-
                 </div>
-
             </div>
+
+{#            <div class="row">#}
+{#                <div class="col-md-3">#}
+{#                    <form action="" method="post">#}
+{#                        {% csrf_token %}#}
+{#                        {{ form }}#}
+{#                        <input type="submit" value="Search" class="btn btn-success" />#}
+{#                    </form>#}
+{#                </div>#}
+{#            </div>#}
 
             <div class="row">
                 <div class="col-md-12">
@@ -136,7 +148,7 @@
                                     <th>Section</th>
                                     <th>Total Approved</th>
                                     <th>Total Completed</th>
-                                    <th>Open Actions</th>
+                                    <th>Total Actions</th>
                                     <th>Closed Actions</th>
                                     <th>Percentage</th>
                                     <th>Color</th>

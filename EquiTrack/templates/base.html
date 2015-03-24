@@ -16,12 +16,17 @@
     <link rel="shortcut icon" href="{{ STATIC_URL }}img/favicon.ico" type="image/x-icon">
     <!-- Bootstrap core CSS -->
     <link rel="stylesheet" href="{{ STATIC_URL }}plugins/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}plugins/bootstrap-datepicker/css/datepicker.css">
+    <!-- JQuery UI CSS -->
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/jquery-ui.min.css">
     <!-- Fonts from Font Awsome -->
     <link rel="stylesheet" href="{{ STATIC_URL }}css/font-awesome.min.css">
     <!-- CSS Animate -->
     <link rel="stylesheet" href="{{ STATIC_URL }}css/animate.css">
     <!-- Custom styles for this theme -->
     <link rel="stylesheet" href="{{ STATIC_URL }}css/main.css">
+    <!-- Custom styles for dashboards and map -->
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/dashboard.css">
     <!-- Vector Map  -->
     <link rel="stylesheet" href="{{ STATIC_URL }}plugins/jvectormap/css/jquery-jvectormap-1.2.2.css">
     <!-- ToDos  -->
@@ -50,7 +55,9 @@
         {% block header %}
             <header id="header">
                 <!--logo start-->
+                <div></div>
                 <div class="brand">
+                    <img class="logoimg" src="{{ STATIC_URL }}img/091008_UNICEFLogoWhTrans_3-19-15.png" width="50px" >
                     <a href="{% url 'dashboard' %}" class="logo"><span>Equi</span>Track</a>
                 </div>
                 <!--logo end-->
@@ -100,7 +107,7 @@
                         </li>
                         {% if user.is_authenticated %}
                             <li class="dropdown settings">
-                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                                <a class="dropdown-toggle" data-toggle="dropdown" href="#" style="color: #fff">
                                     {{ user.get_full_name }} <i class="fa fa-angle-down"></i>
                                 </a>
                                 <ul class="dropdown-menu animated fadeInDown">
@@ -136,6 +143,9 @@
                             <a href="{% url 'trips_dashboard' %}"><i class="fa fa-road"></i><span>Trips</span></a>
                         </li>
                         <li>
+                            <a href="{% url 'winter_dashboard' %}"><i class="fa fa-asterisk"></i><span>Winter</span></a>
+                        </li>
+                        <li>
                             <a href="{% url 'admin:tpm_tpmvisit_changelist' %}"><i class="fa fa-calendar"></i><span>TPM Portal</span></a>
                         </li>
                     </ul>
@@ -149,11 +159,27 @@
         {% endblock content %}
         <!--main content end-->
 
+        <!--main content start-->
+        {% block footer %}
+            <footer id="footer">
+                <div class="brand col-md-1">
+                    <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="130px"></a>
+                </div>
+                <div class="col-md-11 brand msg">
+                    <span>© Copyright 2015 UNICEF. All Rights Reserved.</span>
+                </div>
+
+            </footer>
+        {% endblock footer %}
+        <!--main content end-->
+
     </section>
 {% endblock %}
 <!--Global JS-->
 <script src="{{ STATIC_URL }}js/jquery-1.10.2.min.js"></script>
+<script src="{{ STATIC_URL }}js/jquery-ui.min.js"></script>
 <script src="{{ STATIC_URL }}plugins/bootstrap/js/bootstrap.min.js"></script>
+<script src="{{ STATIC_URL }}plugins/bootstrap-datepicker/js/bootstrap-datepicker.js"></script>
 <script src="{{ STATIC_URL }}plugins/waypoints/waypoints.min.js"></script>
 <script src="{{ STATIC_URL }}plugins/nanoScroller/jquery.nanoscroller.min.js"></script>
 <script src="{{ STATIC_URL }}js/application.js"></script>
@@ -187,7 +213,11 @@
 <!-- ToDo List  -->
 <script src="{{ STATIC_URL }}plugins/todo/js/todos.js"></script>
 <!--Load these page level functions-->
-
+<script>
+    $(document).ready(function () {
+        app.timer();
+    });
+</script>
 {% block extra_js %}
 {% endblock %}
 

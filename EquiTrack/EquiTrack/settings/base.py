@@ -147,6 +147,7 @@ USE_TZ = True
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
 MEDIA_ROOT = normpath(join(BASE_DIR, 'media'))
 
+FILER_ALLOW_REGULAR_USERS_TO_ADD_ROOT_FOLDERS = True
 FILER_STORAGES = {
     'public': {
         'main': {

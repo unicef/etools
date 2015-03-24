@@ -1,3 +1,4 @@
+
 __author__ = 'jcranwellward'
 
 import json
@@ -14,7 +15,8 @@ from django.db.models.signals import post_save
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 
-from EquiTrack.utils import get_changeform_link, AdminURLMixin
+from EquiTrack.utils import get_changeform_link
+from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -300,6 +302,8 @@ class PCA(AdminURLMixin, models.Model):
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
+
+
 
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)

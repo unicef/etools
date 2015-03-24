@@ -1,0 +1,800 @@
+{% extends "base.html" %}
+{% load leaflet_tags %}
+
+{% block extra_head %}
+
+    {% leaflet_css %}
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.awesome-markers.css" />
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
+
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
+    <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
+
+    <!--[if lte IE 8]>
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v2/themes/css/cartodb.ie.css" />
+    <![endif]-->
+    <style>
+    html, body {height:100%; padding: 0;}
+    #cartodb-map {height:100%; margin-left: 250px; background: white;}
+    #mapmenu { position: absolute; top: 170px; right: 10px; height:60px; background: transparent; z-index:10;}
+    #mapmenu a {
+      margin: 15px 10px 0 0;
+      float: right;
+      vertical-align: baseline;
+      width: 100px;
+      padding: 10px;
+      text-align: center;
+      font: bold 11px "Helvetica",Arial;
+      line-height: normal;
+      color: #FFF;
+      border-radius: 4px;
+      border: 1px solid #777777;
+      /*background: #ffffff; */
+      text-decoration: none;
+      cursor: pointer;
+    }
+    #mapmenu a.selected {
+       background: #777; }
+    #mapmenu a:hover {
+      color: #f09;
+    }
+
+    blockquote {
+        display: hidden;
+    }
+
+    .leaflet-popup-content{
+        min-width: 300px !important;
+        width: inherit !important;
+    }
+
+    /*
+    Used for cartodb style popups
+
+    .infowindow-custom{
+        position: relative;
+        width: 500px;
+        background-color: white;
+        margin-bottom: 11px;
+    }
+
+    .cartodb-popup-close-button {
+        position: absolute;
+        top: -12px;
+        right: -11px;
+        width: 26px;
+        height: 26px;
+        background: url('http://libs.cartodb.com/cartodb.js/v3/themes/img/light.png') no-repeat 0 -23px;
+        text-indent: -9999px;
+        font-size: 0;
+        line-height: 0;
+        opacity: 1;
+        text-transform: uppercase;
+        z-index: 3;
+      }
+
+      .cartodb-popup-tip-container {
+        position: absolute;
+        bottom: -3px;
+        left: 23px;
+        width: 16px;
+        height: 14px;
+        background: url('http://libs.cartodb.com/cartodb.js/v3/themes/img/light.png') no-repeat -23px -7px;
+        text-indent: -9999px;
+        font-size: 0;
+        line-height: 0;
+        opacity: 1;
+        z-index: 3;
+      }
+    .cartodb-popup-content {
+        min-height: 100px;
+    }
+    */
+
+    </style>
+
+
+    <script type="infowindow/html" id="infowindow_template">
+        <div class="infowindow-custom" >
+            <a href="#close" class="cartodb-popup-close-button close">x</a>
+            <div class="cartodb-popup-content">
+                <div class="content" style="padding:20px">
+                    <div role="tabpanel">
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">
+                        </ul>
+
+                        <!-- Tab panes -->
+                        <div class="tab-content" id="infotabs">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="cartodb-popup-tip-container"></div>
+
+        </div>
+    </script>
+
+    <script>
+    //window.onload = main;
+
+    //querying JSON
+    function getObjects(obj, key, val) {
+        var objects = [];
+        for (var i in obj) {
+            if (!obj.hasOwnProperty(i)) continue;
+            if (typeof obj[i] == 'object') {
+                objects = objects.concat(getObjects(obj[i], key, val));
+            } else if (i == key && obj[key] == val) {
+                objects.push(obj);
+            }
+        }
+        return objects;
+    }
+
+    //sample PCA json function
+
+
+     var pca_locations1 = [
+    {
+        "latitude": 33.88354923,
+        "longitude": 35.99393762,
+        "location_name": "#N/A",
+        "location_type": "School",
+        "gateway_id": 1,
+        "parterships": [
+            {
+                "pca_title": "Inclusive and enabling learning environment for displaced Syrians and underprivileged Lebanese Learners",
+                "pca_number": "PCA/LEBA/2013/46",
+                "pca_id": 25,
+                "partner_name": "IQRA",
+                "partner_id": 19,
+                "sectors": [
+                    {
+                        "sector_name": "Education",
+                        "sector_id": 1,
+                        "indicators": [
+                            {
+                                "indicator": " # of children in non-formal learning opportunities (girls and boys) ",
+                                "programmed": 5000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 60,
+                                "pca_sector": 28
+                            },
+                            {
+                                "indicator": "# of children in psycho-social support in formal and non-formal education (girls and boys)",
+                                "programmed": 5000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 61,
+                                "pca_sector": 28
+                            }
+                        ],
+                        "id": 28,
+                        "pca": 25,
+                        "sector": 1
+                    }
+                ],
+                "id": 25,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2013/46",
+                "title": "Inclusive and enabling learning environment for displaced Syrians and underprivileged Lebanese Learners",
+                "status": "active",
+                "partner": 19,
+                "start_date": "2013-10-01",
+                "end_date": "2014-06-30",
+                "initiation_date": "2013-10-01",
+                "signed_by_unicef_date": "2014-10-11",
+                "signed_by_partner_date": "2013-10-11",
+                "unicef_mng_first_name": "Kumiko",
+                "unicef_mng_last_name": "Iwasawa",
+                "unicef_mng_email": "kiwasawa@unicef.org",
+                "partner_mng_first_name": "Amina",
+                "partner_mng_last_name": "Kleit",
+                "partner_mng_email": "",
+                "partner_contribution_budget": 67200,
+                "unicef_cash_budget": 930213,
+                "in_kind_amount_budget": 56494,
+                "cash_for_supply_budget": 873719,
+                "total_cash": 1053907,
+                "current": false,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-24T12:50:00.316Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    },
+    {
+        "latitude": 34.628724000112584,
+        "longitude": 36.3863680001831,
+        "location_name": "Aamayer Ouadi Khaled",
+        "location_type": "Social Development Center",
+        "gateway_id": 3,
+        "parterships": [
+            {
+                "pca_title": "Emergency Child Protection Emergency for conflict affected population in Lebanon ",
+                "pca_number": "PCA/LEBA/2012/39",
+                "pca_id": 1,
+                "partner_name": "Danish Refugee Council",
+                "partner_id": 1,
+                "sectors": [
+                    {
+                        "sector_name": "Child Protection",
+                        "sector_id": 4,
+                        "indicators": [
+                            {
+                                "indicator": "# of girls and boys benefitting from psychosocial support",
+                                "programmed": 28000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 1,
+                                "pca_sector": 1
+                            },
+                            {
+                                "indicator": "# of boys and girls identified and referred (not GBV related) to multi-sectoral services",
+                                "programmed": 150000,
+                                "current": 0,
+                                "unit": "Children",
+                                "id": 2,
+                                "pca_sector": 1
+                            }
+                        ],
+                        "id": 1,
+                        "pca": 1,
+                        "sector": 4
+                    }
+                ],
+                "id": 1,
+                "agreement_type": "pca",
+                "result_structure": 1,
+                "number": "PCA/LEBA/2012/39",
+                "title": "Emergency Child Protection Emergency for conflict affected population in Lebanon ",
+                "status": "active",
+                "partner": 1,
+                "start_date": "2013-07-22",
+                "end_date": "2014-07-22",
+                "initiation_date": "2013-07-22",
+                "signed_by_unicef_date": "2013-07-22",
+                "signed_by_partner_date": "2013-07-22",
+                "unicef_mng_first_name": "Catherine ",
+                "unicef_mng_last_name": "Jones",
+                "unicef_mng_email": "cajones@unicef.org",
+                "partner_mng_first_name": "valentina",
+                "partner_mng_last_name": "Stivanello",
+                "partner_mng_email": "valentina.stivanello@drclebanon.dk",
+                "partner_contribution_budget": 510090,
+                "unicef_cash_budget": 2692937,
+                "in_kind_amount_budget": 241763,
+                "cash_for_supply_budget": 2451174,
+                "total_cash": 3444790,
+                "current": true,
+                "created_at": "2013-12-16T22:00:00Z",
+                "updated_at": "2014-03-25T15:18:03.719Z",
+                "amendment": false,
+                "amended_at": null,
+                "amendment_number": 0,
+                "original": null,
+                "unicef_managers": []
+            }
+        ]
+    }
+];
+
+    var pca_locations = {"pcalocations":[
+        {"pca_title": "Adolescents Benefiting Communities", "pca_number": "PCA/LEBA/2013/62", "pca_id": 120, "partner_name": "Lebanese Red Cross", "partner_id": 47, "sector_name": "Education", "sector_id": 1, "latitude": 33.89057, "longitude": 35.5029, "location_name": "Bachoura", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 1632, "pca": 120, "sector": null, "governorate": 1, "region": 1, "locality": 5, "location": 31, "tpm_visit": false, "pcode": "53333-01-002"},
+        {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.87379, "longitude": 35.50219, "location_name": "Tariq El Jdide", "location_type": "Village", "gateway_name": "Village", "gateway_id": 9, "id": 4892, "pca": 473, "sector": 4, "governorate": 1, "region": 1, "locality": 9, "location": 60, "tpm_visit": false, "pcode": "32191-01-007"},
+        {"pca_title": "Strengthening Resilience Among Vulnerable Children", "pca_number": "PCA/LEBA/2014/49", "pca_id": 439, "partner_name": "Himaya", "partner_id": 87, "sector_name": "Child Protection", "sector_id": 4, "latitude": 33.87379, "longitude": 35.50219, "location_name": "Tariq El Jdide", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4501, "pca": 439, "sector": 4, "governorate": 1, "region": 1, "locality": 9, "location": 60, "tpm_visit": true, "pcode": "23267-01-005"},
+        {"pca_title": "Multi-sectoral response in informal tented settlements across Lebanon", "pca_number": "PCA/LEBA/2014/01", "pca_id": 172, "partner_name": "BEYOND Association", "partner_id": 2, "sector_name": "Education, Health and Nutrition, Child Protection, WASH", "sector_id": 1, "latitude": 33.87278, "longitude": 35.52083, "location_name": "Furn ech Chebak", "location_type": "Village", "gateway_name": "Village", "gateway_id": 9, "id": 2790, "pca": 172, "sector": null, "governorate": 2, "region": 2, "locality": 16, "location": 95, "tpm_visit": false, "pcode": "32169-01-006"},
+        {"pca_title": "Reaching out for Protection, Reaching in for Resilience ", "pca_number": "PCA/LEBA/2015/008", "pca_id": 473, "partner_name": "War Child Holland", "partner_id": 17, "sector_name": "WASH, Child Protection", "sector_id": 4, "latitude": 33.86113, "longitude": 35.51024, "location_name": "Ghobeire", "location_type": "Village", "gateway_name": "Village", "gateway_id": 1, "id": 4895, "pca": 473, "sector": 4, "governorate": 2, "region": 2, "locality": 20, "location": 104, "tpm_visit": false, "pcode": "53333-01-002"}
+    ]};
+
+    function getRandomColor() {
+        var letters = '0123456789ABCDEF'.split('');
+        var color = '#';
+        for (var i = 0; i < 6; i++ ) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
+    var map;
+    var sublayer;
+    var table;
+    var uniqueID;
+    var sublayerArr = [];
+    var subLayerOptions = '[';
+    var count = 0;
+    var tableArr = [];
+    var cartoSubLayers = [];
+    var color;
+
+
+    $(document).ready(function() {
+
+        // initiate leaflet map
+        map = new L.Map('cartodb-map', {
+            center: [33.9, 36.1],
+            zoom: 9
+        });
+
+        // add a nice baselayer from Nokia
+        L.tileLayer('https://maps.nlp.nokia.com/maptiler/v2/maptile/newest/normal.day.grey/{z}/{x}/{y}/256/png8?lg=eng&token=61YWYROufLu_f8ylE0vn0Q&app_id=qIWDkliFCtLntLma2e6O', {
+            attribution: 'Nokia'
+        }).addTo(map);
+
+
+
+        //get all cartodb tables from equitrack and pull data from CartoDB
+        $.getJSON("/locations/cartodbtables/", function (data) {
+            $.each(data, function( key, val ) {
+                color = getRandomColor();
+                sublayerArr.push({
+                    sql: 'SELECT * FROM ' + val.table_name,
+                    cartocss: '#' + val.table_name + '{ marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: ' + color.toString() + '; marker-allow-overlap: true; }',
+                    interactivity: val.pcode_col + ', cartodb_id, the_geom'
+                });
+                tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color});
+                user = val.domain;
+                $('#mapmenu').append("<a href=#" + val.table_name + " id='" + val.table_name + "' class='mapbutton " + val.table_name + "' style='background:" + color +"'>" + val.table_name + "</a>");
+            });
+            cartodb.createLayer(map, {
+            user_name: user,
+            type: 'cartodb',
+            sublayers:  sublayerArr //[{sql: "SELECT * FROM ai_is", cartocss: "#ai_is{marker-fill-opacity: 0.9; marker-line-color: #FFF; marker-line-width: 1.5; marker-line-opacity: 1; marker-placement: point; marker-type: ellipse; marker-width: 10; marker-fill: #5CA2D1; marker-allow-overlap: true; polygon-fill: #FFFFB2; polygon-opacity: 0.8; line-color: #FFF; line-width: 1; line-opacity: 1;}"}]
+            })
+            .addTo(map)
+            .done(function(layer) {
+                for (var i = 0; i < layer.getSubLayerCount(); i++) {
+                    cartoSubLayers.push(layer.getSubLayer(i));
+                }
+
+                $('.mapbutton').click(function() {
+                   $('.mapbutton').removeClass('selected');
+                   $(this).addClass('selected');
+                   var buttonId = $(this).attr('id');
+
+                    $.each(tableArr, function (key, value){
+                       if(value.table_name == buttonId ){
+                           layer.getSubLayer(key).toggle();
+                           if($("#" + value.table_name).css("background-color") == "rgb(192, 192, 192)") {
+                               $("#" + value.table_name).css("background-color", value.color);
+                           }
+                           else
+                           {
+                               $("#" + value.table_name).css("background-color", "#C0C0C0");
+                           }
+                       }
+                    });
+                });
+            })
+            .error(function(err){
+                alert("error");
+            });
+        })
+        .done(function() {
+            //change css of sublayers that have polygons
+            $.each(tableArr, function (key, value) {
+                $.getJSON("http://unhcr.cartodb.com/api/v2/sql?q=SELECT%20the_geom%20FROM%20" + value.table_name + "%20WHERE%20cartodb_id=1&format=GeoJSON", function (cartodata) {
+                    $.each(cartodata.features, function (key1, val1) {
+                        //check if table is a polygon or point type
+                        if (val1.geometry.type == "MultiPolygon" || val1.geometry.type == "Polygon") {
+                            cartoSubLayers[key].setCartoCSS('#' + value.table_name + '{ polygon-fill: ' + color.toString() + '; polygon-opacity: 0.3; line-color: #FFF; line-width: 1; line-opacity: 0.5; }');
+                        }
+                    });
+                });
+            });
+        });
+
+
+    });
+
+    </script>
+
+    <script>
+        function GatewayGetData(id){
+            if(id==''){
+
+            }
+            else{
+                var rowId = id.substring(id.length-1);
+                var url = "/nikmap/" + rowId + "/all_json_governorates";
+                $.getJSON(url, function (governorates) {
+                     var options = '';
+                     for (var i = 0; i < governorates.length; i++) {
+                        options += '<li><a href="javascript:void(0);" id="governorate' + governorates[i].pk + '" onclick="GovernorateGetData(this.id);">' + governorates[i].fields['name'] + '</a></li>';
+                     }
+                     $("#governorate_ul").html(options);
+                });
+            }
+            UpdateMap();
+        }
+
+        //getting all pcodes and creating SQL statement
+        function UpdateMap(){
+            $.each(tableArr, function (key, val){
+                var pca_qry = getObjects(pca_locations1, 'gateway_id', '9');
+                //var sql_stmt = "SELECT * FROM " + val.table_name + " WHERE " + val.pcode_col + " IN (";
+                var count = 0;
+                $.each( pca_qry, function( keyq, valueq ) {
+                    var popup_content_start = '<div class="content" id="mytab" style="padding:20px">' +
+                                                '<div role="tabpanel">';
+                    var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
+                    var popup_content_tabs = '<div class="tab-content" id="infotabs">';
+                    var popup_content='';
+                    //looping through all PCAs for one location
+                    $.each( valueq.parterships, function( keyp, valuep ) {
+
+                        //if(keyp == 0)
+                        //{
+                            popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
+                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in ' id='tab" + keyp + "'>" +
+                            "<h4>PCA Title</h4><p id='pca_title'>" + valuep.pca_title + "</p>" +
+                            "<h4>Gateway:</h4><p id='gateway_name'>" + valuep.gateway_name + "</p>" +
+                            "<h4>Partner:</h4><p id='partner_name'>" + valuep.partner_name + "</p>";
+
+
+                            //looping for sectors for one PCA
+                            $.each( valuep.sectors, function( keys, valueSec ) {
+                                var popup_content_tabs_indicator='';
+
+                                var popup_content_tabs_sec =  '<div class="panel panel-default">' +
+                                                                    '<div class="panel-heading">' +
+                                                                        '<h3 class="panel-title">' + valueSec.sector_name +'</h3>' +
+                                                                    '</div>';
+
+                                $.each( valueSec.indicators, function( keyi, valuei ) {
+                                    popup_content_tabs_indicator += '<div class="panel-body">' +
+                                                                        '<a href=""><span class="sublabel">' + valuei.indicator+ '</span></a>' +
+                                                                        '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
+                                                                        '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
+                                                                        '<div class="progress progress-striped">' +
+                                                                            '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current/valuei.programmed*100 +'%">' + valuei.current/valuei.programmed*100 + '% </div>' +
+                                                                        '</div>' +
+                                                                    '</div>';
+
+
+                                });
+                                popup_content_tabs_indicator += '</div>' + '</div>';
+
+                            popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
+                            console.log(popup_content_tabs);
+                            });
+
+                            //alert(popup_content_tabs);
+                        //}
+                        /*
+                        else {
+                            popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
+                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade' id='tab" + keyp + "'>" +
+                            "<h4>PCA Title</h4><p id='pca_title'>" + valuep.pca_title + "</p>" +
+                            "<h4>Gateway:</h4><p id='gateway_name'>" + valuep.gateway_name + "</p>" +
+                            "<h4>Partner:</h4><p id='partner_name'>" + valuep.partner_name + "</p>" +
+                            "<h4>Sector:</h4><p id='sector'>" + valuep.sector + "</p>";
+
+                            //looping for sectors for one PCA
+                            $.each( valuep.sectors, function( keys, values ) {
+                                //var sector_name = values.sector_name;
+                                popup_content_tabs += '<div class="">' +
+                                                            '<div class="panel panel-default">' +
+                                                                '<div class="panel-heading">' +
+                                                                    '<h3 class="panel-title">' + values.sector_name +'</h3>' +
+                                                                    '<div class="actions pull-right">' +
+                                                                        '<i class="fa fa-chevron-down"></i>' +
+                                                                        '<i class="fa fa-times"></i>' +
+                                                                    '</div>' +
+                                                                '</div>' +
+
+                                $.each( values.indicators, function( keyi, valuei ) {
+                                    //alert(valuei.programmed);
+                                    popup_content_tabs += '<div class="panel-body">' +
+                                                            '<a href=""><span class="sublabel"># of girls and boys benefitting from psychosocial support</span></a>' +
+                                                            '<div><span class="sublabel" style="float: right;">Programmed: 34830 </span></div>' +
+                                                            '<div><span class="sublabel">Reached: 1000</span></div>' +
+                                                            '<div class="progress progress-striped">' +
+                                                                '<div class="progress-bar progress-bar-blue" style="width: 30%"> 30% </div>' +
+                                                            '</div>' +
+                                                           '</div>' +
+                                                        '</div>' +
+                                                    '</div>';
+
+                                });
+                            });
+                        }
+                                             */
+                    });
+                    popup_content_navs += '</ul>';
+                    popup_content_tabs += '</div>';
+                    popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
+
+                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {
+                        icon: L.AwesomeMarkers.icon({
+                            icon: 'building-o',
+                            prefix: 'fa',
+                            markerColor: 'blue'
+                        })
+                    });
+                    //var marker = L.marker(new L.LatLng(value.latitude, value.longitude), {icon: redMarker});
+                    marker.bindPopup(popup_content);
+                    marker.addTo(map);
+                });
+                $('#tab0').addClass("active");
+                $('#link0').addClass("active");
+
+                //create tabs in info window
+                    $("#myTab a").click(function (e) {
+                        alert("tab");
+                        e.preventDefault();
+                        $(this).tab('show');
+                    });
+
+                   /*
+                    $.each( value, function( key1, value1 ) {
+                        //alert(key1 + " : " + value1)
+                        if(key1 == "pcode") {
+                            if(count==0) {
+                                sql_stmt = sql_stmt + "'" + value1 + "'";
+                            }
+                            else{
+                                sql_stmt = sql_stmt + ", '" + value1 + "'";
+                            }
+                            count++;
+                        }
+                    });
+                });
+                sql_stmt = sql_stmt + ")";
+                //alert(sql_stmt);
+
+                //change SQL statement
+                cartoSubLayers[key].setSQL(sql_stmt);
+
+                //set infowindow to PCA data
+                cdb.vis.Vis.addInfowindow(map, cartoSubLayers[key], [val.pcode_col], {infowindowTemplate: $('#infowindow_template').html() });
+
+                cartoSubLayers[key].on('featureClick', function (e, pos, latlng, data) {
+                    //clear infowindow
+                    $('#infotabs').html('');
+                    $('.nav-tabs').html('');
+
+                    //getting pca info from json PCAs and update info window
+                    var pca_qry = getObjects(pca_locations, 'pcode', data.pcode);
+                    $.each(pca_qry, function (key, value) {
+
+                            $('#infotabs').append("<div role='tabpanel' class='tab-pane ' id='tab" + key + "'>" +
+                                "<h4>PCA Title</h4><p id='pca_title'>" + value.pca_title + "</p>" +
+                                "<h4>Gateway:</h4><p id='gateway_name'>" + value.gateway_name + "</p>" +
+                                "<h4>Partner:</h4><p id='partner_name'>" + value.partner_name + "</p>" +
+                                "<h4>Sector:</h4><p id='sector'>" + value.sector + "</p></div>");
+                                $('.nav-tabs').append("<li id='link" + key + "' role='presentation' class=''><a href='#tab" + key + "'>" + value.pca_number + "</a></li>");
+
+                        if(key==0){
+                            $('#tab' + key).addClass("active");
+                            $('#link' + key).addClass("active");
+                        }
+                    });
+                    //create tabs in info window
+                    $("#myTab a").click(function (e) {
+                        e.preventDefault();
+                        $(this).tab('show');
+                    });
+                });
+                */
+
+
+            });
+        }
+
+
+
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="row" style="margin-left: 235px !important; padding-top: 10px;">
+    <div class="col-md-2">
+        <div class="btn-group btn-block">
+            <button type="button" class="col-md-10 btn btn-info">
+               Gateways
+            </button>
+
+            <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown" type="button">
+                 <span class="caret"></span>
+            </button>
+
+            <ul class="dropdown-menu col-md-10" role="menu" id="gateway_ul">
+                {% for gateway in gateway_list %}
+                    <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="GatewayGetData(this.id);">{{ gateway.name }}</a></li>
+                {% endfor %}
+            </ul>
+
+        <!--
+        {% url 'nikmap' %}?gateway={{ gateway.id }}
+            <ul class="dropdown-menu col-md-10" role="menu">
+                    <li><a class="col-md-10" href="CollectiveShelter.html">Collecctive Shelter</a><button class="col-md-2 btn" style="background-color: green; min-height: 23px;"></button></li>
+                    <li><a class="col-md-10" href="CollectiveShelter.html">Community Center</a><button class="col-md-2 btn" style="background-color: blue; min-height: 20px;"></button></li>
+                     <li><a class="col-md-10" href="CollectiveShelter.html">Informal Settlement</a><button class="col-md-2 btn" style="background-color: red; min-height: 20px;"></button></li>
+                <li><a href="test3.html">test3</a></li>
+            </ul>
+        -->
+        </div>
+    </div>
+    <div class="col-md-2">
+
+        <div class="btn-group btn-block">
+            <button type="button" class="col-md-10 btn btn-success">
+               Governorate
+            </button>
+
+            <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
+                 <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu col-md-10" role="menu" id="governorate_ul">
+                {% for governorate in governorate_list %}
+                    <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="GovernorateGetData(this.id);">{{ governorate.name }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="btn-group btn-block">
+            <button type="button" id="btn-donot" class="col-md-10 btn btn-primary">
+               Donor
+            </button>
+
+            <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                 <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu col-md-10" role="menu">
+                    <li><a href="test1.html">test1</a></li>
+                    <li><a href="test2.html">test2</a></li>
+                    <li><a href="test3.html">test3</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="btn-group btn-block">
+            <button type="button" class="col-md-10 btn btn-warning">
+               Partner
+            </button>
+
+            <button class="col-md-2 btn btn-warning dropdown-toggle" data-toggle="dropdown">
+                 <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu col-md-10" role="menu">
+                    <li><a href="test1.html">test1</a></li>
+                    <li><a href="test2.html">test2</a></li>
+                    <li><a href="test3.html">test3</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="btn-group btn-block">
+            <button type="button" class="col-md-10 btn btn-danger">
+               Sector
+            </button>
+
+            <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
+                 <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu col-md-10" role="menu">
+                    <li><a href="test1.html">test1</a></li>
+                    <li><a href="test2.html">test2</a></li>
+                    <li><a href="test3.html">test3</a></li>
+            </ul>
+        </div>
+    </div>
+    </div>
+    <div class="row" style="margin-left: 235px !important">
+        <div class="col-md-2">
+            <div class="btn-group btn-block">
+                <button type="button" class="col-md-10 btn btn-info">
+                   Indicator
+                </button>
+
+                <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
+                     <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu col-md-10" role="menu">
+                        <li><a href="test1.html">test1</a></li>
+                        <li><a href="test2.html">test2</a></li>
+                        <li><a href="test3.html">test3</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="btn-group btn-block">
+                <button type="button" class="col-md-10 btn btn-success">
+                   Output
+                </button>
+
+                <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
+                     <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu col-md-10" role="menu">
+                        <li><a href="test1.html">test1</a></li>
+                        <li><a href="test2.html">test2</a></li>
+                        <li><a href="test3.html">test3</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="btn-group btn-block">
+                <button type="button" class="col-md-10 btn btn-primary">
+                   District
+                </button>
+
+                <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                     <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu col-md-10" role="menu">
+                        <li><a href="test1.html">test1</a></li>
+                        <li><a href="test2.html">test2</a></li>
+                        <li><a href="test3.html">test3</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class='col-md-2'>
+            <div class="form-group">
+                <label class="col-md-2 control-label nopadding">Date From</label>
+                <div class='input-group input-append date col-md-10' id='datetimepicker6'>
+                    <input type='text' class="form-control" name="date" />
+                    <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class='col-md-2'>
+            <div class="form-group">
+                <label class="col-md-2 control-label no nopadding">Date To</label>
+                <div class='input-group input-append date col-md-10' id='datetimepicker7'>
+                    <input type='text' class="form-control" name="date" />
+                    <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('#datetimepicker6').datepicker({ format: 'mm/dd/yyyy' });
+                $('#datetimepicker7').datepicker({ format: 'mm/dd/yyyy' });
+
+                $("#datetimepicker6").on("dp.change",function (e) {
+                    $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
+                });
+                $("#datetimepicker7").on("dp.change",function (e) {
+                    $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
+                });
+            });
+        </script>
+    </div>
+
+    <div class="row" style="height:100%;">
+{#        {% leaflet_map "leaflet-map" callback="window.main" %}#}
+
+        <div id='cartodb-map' class="col-md-10"></div>
+    </div>
+
+    <div id='mapmenu' class="col-md-10">
+    </div>
+    <div class="col-md-10">
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <a href="{"><span class="sublabel"># of girls and boys benefitting from psychosocial support</span></a>
+                <div><span class="sublabel" style="float: right;">Programmed: 34830 </span></div>
+                <div><span class="sublabel">Reached: 1000</span></div>
+                <div class="progress progress-striped">
+                    <div class="progress-bar progress-bar-blue" style="width: 30%"> 30% </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+
+{% endblock %}

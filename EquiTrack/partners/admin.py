@@ -345,7 +345,7 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
                  'title',
                  'status',
                  'partner',
-                 'initiation_date',)
+                 'initiation_date')
         }),
         (_('Dates'), {
             u'classes': (u'suit-tab suit-tab-info',),
@@ -508,13 +508,13 @@ class FACEAdmin(admin.ModelAdmin):
     )
 
 
-class ReccomnedationsInlineAdmin(admin.TabularInline):
+class RecommendationsInlineAdmin(admin.TabularInline):
     model = Recommendation
     extra = 0
 
 
 class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
-    inlines = [ReccomnedationsInlineAdmin]
+    inlines = [RecommendationsInlineAdmin]
     readonly_fields = (
         u'download_url',
         u'requested_date',

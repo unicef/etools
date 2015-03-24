@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 from datetime import datetime
 
 from django.db.models import Q
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, FormView
 
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
@@ -13,6 +13,7 @@ from rest_framework.response import Response
 from reports.models import Sector
 from .models import Trip, Office
 from .serializers import TripSerializer
+from .forms import TripFilterByDateForm
 
 
 def get_trip_months():
@@ -47,6 +48,7 @@ class TripsByOfficeView(APIView):
     def get(self, request):
 
         months = get_trip_months()
+        months.append(None)
         month_num = request.QUERY_PARAMS.get('month', 0)
         month = months[int(month_num)]
 
@@ -58,10 +60,13 @@ class TripsByOfficeView(APIView):
             trips = office.trip_set.filter(
                 Q(status=Trip.APPROVED) |
                 Q(status=Trip.COMPLETED)
-            ).filter(
-                from_date__year=month.year,
-                from_date__month=month.month
-            )
+            ).all()
+            if month is not None:
+                trips = office.trip_set.filter(
+                    from_date__year=month.year,
+                    from_date__month=month.month
+                )
+
             office = {'name': office.name}
             for sector in sections:
                 office[sector.name] = trips.filter(
@@ -79,13 +84,19 @@ class TripsByOfficeView(APIView):
         return Response(data=payload)
 
 
-class TripsDashboard(TemplateView):
+class TripsDashboard(FormView):
 
     template_name = 'trips/dashboard.html'
+    form_class = TripFilterByDateForm
+
+    def form_valid(self, form):
+
+        return super(TripsDashboard, self).form_valid(form)
 
     def get_context_data(self, **kwargs):
 
         months = get_trip_months()
+        months.append(None)
         month_num = self.request.GET.get('month', 0)
         month = months[int(month_num)]
 
@@ -93,10 +104,12 @@ class TripsDashboard(TemplateView):
         for section in Sector.objects.filter(
                 dashboard=True
         ):
-            trips = section.trip_set.filter(
-                from_date__year=month.year,
-                from_date__month=month.month
-            )
+            trips = section.trip_set.all()
+            if month is not None:
+                trips = section.trip_set.filter(
+                    from_date__year=month.year,
+                    from_date__month=month.month
+                )
             action_points = [
                 action for trip in trips
                 for action in trip.actionpoint_set.all()
@@ -121,7 +134,7 @@ class TripsDashboard(TemplateView):
             }
             by_month.append(row)
 
-        return {
+        kwargs.update({
             'months': months,
             'current_month': month,
             'current_month_num': month_num,
@@ -139,5 +152,7 @@ class TripsDashboard(TemplateView):
                     status=Trip.CANCELLED,
                 ).count(),
             },
-            'by_month': by_month
-        }
+            'by_month': by_month,
+        })
+
+        return super(TripsDashboard, self).get_context_data(**kwargs)

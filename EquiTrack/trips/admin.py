@@ -91,8 +91,8 @@ class TripReportFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
 
         if self.value():
-            param = Q(main_observations='')
-            return queryset.filter(param if self.value() == 'No' else ~param)
+            is_null = Q(main_observations='')
+            return queryset.filter(is_null if self.value() == 'No' else ~is_null)
         return queryset
 
 

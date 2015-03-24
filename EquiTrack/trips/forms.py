@@ -2,12 +2,12 @@ __author__ = 'jcranwellward'
 
 from datetime import datetime
 
-from django.forms import ModelForm, fields
+from django.forms import ModelForm, fields, Form
 from django.core.exceptions import ValidationError
 
 from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
-from datetimewidget.widgets import DateTimeWidget
+from datetimewidget.widgets import DateTimeWidget, DateWidget
 
 from partners.models import PCA
 from .models import Trip
@@ -125,3 +125,21 @@ class TripForm(ModelForm):
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
+
+
+class TripFilterByDateForm(Form):
+
+    depart = fields.DateField(
+        label='From',
+        widget=DateWidget(
+            bootstrap_version=3,
+            attrs={}
+        )
+    )
+    arrive = fields.DateField(
+        label='To',
+        widget=DateWidget(
+            bootstrap_version=3,
+            attrs={}
+        )
+    )

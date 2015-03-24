@@ -35,6 +35,7 @@ class LocationAdmin(ImportExportMixin, LeafletGeoAdmin):
         'p_code',
         'point',
         'point_lat_long',
+        'locality',
     )
     list_display = (
         'name',

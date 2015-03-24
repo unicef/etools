@@ -9,6 +9,7 @@ from django.db import IntegrityError
 from django.contrib.gis.db import models
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.forms import forms
 
 from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey
@@ -17,9 +18,13 @@ from paintstore.fields import ColorPickerField
 logger = logging.getLogger('locations.models')
 
 
+def get_random_color():
+    r = lambda: random.randint(0,255)
+    return '#%02X%02X%02X' % (r(), r(), r())
+
+
 class GatewayType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
-
     class Meta:
         ordering = ['name']
 
@@ -35,7 +40,7 @@ class Governorate(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True)
+    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
     geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
@@ -56,7 +61,7 @@ class Region(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True)
+    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
     geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
@@ -82,7 +87,7 @@ class Locality(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True)
+    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
 
     geom = models.MultiPolygonField(null=True, blank=True)
@@ -185,10 +190,12 @@ class CartoDBTable(models.Model):
     domain = models.CharField(max_length=254)
     api_key = models.CharField(max_length=254)
     table_name = models.CharField(max_length=254)
+    display_name = models.CharField(max_length=254, null=True, blank=True)
     location_type = models.ForeignKey(GatewayType)
     name_col = models.CharField(max_length=254, default='name')
     pcode_col = models.CharField(max_length=254, default='pcode')
     parent_code_col = models.CharField(max_length=254, null=True, blank=True)
+    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
     def __unicode__(self):
         return self.table_name

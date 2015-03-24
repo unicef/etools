@@ -1,6 +1,5 @@
 __author__ = 'jcranwellward'
 
-import glob
 import tablib
 import tempfile
 import zipfile
@@ -199,27 +198,6 @@ class PCAResource(BaseExportResource):
 
     class Meta:
         model = PCA
-
-    def insert_column(self, row, field_name, value):
-
-        row[field_name] = value if self.headers else ''
-
-    def insert_columns_inplace(self, row, fields, after_column):
-
-        keys = row.keys()
-        before_column = None
-        if after_column in row:
-            index = keys.index(after_column)
-            offset = index + 1
-            if offset < len(row):
-                before_column = keys[offset]
-
-        for key, value in fields.items():
-            if before_column:
-                row.insert(offset, key, value)
-                offset += 1
-            else:
-                row[key] = value
 
     def fill_pca_grants(self, row, pca):
 
