@@ -238,3 +238,121 @@ body .modal-dialog {
 body .modal-header {
   border-bottom: 1px solid #999;
 }
+
+
+/* ==========================================================================
+   Map
+   ========================================================================== */
+
+      html, body {height:100%; padding: 0;}
+        #cartodb-map {height:100%; margin-left: 250px; background: white;}
+        #mapmenu { position: absolute; top: 10px; right: 10px; height:60px; background: transparent; z-index:10;}
+        #mapmenu a {
+          margin: 15px 10px 0 0;
+          float: right;
+          vertical-align: baseline;
+          width: 100px;
+          padding: 10px;
+          text-align: center;
+          font: bold 11px "Helvetica",Arial;
+          line-height: normal;
+          color: #FFF;
+          border-radius: 4px;
+          border: 1px solid #777777;
+          /*background: #ffffff; */
+          text-decoration: none;
+          cursor: pointer;
+        }
+        #mapmenu a.selected {
+           background: #777; }
+        #mapmenu a:hover {
+          color: #f09;
+        }
+
+        .infowindow-custom{
+            position: relative;
+            width: 500px;
+            background-color: white;
+            margin-bottom: 11px;
+
+          }
+
+        .cartodb-popup-close-button {
+            position: absolute;
+            top: -12px;
+            right: -11px;
+            width: 26px;
+            height: 26px;
+            background: url('http://libs.cartodb.com/cartodb.js/v3/themes/img/light.png') no-repeat 0 -23px;
+            text-indent: -9999px;
+            font-size: 0;
+            line-height: 0;
+            opacity: 1;
+            text-transform: uppercase;
+            z-index: 3;
+          }
+
+          .cartodb-popup-tip-container {
+            position: absolute;
+            bottom: -3px;
+            left: 23px;
+            width: 16px;
+            height: 14px;
+            background: url('http://libs.cartodb.com/cartodb.js/v3/themes/img/light.png') no-repeat -23px -7px;
+            text-indent: -9999px;
+            font-size: 0;
+            line-height: 0;
+            opacity: 1;
+            z-index: 3;
+          }
+
+          blockquote {
+            display: hidden;
+          }
+
+          .cartodb-popup-content {
+            min-height: 100px;
+          }
+        .leaflet-popup-content{
+        min-width: 400px !important;
+        width: inherit !important;
+        height: 500px;
+            height: inherit !important;
+    }
+
+    .scrollable-menu {
+        height: auto;
+        max-height: 500px;
+        overflow-x: hidden;
+    }
+
+    /* Start by setting display:none to make this hidden.
+   Then we position it in relation to the viewport window
+   with position:fixed. Width, height, top and left speak
+   speak for themselves. Background we set to 80% white with
+   our animation centered, and no-repeating */
+    .modal {
+        display:    none;
+        position:   fixed;
+        z-index:    1000;
+        top:        0;
+        left:       0;
+        height:     100%;
+        width:      100%;
+        background: rgba( 255, 255, 255, .8 )
+                    url('http://i.stack.imgur.com/FhHRx.gif')
+                    50% 50%
+                    no-repeat;
+    }
+
+    /* When the body has the loading class, we turn
+       the scrollbar off with overflow:hidden */
+    body.loading {
+        overflow: hidden;
+    }
+
+    /* Anytime the body has the loading class, our
+       modal element will be visible */
+    body.loading .modal {
+        display: block;
+    }
