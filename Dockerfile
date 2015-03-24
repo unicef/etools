@@ -7,3 +7,6 @@ RUN mkdir /code
 WORKDIR /code
 ADD . /code/
 RUN pip install -r requirements.txt
+# Start everything
+EXPOSE 8080
+ENTRYPOINT newrelic-admin run-program python EquiTrack/manage.py run_gunicorn -b "0.0.0.0:$PORT" -w 3 --timeout=1200
