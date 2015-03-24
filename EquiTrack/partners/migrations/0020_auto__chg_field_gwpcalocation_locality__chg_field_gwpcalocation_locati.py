@@ -9,6 +9,12 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
 
+        # Changing field 'GwPCALocation.locality'
+        db.alter_column(u'partners_gwpcalocation', 'locality_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['locations.Locality'], null=True))
+
+        # Changing field 'GwPCALocation.location'
+        db.alter_column(u'partners_gwpcalocation', 'location_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['locations.Location'], null=True))
+
         # Changing field 'Assessment.notes'
         db.alter_column(u'partners_assessment', 'notes', self.gf('django.db.models.fields.CharField')(max_length=255, null=True))
 
@@ -16,6 +22,20 @@ class Migration(SchemaMigration):
         db.alter_column(u'partners_assessment', 'requested_date', self.gf('django.db.models.fields.DateField')(auto_now_add=True))
 
     def backwards(self, orm):
+
+        # User chose to not deal with backwards NULL issues for 'GwPCALocation.locality'
+        raise RuntimeError("Cannot reverse this migration. 'GwPCALocation.locality' and its values cannot be restored.")
+        
+        # The following code is provided here to aid in writing a correct migration
+        # Changing field 'GwPCALocation.locality'
+        db.alter_column(u'partners_gwpcalocation', 'locality_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['locations.Locality']))
+
+        # User chose to not deal with backwards NULL issues for 'GwPCALocation.location'
+        raise RuntimeError("Cannot reverse this migration. 'GwPCALocation.location' and its values cannot be restored.")
+        
+        # The following code is provided here to aid in writing a correct migration
+        # Changing field 'GwPCALocation.location'
+        db.alter_column(u'partners_gwpcalocation', 'location_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['locations.Location']))
 
         # Changing field 'Assessment.notes'
         db.alter_column(u'partners_assessment', 'notes', self.gf('django.db.models.fields.TextField')(null=True))
@@ -149,7 +169,7 @@ class Migration(SchemaMigration):
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '45L'}),
             'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'})
         },
         u'locations.locality': {
@@ -184,7 +204,7 @@ class Migration(SchemaMigration):
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '45L'}),
             'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'})
         },
         u'partners.assessment': {
@@ -223,8 +243,8 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'GwPCALocation'},
             'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'locality': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Locality']"}),
-            'location': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Location']"}),
+            'locality': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Locality']", 'null': 'True', 'blank': 'True'}),
+            'location': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Location']", 'null': 'True', 'blank': 'True'}),
             'pca': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'locations'", 'to': u"orm['partners.PCA']"}),
             'region': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Region']"}),
             'sector': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.Sector']", 'null': 'True', 'blank': 'True'}),

@@ -1,5 +1,6 @@
 __author__ = 'jcranwellward'
 
+from django.db.models import Q
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.sites.models import Site
@@ -25,7 +26,7 @@ from .forms import (
     TripForm,
     TravelRoutesForm
 )
-from .exports import TripResource
+from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
 
@@ -52,7 +53,7 @@ class ActionPointInlineAdmin(admin.StackedInline):
     extra = 1
     fields = (
         (u'description', u'due_date',),
-        u'persons_responsible',
+        u'person_responsible',
         (u'actions_taken',),
         (u'completed_date', u'closed',),
     )
@@ -75,6 +76,26 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
+class TripReportFilter(admin.SimpleListFilter):
+
+    title = 'Report'
+    parameter_name = 'report'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            ('Yes', 'Completed'),
+            ('No', 'Not-Completed'),
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            is_null = Q(main_observations='')
+            return queryset.filter(is_null if self.value() == 'No' else ~is_null)
+        return queryset
+
+
 class TripReportAdmin(ExportMixin, VersionAdmin):
     resource_class = TripResource
     save_as = True  # TODO: There is a bug using this
@@ -89,6 +110,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     )
     ordering = (u'-created_date',)
     date_hierarchy = u'from_date'
+    search_fields = (
+        u'owner',
+        u'section',
+        u'office',
+        u'purpose_of_travel',
+    )
     list_display = (
         u'reference',
         u'created_date',
@@ -109,11 +136,13 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'office',
         u'from_date',
         u'to_date',
-        u'no_pca',
+        u'travel_type',
         u'international_travel',
         u'supervisor',
+        u'budget_owner',
         u'status',
         u'approved_date',
+        TripReportFilter,
     )
     filter_vertical = (
         u'pcas',
@@ -130,18 +159,18 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                  u'owner',
                  u'supervisor',
                  (u'section', u'office',),
-                 (u'purpose_of_travel', u'monitoring_supply_delivery',),
+                 (u'purpose_of_travel',),
                  (u'from_date', u'to_date',),
                  (u'travel_type', u'travel_assistant',),
-                 u'approved_by_human_resources',
+                 u'security_clearance_required',
                  u'ta_required',
                  u'budget_owner',
                  u'programme_assistant',
                  (u'international_travel', u'representative',),
-                 u'no_pca',)
+                 u'approved_by_human_resources',)
         }),
         (u'PCA Details', {
-            u'classes': (u'collapse', u'suit-tab suit-tab-planning',),
+            u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (u'pcas',
                  u'partners',),
@@ -170,6 +199,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
             u'fields': (
                 u'main_observations',),
+        }),
+
+        (u'Travel Claim', {
+            u'classes': (u'suit-tab suit-tab-reporting',),
+            u'fields': (
+                u'ta_trip_took_place_as_planned',),
         }),
     )
     suit_form_tabs = (
@@ -234,6 +269,22 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             return []
 
         return fields
+
+    # def add_view(self, request, form_url='', extra_context=None):
+    #     """
+    #     Don't allow users to create new trips if they have outstanding
+    #     """
+    #     # trips = request.user.trips.filter(
+    #     #     status=Trip.APPROVED,
+    #     #
+    #     # )
+    #     #
+    #     # for trip in trips:
+    #     #     pass
+    #
+    #     return super(TripReportAdmin, self).add_view(
+    #         self, request, form_url, extra_context
+    #     )
 
     # def save_model(self, request, obj, form, change):
     #
@@ -329,21 +380,23 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     #         kwargs['queryset'] = rep_group.user_set.all()
 
 
-class ActionPointsAdmin(admin.ModelAdmin):
-
+class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
+    resource_class = ActionPointResource
+    exclude = [u'persons_responsible']
+    date_hierarchy = u'due_date'
     list_display = (
         u'trip',
         u'description',
         u'due_date',
-        u'responsible',
+        u'person_responsible',
+        u'originally_responsible',
         u'actions_taken',
-        u'supervisor',
         u'comments',
         u'closed',
     )
     list_filter = (
         u'trip__owner',
-        u'trip__supervisor',
+        u'person_responsible',
         u'closed',
     )
     search_fields = (
@@ -355,10 +408,7 @@ class ActionPointsAdmin(admin.ModelAdmin):
     def trip(self, obj):
         return unicode(obj.trip)
 
-    def supervisor(self, obj):
-        return obj.trip.supervisor
-
-    def responsible(self, obj):
+    def originally_responsible(self, obj):
         return ', '.join(
             [
                 user.get_full_name()
@@ -367,21 +417,19 @@ class ActionPointsAdmin(admin.ModelAdmin):
             ]
         )
 
-    def has_add_permission(self, request):
-        return False
-
     def get_readonly_fields(self, request, obj=None):
 
         readonly_fields = [
             u'trip',
             u'description',
             u'due_date',
+            u'person_responsible',
             u'persons_responsible',
             u'comments',
             u'closed',
         ]
 
-        if obj and obj.trip.supervisor == request.user:
+        if obj and obj.person_responsible == request.user:
             readonly_fields.remove(u'comments')
             readonly_fields.remove(u'closed')
 

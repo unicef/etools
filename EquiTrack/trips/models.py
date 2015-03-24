@@ -14,7 +14,7 @@ from django.contrib.sites.models import Site
 from filer.fields.file import FilerFileField
 import reversion
 
-from EquiTrack.utils import AdminURLMixin
+from EquiTrack.mixins import AdminURLMixin
 from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
@@ -23,6 +23,7 @@ from . import emails
 User = get_user_model()
 
 User.__unicode__ = lambda user: user.get_full_name()
+User._meta.ordering = ['first_name']
 
 BOOL_CHOICES = (
     (None, "N/A"),
@@ -53,12 +54,20 @@ class Trip(AdminURLMixin, models.Model):
         (CANCELLED, u"Cancelled"),
     )
 
+    PROGRAMME_MONITORING = u'programme_monitoring'
+    ADVOCACY = u'advocacy'
+    TECHNICAL_SUPPORT = u'technical_support'
+    MEETING = u'meeting'
     DUTY_TRAVEL = u'duty_travel'
     HOME_LEAVE = u'home_leave'
     FAMILY_VISIT = u'family_visit'
     EDUCATION_GRANT = u'education_grant'
     STAFF_DEVELOPMENT = u'staff_development'
     TRAVEL_TYPE = (
+        (PROGRAMME_MONITORING, u'PROGRAMME MONITORING'),
+        (ADVOCACY, u'ADVOCACY'),
+        (TECHNICAL_SUPPORT, u'TECHNICAL SUPPORT'),
+        (MEETING, u'MEETING'),
         (DUTY_TRAVEL, u"DUTY TRAVEL"),
         (HOME_LEAVE, u"HOME LEAVE"),
         (FAMILY_VISIT, u"FAMILY VISIT"),
@@ -82,7 +91,11 @@ class Trip(AdminURLMixin, models.Model):
     travel_type = models.CharField(
         max_length=32L,
         choices=TRAVEL_TYPE,
-        default=DUTY_TRAVEL
+        default=PROGRAMME_MONITORING
+    )
+    security_clearance_required = models.BooleanField(
+        default=False,
+        help_text='Do you need security clarance for this trip?'
     )
     international_travel = models.BooleanField(
         default=False,
@@ -90,12 +103,7 @@ class Trip(AdminURLMixin, models.Model):
     )
     from_date = models.DateField()
     to_date = models.DateField()
-    monitoring_supply_delivery = models.BooleanField(default=False)
-    no_pca = models.BooleanField(
-        default=False,
-        verbose_name=u'Not related to a PCA',
-        help_text='Tick this if this trip is not related to partner monitoring'
-    )
+
     pcas = models.ManyToManyField(
         u'partners.PCA',
         blank=True, null=True,
@@ -159,7 +167,8 @@ class Trip(AdminURLMixin, models.Model):
     approved_by_human_resources = models.NullBooleanField(
         default=None,
         choices=BOOL_CHOICES,
-        verbose_name='Certified by human resources')
+        verbose_name='Certified by human resources',
+        help_text='HR must approve all trips relating to training and staff development')
     date_human_resources_approved = models.DateField(blank=True, null=True)
 
     representative = models.ForeignKey(User, related_name='approved_trips', blank=True, null=True)
@@ -169,6 +178,11 @@ class Trip(AdminURLMixin, models.Model):
     approved_date = models.DateField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     approved_email_sent = models.BooleanField(default=False)
+
+    ta_trip_took_place_as_planned = models.BooleanField(
+        default=False,
+        help_text='Did the trip take place as planned and therefore no claim is required?'
+    )
 
     class Meta:
         ordering = ['-created_date']
@@ -317,11 +331,15 @@ class ActionPoint(models.Model):
     trip = models.ForeignKey(Trip)
     description = models.CharField(max_length=254)
     due_date = models.DateField()
-    persons_responsible = models.ManyToManyField(User)
+    person_responsible = models.ForeignKey(User, related_name='for_action')
+    persons_responsible = models.ManyToManyField(User, blank=True, null=True)
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
-    comments = models.TextField(blank=True, null=True, verbose_name='Supervisors Comments')
+    comments = models.TextField(blank=True, null=True)
     closed = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.description
 
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
@@ -340,12 +358,12 @@ class ActionPoint(models.Model):
             )
         elif instance.closed:
             emails.TripActionPointClosed(instance).send(
-                'no-reply@unicef.org',
+                instance.trip.owner.email,
                 *recipients
             )
         else:
             emails.TripActionPointUpdated(instance).send(
-                'no-reply@unicef.org',
+                instance.trip.owner.email,
                 *recipients
             )
 

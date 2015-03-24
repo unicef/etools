@@ -1,38 +1,14 @@
 __author__ = 'jcranwellward'
 
-import tablib
 
-from django.utils.datastructures import SortedDict
-
-from import_export import resources
-
-from .models import Trip
+from EquiTrack.utils import BaseExportResource
+from .models import Trip, ActionPoint
 
 
-class TripResource(resources.ModelResource):
+class TripResource(BaseExportResource):
 
-    headers = []
-
-    def insert_column(self, row, field_name, value):
-
-        row[field_name] = value if self.headers else ''
-
-    def insert_columns_inplace(self, row, fields, after_column):
-
-        keys = row.keys()
-        before_column = None
-        if after_column in row:
-            index = keys.index(after_column)
-            offset = index + 1
-            if offset < len(row):
-                before_column = keys[offset]
-
-        for key, value in fields.items():
-            if before_column:
-                row.insert(offset, key, value)
-                offset += 1
-            else:
-                row[key] = value
+    class Meta:
+        model = Trip
 
     def fill_trip_routes(self, row, trip):
 
@@ -43,6 +19,19 @@ class TripResource(resources.ModelResource):
         )
 
         return row
+
+    def fill_trip_partners(self, row, trip):
+
+        partners = [pca.partner.name for pca in trip.pcas.all()]
+        partners.extend(
+            [partner.name for partner in trip.partners.all()]
+        )
+
+        self.insert_column(
+            row,
+            'Partners',
+            ', '.join(set(partners))
+        )
 
     def fill_trip_row(self, row, trip):
 
@@ -60,40 +49,34 @@ class TripResource(resources.ModelResource):
     def fill_row(self, trip, row):
 
         self.fill_trip_row(row, trip)
+        self.fill_trip_partners(row, trip)
         self.fill_trip_routes(row, trip)
 
-    def export(self, queryset=None):
-        """
-        Exports a resource.
-        """
-        rows = []
 
-        if queryset is None:
-            queryset = self.get_queryset()
-
-        fields = SortedDict()
-
-        for trip in queryset.iterator():
-
-            self.fill_row(trip, fields)
-
-        self.headers = fields
-
-        # Iterate without the queryset cache, to avoid wasting memory when
-        # exporting large datasets.
-        for trip in queryset.iterator():
-            # second pass creates rows from the known table shape
-            row = fields.copy()
-
-            self.fill_row(trip, row)
-
-            rows.append(row)
-
-        data = tablib.Dataset(headers=fields.keys())
-        for row in rows:
-            data.append(row.values())
-        return data
+class ActionPointResource(BaseExportResource):
 
     class Meta:
-        model = Trip
+        model = ActionPoint
 
+    def fill_row(self, action, row):
+
+        self.insert_column(row, 'Trip', action.trip.__unicode__())
+        self.insert_column(row, 'Traveller', action.trip.owner)
+        self.insert_column(row, 'Description', action.description)
+        self.insert_column(row, 'Due Date', action.due_date)
+        self.insert_column(
+            row,
+            'Persons Responsible',
+            ', '.join([person.get_full_name()
+                       for person in action.persons_responsible.all()])
+        )
+        self.insert_column(row, 'Actions Taken', action.actions_taken)
+        self.insert_column(
+            row,
+            'Completed Date',
+            action.completed_date.strftime("%d-%m-%Y")
+            if action.completed_date else ''
+        )
+        self.insert_column(row, 'Supervisors Comments', action.comments)
+        self.insert_column(row, 'Supervisors Comments', action.comments)
+        self.insert_column(row, 'Closed?', action.closed)

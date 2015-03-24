@@ -2,13 +2,14 @@ __author__ = 'jcranwellward'
 
 from datetime import datetime
 
-from django.forms import ModelForm, fields
+from django.forms import ModelForm, fields, Form
 from django.core.exceptions import ValidationError
 
 from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
-from datetimewidget.widgets import DateTimeWidget
+from datetimewidget.widgets import DateTimeWidget, DateWidget
 
+from partners.models import PCA
 from .models import Trip
 
 
@@ -45,6 +46,10 @@ class TravelRoutesForm(ModelForm):
 
 class TripForm(ModelForm):
 
+    def __init__(self, **kwargs):
+        super(TripForm, self).__init__(**kwargs)
+        self.fields['pcas'].queryset = PCA.get_active_partnerships()
+
     class Meta:
         model = Trip
         widgets = {
@@ -70,6 +75,7 @@ class TripForm(ModelForm):
         date_supervisor_approved = cleaned_data.get(u'date_supervisor_approved')
         approved_by_budget_owner = cleaned_data.get(u'approved_by_budget_owner')
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
+        trip_report = cleaned_data.get(u'main_observations')
 
         if to_date < from_date:
             raise ValidationError('The to date must be greater than the from date')
@@ -105,11 +111,35 @@ class TripForm(ModelForm):
         #         'Only the supervisor can approve this trip'
         #     )
 
+        # if status == Trip.COMPLETED:
+        #     if not approved_by_supervisor:
+        #         raise ValidationError(
+        #             'The trip must be approved before it can be completed'
+        #         )
+        #
+        #     if not trip_report:
+        #         raise ValidationError(
+        #             'You must provide a narrative report before the trip can be completed'
+        #         )
 
-        # if status == Trip.COMPLETED and not approved_by_supervisor:
-        #     raise ValidationError(
-        #         'The trip must be approved before it can be completed'
-        #     )
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
+
+
+class TripFilterByDateForm(Form):
+
+    depart = fields.DateField(
+        label='From',
+        widget=DateWidget(
+            bootstrap_version=3,
+            attrs={}
+        )
+    )
+    arrive = fields.DateField(
+        label='To',
+        widget=DateWidget(
+            bootstrap_version=3,
+            attrs={}
+        )
+    )

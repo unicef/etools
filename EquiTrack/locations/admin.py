@@ -35,6 +35,7 @@ class LocationAdmin(ImportExportMixin, LeafletGeoAdmin):
         'p_code',
         'point',
         'point_lat_long',
+        'locality',
     )
     list_display = (
         'name',
@@ -83,6 +84,7 @@ class LocalityAdmin(LeafletGeoAdmin):
 
 
 class CartoDBTableAdmin(admin.ModelAdmin):
+    save_as = True
     list_display = (
         'table_name',
         'location_type',

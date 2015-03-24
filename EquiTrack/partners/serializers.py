@@ -4,7 +4,78 @@ import json
 
 from rest_framework import serializers
 
-from .models import GwPCALocation
+from locations.models import Location
+from .models import GwPCALocation, PCA, PCASector, IndicatorProgress
+
+
+class IndicatorProgressSerializer(serializers.ModelSerializer):
+
+    indicator = serializers.CharField(source='indicator.name')
+    programmed = serializers.IntegerField(source='programmed')
+    current = serializers.IntegerField(source='current')
+    unit = serializers.CharField(source='unit')
+
+    class Meta:
+        model = IndicatorProgress
+
+
+class PCASectorSerializer(serializers.ModelSerializer):
+
+    sector_name = serializers.CharField(source='sector.name')
+    sector_id = serializers.CharField(source='sector.id')
+
+    indicators = serializers.SerializerMethodField('get_indicators')
+
+    def get_indicators(self, pca_sector):
+        return IndicatorProgressSerializer(
+            pca_sector.indicatorprogress_set.all(),
+            many=True
+        ).data
+
+    class Meta:
+        model = PCASector
+
+
+class PartnershipSerializer(serializers.ModelSerializer):
+
+    pca_title = serializers.CharField(source='title')
+    pca_number = serializers.CharField(source='number')
+    pca_id = serializers.CharField(source='id')
+    partner_name = serializers.CharField(source='partner.name')
+    partner_id = serializers.CharField(source='partner.id')
+
+    sectors = serializers.SerializerMethodField('get_sectors')
+
+    def get_sectors(self, pca):
+        return PCASectorSerializer(
+            pca.pcasector_set.all(),
+            many=True
+        ).data
+
+    class Meta:
+        model = PCA
+
+
+class LocationSerializer(serializers.Serializer):
+
+    latitude = serializers.CharField(source='point.y')
+    longitude = serializers.CharField(source='point.x')
+    location_name = serializers.CharField(source='name')
+    location_type = serializers.CharField(source='gateway.name')
+    gateway_id = serializers.CharField(source='gateway.id')
+    p_code = serializers.CharField(source='p_code')
+
+    parterships = serializers.SerializerMethodField('get_pcas')
+
+    def get_pcas(self, location):
+        pcas = set([
+            loc.pca for loc in
+            location.gwpcalocation_set.all()
+        ])
+        return PartnershipSerializer(pcas, many=True).data
+
+    class Meta:
+        model = Location
 
 
 class GWLocationSerializer(serializers.ModelSerializer):
@@ -20,7 +91,6 @@ class GWLocationSerializer(serializers.ModelSerializer):
     longitude = serializers.CharField(source='location.point.x')
     location_name = serializers.CharField(source='location.name')
     location_type = serializers.CharField(source='location.gateway.name')
-    gateway_name = serializers.CharField(source='location.gateway.name')
     gateway_id = serializers.CharField(source='location.gateway.id')
 
     class Meta:

@@ -1,3 +1,4 @@
+
 __author__ = 'jcranwellward'
 
 import json
@@ -14,7 +15,8 @@ from django.db.models.signals import post_save
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 
-from EquiTrack.utils import get_changeform_link, AdminURLMixin
+from EquiTrack.utils import get_changeform_link
+from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -301,6 +303,8 @@ class PCA(AdminURLMixin, models.Model):
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
 
+
+
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
     unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -446,6 +450,10 @@ class PCA(AdminURLMixin, models.Model):
         super(PCA, self).save(**kwargs)
 
     @classmethod
+    def get_active_partnerships(cls):
+        return cls.objects.filter(current=True, status=cls.ACTIVE)
+
+    @classmethod
     def send_changes(cls, sender, instance, created, **kwargs):
         # send emails to managers on changes
         manager, created = Group.objects.get_or_create(
@@ -500,13 +508,17 @@ class GwPCALocation(models.Model):
         chained_model_field="region",
         show_all=False,
         auto_choose=True,
+        null=True,
+        blank=True
     )
     location = ChainedForeignKey(
         Location,
         chained_field="locality",
         chained_model_field="locality",
         show_all=False,
-        auto_choose=True
+        auto_choose=True,
+        null=True,
+        blank=True
     )
     tpm_visit = models.BooleanField(default=False)
 
@@ -514,11 +526,11 @@ class GwPCALocation(models.Model):
         verbose_name = 'PCA Location'
 
     def __unicode__(self):
-        return u'{} -> {} -> {} -> {}'.format(
+        return u'{} -> {}{}{}'.format(
             self.governorate.name,
             self.region.name,
-            self.locality.name,
-            self.location.__unicode__(),
+            u'-> {}'.format(self.locality.name) if self.locality else u'',
+            self.location.__unicode__() if self.location else u'',
         )
 
     def view_location(self):
