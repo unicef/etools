@@ -28,6 +28,7 @@ django-redis-cache==0.10.2
 hiredis==0.1.2
 boto==2.20.1
 pykml==0.1.0
+GDAL==1.10.0
 Fiona==1.5.0
 Shapely==1.5.7
 cartodb==0.8.1
@@ -44,5 +45,3 @@ pymongo
 django-datatables-view
 python-dateutil
 unidecode
-#GDAL==1.11.1
-
