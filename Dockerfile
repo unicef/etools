@@ -7,6 +7,7 @@ RUN mkdir /code
 WORKDIR /code
 ADD . /code/
 RUN pip install -r requirements.txt
+ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN python EquiTrack/manage.py collectstatic
 # Start everything
 EXPOSE 8080
