@@ -46,8 +46,8 @@ class TravelRoutesForm(ModelForm):
 
 class TripForm(ModelForm):
 
-    def __init__(self, **kwargs):
-        super(TripForm, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        super(TripForm, self).__init__(*args, **kwargs)
         self.fields['pcas'].queryset = PCA.get_active_partnerships()
 
     class Meta:
@@ -62,6 +62,7 @@ class TripForm(ModelForm):
     def clean(self):
         cleaned_data = super(TripForm, self).clean()
         status = cleaned_data.get('status')
+        travel_type = cleaned_data.get('travel_type')
         from_date = cleaned_data.get('from_date')
         to_date = cleaned_data.get('to_date')
         owner = cleaned_data.get('owner')
@@ -83,10 +84,10 @@ class TripForm(ModelForm):
         if owner == supervisor:
             raise ValidationError('You can\'t supervise your own trips')
 
-        if not pcas and not no_pca:
+        if not pcas and travel_type == Trip.PROGRAMME_MONITORING:
             raise ValidationError(
                 'You must select the PCAs related to this trip'
-                ' or select the "Not related to a PCA" option'
+                ' or change the Travel Type'
             )
 
         if ta_required and not programme_assistant:
