@@ -20,6 +20,16 @@ class TripResource(BaseExportResource):
 
         return row
 
+    def fill_trip_pcas(self, row, trip):
+
+        pcas = [pca.__unicode__() for pca in trip.pcas.all()]
+
+        self.insert_column(
+            row,
+            'PCA',
+            ', '.join(set(pcas))
+        )
+
     def fill_trip_partners(self, row, trip):
 
         partners = [pca.partner.name for pca in trip.pcas.all()]
@@ -50,6 +60,7 @@ class TripResource(BaseExportResource):
 
         self.fill_trip_row(row, trip)
         self.fill_trip_partners(row, trip)
+        self.fill_trip_pcas(row, trip)
         self.fill_trip_routes(row, trip)
 
 
@@ -62,11 +73,16 @@ class ActionPointResource(BaseExportResource):
 
         self.insert_column(row, 'Trip', action.trip.__unicode__())
         self.insert_column(row, 'Traveller', action.trip.owner)
+        self.insert_column(row, 'Section', action.trip.section)
+        self.insert_column(row, 'Office', action.trip.office)
         self.insert_column(row, 'Description', action.description)
         self.insert_column(row, 'Due Date', action.due_date)
+        self.insert_column(row, 'Person Responsible', action.person_responsible)
+        self.insert_column(row, 'Section Responsible', action.person_responsible.section)
+        self.insert_column(row, 'Office Responsible', action.person_responsible.office)
         self.insert_column(
             row,
-            'Persons Responsible',
+            'Originally Responsible',
             ', '.join([person.get_full_name()
                        for person in action.persons_responsible.all()])
         )
@@ -77,6 +93,5 @@ class ActionPointResource(BaseExportResource):
             action.completed_date.strftime("%d-%m-%Y")
             if action.completed_date else ''
         )
-        self.insert_column(row, 'Supervisors Comments', action.comments)
         self.insert_column(row, 'Supervisors Comments', action.comments)
         self.insert_column(row, 'Closed?', action.closed)

@@ -48,10 +48,7 @@ class DashboardView(TemplateView):
             'current_structure': current_structure,
             'structures': ResultStructure.objects.all(),
             'pcas': {
-                'active': PCA.objects.filter(
-                    status=PCA.ACTIVE,
-                    amendment_number=0,
-                ).count(),
+                'active': PCA.get_active_partnerships().count(),
                 'implemented': PCA.objects.filter(
                     status=PCA.IMPLEMENTED,
                     amendment_number=0,

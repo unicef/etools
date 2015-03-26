@@ -114,6 +114,11 @@
                                     <li>
                                         <a href="{% url "logout" %}"><i class="fa fa-power-off"></i> Logout</a>
                                     </li>
+                                    {% if user.is_superuser %}
+                                        <li>
+                                            <a href="{% url 'admin:index' %}"><i class="fa fa-home"></i> Admin</a>
+                                        </li>
+                                    {% endif %}
                                 </ul>
                             </li>
                         {% else %}
