@@ -22,9 +22,6 @@ from . import emails
 
 User = get_user_model()
 
-User.__unicode__ = lambda user: user.get_full_name()
-User._meta.ordering = ['first_name']
-
 BOOL_CHOICES = (
     (None, "N/A"),
     (True, "Yes"),

@@ -1,8 +1,6 @@
 __author__ = 'jcranwellward'
 
 from django.contrib.gis import admin
-from django.contrib.auth.models import User
-from django.contrib.auth.admin import UserAdmin
 
 from import_export import resources
 from import_export.admin import ImportExportMixin
@@ -15,16 +13,6 @@ class LocationResource(resources.ModelResource):
 
     class Meta:
         model = models.Location
-
-
-class UserResource(resources.ModelResource):
-
-    class Meta:
-        model = User
-
-
-class UserAdminPlus(ImportExportMixin, UserAdmin):
-    resource_class = UserResource
 
 
 class LocationAdmin(ImportExportMixin, LeafletGeoAdmin):
@@ -106,8 +94,6 @@ class CartoDBTableAdmin(admin.ModelAdmin):
             )
 
 
-admin.site.unregister(User)
-admin.site.register(User, UserAdminPlus)
 admin.site.register(models.Governorate, GovernorateAdmin)
 admin.site.register(models.Region, RegionAdmin)
 admin.site.register(models.Locality, LocalityAdmin)

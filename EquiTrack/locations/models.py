@@ -3,13 +3,11 @@ __author__ = 'jcranwellward'
 import random
 
 import logging
-from django.conf import settings
-from django.core import urlresolvers
+
 from django.db import IntegrityError
 from django.contrib.gis.db import models
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.forms import forms
 
 from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey

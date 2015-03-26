@@ -4,6 +4,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 from registration.forms import EmailRegistrationForm
+from trips.models import Office
+from reports.models import Sector
 
 User = get_user_model()
 
@@ -21,6 +23,18 @@ class UnicefEmailRegistrationForm(EmailRegistrationForm):
 
     first_name = forms.CharField(max_length=254)
     last_name = forms.CharField(max_length=254)
+    office = forms.ModelChoiceField(
+        Office.objects.all(),
+        empty_label='Office',
+        widget=forms.Select(attrs={'class': 'form-control input-sm'})
+    )
+    section = forms.ModelChoiceField(
+        Sector.objects.all(),
+        empty_label='Section',
+        widget=forms.Select(attrs={'class': 'form-control input-sm'})
+    )
+    job_title = forms.CharField(max_length=255)
+    phone_number = forms.CharField(max_length=255)
 
     def clean_email(self):
 
