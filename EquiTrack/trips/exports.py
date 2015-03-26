@@ -53,7 +53,7 @@ class TripResource(BaseExportResource):
         self.insert_column(row, 'Purpose', trip.purpose_of_travel)
         self.insert_column(row, 'From Date', str(trip.from_date))
         self.insert_column(row, 'To Date', str(trip.to_date))
-
+        self.insert_column(row, 'Report', 'Yes' if trip.main_observations else 'No')
         return row
 
     def fill_row(self, trip, row):
@@ -77,9 +77,6 @@ class ActionPointResource(BaseExportResource):
         self.insert_column(row, 'Office', action.trip.office)
         self.insert_column(row, 'Description', action.description)
         self.insert_column(row, 'Due Date', action.due_date)
-        self.insert_column(row, 'Person Responsible', action.person_responsible)
-        self.insert_column(row, 'Section Responsible', action.person_responsible.section)
-        self.insert_column(row, 'Office Responsible', action.person_responsible.office)
         self.insert_column(
             row,
             'Originally Responsible',
