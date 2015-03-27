@@ -14,7 +14,7 @@ User._meta.ordering = ['first_name']
 
 class UserProfile(models.Model):
 
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='profile')
     office = models.ForeignKey(Office)
     section = models.ForeignKey(Sector)
     job_title = models.CharField(max_length=255)
