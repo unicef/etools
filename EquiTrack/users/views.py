@@ -24,21 +24,3 @@ class EquiTrackRegistrationView(RegistrationView):
         return super(EquiTrackRegistrationView, self).register(
             request, send_email, **cleaned_data
         )
-
-
-class EquiTrackActivationView(ActivationView):
-
-    def activate(self, request, activation_key):
-
-        activated_user = self.registration_profile.objects.activate_user(
-            activation_key
-        )
-        if activated_user:
-            activated_user.is_staff = True
-            activated_user.save()
-
-            signals.user_activated.send(
-                sender=self.__class__,
-                user=activated_user,
-                request=request)
-        return activated_user
