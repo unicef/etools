@@ -48,7 +48,7 @@ class TripForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(TripForm, self).__init__(*args, **kwargs)
-        self.fields['pcas'].queryset = PCA.get_active_partnerships()
+        #self.fields['pcas'].queryset = PCA.get_active_partnerships()
 
     class Meta:
         model = Trip
