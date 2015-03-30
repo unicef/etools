@@ -45,3 +45,4 @@ pymongo
 django-datatables-view
 python-dateutil
 unidecode
+lxml==3.3.1
