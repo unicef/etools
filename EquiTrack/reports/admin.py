@@ -131,7 +131,16 @@ class IndicatorAdmin(ImportExportModelAdmin):
     ]
 
 
-admin.site.register(Result)
+class ResultAdmin(ImportExportModelAdmin):
+
+    list_filter = (
+        'result_structure',
+        'sector',
+        'result_type'
+    )
+
+
+admin.site.register(Result, ResultAdmin)
 admin.site.register(ResultType)
 admin.site.register(RRPObjective, ImportExportModelAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
