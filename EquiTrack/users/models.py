@@ -64,6 +64,16 @@ class EquiTrackRegistrationManager(RegistrationManager):
 
         return new_user
 
+    def activate_user(self, activation_key):
+
+        user = super(EquiTrackRegistrationManager, self).activate_user(activation_key)
+
+        if user is not False:
+            user.is_staff = True
+            user.save()
+
+        return user
+
 
 class EquiTrackRegistrationModel(RegistrationProfile):
 
