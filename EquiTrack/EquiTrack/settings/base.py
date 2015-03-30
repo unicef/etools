@@ -359,9 +359,9 @@ LOCAL_APPS = (
     'registration',
 )
 
-SOUTH_MIGRATION_MODULES = {
-    "post_office": "post_office.south_migrations",
-}
+# SOUTH_MIGRATION_MODULES = {
+#     "post_office": "post_office.south_migrations",
+# }
 
 MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
 
