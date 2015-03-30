@@ -16,7 +16,9 @@ from reports.models import (
     Rrp5Output,
     RRPObjective,
     IntermediateResult,
-    ResultStructure
+    ResultStructure,
+    ResultType,
+    Result
 )
 
 
@@ -129,6 +131,8 @@ class IndicatorAdmin(ImportExportModelAdmin):
     ]
 
 
+admin.site.register(Result)
+admin.site.register(ResultType)
 admin.site.register(RRPObjective, ImportExportModelAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
 admin.site.register(Sector, SectorAdmin)

@@ -47,6 +47,7 @@ from partners.models import (
     Assessment,
     SpotCheck,
     Recommendation,
+    ResultChain
 )
 
 from partners.filters import (
@@ -275,6 +276,11 @@ class SpotChecksAdminInline(ReadOnlyMixin, admin.StackedInline):
     model = SpotCheck
 
 
+class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-results'
+    model = ResultChain
+
+
 class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PCAForm
     resource_class = PCAResource
@@ -382,10 +388,12 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PCAFileInline,
         LinksInlineAdmin,
         SpotChecksAdminInline,
+        ResultsInlineAdmin,
     )
 
     suit_form_tabs = (
         (u'info', u'Info'),
+        (u'results', u'Results'),
         (u'locations', u'Locations'),
         (u'checks', u'Spot Checks'),
     )

@@ -18,6 +18,14 @@ class ResultStructure(models.Model):
         return self.name
 
 
+class ResultType(models.Model):
+
+    name = models.CharField(max_length=150)
+
+    def __unicode__(self):
+        return self.name
+
+
 class Sector(models.Model):
 
     name = models.CharField(max_length=45L, unique=True)
@@ -83,6 +91,25 @@ class Rrp5Output(models.Model):
         return u'({}) {}'.format(self.result_structure, self.name)
 
 
+class Result(models.Model):
+
+    result_structure = models.ForeignKey(ResultStructure)
+    result_type = models.ForeignKey(ResultType)
+    sector = models.ForeignKey(Sector)
+    name = models.CharField(max_length=256L)
+
+    class Meta:
+        ordering = ['name']
+
+    def __unicode__(self):
+        return u'{} {} {}: {}'.format(
+            self.result_structure.name,
+            self.sector.name,
+            self.result_type.name,
+            self.name
+        )
+
+
 class Goal(models.Model):
 
     result_structure = models.ForeignKey(
@@ -114,6 +141,8 @@ class Indicator(models.Model):
     sector = models.ForeignKey(Sector)
     result_structure = models.ForeignKey(
         ResultStructure, blank=True, null=True)
+
+    result = models.ForeignKey(Result, blank=True, null=True)
     name = models.CharField(max_length=128L, unique=True)
     unit = models.ForeignKey(Unit)
     total = models.IntegerField(verbose_name='Target')
@@ -128,8 +157,7 @@ class Indicator(models.Model):
         ordering = ['name']
 
     def __unicode__(self):
-        return u'({}) {} {}'.format(
-            self.result_structure,
+        return u'{} {}'.format(
             self.name,
             'ActivityInfo' if self.in_activity_info else ''
         )
