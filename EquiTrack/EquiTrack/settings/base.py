@@ -45,7 +45,7 @@ SUIT_CONFIG = {
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
         {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
-            {'model': 'reports.result_structure'},
+            {'model': 'reports.resultstructure'},
             {'model': 'reports.sector'},
             {'model': 'reports.result'},
             {'model': 'reports.indicator'},
