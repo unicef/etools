@@ -20,6 +20,9 @@ class UserProfile(models.Model):
     job_title = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
 
+    def username(self):
+        return self.user.username
+
     def __unicode__(self):
         return u'User profile for {}'.format(
             self.user.get_full_name()
