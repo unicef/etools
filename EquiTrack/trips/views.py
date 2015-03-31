@@ -3,18 +3,20 @@ __author__ = 'jcranwellward'
 from datetime import datetime
 
 from django.db.models import Q
+from django.contrib.auth import get_user_model
 from django.views.generic import TemplateView, FormView
-
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.renderers import JSONPRenderer
 from rest_framework.response import Response
+
 
 from reports.models import Sector
 from .models import Trip, Office
 from .serializers import TripSerializer
 from .forms import TripFilterByDateForm
 
+User = get_user_model()
 
 def get_trip_months():
 
@@ -37,10 +39,21 @@ class TripsView(ListAPIView):
     serializer_class = TripSerializer
 
     def get_queryset(self):
-        return self.model.objects.filter(
-            status=self.model.APPROVED,
-            travel_type=Trip.DUTY_TRAVEL
+        status = self.request.QUERY_PARAMS.get('status', "approved")
+        #user = self.request.user
+        user = User.objects.get(id=62)
+
+        super_trips = user.supervised_trips.filter(
+            Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
         )
+
+        status_list = status.split(',')
+        q1 = Q()
+        for st in status_list:
+            q1 |= Q(status=st)
+
+        my_trips = user.trips.filter(q1)
+        return my_trips | super_trips
 
 
 class TripsByOfficeView(APIView):
