@@ -14,11 +14,14 @@ User._meta.ordering = ['first_name']
 
 class UserProfile(models.Model):
 
-    user = models.OneToOneField(User)
+    user = models.OneToOneField(User, related_name='profile')
     office = models.ForeignKey(Office)
     section = models.ForeignKey(Sector)
     job_title = models.CharField(max_length=255)
     phone_number = models.CharField(max_length=20)
+
+    def username(self):
+        return self.user.username
 
     def __unicode__(self):
         return u'User profile for {}'.format(
@@ -60,6 +63,16 @@ class EquiTrackRegistrationManager(RegistrationManager):
             reg_profile.send_activation_email(site)
 
         return new_user
+
+    def activate_user(self, activation_key):
+
+        user = super(EquiTrackRegistrationManager, self).activate_user(activation_key)
+
+        if user is not False:
+            user.is_staff = True
+            user.save()
+
+        return user
 
 
 class EquiTrackRegistrationModel(RegistrationProfile):

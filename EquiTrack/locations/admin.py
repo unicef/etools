@@ -7,6 +7,7 @@ from import_export.admin import ImportExportMixin
 from leaflet.admin import LeafletGeoAdmin
 
 from . import models
+from .forms import CartoDBTableForm
 
 
 class LocationResource(resources.ModelResource):
@@ -72,6 +73,7 @@ class LocalityAdmin(LeafletGeoAdmin):
 
 
 class CartoDBTableAdmin(admin.ModelAdmin):
+    form = CartoDBTableForm
     save_as = True
     list_display = (
         'table_name',

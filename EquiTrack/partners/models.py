@@ -27,7 +27,8 @@ from reports.models import (
     Sector,
     Goal,
     WBS,
-)
+    ResultType,
+    Result)
 from locations.models import (
     Governorate,
     Locality,
@@ -732,3 +733,38 @@ class FACE(models.Model):
             return response
 
 models.signals.post_save.connect(FACE.notify_face_change, sender=FACE)
+
+
+class ResultChain(models.Model):
+
+    partnership = models.ForeignKey(PCA)
+    result_type = models.ForeignKey(ResultType)
+    result = ChainedForeignKey(
+        Result,
+        chained_field="result_type",
+        chained_model_field="result_type",
+        show_all=False,
+        auto_choose=False,
+    )
+    indicator = ChainedForeignKey(
+        Indicator,
+        chained_field="result",
+        chained_model_field="result",
+        show_all=False,
+        auto_choose=True
+    )
+    governerate = models.ForeignKey(
+        Governorate,
+        blank=True, null=True
+    )
+    target = models.PositiveIntegerField(
+        blank=True, null=True
+    )
+
+    def __unicode__(self):
+        return u'{} -> {} -> {} -> {}'.format(
+            self.result.result_structure.name,
+            self.sector.name,
+            self.result.__unicode__(),
+            self.indicator.name,
+        )

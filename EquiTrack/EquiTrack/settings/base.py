@@ -44,7 +44,15 @@ SUIT_CONFIG = {
 
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
-        {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign'},
+        {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
+            {'model': 'reports.resultstructure'},
+            {'model': 'reports.sector'},
+            {'model': 'reports.result'},
+            {'model': 'reports.indicator'},
+            {'model': 'reports.goal'},
+            {'model': 'reports.intermediateresult'},
+            {'model': 'reports.wbs'},
+        ]},
 
         {'app': 'activityinfo', 'label': 'ActivityInfo'},
 
@@ -351,9 +359,9 @@ LOCAL_APPS = (
     'registration',
 )
 
-SOUTH_MIGRATION_MODULES = {
-    "post_office": "post_office.south_migrations",
-}
+# SOUTH_MIGRATION_MODULES = {
+#     "post_office": "post_office.south_migrations",
+# }
 
 MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
 

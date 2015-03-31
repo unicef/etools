@@ -27,6 +27,23 @@ class UserAdminPlus(ImportExportMixin, UserAdmin):
     inlines = (ProfileInline,)
 
 
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = (
+        'username',
+        'office',
+        'section',
+        'job_title',
+        'phone_number',
+    )
+    list_editable = (
+        'office',
+        'section',
+        'job_title',
+        'phone_number',
+    )
+
+
 # Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
+admin.site.register(UserProfile, ProfileAdmin)
