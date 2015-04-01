@@ -23,7 +23,29 @@ class TripSerializer(serializers.ModelSerializer):
     staff_responsible_ta = serializers.CharField(source='programme_assistant')
     international_travel = serializers.CharField(source='international_travel')
     representative = serializers.CharField(source='representative')
+    human_resources = serializers.CharField(source='human_resources')
     approved_by_human_resources = serializers.CharField(source='approved_by_human_resources')
+
+    vision_approver = serializers.CharField(source='vision_approver')
+    partners = serializers.CharField(source='partners')
+
+    # pcas = serializers.CharField(source='pcas')
+    # approved_by_supervisor = serializers.CharField(source='approved_by_supervisor')
+    # date_supervisor_approved = serializers.DateField(source='date_supervisor_approved')
+    # approved_by_budget_owner = serializers.CharField(source='approved_by_budget_owner')
+    # date_budget_owner_approved = serializers.DateField(source='approved_by_budget_owner')
+    # approved_by_human_resources = serializers.CharField(source='approved_by_human_resources')
+    # date_human_resources_approved = serializers.DateField(source='date_supervisor_approved')
+    # representative_approval = serializers.CharField(source='representative_approval')
+    # date_representative_approved = serializers.DateField(source='date_representative_approved')
+    # approved_date = serializers.DateField(source='date_representative_approved')
+    #
+    # transport_booked = serializers.CharField(source='transport_booked')
+    # security_granted = serializers.CharField(source='security_granted')
+    # ta_drafted = serializers.CharField(source='ta_drafted')
+    # ta_drafted_date = serializers.DateField(source='ta_drafted_date')
+    # ta_reference = serializers.CharField(source='ta_reference')
+
 
 
     def transform_traveller(self, obj, value):
@@ -35,6 +57,11 @@ class TripSerializer(serializers.ModelSerializer):
     def transform_partners(self, obj, value):
         return ', '.join([
             partner.name for partner in obj.partners.all()
+        ])
+
+    def transform_pcas(self, obj, value):
+        return ', '.join([
+            pca.name for pca in obj.pcas.all()
         ])
 
     def transform_url(self, obj, value):
@@ -67,6 +94,27 @@ class TripSerializer(serializers.ModelSerializer):
             'staff_responsible_ta',
             'international_travel',
             'representative',
-            'approved_by_human_resources'
+            'human_resources',
+
+            'approved_by_supervisor',
+            'date_supervisor_approved',
+            'approved_by_budget_owner',
+            'date_budget_owner_approved',
+            'approved_by_human_resources',
+            'date_human_resources_approved',
+            'representative_approval',
+            'date_representative_approved',
+            'approved_date',
+            'transport_booked',
+            'security_granted',
+            'ta_drafted',
+            'ta_drafted_date',
+            'ta_reference',
+            'vision_approver',
+            'partners',
+            'pcas'
+
+
+
         )
 
