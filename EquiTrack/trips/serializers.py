@@ -4,7 +4,31 @@ from django.contrib.sites.models import Site
 
 from rest_framework import serializers
 
-from .models import Trip
+from .models import Trip, TravelRoutes, TripFunds
+
+
+class TravelRoutesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TravelRoutes
+        fields = (
+            'origin',
+            'destination',
+            'depart',
+            'arrive',
+            'remarks'
+        )
+
+
+class TripFundsSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = TripFunds
+        fields = (
+            'wbs',
+            'grant',
+            'amount'
+        )
 
 
 class TripSerializer(serializers.ModelSerializer):
@@ -25,9 +49,10 @@ class TripSerializer(serializers.ModelSerializer):
     representative = serializers.CharField(source='representative')
     human_resources = serializers.CharField(source='human_resources')
     approved_by_human_resources = serializers.CharField(source='approved_by_human_resources')
-
     vision_approver = serializers.CharField(source='vision_approver')
     partners = serializers.CharField(source='partners')
+    travel_routes = serializers.SerializerMethodField('get_TravelRoutes')
+    trip_funds = serializers.SerializerMethodField('get_TripFunds')
 
     # pcas = serializers.CharField(source='pcas')
     # approved_by_supervisor = serializers.CharField(source='approved_by_supervisor')
@@ -47,6 +72,17 @@ class TripSerializer(serializers.ModelSerializer):
     # ta_reference = serializers.CharField(source='ta_reference')
 
 
+    def get_TravelRoutes(self, trip):
+        return TripFundsSerializer(
+            trip.tripfunds_set.all(),
+            many=True
+        ).data
+
+    def get_TripFunds(self, trip):
+        return TravelRoutesSerializer(
+            trip.travelroutes_set.all(),
+            many=True
+        ).data
 
     def transform_traveller(self, obj, value):
         return obj.owner.get_full_name()
@@ -61,7 +97,7 @@ class TripSerializer(serializers.ModelSerializer):
 
     def transform_pcas(self, obj, value):
         return ', '.join([
-            pca.name for pca in obj.pcas.all()
+            pca.__unicode__() for pca in obj.pcas.all()
         ])
 
     def transform_url(self, obj, value):
@@ -112,9 +148,15 @@ class TripSerializer(serializers.ModelSerializer):
             'ta_reference',
             'vision_approver',
             'partners',
-            'pcas'
+            'pcas',
+            'travel_routes',
+            'trip_funds'
 
 
 
         )
+
+
+
+
 
