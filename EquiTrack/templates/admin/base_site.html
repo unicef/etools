@@ -8,7 +8,7 @@
 {% block title %}{{ title }} | {{ site_title|default:_('Equitrack') }}{% endblock %}
 
 {% block branding %}
-    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/091008_UNICEFLogoWhTrans_3-19-15.png" width="50" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">Equi<span>Track</span></a></div>
+    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">Equi<span>Track</span></a></div>
 
     <style type="text/css">
     #header
@@ -17,12 +17,11 @@
         color: #fff;
         text-shadow: none;
         min-height: 60px;
-
     }
 
     .header #branding {
         border-right: 0px;
-        width: 240px;
+        width: 280px;
     }
 
     .header #branding a {
@@ -37,7 +36,6 @@
    .header a:link, a:visited {
         text-decoration: none;
         outline: none;
-
     }
     .header .header-content.header-content-first{
         border-left: 0px;
