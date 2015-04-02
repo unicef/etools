@@ -40,8 +40,8 @@ class TripsView(ListAPIView):
 
     def get_queryset(self):
         status = self.request.QUERY_PARAMS.get('status', "approved")
-        #user = self.request.user
-        user = User.objects.get(id=62)
+        user = self.request.user
+        #user = User.objects.get(id=62)
 
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
