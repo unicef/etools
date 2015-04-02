@@ -19,8 +19,9 @@ class TravelRoutesSerializer(serializers.ModelSerializer):
             'remarks'
         )
 
-
 class TripFundsSerializer(serializers.ModelSerializer):
+    wbs = serializers.CharField(source='wbs.name')
+    grant = serializers.CharField(source='grant.name')
 
     class Meta:
         model = TripFunds
@@ -54,33 +55,16 @@ class TripSerializer(serializers.ModelSerializer):
     travel_routes = serializers.SerializerMethodField('get_TravelRoutes')
     trip_funds = serializers.SerializerMethodField('get_TripFunds')
 
-    # pcas = serializers.CharField(source='pcas')
-    # approved_by_supervisor = serializers.CharField(source='approved_by_supervisor')
-    # date_supervisor_approved = serializers.DateField(source='date_supervisor_approved')
-    # approved_by_budget_owner = serializers.CharField(source='approved_by_budget_owner')
-    # date_budget_owner_approved = serializers.DateField(source='approved_by_budget_owner')
-    # approved_by_human_resources = serializers.CharField(source='approved_by_human_resources')
-    # date_human_resources_approved = serializers.DateField(source='date_supervisor_approved')
-    # representative_approval = serializers.CharField(source='representative_approval')
-    # date_representative_approved = serializers.DateField(source='date_representative_approved')
-    # approved_date = serializers.DateField(source='date_representative_approved')
-    #
-    # transport_booked = serializers.CharField(source='transport_booked')
-    # security_granted = serializers.CharField(source='security_granted')
-    # ta_drafted = serializers.CharField(source='ta_drafted')
-    # ta_drafted_date = serializers.DateField(source='ta_drafted_date')
-    # ta_reference = serializers.CharField(source='ta_reference')
-
-
     def get_TravelRoutes(self, trip):
-        return TripFundsSerializer(
-            trip.tripfunds_set.all(),
+        return TravelRoutesSerializer(
+            trip.travelroutes_set.all(),
             many=True
         ).data
 
+
     def get_TripFunds(self, trip):
-        return TravelRoutesSerializer(
-            trip.travelroutes_set.all(),
+        return TripFundsSerializer(
+            trip.tripfunds_set.all(),
             many=True
         ).data
 
