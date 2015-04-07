@@ -168,11 +168,15 @@ class LinkedLocation(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
-        desc = u'{} -> {} -> {}'.format(
+        desc = u'{} -> {}'.format(
             self.governorate.name,
             self.region.name,
-            self.locality.name,
         )
+        if self.locality:
+            desc = u'{} -> {}'.format(
+                desc,
+                self.locality.name
+            )
         if self.location:
             desc = u'{} -> {} ({})'.format(
                 desc,
