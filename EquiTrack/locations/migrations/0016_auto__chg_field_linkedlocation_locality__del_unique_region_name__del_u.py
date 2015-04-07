@@ -8,12 +8,6 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Removing unique constraint on 'Governorate', fields ['name']
-        db.delete_unique(u'locations_governorate', ['name'])
-
-        # Removing unique constraint on 'Region', fields ['name']
-        db.delete_unique(u'locations_region', ['name'])
-
 
         # Changing field 'LinkedLocation.locality'
         db.alter_column(u'locations_linkedlocation', 'locality_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['locations.Locality'], null=True))

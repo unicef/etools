@@ -302,7 +302,7 @@ def link_db():
 def migrate_db(backup=True):
     if backup:
         run('dokku postgis:dump {} > /home/dokku/{}/backup.sql'.format(env.name, env.name))
-    run('dokku run {} ./EquiTrack/manage.py syncdb --migrate'.format(env.name))
+    run('dokku run {} "./EquiTrack/manage.py syncdb --migrate"'.format(env.name))
 
 
 @_setup
