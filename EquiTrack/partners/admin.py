@@ -312,6 +312,7 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PCASectorFilter,
         'status',
         'amendment',
+        'current',
         'start_date',
         'end_date',
         'signed_by_unicef_date',
