@@ -15,10 +15,10 @@ User._meta.ordering = ['first_name']
 class UserProfile(models.Model):
 
     user = models.OneToOneField(User, related_name='profile')
-    office = models.ForeignKey(Office)
-    section = models.ForeignKey(Sector)
-    job_title = models.CharField(max_length=255)
-    phone_number = models.CharField(max_length=20)
+    office = models.ForeignKey(Office, null=True, blank=True)
+    section = models.ForeignKey(Sector, null=True, blank=True)
+    job_title = models.CharField(max_length=255, null=True, blank=True)
+    phone_number = models.CharField(max_length=20, null=True, blank=True)
 
     def username(self):
         return self.user.username
