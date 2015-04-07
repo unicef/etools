@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.renderers import JSONPRenderer
 from rest_framework.response import Response
+from rest_framework.authentication import BasicAuthentication
 
 
 from reports.models import Sector
@@ -17,6 +18,7 @@ from .serializers import TripSerializer
 from .forms import TripFilterByDateForm
 
 User = get_user_model()
+
 
 def get_trip_months():
 
@@ -37,11 +39,11 @@ class TripsView(ListAPIView):
     model = Trip
     renderer_classes = (JSONPRenderer,)
     serializer_class = TripSerializer
+    authentication_classes = (BasicAuthentication,)
 
     def get_queryset(self):
         status = self.request.QUERY_PARAMS.get('status', "approved")
         user = self.request.user
-        #user = User.objects.get(id=62)
 
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
