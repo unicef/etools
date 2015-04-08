@@ -86,6 +86,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     )
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
+
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:
 path.append(DJANGO_ROOT)
@@ -111,7 +114,7 @@ import dj_database_url
 DATABASES = {
     'default': dj_database_url.config(
         env="DATABASE_URL",
-        default='postgis:///equitrack'
+        default='postgis://postgres:un1c3f@127.0.0.1/equitrack'
     )
 }
 BROKER_URL = 'redis://localhost:6379/0'
@@ -289,6 +292,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
@@ -343,6 +348,8 @@ THIRD_PARTY_APPS = (
     'djgeojson',
     'paintstore',
     'messages_extends',
+    'corsheaders',
+
 )
 
 # Apps specific for this project go here.
