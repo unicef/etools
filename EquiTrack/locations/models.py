@@ -225,7 +225,7 @@ class CartoDBTable(models.Model):
                 parent, level = Locality, Location
 
             for row in sites['rows']:
-                pcode = row[self.pcode_col]
+                pcode = str(row[self.pcode_col]).strip()
                 site_name = row[self.name_col].encode('UTF-8')
 
                 if not site_name or site_name.isspace():
@@ -250,7 +250,6 @@ class CartoDBTable(models.Model):
 
                 try:
                     create_args = {
-                        'name': site_name,
                         'p_code': pcode,
                         'gateway': self.location_type
                     }
