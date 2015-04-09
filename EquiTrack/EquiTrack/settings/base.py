@@ -114,7 +114,7 @@ import dj_database_url
 DATABASES = {
     'default': dj_database_url.config(
         env="DATABASE_URL",
-        default='postgis://postgres:un1c3f@127.0.0.1/equitrack'
+        default='postgis:///equitrack'
     )
 }
 BROKER_URL = 'redis://localhost:6379/0'
