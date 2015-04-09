@@ -86,6 +86,9 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     )
 }
+
+CORS_ORIGIN_ALLOW_ALL = True
+
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:
 path.append(DJANGO_ROOT)
@@ -105,7 +108,7 @@ if isinstance(DEBUG, str):
 TEMPLATE_DEBUG = DEBUG
 ########## END DEBUG CONFIGURATION
 
-########## DATABASE CONFIGURATION
+########## DATABASE CONFIGURATION #########
 POSTGIS_VERSION = (2, 1)
 import dj_database_url
 DATABASES = {
@@ -289,6 +292,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
@@ -343,6 +348,8 @@ THIRD_PARTY_APPS = (
     'djgeojson',
     'paintstore',
     'messages_extends',
+    'corsheaders',
+
 )
 
 # Apps specific for this project go here.
