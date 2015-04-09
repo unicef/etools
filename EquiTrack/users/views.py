@@ -1,13 +1,13 @@
 __author__ = 'jcranwellward'
 
+from rest_framework.generics import RetrieveAPIView
 from registration.backends.default.views import (
     RegistrationView,
-    ActivationView
 )
 
-from registration import signals
 from .forms import UnicefEmailRegistrationForm
-from .models import EquiTrackRegistrationModel
+from .models import EquiTrackRegistrationModel, User
+from .serializers import UserSerializer
 
 
 class EquiTrackRegistrationView(RegistrationView):
@@ -24,3 +24,12 @@ class EquiTrackRegistrationView(RegistrationView):
         return super(EquiTrackRegistrationView, self).register(
             request, send_email, **cleaned_data
         )
+
+
+class UserAuthAPIView(RetrieveAPIView):
+
+    model = User
+    serializer_class = UserSerializer
+
+    def get_object(self, queryset=None):
+        return self.request.user
