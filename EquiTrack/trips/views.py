@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.views.generic import TemplateView, FormView
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
 from rest_framework.renderers import JSONPRenderer
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
@@ -37,7 +37,6 @@ def get_trip_months():
 class TripsView(ListAPIView):
 
     model = Trip
-    # renderer_classes = (JSONPRenderer,)
     serializer_class = TripSerializer
     authentication_classes = (BasicAuthentication,)
 
@@ -56,6 +55,11 @@ class TripsView(ListAPIView):
 
         my_trips = user.trips.filter(q1)
         return my_trips | super_trips
+
+
+class TripActionView(RetrieveUpdateAPIView):
+
+    model = Trip
 
 
 class TripsByOfficeView(APIView):

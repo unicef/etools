@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from django.db.models.signals import post_save
 
 from registration.models import RegistrationManager, RegistrationProfile
 
@@ -27,6 +28,17 @@ class UserProfile(models.Model):
         return u'User profile for {}'.format(
             self.user.get_full_name()
         )
+
+    @classmethod
+    def create_user_profile(cls, sender, instance, created, **kwargs):
+        """
+        Signal handler to create user profiles automatically
+        """
+        if created:
+            cls.objects.create(user=instance)
+
+
+post_save.connect(UserProfile.create_user_profile, sender=User)
 
 
 class EquiTrackRegistrationManager(RegistrationManager):

@@ -38,4 +38,3 @@ def send_user_activated_email_to_user(sender, user, request, **kwargs):
         },
         user.email
     )
-

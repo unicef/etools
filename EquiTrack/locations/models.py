@@ -168,11 +168,15 @@ class LinkedLocation(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
-        desc = u'{} -> {} -> {}'.format(
+        desc = u'{} -> {}'.format(
             self.governorate.name,
             self.region.name,
-            self.locality.name,
         )
+        if self.locality:
+            desc = u'{} -> {}'.format(
+                desc,
+                self.locality.name
+            )
         if self.location:
             desc = u'{} -> {} ({})'.format(
                 desc,
@@ -221,7 +225,7 @@ class CartoDBTable(models.Model):
                 parent, level = Locality, Location
 
             for row in sites['rows']:
-                pcode = row[self.pcode_col]
+                pcode = str(row[self.pcode_col]).strip()
                 site_name = row[self.name_col].encode('UTF-8')
 
                 if not site_name or site_name.isspace():
@@ -246,7 +250,6 @@ class CartoDBTable(models.Model):
 
                 try:
                     create_args = {
-                        'name': site_name,
                         'p_code': pcode,
                         'gateway': self.location_type
                     }
