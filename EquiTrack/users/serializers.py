@@ -23,9 +23,12 @@ class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField('get_profile')
 
     def get_profile(self, user):
-        return UserProfileSerializer(
-            user.get_profile()
-        ).data
+        try:
+            return UserProfileSerializer(
+                user.get_profile()
+            ).data
+        except Exception:
+            return None
 
     class Meta:
         model = User
