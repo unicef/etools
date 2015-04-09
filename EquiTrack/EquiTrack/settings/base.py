@@ -108,7 +108,7 @@ if isinstance(DEBUG, str):
 TEMPLATE_DEBUG = DEBUG
 ########## END DEBUG CONFIGURATION
 
-########## DATABASE CONFIGURATION
+########## DATABASE CONFIGURATION #########
 POSTGIS_VERSION = (2, 1)
 import dj_database_url
 DATABASES = {
