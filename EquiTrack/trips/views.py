@@ -37,7 +37,7 @@ def get_trip_months():
 class TripsView(ListAPIView):
 
     model = Trip
-    renderer_classes = (JSONPRenderer,)
+    # renderer_classes = (JSONPRenderer,)
     serializer_class = TripSerializer
     authentication_classes = (BasicAuthentication,)
 

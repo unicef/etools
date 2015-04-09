@@ -46,3 +46,4 @@ python-dateutil
 unidecode
 #lxml==3.3.1
 #pykml==0.1.0
+django-cors-headers
