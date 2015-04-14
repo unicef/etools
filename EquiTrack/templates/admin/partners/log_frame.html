@@ -1,0 +1,51 @@
+
+{{ inline_admin_formset.formset.management_form }}
+<script src="/static/js/jquery.table-filter-0.2.2/jquery.table-filter.js"></script>
+<script src="/static/js/jquery.table-filter-0.2.2/jquery.table-filter.min.js"></script>
+<script type="text/javascript">
+    $(document).ready( function(){
+        $('table').tablesorter({
+                usNumberFormat: false,
+                sortReset: true,
+                sortRestart: true,
+                sortList: [[0,1], [1,0]]
+        });
+
+        $("table").addTableFilter();
+    });
+
+</script>
+
+<table cellpadding="4" cellspacing="0" border="0" id="logframetable" class="table table-striped" style="color:black" bgcolor="#C0C0C0 ">
+    <thead>
+        <tr>
+            <th class="header"><b>Result Type</b></th>
+            <th class="header"><b>Result</b></th>
+            <th class="header"><b>Indicator</b></th>
+            {% for rc in ResultChain_list %}
+                <th ></th>
+            {% endfor %}
+            <th class="header"><b>Governorate</b></th>
+            <th class="header"><b>Target</b></th>
+        </tr>
+    </thead>
+    <tbody>
+    {#    for (var i = 0; i < retdata.data.length; i++) {#}
+    {#        var obj = retdata.data[i];#}
+    {#        marker_content += '\#}
+        <tr>
+            <td style="vertical-align:top; white-space:nowrap;">Output</td>
+            <td style="vertical-align:top;">HRRP 2015 Child Protection Output</td>
+            <td style="vertical-align:top;">Children</td>
+            <td style="vertical-align:top;">North</td>
+            <td style="vertical-align:top;">10,000</td>
+        </tr>
+        <tr>
+            <td style="vertical-align:top; white-space:nowrap;">Output</td>
+            <td style="vertical-align:top;">HRRP 2015 Child Protection Output</td>
+            <td style="vertical-align:top;">Children</td>
+            <td style="vertical-align:top;">North</td>
+            <td style="vertical-align:top;">10,000</td>
+        </tr>
+    </tbody>
+</table>

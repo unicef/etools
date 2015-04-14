@@ -281,6 +281,12 @@ class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = ResultChain
 
 
+class LogFrameInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-results'
+    model = ResultChain
+    template = "admin/partners/log_frame.html"
+
+
 class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PCAForm
     resource_class = PCAResource
@@ -390,6 +396,7 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         LinksInlineAdmin,
         SpotChecksAdminInline,
         ResultsInlineAdmin,
+        LogFrameInlineAdmin,
     )
 
     suit_form_tabs = (

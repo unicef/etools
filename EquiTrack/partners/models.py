@@ -764,7 +764,8 @@ class ResultChain(models.Model):
     def __unicode__(self):
         return u'{} -> {} -> {} -> {}'.format(
             self.result.result_structure.name,
-            self.sector.name,
+            self.result.sector.name,
             self.result.__unicode__(),
             self.indicator.name,
         )
+
