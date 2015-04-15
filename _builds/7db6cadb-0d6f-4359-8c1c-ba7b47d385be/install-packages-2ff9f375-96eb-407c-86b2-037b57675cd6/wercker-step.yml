@@ -1,8 +1,0 @@
-name: install-packages
-version: 0.0.4
-description: install-packages step
-keywords:
-  - apt-get
-  - update
-  - install
-  - packages

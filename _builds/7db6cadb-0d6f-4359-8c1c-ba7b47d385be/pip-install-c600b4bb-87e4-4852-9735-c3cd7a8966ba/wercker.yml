@@ -1,4 +1,0 @@
-box: wercker/python
-build:
-  steps:
-    - validate-wercker-step
