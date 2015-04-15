@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+DIR=$(dirname $0)
+
+. $DIR/../support/*.sh
+
+time $DIR/../bin/roundup $DIR/../unit/*_test.sh

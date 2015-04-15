@@ -1,7 +1,4 @@
-box: wercker/python
-services:
-  - mies/postgis@0.0.5
-
+box: python:2.7
 # Build definition
 build:
   # The steps that will be executed on build
@@ -13,15 +10,21 @@ build:
           export WERCKER_POSTGRESQL_URL="postgis://$WERCKER_POSTGRESQL_USERNAME:$WERCKER_POSTGRESQL_PASSWORD@$WERCKER_POSTGRESQL_HOST:$WERCKER_POSTGRESQL_PORT/$WERCKER_POSTGRESQL_DATABASE"
 
     - install-packages:
-        packages: postgresql-client-9.3 postgis libgdal-dev
+        packages: postgresql-client postgis libgdal-dev python-gdal gdal-bin libgdal1-dev libxml2-dev libxslt-dev python-dev
 
     # A step that sets up the python virtual environment
     - virtualenv:
-         name: setup virtual environment
+        name: setup virtual environment
+        install_wheel: false # Enable wheel to speed up builds (experimental)
+
+    - script:
+        name: set C libs dir
+        code: |
+          export CPLUS_INCLUDE_PATH="/usr/include/gdal"
+          export C_INCLUDE_PATH="/usr/include/gdal"
 
     # A step that executes `pip install` command.
-    - pip-install:
-         requirements_file: "EquiTrack/requirements/test.txt"
+    - pip-install
 
     # # This pip-install clears the local wheel cache
     # - pip-install:
@@ -43,3 +46,43 @@ build:
         name: run django tests
         code: |
           python ./EquiTrack/manage.py test
+
+  after-steps:
+    - sherzberg/slack-notify:
+        subdomain: uniceflebanon
+        token: $SLACK_TOKEN
+        channel: "#devs"
+        username: wercker
+        icon_url: https://avatars3.githubusercontent.com/u/1695193?s=140
+
+deploy:
+  steps:
+    - add-to-known_hosts:
+        hostname: $SERVER_HOSTNAME
+    - add-ssh-key:
+        keyname: SSH_KEY
+    - script:
+        name: Initialize new repository
+        code: |
+          rm -rf .git
+          git init
+          git config --global user.name "wercker"
+          git config --global user.email "pleasemailus@wercker.com"
+          git remote add dokku dokku@$SERVER_HOSTNAME:$APP_NAME
+    - script:
+        name: Add everything to the repository
+        code: |
+          git add .
+          git commit -m "Result of deploy $WERCKER_GIT_COMMIT"
+    - script:
+        name: Push to dokku
+        code: |
+          git push dokku master
+
+  after-steps:
+    - sherzberg/slack-notify:
+        subdomain: uniceflebanon
+        token: $SLACK_TOKEN
+        channel: "#devs"
+        username: wercker
+        icon_url: https://avatars3.githubusercontent.com/u/1695193?s=140
