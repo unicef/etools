@@ -395,8 +395,8 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PCAFileInline,
         LinksInlineAdmin,
         SpotChecksAdminInline,
-        ResultsInlineAdmin,
         LogFrameInlineAdmin,
+        ResultsInlineAdmin,
     )
 
     suit_form_tabs = (

@@ -1,38 +1,44 @@
 {% load i18n admin_static admin_modify %}
+{% load log_frame %}
 <div class="inline-group {{ inline_admin_formset.opts.suit_classes }}" id="{{ inline_admin_formset.formset.prefix }}-group">
+
   <div class="tabular inline-related {% if forloop.last %}last-related{% endif %}">
 {{ inline_admin_formset.formset.management_form }}
+
 <fieldset class="module">
    <h2>{{ inline_admin_formset.opts.verbose_name_plural|capfirst }}</h2>
    {{ inline_admin_formset.formset.non_form_errors }}
-
-<table cellpadding="4" cellspacing="0" border="0" id="logframetable" class="table table-striped" style="color:black" bgcolor="#C0C0C0 ">
-    <thead>
-        <tr>
-            <th class=""><b>Result Type</b></th>
-            <th class=""><b>Result</b></th>
-            <th class=""><b>Indicator</b></th>
-
-           {% for inline_admin_formx in inline_admin_formset %}
-               {% if inline_admin_formx.form.instance.result_type %}
-                    <th class="">{{ inline_admin_formx.form.instance.governerate }} </th>
-               {%  endif %}
-           {% endfor %}
-        </tr>
-    </thead>
-    <tbody>
-        {% for inline_admin_formx in inline_admin_formset %}
-            {% if inline_admin_formx.form.instance.result_type %}
-                <tr>
-                    <td style="vertical-align:top; white-space:nowrap;">{{ inline_admin_formx.form.instance.result_type }}</td>
-                    <td style="vertical-align:top;">{{ inline_admin_formx.form.instance.result }}</td>
-                    <td style="vertical-align:top;">{{ inline_admin_formx.form.instance.indicator }}</td>
-                    <td style="vertical-align:top;">{{ inline_admin_formx.form.instance.target }}</td>
-                </tr>
-            {%  endif %}
-        {% endfor %}
-    </tbody>
-</table>
+    <div id="log_frame">
+      {% autoescape off %} {% show_results object_id %}{% endautoescape %}
+    </div>
+{#<table cellpadding="4" cellspacing="0" border="0" id="logframetable" class="table table-striped" style="color:black" bgcolor="#C0C0C0 ">#}
+{#    <thead>#}
+{#        <tr>#}
+{#            <th class=""><b>Result Type</b></th>#}
+{#            <th class=""><b>Result</b></th>#}
+{#            <th class=""><b>Indicator</b></th>#}
+{##}
+{##}
+{#           {% for inline_admin_formx in inline_admin_formset %}#}
+{#               {% if inline_admin_formx.form.instance.result_type %}#}
+{#                    <th class="">{{ inline_admin_formx.form.instance.governerate }} </th>#}
+{#               {%  endif %}#}
+{#           {% endfor %}#}
+{#        </tr>#}
+{#    </thead>#}
+{#    <tbody>#}
+{#        {% for inline_admin_formx in inline_admin_formset %}#}
+{#            {% if inline_admin_formx.form.instance.result_type %}#}
+{#                <tr>#}
+{#                    <td style="vertical-align:top; white-space:nowrap;">{{ inline_admin_formx.form.instance.result_type }}</td>#}
+{#                    <td style="vertical-align:top;">{{ inline_admin_formx.form.instance.result }}</td>#}
+{#                    <td style="vertical-align:top;">{{ inline_admin_formx.form.instance.indicator }}</td>#}
+{#                    <td style="vertical-align:top;">{{ inline_admin_formx.form.instance.target }}</td>#}
+{#                </tr>#}
+{#            {%  endif %}#}
+{#        {% endfor %}#}
+{#    </tbody>#}
+{#</table>#}
 
 
 {#    <table class="table table-bordered table-condensed table-striped">#}
@@ -99,9 +105,17 @@
 {#   </table>#}
 
 
-</fieldset>
+    </fieldset>
   </div>
 </div>
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#log_frame table').addClass("table table-striped table-hover");
+        $('#log_frame table thead th').each( function(){
+            $(this).attr("data-sortable", "true");
+        });
+    });
+</script>
 
 {#<script type="text/javascript">#}
 {#(function($) {#}
