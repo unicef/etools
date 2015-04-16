@@ -367,9 +367,6 @@ LOCAL_APPS = (
     'registration',
 )
 
-SOUTH_TESTS_MIGRATE = False
-SKIP_SOUTH_TESTS = True
-
 MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
 
 LEAFLET_CONFIG = {
