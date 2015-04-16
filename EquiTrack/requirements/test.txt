@@ -4,20 +4,4 @@
 # Test tools
 
 django-debug-toolbar==1.0.1
-django-nose==1.1     # integrate nose as test runner for django tests
-django-test-extensions==0.14
-factory-boy==2.0.2   # generate test objects using factories
-mock                 # create mocks for unit testing
 
-robotframework
-robotframework-selenium2library
-
-# Analysis/checker tools
-
-coverage==3.6   # generate code coverage reports
-nosexcover      # nose plugin to integrate coverage
-pep8            # style checking
-
-# Documentation tools
-
-Sphinx==1.2b1          # compile HTML documentation out of code and RST files
