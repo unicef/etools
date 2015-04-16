@@ -33,8 +33,20 @@ def get_trip_months():
 
     return sorted(months, reverse=True)
 
-
 class TripsView(ListAPIView):
+
+    model = Trip
+    renderer_classes = (JSONPRenderer,)
+    serializer_class = TripSerializer
+
+    def get_queryset(self):
+        return self.model.objects.filter(
+            status=self.model.APPROVED,
+            travel_type=Trip.DUTY_TRAVEL
+        )
+
+
+class TripsApi(ListAPIView):
 
     model = Trip
     serializer_class = TripSerializer
