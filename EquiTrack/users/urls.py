@@ -36,6 +36,4 @@ urlpatterns = patterns(
     #api
     url(r'^profile', UserAuthAPIView.as_view()),
 
-    # auth
-    url(r'', include('registration.auth_urls')),
 )
