@@ -10,7 +10,7 @@ from funds.models import Donor
 
 class DashboardView(TemplateView):
 
-    template_name = 'dashboard.html'
+    template_name = 'new_dashboard.html'
 
     def get_context_data(self, **kwargs):
 
