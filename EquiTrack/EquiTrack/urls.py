@@ -26,6 +26,9 @@ urlpatterns = patterns(
     url(r'trips/', include('trips.urls')),
     url(r'users/', include('users.urls')),
 
+    # auth
+    url(r'', include('registration.auth_urls')),
+
     # Uncomment the admin/doc line below to enable admin documentation:
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
