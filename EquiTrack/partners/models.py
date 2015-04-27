@@ -753,7 +753,7 @@ class ResultChain(models.Model):
         show_all=False,
         auto_choose=True
     )
-    governerate = models.ForeignKey(
+    governorate = models.ForeignKey(
         Governorate,
         blank=True, null=True
     )

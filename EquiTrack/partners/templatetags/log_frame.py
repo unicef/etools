@@ -5,37 +5,35 @@ import tablib
 from django import template
 from django.utils.datastructures import SortedDict
 
-from partners.models import (
-    PCA,
-    ResultChain,
-    Indicator
-)
+from partners.models import PCA
 
 register = template.Library()
 
+
 @register.simple_tag
-def show_results(value):
+def show_log_frame(value):
     pca = PCA.objects.get(id=int(value))
     results = pca.resultchain_set.all()
     data = tablib.Dataset()
     indicators = SortedDict()
-    governorates = []
+    row_mask = SortedDict({
+        'Result Type': '',
+        'Result': '',
+        'Indicator': ''
+    })
 
+    # first pass gets all the governorates
     for result in results:
-        if result.governerate.name not in governorates:
-            governorates.append(result.governerate.name)
+        if result.governorate.name not in row_mask.keys():
+            row_mask[result.governorate.name] = 0
 
+    # second pass builds the rows
     for result in results:
-        row = indicators.get(result.indicator.id, SortedDict())
+        row = indicators.get(result.indicator.id, row_mask.copy())
         row['Result Type'] = result.result_type.name
         row['Result'] = result.result.name
         row['Indicator'] = result.indicator.name
-        for governorate in governorates:
-            if result.governerate.name == governorate:
-                row[result.governerate.name] = result.target
-            else:
-                if governorate not in row:
-                    row[governorate] = 0
+        row[result.governorate.name] = result.target
         indicators[result.indicator.id] = row
 
     if indicators:
@@ -45,5 +43,3 @@ def show_results(value):
             data.append(row.values())
 
         return data.html
-
-    return '<p>No results</p>'
