@@ -281,12 +281,6 @@ class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = ResultChain
 
 
-class LogFrameInlineAdmin(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-results'
-    model = ResultChain
-    template = "admin/partners/log_frame.html"
-
-
 class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PCAForm
     resource_class = PCAResource
@@ -395,7 +389,6 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PCAFileInline,
         LinksInlineAdmin,
         SpotChecksAdminInline,
-        LogFrameInlineAdmin,
         ResultsInlineAdmin,
     )
 
@@ -404,6 +397,10 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'results', u'Results'),
         (u'locations', u'Locations'),
         (u'checks', u'Spot Checks'),
+    )
+
+    suit_form_includes = (
+        ('admin/partners/log_frame.html', 'top', 'results'),
     )
 
     def created_date(self, obj):

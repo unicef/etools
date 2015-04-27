@@ -1,7 +1,10 @@
 __author__ = 'unicef-leb-inn'
 
-from django import template
 import tablib
+
+from django import template
+from django.utils.datastructures import SortedDict
+
 from partners.models import (
     PCA,
     ResultChain,
@@ -10,46 +13,27 @@ from partners.models import (
 
 register = template.Library()
 
-# @register.inclusion_tag('admin/partners/log_frame.html')
 @register.simple_tag
 def show_results(value):
     pca = PCA.objects.get(id=int(value))
     results = pca.resultchain_set.all()
     data = tablib.Dataset()
-    indicators = []
-    governorates = []
-    headers = ["Result Type", "Result", "Indicator"]
+    indicators = SortedDict()
 
     for result in results:
-        indicators.append({'ind': result.indicator, 'gov': result.governerate.name, 'tar': result.target})
-        if result.governerate.name not in governorates:
-            governorates.append(result.governerate.name)
+        row = indicators.get(result.indicator.id, SortedDict())
+        row['Result Type'] = result.result_type.name
+        row['Result'] = result.result.name
+        row['Indicator'] = result.indicator.name
+        row[result.governerate.name] = result.target
+        indicators[result.indicator.id] = row
 
+    if indicators:
+        for row in indicators.values():
+            if not data.headers or len(data.headers) < len(row.values()):
+                data.headers = row.keys()
+            data.append(row.values())
 
-    govs = {}
-    for governorate in governorates:
-        govs[governorate] = 0
-        headers.append(governorate)
+        return data.html
 
-    gov_dict = {}
-    for indicator in indicators:
-        # if indicator["gov"] == governorate:
-        # results_trans.append(indicator["ind"], {})
-        if indicator['ind'] not in gov_dict:
-            gov_dict[indicator['ind']] = govs.copy()
-        gov_dict[indicator["ind"]][indicator["gov"]] = indicator['tar']
-
-    for key, value in gov_dict.iteritems():
-        res = results.filter(indicator=key)
-        tup1 = (res[0].result_type, res[0].result, key)
-        for gov, target in value.iteritems():
-            tup2 = (target,)
-            tup1 = tup1 + tup2
-        data.append(tup1)
-
-    data.headers = headers
-
-    datahtml = data.html
-    """Removes all values of arg from the given string"""
-    return data.html
-
+    return '<p>No results</p>'
