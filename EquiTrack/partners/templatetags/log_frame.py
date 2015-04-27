@@ -19,23 +19,13 @@ def show_results(value):
     results = pca.resultchain_set.all()
     data = tablib.Dataset()
     indicators = SortedDict()
-    governorates = []
-
-    for result in results:
-        if result.governerate.name not in governorates:
-            governorates.append(result.governerate.name)
 
     for result in results:
         row = indicators.get(result.indicator.id, SortedDict())
         row['Result Type'] = result.result_type.name
         row['Result'] = result.result.name
         row['Indicator'] = result.indicator.name
-        for governorate in governorates:
-            if result.governerate.name == governorate:
-                row[result.governerate.name] = result.target
-            else:
-                if governorate not in row:
-                    row[governorate] = 0
+        row[result.governerate.name] = result.target
         indicators[result.indicator.id] = row
 
     if indicators:
