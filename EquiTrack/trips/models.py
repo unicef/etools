@@ -249,8 +249,6 @@ class Trip(AdminURLMixin, models.Model):
             instance.supervisor.email]
         if instance.budget_owner:
             recipients.append(instance.budget_owner.email)
-        if instance.international_travel:
-            recipients.append(instance.representative.email)
 
         if instance.status == Trip.SUBMITTED:
             emails.TripCreatedEmail(instance).send(
@@ -259,6 +257,8 @@ class Trip(AdminURLMixin, models.Model):
             )
         elif instance.status == Trip.CANCELLED:
             # send an email to everyone if the trip is cancelled
+            if instance.travel_assistant:
+                recipients.append(instance.travel_assistant.email)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
                 *recipients
@@ -284,6 +284,8 @@ class Trip(AdminURLMixin, models.Model):
                 )
 
             if not instance.approved_email_sent:
+                if instance.international_travel:
+                    recipients.append(instance.representative.email)
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
                     *recipients
