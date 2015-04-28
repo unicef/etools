@@ -1,0 +1,11 @@
+machine:
+  services:
+    - postgres
+  python:
+    version: pypy-2.7.9
+  pre:
+    - sudo apt-get install postgresql-client postgis libgdal-dev python-gdal gdal-bin libgdal1-dev libxml2-dev libxslt-dev python-dev
+  environment:
+    CPLUS_INCLUDE_PATH: /usr/include/gdal
+    C_INCLUDE_PATH: /usr/include/gdal
+    DATABASE_URL: postgis://ubuntu:@127.0.0.1:5432/circle_test
