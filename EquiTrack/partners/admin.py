@@ -399,6 +399,10 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'checks', u'Spot Checks'),
     )
 
+    suit_form_includes = (
+        ('admin/partners/log_frame.html', 'top', 'results'),
+    )
+
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
     created_date.admin_order_field = '-created_at'
