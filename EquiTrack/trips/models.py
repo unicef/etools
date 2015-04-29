@@ -222,6 +222,8 @@ class Trip(AdminURLMixin, models.Model):
 
     @property
     def can_be_approved(self):
+        if self.status != Trip.SUBMITTED:
+            return False
         if not self.approved_by_supervisor:
             return False
         if self.requires_hr_approval\
@@ -233,7 +235,7 @@ class Trip(AdminURLMixin, models.Model):
         return True
 
     def save(self, **kwargs):
-        if self.status == Trip.SUBMITTED and self.can_be_approved:
+        if self.can_be_approved:
             self.approved_date = datetime.datetime.today()
             self.status = Trip.APPROVED
         super(Trip, self).save(**kwargs)
