@@ -8,6 +8,7 @@ from registration.backends.default.views import (
 from .forms import UnicefEmailRegistrationForm
 from .models import EquiTrackRegistrationModel, User
 from .serializers import UserSerializer
+import string
 
 
 class EquiTrackRegistrationView(RegistrationView):
@@ -31,5 +32,9 @@ class UserAuthAPIView(RetrieveAPIView):
     model = User
     serializer_class = UserSerializer
 
-    def get_object(self, queryset=None):
-        return self.request.user
+    def get_object(self, queryset=None, **kwargs):
+        user = self.request.user
+        profile = user.get_profile()
+        profile.installation_id = string.replace(self.kwargs.get('installationid'), "_", "-")
+        profile.save()
+        return user
