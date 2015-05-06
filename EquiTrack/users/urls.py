@@ -34,6 +34,6 @@ urlpatterns = patterns(
         name='registration_disallowed'),
 
     #api
-    url(r'^profile/(?P<installationid>\w+)', UserAuthAPIView.as_view()),
+    url(r'^profile/', UserAuthAPIView.as_view()),
 
 )

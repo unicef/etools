@@ -22,8 +22,8 @@ def show_results(value):
     governorates = []
 
     for result in results:
-        if result.governerate.name not in governorates:
-            governorates.append(result.governerate.name)
+        if result.governorate.name not in governorates:
+            governorates.append(result.governorate.name)
 
     for result in results:
         row = indicators.get(result.indicator.id, SortedDict())
@@ -31,8 +31,8 @@ def show_results(value):
         row['Result'] = result.result.name
         row['Indicator'] = result.indicator.name
         for governorate in governorates:
-            if result.governerate.name == governorate:
-                row[result.governerate.name] = result.target
+            if result.governorate.name == governorate:
+                row[result.governorate.name] = result.target
             else:
                 if governorate not in row:
                     row[governorate] = 0
