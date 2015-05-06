@@ -54,6 +54,7 @@ class TripSerializer(serializers.ModelSerializer):
     partners = serializers.CharField(source='partners')
     travel_routes = serializers.SerializerMethodField('get_TravelRoutes')
     trip_funds = serializers.SerializerMethodField('get_TripFunds')
+    office =  serializers.CharField(source='office.name')
 
     def get_TravelRoutes(self, trip):
         return TravelRoutesSerializer(
@@ -102,6 +103,7 @@ class TripSerializer(serializers.ModelSerializer):
             'travel_assistant',
             'section',
             'purpose_of_travel',
+            'office',
             'travel_type',
             'from_date',
             'to_date',

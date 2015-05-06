@@ -6,10 +6,11 @@ from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.views.generic import TemplateView, FormView
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.renderers import JSONPRenderer
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
+from rest_framework import status
 
 
 from reports.models import Sector
@@ -33,7 +34,8 @@ def get_trip_months():
 
     return sorted(months, reverse=True)
 
-class TripsView(ListAPIView):
+
+class TripsApprovedView(ListAPIView):
 
     model = Trip
     renderer_classes = (JSONPRenderer,)
@@ -69,9 +71,27 @@ class TripsApi(ListAPIView):
         return my_trips | super_trips
 
 
-class TripActionView(RetrieveUpdateAPIView):
+class TripActionView(RetrieveAPIView):
 
     model = Trip
+    lookup_url_kwarg = 'trip'
+
+    def retrieve(self, request, *args, **kwargs):
+        trip = self.get_object()
+        action = self.kwargs.get('action', None)
+        if action == 'submit':
+            if trip.status != Trip.SUBMITTED:
+                trip.status == Trip.SUBMITTED
+                trip.save()
+        elif action == 'approve':
+            if not trip.can_be_approved:
+                return Response(
+                    {'message': 'This trip can not be approved yet'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            trip.status == Trip.APPROVED
+            trip.save()
+        return Response(status=status.HTTP_200_OK)
 
 
 class TripsByOfficeView(APIView):
