@@ -37,6 +37,6 @@ class UserAuthAPIView(RetrieveAPIView):
         q = self.request.GET.get('device_id', None)
         if q is not None:
             profile = user.get_profile()
-            profile.device_id = string.replace(q, "_", "-")
+            profile.installation_id = string.replace(q, "_", "-")
             profile.save()
         return user
