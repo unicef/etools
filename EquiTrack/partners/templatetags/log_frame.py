@@ -14,7 +14,7 @@ from partners.models import (
 register = template.Library()
 
 @register.simple_tag
-def show_results(value):
+def show_log_frame(value):
     pca = PCA.objects.get(id=int(value))
     results = pca.resultchain_set.all()
     data = tablib.Dataset()

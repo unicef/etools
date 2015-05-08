@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 from django.conf.urls import patterns, include, url
 from django.views.generic import TemplateView
 
-from .views import EquiTrackRegistrationView, UserAuthAPIView
+from .views import EquiTrackRegistrationView, UserAuthAPIView, ProfileEdit
 
 
 urlpatterns = patterns(
@@ -36,4 +36,7 @@ urlpatterns = patterns(
     #api
     url(r'^profile/', UserAuthAPIView.as_view()),
 
+    #user profile
+    url(r'^profile_view/', ProfileEdit.as_view(template_name='registration/profile.html'),
+        name='user_profile'),
 )

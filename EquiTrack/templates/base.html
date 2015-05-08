@@ -118,6 +118,9 @@
                                             <a href="{% url 'admin:index' %}"><i class="fa fa-home"></i> Admin</a>
                                         </li>
                                     {% endif %}
+                                <li>
+                                    <a data-toggle="modal" href="{% url 'user_profile' %}" data-target="#myModal"><i class="fa fa-user"></i> Profile</a>
+                                </li>
                                 </ul>
                             </li>
                         {% else %}
@@ -127,6 +130,15 @@
                 </div>
             </header>
         {% endblock %}
+
+        <!-- Profile Modal Form Start-->
+        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                </div>
+            </div>
+        </div>
+        <!-- Profile Modal Form End-->
 
         <!--sidebar left start-->
         {% block sidebar %}
@@ -157,6 +169,7 @@
 
         <!--main content start-->
         {% block content %}
+
         {% endblock content %}
         <!--main content end-->
 

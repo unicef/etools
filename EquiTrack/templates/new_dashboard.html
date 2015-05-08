@@ -91,12 +91,12 @@
     <ul class="nav nav-tabs col-md-10">
         {% for name,indicators in sectors.items %}
             {% if name == "WASH" %}
-                 <li class="active bg-info">
-                    <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab">{{ name }}</a>
+                 <li class="active">
+                    <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab" class="">{{ name }}</a>
                  </li>
             {% else %}
-                 <li class="bg-info">
-                    <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab">{{ name }}</a>
+                 <li class="">
+                    <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab" class="">{{ name }}</a>
                  </li>
             {% endif %}
         {% endfor %}
@@ -104,7 +104,7 @@
     <!-- tabs end -->
 
     <!-- tabs content start -->
-    <div class="tab-content col-md-8" style="padding-top: 10px">
+    <div class="tab-content col-md-7" style="padding-top: 10px">
         {% for name,indicators in sectors.items %}
             {% cycle 'info' 'warning' 'success' 'danger' as barcolor silent %}
 
@@ -115,32 +115,26 @@
             {% endif %}
                     <!--Indicators start-->
                 {% for ind in indicators %}
-                <div class="row dashboard-tile" style="margin-top: 15px; background-color: #ebecee;">
+                <div class="row panel-body" style="margin-top: 10px; background-color: #ffffff;">
                     <a href="{% url 'admin:reports_indicator_change' ind.indicator.id %}">
                         <span class="sublabel">{{ ind.indicator.name }} ({{ ind.indicator.result_structure }})</span>
                     </a>
                     <div>
-                        <span class="sublabel"
-                              style="float: right;">Target: {{ ind.indicator.total|intcomma }}</span>
-                        <span class="sublabel">Programmed: {{ ind.programmed|intcomma }}</span>
+                        <span class="sublabel pull-right">Target: {{ ind.indicator.total|intcomma }}</span>
+                        <span class="sublabel pull-left">Programmed: {{ ind.programmed|intcomma }}</span>
                     </div>
-{#                    <div class="progress">#}
-{#                        <div class="progress-bar progress-bar-{{ barcolor }}"#}
-{#                             style="width: {% widthratio ind.programmed ind.indicator.total 100 %}%">#}
-{#                            {% widthratio ind.programmed ind.indicator.total 100 %}%#}
-{#                        </div>#}
-                        {% with actual=ind.indicator.progress %}
+                    {% with actual=ind.indicator.progress %}
 {#                            <div>#}
 {#                                <span class="sublabel">Reached: {{ actual|intcomma }}</span>#}
 {#                            </div>#}
-                            <div class="progress progress-striped col-md-11">
-                                <span class="sublabel">Reached: {{ actual|intcomma }}</span>
-                                <div class="progress-bar progress-bar-{{ barcolor }}"
-                                     style="width: {% widthratio actual ind.indicator.total 100 %}%">
-                                    {% widthratio actual ind.indicator.total 100 %}%
-                                </div>
+                        <div class="progress progress-striped col-md-11">
+                            <span class="sublabel">Reached: {{ actual|intcomma }}</span>
+                            <div class="progress-bar progress-bar-{{ barcolor }}"
+                                 style="width: {% widthratio actual ind.indicator.total 100 %}%">
+                                {% widthratio actual ind.indicator.total 100 %}%
                             </div>
-                        {% endwith %}
+                        </div>
+                    {% endwith %}
 
                     <!-- progress -->
 {#                    </div>#}
@@ -148,9 +142,12 @@
                         <a href="javascript:sectorClick({{ ind.indicator.id }});" id="show-sector{{ ind.indicator.id }}"><i class="fa fa-chevron-up"></i></a>
                     </div>
                     <!-- Sector progress -->
-                    <div>
-{#                        <div class="progress">#}
-                            <div class="progress progress-striped col-md-11" id="sector-progress{{ ind.indicator.id }}" style="margin-bottom: 10px !important; display: none;">
+                    <div id="sector-progress{{ ind.indicator.id }}" style="margin-bottom: 10px !important; display: none;">
+                        <div>
+                            <span class="sublabel pull-right" >Sector Target: {{ ind.indicator.total|intcomma }}</span>
+                            <span class="sublabel pull-left">Sector Programmed: {{ ind.programmed|intcomma }}</span>
+                        </div>
+                            <div class="progress progress-striped col-md-11" >
                                 <span class="sublabel"> {{ actual|intcomma }}</span>
                                 <span class="progress-bar progress-bar-primary }}"
                                      style="width: 10%">
@@ -181,7 +178,7 @@
     <script type="text/javascript">
     function sectorClick(indID) {
         //$('#show-sector').click( function(){
-            $('#sector-progress' + indID).slideToggle("slow");
+            $('#sector-progress' + indID).fadeToggle("slow");
             $('#show-sector' + indID).children(".fa-chevron-down, .fa-chevron-up").toggleClass( 'fa-chevron-up fa-chevron-down');
             //$('#show-sector' + indID).children().first().removeClass("fa-chevron-up");
             //$('#show-sector' + indID).children().first().addClass("fa-chevron-down");
