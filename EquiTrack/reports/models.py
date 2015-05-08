@@ -147,8 +147,10 @@ class Indicator(models.Model):
     name = models.CharField(max_length=128L, unique=True)
     code = models.CharField(max_length=10, null=True, blank=True)
     unit = models.ForeignKey(Unit)
-    total = models.IntegerField(verbose_name='Target')
+    total = models.IntegerField(verbose_name='UNICEF Target')
+    sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
     current = models.IntegerField(null=True, blank=True)
+    sector_current = models.IntegerField(null=True, blank=True)
     view_on_dashboard = models.BooleanField(default=False)
     in_activity_info = models.BooleanField(default=False)
     activity_info_indicators = models.ManyToManyField(
