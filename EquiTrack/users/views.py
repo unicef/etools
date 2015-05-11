@@ -1,20 +1,20 @@
 __author__ = 'jcranwellward'
 
+import string
+
+from django.http import HttpResponse
+from django.views.generic import TemplateView, FormView
+
 from rest_framework.generics import RetrieveAPIView
 from registration.backends.default.views import (
     RegistrationView,
 )
-import string
+
+from trips.models import Office
+from reports.models import Sector
 from .forms import UnicefEmailRegistrationForm, ProfileForm
 from .models import EquiTrackRegistrationModel, User
 from .serializers import UserSerializer
-from django.views.generic import TemplateView, FormView
-from trips.models import Office
-from reports.models import Sector
-from django.http import HttpResponse
-
-
-
 
 
 class EquiTrackRegistrationView(RegistrationView):

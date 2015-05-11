@@ -20,7 +20,7 @@ class UserProfile(models.Model):
     section = models.ForeignKey(Sector, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
-    installation_id = models.CharField(max_length=50, null=True, blank=True)
+    installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
 
     def username(self):
         return self.user.username
