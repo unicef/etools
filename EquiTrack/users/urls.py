@@ -37,6 +37,5 @@ urlpatterns = patterns(
     url(r'^profile/', UserAuthAPIView.as_view()),
 
     #user profile
-    url(r'^profile_view/', ProfileEdit.as_view(template_name='registration/profile.html'),
-        name='user_profile'),
+    url(r'^profile_view/$', ProfileEdit.as_view(), name='user_profile'),
 )

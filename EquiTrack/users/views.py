@@ -61,7 +61,7 @@ class ProfileView(TemplateView):
 
 class ProfileEdit(FormView):
 
-    template_name = 'profile.html'
+    template_name = 'registration/profile.html'
     form_class = ProfileForm
     success_url = '/'
 
@@ -74,6 +74,7 @@ class ProfileEdit(FormView):
     def form_valid(self, form):
         # This method is called when valid form data has been POSTed.
         # It should return an HttpResponse.
+        form.save()
         print(self.request.POST['office'])
         return super(ProfileEdit, self).form_valid(form)
 
@@ -93,4 +94,3 @@ class ProfileEdit(FormView):
         initial['job_title'] = profile.job_title
         initial['phone_number'] = profile.phone_number
         return initial
-
