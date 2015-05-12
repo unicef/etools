@@ -10,7 +10,7 @@ from funds.models import Donor
 
 class DashboardView(TemplateView):
 
-    template_name = 'new_dashboard.html'
+    template_name = 'dashboard.html'
 
     def get_context_data(self, **kwargs):
 
@@ -39,7 +39,7 @@ class DashboardView(TemplateView):
                 sectors[sector.name].append(
                     {
                         'indicator': indicator,
-                        'programmed': programmed
+                        'programmed': programmed,
                     }
                 )
 
