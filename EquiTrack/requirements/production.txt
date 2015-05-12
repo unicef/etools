@@ -4,5 +4,5 @@
 
 dj-static
 raven
-loggly-handler
 newrelic
+honcho
