@@ -324,6 +324,7 @@ DJANGO_APPS = (
     'django.contrib.admin',
     # 'django.contrib.admindocs',
     'django.contrib.humanize',
+    'mathfilters'
 )
 
 THIRD_PARTY_APPS = (
