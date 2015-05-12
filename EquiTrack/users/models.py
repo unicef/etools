@@ -90,7 +90,6 @@ class EquiTrackRegistrationManager(RegistrationManager):
 
 class EquiTrackRegistrationModel(RegistrationProfile):
 
-
     objects = EquiTrackRegistrationManager()
 
 

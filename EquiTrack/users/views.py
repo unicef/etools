@@ -1,14 +1,20 @@
 __author__ = 'jcranwellward'
 
+import string
+
+from django.http import HttpResponse
+from django.views.generic import TemplateView, FormView
+
 from rest_framework.generics import RetrieveAPIView
 from registration.backends.default.views import (
     RegistrationView,
 )
 
-from .forms import UnicefEmailRegistrationForm
+from trips.models import Office
+from reports.models import Sector
+from .forms import UnicefEmailRegistrationForm, ProfileForm
 from .models import EquiTrackRegistrationModel, User
 from .serializers import UserSerializer
-import string
 
 
 class EquiTrackRegistrationView(RegistrationView):
@@ -40,3 +46,51 @@ class UserAuthAPIView(RetrieveAPIView):
             profile.installation_id = string.replace(q, "_", "-")
             profile.save()
         return user
+
+
+class ProfileView(TemplateView):
+
+    template_name = 'profile.html'
+
+    def get_context_data(self, **kwargs):
+        return {
+            'office_list': Office.objects.all().order_by('name'),
+            'section_list': Sector.objects.all().order_by('name')
+        }
+
+
+class ProfileEdit(FormView):
+
+    template_name = 'registration/profile.html'
+    form_class = ProfileForm
+    success_url = '/'
+
+    def get_context_data(self, **kwargs):
+        return {
+            'office_list': Office.objects.all().order_by('name'),
+            'section_list': Sector.objects.all().order_by('name')
+        }
+
+    def form_valid(self, form):
+        # This method is called when valid form data has been POSTed.
+        # It should return an HttpResponse.
+        form.save()
+        print(self.request.POST['office'])
+        return super(ProfileEdit, self).form_valid(form)
+
+    def form_invalid(self, form):
+        return HttpResponse('Error!')
+
+    def get_context_data(self, **kwargs):
+        context = super(ProfileEdit, self).get_context_data(**kwargs)
+        return context
+
+    def get_initial(self):
+        """  Returns the initial data to use for forms on this view.  """
+        initial = super(ProfileEdit, self).get_initial()
+        profile = self.request.user.get_profile()
+        initial['office'] = profile.office
+        initial['section'] = profile.section
+        initial['job_title'] = profile.job_title
+        initial['phone_number'] = profile.phone_number
+        return initial

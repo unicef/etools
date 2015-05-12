@@ -39,7 +39,7 @@ class DashboardView(TemplateView):
                 sectors[sector.name].append(
                     {
                         'indicator': indicator,
-                        'programmed': programmed
+                        'programmed': programmed,
                     }
                 )
 

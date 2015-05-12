@@ -3,9 +3,10 @@ __author__ = 'jcranwellward'
 from django import forms
 from django.contrib.auth import get_user_model
 
-from registration.forms import EmailRegistrationForm
+from registration.forms import EmailRegistrationForm, RegistrationForm
 from trips.models import Office
 from reports.models import Sector
+from users.models import UserProfile
 
 User = get_user_model()
 
@@ -48,3 +49,27 @@ class UnicefEmailRegistrationForm(EmailRegistrationForm):
             )
 
         return cleaned_data
+
+
+class ProfileForm(forms.ModelForm):
+    office = forms.ModelChoiceField(
+        Office.objects.all(),
+        empty_label='Office',
+        widget=forms.Select(attrs={'class': 'form-control input-sm'})
+    )
+    section = forms.ModelChoiceField(
+        Sector.objects.all(),
+        empty_label='Section',
+        widget=forms.Select(attrs={'class': 'form-control input-sm'})
+    )
+    job_title = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    phone_number = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = UserProfile
