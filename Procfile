@@ -1,1 +1,2 @@
 web: newrelic-admin run-program python EquiTrack/manage.py run_gunicorn -b "0.0.0.0:$PORT" -w 4 --timeout=3200
+worker: newrelic-admin run-program celery -A EquiTrack.celery worker --beat --loglevel=info

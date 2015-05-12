@@ -118,9 +118,9 @@ DATABASES = {
         default='postgis:///equitrack'
     )
 }
-BROKER_URL = 'redis://localhost:6379/0'
+BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_ALWAYS_EAGER = os.environ.get('CELERY_EAGER', True)
-CELERY_RESULT_BACKEND='djcelery.backends.database:DatabaseBackend'
+CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 ########## END DATABASE CONFIGURATION
 
@@ -360,7 +360,6 @@ LOCAL_APPS = (
     'activityinfo',
     'reports',
     'partners',
-    'emails',
     'trips',
     'tpm',
     'users',
