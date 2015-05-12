@@ -11,4 +11,5 @@ ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN python EquiTrack/manage.py collectstatic --noinput
 # Start everything
 EXPOSE 8080
+ENV C_FORCE_ROOT true
 ENTRYPOINT honcho start
