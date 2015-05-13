@@ -11,4 +11,5 @@ ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN python EquiTrack/manage.py collectstatic --noinput
 # Start everything
 EXPOSE 8080
-ENTRYPOINT newrelic-admin run-program python EquiTrack/manage.py run_gunicorn -b "0.0.0.0:8080" -w 4 --timeout=1200
+ENV C_FORCE_ROOT true
+ENTRYPOINT honcho start
