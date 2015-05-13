@@ -63,7 +63,7 @@ class ProfileEdit(FormView):
 
     template_name = 'registration/profile.html'
     form_class = ProfileForm
-    success_url = '/'
+    success_url = 'complete'
 
     def get_context_data(self, **kwargs):
         return {
@@ -74,8 +74,12 @@ class ProfileEdit(FormView):
     def form_valid(self, form):
         # This method is called when valid form data has been POSTed.
         # It should return an HttpResponse.
-        form.save()
-        print(self.request.POST['office'])
+        profile = self.request.user.get_profile()
+        profile.office = form.cleaned_data['office']
+        profile.section = form.cleaned_data['section']
+        profile.job_title = form.cleaned_data['job_title']
+        profile.phone_number = form.cleaned_data['phone_number']
+        profile.save()
         return super(ProfileEdit, self).form_valid(form)
 
     def form_invalid(self, form):

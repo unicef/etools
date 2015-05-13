@@ -94,11 +94,8 @@
                                         </li>
                                     {% endfor %}
 
-                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i
-                                            class="fa fa-angle-right"></i></a>
-
+                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i class="fa fa-angle-right"></i></a>
                                 </ul>
-
                             </li>
                         {% endif %}
                         <li class="profile-photo">
@@ -119,7 +116,7 @@
                                         </li>
                                     {% endif %}
                                 <li>
-                                    <a data-toggle="modal" href="{% url 'user_profile' %}" data-target="#myModal"><i class="fa fa-user"></i> Profile</a>
+                                    <a href="{% url 'user_profile' %}"><i class="fa fa-user"></i> Profile</a>
                                 </li>
                                 </ul>
                             </li>
@@ -130,15 +127,6 @@
                 </div>
             </header>
         {% endblock %}
-
-        <!-- Profile Modal Form Start-->
-        <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                </div>
-            </div>
-        </div>
-        <!-- Profile Modal Form End-->
 
         <!--sidebar left start-->
         {% block sidebar %}
