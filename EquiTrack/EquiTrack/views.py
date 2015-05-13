@@ -6,6 +6,7 @@ from partners.models import PCA, PartnerOrganization, PCASectorOutput
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
+import datetime
 
 
 class DashboardView(TemplateView):
@@ -15,9 +16,10 @@ class DashboardView(TemplateView):
     def get_context_data(self, **kwargs):
 
         sectors = {}
-        sructure = self.request.GET.get('structure', 1)
+        now = datetime.datetime.now()
+        structure = self.request.GET.get('structure', ResultStructure.objects.filter(from_date__lte=now, to_date__gte=now))
         try:
-            current_structure = ResultStructure.objects.get(id=sructure)
+            current_structure = ResultStructure.objects.get(id=structure)
         except ResultStructure.DoesNotExist:
             current_structure = None
         for sector in Sector.objects.all():
