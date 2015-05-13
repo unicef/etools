@@ -56,3 +56,5 @@ _builds
 _projects
 _steps
 
+
+celerybeat-schedule
