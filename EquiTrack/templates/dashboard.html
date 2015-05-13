@@ -139,7 +139,7 @@
     <!-- tabs end -->
 
     <!-- tabs content start -->
-    <div class="tab-content col-md-7" style="padding-top: 10px">
+    <div class="tab-content col-md-9" style="padding-top: 10px">
         {% for name,indicators in sectors.items %}
             {% cycle 'info' 'warning' 'success' 'danger' as barcolor silent %}
 
@@ -148,6 +148,7 @@
             {% else %}
             <div id="tab-{{ name.split|join:"_" }}" class="tab-pane">
             {% endif %}
+
                     <!--Indicators start-->
                 {% for ind in indicators %}
                 <div class="row panel-body" style="margin-top: 10px; background-color: #ffffff;">
@@ -156,31 +157,28 @@
                     </a>
                     {% with actual=ind.indicator.current %}
                     <div>
-
-                        <span class="sublabel pull-left col-md-11">Programmed: {{ ind.programmed|intcomma }}</span>
-                        <span class="sublabel pull-left" style="margin-bottom: 0px;">Reached: {{ actual|intcomma }}</span>
-                        <span class="sublabel pull-right">Target: {{ ind.indicator.total|intcomma }}</span>
+                        <span class="sublabel pull-left col-md-12">Programmed: {{ ind.programmed|intcomma }}</span>
+                        <span class="sublabel pull-left col-md-2" style="margin-bottom: 0px;">Reached: {{ actual|intcomma }}</span>
+                        <span class="sublabel col-md-2 pull-right">Target: {{ ind.indicator.total|intcomma }}</span>
                     </div>
                     <!-- progress -->
-
                         <div class="progress col-md-11">
                             <div class="progress-bar progress-bar-{{ barcolor }}"
                                  style="width: {% widthratio actual ind.indicator.total 100 %}%" >
                                 {% widthratio actual ind.indicator.total 100 %}%
                             </div>
                         </div>
-
                     {% endwith %}
 
-                    <div class="pull-right">
+                    <div class="col-md-offset-11" style="padding-left:  15px;">
                         <a href="javascript:sectorClick({{ ind.indicator.id }});" id="show-sector{{ ind.indicator.id }}"><i class="fa fa-chevron-up"></i></a>
                     </div>
                     <!-- Sector progress -->
                     <div id="sector-progress{{ ind.indicator.id }}" style="margin-bottom: 10px !important; display: none;">
                         {% with actual=ind.indicator.sector_current %}
                             <div>
-                                <span class="sublabel pull-right" >Sector Target: {{ ind.indicator.sector_total|intcomma }}</span>
-                                <span class="sublabel pull-left">Sector Reached: {{ actual|intcomma }}</span>
+                                <span class="sublabel col-md-2 pull-left">Sector Reached: {{ actual|intcomma }}</span>
+                                <span class="sublabel col-md-2  pull-right" >Sector Target: {{ ind.indicator.sector_total|intcomma }}</span>
                             </div>
                             <div class="progress progress-striped col-md-11" >
                                 <!-- unicef -->
@@ -192,7 +190,6 @@
                                 <!-- Sector -->
                                 <span class="progress-bar progress-bar-{{ barcolor }}"
                                      style="width: {% widthratio actual|sub:ind.indicator.current ind.indicator.sector_total 100 %}%; text-align: initial;">
-
                                 </span>
                                 <!-- setting the sector percentage text to be in the middle of 2 progress spans -->
                                 <span id="sector-percent" style="color: #fff; position: absolute; left:{{actual|div:ind.indicator.sector_total|mul:100|div:2|sub:1}}%;">{% widthratio actual ind.indicator.sector_total 100 %}%</span>

@@ -36,6 +36,13 @@ urlpatterns = patterns(
     #api
     url(r'^profile/', UserAuthAPIView.as_view()),
 
+
+
     #user profile
     url(r'^profile_view/$', ProfileEdit.as_view(), name='user_profile'),
+
+    url(r'^profile_view/complete/$',
+        TemplateView.as_view(
+            template_name='registration/profile_change_done.html'),
+            name='profile_complete'),
 )
