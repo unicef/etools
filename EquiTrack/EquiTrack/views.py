@@ -17,7 +17,8 @@ class DashboardView(TemplateView):
 
         sectors = {}
         now = datetime.datetime.now()
-        structure = self.request.GET.get('structure', ResultStructure.objects.filter(from_date__lte=now, to_date__gte=now))
+        structure = self.request.GET.get('structure', ResultStructure.objects.filter(
+            from_date__lte=now, to_date__gte=now))
         try:
             current_structure = ResultStructure.objects.get(id=structure)
         except ResultStructure.DoesNotExist:
@@ -51,17 +52,21 @@ class DashboardView(TemplateView):
             'structures': ResultStructure.objects.all(),
             'pcas': {
                 'active': PCA.objects.filter(
+                    result_structure=current_structure,
                     status=PCA.ACTIVE,
                     amendment_number=0,
                 ).count(),
                 'implemented': PCA.objects.filter(
+                    result_structure=current_structure,
                     status=PCA.IMPLEMENTED,
                     amendment_number=0,
                 ).count(),
                 'in_process': PCA.objects.filter(
+                    result_structure=current_structure,
                     status=PCA.IN_PROCESS,
                 ).count(),
                 'cancelled': PCA.objects.filter(
+                    result_structure=current_structure,
                     status=PCA.CANCELLED,
                     amendment_number=0,
                 ).count(),

@@ -6,6 +6,7 @@ from celery import Celery
 from celery.schedules import crontab
 
 from django.conf import settings
+from datetime import timedelta
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'EquiTrack.settings.production')
@@ -22,5 +23,6 @@ CELERYBEAT_SCHEDULE = {
     'every-monday-morning-trips': {
         'task': 'trips.tasks.process_trips',
         'schedule': crontab(hour=7, minute=30, day_of_week=1),
+        #timedelta(seconds=30),
     },
 }

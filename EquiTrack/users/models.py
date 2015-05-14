@@ -6,7 +6,7 @@ from django.db.models.signals import post_save
 
 from registration.models import RegistrationManager, RegistrationProfile
 
-from trips.models import Office
+#from trips.models import Office
 from reports.models import Sector
 
 User.__unicode__ = lambda user: user.get_full_name()
@@ -16,7 +16,7 @@ User._meta.ordering = ['first_name']
 class UserProfile(models.Model):
 
     user = models.OneToOneField(User, related_name='profile')
-    office = models.ForeignKey(Office, null=True, blank=True)
+    office = models.ForeignKey('trips.Office', null=True, blank=True)
     section = models.ForeignKey(Sector, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
