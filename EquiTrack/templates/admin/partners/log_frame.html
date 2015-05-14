@@ -1,0 +1,16 @@
+{% load i18n admin_static admin_modify %}
+{% load log_frame %}
+
+    <div id="log_frame">
+      {% autoescape off %} {% show_log_frame object_id %}{% endautoescape %}
+    </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#log_frame table').addClass("table table-striped table-hover");
+        $('#log_frame table thead th').each( function(){
+            $(this).attr("data-sortable", "true");
+        });
+    });
+</script>
+
