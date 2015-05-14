@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 
 from celery import Celery
+from celery.schedules import crontab
 
 from django.conf import settings
 
@@ -16,7 +17,10 @@ app = Celery('EquiTrack')
 app.config_from_object('django.conf:settings')
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
-
-@app.task(bind=True)
-def debug_task(self):
-    print('Request: {0!r}'.format(self.request))
+CELERYBEAT_SCHEDULE = {
+    # Executes every Monday morning at 7:30 A.M
+    'every-monday-morning-trips': {
+        'task': 'trips.tasks.process_trips',
+        'schedule': crontab(hour=7, minute=30, day_of_week=1),
+    },
+}
