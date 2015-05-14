@@ -16,7 +16,7 @@ test:
     - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
       /etc/postgresql/9.4/main/pg_hba.conf"
     - sudo /etc/init.d/postgresql restart
-    - HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
   override:
-    - docker run -it -e "DJANGO_SETTINGS_MODULE=EquiTrack.settings.test" -e "DATABASE_URL=postgis://ubuntu@${HOSTIP}:5432/circle_test" unicef/equitrack EquiTrack/manage.py test
+    - HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
+    - docker run -it --add-host=docker:${HOSTIP} -e "DJANGO_SETTINGS_MODULE=EquiTrack.settings.test" -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" unicef/equitrack EquiTrack/manage.py test
 
