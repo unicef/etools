@@ -1,17 +1,14 @@
 machine:
   services:
+    - docker
     - postgresql
-  python:
-    version: 2.7.9
-  pre:
-    - sudo apt-get update; sudo apt-get install libgdal-dev python-gdal gdal-bin libgdal1-dev libxml2-dev libxslt-dev python-dev
-  environment:
-    CPLUS_INCLUDE_PATH: /usr/include/gdal
-    C_INCLUDE_PATH: /usr/include/gdal
-    DATABASE_URL: postgis://ubuntu:@127.0.0.1:5432/circle_test
 
 dependencies:
-    pre:
-        - sudo apt-get update
-        - sudo apt-get install gdal-bin libgdal1-dev
-        - export CPLUS_INCLUDE_PATH=/usr/include/gdal; export C_INCLUDE_PATH=/usr/include/gdal; pip install gdal
+  override:
+    - docker info
+    - docker build -t unicef/equitrack .
+
+test:
+  override:
+    - docker run --env DJANGO_SETTINGS_MODULE=EquiTrack.settings.test unicef/equitrack EquiTrack/manage.py test
+
