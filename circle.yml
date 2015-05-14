@@ -17,5 +17,5 @@ test:
       /etc/postgresql/9.4/main/pg_hba.conf"
     - sudo /etc/init.d/postgresql restart
   override:
-    - docker run -it -e "DJANGO_SETTINGS_MODULE=EquiTrack.settings.test" -e "DATABASE_URL=postgis://0.0.0.0/circle_test" unicef/equitrack EquiTrack/manage.py test
+    - docker run -it -e "DJANGO_SETTINGS_MODULE=EquiTrack.settings.test" -e "DATABASE_URL=postgis:///circle_test" -p 5432:5432 unicef/equitrack EquiTrack/manage.py test
 
