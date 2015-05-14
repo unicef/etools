@@ -11,5 +11,5 @@ dependencies:
 
 test:
   override:
-    - docker run --entrypoint --env DJANGO_SETTINGS_MODULE=EquiTrack.settings.test unicef/equitrack EquiTrack/manage.py test
+    - docker run --entrypoint -e "DJANGO_SETTINGS_MODULE=EquiTrack.settings.test" unicef/equitrack EquiTrack/manage.py test
 
