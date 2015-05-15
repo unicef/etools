@@ -1,7 +1,7 @@
 EquiTrack
 =========
 
-![image](https://app.wercker.com/status/c1adb811a20b9efc952a5c3e0eb00e47/m/)
+[![Circle CI](https://circleci.com/gh/UNICEFLebanonInnovation/EquiTrack/tree/develop.svg?style=svg)](https://circleci.com/gh/UNICEFLebanonInnovation/EquiTrack/tree/develop)
 
 **Monitoring and Tracking Results for Children**
 
