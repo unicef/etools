@@ -7,13 +7,8 @@ build:
   # The steps that will be executed on build
   steps:
 
-    - script:
-        name: set postgis connection string
-        code: |
-          export WERCKER_POSTGRESQL_URL="postgis://$WERCKER_POSTGRESQL_USERNAME:$WERCKER_POSTGRESQL_PASSWORD@$WERCKER_POSTGRESQL_HOST:$WERCKER_POSTGRESQL_PORT/$WERCKER_POSTGRESQL_DATABASE"
-
     - install-packages:
-        packages: postgresql-client postgis libgdal-dev python-gdal gdal-bin libgdal1-dev libxml2-dev libxslt-dev python-dev
+        packages: postgresql-client postgis libgdal-dev python-gdal gdal-bin python-dev
 
     # A step that sets up the python virtual environment
     - virtualenv:
