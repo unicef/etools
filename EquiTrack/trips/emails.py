@@ -248,7 +248,6 @@ class TripSummaryEmail(BaseEmail):
                 self.get_current_site().domain,
                 trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
 
-        print("done")
         for key, value in trips_overdue_text.items():
             print("<a href='" + value[0] + "'>" + key + "</a> - ended on " + value[1])
 
