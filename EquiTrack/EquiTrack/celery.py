@@ -23,6 +23,6 @@ CELERYBEAT_SCHEDULE = {
     'every-monday-morning-trips': {
         'task': 'trips.tasks.process_trips',
         'schedule': crontab(hour=7, minute=30, day_of_week=1),
-        #timedelta(seconds=30),
+
     },
 }

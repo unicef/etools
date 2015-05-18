@@ -236,11 +236,6 @@ class Trip(AdminURLMixin, models.Model):
         return True
 
     def save(self, **kwargs):
-        #check if trip was approved and sets back to planned
-        # if self.pk is not None:
-        #     orig = Trip.objects.get(pk=self.pk)
-        #     if orig.status == Trip.APPROVED:
-        #         self.status = Trip.PLANNED
 
         #check if trip can be approved
         if self.can_be_approved:
@@ -275,7 +270,6 @@ class Trip(AdminURLMixin, models.Model):
                 *recipients
             )
         elif instance.status == Trip.APPROVED:
-
             if instance.travel_assistant and not instance.transport_booked:
                 emails.TripTravelAssistantEmail(instance).send(
                     instance.owner.email,

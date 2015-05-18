@@ -1,4 +1,7 @@
 __author__ = 'jcranwellward'
+import datetime
+
+from django.db.models import Q
 
 from EquiTrack.utils import BaseEmail
 
@@ -190,5 +193,80 @@ class TripActionPointClosed(TripActionPointUpdated):
         context['state'] = 'Closed'
         return context
 
+
+class TripSummaryEmail(BaseEmail):
+
+    template_name = 'trips/trip/summary'
+    description = 'The email that is sent to owner a summary of trips'
+    subject = "EquiTrack - Trip Summary"
+    content = """
+    The following is a trip summary for this week:
+
+    <b>Trips Coming up:</b>
+        <ul>
+            {% for key, value in trips_coming_text.items %}
+                <li><a href='{{ value[0] }}'>{{key}}</a> - started on {{ value[1] }}</li>
+            {% endfor %}
+        </ul>
+
+    <b>Overdue Trips:</b>
+        <ul>
+            {% for key, value in trips_overdue_text.items %}
+                <li><a href='{{ value[0] }}'>{{key}}</a> - ended on {{ value[1] }} </li>
+            {% endfor %}
+        </ul>
+
+
+    Thank you.
+    """
+
+    def get_context(self):
+        trips_coming_text = {}
+        trips_overdue_text = {}
+
+        trips_coming = self.object.trips.filter(
+            Q(status='approved') | Q(status='submitted'),
+            from_date__gt=datetime.date.today()
+        )
+
+        trips_overdue = self.object.trips.filter(
+            status='approved',
+            to_date__lt=datetime.date.today()
+        )
+
+        print(self.object.trips.count())
+        print(trips_overdue.count())
+        print(trips_coming.count())
+
+        for trip in trips_overdue:
+            trips_overdue_text[trip.purpose_of_travel] = ['http://{}{}'.format(
+                self.get_current_site().domain,
+                trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
+
+        for trip in trips_coming:
+            trips_coming_text[trip.purpose_of_travel] = ['http://{}{}'.format(
+                self.get_current_site().domain,
+                trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
+
+        print("done")
+        for key, value in trips_overdue_text.items():
+            print("<a href='" + value[0] + "'>" + key + "</a> - ended on " + value[1])
+
+        for key, value in trips_coming_text.items():
+            print("<a href='" + value[0] + "'>" + key + "</a> - starts on " + value[1])
+
+
+        return {
+            'trips_coming_text': trips_coming_text,
+            'trips_overdue_text': trips_overdue_text,
+            'owner_name': self.object.get_full_name(),
+            # 'number': self.object.reference(),
+            # 'state': 'Submitted',
+            # 'url': 'http://{}{}'.format(
+            #     self.get_current_site().domain,
+            #     self.object.get_admin_url()),
+            # 'purpose_of_travel': self.object.purpose_of_travel
+
+        }
 
 

@@ -1,11 +1,15 @@
 from __future__ import absolute_import
 
+import datetime
+from datetime import timedelta
+
 from django.db.models import Q
+from django.db.models.signals import post_save
 
 from EquiTrack.celery import app
 from trips.models import Trip
+from trips.emails import TripSummaryEmail
 from users.models import User
-from datetime import timedelta, datetime
 import json, httplib
 
 
@@ -16,32 +20,36 @@ def process_trips():
 
     users = User.objects.filter(is_staff=True, is_active=True)
     for user in users:
-        #profile = user.get_profile()
 
         trips_coming = user.trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED),
-            from_date__gt=datetime.now())
+            from_date__gt=datetime.datetime.now()
+        )
 
         trips_overdue = user.trips.filter(
             status=Trip.APPROVED,
-            to_date__gt=datetime.now())
+            to_date__lt=datetime.datetime.now())
+
+        if trips_coming or trips_overdue and user.username == 'ntrncic':
+            print(user.username)
+            TripSummaryEmail(user).send('equitrack@unicef.org', user.email)
 
     # 1. Upcoming trips (for any traveller) push notifications
         trips_coming_app = user.trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED),
-            from_date__range=[datetime.now()+timedelta(days=2), datetime.now()+timedelta(days=3)]
+            from_date__range=[datetime.datetime.now()+timedelta(days=2), datetime.datetime.now()+timedelta(days=3)]
         )
 
         for trip in trips_coming_app:
-            print(trip.purpose_of_travel)
-            connection=httplib.HTTPSConnection('api.parse.com', 443)
+            dt = trip.from_date-datetime.date.today()
+            connection = httplib.HTTPSConnection('api.parse.com', 443)
             connection.connect()
             connection.request('POST', '/1/push', json.dumps({
                 "where": {
                     "installationId": trip.owner.profile.installation_id
                 },
                 "data": {
-                    "alert": "Yor trip " + trip.purpose_of_travel + " is coming up!"
+                    "alert": "Your trip is coming up on " + str(dt.days) + " days!"
                 }
             }), {
                 "X-Parse-Application-Id": "wVQDNInUSPJW7vxIB0qUtl1RPeMdBIQWbesYNqdi",
@@ -51,13 +59,11 @@ def process_trips():
             result = json.loads(connection.getresponse().read())
             print result
 
-        # # 2. Overdue reports greater than 15 days
-        # trips_overdue = Trip.objects.filter(
-        #     status=Trip.APPROVED,
-        #     to_date__gte=datetime.now()-timedelta(days=15)
-        # )
-
+        # # 2. Overdue reports send emails
         # for trip in trips_overdue:
+        #     #post_save.connect(trip.send_trip_request, sender=Trip)
+        #     print(trip.owner)
         #     trip.send_trip_request(sender=Trip)
+
 
     return "Processing"
