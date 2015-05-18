@@ -58,3 +58,10 @@ _steps
 
 
 celerybeat-schedule
+
+.coverage
+*.bak
+
+*.dat
+
+*.dir

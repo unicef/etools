@@ -1,11 +1,14 @@
-db:
-  image: mdillon/postgis
 web:
   build: .
-  command: python manage.py runserver 0.0.0.0:8000
+  command: honcho start
   volumes:
     - .:/code
   ports:
-    - "8000:8000"
+    - "8080:8080"
   links:
     - db
+    - redis
+db:
+  image: mdillon/postgis
+redis:
+  image: redis
