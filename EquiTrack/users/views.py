@@ -82,9 +82,6 @@ class ProfileEdit(FormView):
         profile.save()
         return super(ProfileEdit, self).form_valid(form)
 
-    def form_invalid(self, form):
-        return HttpResponse('Error!')
-
     def get_context_data(self, **kwargs):
         context = super(ProfileEdit, self).get_context_data(**kwargs)
         return context

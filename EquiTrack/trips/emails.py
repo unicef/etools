@@ -197,7 +197,7 @@ class TripActionPointClosed(TripActionPointUpdated):
 class TripSummaryEmail(BaseEmail):
 
     template_name = 'trips/trip/summary'
-    description = 'The email that is sent to owner a summary of trips'
+    description = 'A summary of trips sent to the owner'
     subject = "EquiTrack - Trip Summary"
     content = """
     The following is a trip summary for this week:
@@ -234,10 +234,6 @@ class TripSummaryEmail(BaseEmail):
             to_date__lt=datetime.date.today()
         )
 
-        print(self.object.trips.count())
-        print(trips_overdue.count())
-        print(trips_coming.count())
-
         for trip in trips_overdue:
             trips_overdue_text[trip.purpose_of_travel] = ['http://{}{}'.format(
                 self.get_current_site().domain,
@@ -248,24 +244,10 @@ class TripSummaryEmail(BaseEmail):
                 self.get_current_site().domain,
                 trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
 
-        for key, value in trips_overdue_text.items():
-            print("<a href='" + value[0] + "'>" + key + "</a> - ended on " + value[1])
-
-        for key, value in trips_coming_text.items():
-            print("<a href='" + value[0] + "'>" + key + "</a> - starts on " + value[1])
-
-
         return {
             'trips_coming_text': trips_coming_text,
             'trips_overdue_text': trips_overdue_text,
             'owner_name': self.object.get_full_name(),
-            # 'number': self.object.reference(),
-            # 'state': 'Submitted',
-            # 'url': 'http://{}{}'.format(
-            #     self.get_current_site().domain,
-            #     self.object.get_admin_url()),
-            # 'purpose_of_travel': self.object.purpose_of_travel
-
         }
 
 
