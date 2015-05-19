@@ -55,7 +55,7 @@ class ActionPointInlineAdmin(admin.StackedInline):
         (u'description', u'due_date',),
         u'person_responsible',
         (u'actions_taken',),
-        (u'completed_date', u'closed',),
+        (u'completed_date', u'closed_choice'),
     )
 
 
@@ -392,12 +392,12 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         u'originally_responsible',
         u'actions_taken',
         u'comments',
-        u'closed',
+        u'closed_choice'
     )
     list_filter = (
         u'trip__owner',
         u'person_responsible',
-        u'closed',
+        u'closed_choice',
     )
     search_fields = (
         u'trip__name',
@@ -426,12 +426,12 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
             u'person_responsible',
             u'persons_responsible',
             u'comments',
-            u'closed',
+            u'closed_choice',
         ]
 
         if obj and obj.person_responsible == request.user:
             readonly_fields.remove(u'comments')
-            readonly_fields.remove(u'closed')
+            readonly_fields.remove(u'closed_choice')
 
         return readonly_fields
     #

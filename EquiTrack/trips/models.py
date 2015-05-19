@@ -202,7 +202,7 @@ class Trip(AdminURLMixin, models.Model):
 
     def outstanding_actions(self):
         return self.actionpoint_set.filter(
-            closed=False).count()
+            closed_choice='ongoing').count()
 
     @property
     def trip_revision(self):
@@ -329,6 +329,11 @@ class TravelRoutes(models.Model):
 
 class ActionPoint(models.Model):
 
+    CLOSED = (
+        ('closed', 'Closed'),
+        ('ongoing', 'On-going'),
+    )
+
     trip = models.ForeignKey(Trip)
     description = models.CharField(max_length=254)
     due_date = models.DateField()
@@ -337,7 +342,7 @@ class ActionPoint(models.Model):
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
-    closed = models.BooleanField(default=False)
+    closed_choice = models.CharField(choices=CLOSED, max_length=254, null=True, verbose_name='Status')
 
     def __unicode__(self):
         return self.description
