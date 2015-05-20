@@ -99,4 +99,4 @@ class ActionPointResource(BaseExportResource):
             if action.completed_date else ''
         )
         self.insert_column(row, 'Supervisors Comments', action.comments)
-        self.insert_column(row, 'Closed?', action.closed)
+        self.insert_column(row, 'Closed?', action.closed_choice)

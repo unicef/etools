@@ -168,7 +168,8 @@ class TripsDashboard(FormView):
             closed_action_points = [
                 action for trip in trips
                 for action in trip.actionpoint_set.filter(
-                    closed=True
+                    closed_choice='closed'
+
                 )
             ]
             row = {

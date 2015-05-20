@@ -362,7 +362,7 @@ class ActionPoint(models.Model):
                 instance.trip.owner.email,
                 *recipients
             )
-        elif instance.closed:
+        elif instance.closed_choice=='closed':
             emails.TripActionPointClosed(instance).send(
                 instance.trip.owner.email,
                 *recipients
