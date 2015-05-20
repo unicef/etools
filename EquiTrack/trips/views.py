@@ -14,8 +14,9 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
 
 
+from users.models import UserProfile
 from reports.models import Sector
-from .models import Trip, Office
+from .models import Trip, Office, ActionPoint
 from .serializers import TripSerializer
 from .forms import TripFilterByDateForm
 
@@ -158,16 +159,16 @@ class TripsDashboard(FormView):
                     from_date__year=month.year,
                     from_date__month=month.month
                 )
-            action_points = [
-                action for trip in trips
-                for action in trip.actionpoint_set.all()
-            ]
-            closed_action_points = [
-                action for trip in trips
-                for action in trip.actionpoint_set.filter(
-                    closed=True
-                )
-            ]
+
+            user_profiles = UserProfile.objects.filter(
+                section=section,
+                user__is_active=True
+            )
+            action_points = 0
+            closed_action_points = 0
+            for profile in user_profiles:
+                action_points += profile.user.for_action.count()
+                closed_action_points += profile.user.for_action.filter(closed=True).count()
             row = {
                 'section': section.name,
                 'color': section.color,
@@ -177,8 +178,8 @@ class TripsDashboard(FormView):
                 'total_completed': trips.filter(
                     status=Trip.COMPLETED
                 ).count(),
-                'actions': len(action_points),
-                'closed_actions': len(closed_action_points)
+                'actions': action_points,
+                'closed_actions': closed_action_points
             }
             by_month.append(row)
 
@@ -188,7 +189,8 @@ class TripsDashboard(FormView):
             'current_month_num': month_num,
             'trips': {
                 'planned': Trip.objects.filter(
-                    status=Trip.PLANNED,
+                    Q(status=Trip.PLANNED) |
+                    Q(status=Trip.SUBMITTED)
                 ).count(),
                 'approved': Trip.objects.filter(
                     status=Trip.APPROVED,
