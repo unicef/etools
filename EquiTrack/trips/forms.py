@@ -128,6 +128,8 @@ class TripForm(ModelForm):
         return cleaned_data
 
 
+
+
 class TripFilterByDateForm(Form):
 
     depart = fields.DateField(

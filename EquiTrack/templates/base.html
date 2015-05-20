@@ -94,11 +94,8 @@
                                         </li>
                                     {% endfor %}
 
-                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i
-                                            class="fa fa-angle-right"></i></a>
-
+                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i class="fa fa-angle-right"></i></a>
                                 </ul>
-
                             </li>
                         {% endif %}
                         <li class="profile-photo">
@@ -111,13 +108,17 @@
                                 </a>
                                 <ul class="dropdown-menu animated fadeInDown">
                                     <li>
-                                        <a href="{% url "logout" %}"><i class="fa fa-power-off"></i> Logout</a>
+                                        <a href="{% url 'user_profile' %}"><i class="fa fa-user"></i> Profile</a>
                                     </li>
                                     {% if user.is_superuser %}
                                         <li>
                                             <a href="{% url 'admin:index' %}"><i class="fa fa-home"></i> Admin</a>
                                         </li>
                                     {% endif %}
+                                    <li>
+                                        <a href="{% url "logout" %}"><i class="fa fa-power-off"></i> Logout</a>
+                                    </li>
+
                                 </ul>
                             </li>
                         {% else %}
@@ -157,6 +158,7 @@
 
         <!--main content start-->
         {% block content %}
+
         {% endblock content %}
         <!--main content end-->
 

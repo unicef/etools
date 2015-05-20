@@ -213,6 +213,13 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'attachments', u'Attachments')
     )
 
+    # def __init__(self, *args, **kwargs):
+    #     # We can't assume that kwargs['initial'] exists!
+    #     if not kwargs['initial']:
+    #         kwargs['initial'] = {}
+    #     kwargs['initial'].update({'owner': User.objects.get(id=169)})
+    #     super(TripReportAdmin, self).__init__(*args, **kwargs)
+
     def get_readonly_fields(self, request, trip=None):
         """
         Only let certain users perform approvals
@@ -270,21 +277,23 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
         return fields
 
-    # def add_view(self, request, form_url='', extra_context=None):
-    #     """
-    #     Don't allow users to create new trips if they have outstanding
-    #     """
-    #     # trips = request.user.trips.filter(
-    #     #     status=Trip.APPROVED,
-    #     #
-    #     # )
-    #     #
-    #     # for trip in trips:
-    #     #     pass
-    #
-    #     return super(TripReportAdmin, self).add_view(
-    #         self, request, form_url, extra_context
-    #     )
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(TripReportAdmin, self).get_form(request, obj, **kwargs)
+        user_profile = request.user.get_profile()
+        form.base_fields['owner'].initial = request.user
+        form.base_fields['office'].initial = user_profile.office
+        form.base_fields['section'].initial = user_profile.section
+        return form
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+
+        if db_field.name == u'representative':
+            rep_group = Group.objects.get(name=u'Representative Office')
+            kwargs['queryset'] = rep_group.user_set.all()
+
+        return super(TripReportAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
     # def save_model(self, request, obj, form, change):
     #
@@ -373,11 +382,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     #         request.POST['linkedlocation_set-TOTAL_FORMS'] = 0
     #
     #         return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
-
-    # def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-    #     if db_field.name == u'representative':
-    #         rep_group = Group.objects.get(name=u'Representative Office')
-    #         kwargs['queryset'] = rep_group.user_set.all()
 
 
 class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):

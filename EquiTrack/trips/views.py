@@ -4,7 +4,8 @@ from datetime import datetime
 
 from django.db.models import Q
 from django.contrib.auth import get_user_model
-from django.views.generic import TemplateView, FormView
+from django.views.generic import FormView
+
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.renderers import JSONPRenderer
@@ -13,8 +14,9 @@ from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
 
 
+from users.models import UserProfile
 from reports.models import Sector
-from .models import Trip, Office
+from .models import Trip, Office, ActionPoint
 from .serializers import TripSerializer
 from .forms import TripFilterByDateForm
 
@@ -81,15 +83,11 @@ class TripActionView(RetrieveAPIView):
         action = self.kwargs.get('action', None)
         if action == 'submit':
             if trip.status != Trip.SUBMITTED:
-                trip.status == Trip.SUBMITTED
+                trip.status = Trip.SUBMITTED
                 trip.save()
         elif action == 'approve':
-            if not trip.can_be_approved:
-                return Response(
-                    {'message': 'This trip can not be approved yet'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-            trip.status == Trip.APPROVED
+            trip.approved_by_supervisor = True
+            trip.date_supervisor_approved = datetime.now()
             trip.save()
         return Response(status=status.HTTP_200_OK)
 
@@ -161,17 +159,16 @@ class TripsDashboard(FormView):
                     from_date__year=month.year,
                     from_date__month=month.month
                 )
-            action_points = [
-                action for trip in trips
-                for action in trip.actionpoint_set.all()
-            ]
-            closed_action_points = [
-                action for trip in trips
-                for action in trip.actionpoint_set.filter(
-                    closed_choice='closed'
 
-                )
-            ]
+            user_profiles = UserProfile.objects.filter(
+                section=section,
+                user__is_active=True
+            )
+            action_points = 0
+            closed_action_points = 0
+            for profile in user_profiles:
+                action_points += profile.user.for_action.count()
+                closed_action_points += profile.user.for_action.filter(closed=True).count()
             row = {
                 'section': section.name,
                 'color': section.color,
@@ -181,8 +178,8 @@ class TripsDashboard(FormView):
                 'total_completed': trips.filter(
                     status=Trip.COMPLETED
                 ).count(),
-                'actions': len(action_points),
-                'closed_actions': len(closed_action_points)
+                'actions': action_points,
+                'closed_actions': closed_action_points
             }
             by_month.append(row)
 
@@ -192,7 +189,8 @@ class TripsDashboard(FormView):
             'current_month_num': month_num,
             'trips': {
                 'planned': Trip.objects.filter(
-                    status=Trip.PLANNED,
+                    Q(status=Trip.PLANNED) |
+                    Q(status=Trip.SUBMITTED)
                 ).count(),
                 'approved': Trip.objects.filter(
                     status=Trip.APPROVED,
