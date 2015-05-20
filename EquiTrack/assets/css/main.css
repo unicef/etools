@@ -2160,7 +2160,7 @@ fieldset[disabled] .btn-warning.active {
   -ms-transition: all 3s ease-in-out;
   transition: all 3s ease-in-out;
   color: #fff;
-  background: #405d8c;
+  background: #F1F2F7 !important;
   /* Old browsers */
 
   background: -moz-radial-gradient(center, ellipse cover, #405d8c 0%, #293949 100%);
@@ -2199,7 +2199,9 @@ fieldset[disabled] .btn-warning.active {
   font-size: 30px;
 }
 #error-container p {
-  margin: 10px 0 40px 0;
+    margin: 10px 0 40px 0;
+    color:#0099ff;
+
 }
 /* ==========================================================================
    Timeline

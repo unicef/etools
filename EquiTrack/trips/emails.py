@@ -1,4 +1,7 @@
 __author__ = 'jcranwellward'
+import datetime
+
+from django.db.models import Q
 
 from EquiTrack.utils import BaseEmail
 
@@ -6,15 +9,15 @@ from EquiTrack.utils import BaseEmail
 class TripCreatedEmail(BaseEmail):
 
     template_name = 'trips/trip/created/updated'
-    description = ('The email that is send to the supervisor,'
+    description = ('The email that is sent to the supervisor,'
                    ' budget owner, traveller for any update')
-    subject = 'Trip {{number}} has been {{state}} for {{owner_name}}'
+    subject = 'EquiTrack - Trip {{number}} has been {{state}} for {{owner_name}}'
     content = """
     Dear Colleague,
 
     Trip {{number}} has been {{state}} for {{owner_name}} here:
-
     {{url}}
+    Purpose of travel: {{ purpose_of_travel }}
 
     Thank you.
     """
@@ -27,8 +30,9 @@ class TripCreatedEmail(BaseEmail):
             'state': 'Submitted',
             'url': 'http://{}{}'.format(
                 self.get_current_site().domain,
-                self.object.get_admin_url()
-            )
+                self.object.get_admin_url()),
+            'purpose_of_travel': self.object.purpose_of_travel
+
         }
 
 
@@ -44,7 +48,7 @@ class TripApprovedEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/approved'
     description = 'The email that is sent to the traveller if a trip has been approved'
-    subject = "Trip Approved: {{trip_reference}}"
+    subject = "EquiTrack - Trip Approved: {{trip_reference}}"
     content = """
     The following trip has been approved: {{trip_reference}}
 
@@ -58,7 +62,7 @@ class TripCancelledEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/cancelled'
     description = 'The email that is sent to everyone if a trip has been cancelled'
-    subject = "Trip Cancelled: {{trip_reference}}"
+    subject = "EquiTrack - Trip Cancelled: {{trip_reference}}"
     content = """
     The following trip has been cancelled: {{trip_reference}}
 
@@ -74,7 +78,7 @@ class TripTravelAssistantEmail(TripCreatedEmail):
     description = ("This e-mail will be sent when the trip is approved by the supervisor. "
                    "It will go to the travel assistant to prompt them to organise the travel "
                    "(vehicles, flights etc.) and request security clearance.")
-    subject = "Travel for {{owner_name}}"
+    subject = "EquiTrack - Travel for {{owner_name}}"
     content = """
     Dear {{travel_assistant}},
 
@@ -97,7 +101,7 @@ class TripTAEmail(TripCreatedEmail):
     template_name = 'trips/trip/TA_request'
     description = ("This email is sent to the relevant programme assistant to create "
                     "the TA for the staff in concern after the approval of the supervisor.")
-    subject = "Travel Authorization request for {{owner_name}}"
+    subject = "EquiTrack - Travel Authorization request for {{owner_name}}"
     content = """
     Dear {{pa_assistant}},
 
@@ -120,7 +124,7 @@ class TripTADraftedEmail(TripCreatedEmail):
     template_name = 'trips/trip/TA_drafted'
     description = ("This email is sent to the relevant colleague to approve "
                    "the TA for the staff in concern after the TA has been drafted in VISION.")
-    subject = "Travel Authorization drafted for {{owner_name}}"
+    subject = "EquiTrack - Travel Authorization drafted for {{owner_name}}"
     content = """
     Dear {{vision_approver}},"
 
@@ -143,7 +147,7 @@ class TripActionPointCreated(BaseEmail):
 
     template_name = 'trips/action/created'
     description = 'Sent when trip action points are created'
-    subject = 'Trip action point {{state}} for trip: {{trip_reference}}'
+    subject = 'EquiTrack - Trip action point {{state}} for trip: {{trip_reference}}'
     content = """
     Trip action point by {{owner_name}} for {{responsible}} was {{state}}:"
 
@@ -189,5 +193,61 @@ class TripActionPointClosed(TripActionPointUpdated):
         context['state'] = 'Closed'
         return context
 
+
+class TripSummaryEmail(BaseEmail):
+
+    template_name = 'trips/trip/summary'
+    description = 'A summary of trips sent to the owner'
+    subject = "EquiTrack - Trip Summary"
+    content = """
+    The following is a trip summary for this week:
+
+    <b>Trips Coming up:</b>
+        <ul>
+            {% for key, value in trips_coming_text.items %}
+                <li><a href='{{ value[0] }}'>{{key}}</a> - started on {{ value[1] }}</li>
+            {% endfor %}
+        </ul>
+
+    <b>Overdue Trips:</b>
+        <ul>
+            {% for key, value in trips_overdue_text.items %}
+                <li><a href='{{ value[0] }}'>{{key}}</a> - ended on {{ value[1] }} </li>
+            {% endfor %}
+        </ul>
+
+
+    Thank you.
+    """
+
+    def get_context(self):
+        trips_coming_text = {}
+        trips_overdue_text = {}
+
+        trips_coming = self.object.trips.filter(
+            Q(status='approved') | Q(status='submitted'),
+            from_date__gt=datetime.date.today()
+        )
+
+        trips_overdue = self.object.trips.filter(
+            status='approved',
+            to_date__lt=datetime.date.today()
+        )
+
+        for trip in trips_overdue:
+            trips_overdue_text[trip.purpose_of_travel] = ['http://{}{}'.format(
+                self.get_current_site().domain,
+                trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
+
+        for trip in trips_coming:
+            trips_coming_text[trip.purpose_of_travel] = ['http://{}{}'.format(
+                self.get_current_site().domain,
+                trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
+
+        return {
+            'trips_coming_text': trips_coming_text,
+            'trips_overdue_text': trips_overdue_text,
+            'owner_name': self.object.get_full_name(),
+        }
 
 

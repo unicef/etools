@@ -65,11 +65,12 @@ class Trip(AdminURLMixin, models.Model):
         (ADVOCACY, u'ADVOCACY'),
         (TECHNICAL_SUPPORT, u'TECHNICAL SUPPORT'),
         (MEETING, u'MEETING'),
-        (DUTY_TRAVEL, u"DUTY TRAVEL"),
-        (HOME_LEAVE, u"HOME LEAVE"),
-        (FAMILY_VISIT, u"FAMILY VISIT"),
-        (EDUCATION_GRANT, u"EDUCATION GRANT"),
         (STAFF_DEVELOPMENT, u"STAFF DEVELOPMENT"),
+        # (DUTY_TRAVEL, u"DUTY TRAVEL"),
+        # (HOME_LEAVE, u"HOME LEAVE"),
+        # (FAMILY_VISIT, u"FAMILY VISIT"),
+        # (EDUCATION_GRANT, u"EDUCATION GRANT"),
+
     )
 
     status = models.CharField(
@@ -235,9 +236,12 @@ class Trip(AdminURLMixin, models.Model):
         return True
 
     def save(self, **kwargs):
+
+        #check if trip can be approved
         if self.can_be_approved:
             self.approved_date = datetime.datetime.today()
             self.status = Trip.APPROVED
+
         super(Trip, self).save(**kwargs)
 
     @classmethod
@@ -266,7 +270,6 @@ class Trip(AdminURLMixin, models.Model):
                 *recipients
             )
         elif instance.status == Trip.APPROVED:
-
             if instance.travel_assistant and not instance.transport_booked:
                 emails.TripTravelAssistantEmail(instance).send(
                     instance.owner.email,

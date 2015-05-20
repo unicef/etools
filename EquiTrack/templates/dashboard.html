@@ -1,8 +1,43 @@
 {% extends "base.html" %}
 {% load humanize %}
+{% load mathfilters %}
 
 {% block content %}
-    <section class="main-content-wrapper">
+<style>
+    .progress{
+        padding-left:0px;
+        margin-bottom: 10px;
+    }
+    .sublabel{
+        padding-left: 5px;
+    }
+    #horizontal-style {
+        display: table;
+        width: 100%;
+        position:absolute;
+        height:20px;
+    }
+    #horizontal-style li {
+        display: table-cell;
+    }
+
+    .popover {
+        background: #0099ff;
+    }
+    .popover.bottom .arrow:after {
+        border-bottom-color: #0099ff;
+    }
+
+    .popover-content {
+        padding: 0px 0px;
+    }
+
+    .popover-title{
+        border-radius: 5px 5px 5px 5px;
+    }
+
+</style>
+<section class="main-content-wrapper">
     <section id="main-content">
     <!--tiles start-->
     <div class="row">
@@ -71,7 +106,7 @@
         </div>
     </div>
     <!--tiles end-->
-
+    <!-- result structure dropdown -->
     <div class="row">
         <div class="col-md-4">
             <div class="btn-group">
@@ -86,58 +121,107 @@
             </div>
 
         </div>
-
     </div>
+    <!-- tabs start -->
+    <ul class="nav nav-tabs col-md-10">
+        {% for name,indicators in sectors.items %}
+            {% if name == "WASH" %}
+                 <li class="active">
+                    <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab" class="">{{ name }}</a>
+                 </li>
+            {% else %}
+                 <li class="">
+                    <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab" class="">{{ name }}</a>
+                 </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <!-- tabs end -->
 
-    <!--Indicators start-->
-    <div class="row">
+    <!-- tabs content start -->
+    <div class="tab-content col-md-9" style="padding-top: 10px">
         {% for name,indicators in sectors.items %}
             {% cycle 'info' 'warning' 'success' 'danger' as barcolor silent %}
-            <div class="col-md-6">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">{{ name }}</h3>
 
-                        <div class="actions pull-right">
-                            <i class="fa fa-chevron-down"></i>
-                            <i class="fa fa-times"></i>
+            {% if name == "WASH" %}
+            <div id="tab-{{ name.split|join:"_" }}" class="tab-pane active" >
+            {% else %}
+            <div id="tab-{{ name.split|join:"_" }}" class="tab-pane">
+            {% endif %}
+
+                    <!--Indicators start-->
+                {% for ind in indicators %}
+                <div class="row panel-body" style="margin-top: 10px; background-color: #ffffff;">
+                    <a href="{% url 'admin:reports_indicator_change' ind.indicator.id %}">
+                        <span class="sublabel">{{ ind.indicator.name }} ({{ ind.indicator.result_structure }})</span>
+                    </a>
+                    {% with actual=ind.indicator.current %}
+                    <div>
+                        <span class="sublabel pull-left col-md-12">Programmed: {{ ind.programmed|intcomma }}</span>
+                        <span class="sublabel pull-left col-md-2" style="margin-bottom: 0px;">Reached: {{ actual|intcomma }}</span>
+                        <span class="sublabel col-md-2 pull-right">Target: {{ ind.indicator.total|intcomma }}</span>
+                    </div>
+                    <!-- progress -->
+                        <div class="progress col-md-11">
+                            <div class="progress-bar progress-bar-{{ barcolor }}"
+                                 style="width: {% widthratio actual ind.indicator.total 100 %}%" >
+                                {% widthratio actual ind.indicator.total 100 %}%
+                            </div>
                         </div>
+                    {% endwith %}
+
+                    <div class="col-md-offset-11" style="padding-left:  15px;">
+                        <a href="javascript:sectorClick({{ ind.indicator.id }});" id="show-sector{{ ind.indicator.id }}"><i class="fa fa-chevron-up"></i></a>
                     </div>
-                    <div class="panel-body">
-                        {% for ind in indicators %}
-                            <a href="{% url 'admin:reports_indicator_change' ind.indicator.id %}">
-                                <span class="sublabel">{{ ind.indicator.name }} ({{ ind.indicator.result_structure }})</span>
-                            </a>
+                    <!-- Sector progress -->
+                    <div id="sector-progress{{ ind.indicator.id }}" style="margin-bottom: 10px !important; display: none;">
+                        {% with actual=ind.indicator.sector_current %}
                             <div>
-                                <span class="sublabel"
-                                      style="float: right;">Target: {{ ind.indicator.total|intcomma }}</span>
-                                <span class="sublabel">Programmed: {{ ind.programmed|intcomma }}</span>
+                                <span class="sublabel col-md-2 pull-left">Sector Reached: {{ actual|intcomma }}</span>
+                                <span class="sublabel col-md-2  pull-right" >Sector Target: {{ ind.indicator.sector_total|intcomma }}</span>
                             </div>
-                            <div class="progress">
-                                <div class="progress-bar progress-bar-{{ barcolor }}"
-                                     style="width: {% widthratio ind.programmed ind.indicator.total 100 %}%">
-                                    {% widthratio ind.programmed ind.indicator.total 100 %}%
-                                </div>
+                            <div class="progress progress-striped col-md-11" >
+                                <!-- unicef -->
+                                <span id="sector-unicef-{{ ind.indicator.id }}" class="progress-bar progress-bar-primary"
+                                      style="width: {% widthratio ind.indicator.current ind.indicator.sector_total 100 %}%"
+                                      data-toggle="popover" title="unicef {% widthratio ind.indicator.current ind.indicator.sector_total 100 %}% " data-container="body" data-trigger="hover">
+                                </span>
+
+                                <!-- Sector -->
+                                <span class="progress-bar progress-bar-{{ barcolor }}"
+                                     style="width: {% widthratio actual|sub:ind.indicator.current ind.indicator.sector_total 100 %}%; text-align: initial;">
+                                </span>
+                                <!-- setting the sector percentage text to be in the middle of 2 progress spans -->
+                                <span id="sector-percent" style="color: #fff; position: absolute; left:{{actual|div:ind.indicator.sector_total|mul:100|div:2|sub:1}}%;">{% widthratio actual ind.indicator.sector_total 100 %}%</span>
                             </div>
-                                {% with actual=ind.indicator.progress %}
-                                    <div>
-                                        <span class="sublabel">Reached: {{ actual|intcomma }}</span>
-                                    </div>
-                                    <div class="progress progress-striped">
-                                        <div class="progress-bar progress-bar-{{ barcolor }}"
-                                             style="width: {% widthratio actual ind.indicator.total 100 %}%">
-                                            {% widthratio actual ind.indicator.total 100 %}%
-                                        </div>
-                                    </div>
-                                {% endwith %}
-                            <!-- progress -->
-                        {% endfor %}
+                        {% endwith %}
                     </div>
+
                 </div>
+
+                {% endfor %}
+                <!--indicators end-->
+
             </div>
         {% endfor %}
     </div>
-    <!--indicators end-->
+    <!-- tabs content end -->
     </section>
-    </section>
+</section>
+
 {% endblock content %}
+
+{% block extra_js %}
+
+    <script type="text/javascript">
+    function sectorClick(indID) {
+        $('#sector-progress' + indID).fadeToggle("slow");
+        $('#show-sector' + indID).children(".fa-chevron-down, .fa-chevron-up").toggleClass( 'fa-chevron-up fa-chevron-down');
+    }
+
+    $(document).ready(function() {
+        $("[data-toggle='popover']").popover({placement : 'bottom', container : 'body'});
+    });
+    </script>
+
+{% endblock extra_js %}

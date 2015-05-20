@@ -5,10 +5,13 @@ import tablib
 from django import template
 from django.utils.datastructures import SortedDict
 
-from partners.models import PCA
+from partners.models import (
+    PCA,
+    ResultChain,
+    Indicator
+)
 
 register = template.Library()
-
 
 @register.simple_tag
 def show_log_frame(value):
@@ -16,24 +19,23 @@ def show_log_frame(value):
     results = pca.resultchain_set.all()
     data = tablib.Dataset()
     indicators = SortedDict()
-    row_mask = SortedDict({
-        'Result Type': '',
-        'Result': '',
-        'Indicator': ''
-    })
+    governorates = []
 
-    # first pass gets all the governorates
     for result in results:
-        if result.governorate.name not in row_mask.keys():
-            row_mask[result.governorate.name] = 0
+        if result.governorate.name not in governorates:
+            governorates.append(result.governorate.name)
 
-    # second pass builds the rows
     for result in results:
-        row = indicators.get(result.indicator.id, row_mask.copy())
+        row = indicators.get(result.indicator.id, SortedDict())
         row['Result Type'] = result.result_type.name
         row['Result'] = result.result.name
         row['Indicator'] = result.indicator.name
-        row[result.governorate.name] = result.target
+        for governorate in governorates:
+            if result.governorate.name == governorate:
+                row[result.governorate.name] = result.target
+            else:
+                if governorate not in row:
+                    row[governorate] = 0
         indicators[result.indicator.id] = row
 
     if indicators:
@@ -44,4 +46,4 @@ def show_log_frame(value):
 
         return data.html
 
-    return ''
+    return '<p>No results</p>'
