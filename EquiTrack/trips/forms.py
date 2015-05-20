@@ -15,8 +15,10 @@ from .models import Trip
 
 class TravelRoutesForm(ModelForm):
 
-    depart = fields.DateTimeField(label='Depart', widget=DateTimeWidget(bootstrap_version=3))
-    arrive = fields.DateTimeField(label='Arrive', widget=DateTimeWidget(bootstrap_version=3))
+    depart = fields.DateTimeField(label='Depart', widget=DateTimeWidget(bootstrap_version=3),
+                                  input_formats=['%d/%m/%Y %H:%M'])
+    arrive = fields.DateTimeField(label='Arrive', widget=DateTimeWidget(bootstrap_version=3),
+                                  input_formats=['%d/%m/%Y %H:%M'])
 
     def clean(self):
         cleaned_data = super(TravelRoutesForm, self).clean()
@@ -29,17 +31,20 @@ class TravelRoutesForm(ModelForm):
                     'Arrival must be greater than departure'
                 )
 
-        #TODO: Make this work
-        # if self.instance:
-        #     from_date = self.instance.trip.from_date
-        #     to_date = self.instance.trip.to_date
-        #     depart = depart.date()
-        #     arrive = arrive.date()
-        #
-        #     if depart < from_date or to_date < arrive:
-        #         raise ValidationError(
-        #             'Travel dates must be within overall trip dates'
-        #         )
+            if self.instance:
+                from_date = self.instance.trip.from_date
+                to_date = self.instance.trip.to_date
+                depart = depart.date()
+                arrive = arrive.date()
+
+                if to_date < depart or depart < from_date or to_date < arrive or arrive < from_date:
+                    raise ValidationError(
+                        'Travel dates must be within overall trip dates'
+                    )
+
+        if self.has_changed() and self.instance.trip.status == Trip.APPROVED:
+            self.instance.trip.status = Trip.PLANNED
+            print("changed")
 
         return cleaned_data
 

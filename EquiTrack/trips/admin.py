@@ -213,13 +213,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'attachments', u'Attachments')
     )
 
-    # def __init__(self, *args, **kwargs):
-    #     # We can't assume that kwargs['initial'] exists!
-    #     if not kwargs['initial']:
-    #         kwargs['initial'] = {}
-    #     kwargs['initial'].update({'owner': User.objects.get(id=169)})
-    #     super(TripReportAdmin, self).__init__(*args, **kwargs)
-
     def get_readonly_fields(self, request, trip=None):
         """
         Only let certain users perform approvals
