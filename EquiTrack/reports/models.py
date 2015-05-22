@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 from django.db import models
 
 from paintstore.fields import ColorPickerField
+from smart_selects.db_fields import ChainedForeignKey
 
 
 class ResultStructure(models.Model):

@@ -20,6 +20,7 @@ from reports.models import (
     ResultType,
     Result
 )
+from .forms import IndicatorAdminForm
 
 
 class SectorListFilter(admin.SimpleListFilter):
@@ -107,6 +108,7 @@ class IndicatorProgressInlineAdmin(admin.TabularInline):
 
 
 class IndicatorAdmin(ImportExportModelAdmin):
+    form = IndicatorAdminForm
     search_fields = ('name',)
     list_editable = (
         'in_activity_info',
