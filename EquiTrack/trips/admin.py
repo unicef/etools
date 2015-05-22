@@ -213,6 +213,15 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'attachments', u'Attachments')
     )
 
+    def save_formset(self, request, form, formset, change):
+
+        for f in formset.forms:
+            if f.has_changed():
+                if type(f.instance) is TravelRoutes and f.instance.trip.status == Trip.APPROVED:
+                    form.instance.status = Trip.SUBMITTED
+
+        formset.save()
+
     def get_readonly_fields(self, request, trip=None):
         """
         Only let certain users perform approvals

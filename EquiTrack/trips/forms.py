@@ -38,14 +38,12 @@ class TravelRoutesForm(ModelForm):
                 arrive = arrive.date()
 
                 #check if itinerary dates are outside the entire trip date range
-                if depart in  to_date < depart or depart < from_date or to_date < arrive or arrive < from_date:
+                if to_date < depart or depart < from_date or to_date < arrive or arrive < from_date:
                     raise ValidationError(
                         'Travel dates must be within overall trip dates'
                     )
 
-        if self.has_changed() and self.instance.trip.status == Trip.APPROVED:
-            self.instance.trip.status == Trip.SUBMITTED
-            self.instance.trip.save()
+
             # obj = Trip.objects.get(pk=self.instance.trip.pk)
             # model_instance = self.save(commit=False)
             # print(obj.status)

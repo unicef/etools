@@ -58,3 +58,32 @@
     <script src="/static/js/application.js"></script>
     </body>
 </html>
+
+{% extends "base.html" %}
+
+{% block body %}
+    <section id="error-container">
+
+        <div class="block-error">
+
+            <header>
+                <h1 class="error primary-txt">500</h1>
+
+                <p class="text-center primary-txt">Something went wrong.</p>
+            </header>
+
+            <p class="text-center">Our engineers have have been notified and will address the issue shortly</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <a class="btn btn-info btn-block btn-3d" href="{% url 'dashboard' %}">Back to Dashboard</a>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-primary btn-block btn-3d" onclick="history.back();">Previous Page</button>
+                </div>
+            </div>
+        </div>
+
+    </section>
+{% endblock %}
+
