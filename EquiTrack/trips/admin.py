@@ -231,7 +231,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'approved_date'
         ]
 
-        if trip and request.user in [
+        if trip.status == Trip.APPROVED and request.user in [
             trip.owner,
             trip.travel_assistant,
             trip.programme_assistant
@@ -239,8 +239,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             fields.remove(u'status')
 
         if trip and request.user == trip.supervisor:
-            if u'status' in fields:
-                fields.remove(u'status')
             fields.remove(u'approved_by_supervisor')
             fields.remove(u'date_supervisor_approved')
 
@@ -260,8 +258,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             name=u'Representative Office'
         )
         if trip and rep_group in request.user.groups.all():
-            if u'status' in fields:
-                fields.remove(u'status')
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
 
