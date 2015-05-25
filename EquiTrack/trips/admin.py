@@ -218,7 +218,9 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         for f in formset.forms:
             if f.has_changed():
                 if type(f.instance) is TravelRoutes and f.instance.trip.status == Trip.APPROVED:
-                    form.instance.status = Trip.SUBMITTED
+                    trip = Trip.objects.get(pk=form.instance.pk)
+                    trip.status = Trip.SUBMITTED
+                    trip.save()
 
         formset.save()
 
