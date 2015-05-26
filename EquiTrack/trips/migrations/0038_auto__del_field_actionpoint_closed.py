@@ -8,15 +8,15 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'ActionPoint.closed_choice'
-        db.add_column(u'trips_actionpoint', 'closed_choice',
-                      self.gf('django.db.models.fields.CharField')(max_length=254, null=True),
-                      keep_default=False)
+        # Deleting field 'ActionPoint.closed'
+        db.delete_column(u'trips_actionpoint', 'closed')
 
 
     def backwards(self, orm):
-        # Deleting field 'ActionPoint.closed_choice'
-        db.delete_column(u'trips_actionpoint', 'closed_choice')
+        # Adding field 'ActionPoint.closed'
+        db.add_column(u'trips_actionpoint', 'closed',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
 
 
     models = {
@@ -210,15 +210,15 @@ class Migration(SchemaMigration):
         u'trips.actionpoint': {
             'Meta': {'object_name': 'ActionPoint'},
             'actions_taken': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'closed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'closed_choice': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             'comments': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'completed_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'created_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
             'due_date': ('django.db.models.fields.DateField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'person_responsible': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'for_action'", 'to': u"orm['auth.User']"}),
             'persons_responsible': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             'trip': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Trip']"})
         },
         u'trips.fileattachment': {

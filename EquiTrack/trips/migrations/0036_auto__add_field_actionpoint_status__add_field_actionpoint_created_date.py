@@ -1,28 +1,31 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
 from south.db import db
-from south.v2 import DataMigration
+from south.v2 import SchemaMigration
 from django.db import models
 
-class Migration(DataMigration):
+
+class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        "Write your forwards methods here."
-        for action in orm.ActionPoint.objects.all():
-            if action.closed is False:
-                action.closed_choice = 'ongoing'
-            elif action.closed:
-                action.closed_choice = 'closed'
-            else:
-                action.closed_choice = None
-            action.save()
+        # Adding field 'ActionPoint.status'
+        db.add_column(u'trips_actionpoint', 'status',
+                      self.gf('django.db.models.fields.CharField')(max_length=254, null=True),
+                      keep_default=False)
 
-        # Note: Don't use "from appname.models import ModelName". 
-        # Use orm.ModelName to refer to models in this application,
-        # and orm['appname.ModelName'] for models in other applications.
+        # Adding field 'ActionPoint.created_date'
+        db.add_column(u'trips_actionpoint', 'created_date',
+                      self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, default=datetime.datetime(2015, 5, 22, 0, 0), blank=True),
+                      keep_default=False)
+
 
     def backwards(self, orm):
-        "Write your backwards methods here."
+        # Deleting field 'ActionPoint.status'
+        db.delete_column(u'trips_actionpoint', 'status')
+
+        # Deleting field 'ActionPoint.created_date'
+        db.delete_column(u'trips_actionpoint', 'created_date')
+
 
     models = {
         u'activityinfo.database': {
@@ -216,14 +219,15 @@ class Migration(DataMigration):
             'Meta': {'object_name': 'ActionPoint'},
             'actions_taken': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'closed': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'closed_choice': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             'comments': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'completed_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'created_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
             'due_date': ('django.db.models.fields.DateField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'person_responsible': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'for_action'", 'to': u"orm['auth.User']"}),
             'persons_responsible': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'}),
+            'status': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
             'trip': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Trip']"})
         },
         u'trips.fileattachment': {
@@ -303,4 +307,3 @@ class Migration(DataMigration):
     }
 
     complete_apps = ['trips']
-    symmetrical = True

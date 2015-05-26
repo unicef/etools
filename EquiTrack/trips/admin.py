@@ -55,7 +55,7 @@ class ActionPointInlineAdmin(admin.StackedInline):
         (u'description', u'due_date',),
         u'person_responsible',
         (u'actions_taken',),
-        (u'completed_date', u'closed_choice'),
+        (u'completed_date', u'status'),
     )
 
 
@@ -212,6 +212,17 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'reporting', u'Reporting'),
         (u'attachments', u'Attachments')
     )
+
+    def save_formset(self, request, form, formset, change):
+
+        for f in formset.forms:
+            if f.has_changed():
+                if type(f.instance) is TravelRoutes and f.instance.trip.status == Trip.APPROVED:
+                    trip = Trip.objects.get(pk=form.instance.pk)
+                    trip.status = Trip.SUBMITTED
+                    trip.save()
+
+        formset.save()
 
     def get_readonly_fields(self, request, trip=None):
         """
@@ -385,12 +396,12 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         u'originally_responsible',
         u'actions_taken',
         u'comments',
-        u'closed_choice'
+        u'status'
     )
     list_filter = (
         u'trip__owner',
         u'person_responsible',
-        u'closed_choice',
+        u'status',
     )
     search_fields = (
         u'trip__name',
@@ -419,15 +430,16 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
             u'person_responsible',
             u'persons_responsible',
             u'comments',
-            u'closed_choice',
+            u'status',
         ]
 
         if obj and obj.person_responsible == request.user:
             readonly_fields.remove(u'comments')
-            readonly_fields.remove(u'closed_choice')
+            readonly_fields.remove(u'status')
 
         return readonly_fields
     #
+
     # def save_model(self, request, obj, form, change):
     #     messages.add_message(
     #         request,

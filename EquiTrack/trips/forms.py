@@ -37,14 +37,18 @@ class TravelRoutesForm(ModelForm):
                 depart = depart.date()
                 arrive = arrive.date()
 
+                #check if itinerary dates are outside the entire trip date range
                 if to_date < depart or depart < from_date or to_date < arrive or arrive < from_date:
                     raise ValidationError(
                         'Travel dates must be within overall trip dates'
                     )
 
-        if self.has_changed() and self.instance.trip.status == Trip.APPROVED:
-            self.instance.trip.status = Trip.PLANNED
-            print("changed")
+
+            # obj = Trip.objects.get(pk=self.instance.trip.pk)
+            # model_instance = self.save(commit=False)
+            # print(obj.status)
+            # obj.status = Trip.PLANNED
+            # obj.save()
 
         return cleaned_data
 
@@ -82,6 +86,7 @@ class TripForm(ModelForm):
         approved_by_budget_owner = cleaned_data.get(u'approved_by_budget_owner')
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
         trip_report = cleaned_data.get(u'main_observations')
+
 
         if to_date < from_date:
             raise ValidationError('The to date must be greater than the from date')
