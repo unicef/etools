@@ -203,7 +203,7 @@ class Trip(AdminURLMixin, models.Model):
 
     def outstanding_actions(self):
         return self.actionpoint_set.filter(
-            closed=False).count()
+            status='open').count()
 
     @property
     def trip_revision(self):
@@ -236,7 +236,6 @@ class Trip(AdminURLMixin, models.Model):
         return True
 
     def save(self, **kwargs):
-
         #check if trip can be approved
         if self.can_be_approved:
             self.approved_date = datetime.datetime.today()
@@ -332,6 +331,13 @@ class TravelRoutes(models.Model):
 
 class ActionPoint(models.Model):
 
+    CLOSED = (
+        ('closed', 'Closed'),
+        ('ongoing', 'On-going'),
+        ('open', 'Open'),
+        ('cancelled', 'Cancelled')
+    )
+
     trip = models.ForeignKey(Trip)
     description = models.CharField(max_length=254)
     due_date = models.DateField()
@@ -340,7 +346,8 @@ class ActionPoint(models.Model):
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
-    closed = models.BooleanField(default=False)
+    status = models.CharField(choices=CLOSED, max_length=254, null=True, verbose_name='Status')
+    created_date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return self.description
@@ -360,7 +367,7 @@ class ActionPoint(models.Model):
                 instance.trip.owner.email,
                 *recipients
             )
-        elif instance.closed:
+        elif instance.status == 'closed':
             emails.TripActionPointClosed(instance).send(
                 instance.trip.owner.email,
                 *recipients

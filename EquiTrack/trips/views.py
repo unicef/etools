@@ -168,7 +168,7 @@ class TripsDashboard(FormView):
             closed_action_points = 0
             for profile in user_profiles:
                 action_points += profile.user.for_action.count()
-                closed_action_points += profile.user.for_action.filter(closed=True).count()
+                closed_action_points += profile.user.for_action.filter(status='closed').count()
             row = {
                 'section': section.name,
                 'color': section.color,

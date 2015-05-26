@@ -15,8 +15,10 @@ from .models import Trip
 
 class TravelRoutesForm(ModelForm):
 
-    depart = fields.DateTimeField(label='Depart', widget=DateTimeWidget(bootstrap_version=3))
-    arrive = fields.DateTimeField(label='Arrive', widget=DateTimeWidget(bootstrap_version=3))
+    depart = fields.DateTimeField(label='Depart', widget=DateTimeWidget(bootstrap_version=3),
+                                  input_formats=['%d/%m/%Y %H:%M'])
+    arrive = fields.DateTimeField(label='Arrive', widget=DateTimeWidget(bootstrap_version=3),
+                                  input_formats=['%d/%m/%Y %H:%M'])
 
     def clean(self):
         cleaned_data = super(TravelRoutesForm, self).clean()
@@ -29,17 +31,24 @@ class TravelRoutesForm(ModelForm):
                     'Arrival must be greater than departure'
                 )
 
-        #TODO: Make this work
-        # if self.instance:
-        #     from_date = self.instance.trip.from_date
-        #     to_date = self.instance.trip.to_date
-        #     depart = depart.date()
-        #     arrive = arrive.date()
-        #
-        #     if depart < from_date or to_date < arrive:
-        #         raise ValidationError(
-        #             'Travel dates must be within overall trip dates'
-        #         )
+            if self.instance:
+                from_date = self.instance.trip.from_date
+                to_date = self.instance.trip.to_date
+                depart = depart.date()
+                arrive = arrive.date()
+
+                #check if itinerary dates are outside the entire trip date range
+                if to_date < depart or depart < from_date or to_date < arrive or arrive < from_date:
+                    raise ValidationError(
+                        'Travel dates must be within overall trip dates'
+                    )
+
+
+            # obj = Trip.objects.get(pk=self.instance.trip.pk)
+            # model_instance = self.save(commit=False)
+            # print(obj.status)
+            # obj.status = Trip.PLANNED
+            # obj.save()
 
         return cleaned_data
 
@@ -77,6 +86,7 @@ class TripForm(ModelForm):
         approved_by_budget_owner = cleaned_data.get(u'approved_by_budget_owner')
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
         trip_report = cleaned_data.get(u'main_observations')
+
 
         if to_date < from_date:
             raise ValidationError('The to date must be greater than the from date')
