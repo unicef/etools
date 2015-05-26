@@ -223,9 +223,10 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                     trip.date_supervisor_approved = None
                     trip.approved_by_budget_owner = False
                     trip.date_budget_owner_approved = None
-                    trip.approved_by_human_resources = False
-                    trip.representative_approval = False
+                    trip.approved_by_human_resources = None
+                    trip.representative_approval = None
                     trip.date_representative_approved = None
+                    trip.approved_date = None
                     trip.save()
 
         formset.save()

@@ -301,6 +301,11 @@ class Trip(AdminURLMixin, models.Model):
                 instance.approved_email_sent = True
                 instance.save()
 
+        elif instance.status == Trip.COMPLETED:
+            emails.TripCompletedEmail(instance).send(
+                instance.owner.email,
+                *recipients
+            )
 
 post_save.connect(Trip.send_trip_request, sender=Trip)
 
