@@ -31,7 +31,7 @@ class TravelRoutesForm(ModelForm):
                     'Arrival must be greater than departure'
                 )
 
-            if self.instance:
+            if self.instance and self.instance.trip_id is not None:
                 from_date = self.instance.trip.from_date
                 to_date = self.instance.trip.to_date
                 depart = depart.date()

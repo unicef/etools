@@ -214,12 +214,18 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     )
 
     def save_formset(self, request, form, formset, change):
-
         for f in formset.forms:
             if f.has_changed():
                 if type(f.instance) is TravelRoutes and f.instance.trip.status == Trip.APPROVED:
                     trip = Trip.objects.get(pk=form.instance.pk)
                     trip.status = Trip.SUBMITTED
+                    trip.approved_by_supervisor = False
+                    trip.date_supervisor_approved = None
+                    trip.approved_by_budget_owner = False
+                    trip.date_budget_owner_approved = None
+                    trip.approved_by_human_resources = False
+                    trip.representative_approval = False
+                    trip.date_representative_approved = None
                     trip.save()
 
         formset.save()
@@ -242,7 +248,10 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'approved_date'
         ]
 
-        if trip.status == Trip.APPROVED and request.user in [
+        if trip and trip.status == Trip.PLANNED and request.user in [trip.owner]:
+            fields.remove(u'status')
+
+        if trip and trip.status == Trip.APPROVED and request.user in [
             trip.owner,
             trip.travel_assistant,
             trip.programme_assistant

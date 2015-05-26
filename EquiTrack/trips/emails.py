@@ -72,6 +72,19 @@ class TripCancelledEmail(TripCreatedEmail):
     """
 
 
+class TripRepresentativeEmail(TripCreatedEmail):
+
+    template_name = 'trips/trip/representative'
+    description = 'The email that is sent to the rep  to approve a trip'
+    subject = "EquiTrack - Trip Approval Needed: {{trip_reference}}"
+    content = """
+    The following trip needs representative approval: {{trip_reference}}
+
+    {{url}}
+
+    Thank you.
+    """
+
 class TripTravelAssistantEmail(TripCreatedEmail):
 
     template_name = "travel/trip/travel_or_admin_assistant"
