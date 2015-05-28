@@ -1689,9 +1689,9 @@ fieldset[disabled] .btn-warning.active {
   padding: 15px;
 }
 .panel-default > .panel-heading {
-  border-color: #eff2f7;
-  background: #fafafa;
-  color: #767676;
+    border-color: #eff2f7;
+    background: #fafafa;
+    color: #767676;
 }
 .panel-default .actions i {
   font-size: 1em;
@@ -1712,6 +1712,31 @@ fieldset[disabled] .btn-warning.active {
   background-color: #09f;
   border-color: #09f;
 }
+
+.panel-success > .panel-heading {
+  color: #fff;
+  background-color: #009900;
+  border-color: #009900;
+}
+
+.panel-info > .panel-heading {
+  color: #fff;
+  background-color: #cc007a;
+  border-color: #cc007a;
+}
+
+.panel-warning > .panel-heading {
+  color: #fff;
+  background-color: #f90;
+  border-color: #f90;
+}
+
+.panel-danger > .panel-heading {
+  color: #fff;
+  background-color: #c00;
+  border-color: #c00;
+}
+
 .panel-primary {
   border-color: #09f;
 }

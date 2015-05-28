@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block content %}
+<style>
+
+.panel{
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.itemdiv {
+  padding-right: 3px;
+  min-height: 66px;
+  position: relative;
+}
+
+.itemdiv>.body {
+    width: auto;
+    margin-right: 12px;
+    margin-top: 10px;
+    position: relative;
+    margin-left: 50px;
+}
+
+.itemdiv>.status {
+  display: inline-block;
+  width: 42px;
+  position: absolute;
+  left: 0;
+}
+
+.itemdiv>.body>.name {
+  display: block;
+  color: #999;
+}
+
+.itemdiv>.body>.time {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+    position: absolute;
+    right: 9px;
+    top: 0;
+}
+
+.itemdiv>.body>.text:after {
+  display: block;
+  content: "";
+  height: 1px;
+  font-size: 0;
+  overflow: hidden;
+  position: absolute;
+  left: -10px;
+  right: -12px;
+  margin-top: 9px;
+  border-top: 1px solid #E4ECF3;
+}
+
+.green {
+  color: #69aa46!important;
+}
+
+.itemdiv>.body>.text {
+  display: block;
+  position: relative;
+  margin-top: 2px;
+  padding-bottom: 10px;
+  font-size: 13px;
+}
+
+.scroll-content {
+  position: static;
+  overflow: hidden;
+}
+
+.scroll-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: inherit;
+  background-color: #ACE;
+  background: #bbd4e5;
+}
+
+.scroll-track {
+  position: absolute;
+  top: auto;
+  bottom: auto;
+  right: 0;
+  height: auto;
+  background-color: #E7E7E7;
+  z-index: 99;
+  width: 0;
+  opacity: 0;
+}
+
+.timeline-container {
+  position: relative;
+  padding-top: 4px;
+  margin-bottom: 32px;
+}
+
+.timeline-style2 .timeline-label {
+  width: 75px;
+  margin-left: 0;
+  margin-bottom: 10px;
+  text-align: right;
+  color: #666;
+  font-size: 14px;
+}
+
+.timeline-label {
+  display: block;
+  clear: both;
+  margin: 0 0 18px;
+}
+
+.timeline-style2 .timeline-item {
+  padding-bottom: 10px;
+  margin-bottom: 0;
+}
+
+.timeline-item {
+  position: relative;
+  display: block;
+}
+
+.timeline-info {
+  float: left;
+  text-align: center;
+  position: relative;
+}
+
+.timeline-style2 .timeline-info {
+  width: 18%;
+}
+
+.timeline-style2 .timeline-date {
+  display: inline-block;
+  width: 72px;
+  text-align: right;
+  margin-right: 25px;
+  color: #777;
+}
+
+.timeline-style2 .timeline-indicator {
+  font-size: 0;
+  height: 12px;
+  line-height: 12px;
+  width: 12px;
+  border-width: 1px!important;
+{#  background-color: #FFF!important;#}
+  position: absolute;
+  left: 93.7%;
+  top: 3px;
+  opacity: 1;
+  border-radius: 100%;
+  display: inline-block;
+  padding: 0;
+  z-index: 100;
+}
+
+.timeline-style2 .timeline-item:before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 18%;
+  top: 5px;
+  bottom: -5px;
+  border-width: 0;
+  background-color: #DDD;
+  width: 2px;
+  max-width: 2px;
+}
+
+.timeline-style2 .timeline-item .transparent.widget-box {
+  background-color: transparent!important;
+  border-left: none!important;
+}
+
+.timeline-style2 .timeline-item .widget-box {
+  margin-left: 112px;
+}
+
+.btn-info.no-hover:hover, .btn-info.no-hover:active {
+  background-color: #6fb3e0!important;
+}
+
+.timeline-item .widget-box {
+  margin: 0;
+  position: relative;
+  max-width: none;
+}
+
+.widget-box.transparent>.widget-body {
+  border-width: 0;
+  background-color: transparent;
+}
+
+.timeline-item .widget-main {
+  margin: 0;
+  position: relative;
+  max-width: none;
+  border-bottom-width: 0;
+}
+
+</style>
+
+<section class="main-content-wrapper">
+    <section id="main-content">
+        <!-- TRIPS PANEL -->
+        <div id="trips-panel" class="col-md-5 panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">My Trips</h3>
+                <div class="actions pull-right">
+                    <i class="fa fa-chevron-down"></i>
+                    <i class="fa fa-times"></i>
+                </div>
+            </div>
+            <div class="panel-body" style="max-height: 400px; overflow-y: scroll;">
+                <!-- tabs start -->
+                <ul class="nav nav-tabs col-md-12">
+                     <li class="active">
+                        <a href="#tab-current" data-toggle="tab" class="">Current</a>
+                     </li>
+                     <li class="">
+                        <a href="#tab-previous" data-toggle="tab" class="">Previous</a>
+                     </li>
+                     <li class="">
+                        <a href="#tab-supervised" data-toggle="tab" class="">Supervised</a>
+                     </li>
+                </ul>
+                <!-- tabs end -->
+                <div class="tab-content col-md-12" style="padding-top: 10px">
+                    <div id="tab-current" class="tab-pane active">
+                        <div class="scroll-track" style="display: none;">
+                            <div class="scroll-bar">
+                            </div>
+                        </div>
+                        <div class="scroll-content">
+                        {% for trip in trips_current %}
+                            <div class="itemdiv commentdiv">
+                                <div class="status">
+                                    {% if trip.status == 'submitted' %}
+                                        <img src="{{ STATIC_URL }}img/paper-tick.png" width="40px">
+                                    {% elif trip.status ==  'approved' %}
+                                        <img src="{{ STATIC_URL }}img/Paper-ticktick.png" width="40px">
+                                    {% elif trip.status ==  'planned' %}
+                                        <img src="{{ STATIC_URL }}img/Paper.png" width="40px">
+                                    {% endif%}
+                                </div>
+                                <div class="body">
+                                    <div class="name">
+                                        <a href="{% url 'admin:trips_trip_change' trip.id %}">{{ trip.reference }}</a>
+                                    </div>
+                                    <div class="time">
+                                        <i class="fa fa-clock-o"></i>
+                                        <span class="green">{{ trip.from_date }}</span>
+                                    </div>
+                                    <div class="text">
+                                        {{ trip.purpose_of_travel }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    </div>
+                    <div id="tab-previous" class="tab-pane">
+                        {% for trip in trips_previous %}
+                            <div class="itemdiv commentdiv">
+                                <div class="status">
+                                    {% if trip.status == 'completed' %}
+                                        <img src="{{ STATIC_URL }}img/Paper-done.png" width="40px">
+                                    {% elif trip.status ==  'cancelled' %}
+                                        <img src="{{ STATIC_URL }}img/Paper-X.png" width="40px">
+                                    {% endif%}
+                                </div>
+                                <div class="body">
+                                    <div class="name">
+                                        <a href="{% url 'admin:trips_trip_change' trip.id %}">{{ trip.reference }}</a>
+                                    </div>
+                                    <div class="time">
+                                        <i class="fa fa-clock-o"></i>
+                                        <span class="green">{{ trip.from_date }}</span>
+                                    </div>
+                                    <div class="text">
+                                        {{ trip.purpose_of_travel }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div id="tab-supervised" class="tab-pane">
+                        {% for trip in trips_supervised %}
+                            <div class="itemdiv commentdiv">
+                                <div class="status">
+                                    {% if trip.status == 'submitted' %}
+                                        <img src="{{ STATIC_URL }}img/paper-tick.png" width="40px">
+                                    {% elif trip.status ==  'approved' %}
+                                        <img src="{{ STATIC_URL }}img/Paper-ticktick.png" width="40px">
+                                    {% endif%}
+                                </div>
+                                <div class="body">
+                                    <div class="name">
+                                        <a href="{% url 'admin:trips_trip_change' trip.id %}">{{ trip.reference }}</a>
+                                    </div>
+                                    <div class="time">
+                                        <i class="fa fa-clock-o"></i>
+                                        <span class="green">{{ trip.from_date }}</span>
+                                        <div class="owner">{{ trip.owner }}</div>
+                                    </div>
+                                    <div class="text">
+                                        {{ trip.purpose_of_travel }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+{#            <div class="col-md-10 pull-center pull-down">#}
+{#                <a href="{% url 'admin:trips_trip_changelist' %}" class="btn btn-sm btn-white btn-info">#}
+{#                    See all Trips &nbsp;#}
+{#                    <i class="fa fa-arrow-right"></i>#}
+{#                </a>#}
+{#            </div>#}
+            <!-- tabs content end -->
+        </div>
+        <!-- END TRIPS PANEL -->
+        <div class="col-md-1"></div>
+        <!-- START LOG PANEL -->
+        <div id="log-panel" class="col-md-5 panel panel-danger">
+            <div class="panel-heading">
+                <h3 class="panel-title">My Actions</h3>
+                <div class="actions pull-right">
+                    <i class="fa fa-chevron-down"></i>
+                    <i class="fa fa-times"></i>
+                </div>
+            </div>
+            <div class="panel-body" style="max-height: 400px; overflow-y: scroll;">
+                <div id="timeline-2" class="">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-10 col-sm-offset-1">
+                            <div class="timeline-container timeline-style2">
+                                <span class="timeline-label">
+                                    <b>{{ l.action_time|date:"M d" }}</b>
+                                </span>
+                                <div class="timeline-items">
+                                    {% for l in log %}
+
+                                        <div class="timeline-item">
+                                            <div class="timeline-info">
+                                                {% ifchanged  l.action_time|date:"d M Y" %}
+                                                    <span class="timeline-date"> <b>{{ l.action_time|date:"M d" }}</b> {{ l.action_time|time:"P" }}</span>
+                                                {% else %}
+                                                    <span class="timeline-date"> {{ l.action_time|time:"P" }}</span>
+                                                {% endifchanged %}
+
+                                                <i class="timeline-indicator btn-success"></i>
+                                            </div>
+                                            <div class="widget-box transparent">
+                                                <div class="widget-body">
+                                                    <div class="widget-main no-padding">
+                                                        <span>
+                                                            <a href="#" class="bolder">{{ l.content_type.name }}</a>
+                                                            {{ l }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div><!-- /.timeline-items -->
+                            </div><!-- /.timeline-container -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END LOG PANEL -->
+
+    </section>
+</section>
+
+{% endblock content %}
+
+{% block extra_js %}
+
+    <script type="text/javascript">
+    function sectorClick(indID) {
+        $('#sector-progress' + indID).fadeToggle("slow");
+        $('#show-sector' + indID).children(".fa-chevron-down, .fa-chevron-up").toggleClass( 'fa-chevron-up fa-chevron-down');
+    }
+
+    $(document).ready(function() {
+        $("[data-toggle='popover']").popover({placement : 'bottom', container : 'body'});
+    });
+    </script>
+
+{% endblock extra_js %}
