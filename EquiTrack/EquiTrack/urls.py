@@ -24,6 +24,7 @@ urlpatterns = patterns(
 
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),
+    url(r'partners/dashboard', login_required(DashboardView.as_view()), name='partners_dashboard'),
     url(r'trips/', include('trips.urls')),
     url(r'users/', include('users.urls')),
 

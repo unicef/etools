@@ -413,6 +413,17 @@ img {
 #leftside-navigation ul li.active > a {
   color: #0099ff;
 }
+
+.sidebar .sidebar-shortcuts {
+  text-align: center;
+  min-height: 40px;
+  margin-bottom: 0;
+  padding-top: 15px;
+  overflow: hidden;
+  position: relative;
+  border: 0 solid;
+}
+
 .btn-primary + .dropdown-menu > li > a:hover,
 .btn-primary + .dropdown-menu > li > a:active {
   background-color: #007acc;
