@@ -101,18 +101,21 @@ class UserDashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         user = self.request.user
-        log = LogEntry.objects.select_related().all().order_by("-id")
-        log = log.filter(user=self.request.user)[:10]
-        for l in log:
-            print(l.id)
-
 
         return {
             'trips_current': Trip.objects.filter(
-                Q(status=Trip.PLANNED) | Q(status=Trip.SUBMITTED) | Q(status=Trip.APPROVED), owner=user),
+                Q(status=Trip.PLANNED) | Q(status=Trip.SUBMITTED) | Q(status=Trip.APPROVED),
+                owner=user),
             'trips_previous': Trip.objects.filter(
-                Q(status=Trip.COMPLETED) | Q(status=Trip.CANCELLED), owner=user),
+                Q(status=Trip.COMPLETED) | Q(status=Trip.CANCELLED),
+                owner=user),
             'trips_supervised': user.supervised_trips.filter(
                 Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)),
-            'log': log,
+            'log': LogEntry.objects.select_related().filter(
+                user=self.request.user).order_by("-id")[:10],
+            'pcas': PCA.objects.filter(
+                unicef_managers=user).order_by("-id")[:10],
+            'action_points': ActionPoint.objects.filter(
+                Q(status='open') | Q(status='ongoing'),
+                person_responsible=user).order_by("-due_date")[:10]
         }
