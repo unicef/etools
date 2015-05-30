@@ -212,9 +212,6 @@ class Trip(AdminURLMixin, models.Model):
     @property
     def requires_hr_approval(self):
         return self.travel_type in [
-            Trip.HOME_LEAVE,
-            Trip.FAMILY_VISIT,
-            Trip.EDUCATION_GRANT,
             Trip.STAFF_DEVELOPMENT]
 
     @property
@@ -260,6 +257,13 @@ class Trip(AdminURLMixin, models.Model):
                 instance.owner.email,
                 *recipients
             )
+            if instance.international_travel and instance.approved_by_supervisor:
+                recipients.append(instance.representative.email)
+                emails.TripRepresentativeEmail(instance).send(
+                    instance.owner.email,
+                    *recipients
+                )
+
         elif instance.status == Trip.CANCELLED:
             # send an email to everyone if the trip is cancelled
             if instance.travel_assistant:
@@ -297,6 +301,11 @@ class Trip(AdminURLMixin, models.Model):
                 instance.approved_email_sent = True
                 instance.save()
 
+        elif instance.status == Trip.COMPLETED:
+            emails.TripCompletedEmail(instance).send(
+                instance.owner.email,
+                *recipients
+            )
 
 post_save.connect(Trip.send_trip_request, sender=Trip)
 
