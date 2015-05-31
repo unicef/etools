@@ -7,6 +7,10 @@ from django.db import models
 
 class Migration(SchemaMigration):
 
+    depends_on = (
+        ("trips", "0022_auto__add_office__add_field_trip_office"),
+    )
+
     def forwards(self, orm):
         # Adding model 'UserProfile'
         db.create_table(u'users_userprofile', (
@@ -25,14 +29,12 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'users', ['EquiTrackRegistrationModel'])
 
-
     def backwards(self, orm):
         # Deleting model 'UserProfile'
         db.delete_table(u'users_userprofile')
 
         # Deleting model 'EquiTrackRegistrationModel'
         db.delete_table(u'users_equitrackregistrationmodel')
-
 
     models = {
         u'auth.group': {

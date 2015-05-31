@@ -9,8 +9,10 @@ web:
     - db
     - redis
   environment:
-    - REDIS_URL='redis://redis:6379/0'
-    - DATABASE_URL='postgis://postgres:password@db:5432/postgres'
+    - REDIS_URL=redis://redis:6379/0
+    - DATABASE_URL=postgis://postgres:password@db:5432/postgres
+    - DJANGO_SETTINGS_MODULE=EquiTrack.settings.base
+    - DJANGO_DEBUG=true
 
 db:
   image: mdillon/postgis

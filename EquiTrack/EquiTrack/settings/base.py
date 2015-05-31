@@ -81,7 +81,7 @@ POST_OFFICE = {
 EMAIL_BACKEND = 'post_office.EmailBackend'
 POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
 CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
-MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", '')
+MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
 ########## END EMAIL CONFIGURATION
 
 REST_FRAMEWORK = {
@@ -368,9 +368,9 @@ LOCAL_APPS = (
     'reports',
     'partners',
     'trips',
-    'tpm',
     'users',
     'registration',
+    'tpm',
 )
 
 MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
