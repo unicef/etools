@@ -8,7 +8,18 @@ web:
   links:
     - db
     - redis
+  environment:
+    - REDIS_URL='redis://redis:6379/0'
+    - DATABASE_URL='postgis://postgres:password@db:5432/postgres'
+
 db:
   image: mdillon/postgis
+  environment:
+    - POSTGRES_HOST=db
+    - POSTGRES_PORT=5432
+    - POSTGRES_NAME=postgres
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=password
+
 redis:
   image: redis
