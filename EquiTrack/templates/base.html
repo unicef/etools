@@ -133,41 +133,34 @@
         {% block sidebar %}
             <aside class="sidebar">
                 <div id="leftside-navigation" class="nano">
-                    <div class="sidebar-shortcuts" id="sidebar-shortcuts">
-					<div class="sidebar-shortcuts-large" id="sidebar-shortcuts-large">
-                        <a href="{% url 'admin:trips_trip_changelist' %}">
-                            <button class="btn btn-warning" title="Manage Trips">
-                                <i class="fa fa-road"></i>
-                            </button>
-                        </a>
-                        <a href="{% url 'admin:partners_pca_changelist' %}">
-                            <button class="btn btn-info" title="Manage Partnerships">
-                                <i class="fa fa-pencil"></i>
-                            </button>
-                        </a>
-
-{#						<button class="btn btn-warning">#}
-{#							<i class="fa fa-users"></i>#}
-{#						</button>#}
-{##}
-{#						<button class="btn btn-danger">#}
-{#							<i class="fa fa-cogs"></i>#}
-{#						</button>#}
-					</div>
-				</div>
                     <ul class="nano-content">
                         <li class="active">
                             <a href="{% url 'dashboard' %}"><i class="fa fa-dashboard"></i><span>Dashboard</span></a>
                         </li>
+                        <li class="sub-menu active">
+                            <ul>
+                                <li>
+                                   <a href="{% url 'dashboard' %}">Personal</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'partners_dashboard' %}">Indicators</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'trips_dashboard' %}">Trips</a>
+                                </li>
+                            </ul>
+                        </li>
                         <li>
                             <a href="{% url 'map' %}"><i class="fa fa-map-marker"></i><span>Map</span></a>
+
                         </li>
                         <li>
-                            <a href="{% url 'partners_dashboard' %}"><i
-                                    class="fa fa-pencil"></i><span>Partnerships</span></a>
+                            <a href="{% url 'admin:partners_pca_changelist' %}">
+                                <i class="fa fa-pencil"></i><span>Partnerships</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="{% url 'trips_dashboard' %}"><i class="fa fa-road"></i><span>Trips</span></a>
+                            <a href="{% url 'admin:trips_trip_changelist' %}"><i class="fa fa-road"></i><span>Trips</span></a>
                         </li>
                         <li>
                             <a href="{% url 'admin:tpm_tpmvisit_changelist' %}"><i class="fa fa-calendar"></i><span>TPM Portal</span></a>
