@@ -11,6 +11,14 @@
 <section class="main-content-wrapper">
     <section id="main-content">
     <div class="col-md-12">
+        <header class="hero-spacer">
+            <h3>Welcome {{ request.user.first_name }}!</h3>
+            <p>Below is your dashboard personalized to your trips, action points, PCAs and log of changes for quick access.</p>
+            </p>
+        </header>
+
+    </div>
+    <div class="col-md-12">
         <!-- TRIPS PANEL -->
         <div id="trips-panel" class="col-md-5 panel panel-success">
             <div class="panel-heading">
