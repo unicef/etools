@@ -137,15 +137,30 @@
                         <li class="active">
                             <a href="{% url 'dashboard' %}"><i class="fa fa-dashboard"></i><span>Dashboard</span></a>
                         </li>
+                        <li class="sub-menu active">
+                            <ul>
+                                <li>
+                                   <a href="{% url 'dashboard' %}">Personal</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'partners_dashboard' %}">Indicators</a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'trips_dashboard' %}">Trips</a>
+                                </li>
+                            </ul>
+                        </li>
                         <li>
                             <a href="{% url 'map' %}"><i class="fa fa-map-marker"></i><span>Map</span></a>
+
                         </li>
                         <li>
-                            <a href="{% url 'admin:partners_pca_changelist' %}"><i
-                                    class="fa fa-pencil"></i><span>Partnerships</span></a>
+                            <a href="{% url 'admin:partners_pca_changelist' %}">
+                                <i class="fa fa-pencil"></i><span>Partnerships</span>
+                            </a>
                         </li>
                         <li>
-                            <a href="{% url 'trips_dashboard' %}"><i class="fa fa-road"></i><span>Trips</span></a>
+                            <a href="{% url 'admin:trips_trip_changelist' %}?q=&owner__id__exact={{ request.user.id }}"><i class="fa fa-road"></i><span>Trips</span></a>
                         </li>
                         <li>
                             <a href="{% url 'admin:tpm_tpmvisit_changelist' %}"><i class="fa fa-calendar"></i><span>TPM Portal</span></a>

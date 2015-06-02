@@ -1,12 +1,15 @@
 __author__ = 'jcranwellward'
+import datetime
 
 from django.views.generic import TemplateView
+from django.db.models import Q
+from django.contrib.admin.models import LogEntry
 
 from partners.models import PCA, PartnerOrganization, PCASectorOutput
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
-import datetime
+from trips.models import Trip, ActionPoint
 
 
 class DashboardView(TemplateView):
@@ -90,4 +93,29 @@ class MapView(TemplateView):
             'indicator_list': Indicator.objects.all(),
             'output_list': PCASectorOutput.objects.all(),
             'donor_list': Donor.objects.all()
+        }
+
+
+class UserDashboardView(TemplateView):
+    template_name = 'user_dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        user = self.request.user
+
+        return {
+            'trips_current': Trip.objects.filter(
+                Q(status=Trip.PLANNED) | Q(status=Trip.SUBMITTED) | Q(status=Trip.APPROVED),
+                owner=user),
+            'trips_previous': Trip.objects.filter(
+                Q(status=Trip.COMPLETED) | Q(status=Trip.CANCELLED),
+                owner=user),
+            'trips_supervised': user.supervised_trips.filter(
+                Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)),
+            'log': LogEntry.objects.select_related().filter(
+                user=self.request.user).order_by("-id")[:10],
+            'pcas': PCA.objects.filter(
+                unicef_managers=user).order_by("-id")[:10],
+            'action_points': ActionPoint.objects.filter(
+                Q(status='open') | Q(status='ongoing'),
+                person_responsible=user).order_by("-due_date")[:10]
         }
