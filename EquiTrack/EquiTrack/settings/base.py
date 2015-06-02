@@ -71,11 +71,18 @@ AUTH_PROFILE_MODULE = 'users.UserProfile'
 
 REGISTRATION_OPEN = True
 ACCOUNT_ACTIVATION_DAYS = 7
+
+########## EMAIL CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now'
 }
-
+EMAIL_BACKEND = 'post_office.EmailBackend'
+POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
+CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
+########## END EMAIL CONFIGURATION
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
@@ -119,7 +126,6 @@ DATABASES = {
     )
 }
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-CELERY_ALWAYS_EAGER = os.environ.get('CELERY_EAGER', True)
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 ########## END DATABASE CONFIGURATION
@@ -343,6 +349,7 @@ THIRD_PARTY_APPS = (
     'post_office',
     'djrill',
     'djcelery',
+    'djcelery_email',
     'datetimewidget',
     'logentry_admin',
     'dbbackup',
@@ -351,7 +358,6 @@ THIRD_PARTY_APPS = (
     'paintstore',
     'messages_extends',
     'corsheaders',
-
 )
 
 # Apps specific for this project go here.
@@ -362,9 +368,9 @@ LOCAL_APPS = (
     'reports',
     'partners',
     'trips',
-    'tpm',
     'users',
     'registration',
+    'tpm',
 )
 
 MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'

@@ -214,9 +214,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     )
 
     def save_formset(self, request, form, formset, change):
-        for f in formset.forms:
-            if f.has_changed():
-                if type(f.instance) is TravelRoutes and f.instance.trip.status == Trip.APPROVED:
+        """
+        Override here to check if the itinerary has changed
+        """
+        for form in formset.forms:
+            if form.has_changed():  #TODO: Test this
+                if type(form.instance) is TravelRoutes and form.instance.trip.status == Trip.APPROVED:
                     trip = Trip.objects.get(pk=form.instance.pk)
                     trip.status = Trip.SUBMITTED
                     trip.approved_by_supervisor = False

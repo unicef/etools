@@ -9,6 +9,7 @@ dj-database-url
 easy-thumbnails==1.4
 celery==3.1.12
 django-celery==3.1.10
+django-celery-email==1.1.1
 django-filer==0.9.5
 django-storages
 django-suit==0.2.8
