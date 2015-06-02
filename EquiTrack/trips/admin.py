@@ -214,12 +214,19 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     )
 
     def save_formset(self, request, form, formset, change):
-
         for f in formset.forms:
             if f.has_changed():
                 if type(f.instance) is TravelRoutes and f.instance.trip.status == Trip.APPROVED:
                     trip = Trip.objects.get(pk=form.instance.pk)
                     trip.status = Trip.SUBMITTED
+                    trip.approved_by_supervisor = False
+                    trip.date_supervisor_approved = None
+                    trip.approved_by_budget_owner = False
+                    trip.date_budget_owner_approved = None
+                    trip.approved_by_human_resources = None
+                    trip.representative_approval = None
+                    trip.date_representative_approved = None
+                    trip.approved_date = None
                     trip.save()
 
         formset.save()
@@ -242,7 +249,10 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'approved_date'
         ]
 
-        if trip and request.user in [
+        if trip and trip.status == Trip.PLANNED and request.user in [trip.owner]:
+            fields.remove(u'status')
+
+        if trip and trip.status == Trip.APPROVED and request.user in [
             trip.owner,
             trip.travel_assistant,
             trip.programme_assistant
@@ -250,8 +260,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             fields.remove(u'status')
 
         if trip and request.user == trip.supervisor:
-            if u'status' in fields:
-                fields.remove(u'status')
             fields.remove(u'approved_by_supervisor')
             fields.remove(u'date_supervisor_approved')
 
@@ -271,8 +279,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             name=u'Representative Office'
         )
         if trip and rep_group in request.user.groups.all():
-            if u'status' in fields:
-                fields.remove(u'status')
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
 

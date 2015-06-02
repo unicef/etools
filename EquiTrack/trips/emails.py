@@ -71,6 +71,32 @@ class TripCancelledEmail(TripCreatedEmail):
     Thank you.
     """
 
+class TripCompletedEmail(TripCreatedEmail):
+
+    template_name = 'trips/trip/completed'
+    description = 'The email that is sent to travelller and supervisor  when a trip has been completed'
+    subject = "EquiTrack - Trip Completed: {{trip_reference}}"
+    content = """
+    The following trip has been completed: {{trip_reference}}
+
+    {{url}}
+
+    Thank you.
+    """
+
+
+class TripRepresentativeEmail(TripCreatedEmail):
+
+    template_name = 'trips/trip/representative'
+    description = 'The email that is sent to the rep  to approve a trip'
+    subject = "EquiTrack - Trip Approval Needed: {{trip_reference}}"
+    content = """
+    The following trip needs representative approval: {{trip_reference}}
+
+    {{url}}
+
+    Thank you.
+    """
 
 class TripTravelAssistantEmail(TripCreatedEmail):
 
