@@ -46,7 +46,6 @@ class TripsApprovedView(ListAPIView):
     def get_queryset(self):
         return self.model.objects.filter(
             status=self.model.APPROVED,
-            travel_type=Trip.DUTY_TRAVEL
         )
 
 
