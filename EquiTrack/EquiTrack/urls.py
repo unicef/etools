@@ -20,11 +20,11 @@ from .views import (
 urlpatterns = patterns(
     '',
     url(r'^$', login_required(UserDashboardView.as_view()), name='dashboard'),
+    url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
 
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),
-    url(r'partners/dashboard', login_required(DashboardView.as_view()), name='partners_dashboard'),
     url(r'trips/', include('trips.urls')),
     url(r'users/', include('users.urls')),
 
