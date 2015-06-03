@@ -1,0 +1,202 @@
+.panel{
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.itemdiv {
+  padding-right: 3px;
+  min-height: 66px;
+  position: relative;
+}
+
+.itemdiv>.body {
+    width: auto;
+    margin-right: 12px;
+    margin-top: 10px;
+    position: relative;
+    margin-left: 50px;
+}
+
+.itemdiv>.status {
+  display: inline-block;
+  width: 42px;
+  position: absolute;
+  left: 0;
+}
+
+.itemdiv>.body>.name {
+  display: block;
+  color: #999;
+}
+
+.itemdiv>.body>.time {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+    position: absolute;
+    right: 9px;
+    top: 0;
+}
+
+.itemdiv>.body>.text:after {
+  display: block;
+  content: "";
+  height: 1px;
+  font-size: 0;
+  overflow: hidden;
+  position: absolute;
+  left: -10px;
+  right: -12px;
+  margin-top: 9px;
+  border-top: 1px solid #E4ECF3;
+}
+
+.green {
+  color: #69aa46!important;
+}
+
+.itemdiv>.body>.text {
+  display: block;
+  position: relative;
+  margin-top: 2px;
+  padding-bottom: 10px;
+  font-size: 13px;
+}
+
+.scroll-content {
+  position: static;
+  overflow: hidden;
+}
+
+.scroll-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: inherit;
+  background: #bbd4e5;
+}
+
+.scroll-track {
+  position: absolute;
+  top: auto;
+  bottom: auto;
+  right: 0;
+  height: auto;
+  background-color: #E7E7E7;
+  z-index: 99;
+  width: 0;
+  opacity: 0;
+}
+
+.timeline-container {
+  position: relative;
+  padding-top: 4px;
+  margin-bottom: 32px;
+}
+
+.timeline-style2 .timeline-label {
+  width: 75px;
+  margin-left: 0;
+  margin-bottom: 10px;
+  text-align: right;
+  color: #666;
+  font-size: 14px;
+}
+
+.timeline-label {
+  display: block;
+  clear: both;
+  margin: 0 0 18px;
+}
+
+.timeline-style2 .timeline-item {
+  padding-bottom: 10px;
+  margin-bottom: 0;
+}
+
+.timeline-item {
+  position: relative;
+  display: block;
+}
+
+.timeline-info {
+  float: left;
+  text-align: center;
+  position: relative;
+}
+
+.timeline-style2 .timeline-info {
+  width: 18%;
+}
+
+.timeline-style2 .timeline-date {
+  display: inline-block;
+  width: 72px;
+  text-align: right;
+  margin-right: 25px;
+  color: #777;
+}
+
+.timeline-style2 .timeline-indicator {
+  font-size: 0;
+  height: 12px;
+  line-height: 12px;
+  width: 12px;
+  border-width: 1px!important;
+  position: absolute;
+  left: 93.7%;
+  top: 3px;
+  opacity: 1;
+  border-radius: 100%;
+  display: inline-block;
+  padding: 0;
+  z-index: 100;
+}
+
+.timeline-style2 .timeline-item:before {
+  content: "";
+  display: block;
+  position: absolute;
+  left: 18%;
+  top: 5px;
+  bottom: -5px;
+  border-width: 0;
+  background-color: #DDD;
+  width: 2px;
+  max-width: 2px;
+}
+
+.timeline-style2 .timeline-item .transparent.widget-box {
+  background-color: transparent!important;
+  border-left: none!important;
+}
+
+.timeline-style2 .timeline-item .widget-box {
+  margin-left: 112px;
+}
+
+.btn-info.no-hover:hover, .btn-info.no-hover:active {
+  background-color: #6fb3e0!important;
+}
+
+.timeline-item .widget-box {
+  margin: 0;
+  position: relative;
+  max-width: none;
+}
+
+.widget-box.transparent>.widget-body {
+  border-width: 0;
+  background-color: transparent;
+}
+
+.timeline-item .widget-main {
+  margin: 0;
+  position: relative;
+  max-width: none;
+  border-bottom-width: 0;
+}
+
+.panel-scroll {max-height: 400px; min-height: 400px; overflow-y: scroll;}
+

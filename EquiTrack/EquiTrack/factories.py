@@ -1,5 +1,7 @@
 __author__ = 'jcranwellward'
 
+from datetime import datetime, timedelta
+
 from django.db.models.signals import post_save
 
 import factory
@@ -20,7 +22,7 @@ class SectorFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Sector
 
-    name = 'A Section'
+    name = factory.Sequence(lambda n: "section_%d" % n)
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):
@@ -41,6 +43,7 @@ class UserFactory(factory.django.DjangoModelFactory):
         model = user_models.User
 
     username = factory.Sequence(lambda n: "user_%d" % n)
+    email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
 
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
@@ -55,3 +58,13 @@ class UserFactory(factory.django.DjangoModelFactory):
         user = super(UserFactory, cls)._generate(create, attrs)
         post_save.connect(user_models.UserProfile.create_user_profile, user_models.User)
         return user
+
+
+class TripFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = trip_models.Trip
+
+    owner = factory.SubFactory(UserFactory)
+    supervisor = factory.SubFactory(UserFactory)
+    from_date = datetime.today()
+    to_date = from_date + timedelta(days=1)

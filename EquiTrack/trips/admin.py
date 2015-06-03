@@ -55,7 +55,7 @@ class ActionPointInlineAdmin(admin.StackedInline):
         (u'description', u'due_date',),
         u'person_responsible',
         (u'actions_taken',),
-        (u'completed_date', u'closed',),
+        (u'completed_date', u'status'),
     )
 
 
@@ -213,12 +213,26 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'attachments', u'Attachments')
     )
 
-    # def __init__(self, *args, **kwargs):
-    #     # We can't assume that kwargs['initial'] exists!
-    #     if not kwargs['initial']:
-    #         kwargs['initial'] = {}
-    #     kwargs['initial'].update({'owner': User.objects.get(id=169)})
-    #     super(TripReportAdmin, self).__init__(*args, **kwargs)
+    def save_formset(self, request, form, formset, change):
+        """
+        Override here to check if the itinerary has changed
+        """
+        for form in formset.forms:
+            if form.has_changed():  #TODO: Test this
+                if type(form.instance) is TravelRoutes and form.instance.trip.status == Trip.APPROVED:
+                    trip = Trip.objects.get(pk=form.instance.trip.pk)
+                    trip.status = Trip.SUBMITTED
+                    trip.approved_by_supervisor = False
+                    trip.date_supervisor_approved = None
+                    trip.approved_by_budget_owner = False
+                    trip.date_budget_owner_approved = None
+                    trip.approved_by_human_resources = None
+                    trip.representative_approval = None
+                    trip.date_representative_approved = None
+                    trip.approved_date = None
+                    trip.save()
+
+        formset.save()
 
     def get_readonly_fields(self, request, trip=None):
         """
@@ -238,7 +252,10 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'approved_date'
         ]
 
-        if trip and request.user in [
+        if trip and trip.status == Trip.PLANNED and request.user in [trip.owner]:
+            fields.remove(u'status')
+
+        if trip and trip.status == Trip.APPROVED and request.user in [
             trip.owner,
             trip.travel_assistant,
             trip.programme_assistant
@@ -246,8 +263,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             fields.remove(u'status')
 
         if trip and request.user == trip.supervisor:
-            if u'status' in fields:
-                fields.remove(u'status')
             fields.remove(u'approved_by_supervisor')
             fields.remove(u'date_supervisor_approved')
 
@@ -267,8 +282,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             name=u'Representative Office'
         )
         if trip and rep_group in request.user.groups.all():
-            if u'status' in fields:
-                fields.remove(u'status')
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
 
@@ -396,12 +409,12 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         u'originally_responsible',
         u'actions_taken',
         u'comments',
-        u'closed',
+        u'status'
     )
     list_filter = (
         u'trip__owner',
         u'person_responsible',
-        u'closed',
+        u'status',
     )
     search_fields = (
         u'trip__name',
@@ -430,15 +443,16 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
             u'person_responsible',
             u'persons_responsible',
             u'comments',
-            u'closed',
+            u'status',
         ]
 
         if obj and obj.person_responsible == request.user:
             readonly_fields.remove(u'comments')
-            readonly_fields.remove(u'closed')
+            readonly_fields.remove(u'status')
 
         return readonly_fields
     #
+
     # def save_model(self, request, obj, form, change):
     #     messages.add_message(
     #         request,
