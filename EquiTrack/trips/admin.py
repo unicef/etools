@@ -220,7 +220,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         for form in formset.forms:
             if form.has_changed():  #TODO: Test this
                 if type(form.instance) is TravelRoutes and form.instance.trip.status == Trip.APPROVED:
-                    trip = Trip.objects.get(pk=form.instance.pk)
+                    trip = Trip.objects.get(pk=form.instance.trip.pk)
                     trip.status = Trip.SUBMITTED
                     trip.approved_by_supervisor = False
                     trip.date_supervisor_approved = None
