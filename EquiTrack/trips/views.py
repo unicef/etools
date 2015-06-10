@@ -66,7 +66,6 @@ class TripsApi(ListAPIView):
 class TripActionView(RetrieveAPIView):
 
     model = Trip
-    serializer_class = TripSerializer
     lookup_url_kwarg = 'trip'
 
     def retrieve(self, request, *args, **kwargs):
@@ -74,18 +73,19 @@ class TripActionView(RetrieveAPIView):
         action = self.kwargs.get('action', None)
         user = self.request.user
         trips = Trip.get_all_trips(user)
+        serializer = TripSerializer(trips, many=True)
 
         if action == 'submit':
             if trip.status != Trip.SUBMITTED:
                 trip.status = Trip.SUBMITTED
                 trip.save()
-                return Response(trips.values(), status=status.HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_200_OK)
         elif action == 'approve':
             trip.approved_by_supervisor = True
             trip.date_supervisor_approved = datetime.now()
             trip.save()
-            return Response(trips.values(), status=status.HTTP_200_OK,)
-        return Response(trips.values(), Zstatus=status.HTTP_204_NO_CONTENT)
+            return Response(serializer.data, status=status.HTTP_200_OK,)
+        return Response(serializer.data, Zstatus=status.HTTP_204_NO_CONTENT)
 
 
 
