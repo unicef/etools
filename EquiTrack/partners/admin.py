@@ -505,9 +505,9 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
         u'alternate_id',
         u'alternate_name',
     )
-    inlines = [
-        AssessmentAdminInline,
-    ]
+    # inlines = [
+    #     AssessmentAdminInline,
+    # ]
 
 
 class FACEAdmin(admin.ModelAdmin):
