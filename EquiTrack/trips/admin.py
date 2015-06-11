@@ -21,6 +21,7 @@ from .models import (
     ActionPoint,
     TravelRoutes,
     FileAttachment
+
 )
 from .forms import (
     TripForm,
@@ -252,7 +253,11 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'approved_date'
         ]
 
-        if trip and trip.status == Trip.PLANNED and request.user in [trip.owner]:
+        if trip and trip.status == Trip.PLANNED and request.user in [
+            trip.owner,
+            trip.travel_assistant,
+            trip.supervisor
+        ]:
             fields.remove(u'status')
 
         if trip and trip.status == Trip.APPROVED and request.user in [

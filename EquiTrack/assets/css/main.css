@@ -2580,6 +2580,6 @@ h3.timeline-title {
     font-size: 22px;
   }
   #header .dropdown.messages {
-    display: none;
+    display: block;
   }
 }
