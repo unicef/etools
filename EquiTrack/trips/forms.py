@@ -32,8 +32,8 @@ class TravelRoutesForm(ModelForm):
                 )
 
             if self.instance and self.instance.trip_id is not None:
-                from_date = self.instance.trip.from_date
-                to_date = self.instance.trip.to_date
+                from_date = datetime.strptime(self.data.get('from_date'), '%Y-%m-%d').date()
+                to_date = datetime.strptime(self.data.get('to_date'), '%Y-%m-%d').date()
                 depart = depart.date()
                 arrive = arrive.date()
 
@@ -42,14 +42,6 @@ class TravelRoutesForm(ModelForm):
                     raise ValidationError(
                         'Travel dates must be within overall trip dates'
                     )
-
-
-            # obj = Trip.objects.get(pk=self.instance.trip.pk)
-            # model_instance = self.save(commit=False)
-            # print(obj.status)
-            # obj.status = Trip.PLANNED
-            # obj.save()
-
         return cleaned_data
 
 
@@ -57,7 +49,6 @@ class TripForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(TripForm, self).__init__(*args, **kwargs)
-        #self.fields['pcas'].queryset = PCA.get_active_partnerships()
 
     class Meta:
         model = Trip
