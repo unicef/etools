@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 import datetime
 
 from django.db import models
+from django.db.models import Q
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
@@ -239,6 +240,16 @@ class Trip(AdminURLMixin, models.Model):
             self.status = Trip.APPROVED
 
         super(Trip, self).save(**kwargs)
+
+    @classmethod
+    def get_all_trips(cls, user):
+        #user = self.request.user
+        super_trips = user.supervised_trips.filter(
+            Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
+        )
+        my_trips = user.trips.filter()
+        return my_trips | super_trips
+        #return cls.objects.filter(current=True, status=cls.ACTIVE)
 
     @classmethod
     def send_trip_request(cls, sender, instance, created, **kwargs):
