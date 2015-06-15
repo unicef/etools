@@ -226,11 +226,13 @@ def stop_container(container):
     run('docker stop {}'.format(container))
 
 
+@_setup
 def clean_containers():
     print('>>> Cleaning up containers')
     run("docker ps -a | grep 'Exit' | awk '{print $1}' | while read -r id ; do\n docker rm $id \ndone")
 
 
+@_setup
 def clean_images():
     print('>>> Cleaning up images')
     run('docker images | grep "^<none>" | awk \'BEGIN { FS = "[ \t]+" } { print $3 }\'  | while read -r id ; '
