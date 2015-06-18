@@ -117,7 +117,6 @@
 
 .timeline-item {
   position: relative;
-  display: block;
 }
 
 .timeline-info {
@@ -174,6 +173,7 @@
 
 .timeline-style2 .timeline-item .widget-box {
   margin-left: 112px;
+  padding-bottom: 10px;
 }
 
 .btn-info.no-hover:hover, .btn-info.no-hover:active {
