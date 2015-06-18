@@ -107,23 +107,22 @@ class TripForm(ModelForm):
                 'Please put the date the budget owner approved this Trip'
             )
 
+        if status == Trip.COMPLETED:
+            if not approved_by_supervisor:
+                raise ValidationError(
+                    'The trip must be approved before it can be completed'
+                )
+
+            if not trip_report:
+                raise ValidationError(
+                    'You must provide a narrative report before the trip can be completed'
+                )
+
         #TODO: Debug this
         # if status == Trip.APPROVED and not approved_by_supervisor:
         #     raise ValidationError(
         #         'Only the supervisor can approve this trip'
         #     )
-
-        # if status == Trip.COMPLETED:
-        #     if not approved_by_supervisor:
-        #         raise ValidationError(
-        #             'The trip must be approved before it can be completed'
-        #         )
-        #
-        #     if not trip_report:
-        #         raise ValidationError(
-        #             'You must provide a narrative report before the trip can be completed'
-        #         )
-
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
