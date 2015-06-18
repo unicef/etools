@@ -261,7 +261,8 @@ class Trip(AdminURLMixin, models.Model):
             instance.owner.email,
             instance.supervisor.email]
         if instance.budget_owner:
-            recipients.append(instance.budget_owner.email)
+            if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
+                recipients.append(instance.budget_owner.email)
 
         if instance.status == Trip.SUBMITTED:
             emails.TripCreatedEmail(instance).send(
