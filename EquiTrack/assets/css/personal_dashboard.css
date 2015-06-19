@@ -53,7 +53,10 @@
 }
 
 .green {
-  color: #69aa46!important;
+  color: #69aa46 !important;
+}
+.red{
+    color: #c00 !important;
 }
 
 .itemdiv>.body>.text {
@@ -133,8 +136,8 @@
   display: inline-block;
   width: 72px;
   text-align: right;
-  margin-right: 25px;
   color: #777;
+  margin-left: -20px;
 }
 
 .timeline-style2 .timeline-indicator {

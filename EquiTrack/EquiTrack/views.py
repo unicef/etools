@@ -101,6 +101,9 @@ class UserDashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         user = self.request.user
+        now = datetime.datetime.now()
+        current_structure = ResultStructure.objects.filter(
+            from_date__lte=now, to_date__gte=now)
 
         return {
             'trips_current': Trip.objects.filter(
@@ -114,7 +117,7 @@ class UserDashboardView(TemplateView):
             'log': LogEntry.objects.select_related().filter(
                 user=self.request.user).order_by("-id")[:10],
             'pcas': PCA.objects.filter(
-                unicef_managers=user).order_by("-id")[:10],
+                unicef_managers=user, current=True, result_structure=current_structure).order_by("-id")[:10],
             'action_points': ActionPoint.objects.filter(
                 Q(status='open') | Q(status='ongoing'),
                 person_responsible=user).order_by("-due_date")[:10]
