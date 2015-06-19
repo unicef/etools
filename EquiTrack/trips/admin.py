@@ -12,6 +12,7 @@ from reversion import VersionAdmin
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 from messages_extends import constants as constants_messages
+from users.models import UserProfile
 
 from locations.models import LinkedLocation
 from .models import (
@@ -297,10 +298,13 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(TripReportAdmin, self).get_form(request, obj, **kwargs)
-        user_profile = request.user.get_profile()
-        form.base_fields['owner'].initial = request.user
-        form.base_fields['office'].initial = user_profile.office
-        form.base_fields['section'].initial = user_profile.section
+        try:
+            user_profile = request.user.get_profile()
+            form.base_fields['owner'].initial = request.user
+            form.base_fields['office'].initial = user_profile.office
+            form.base_fields['section'].initial = user_profile.section
+        except UserProfile.DoesNotExist:
+            form.base_fields['owner'].initial = request.user
         return form
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
