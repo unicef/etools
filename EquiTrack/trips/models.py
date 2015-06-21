@@ -211,6 +211,13 @@ class Trip(AdminURLMixin, models.Model):
         return reversion.get_for_object(self).count()
 
     @property
+    def trip_overdue(self):
+        if self.to_date < datetime.date.today() and self.status != Trip.COMPLETED:
+            return True
+        else:
+            return False
+
+    @property
     def requires_hr_approval(self):
         return self.travel_type in [
             Trip.STAFF_DEVELOPMENT]
@@ -261,7 +268,8 @@ class Trip(AdminURLMixin, models.Model):
             instance.owner.email,
             instance.supervisor.email]
         if instance.budget_owner:
-            recipients.append(instance.budget_owner.email)
+            if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
+                recipients.append(instance.budget_owner.email)
 
         if instance.status == Trip.SUBMITTED:
             emails.TripCreatedEmail(instance).send(
@@ -371,6 +379,22 @@ class ActionPoint(models.Model):
 
     def __unicode__(self):
         return self.description
+
+    @property
+    def traffic_color(self):
+        if self.status == 'ongoing' or self.status == 'open':
+            if self.due_date >= datetime.date.today():
+                delta = (self.due_date - datetime.date.today()).days
+                if delta > 2:
+                    return 'green'
+                else:
+                    return 'yellow'
+            else:
+                return 'red'
+        elif self.status == 'cancelled':
+            return 'red'
+        else:
+            return 'green'
 
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):

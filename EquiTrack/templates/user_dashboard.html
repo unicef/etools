@@ -69,7 +69,11 @@
                                     </div>
                                     <div class="time">
                                         <i class="fa fa-clock-o"></i>
-                                        <span class="green">{{ trip.from_date }}</span>
+                                        {% if trip.trip_overdue %}
+                                            <span class="red">{{ trip.from_date }}</span>
+                                        {% else %}
+                                            <span class="green">{{ trip.from_date }}</span>
+                                        {% endif %}
                                     </div>
                                     <div class="text">
                                         {{ trip.purpose_of_travel }}
@@ -95,7 +99,11 @@
                                     </div>
                                     <div class="time">
                                         <i class="fa fa-clock-o"></i>
-                                        <span class="green">{{ trip.from_date }}</span>
+                                        {% if trip.trip_overdue %}
+                                            <span class="red">{{ trip.from_date }}</span>
+                                        {% else %}
+                                            <span class="green">{{ trip.from_date }}</span>
+                                        {% endif %}
                                     </div>
                                     <div class="text">
                                         {{ trip.purpose_of_travel }}
@@ -120,7 +128,11 @@
                                     </div>
                                     <div class="time">
                                         <i class="fa fa-clock-o"></i>
-                                        <span class="green">{{ trip.from_date }}</span>
+                                        {% if trip.trip_overdue %}
+                                            <span class="red">{{ trip.from_date }}</span>
+                                        {% else %}
+                                            <span class="green">{{ trip.from_date }}</span>
+                                        {% endif %}
                                         <div class="owner">{{ trip.owner }}</div>
                                     </div>
                                     <div class="text">
@@ -168,10 +180,12 @@
                             <span class="green" style="font-size: 11px; font-weight: 700;">
                                 {{ ap.due_date }}
                             </span>&nbsp;&nbsp;
-                            {% if ap.status == 'open' %}
+                            {% if ap.traffic_color == 'green' %}
                                 <span class="label label-success">{{ ap.status }}</span>
-                            {% else %}
-                                <span class="label label-primary">{{ ap.status }}</span>
+                            {% elif ap.traffic_color == 'yellow' %}
+                                <span class="label label-warning">{{ ap.status }}</span>
+                            {% elif ap.traffic_color == 'red' %}
+                                <span class="label label-danger">{{ ap.status }}</span>
                             {% endif %}
                         </span>
                     </div>
