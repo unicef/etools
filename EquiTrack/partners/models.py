@@ -11,6 +11,7 @@ from django.conf import settings
 from django.db import models, transaction
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
+from django.db.models import Sum
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
@@ -346,6 +347,11 @@ class PCA(AdminURLMixin, models.Model):
         if sectors:
             return sectors[0].sector.id
         return 0
+
+    @property
+    def sum_budget(self):
+        total_sum = PCA.objects.filter(number=self.number).aggregate(Sum("total_cash"))
+        return total_sum.values()[0]
 
     def total_unicef_contribution(self):
         cash = self.unicef_cash_budget if self.unicef_cash_budget else 0
