@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% load mathfilters %}
+
+{% block extra_head %}
+
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" />
+
+{% endblock %}
+
+{% block content %}
+
+    <section class="main-content-wrapper">
+        <section id="main-content">
+           <div class="row col-md-offset-1" style=" padding-top: 10px;">
+            <div class="col-md-2">
+                <div class="btn-group btn-block">
+                    <button id="btn-result_structure" type="button" class="col-md-10 btn btn-info">
+                       Result Structure
+                    </button>
+
+                    <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
+                         <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu scrollable-menu" role="menu">
+                        <li><a href="javascript:void(0);" id="result_structure999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
+                        {% for result_structure in result_structure_list %}
+                            <li><a href="javascript:void(0);" id="result_structure{{ result_structure.id }}" onclick="DropdownSelect(this.id);" itemid="{{ result_structure.id }}">{{ result_structure.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+           <div class="col-md-2">
+                <div class="btn-group btn-block">
+                    <button id="btn-sector" type="button" class="col-md-10 btn btn-danger">
+                       Sector
+                    </button>
+
+                    <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
+                         <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu scrollable-menu" role="menu">
+                        <li><a href="javascript:void(0);" id="sector999" onclick="DropdownSelect(this.id);" itemid="999">All Sectors</a></li>
+                        {% for sector in sectors_list %}
+                            <li><a href="javascript:void(0);" id="sector{{ sector.id }}" onclick="DropdownSelect(this.id);" itemid="{{ sector.id }}">{{ sector.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="btn-group btn-block">
+                    <button id="btn-gateway" type="button" class="col-md-10 btn btn-primary">
+                       Gateways
+                    </button>
+
+                    <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
+                         <span class="caret"></span>
+                    </button>
+
+                    <ul class="dropdown-menu scrollable-menu" role="menu" id="gateway_ul">
+                        <li><a href="javascript:void(0);" id="gateway999" onclick="DropdownSelect(this.id);" itemid="999">All Gateways</a></li>
+                        {% for gateway in gateway_list %}
+                            <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="DropdownSelect(this.id);" itemid="{{ gateway.id }}">{{ gateway.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="btn-group btn-block">
+                    <button id="btn-governorate" type="button" class="col-md-10 btn btn-success">
+                       Governorate
+                    </button>
+
+                    <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
+                         <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu scrollable-menu" role="menu" id="governorate_ul">
+                       <li><a href="javascript:void(0);" id="governorate999" onclick="DropdownSelect(this.id);" itemid="999">All Governorates</a></li>
+                        {% for governorate in governorate_list %}
+                            <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="DropdownSelect(this.id);" itemid="{{ governorate.id }}">{{ governorate.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-2 col-md-offset-2">
+                <div class="btn-group btn-block">
+                    <button id="btn-submit" type="button" class="col-md-5 btn btn-warning" onclick="SubmitSearch();">
+                       Submit
+                    </button>
+                    <button id="btn-clear" type="button" class="col-md-5 btn btn-danger" onclick="ClearButtonClick();">
+                       Clear
+                    </button>
+                </div>
+            </div>
+
+            </div>
+
+            <!-- new row -->
+            <div class="row col-md-offset-1">
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button id="btn-status" type="button" class="col-md-10 btn btn-info">
+                           Status
+                        </button>
+
+                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown" type="=button">
+                             <span class="caret"></span>
+                        </button>
+                            <ul class="dropdown-menu scrollable-menu" role="menu">
+                                    <li><a href="javascript:void(0);" id="status999" onclick="DropdownSelect(this.id);" itemid="999">All Statuses</a></li>
+                                    <li><a href="javascript:void(0);" id="status0" onclick="DropdownSelect(this.id);" itemid="0">IN_PROCESS</a></li>
+                                    <li><a href="javascript:void(0);" id="status1" onclick="DropdownSelect(this.id);" itemid="1">ACTIVE</a></li>
+                                    <li><a href="javascript:void(0);" id="status2" onclick="DropdownSelect(this.id);" itemid="2">IMPLEMENTED</a></li>
+                                    <li><a href="javascript:void(0);" id="status3" onclick="DropdownSelect(this.id);" itemid="3">CANCELLED</a></li>
+                            </ul>
+                    </div>
+                </div>
+               <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button id="btn-donor" type="button" class="col-md-10 btn btn-danger">
+                           Donor
+                        </button>
+
+                        <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="donor999" onclick="DropdownSelect(this.id);" itemid="999">All Donors</a></li>
+                           {% for donor in donor_list %}
+                                <li><a href="javascript:void(0);" id="donor{{ donor.id }}" onclick="DropdownSelect(this.id);" itemid="{{ donor.id }}">{{ donor.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button id="btn-partner" type="button" class="col-md-10 btn btn-primary">
+                           Partner
+                        </button>
+
+                        <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="partner999" onclick="DropdownSelect(this.id);" itemid="999">All Partners</a></li>
+                           {% for partner in partner_list %}
+                                <li><a href="javascript:void(0);" id="partner{{ partner.id }}" onclick="DropdownSelect(this.id);" itemid="{{ partner.id }}">{{ partner.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group btn-block">
+                        <button id="btn-district" type="button" class="col-md-10 btn btn-success">
+                           District
+                        </button>
+
+                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
+                             <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                            <li><a href="javascript:void(0);" id="district999" onclick="DropdownSelect(this.id);" itemid="999">All Districts</a></li>
+                           {% for district in region_list %}
+                                <li><a href="javascript:void(0);" id="district{{ district.id }}" onclick="DropdownSelect(this.id);" itemid="{{ district.id }}">{{ district.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        <!-- new row -->
+            <div class="row col-md-11 col-md-offset-1" style="display:none">
+                <div id="accordion" class="panel-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Detailed Search</a>
+                            </h4>
+                        </div>
+                         <div id="collapseOne" class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <div class="col-md-2">
+                                    <div class="btn-group btn-block">
+                                        <button id="btn-indicator" type="button" class="col-md-10 btn btn-info">
+                                           Indicator
+                                        </button>
+
+                                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
+                                             <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                                           {% for indicator in indicator_list %}
+                                                <li><a href="javascript:void(0);" id="indicator{{ indicator.id }}" onclick="DropdownSelect(this.id);" itemid="{{ indicator.id }}">{{ indicator.name }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="btn-group btn-block">
+                                        <button id="btn-output" type="button" class="col-md-10 btn btn-success">
+                                           Output
+                                        </button>
+
+                                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
+                                             <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu scrollable-menu" role="menu">
+                                           {% for output in output_list %}
+                                                <li><a href="javascript:void(0);" id="output{{ output.id }}" onclick="DropdownSelect(this.id);" itemid="{{ output.id }}">{{ output.name }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class='col-md-3'>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label nopadding">Date From</label>
+                                        <div class='input-group input-append date col-md-10' id='datetimepicker6'>
+                                            <input type='text' class="form-control" name="date" />
+                                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='col-md-3'>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label no nopadding">Date To</label>
+                                        <div class='input-group input-append date col-md-10' id='datetimepicker7'>
+                                            <input type='text' class="form-control" name="date" />
+                                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                             </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-body col-md-11">
+                            <table id="table_pca" class="table table-striped" data-height="500" data-pagination="true" data-search="true">
+                                <thead>
+                                    <tr>
+                                        <th>Number</th>
+                                        <th>Status</th>
+                                        <th>Start date</th>
+                                        <th>End Date</th>
+                                        <th>Total Budget</th>
+                                        <th>Sectors</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table_body" class="searchable">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </section>
+
+
+{% endblock %}
+
+{% block extra_js %}
+
+    <script type="text/javascript" src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+
+    <script type="text/javascript">
+        var dataSet = [];
+        var otable = $("#table_pca").dataTable({
+            "data": dataSet,
+            "columnDefs": [
+                { "width": "30%", "targets": 0 }
+            ],
+            "order": [[ 2, "desc" ]]
+        });
+
+        //querying JSON
+        function getObjects(obj, key, val) {
+            var objects = [];
+            for (var i in obj) {
+                if (!obj.hasOwnProperty(i)) continue;
+                if (typeof obj[i] == 'object') {
+                    objects = objects.concat(getObjects(obj[i], key, val));
+                } else if (i == key && obj[key] == val) {
+                    objects.push(obj);
+                }
+            }
+            return objects;
+        }
+
+        function DropdownSelect(id){
+            var selectVal = $('#' + id).html();
+            var itemId = $('#' + id).attr('itemid');
+            var btnId = "btn-" + id.substring(0, id.indexOf(itemId));
+            //if(itemId != '999'){
+                $('#' + btnId).html(selectVal);
+           // }
+            //else{ //all is clicked
+                 //$('#' + btnId).html('Result Structure');
+            //}
+
+            //get the current color class and set the background of selected item
+            var colorClass = '';
+            var arr =  $('#' + btnId).attr('class').split(" ");
+
+            for (var i = 0; i < arr.length; i++){
+                if(arr[i].indexOf("btn-")>-1){
+                    colorClass = arr[i];
+                    break;
+                }
+            }
+            $('#' + btnId).next().next().find('*').removeClass(colorClass);
+            $('#' + btnId).next().next().find('*').css({"color": ""});
+
+            $('#' + id).addClass(colorClass);
+            $('#' + id).css({"color" : "#fff"})
+        }
+
+        function SubmitSearch(){
+            var resultStructure = $('#btn-result_structure').html();
+            var sector = $('#btn-sector').html();
+            var gateway = $('#btn-gateway').html();
+            var governorate = $('#btn-governorate').html();
+            var status = $('#btn-status').html();
+            var donor = $('#btn-donor').html();
+            var partner = $('#btn-partner').html();
+            var district = $('#btn-district').html();
+
+            var query='';
+            if(!resultStructure.includes('Result Structure'))
+                query += 'result_structure=' + $("a:contains(" + resultStructure + ")").attr("itemid") + '&';
+
+            if(!sector.includes('Sector'))
+                query += 'sector=' + $("a:contains(" + sector + ")").attr("itemid") + '&';
+
+            if(!gateway.includes('Gateways'))
+                query += 'gateway=' + $("a:contains(" + gateway + ")").attr("itemid") + '&';
+
+            if(!governorate.includes('Governorate'))
+                query += 'governorate=' + $("a:contains(" + governorate + ")").attr("itemid") + '&';
+
+            if(!status.includes('Status'))
+                query += 'status=' + $("a:contains(" + status + ")").html().toLowerCase() + '&';
+
+            if(!donor.includes('Donor'))
+                query += 'donor=' + $("a:contains(" + donor + ")").attr("itemid") + '&';
+
+            if(!partner.includes('Partner'))
+                query += 'partner=' + $("a:contains(" + partner + ")").attr("itemid") + '&';
+
+            if(!district.includes('District'))
+                query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';
+
+            history.pushState(query, "", "/cmt/?" + query);
+            $.getJSON("{% url 'locations' %}?" + query, function (data) {
+                 $.each( data, function( key, value ) {
+                     //console.log(value);
+                     $.each( value.parterships, function( key, pca ) {
+                         var row = [];
+                         row.push(pca.pca_number + '<br>' + pca.pca_title, pca.status, pca.start_date, pca.end_date, '$' + numberWithCommas(pca.total_cash));
+                         var sectors='';
+                         $.each( pca.sectors, function( key, sector ) {
+                             sectors += sector.sector_name + '<br>';
+                         });
+                         row.push(sectors);
+                         dataSet.push(row);
+                     });
+                 });
+                otable.fnDraw();
+{#                $("#table_pca").dataTable({#}
+{#                    "data": dataSet,#}
+{#                    "columnDefs": [#}
+{#                        { "width": "30%", "targets": 0 }#}
+{#                    ],#}
+{#                    "order": [[ 2, "desc" ]]#}
+{##}
+{#                });#}
+            }).done({
+
+            });
+        }
+
+        function ClearButtonClick(){
+            history.replaceState("", "", "/map/");
+            location.reload();
+        }
+
+        function numberWithCommas(x) {
+            return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function getRandomColor() {
+            var letters = '0123456789ABCDEF'.split('');
+            var color = '#';
+            for (var i = 0; i < 6; i++ ) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        $(document).ready(function() {
+            $('#datetimepicker6').datepicker({ format: 'mm/dd/yyyy' });
+            $('#datetimepicker7').datepicker({ format: 'mm/dd/yyyy' });
+
+            $("#datetimepicker6").on("dp.change",function (e) {
+                $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
+            });
+            $("#datetimepicker7").on("dp.change",function (e) {
+                $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
+            });
+            SubmitSearch();
+        });
+
+    </script>
+{% endblock %}

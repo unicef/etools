@@ -14,7 +14,8 @@ from users.views import EquiTrackRegistrationView
 from .views import (
     MapView,
     DashboardView,
-    UserDashboardView
+    UserDashboardView,
+    CmtView
 )
 
 urlpatterns = patterns(
@@ -22,6 +23,8 @@ urlpatterns = patterns(
     url(r'^$', login_required(UserDashboardView.as_view()), name='dashboard'),
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
+    url(r'^cmt/$', login_required(CmtView.as_view()), name='cmt'),
+
 
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),

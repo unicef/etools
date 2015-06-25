@@ -99,7 +99,6 @@ class RapidProWebHookMixin(object):
 
     authentication_classes = ()
     parser_classes = (FormParser,)
-
     def get_data(self, request):
         return RapidProRequest(data=request.DATA)
 

@@ -83,6 +83,24 @@ class MapView(TemplateView):
 
     def get_context_data(self, **kwargs):
         return {
+            'gateway_list': GatewayType.objects.all(),
+            'governorate_list': Governorate.objects.all(),
+            'sectors_list': Sector.objects.all(),
+            'result_structure_list': ResultStructure.objects.all(),
+            'region_list': Region.objects.all(),
+            'partner_list': PartnerOrganization.objects.all(),
+            'indicator_list': Indicator.objects.all(),
+            'output_list': PCASectorOutput.objects.all(),
+            'donor_list': Donor.objects.all()
+        }
+
+
+class CmtView(TemplateView):
+
+    template_name = 'cmt_dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        return {
             'tables': CartoDBTable.objects.all(),
             'gateway_list': GatewayType.objects.all(),
             'governorate_list': Governorate.objects.all(),
