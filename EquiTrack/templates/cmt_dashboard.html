@@ -6,6 +6,40 @@
 
     <link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" />
 
+    <style>
+    /* Start by setting display:none to make this hidden.
+   Then we position it in relation to the viewport window
+   with position:fixed. Width, height, top and left speak
+   speak for themselves. Background we set to 80% white with
+   our animation centered, and no-repeating */
+    .modal {
+        display:    none;
+        position:   fixed;
+        z-index:    1000;
+        top:        0;
+        left:       0;
+        height:     100%;
+        width:      100%;
+        background: rgba( 255, 255, 255, .8 )
+                    url('http://i.stack.imgur.com/FhHRx.gif')
+                    50% 50%
+                    no-repeat;
+    }
+
+    /* When the body has the loading class, we turn
+       the scrollbar off with overflow:hidden */
+    body.loading {
+        overflow: hidden;
+    }
+
+    /* Anytime the body has the loading class, our
+       modal element will be visible */
+    body.loading .modal {
+        display: block;
+    }
+
+    </style>
+
 {% endblock %}
 
 {% block content %}
@@ -260,6 +294,7 @@
                     </div>
                 </div>
             </div>
+            <div id="loading" class="modal"></div>
         </section>
     </section>
 
@@ -275,9 +310,9 @@
         var otable = $("#table_pca").dataTable({
             "data": dataSet,
             "columnDefs": [
-                { "width": "30%", "targets": 0 }
+                {"width": "30%", "targets": 0}
             ],
-            "order": [[ 2, "desc" ]]
+            "order": [[2, "desc"]],
         });
 
         //querying JSON
@@ -359,6 +394,7 @@
 
             history.pushState(query, "", "/cmt/?" + query);
             $.getJSON("{% url 'locations' %}?" + query, function (data) {
+                dataSet=[];
                  $.each( data, function( key, value ) {
                      //console.log(value);
                      $.each( value.parterships, function( key, pca ) {
@@ -372,7 +408,14 @@
                          dataSet.push(row);
                      });
                  });
+                otable.fnClearTable();
+                otable.fnAddData(dataSet);
                 otable.fnDraw();
+
+
+
+
+
 {#                $("#table_pca").dataTable({#}
 {#                    "data": dataSet,#}
 {#                    "columnDefs": [#}
@@ -382,7 +425,33 @@
 {##}
 {#                });#}
             }).done({
+            /*
+                $("#table_pca").dataTable({
+                    "footerCallback": function (row, data, start, end, display) {
+                        var api = this.api(), data;
 
+                        // Remove the formatting to get integer data for summation
+                        var intVal = function (i) {
+                            return typeof i === 'string' ?
+                            i.replace(/[\$,]/g, '') * 1 :
+                                    typeof i === 'number' ?
+                                            i : 0;
+                        };
+                        // Total over all pages
+                        var total = api
+                                .column(4)
+                                .data()
+                                .reduce(function (a, b) {
+                                    return intVal(a) + intVal(b);
+                                });
+
+                        // Update footer
+                        $(api.column(4).footer()).html(
+                                '$' + total + ' total'
+                        );
+                    }
+                });
+                */
             });
         }
 
@@ -417,5 +486,10 @@
             SubmitSearch();
         });
 
+        $(document).ajaxStart(function(){
+            $('#loading').show();
+        }).ajaxStop(function(){
+            $('#loading').hide();
+        });
     </script>
 {% endblock %}
