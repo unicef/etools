@@ -43,7 +43,6 @@ class PartnershipSerializer(serializers.ModelSerializer):
     pca_id = serializers.CharField(source='id')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-
     sectors = serializers.SerializerMethodField('get_sectors')
 
     def get_sectors(self, pca):

@@ -184,23 +184,23 @@
                         </ul>
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-district" type="button" class="col-md-10 btn btn-success">
-                           District
-                        </button>
-
-                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
-                             <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                            <li><a href="javascript:void(0);" id="district999" onclick="DropdownSelect(this.id);" itemid="999">All Districts</a></li>
-                           {% for district in region_list %}
-                                <li><a href="javascript:void(0);" id="district{{ district.id }}" onclick="DropdownSelect(this.id);" itemid="{{ district.id }}">{{ district.name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
+{#                <div class="col-md-2">#}
+{#                    <div class="btn-group btn-block">#}
+{#                        <button id="btn-district" type="button" class="col-md-10 btn btn-success">#}
+{#                           District#}
+{#                        </button>#}
+{##}
+{#                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">#}
+{#                             <span class="caret"></span>#}
+{#                        </button>#}
+{#                        <ul class="dropdown-menu scrollable-menu" role="menu">#}
+{#                            <li><a href="javascript:void(0);" id="district999" onclick="DropdownSelect(this.id);" itemid="999">All Districts</a></li>#}
+{#                           {% for district in region_list %}#}
+{#                                <li><a href="javascript:void(0);" id="district{{ district.id }}" onclick="DropdownSelect(this.id);" itemid="{{ district.id }}">{{ district.name }}</a></li>#}
+{#                            {% endfor %}#}
+{#                        </ul>#}
+{#                    </div>#}
+{#                </div>#}
             </div>
 
         <!-- new row -->
@@ -313,6 +313,7 @@
                 {"width": "30%", "targets": 0}
             ],
             "order": [[2, "desc"]],
+
         });
 
         //querying JSON
@@ -389,69 +390,56 @@
             if(!partner.includes('Partner'))
                 query += 'partner=' + $("a:contains(" + partner + ")").attr("itemid") + '&';
 
-            if(!district.includes('District'))
-                query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';
+{#            if(!district.includes('District'))#}
+{#                query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';#}
 
             history.pushState(query, "", "/cmt/?" + query);
-            $.getJSON("{% url 'locations' %}?" + query, function (data) {
+            $.getJSON("{% url 'pcas' %}?" + query, function (data) {
                 dataSet=[];
                  $.each( data, function( key, value ) {
                      //console.log(value);
-                     $.each( value.parterships, function( key, pca ) {
+                     var pca_num = "";
                          var row = [];
-                         row.push(pca.pca_number + '<br>' + pca.pca_title, pca.status, pca.start_date, pca.end_date, '$' + numberWithCommas(pca.total_cash));
-                         var sectors='';
-                         $.each( pca.sectors, function( key, sector ) {
+                         row.push(value.pca_number + '<br>' + value.pca_title, value.status, value.start_date, value.end_date, '$' + numberWithCommas(value.total_cash));
+                         var sectors = '';
+                         $.each(value.sectors, function (key, sector) {
                              sectors += sector.sector_name + '<br>';
                          });
                          row.push(sectors);
                          dataSet.push(row);
-                     });
                  });
                 otable.fnClearTable();
                 otable.fnAddData(dataSet);
                 otable.fnDraw();
-
-
-
-
-
-{#                $("#table_pca").dataTable({#}
-{#                    "data": dataSet,#}
-{#                    "columnDefs": [#}
-{#                        { "width": "30%", "targets": 0 }#}
-{#                    ],#}
-{#                    "order": [[ 2, "desc" ]]#}
-{##}
-{#                });#}
-            }).done({
             /*
-                $("#table_pca").dataTable({
-                    "footerCallback": function (row, data, start, end, display) {
-                        var api = this.api(), data;
+                otable.fnFooterCallback( function(row, data, start, end, display)
+                {
+                    //"footerCallback": function (row, data, start, end, display) {
+                    var api = this.api(), data;
 
-                        // Remove the formatting to get integer data for summation
-                        var intVal = function (i) {
-                            return typeof i === 'string' ?
-                            i.replace(/[\$,]/g, '') * 1 :
-                                    typeof i === 'number' ?
-                                            i : 0;
-                        };
-                        // Total over all pages
-                        var total = api
-                                .column(4)
-                                .data()
-                                .reduce(function (a, b) {
-                                    return intVal(a) + intVal(b);
-                                });
+                    // Remove the formatting to get integer data for summation
+                    var intVal = function (i) {
+                        return typeof i === 'string' ?
+                        i.replace(/[\$,]/g, '') * 1 :
+                                typeof i === 'number' ?
+                                        i : 0;
+                    };
+                    // Total over all pages
+                    var total = api
+                        .column(4)
+                        .data()
+                        .reduce(function (a, b) {
+                            return intVal(a) + intVal(b);
+                        });
 
-                        // Update footer
-                        $(api.column(4).footer()).html(
-                                '$' + total + ' total'
-                        );
-                    }
+                    // Update footer
+                    $(api.column(4).footer()).html(
+                            '$' + total + ' total'
+                    );
                 });
                 */
+            }).done({
+
             });
         }
 
@@ -484,6 +472,8 @@
                 $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
             });
             SubmitSearch();
+
+
         });
 
         $(document).ajaxStart(function(){
