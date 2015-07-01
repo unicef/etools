@@ -214,13 +214,13 @@ class Trip(AdminURLMixin, models.Model):
     def trip_overdue(self):
         if self.to_date < datetime.date.today() and self.status != Trip.COMPLETED:
             return True
-        else:
-            return False
+        return False
 
     @property
     def requires_hr_approval(self):
         return self.travel_type in [
-            Trip.STAFF_DEVELOPMENT]
+            Trip.STAFF_DEVELOPMENT
+        ]
 
     @property
     def requires_rep_approval(self):
@@ -250,13 +250,11 @@ class Trip(AdminURLMixin, models.Model):
 
     @classmethod
     def get_all_trips(cls, user):
-        #user = self.request.user
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
         )
         my_trips = user.trips.filter()
         return my_trips | super_trips
-        #return cls.objects.filter(current=True, status=cls.ACTIVE)
 
     @classmethod
     def send_trip_request(cls, sender, instance, created, **kwargs):
