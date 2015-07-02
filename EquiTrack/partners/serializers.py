@@ -23,7 +23,6 @@ class PCASectorSerializer(serializers.ModelSerializer):
 
     sector_name = serializers.CharField(source='sector.name')
     sector_id = serializers.CharField(source='sector.id')
-
     indicators = serializers.SerializerMethodField('get_indicators')
 
     def get_indicators(self, pca_sector):
