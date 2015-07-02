@@ -76,6 +76,7 @@ class TripForm(ModelForm):
         date_supervisor_approved = cleaned_data.get(u'date_supervisor_approved')
         approved_by_budget_owner = cleaned_data.get(u'approved_by_budget_owner')
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
+        approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         trip_report = cleaned_data.get(u'main_observations')
 
 
@@ -108,21 +109,20 @@ class TripForm(ModelForm):
             )
 
         #TODO: Debug this
-        # if status == Trip.APPROVED and not approved_by_supervisor:
-        #     raise ValidationError(
-        #         'Only the supervisor can approve this trip'
-        #     )
+        if status == Trip.APPROVED and not approved_by_supervisor:
+            raise ValidationError(
+                'Only the supervisor can approve this trip'
+            )
 
-        # if status == Trip.COMPLETED:
-        #     if not approved_by_supervisor:
-        #         raise ValidationError(
-        #             'The trip must be approved before it can be completed'
-        #         )
-        #
-        #     if not trip_report:
-        #         raise ValidationError(
-        #             'You must provide a narrative report before the trip can be completed'
-        #         )
+        if status == Trip.COMPLETED:
+            if not trip_report:
+                raise ValidationError(
+                    'You must provide a narrative report before the trip can be completed'
+                )
+            if not approved_by_human_resources and travel_type == Trip.STAFF_DEVELOPMENT:
+                raise ValidationError(
+                    'STAFF DEVELOPMENT trip must be certified by Human Resources before it can be completed'
+                )
 
 
         #TODO: this can be removed once we upgrade to 1.7
