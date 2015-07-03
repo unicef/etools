@@ -1,6 +1,6 @@
 __author__ = 'jcranwellward'
 
-
+from datetime import datetime
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -28,7 +28,7 @@ class PcaView(ListAPIView):
         """
         Return locations with GPS points only
         """
-        status = self.request.QUERY_PARAMS.get('status', PCA.ACTIVE)
+        status = self.request.QUERY_PARAMS.get('status', None)
         result_structure = self.request.QUERY_PARAMS.get('result_structure', None)
         sector = self.request.QUERY_PARAMS.get('sector', None)
         gateway = self.request.QUERY_PARAMS.get('gateway', None)
@@ -36,11 +36,15 @@ class PcaView(ListAPIView):
         donor = self.request.QUERY_PARAMS.get('donor', None)
         partner = self.request.QUERY_PARAMS.get('partner', None)
         district = self.request.QUERY_PARAMS.get('district', None)
+        from_date = self.request.QUERY_PARAMS.get('from_date', None)
+        to_date = self.request.QUERY_PARAMS.get('to_date', None)
 
         queryset = self.model.objects.filter(
-            status=status,
             current=True,
         )
+
+        if status is not None:
+            queryset = self.model.objects.filter(status=status)
 
         if gateway is not None:
             # queryset = queryset.filter(
@@ -93,12 +97,14 @@ class PcaView(ListAPIView):
             queryset = queryset.filter(
                 id__in=pcas
             )
-        # pcas = queryset.values_list('pca__id', flat=True)
 
-        # pca_locs = queryset.values_list('location', flat=True)
-        # locs = Location.objects.filter(
-        #     id__in=pca_locs
-        # )
+        if from_date is not None and to_date is not None:
+            fdate = datetime.strptime(from_date, '%m/%d/%Y').date()
+            tdate = datetime.strptime(to_date, '%m/%d/%Y').date()
+            queryset = queryset.filter(
+                end_date__range=(fdate, tdate)
+            )
+
         return queryset
 
 
