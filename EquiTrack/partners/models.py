@@ -223,7 +223,6 @@ class Recommendation(models.Model):
     closed = models.BooleanField(default=False, verbose_name=u'Closed?')
     completed_date = models.DateField(blank=True, null=True)
 
-
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
         pass
@@ -249,11 +248,13 @@ class PCA(AdminURLMixin, models.Model):
     MOU = u'mou'
     SSFA = u'ssfa'
     AWP = u'awp'
+    IC = u'ic'
     AGREEMENT_TYPES = (
         (PCA, u'Partner Cooperation Agreement'),
         (MOU, u'Memorandum of Understanding'),
         (SSFA, u'Small Scale Funding Agreement'),
         (AWP, u'Annual Work Plan'),
+        (IC, u'Institutional Contract'),
     )
 
     agreement_type = models.CharField(
