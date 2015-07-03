@@ -269,6 +269,7 @@
             ],
             "order": [[2, "desc"]],
 
+
         });
 
         //querying JSON
@@ -399,7 +400,8 @@
                          dataSet.push(row);
                  });
                 otable.fnClearTable();
-                otable.fnAddData(dataSet);
+                if(dataSet.length > 0)
+                    otable.fnAddData(dataSet);
                 otable.fnDraw();
 
                 //get counts
