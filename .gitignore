@@ -64,3 +64,5 @@ htmlcov
 *.bak
 *.dat
 *.dir
+
+config.json
