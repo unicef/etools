@@ -192,7 +192,7 @@ class Indicator(models.Model):
 
             )
         total = programmed.aggregate(models.Sum('current'))
-        return (total[total.keys()[0]] or 0) + self.current
+        return (total[total.keys()[0]] or 0) + self.current if self.current else 0
 
 
 class IntermediateResult(models.Model):
