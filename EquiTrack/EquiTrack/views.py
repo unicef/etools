@@ -52,10 +52,14 @@ class DashboardView(TemplateView):
                 programmed = indicator.programmed(
                     result_structure=current_structure
                 )
+                current = indicator.progress(
+                    result_structure=current_structure
+                )
                 sectors[sector.name].append(
                     {
                         'indicator': indicator,
                         'programmed': programmed,
+                        'current': current
                     }
                 )
 

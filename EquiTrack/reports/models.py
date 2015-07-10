@@ -150,7 +150,7 @@ class Indicator(models.Model):
     unit = models.ForeignKey(Unit)
     total = models.IntegerField(verbose_name='UNICEF Target')
     sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
-    current = models.IntegerField(null=True, blank=True)
+    current = models.IntegerField(null=True, blank=True, default=0)
     sector_current = models.IntegerField(null=True, blank=True)
     view_on_dashboard = models.BooleanField(default=False)
     in_activity_info = models.BooleanField(default=False)
@@ -184,9 +184,15 @@ class Indicator(models.Model):
         total = programmed.aggregate(models.Sum('programmed'))
         return total[total.keys()[0]] or 0
 
-    def progress(self):
-        reported = 0
-        return reported
+    def progress(self, result_structure=None):
+        programmed = self.programmed_amounts()
+        if result_structure:
+            programmed = programmed.filter(
+                pca_sector__pca__result_structure=result_structure,
+
+            )
+        total = programmed.aggregate(models.Sum('current'))
+        return (total[total.keys()[0]] or 0) + self.current
 
 
 class IntermediateResult(models.Model):
