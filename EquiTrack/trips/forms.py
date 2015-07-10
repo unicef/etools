@@ -124,6 +124,11 @@ class TripForm(ModelForm):
                     'STAFF DEVELOPMENT trip must be certified by Human Resources before it can be completed'
                 )
 
+        #TODO: Debug this
+        # if status == Trip.APPROVED and not approved_by_supervisor:
+        #     raise ValidationError(
+        #         'Only the supervisor can approve this trip'
+        #     )
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data

@@ -3,7 +3,6 @@ __author__ = 'jcranwellward'
 from django.db import models
 
 from paintstore.fields import ColorPickerField
-from smart_selects.db_fields import ChainedForeignKey
 
 
 class ResultStructure(models.Model):
@@ -104,8 +103,9 @@ class Result(models.Model):
         ordering = ['name']
 
     def __unicode__(self):
-        return u'{} {} {}: {}'.format(
+        return u'{} {} {} {}: {}'.format(
             self.result_structure.name,
+            self.code if self.code else u'',
             self.sector.name,
             self.result_type.name,
             self.name

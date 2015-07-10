@@ -16,7 +16,6 @@ import json, httplib
 
 @app.task
 def process_trips():
-    #TODO: Actually process trips:
 
     users = User.objects.filter(is_staff=True, is_active=True)
     for user in users:
@@ -64,6 +63,5 @@ def process_trips():
         #     #post_save.connect(trip.send_trip_request, sender=Trip)
         #     print(trip.owner)
         #     trip.send_trip_request(sender=Trip)
-
 
     return "Processing"
