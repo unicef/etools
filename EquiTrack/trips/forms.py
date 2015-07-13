@@ -10,10 +10,13 @@ from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget, DateWidget
 
 from partners.models import PCA
-from .models import Trip
+from .models import Trip, TravelRoutes
 
 
 class TravelRoutesForm(ModelForm):
+
+    class Meta:
+        model = TravelRoutes
 
     depart = fields.DateTimeField(label='Depart', widget=DateTimeWidget(bootstrap_version=3),
                                   input_formats=['%d/%m/%Y %H:%M'])
