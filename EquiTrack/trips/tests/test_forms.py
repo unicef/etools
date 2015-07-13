@@ -3,7 +3,6 @@ from datetime import timedelta, datetime
 
 from django.test import TestCase
 from django.db.models.fields.related import ManyToManyField
-from django.core.exceptions import ValidationError
 
 from EquiTrack.factories import TripFactory
 from trips.forms import TripForm, TravelRoutesForm
@@ -36,13 +35,8 @@ class TestTripForm(TestCase):
         trip_dict = to_dict(self.trip)
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaises(ValidationError("The to date must be greater than the from date"), form.clean())
-        # self.assertRaisesMessage(ValidationError,
-        #                          [u'The to date must be greater than the from date'],
-        #                          form.clean())
-        # self.assertRaisesRegexp(ValidationError,
-        #                         "You must select the PCAs related to this trip or change the Travel Type")
-        # self.assertEqual(form.errors['travel_type'], ["You must select the PCAs related to this trip or change the Travel Type"])
+        self.assertEqual(form.non_field_errors(),
+                         ["You must select the PCAs related to this trip or change the Travel Type"])
 
     def test_form_validation_for_bigger_date(self):
         trip_dict = to_dict(self.trip)
@@ -50,7 +44,7 @@ class TestTripForm(TestCase):
         trip_dict['from_date'] = trip_dict['from_date'] + timedelta(days=3)
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaisesMessage(ValidationError, u'The to date must be greater than the from date', form.clean())
+        self.assertEqual(form.non_field_errors(), ['The to date must be greater than the from date'])
 
     def test_form_validation_for_owner_is_supervisor(self):
         trip_dict = to_dict(self.trip)
@@ -58,7 +52,7 @@ class TestTripForm(TestCase):
         trip_dict['supervisor'] = trip_dict['owner']
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError, 'You can\'t supervise your own trips', form.is_valid())
+        self.assertEqual(form.non_field_errors(), ['You can\'t supervise your own trips'])
 
     def test_form_validation_for_ta_required(self):
         trip_dict = to_dict(self.trip)
@@ -66,8 +60,8 @@ class TestTripForm(TestCase):
         trip_dict['ta_required'] = True
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError,
-                                'This trip needs a programme assistant to create a Travel Authorisation (TA)')
+        self.assertEqual(form.non_field_errors(),
+                         ['This trip needs a programme assistant to create a Travel Authorisation (TA)'])
 
     def test_form_validation_for_approved_by_supervisor(self):
         trip_dict = to_dict(self.trip)
@@ -75,7 +69,7 @@ class TestTripForm(TestCase):
         trip_dict['approved_by_supervisor'] = True
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError, 'Please put the date the supervisor approved this Trip')
+        self.assertEqual(form.non_field_errors(), ['Please put the date the supervisor approved this Trip'])
 
     def test_form_validation_for_approved_by_budget_owner(self):
         trip_dict = to_dict(self.trip)
@@ -83,7 +77,7 @@ class TestTripForm(TestCase):
         trip_dict['approved_by_budget_owner'] = True
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError, 'Please put the date the budget owner approved this Trip')
+        self.assertEqual(form.non_field_errors(),['Please put the date the budget owner approved this Trip'])
 
     def test_form_validation_for_status_approved(self):
         trip_dict = to_dict(self.trip)
@@ -91,7 +85,7 @@ class TestTripForm(TestCase):
         trip_dict['status'] = u'approved'
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError,  'Only the supervisor can approve this trip')
+        self.assertEqual(form.non_field_errors(), ['Only the supervisor can approve this trip'])
 
     def test_form_validation_for_completed_no_report(self):
         trip_dict = to_dict(self.trip)
@@ -99,17 +93,21 @@ class TestTripForm(TestCase):
         trip_dict['status'] = u'completed'
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError, 'You must provide a narrative report before the trip can be completed')
+        self.assertEqual(form.non_field_errors(),
+                         ['You must provide a narrative report before the trip can be completed'])
 
     def test_form_validation_for_staff_development(self):
         trip_dict = to_dict(self.trip)
+        print trip_dict
         trip_dict['travel_type'] = u'staff_development'
         trip_dict['status'] = u'completed'
+        trip_dict['main_observations'] = u'Testing completed'
+        print trip_dict
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError,
-                                'STAFF DEVELOPMENT trip must be certified by Human Resources'
-                                'before it can be completed')
+        self.assertEqual(form.non_field_errors(),
+                                ['STAFF DEVELOPMENT trip must be certified by Human '
+                                 'Resources before it can be completed'])
 
     def test_form_validation_for_date_greater(self):
         form = TravelRoutesForm(data={'origin': 'Test',
@@ -117,12 +115,12 @@ class TestTripForm(TestCase):
                                       'depart': datetime.now() + timedelta(hours=3),
                                       'arrive': datetime.now()})
         self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError, 'test')
+        self.assertEqual(form.non_field_errors(), ['Arrival must be greater than departure'])
 
-    def test_form_validation_for_dates(self):
-        form = TravelRoutesForm(data={'origin': 'Test',
-                                      'destination': 'Test',
-                                      'depart': datetime.now() + timedelta(hours=3),
-                                      'arrive': datetime.now() + timedelta(days=3)})
-        self.assertFalse(form.is_valid())
-        self.assertRaisesRegexp(ValidationError, 'Arrival must be greater than departure')
+    # def test_form_validation_for_dates(self):
+    #     form = TravelRoutesForm(data={'origin': 'Test',
+    #                                   'destination': 'Test',
+    #                                   'depart': datetime.now() + timedelta(hours=3),
+    #                                   'arrive': datetime.now() + timedelta(days=3)})
+    #     self.assertFalse(form.is_valid())
+    #     self.assertEqual(form.non_field_errors(), ['Arrival must be greater than departure'])
