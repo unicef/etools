@@ -1,9 +1,15 @@
 __author__ = 'jcranwellward'
 import datetime
+import json
+import platform
+import subprocess
+
+from dealer.git import git
 
 from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
+from django.http.response import HttpResponse
 
 from partners.models import PCA, PartnerOrganization, PCASectorOutput
 from reports.models import Sector, ResultStructure, Indicator
@@ -20,8 +26,12 @@ class DashboardView(TemplateView):
 
         sectors = {}
         now = datetime.datetime.now()
-        structure = self.request.GET.get('structure', ResultStructure.objects.filter(
-            from_date__lte=now, to_date__gte=now))
+        structure = self.request.GET.get('structure')
+        if structure is None and ResultStructure.objects.count():
+            structure = ResultStructure.objects.filter(
+                from_date__lte=now,
+                to_date__gte=now
+            )[0].id
         try:
             current_structure = ResultStructure.objects.get(id=structure)
         except ResultStructure.DoesNotExist:
@@ -42,10 +52,14 @@ class DashboardView(TemplateView):
                 programmed = indicator.programmed(
                     result_structure=current_structure
                 )
+                current = indicator.progress(
+                    result_structure=current_structure
+                )
                 sectors[sector.name].append(
                     {
                         'indicator': indicator,
                         'programmed': programmed,
+                        'current': current
                     }
                 )
 
@@ -96,6 +110,11 @@ class MapView(TemplateView):
         }
 
 
+class CmtDashboardView(MapView):
+
+    template_name = 'cmt_dashboard.html'
+
+
 class UserDashboardView(TemplateView):
     template_name = 'user_dashboard.html'
 
@@ -103,7 +122,9 @@ class UserDashboardView(TemplateView):
         user = self.request.user
         now = datetime.datetime.now()
         current_structure = ResultStructure.objects.filter(
-            from_date__lte=now, to_date__gte=now)
+            from_date__lte=now,
+            to_date__gte=now
+        )[0].id if ResultStructure.objects.count() else None
 
         return {
             'trips_current': Trip.objects.filter(
@@ -117,8 +138,31 @@ class UserDashboardView(TemplateView):
             'log': LogEntry.objects.select_related().filter(
                 user=self.request.user).order_by("-id")[:10],
             'pcas': PCA.objects.filter(
-                unicef_managers=user, result_structure=current_structure).order_by("-id")[:10],
+                unicef_managers=user, status=PCA.ACTIVE
+            ).order_by("number", "-amendment_number")[:10],
             'action_points': ActionPoint.objects.filter(
                 Q(status='open') | Q(status='ongoing'),
                 person_responsible=user).order_by("-due_date")[:10]
         }
+
+
+def magic_info(request):
+    """
+    Return JSON string with some basic state information about this server.
+
+    You must be logged in as a staff user to access this URL.
+    """
+    if not request.user.is_staff:
+        return HttpResponse("You must be logged in as a superuser to "
+                            "perform this operation!", status=403)
+
+    info = {'commit_id': git.revision,
+            'os': platform.system(),
+            'arch': platform.machine(),
+            'hostname': platform.node(),
+            'python': platform.python_version(),
+            'server': request.META['SERVER_NAME'],
+            'server_port': request.META['SERVER_PORT'],
+            }
+
+    return HttpResponse(json.dumps(info), content_type="text/json")
