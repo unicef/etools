@@ -52,10 +52,14 @@ class DashboardView(TemplateView):
                 programmed = indicator.programmed(
                     result_structure=current_structure
                 )
+                current = indicator.progress(
+                    result_structure=current_structure
+                )
                 sectors[sector.name].append(
                     {
                         'indicator': indicator,
                         'programmed': programmed,
+                        'current': current
                     }
                 )
 
@@ -106,6 +110,11 @@ class MapView(TemplateView):
         }
 
 
+class CmtDashboardView(MapView):
+
+    template_name = 'cmt_dashboard.html'
+
+
 class UserDashboardView(TemplateView):
     template_name = 'user_dashboard.html'
 
@@ -129,7 +138,8 @@ class UserDashboardView(TemplateView):
             'log': LogEntry.objects.select_related().filter(
                 user=self.request.user).order_by("-id")[:10],
             'pcas': PCA.objects.filter(
-                unicef_managers=user, result_structure=current_structure).order_by("-id")[:10],
+                unicef_managers=user, status=PCA.ACTIVE
+            ).order_by("number", "-amendment_number")[:10],
             'action_points': ActionPoint.objects.filter(
                 Q(status='open') | Q(status='ongoing'),
                 person_responsible=user).order_by("-due_date")[:10]
