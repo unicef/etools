@@ -275,11 +275,14 @@ def get_env_vars():
 
 
 @_setup
-def set_env_vars():
-    run('dokku config:set {app} {envs}'.format(
+def set_env_vars(paas='dokku'):
+    command = 'dokku config:set {app} {envs}'
+    if paas == 'flynn':
+        command = 'flynn -a {app} env set {envs}'
+    local(command.format(
         app=env.name,
         envs=' '.join(
-            ['{}={}'.format(key, value)
+            ['{}="{}"'.format(key, value)
              for key, value in env.envs.items()])
     ))
 
