@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 from django.test import TestCase
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import TripFactory
+from EquiTrack.factories import TripFactory, UserFactory
 from trips.forms import TripForm, TravelRoutesForm
 
 
@@ -37,6 +37,15 @@ class TestTripForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors(),
                          ["You must select the PCAs related to this trip or change the Travel Type"])
+
+    def test_form_validation_for_international_travel(self):
+        trip_dict = to_dict(self.trip)
+        trip_dict['travel_type'] = u'advocacy'
+        trip_dict['international_travel'] = True
+        form = TripForm(data=trip_dict)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.non_field_errors(),
+                         ["You must select the Representative for international travel trips"])
 
     def test_form_validation_for_bigger_date(self):
         trip_dict = to_dict(self.trip)
@@ -77,7 +86,7 @@ class TestTripForm(TestCase):
         trip_dict['approved_by_budget_owner'] = True
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertEqual(form.non_field_errors(),['Please put the date the budget owner approved this Trip'])
+        self.assertEqual(form.non_field_errors(), ['Please put the date the budget owner approved this Trip'])
 
     def test_form_validation_for_status_approved(self):
         trip_dict = to_dict(self.trip)
@@ -86,6 +95,19 @@ class TestTripForm(TestCase):
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors(), ['Only the supervisor can approve this trip'])
+
+    def test_form_validation_for_ta_drafted_vision(self):
+        trip_dict = to_dict(self.trip)
+        trip_dict['travel_type'] = u'advocacy'
+        trip_dict['status'] = u'approved'
+        trip_dict['ta_drafted'] = True
+        trip_dict['approved_by_supervisor'] = True
+        trip_dict['date_supervisor_approved'] = datetime.today()
+        form = TripForm(data=trip_dict)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.non_field_errors(), ['For TA Drafted trip you must select a Vision Approver'])
+
+
 
     def test_form_validation_for_completed_no_report(self):
         trip_dict = to_dict(self.trip)
@@ -98,11 +120,9 @@ class TestTripForm(TestCase):
 
     def test_form_validation_for_staff_development(self):
         trip_dict = to_dict(self.trip)
-        print trip_dict
         trip_dict['travel_type'] = u'staff_development'
         trip_dict['status'] = u'completed'
         trip_dict['main_observations'] = u'Testing completed'
-        print trip_dict
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors(),

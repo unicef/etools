@@ -74,6 +74,10 @@ class TripForm(ModelForm):
         ta_required = cleaned_data.get('ta_required')
         pcas = cleaned_data.get('pcas')
         no_pca = cleaned_data.get('no_pca')
+        international_travel = cleaned_data.get('international_travel')
+        representative = cleaned_data.get('representative')
+        ta_drafted = cleaned_data.get(u'ta_drafted')
+        vision_approver = cleaned_data.get(u'vision_approver')
         programme_assistant = cleaned_data.get(u'programme_assistant')
         approved_by_supervisor = cleaned_data.get(u'approved_by_supervisor')
         date_supervisor_approved = cleaned_data.get(u'date_supervisor_approved')
@@ -101,6 +105,9 @@ class TripForm(ModelForm):
                 'to create a Travel Authorisation (TA)'
             )
 
+        if international_travel and not representative:
+            raise ValidationError('You must select the Representative for international travel trips')
+
         if approved_by_supervisor and not date_supervisor_approved:
             raise ValidationError(
                 'Please put the date the supervisor approved this Trip'
@@ -116,6 +123,16 @@ class TripForm(ModelForm):
             raise ValidationError(
                 'Only the supervisor can approve this trip'
             )
+
+        if status == Trip.APPROVED and ta_drafted:
+            if not vision_approver:
+                raise ValidationError(
+                    'For TA Drafted trip you must select a Vision Approver'
+                )
+            if not programme_assistant:
+                raise ValidationError(
+                    'For TA Drafted trip you must select a Staff Responsible for TA'
+                )
 
         if status == Trip.COMPLETED:
             if not trip_report:
