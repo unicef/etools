@@ -6,7 +6,6 @@ from django.core import mail
 from django.test import TestCase
 
 from EquiTrack.factories import TripFactory, UserFactory
-
 from trips.models import Trip
 
 
