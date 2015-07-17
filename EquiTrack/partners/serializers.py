@@ -23,7 +23,6 @@ class PCASectorSerializer(serializers.ModelSerializer):
 
     sector_name = serializers.CharField(source='sector.name')
     sector_id = serializers.CharField(source='sector.id')
-
     indicators = serializers.SerializerMethodField('get_indicators')
 
     def get_indicators(self, pca_sector):
@@ -43,7 +42,6 @@ class PartnershipSerializer(serializers.ModelSerializer):
     pca_id = serializers.CharField(source='id')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-
     sectors = serializers.SerializerMethodField('get_sectors')
 
     def get_sectors(self, pca):
@@ -64,7 +62,6 @@ class LocationSerializer(serializers.Serializer):
     location_type = serializers.CharField(source='gateway.name')
     gateway_id = serializers.CharField(source='gateway.id')
     p_code = serializers.CharField(source='p_code')
-
     parterships = serializers.SerializerMethodField('get_pcas')
 
     def get_pcas(self, location):
