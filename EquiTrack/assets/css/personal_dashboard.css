@@ -53,10 +53,7 @@
 }
 
 .green {
-  color: #69aa46 !important;
-}
-.red{
-    color: #c00 !important;
+  color: #69aa46!important;
 }
 
 .itemdiv>.body>.text {
@@ -120,6 +117,7 @@
 
 .timeline-item {
   position: relative;
+  display: block;
 }
 
 .timeline-info {
@@ -136,8 +134,8 @@
   display: inline-block;
   width: 72px;
   text-align: right;
+  margin-right: 25px;
   color: #777;
-  margin-left: -20px;
 }
 
 .timeline-style2 .timeline-indicator {
@@ -176,7 +174,6 @@
 
 .timeline-style2 .timeline-item .widget-box {
   margin-left: 112px;
-  padding-bottom: 10px;
 }
 
 .btn-info.no-hover:hover, .btn-info.no-hover:active {

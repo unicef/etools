@@ -16,14 +16,10 @@ class TPMVisit(AdminURLMixin, models.Model):
     PLANNED = u'planned'
     COMPLETED = u'completed'
     RESCHEDULED = u'rescheduled'
-    NOACTIVITY = u'no-activity'
-    DISCONTINUED = u'discontinued'
     TPM_STATUS = (
         (PLANNED, u"Planned"),
         (COMPLETED, u"Completed"),
         (RESCHEDULED, u"Rescheduled"),
-        (NOACTIVITY, u"No-Activity"),
-        (DISCONTINUED, u'Discontinued')
     )
 
     pca = models.ForeignKey('partners.PCA')
