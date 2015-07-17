@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 from django.db import models
 
 from paintstore.fields import ColorPickerField
+from smart_selects.db_fields import ChainedForeignKey
 
 
 class ResultStructure(models.Model):
@@ -103,9 +104,8 @@ class Result(models.Model):
         ordering = ['name']
 
     def __unicode__(self):
-        return u'{} {} {} {}: {}'.format(
+        return u'{} {} {}: {}'.format(
             self.result_structure.name,
-            self.code if self.code else u'',
             self.sector.name,
             self.result_type.name,
             self.name
@@ -150,7 +150,7 @@ class Indicator(models.Model):
     unit = models.ForeignKey(Unit)
     total = models.IntegerField(verbose_name='UNICEF Target')
     sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
-    current = models.IntegerField(null=True, blank=True, default=0)
+    current = models.IntegerField(null=True, blank=True)
     sector_current = models.IntegerField(null=True, blank=True)
     view_on_dashboard = models.BooleanField(default=False)
     in_activity_info = models.BooleanField(default=False)
@@ -184,15 +184,9 @@ class Indicator(models.Model):
         total = programmed.aggregate(models.Sum('programmed'))
         return total[total.keys()[0]] or 0
 
-    def progress(self, result_structure=None):
-        programmed = self.programmed_amounts()
-        if result_structure:
-            programmed = programmed.filter(
-                pca_sector__pca__result_structure=result_structure,
-
-            )
-        total = programmed.aggregate(models.Sum('current'))
-        return (total[total.keys()[0]] or 0) + self.current if self.current else 0
+    def progress(self):
+        reported = 0
+        return reported
 
 
 class IntermediateResult(models.Model):

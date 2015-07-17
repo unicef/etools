@@ -8,7 +8,6 @@ psycopg2==2.5.1
 dj-database-url
 easy-thumbnails==1.4
 celery==3.1.12
-dealer==2.0.4
 django-celery==3.1.10
 django-celery-email==1.1.1
 django-filer==0.9.5

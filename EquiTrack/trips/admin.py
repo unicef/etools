@@ -164,6 +164,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                  (u'purpose_of_travel',),
                  (u'from_date', u'to_date',),
                  (u'travel_type', u'travel_assistant',),
+                 u'office_visiting',
                  u'security_clearance_required',
                  u'ta_required',
                  u'budget_owner',
