@@ -115,7 +115,7 @@
                 </button>
                 <ul class="dropdown-menu" role="menu">
                     {% for structure in structures %}
-                        <li><a href="{% url 'dashboard' %}?structure={{ structure.id }}">{{ structure.name }}</a></li>
+                        <li><a href="{% url 'indicator_dashboard' %}?structure={{ structure.id }}">{{ structure.name }}</a></li>
                     {% endfor %}
                 </ul>
             </div>
@@ -125,15 +125,9 @@
     <!-- tabs start -->
     <ul class="nav nav-tabs col-md-10">
         {% for name,indicators in sectors.items %}
-            {% if name == "WASH" %}
-                 <li class="active">
-                    <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab" class="">{{ name }}</a>
-                 </li>
-            {% else %}
-                 <li class="">
-                    <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab" class="">{{ name }}</a>
-                 </li>
-            {% endif %}
+            <li class="{% if forloop.first %}active{% endif %}">
+                <a href="#tab-{{ name.split|join:"_" }}" data-toggle="tab" class="">{{ name }}</a>
+            </li>
         {% endfor %}
     </ul>
     <!-- tabs end -->
@@ -143,11 +137,7 @@
         {% for name,indicators in sectors.items %}
             {% cycle 'info' 'warning' 'success' 'danger' as barcolor silent %}
 
-            {% if name == "WASH" %}
-            <div id="tab-{{ name.split|join:"_" }}" class="tab-pane active" >
-            {% else %}
-            <div id="tab-{{ name.split|join:"_" }}" class="tab-pane">
-            {% endif %}
+            <div id="tab-{{ name.split|join:"_" }}" class="tab-pane {% if forloop.first %}active{% endif %}" >
 
                     <!--Indicators start-->
                 {% for ind in indicators %}

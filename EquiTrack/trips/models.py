@@ -4,7 +4,6 @@ import datetime
 
 from django.db import models
 from django.db.models import Q
-from django.contrib import  messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
@@ -33,10 +32,6 @@ BOOL_CHOICES = (
 
 class Office(models.Model):
     name = models.CharField(max_length=254)
-    zonal_chief = models.ForeignKey(User,
-                                    blank=True, null=True,
-                                    related_name='zonal_chief',
-                                    verbose_name='Chief')
 
     def __unicode__(self):
         return self.name
@@ -158,8 +153,6 @@ class Trip(AdminURLMixin, models.Model):
     )
     transport_booked = models.BooleanField(default=False)
     security_granted = models.BooleanField(default=False)
-    office_visiting = models.ForeignKey(Office, blank=True, null=True,
-                                        related_name='office_visiting', verbose_name='Travelling to Office')
 
     supervisor = models.ForeignKey(User, related_name='supervised_trips')
     approved_by_supervisor = models.BooleanField(default=False)
@@ -292,8 +285,6 @@ class Trip(AdminURLMixin, models.Model):
             # send an email to everyone if the trip is cancelled
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
-            if instance.office_visiting:
-                recipients.append(instance.office_visiting.zonal_chief.email)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
                 *recipients
@@ -315,12 +306,6 @@ class Trip(AdminURLMixin, models.Model):
                 emails.TripTADraftedEmail(instance).send(
                     instance.programme_assistant.email,
                     instance.vision_approver.email
-                )
-
-            if instance.office_visiting:
-                emails.TripApprovedEmail(instance).send(
-                    instance.owner.email,
-                    instance.office_visiting.zonal_chief.email
                 )
 
             if not instance.approved_email_sent:
