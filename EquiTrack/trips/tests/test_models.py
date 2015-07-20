@@ -5,8 +5,7 @@ from datetime import datetime
 from django.core import mail
 from django.test import TestCase
 
-from EquiTrack.factories import TripFactory
-
+from EquiTrack.factories import TripFactory, UserFactory
 from trips.models import Trip
 
 
@@ -33,11 +32,6 @@ class TestTripModels(TestCase):
         self.assertFalse(self.trip.ta_required)
         self.assertEqual(len(mail.outbox), 0)  # no emails should be sent
 
-    def test_create_trip_with_TA(self):
-        """
-        TODO: Test a more complex trip
-        """
-        pass
 
     def test_submit_trip(self):
         """
@@ -54,6 +48,25 @@ class TestTripModels(TestCase):
         self.assertTrue('Submitted' in mail.outbox[0].body)
         self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
         self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+
+    def test_submit_trip_international(self):
+        """
+        Test that when an international trip is submitted and approved by supervisor, the rep is informed that they
+         must approve
+        """
+        self.trip.status = Trip.SUBMITTED
+        self.trip.international_travel = True
+        self.trip.approved_by_supervisor = True
+        self.trip.representative = UserFactory()
+        self.trip.save()
+        self.assertEqual(Trip.SUBMITTED, self.trip.status)
+        self.assertEqual(len(mail.outbox), 2)
+
+        # Now test the email is correct for this action
+        self.assertTrue('Approval' in mail.outbox[1].subject)
+        self.assertTrue('representative approval' in mail.outbox[1].body)
+        self.assertTrue(self.trip.representative.email in mail.outbox[1].to)
+        self.assertTrue(self.trip.owner.email in mail.outbox[1].to)
 
     def test_approve_trip(self):
         """
@@ -74,6 +87,64 @@ class TestTripModels(TestCase):
         self.assertTrue('approved' in mail.outbox[0].body)
         self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
         self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+
+    def test_approve_trip_with_TA(self):
+        """
+        Test that if a supervisor approves a trip and TA is selected, and email
+        is sent to the programme assistant
+        """
+        self.trip.status = Trip.APPROVED
+        self.trip.ta_required = True
+        self.trip.approved_by_supervisor = True
+        self.trip.date_supervisor_approved = datetime.now()
+        self.trip.programme_assistant = UserFactory()
+        self.trip.approved_email_sent = True
+        self.trip.save()
+        self.assertEqual(Trip.APPROVED, self.trip.status)
+        self.assertEqual(len(mail.outbox), 1)
+        # Now test the email is correct for this action
+        self.assertTrue(self.trip.programme_assistant.first_name in mail.outbox[0].subject)
+
+    def test_approve_trip_with_Vision_Approver(self):
+        """
+        Test that if a supervisor approves a trip and TA is selected, and email
+        is sent to the programme assistant
+        """
+        self.trip.status = Trip.APPROVED
+        self.trip.ta_drafted = True
+        self.trip.approved_by_supervisor = True
+        self.trip.date_supervisor_approved = datetime.now()
+        self.trip.vision_approver = UserFactory()
+        self.trip.programme_assistant = UserFactory()
+        self.trip.approved_email_sent = True
+        self.trip.save()
+        self.assertEqual(Trip.APPROVED, self.trip.status)
+        self.assertEqual(len(mail.outbox), 1)
+        # Now test the email is correct for this action
+        self.assertTrue('Travel Authorization' in mail.outbox[0].subject)
+        self.assertTrue('VISION' in mail.outbox[0].body)
+        self.assertTrue(self.trip.vision_approver.email in mail.outbox[0].to)
+        self.assertTrue(self.trip.vision_approver.first_name in mail.outbox[0].body)
+
+    def test_approve_trip_with_Travel_Assistant(self):
+        """
+        Test that if a supervisor approves a trip and travel assistant is selected,
+        an email is sent to the travel assistant
+        """
+        self.trip.status = Trip.APPROVED
+        self.trip.travel_assistant = UserFactory()
+        self.trip.approved_by_supervisor = True
+        self.trip.date_supervisor_approved = datetime.now()
+        self.trip.approved_email_sent = True
+        self.trip.save()
+        self.assertEqual(Trip.APPROVED, self.trip.status)
+        self.assertEqual(len(mail.outbox), 1)
+
+        # Now test the email is correct for this action
+        self.assertTrue('travel' in mail.outbox[0].body)
+        self.assertTrue(self.trip.travel_assistant.email in mail.outbox[0].to)
+        self.assertTrue(self.trip.travel_assistant.first_name in mail.outbox[0].body)
+
 
     def test_complete_trip(self):
         self.trip.status = Trip.COMPLETED
