@@ -292,8 +292,8 @@ class Trip(AdminURLMixin, models.Model):
             # send an email to everyone if the trip is cancelled
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
-            if instance.office_visiting:
-                recipients.append(instance.office_visiting.zonal_chief.email)
+            for location in instance.locations.all():
+                recipients.append(location.governorate.office.zonal_chief.email)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
                 *recipients
@@ -322,7 +322,6 @@ class Trip(AdminURLMixin, models.Model):
                     recipients.append(instance.representative.email)
 
                 for location in instance.locations.all():
-                    print location.governorate.office.zonal_chief.email
                     recipients.append(location.governorate.office.zonal_chief.email)
 
                 emails.TripApprovedEmail(instance).send(
