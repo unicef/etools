@@ -4,7 +4,7 @@ web:
   volumes:
     - .:/code
   ports:
-    - "8080:8080"
+    - "8000:8000"
   links:
     - db
     - redis
@@ -13,6 +13,7 @@ web:
     - DATABASE_URL=postgis://postgres:password@db:5432/postgres
     - DJANGO_SETTINGS_MODULE=EquiTrack.settings.base
     - DJANGO_DEBUG=true
+    - PORT=8000
 
 db:
   image: mdillon/postgis

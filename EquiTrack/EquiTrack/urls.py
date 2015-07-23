@@ -33,6 +33,8 @@ urlpatterns = patterns(
     url(r'trips/', include('trips.urls')),
     url(r'users/', include('users.urls')),
 
+    url(r'^saml2/', include('djangosaml2.urls')),
+
     # auth
     url(r'', include('registration.auth_urls')),
 

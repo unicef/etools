@@ -50,3 +50,4 @@ unidecode
 #pykml==0.1.0
 django-cors-headers==1.0.0
 django-mathfilters==0.3.0
+djangosaml2==0.13.0
