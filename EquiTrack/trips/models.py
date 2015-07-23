@@ -219,7 +219,7 @@ class Trip(AdminURLMixin, models.Model):
     @property
     def requires_hr_approval(self):
         return self.travel_type in [
-            Trip.STAFF_DEVELOPMENT
+            # Trip.STAFF_DEVELOPMENT
         ]
 
     @property
@@ -245,6 +245,9 @@ class Trip(AdminURLMixin, models.Model):
         if self.can_be_approved:
             self.approved_date = datetime.datetime.today()
             self.status = Trip.APPROVED
+
+        if self.status is not Trip.CANCELLED and self.cancelled_reason:
+            self.status = Trip.CANCELLED
 
         super(Trip, self).save(**kwargs)
 

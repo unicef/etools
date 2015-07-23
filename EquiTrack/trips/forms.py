@@ -139,10 +139,10 @@ class TripForm(ModelForm):
                 raise ValidationError(
                     'You must provide a narrative report before the trip can be completed'
                 )
-            if not approved_by_human_resources and travel_type == Trip.STAFF_DEVELOPMENT:
-                raise ValidationError(
-                    'STAFF DEVELOPMENT trip must be certified by Human Resources before it can be completed'
-                )
+            # if not approved_by_human_resources and travel_type == Trip.STAFF_DEVELOPMENT:
+            #     raise ValidationError(
+            #         'STAFF DEVELOPMENT trip must be certified by Human Resources before it can be completed'
+            #     )
 
         #TODO: Debug this
         # if status == Trip.APPROVED and not approved_by_supervisor:
