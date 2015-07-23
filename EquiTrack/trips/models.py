@@ -17,10 +17,12 @@ from filer.fields.file import FilerFileField
 import reversion
 
 from EquiTrack.mixins import AdminURLMixin
-from locations.models import LinkedLocation
+# from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
+import locations
 from . import emails
+
 
 User = get_user_model()
 
@@ -145,7 +147,7 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
-    locations = GenericRelation(LinkedLocation)
+    locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
     section = models.ForeignKey('reports.Sector', blank=True, null=True)
@@ -158,8 +160,6 @@ class Trip(AdminURLMixin, models.Model):
     )
     transport_booked = models.BooleanField(default=False)
     security_granted = models.BooleanField(default=False)
-    office_visiting = models.ForeignKey(Office, blank=True, null=True,
-                                        related_name='office_visiting', verbose_name='Travelling to Office')
 
     supervisor = models.ForeignKey(User, related_name='supervised_trips')
     approved_by_supervisor = models.BooleanField(default=False)
@@ -317,15 +317,14 @@ class Trip(AdminURLMixin, models.Model):
                     instance.vision_approver.email
                 )
 
-            if instance.office_visiting:
-                emails.TripApprovedEmail(instance).send(
-                    instance.owner.email,
-                    instance.office_visiting.zonal_chief.email
-                )
-
             if not instance.approved_email_sent:
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
+
+                for location in instance.locations.all():
+                    print location.governorate.office.zonal_chief.email
+                    recipients.append(location.governorate.office.zonal_chief.email)
+
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
                     *recipients

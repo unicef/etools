@@ -8,11 +8,6 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'Trip.office_visiting'
-        db.add_column(u'trips_trip', 'office_visiting',
-                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='office_visiting', null=True, to=orm['trips.Office']),
-                      keep_default=False)
-
         # Adding field 'Office.zonal_chief'
         db.add_column(u'trips_office', 'zonal_chief',
                       self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='zonal_chief', null=True, to=orm['auth.User']),
@@ -20,9 +15,6 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        # Deleting field 'Trip.office_visiting'
-        db.delete_column(u'trips_trip', 'office_visiting_id')
-
         # Deleting field 'Office.zonal_chief'
         db.delete_column(u'trips_office', 'zonal_chief_id')
 
@@ -273,7 +265,6 @@ class Migration(SchemaMigration):
             'international_travel': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'main_observations': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'office': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Office']", 'null': 'True', 'blank': 'True'}),
-            'office_visiting': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'office_visiting'", 'null': 'True', 'to': u"orm['trips.Office']"}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'trips'", 'to': u"orm['auth.User']"}),
             'partners': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['partners.PartnerOrganization']", 'null': 'True', 'blank': 'True'}),
             'pcas': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['partners.PCA']", 'null': 'True', 'blank': 'True'}),
