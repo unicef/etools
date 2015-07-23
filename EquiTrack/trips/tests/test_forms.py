@@ -118,16 +118,16 @@ class TestTripForm(TestCase):
         self.assertEqual(form.non_field_errors()[0],
                          'You must provide a narrative report before the trip can be completed')
 
-    def test_form_validation_for_staff_development(self):
-        trip_dict = to_dict(self.trip)
-        trip_dict['travel_type'] = u'staff_development'
-        trip_dict['status'] = u'completed'
-        trip_dict['main_observations'] = u'Testing completed'
-        form = TripForm(data=trip_dict)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(form.non_field_errors()[0],
-                         'STAFF DEVELOPMENT trip must be certified by Human '
-                         'Resources before it can be completed')
+    # def test_form_validation_for_staff_development(self):
+    #     trip_dict = to_dict(self.trip)
+    #     trip_dict['travel_type'] = u'staff_development'
+    #     trip_dict['status'] = u'completed'
+    #     trip_dict['main_observations'] = u'Testing completed'
+    #     form = TripForm(data=trip_dict)
+    #     self.assertFalse(form.is_valid())
+    #     self.assertEqual(form.non_field_errors()[0],
+    #                      'STAFF DEVELOPMENT trip must be certified by Human '
+    #                      'Resources before it can be completed')
 
     def test_form_validation_for_date_greater(self):
         form = TravelRoutesForm(data={'origin': 'Test',
@@ -136,11 +136,3 @@ class TestTripForm(TestCase):
                                       'arrive': datetime.now()})
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'Arrival must be greater than departure')
-
-    # def test_form_validation_for_dates(self):
-    #     form = TravelRoutesForm(data={'origin': 'Test',
-    #                                   'destination': 'Test',
-    #                                   'depart': datetime.now() + timedelta(hours=3),
-    #                                   'arrive': datetime.now() + timedelta(days=3)})
-    #     self.assertFalse(form.is_valid())
-    #     self.assertEqual(form.non_field_errors(), ['Arrival must be greater than departure'])

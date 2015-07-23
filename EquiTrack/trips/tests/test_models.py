@@ -170,3 +170,15 @@ class TestTripModels(TestCase):
         self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
         self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
 
+    def test_cancel_trip_reason(self):
+        self.trip.cancelled_reason = 'This trip is no longer valid'
+        self.trip.save()
+        self.assertEqual(Trip.CANCELLED, self.trip.status)
+
+        # Now test the email is correct for this action
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue('Cancelled' in mail.outbox[0].subject)
+        self.assertTrue('cancelled' in mail.outbox[0].body)
+        self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
+        self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+
