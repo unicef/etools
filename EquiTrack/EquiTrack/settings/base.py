@@ -129,7 +129,7 @@ import djcelery
 djcelery.setup_loader()
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
-CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 ########## END DATABASE CONFIGURATION
 
 ########## MANAGER CONFIGURATION
