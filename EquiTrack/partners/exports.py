@@ -87,7 +87,7 @@ class DonorsFormat(SHPFormat):
 
         locs = []
 
-        if dataset._Dataset__headers:
+        if dataset.csv != '':
             pcas = PCA.objects.filter(
                 id__in=dataset['ID']
             )
