@@ -373,7 +373,7 @@ class TravelRoutes(models.Model):
 
 class ActionPoint(models.Model):
 
-    CLOSED = (
+    STATUS = (
         ('closed', 'Closed'),
         ('ongoing', 'On-going'),
         ('open', 'Open'),
@@ -388,27 +388,29 @@ class ActionPoint(models.Model):
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
-    status = models.CharField(choices=CLOSED, max_length=254, null=True, verbose_name='Status')
+    status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
     created_date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return self.description
 
     @property
+    def overdue(self):
+        return self.due_date <= datetime.date.today()
+
+    @property
+    def due_soon(self):
+        delta = (self.due_date - datetime.date.today()).days
+        return delta <= 2
+
+    @property
     def traffic_color(self):
-        if self.status == 'ongoing' or self.status == 'open':
-            if self.due_date >= datetime.date.today():
-                delta = (self.due_date - datetime.date.today()).days
-                if delta > 2:
-                    return 'green'
-                else:
-                    return 'yellow'
-            else:
-                return 'red'
-        elif self.status == 'cancelled':
+        if self.overdue:
             return 'red'
-        else:
-            return 'green'
+        elif self.due_soon:
+            return 'yellow'
+        else
+            return 'red'
 
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):

@@ -1,3 +1,6 @@
+"""
+Model factories used for generating models dynamically for tests
+"""
 __author__ = 'jcranwellward'
 
 from datetime import datetime, timedelta

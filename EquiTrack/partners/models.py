@@ -306,8 +306,6 @@ class PCA(AdminURLMixin, models.Model):
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
 
-
-
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
     unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -487,9 +485,13 @@ post_save.connect(PCA.send_changes, sender=PCA)
 
 
 class PCAGrant(models.Model):
+    """
+    Links a grant to a partnership with a specified amount
+    """
     pca = models.ForeignKey(PCA)
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
+    #TODO: Add multi-currency support
 
     class Meta:
         ordering = ['-funds']
@@ -499,7 +501,9 @@ class PCAGrant(models.Model):
 
 
 class GwPCALocation(models.Model):
-
+    """
+    Links a location to a partnership
+    """
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
     governorate = models.ForeignKey(Governorate)
@@ -531,7 +535,7 @@ class GwPCALocation(models.Model):
     tpm_visit = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = 'PCA Location'
+        verbose_name = 'Partnership Location'
 
     def __unicode__(self):
         return u'{} -> {}{}{}'.format(
@@ -548,7 +552,10 @@ class GwPCALocation(models.Model):
 
 
 class PCASector(models.Model):
-
+    """
+    Links a sector to a partnership
+    Many-to-many cardinality
+    """
     pca = models.ForeignKey(PCA)
     sector = models.ForeignKey(Sector)
 
