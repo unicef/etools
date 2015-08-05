@@ -78,9 +78,9 @@ DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now'
 }
-EMAIL_BACKEND = 'post_office.EmailBackend'
-POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
-CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
+POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'  # Will ensure email is sent async
+CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
 MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
 ########## END EMAIL CONFIGURATION
 
@@ -125,6 +125,10 @@ DATABASES = {
         default='postgis:///equitrack'
     )
 }
+GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
+GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
+
+
 import djcelery
 djcelery.setup_loader()
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')

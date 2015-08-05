@@ -10,7 +10,7 @@ dependencies:
     - docker build -t unicef/equitrack .
 
 test:
-  pre:
+  pre: # bootstrap postgres to accept connections from our container
     - sudo bash -c "echo \"listen_addresses = '*'\" >>
       /etc/postgresql/9.4/main/postgresql.conf"
     - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
