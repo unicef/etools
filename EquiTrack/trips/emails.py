@@ -57,7 +57,6 @@ class TripApprovedEmail(TripCreatedEmail):
     Thank you.
     """
 
-
 class TripCancelledEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/cancelled'

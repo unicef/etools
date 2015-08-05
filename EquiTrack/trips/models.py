@@ -4,6 +4,7 @@ import datetime
 
 from django.db import models
 from django.db.models import Q
+from django.contrib import  messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
@@ -16,10 +17,12 @@ from filer.fields.file import FilerFileField
 import reversion
 
 from EquiTrack.mixins import AdminURLMixin
-from locations.models import LinkedLocation
+# from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
+import locations
 from . import emails
+
 
 User = get_user_model()
 
@@ -32,6 +35,10 @@ BOOL_CHOICES = (
 
 class Office(models.Model):
     name = models.CharField(max_length=254)
+    zonal_chief = models.ForeignKey(User,
+                                    blank=True, null=True,
+                                    related_name='zonal_chief',
+                                    verbose_name='Chief')
 
     def __unicode__(self):
         return self.name
@@ -140,7 +147,7 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
-    locations = GenericRelation(LinkedLocation)
+    locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
     section = models.ForeignKey('reports.Sector', blank=True, null=True)
@@ -288,6 +295,8 @@ class Trip(AdminURLMixin, models.Model):
             # send an email to everyone if the trip is cancelled
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
+            for location in instance.locations.all():
+                recipients.append(location.governorate.office.zonal_chief.email)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
                 *recipients
@@ -314,6 +323,10 @@ class Trip(AdminURLMixin, models.Model):
             if not instance.approved_email_sent:
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
+
+                for location in instance.locations.all():
+                    recipients.append(location.governorate.office.zonal_chief.email)
+
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
                     *recipients
