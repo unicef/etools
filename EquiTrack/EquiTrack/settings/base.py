@@ -125,9 +125,6 @@ DATABASES = {
         default='postgis:///equitrack'
     )
 }
-GEOS_LIBRARY_PATH = "{}/libgeos_c.so".format(os.environ.get('GEOS_LIBRARY_PATH'))
-GDAL_LIBRARY_PATH = "{}/libgdal.so".format(os.environ.get('GDAL_LIBRARY_PATH'))
-
 
 import djcelery
 djcelery.setup_loader()
