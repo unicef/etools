@@ -409,7 +409,7 @@ class ActionPoint(models.Model):
             return 'red'
         elif self.due_soon:
             return 'yellow'
-        else
+        else:
             return 'red'
 
     @classmethod
