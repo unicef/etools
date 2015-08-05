@@ -409,8 +409,8 @@ class ActionPoint(models.Model):
             return 'red'
         elif self.due_soon:
             return 'yellow'
-        else
-            return 'red'
+        else:
+            return 'green'
 
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
