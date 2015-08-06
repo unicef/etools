@@ -4,6 +4,7 @@ Project wide base classes and utility functions for apps
 __author__ = 'jcranwellward'
 
 import tablib
+import traceback
 
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
@@ -20,12 +21,16 @@ def send_mail(sender, template, variables, *recipients):
     """
     Single mail send hook that is reused across the project
     """
-    mail.send(
-        [recp for recp in recipients],
-        sender,
-        template=template,
-        context=variables,
-    )
+    try:
+        mail.send(
+            [recp for recp in recipients],
+            sender,
+            template=template,
+            context=variables,
+        )
+    except Exception as exp:
+        print exp.message
+        print traceback.format_exc()
 
 
 class BaseEmail(object):
