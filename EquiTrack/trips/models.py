@@ -187,9 +187,18 @@ class Trip(AdminURLMixin, models.Model):
 
     ta_trip_took_place_as_planned = models.BooleanField(
         default=False,
-        help_text='Did the trip take place as planned and therefore no claim is required?'
+        verbose_name='Ta trip took place as attached',
+        help_text='I certify that the travel took place exactly as per the attached Travel Authorization and'
+                  ' that there were no changes to the itinerary'
     )
-
+    ta_trip_repay_travel_allowance = models.BooleanField(
+        default=False,
+        help_text='I certify that I will repay any travel allowance to which I am not entitled'
+    )
+    ta_trip_final_claim = models.BooleanField(
+        default=False,
+        help_text='I authorize UNICEF to treat this as the FINAL Claim'
+    )
     class Meta:
         ordering = ['-created_date']
 

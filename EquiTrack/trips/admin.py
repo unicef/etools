@@ -203,10 +203,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                 u'main_observations',),
         }),
 
-        (u'Travel Claim', {
+        (u'Travel Closure', {
             u'classes': (u'suit-tab suit-tab-reporting',),
             u'fields': (
-                u'ta_trip_took_place_as_planned',),
+                u'ta_trip_took_place_as_planned',
+                u'ta_trip_repay_travel_allowance',
+                u'ta_trip_final_claim'),
         }),
     )
     suit_form_tabs = (
