@@ -441,7 +441,7 @@ post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 class FileAttachment(models.Model):
 
-    trip = models.ForeignKey(Trip, null=True, blank=True)
+    trip = models.ForeignKey(Trip, null=True, blank=True, related_name=u'files')
     type = models.ForeignKey(u'partners.FileType')
     file = FilerFileField(null=True, blank=True)
     report = models.FileField(
