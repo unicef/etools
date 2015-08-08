@@ -86,25 +86,30 @@ class DonorsFormat(SHPFormat):
     def export_data(self, dataset):
 
         locs = []
-        pcas = PCA.objects.filter(
-            id__in=dataset['ID']
-        )
-        for pca in pcas:
-            donors = set(pca.pcagrant_set.all().values_list('grant__donor__name', flat=True))
-            for loc in pca.locations.filter(location__point__isnull=False):
-                locs.append(
-                    {
-                        'Donors': ', '.join([d for d in donors]),
-                        'Gateway Type': loc.location.gateway.name,
-                        'PCode': loc.location.p_code,
-                        'Locality': loc.locality.name,
-                        'Cad Code': loc.locality.cad_code,
-                        'x': loc.location.point.x,
-                        'y': loc.location.point.y
-                    }
-                )
 
-        data = tablib.Dataset(headers=locs[0].keys())
+        if dataset.csv != '':
+            pcas = PCA.objects.filter(
+                id__in=dataset['ID']
+            )
+            for pca in pcas:
+                donors = set(pca.pcagrant_set.all().values_list('grant__donor__name', flat=True))
+                for loc in pca.locations.filter(location__point__isnull=False):
+                    locs.append(
+                        {
+                            'Donors': ', '.join([d for d in donors]),
+                            'Gateway Type': loc.location.gateway.name,
+                            'PCode': loc.location.p_code,
+                            'Locality': loc.locality.name,
+                            'Cad Code': loc.locality.cad_code,
+                            'x': loc.location.point.x,
+                            'y': loc.location.point.y
+                        }
+                    )
+            data = tablib.Dataset(headers=locs[0].keys())
+        else:
+            "create empty data set"
+            data = tablib.Dataset(headers=['Donors', 'Gateway Type', 'Locality', 'PCode', 'y', 'x', 'Cad Code'])
+
         for loc in {v['PCode']: v for v in locs}.values():
             data.append(loc.values())
 

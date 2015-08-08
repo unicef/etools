@@ -232,6 +232,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                     trip.representative_approval = None
                     trip.date_representative_approved = None
                     trip.approved_date = None
+                    trip.approved_email_sent = False
                     trip.save()
 
         formset.save()

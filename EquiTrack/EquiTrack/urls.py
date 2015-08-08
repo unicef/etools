@@ -1,5 +1,4 @@
 from django.conf.urls import patterns, include, url
-from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 
 import autocomplete_light
@@ -10,7 +9,6 @@ autocomplete_light.autodiscover()
 from django.contrib import admin
 admin.autodiscover()
 
-from users.views import EquiTrackRegistrationView
 from .views import (
     MapView,
     DashboardView,

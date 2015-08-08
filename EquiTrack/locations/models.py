@@ -13,6 +13,8 @@ from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey
 from paintstore.fields import ColorPickerField
 
+import trips
+
 logger = logging.getLogger('locations.models')
 
 
@@ -38,6 +40,7 @@ class Governorate(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
+    office = models.ForeignKey('trips.Office', blank=True, null=True)
     color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
 
     geom = models.MultiPolygonField(null=True, blank=True)

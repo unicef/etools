@@ -4,6 +4,7 @@ import datetime
 
 from django.db import models
 from django.db.models import Q
+from django.contrib import  messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
@@ -16,10 +17,12 @@ from filer.fields.file import FilerFileField
 import reversion
 
 from EquiTrack.mixins import AdminURLMixin
-from locations.models import LinkedLocation
+# from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
+import locations
 from . import emails
+
 
 User = get_user_model()
 
@@ -32,6 +35,10 @@ BOOL_CHOICES = (
 
 class Office(models.Model):
     name = models.CharField(max_length=254)
+    zonal_chief = models.ForeignKey(User,
+                                    blank=True, null=True,
+                                    related_name='zonal_chief',
+                                    verbose_name='Chief')
 
     def __unicode__(self):
         return self.name
@@ -140,7 +147,7 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
-    locations = GenericRelation(LinkedLocation)
+    locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
     section = models.ForeignKey('reports.Sector', blank=True, null=True)
@@ -219,7 +226,7 @@ class Trip(AdminURLMixin, models.Model):
     @property
     def requires_hr_approval(self):
         return self.travel_type in [
-            Trip.STAFF_DEVELOPMENT
+            # Trip.STAFF_DEVELOPMENT
         ]
 
     @property
@@ -245,6 +252,9 @@ class Trip(AdminURLMixin, models.Model):
         if self.can_be_approved:
             self.approved_date = datetime.datetime.today()
             self.status = Trip.APPROVED
+
+        if self.status is not Trip.CANCELLED and self.cancelled_reason:
+            self.status = Trip.CANCELLED
 
         super(Trip, self).save(**kwargs)
 
@@ -285,6 +295,8 @@ class Trip(AdminURLMixin, models.Model):
             # send an email to everyone if the trip is cancelled
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
+            for location in instance.locations.all():
+                recipients.append(location.governorate.office.zonal_chief.email)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
                 *recipients
@@ -311,6 +323,10 @@ class Trip(AdminURLMixin, models.Model):
             if not instance.approved_email_sent:
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
+
+                for location in instance.locations.all():
+                    recipients.append(location.governorate.office.zonal_chief.email)
+
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
                     *recipients
@@ -357,7 +373,7 @@ class TravelRoutes(models.Model):
 
 class ActionPoint(models.Model):
 
-    CLOSED = (
+    STATUS = (
         ('closed', 'Closed'),
         ('ongoing', 'On-going'),
         ('open', 'Open'),
@@ -372,25 +388,27 @@ class ActionPoint(models.Model):
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
-    status = models.CharField(choices=CLOSED, max_length=254, null=True, verbose_name='Status')
+    status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
     created_date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return self.description
 
     @property
+    def overdue(self):
+        return self.due_date <= datetime.date.today()
+
+    @property
+    def due_soon(self):
+        delta = (self.due_date - datetime.date.today()).days
+        return delta <= 2
+
+    @property
     def traffic_color(self):
-        if self.status == 'ongoing' or self.status == 'open':
-            if self.due_date >= datetime.date.today():
-                delta = (self.due_date - datetime.date.today()).days
-                if delta > 2:
-                    return 'green'
-                else:
-                    return 'yellow'
-            else:
-                return 'red'
-        elif self.status == 'cancelled':
+        if self.overdue:
             return 'red'
+        elif self.due_soon:
+            return 'yellow'
         else:
             return 'green'
 
