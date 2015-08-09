@@ -24,4 +24,5 @@ deployment:
   staging:
     branch: develop
     commands:
-      - ./deploy_staging.sh
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push unicef/equitrack
