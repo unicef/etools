@@ -71,6 +71,7 @@ class SitesVisitedInlineAdmin(GenericTabularInline):
 class FileAttachmentInlineAdmin(GenericTabularInline):
     model = FileAttachment
     suit_classes = u'suit-tab suit-tab-attachments'
+    fields = (u'type', u'report')
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
