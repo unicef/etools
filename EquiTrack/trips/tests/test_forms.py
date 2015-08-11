@@ -107,8 +107,6 @@ class TestTripForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'For TA Drafted trip you must select a Vision Approver')
 
-
-
     def test_form_validation_for_completed_no_report(self):
         trip_dict = to_dict(self.trip)
         trip_dict['travel_type'] = u'advocacy'
@@ -117,6 +115,20 @@ class TestTripForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0],
                          'You must provide a narrative report before the trip can be completed')
+
+    def test_form_validation_for_completed_ta_required(self):
+        trip_dict = to_dict(self.trip)
+        trip_dict['travel_type'] = u'advocacy'
+        trip_dict['status'] = u'completed'
+        trip_dict['programme_assistant'] = UserFactory().id
+        trip_dict['ta_required'] = True
+        trip_dict['ta_trip_took_place_as_planned'] = False
+        trip_dict['main_observations'] = 'Test'
+        form = TripForm(data=trip_dict)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.non_field_errors()[0],
+                         'Only the TA travel assistant can complete the trip')
+
 
     # def test_form_validation_for_staff_development(self):
     #     trip_dict = to_dict(self.trip)

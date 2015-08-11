@@ -141,7 +141,7 @@ class TripForm(ModelForm):
                     'You must provide a narrative report before the trip can be completed'
                 )
 
-            if ta_required is True and ta_trip_took_place_as_planned is False:
+            if ta_required and ta_trip_took_place_as_planned is False:
                 raise ValidationError(
                     'Only the TA travel assistant can complete the trip'
                 )
