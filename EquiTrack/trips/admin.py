@@ -26,7 +26,9 @@ from .models import (
 )
 from .forms import (
     TripForm,
-    TravelRoutesForm
+    TravelRoutesForm,
+    ActionPointForm
+
 )
 from .exports import TripResource, ActionPointResource
 
@@ -422,6 +424,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
 
 class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
+    form = ActionPointForm
     resource_class = ActionPointResource
     exclude = [u'persons_responsible']
     date_hierarchy = u'due_date'

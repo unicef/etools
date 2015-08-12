@@ -1,6 +1,6 @@
 __author__ = 'jcranwellward'
 
-
+from suit.widgets import AutosizedTextarea
 from django import forms
 #from autocomplete_light import forms
 
@@ -47,3 +47,15 @@ class PCAForm(forms.ModelForm):
 
     class Meta:
         model = PCA
+        widgets = {
+            'title':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }
+
+
+class PartnerOrganizationForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'description':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }
