@@ -4,7 +4,7 @@ import datetime
 
 from django.db import models
 from django.db.models import Q
-from django.contrib import  messages
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
@@ -70,17 +70,14 @@ class Trip(AdminURLMixin, models.Model):
     FAMILY_VISIT = u'family_visit'
     EDUCATION_GRANT = u'education_grant'
     STAFF_DEVELOPMENT = u'staff_development'
+    STAFF_ENTITLEMENT = u'staff_entitlement'
     TRAVEL_TYPE = (
         (PROGRAMME_MONITORING, u'PROGRAMME MONITORING'),
         (ADVOCACY, u'ADVOCACY'),
         (TECHNICAL_SUPPORT, u'TECHNICAL SUPPORT'),
         (MEETING, u'MEETING'),
         (STAFF_DEVELOPMENT, u"STAFF DEVELOPMENT"),
-        # (DUTY_TRAVEL, u"DUTY TRAVEL"),
-        # (HOME_LEAVE, u"HOME LEAVE"),
-        # (FAMILY_VISIT, u"FAMILY VISIT"),
-        # (EDUCATION_GRANT, u"EDUCATION GRANT"),
-
+        (STAFF_ENTITLEMENT, u"STAFF ENTITLEMENT"),
     )
 
     status = models.CharField(
@@ -189,9 +186,18 @@ class Trip(AdminURLMixin, models.Model):
 
     ta_trip_took_place_as_planned = models.BooleanField(
         default=False,
-        help_text='Did the trip take place as planned and therefore no claim is required?'
+        verbose_name='Ta trip took place as attached',
+        help_text='I certify that the travel took place exactly as per the attached Travel Authorization and'
+                  ' that there were no changes to the itinerary'
     )
-
+    ta_trip_repay_travel_allowance = models.BooleanField(
+        default=False,
+        help_text='I certify that I will repay any travel allowance to which I am not entitled'
+    )
+    ta_trip_final_claim = models.BooleanField(
+        default=False,
+        help_text='I authorize UNICEF to treat this as the FINAL Claim'
+    )
     class Meta:
         ordering = ['-created_date']
 
@@ -446,20 +452,19 @@ post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 class FileAttachment(models.Model):
 
+    trip = models.ForeignKey(Trip, null=True, blank=True, related_name=u'files')
     type = models.ForeignKey(u'partners.FileType')
-    file = FilerFileField()
+    file = FilerFileField(null=True, blank=True)
+    report = models.FileField(
+        upload_to=u'trip_reports'
+    )
 
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
-        return self.file.name
-
-    def download_url(self):
-        if self.file:
-            return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" >Download</a>'.format(self.file.file.url)
-        return u''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Files'
+        return u'{}: {}'.format(
+            self.type.name,
+            self.report.name
+        )
