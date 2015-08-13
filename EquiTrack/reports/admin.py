@@ -20,7 +20,7 @@ from reports.models import (
     ResultType,
     Result
 )
-from .forms import IndicatorAdminForm
+from .forms import IndicatorAdminForm, SectorForm, ResultForm, GoalForm, IntermediateResultForm
 
 
 class SectorListFilter(admin.SimpleListFilter):
@@ -55,6 +55,7 @@ class SectorListFilter(admin.SimpleListFilter):
 
 
 class SectorAdmin(ImportExportModelAdmin):
+    form = SectorForm
     list_display = ('name', 'color', 'dashboard',)
     list_editable = ('color', 'dashboard',)
 
@@ -63,6 +64,10 @@ class ResultStructureAdmin(admin.ModelAdmin):
     search_fields = ('name',)
     list_filter = ('result_structure', SectorListFilter,)
     list_display = ('name', 'sector', 'result_structure',)
+
+
+class GoalAdmin(ImportExportModelAdmin):
+    form = GoalForm
 
 
 class IndicatorProgressInlineAdmin(admin.TabularInline):
@@ -134,12 +139,16 @@ class IndicatorAdmin(ImportExportModelAdmin):
 
 
 class ResultAdmin(ImportExportModelAdmin):
-
+    form = ResultForm
     list_filter = (
         'result_structure',
         'sector',
         'result_type'
     )
+
+
+class IntermediateResultAdmin(ImportExportModelAdmin):
+    form = IntermediateResultForm
 
 
 admin.site.register(Result, ResultAdmin)
@@ -148,9 +157,9 @@ admin.site.register(RRPObjective, ImportExportModelAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
 admin.site.register(Sector, SectorAdmin)
 admin.site.register(Activity, ImportExportModelAdmin)
-admin.site.register(IntermediateResult, ImportExportModelAdmin)
+admin.site.register(IntermediateResult, IntermediateResultAdmin)
 admin.site.register(Rrp5Output, ResultStructureAdmin)
-admin.site.register(Goal, ImportExportModelAdmin)
+admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 admin.site.register(WBS, ImportExportModelAdmin)

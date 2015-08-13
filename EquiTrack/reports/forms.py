@@ -1,6 +1,7 @@
 __author__ = 'jcranwellward'
 
 from django import forms
+from suit.widgets import AutosizedTextarea
 
 from .models import Indicator, Result
 
@@ -9,6 +10,10 @@ class IndicatorAdminForm(forms.ModelForm):
 
     class Meta:
         model = Indicator
+        widgets = {
+            'name':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }
 
     def __init__(self, *args, **kwargs):
         """
@@ -24,3 +29,35 @@ class IndicatorAdminForm(forms.ModelForm):
                     result_structure=self.instance.result_structure
                 )
             self.fields['result'].queryset = results
+
+
+class SectorForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'description':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }
+
+
+class ResultForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'name':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }
+
+
+class GoalForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'name':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }
+
+
+class IntermediateResultForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'name':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }

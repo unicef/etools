@@ -52,6 +52,7 @@ class TripFundsInlineAdmin(admin.TabularInline):
 
 class ActionPointInlineAdmin(admin.StackedInline):
     model = ActionPoint
+    form = ActionPointForm
     suit_classes = u'suit-tab suit-tab-reporting'
     filter_horizontal = (u'persons_responsible',)
     extra = 1
@@ -424,7 +425,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
 
 class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
-    form = ActionPointForm
     resource_class = ActionPointResource
     exclude = [u'persons_responsible']
     date_hierarchy = u'due_date'

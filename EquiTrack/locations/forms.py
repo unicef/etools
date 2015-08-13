@@ -6,15 +6,22 @@ from django.core.exceptions import ValidationError
 
 from cartodb import CartoDBAPIKey, CartoDBException
 from autocomplete_light import forms as auto_forms
+from suit.widgets import AutosizedTextarea
 
 from partners.models import GwPCALocation
-
 from .models import CartoDBTable
 
 logger = logging.getLogger('locations.models')
 
 
-# class LocationForm(auto_forms.ModelForm):
+class LocationForm(forms.ModelForm):
+    class Meta:
+        widgets = {
+            'name':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }
+
+
 #
 #     class Media:
 #         """

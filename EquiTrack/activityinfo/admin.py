@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 
 from . import models
+from .forms import IndicatorForm
 
 
 class DatabaseAdmin(admin.ModelAdmin):
@@ -122,6 +123,7 @@ class ActivityAdmin(admin.ModelAdmin):
 
 
 class IndicatorAdmin(admin.ModelAdmin):
+    form = IndicatorForm
     search_fields = (
         'ai_id',
     )
