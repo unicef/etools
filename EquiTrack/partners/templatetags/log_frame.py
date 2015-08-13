@@ -16,27 +16,28 @@ register = template.Library()
 @register.simple_tag
 def show_log_frame(value):
     pca = PCA.objects.get(id=int(value))
-    results = pca.resultchain_set.all()
+    results = pca.results.all()
     data = tablib.Dataset()
     indicators = SortedDict()
-    governorates = []
+    governorates = SortedDict()
 
     for result in results:
-        if result.governorate.name not in governorates:
-            governorates.append(result.governorate.name)
+        if result.governorate:
+            governorates[result.governorate] = 0
 
     for result in results:
-        row = indicators.get(result.indicator.id, SortedDict())
+        if result.indicator:
+            row = indicators.get(result.indicator.id, SortedDict())
+        else:
+            row = indicators.get(result.id, SortedDict())
+        row['Code'] = result.result.code
         row['Result Type'] = result.result_type.name
         row['Result'] = result.result.name
-        row['Indicator'] = result.indicator.name
-        for governorate in governorates:
-            if result.governorate.name == governorate:
-                row[result.governorate.name] = result.target
-            else:
-                if governorate not in row:
-                    row[governorate] = 0
-        indicators[result.indicator.id] = row
+        row['Indicator'] = result.indicator.name if result.indicator else u'NOT FOUND'
+        row.update(governorates)
+        if result.governorate:
+            row[result.governorate.name] = result.target or 0
+        indicators[result.indicator.id if result.indicator else result.id] = row
 
     if indicators:
         for row in indicators.values():

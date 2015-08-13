@@ -35,10 +35,12 @@ BOOL_CHOICES = (
 
 class Office(models.Model):
     name = models.CharField(max_length=254)
-    zonal_chief = models.ForeignKey(User,
-                                    blank=True, null=True,
-                                    related_name='zonal_chief',
-                                    verbose_name='Chief')
+    zonal_chief = models.ForeignKey(
+        User,
+        blank=True, null=True,
+        related_name='offices',
+        verbose_name='Chief'
+    )
 
     def __unicode__(self):
         return self.name
