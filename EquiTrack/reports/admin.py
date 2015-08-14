@@ -5,6 +5,7 @@ from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
 
 from EquiTrack.utils import get_changeform_link
+from EquiTrack.forms import AutoSizeTextForm
 from partners.models import IndicatorProgress
 from reports.models import (
     Sector,
@@ -20,7 +21,7 @@ from reports.models import (
     ResultType,
     Result
 )
-from .forms import IndicatorAdminForm, SectorForm, ResultForm, GoalForm, IntermediateResultForm
+from .forms import IndicatorAdminForm
 
 
 class SectorListFilter(admin.SimpleListFilter):
@@ -55,7 +56,7 @@ class SectorListFilter(admin.SimpleListFilter):
 
 
 class SectorAdmin(ImportExportModelAdmin):
-    form = SectorForm
+    form = AutoSizeTextForm
     list_display = ('name', 'color', 'dashboard',)
     list_editable = ('color', 'dashboard',)
 
@@ -67,7 +68,7 @@ class ResultStructureAdmin(admin.ModelAdmin):
 
 
 class GoalAdmin(ImportExportModelAdmin):
-    form = GoalForm
+    form = AutoSizeTextForm
 
 
 class IndicatorProgressInlineAdmin(admin.TabularInline):
@@ -139,7 +140,7 @@ class IndicatorAdmin(ImportExportModelAdmin):
 
 
 class ResultAdmin(ImportExportModelAdmin):
-    form = ResultForm
+    form = AutoSizeTextForm
     list_filter = (
         'result_structure',
         'sector',
@@ -148,7 +149,11 @@ class ResultAdmin(ImportExportModelAdmin):
 
 
 class IntermediateResultAdmin(ImportExportModelAdmin):
-    form = IntermediateResultForm
+    form = AutoSizeTextForm
+
+
+class WBSAdmin(ImportExportModelAdmin):
+    form = AutoSizeTextForm
 
 
 admin.site.register(Result, ResultAdmin)
@@ -162,4 +167,4 @@ admin.site.register(Rrp5Output, ResultStructureAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-admin.site.register(WBS, ImportExportModelAdmin)
+admin.site.register(WBS, WBSAdmin)

@@ -29,35 +29,3 @@ class IndicatorAdminForm(forms.ModelForm):
                     result_structure=self.instance.result_structure
                 )
             self.fields['result'].queryset = results
-
-
-class SectorForm(forms.ModelForm):
-    class Meta:
-        widgets = {
-            'description':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-        }
-
-
-class ResultForm(forms.ModelForm):
-    class Meta:
-        widgets = {
-            'name':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-        }
-
-
-class GoalForm(forms.ModelForm):
-    class Meta:
-        widgets = {
-            'name':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-        }
-
-
-class IntermediateResultForm(forms.ModelForm):
-    class Meta:
-        widgets = {
-            'name':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-        }

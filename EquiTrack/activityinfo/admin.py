@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 
 from . import models
-from .forms import IndicatorForm
+from EquiTrack.forms import AutoSizeTextForm
 
 
 class DatabaseAdmin(admin.ModelAdmin):
@@ -123,7 +123,7 @@ class ActivityAdmin(admin.ModelAdmin):
 
 
 class IndicatorAdmin(admin.ModelAdmin):
-    form = IndicatorForm
+    form = AutoSizeTextForm
     search_fields = (
         'ai_id',
     )

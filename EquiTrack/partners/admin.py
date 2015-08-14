@@ -11,7 +11,8 @@ from reversion import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
-from .forms import PCAForm, PartnerOrganizationForm
+from .forms import PCAForm
+from EquiTrack.forms import AutoSizeTextForm
 from tpm.models import TPMVisit
 from EquiTrack.utils import get_changeform_link
 from locations.models import Location
@@ -494,7 +495,7 @@ class AssessmentAdminInline(admin.StackedInline):
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
-    form = PartnerOrganizationForm
+    form = AutoSizeTextForm
     resource_class = PartnerResource
     list_display = (
         u'name',

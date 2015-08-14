@@ -179,11 +179,3 @@ class TripFilterByDateForm(Form):
             attrs={}
         )
     )
-
-
-class ActionPointForm(ModelForm):
-    class Meta:
-        widgets = {
-            'description':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-        }

@@ -14,6 +14,7 @@ from generic_links.admin import GenericLinkStackedInline
 from messages_extends import constants as constants_messages
 from users.models import UserProfile
 
+from EquiTrack.forms import AutoSizeTextForm
 from locations.models import LinkedLocation
 from .models import (
     Trip,
@@ -27,8 +28,6 @@ from .models import (
 from .forms import (
     TripForm,
     TravelRoutesForm,
-    ActionPointForm
-
 )
 from .exports import TripResource, ActionPointResource
 
@@ -52,7 +51,7 @@ class TripFundsInlineAdmin(admin.TabularInline):
 
 class ActionPointInlineAdmin(admin.StackedInline):
     model = ActionPoint
-    form = ActionPointForm
+    form = AutoSizeTextForm
     suit_classes = u'suit-tab suit-tab-reporting'
     filter_horizontal = (u'persons_responsible',)
     extra = 1

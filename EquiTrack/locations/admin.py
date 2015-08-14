@@ -7,7 +7,8 @@ from import_export.admin import ImportExportMixin
 from leaflet.admin import LeafletGeoAdmin
 
 from . import models
-from .forms import CartoDBTableForm, LocationForm
+from .forms import CartoDBTableForm
+from EquiTrack.forms import AutoSizeTextForm
 
 
 class LocationResource(resources.ModelResource):
@@ -17,7 +18,7 @@ class LocationResource(resources.ModelResource):
 
 
 class LocationAdmin(ImportExportMixin, LeafletGeoAdmin):
-    form = LocationForm
+    form = AutoSizeTextForm
     resource_class = LocationResource
     fields = (
         'name',

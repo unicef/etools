@@ -51,11 +51,3 @@ class PCAForm(forms.ModelForm):
             'title':
                 AutosizedTextarea(attrs={'class': 'input-xlarge'}),
         }
-
-
-class PartnerOrganizationForm(forms.ModelForm):
-    class Meta:
-        widgets = {
-            'description':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-        }
