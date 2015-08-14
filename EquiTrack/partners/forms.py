@@ -8,7 +8,11 @@ from django import forms
 from django.forms.models import BaseInlineFormSet
 from django.contrib import messages
 #from autocomplete_light import forms
-from django.core.exceptions import ValidationError
+from django.core.exceptions import (
+    ValidationError,
+    ObjectDoesNotExist,
+    MultipleObjectsReturned,
+)
 
 from locations.models import Location
 from reports.models import Sector, Result, Indicator
@@ -138,7 +142,9 @@ class PCAForm(forms.ModelForm):
 
     def import_results_from_log_frame(self, log_frame, sector):
         """
-        Matches results from the log frame to country result structure
+        Matches results from the log frame to country result structure.
+        Will try to indicators one to one of by name, this can be ran
+        multiple times to continually update the log frame
         """
         try:  # first try to grab the excel as a table...
             data = pandas.read_excel(log_frame, index_col=0)
@@ -146,21 +152,34 @@ class PCAForm(forms.ModelForm):
             raise ValidationError(exp.message)
 
         imported = found = not_found = 0
-        for code in data.index.values:
+        for code, row in data.iterrows():
+            create_args = dict(
+                partnership=self.obj
+            )
             try:
                 result = Result.objects.get(
                     sector=sector,
                     code=code
                 )
-            except (Result.DoesNotExist, Result.MultipleObjectsReturned) as exp:
+                create_args['result'] = result
+                create_args['result_type'] = result.result_type
+                indicators = result.indicator_set.all()
+                if indicators:
+                    if indicators.count() == 1:
+                        # use this indicator if we only have one
+                        create_args['indicator'] = indicators[0]
+                    else:
+                        # attempt to fuzzy match by name
+                        create_args['indicator'] = indicators.filter(
+                            name__icontains=row['Indicator']
+                        )[0] or None
+                    # if we got this far also take the target
+                    create_args['target'] = row.get('Target')
+            except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
                 not_found += 1
                 #TODO: Log this
             else:
-                result_chain, new = ResultChain.objects.get_or_create(
-                    partnership=self.obj,
-                    result_type=result.result_type,
-                    result=result,
-                )
+                result_chain, new = ResultChain.objects.get_or_create(**create_args)
                 if new:
                     imported += 1
                 else:
