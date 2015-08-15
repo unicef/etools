@@ -7,7 +7,7 @@ machine:
 dependencies:
   override:
     - docker info
-    - docker build -t unicef/equitrack .
+    - docker build -t unicef/equitrack:$CIRCLE_BRANCH .
 
 test:
   pre: # bootstrap postgres to accept connections from our container
