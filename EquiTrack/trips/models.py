@@ -20,7 +20,7 @@ from EquiTrack.mixins import AdminURLMixin
 # from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
-import locations
+from locations.models import Governorate
 from . import emails
 
 
@@ -35,10 +35,15 @@ BOOL_CHOICES = (
 
 class Office(models.Model):
     name = models.CharField(max_length=254)
-    zonal_chief = models.ForeignKey(User,
-                                    blank=True, null=True,
-                                    related_name='zonal_chief',
-                                    verbose_name='Chief')
+    zonal_chief = models.ForeignKey(
+        User,
+        blank=True, null=True,
+        related_name='offices',
+        verbose_name='Chief')
+    location = models.ForeignKey(
+        Governorate,
+        blank=True, null=True,
+    )
 
     def __unicode__(self):
         return self.name

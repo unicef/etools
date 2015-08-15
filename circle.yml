@@ -21,7 +21,8 @@ test:
       docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/equitrack ./runtests.sh
 
 deployment:
-  staging:
+  hub:
     branch: develop
     commands:
-      - ./deploy_staging.sh
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push unicef/equitrack:develop
