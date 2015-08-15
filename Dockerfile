@@ -5,12 +5,12 @@ ENV C_INCLUDE_PATH /usr/include/gdal
 ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 WORKDIR /code
-ADD . /code/
-RUN pip install -r requirements.txt
+ADD ./EquiTrack /code/
+RUN pip install -r ./requirements/production.txt
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
-RUN python EquiTrack/manage.py collectstatic --noinput
+RUN python manage.py collectstatic --noinput
 # Start everything
-ENV PORT 8080
+ENV PORT 8000
 EXPOSE $PORT
 ENV C_FORCE_ROOT true
 CMD honcho start

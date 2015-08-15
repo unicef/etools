@@ -68,3 +68,7 @@ htmlcov
 config.json
 
 *.key
+
+.env_db_prod
+
+.env_web_prod

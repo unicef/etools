@@ -266,7 +266,7 @@ USE_TZ = True
 
 ########## MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = normpath(join(BASE_DIR, 'media'))
+MEDIA_ROOT = normpath(join(SITE_ROOT, 'media'))
 
 FILER_ALLOW_REGULAR_USERS_TO_ADD_ROOT_FOLDERS = True
 FILER_STORAGES = {
@@ -299,7 +299,7 @@ STATIC_URL = '/static/'
 
 ########## STATIC FILE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
-STATIC_ROOT = normpath(join(BASE_DIR, 'static'))
+STATIC_ROOT = normpath(join(SITE_ROOT, 'static'))
 
 # See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
 STATICFILES_DIRS = (

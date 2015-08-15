@@ -1,0 +1,2 @@
+web: newrelic-admin run-program python manage.py run_gunicorn -b "0.0.0.0:$PORT" -w 4 --timeout=3200
+worker: newrelic-admin run-program python manage.py celery worker -B -E --loglevel=info
