@@ -2,8 +2,6 @@ web:
   restart: always
   command: honcho start
   build: .
-  expose:
-    - "8000"
   links:
     - postgres
     - redis
