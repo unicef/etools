@@ -85,6 +85,7 @@ class TripForm(ModelForm):
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         trip_report = cleaned_data.get(u'main_observations')
+        ta_trip_took_place_as_planned = cleaned_data.get(u'ta_trip_took_place_as_planned')
 
 
         if to_date < from_date:
@@ -139,6 +140,12 @@ class TripForm(ModelForm):
                 raise ValidationError(
                     'You must provide a narrative report before the trip can be completed'
                 )
+
+            if ta_required and ta_trip_took_place_as_planned is False:
+                raise ValidationError(
+                    'Only the TA travel assistant can complete the trip'
+                )
+
             # if not approved_by_human_resources and travel_type == Trip.STAFF_DEVELOPMENT:
             #     raise ValidationError(
             #         'STAFF DEVELOPMENT trip must be certified by Human Resources before it can be completed'

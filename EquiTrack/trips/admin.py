@@ -14,6 +14,7 @@ from generic_links.admin import GenericLinkStackedInline
 from messages_extends import constants as constants_messages
 from users.models import UserProfile
 
+from EquiTrack.forms import AutoSizeTextForm
 from locations.models import LinkedLocation
 from .models import (
     Trip,
@@ -26,7 +27,7 @@ from .models import (
 )
 from .forms import (
     TripForm,
-    TravelRoutesForm
+    TravelRoutesForm,
 )
 from .exports import TripResource, ActionPointResource
 
@@ -50,6 +51,7 @@ class TripFundsInlineAdmin(admin.TabularInline):
 
 class ActionPointInlineAdmin(admin.StackedInline):
     model = ActionPoint
+    form = AutoSizeTextForm
     suit_classes = u'suit-tab suit-tab-reporting'
     filter_horizontal = (u'persons_responsible',)
     extra = 1
@@ -71,6 +73,7 @@ class SitesVisitedInlineAdmin(GenericTabularInline):
 class FileAttachmentInlineAdmin(GenericTabularInline):
     model = FileAttachment
     suit_classes = u'suit-tab suit-tab-attachments'
+    fields = (u'type', u'report')
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
@@ -203,10 +206,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                 u'main_observations',),
         }),
 
-        (u'Travel Claim', {
+        (u'Travel Closure', {
             u'classes': (u'suit-tab suit-tab-reporting',),
             u'fields': (
-                u'ta_trip_took_place_as_planned',),
+                u'ta_trip_took_place_as_planned',
+                u'ta_trip_repay_travel_allowance',
+                u'ta_trip_final_claim'),
         }),
     )
     suit_form_tabs = (
@@ -262,12 +267,23 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         ]:
             fields.remove(u'status')
 
-        if trip and trip.status == Trip.APPROVED and request.user in [
-            trip.owner,
-            trip.travel_assistant,
-            trip.programme_assistant
-        ]:
-            fields.remove(u'status')
+        if trip and trip.status == Trip.APPROVED:
+            if trip.ta_required is True and trip.ta_trip_took_place_as_planned is False and request.user in [
+                trip.travel_assistant
+            ]:
+                fields.remove(u'status')
+            elif trip.ta_required is True and trip.ta_trip_took_place_as_planned is True and request.user in [
+                trip.owner,
+                trip.travel_assistant,
+                trip.programme_assistant
+            ]:
+                fields.remove(u'status')
+            elif trip.ta_required is False and request.user in [
+                trip.owner,
+                trip.travel_assistant,
+                trip.programme_assistant
+            ]:
+                fields.remove(u'status')
 
         if trip and request.user == trip.supervisor:
             fields.remove(u'approved_by_supervisor')
