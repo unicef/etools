@@ -142,7 +142,8 @@ class TestTripForm(TestCase):
     #                      'Resources before it can be completed')
 
     def test_form_validation_for_date_greater(self):
-        form = TravelRoutesForm(data={'origin': 'Test',
+        form = TravelRoutesForm(data={'trip': self.trip,
+                                      'origin': 'Test',
                                       'destination': 'Test',
                                       'depart': datetime.now() + timedelta(hours=3),
                                       'arrive': datetime.now()})
