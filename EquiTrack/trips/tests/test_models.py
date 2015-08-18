@@ -5,7 +5,12 @@ from datetime import datetime
 from django.core import mail
 from django.test import TestCase
 
-from EquiTrack.factories import TripFactory, UserFactory
+from EquiTrack.factories import (
+    TripFactory,
+    UserFactory,
+    OfficeFactory,
+    LinkedLocationFactory,
+)
 from trips.models import Trip
 
 
@@ -145,7 +150,6 @@ class TestTripModels(TestCase):
         self.assertTrue(self.trip.travel_assistant.email in mail.outbox[0].to)
         self.assertTrue(self.trip.travel_assistant.first_name in mail.outbox[0].body)
 
-
     def test_complete_trip(self):
         self.trip.status = Trip.COMPLETED
         self.trip.save()
@@ -181,4 +185,22 @@ class TestTripModels(TestCase):
         self.assertTrue('cancelled' in mail.outbox[0].body)
         self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
         self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+
+    def test_zonal_email_sent_to_chief(self):
+
+        office = OfficeFactory()
+        office.zonal_chief = UserFactory()
+        office.save()
+        location = LinkedLocationFactory(content_object=self.trip)
+        location.governorate = office.location
+        location.save()
+
+        self.trip.status = Trip.APPROVED
+        self.trip.save()
+
+         # Now test the email is correct for this action
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertTrue('Approved' in mail.outbox[0].subject)
+        self.assertTrue('approved' in mail.outbox[0].body)
+        self.assertTrue(office.zonal_chief.email in mail.outbox[0].to)
 
