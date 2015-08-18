@@ -14,6 +14,8 @@ from django.core.exceptions import (
     MultipleObjectsReturned,
 )
 
+from suit.widgets import AutosizedTextarea
+
 from locations.models import Location
 from reports.models import Sector, Result, Indicator
 from .models import (
@@ -108,6 +110,10 @@ class PCAForm(forms.ModelForm):
 
     class Meta:
         model = PCA
+        widgets = {
+            'title':
+                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+        }
 
     def add_locations(self, p_codes, sector):
         """

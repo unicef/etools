@@ -2,7 +2,7 @@
 #	production that isn't in development.
 -r base.txt
 
-dj-static
-raven
-newrelic
-honcho
+dj-static==0.0.6
+raven==4.0.2
+newrelic==2.24.0.21
+honcho==0.5.0

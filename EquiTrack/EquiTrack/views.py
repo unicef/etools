@@ -122,11 +122,6 @@ class UserDashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         user = self.request.user
-        now = datetime.datetime.now()
-        current_structure = ResultStructure.objects.filter(
-            from_date__lte=now,
-            to_date__gte=now
-        )[0].id if ResultStructure.objects.count() else None
 
         return {
             'trips_current': Trip.objects.filter(

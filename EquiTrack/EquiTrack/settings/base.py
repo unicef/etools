@@ -326,7 +326,6 @@ THIRD_PARTY_APPS = (
     'djcelery_email',
     'datetimewidget',
     'logentry_admin',
-    'dbbackup',
     'leaflet',
     'djgeojson',
     'paintstore',

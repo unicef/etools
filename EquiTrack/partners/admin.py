@@ -10,9 +10,12 @@ from reversion import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
+from .forms import PCAForm
+from EquiTrack.forms import AutoSizeTextForm
 from .forms import PCAForm, ResultChainAdminForm, ResultInlineAdminFormSet
 from tpm.models import TPMVisit
 from EquiTrack.utils import get_changeform_link
+from locations.models import Location
 from funds.models import Grant
 from reports.models import (
     WBS,
@@ -485,6 +488,7 @@ class AssessmentAdminInline(admin.StackedInline):
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
+    form = AutoSizeTextForm
     resource_class = PartnerResource
     list_display = (
         u'name',
@@ -496,9 +500,6 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
         u'alternate_id',
         u'alternate_name',
     )
-    # inlines = [
-    #     AssessmentAdminInline,
-    # ]
 
 
 class FACEAdmin(admin.ModelAdmin):
