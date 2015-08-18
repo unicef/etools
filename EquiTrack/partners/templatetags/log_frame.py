@@ -18,7 +18,7 @@ def show_log_frame(value):
     pca = PCA.objects.get(id=int(value))
     results = pca.results.all()
     data = tablib.Dataset()
-    indicators = SortedDict()
+    log_frame = SortedDict()
     governorates = SortedDict()
 
     for result in results:
@@ -26,25 +26,23 @@ def show_log_frame(value):
             governorates[result.governorate] = 0
 
     for result in results:
-        if result.indicator:
-            row = indicators.get(result.indicator.id, SortedDict())
-        else:
-            row = indicators.get(result.id, SortedDict())
+        row = log_frame.get(result.result.code, SortedDict())
         row['Code'] = result.result.code
         row['Result Type'] = result.result_type.name
         row['Result'] = result.result.name
         row['Indicator'] = result.indicator.name if result.indicator else u'NOT FOUND'
+        row['Target'] = result.target
         row.update(governorates)
         if result.governorate:
             row[result.governorate.name] = result.target or 0
-        indicators[result.indicator.id if result.indicator else result.id] = row
+        log_frame[result.result.code] = row
 
-    if indicators:
-        for row in indicators.values():
+    if log_frame:
+        for row in log_frame.values():
             if not data.headers or len(data.headers) < len(row.values()):
                 data.headers = row.keys()
             data.append(row.values())
 
-        return data.html
+        return data.sort('Code').html
 
     return '<p>No results</p>'

@@ -176,9 +176,11 @@ class PCAForm(forms.ModelForm):
                         create_args['indicator'] = indicators[0]
                     else:
                         # attempt to fuzzy match by name
-                        create_args['indicator'] = indicators.filter(
+                        candidates = indicators.filter(
                             name__icontains=row['Indicator']
-                        )[0] or None
+                        )
+                        if candidates:
+                            create_args['indicator'] = candidates[0]
                     # if we got this far also take the target
                     create_args['target'] = row.get('Target')
             except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
