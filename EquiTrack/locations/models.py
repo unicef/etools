@@ -13,8 +13,6 @@ from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey
 from paintstore.fields import ColorPickerField
 
-import trips
-
 logger = logging.getLogger('locations.models')
 
 
@@ -25,6 +23,7 @@ def get_random_color():
 
 class GatewayType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
+
     class Meta:
         ordering = ['name']
 
