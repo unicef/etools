@@ -13,7 +13,7 @@ from registration.backends.default.views import (
 from trips.models import Office
 from reports.models import Sector
 from .forms import UnicefEmailRegistrationForm, ProfileForm
-from .models import EquiTrackRegistrationModel, User
+from .models import EquiTrackRegistrationModel, User, UserProfile
 from .serializers import UserSerializer
 
 
@@ -74,7 +74,9 @@ class ProfileEdit(FormView):
     def form_valid(self, form):
         # This method is called when valid form data has been POSTed.
         # It should return an HttpResponse.
-        profile = self.request.user.get_profile()
+        profile, created = UserProfile.objects.get_or_create(
+            user=self.request.user
+        )
         profile.office = form.cleaned_data['office']
         profile.section = form.cleaned_data['section']
         profile.job_title = form.cleaned_data['job_title']
@@ -89,9 +91,12 @@ class ProfileEdit(FormView):
     def get_initial(self):
         """  Returns the initial data to use for forms on this view.  """
         initial = super(ProfileEdit, self).get_initial()
-        profile = self.request.user.get_profile()
-        initial['office'] = profile.office
-        initial['section'] = profile.section
-        initial['job_title'] = profile.job_title
-        initial['phone_number'] = profile.phone_number
+        try:
+            profile = self.request.user.get_profile()
+            initial['office'] = profile.office
+            initial['section'] = profile.section
+            initial['job_title'] = profile.job_title
+            initial['phone_number'] = profile.phone_number
+        except UserProfile.DoesNotExist:
+            pass
         return initial
