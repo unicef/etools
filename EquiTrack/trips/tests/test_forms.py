@@ -143,9 +143,10 @@ class TestTripForm(TestCase):
 
     def test_form_validation_for_date_greater(self):
         form = TravelRoutesForm(data={'trip': self.trip.id,
-                                      'origin': 'Test',
-                                      'destination': 'Test',
+                                      'origin': 'Test1',
+                                      'destination': 'Test2',
                                       'depart': datetime.now() + timedelta(hours=3),
                                       'arrive': datetime.now()})
+        print form
         self.assertFalse(form.is_valid())  # This is returning false which means there is a field level error
         self.assertEqual(form.non_field_errors()[0], 'Arrival must be greater than departure')
