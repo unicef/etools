@@ -30,10 +30,9 @@ SUIT_CONFIG = {
         {'label': 'Dashboard', 'icon': 'icon-dashboard', 'url': 'dashboard'},
 
         {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
-            {'model': 'partners.pca', 'label': 'Partnerships'},
-            {'model': 'partners.assessment', 'label': 'Assessments'},
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
-            {'model': 'partners.face', 'label': 'FACE'},
+            {'model': 'partners.agreement', 'label': 'Agreements'},
+            {'model': 'partners.pca', 'label': 'Partnerships'},
         ]},
 
         {'app': 'trips', 'icon': 'icon-road', 'models': [
