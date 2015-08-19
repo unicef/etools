@@ -34,7 +34,7 @@ Fiona==1.5.0
 Shapely==1.5.7
 cartodb==0.8.1
 gunicorn==18.0
-django-datetime-widget==0.9
+django-datetime-widget==0.9.3
 django-leaflet==0.14.1
 django-geojson==2.6.0
 django-post_office==1.1.2
