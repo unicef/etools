@@ -286,6 +286,7 @@ class Trip(AdminURLMixin, models.Model):
         recipients = [
             instance.owner.email,
             instance.supervisor.email]
+
         if instance.budget_owner:
             if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
                 recipients.append(instance.budget_owner.email)
@@ -335,8 +336,11 @@ class Trip(AdminURLMixin, models.Model):
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
 
-                for location in instance.locations.all():
-                    recipients.append(location.governorate.office.zonal_chief.email)
+                locations = instance.locations.all().values_list('governorate__id', flat=True)
+                offices = Office.objects.filter(location_id__in=locations)
+                recipients.extend(
+                    [office.zonal_chief.email for office in offices if office.zonal_chief]
+                )
 
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,

@@ -1,4 +1,5 @@
 __author__ = 'unicef-leb-inn'
+
 from datetime import timedelta, datetime
 
 from django.template.loader import render_to_string
@@ -8,7 +9,6 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 from EquiTrack.factories import TripFactory, UserFactory
 from trips.models import Trip
 from trips.views import TripsApprovedView, TripsApi, TripsByOfficeView, TripActionView
-
 
 
 class ViewTest(TestCase):
@@ -52,7 +52,6 @@ class ViewTest(TestCase):
         force_authenticate(request, user=user)
         response = view(request)
         self.assertEquals(response.status_code, 200)
-
 
     def test_view_trip_action(self):
         factory = APIRequestFactory()

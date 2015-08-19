@@ -147,6 +147,5 @@ class TestTripForm(TestCase):
                                       'destination': 'Test2',
                                       'depart': datetime.now() + timedelta(hours=3),
                                       'arrive': datetime.now()})
-        print form
-        self.assertFalse(form.is_valid())  # This is returning false which means there is a field level error
+        self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'Arrival must be greater than departure')
