@@ -141,10 +141,11 @@ class TestTripForm(TestCase):
     #                      'STAFF DEVELOPMENT trip must be certified by Human '
     #                      'Resources before it can be completed')
 
-    # def test_form_validation_for_date_greater(self):
-    #     form = TravelRoutesForm(data={'origin': 'Test',
-    #                                   'destination': 'Test',
-    #                                   'depart': datetime.now() + timedelta(hours=3),
-    #                                   'arrive': datetime.now()})
-    #     self.assertFalse(form.is_valid())
-    #     self.assertEqual(form.non_field_errors()[0], 'Arrival must be greater than departure')
+    def test_form_validation_for_date_greater(self):
+        form = TravelRoutesForm(data={'trip': self.trip.id,
+                                      'origin': 'Test1',
+                                      'destination': 'Test2',
+                                      'depart': datetime.now() + timedelta(hours=3),
+                                      'arrive': datetime.now()})
+        self.assertFalse(form.is_valid())
+        self.assertEqual(form.non_field_errors()[0], 'Arrival must be greater than departure')
