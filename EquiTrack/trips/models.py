@@ -372,6 +372,57 @@ class TripFunds(models.Model):
         verbose_name_plural = u'Funding'
 
 
+# class TripLocation(models.Model):
+#     trip = models.ForeignKey(Trip)
+#     governorate = models.ForeignKey(Governorate)
+#     region = ChainedForeignKey(
+#         Region,
+#         chained_field="governorate",
+#         chained_model_field="governorate",
+#         show_all=False,
+#         auto_choose=True,
+#     )
+#     locality = ChainedForeignKey(
+#         Locality,
+#         chained_field="region",
+#         chained_model_field="region",
+#         show_all=False,
+#         auto_choose=True,
+#         null=True, blank=True
+#     )
+#     location = ChainedForeignKey(
+#         Location,
+#         chained_field="locality",
+#         chained_model_field="locality",
+#         show_all=False,
+#         auto_choose=False,
+#         null=True, blank=True
+#     )
+#
+#     content_type = models.ForeignKey(ContentType)
+#     object_id = models.PositiveIntegerField()
+#     content_object = GenericForeignKey('content_type', 'object_id')
+#
+#     def __unicode__(self):
+#         desc = u'{} -> {}'.format(
+#             self.governorate.name,
+#             self.region.name,
+#         )
+#         if self.locality:
+#             desc = u'{} -> {}'.format(
+#                 desc,
+#                 self.locality.name
+#             )
+#         if self.location:
+#             desc = u'{} -> {} ({})'.format(
+#                 desc,
+#                 self.location.name,
+#                 self.location.gateway.name
+#             )
+#
+#         return desc
+
+
 class TravelRoutes(models.Model):
 
     trip = models.ForeignKey(Trip)

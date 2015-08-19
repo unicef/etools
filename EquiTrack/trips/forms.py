@@ -4,6 +4,7 @@ from datetime import datetime
 
 from django.forms import ModelForm, fields, Form
 from django.core.exceptions import ValidationError
+from django.forms.models import BaseInlineFormSet
 
 from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
@@ -161,6 +162,24 @@ class TripForm(ModelForm):
         return cleaned_data
 
 
+# class LinkedLocationForm(ModelForm):
+#     def clean(self):
+#         cleaned_data = super(LinkedLocationForm, self).clean()
+#         print 'test'
+
+
+class RequiredInlineFormSet(BaseInlineFormSet):
+    """
+    Generates an inline formset that is required
+    """
+
+    def _construct_form(self, i, **kwargs):
+        """
+        Override the method to change the form attribute empty_permitted
+        """
+        form = super(RequiredInlineFormSet, self)._construct_form(i, **kwargs)
+        form.empty_permitted = False
+        return form
 
 
 class TripFilterByDateForm(Form):

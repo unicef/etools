@@ -7,6 +7,7 @@ from django.contrib.sites.models import Site
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.generic import GenericTabularInline
+from django.forms.models import BaseInlineFormSet
 
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin
@@ -22,13 +23,16 @@ from .models import (
     TripFunds,
     ActionPoint,
     TravelRoutes,
-    FileAttachment
+    FileAttachment,
+    # TripLocation,
 
 )
 from .forms import (
     TripForm,
     TravelRoutesForm,
+    RequiredInlineFormSet
 )
+
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -64,7 +68,11 @@ class ActionPointInlineAdmin(admin.StackedInline):
 
 
 class SitesVisitedInlineAdmin(GenericTabularInline):
+    def __init__(self, parent_model, admin_site):
+        super(SitesVisitedInlineAdmin, self).__init__(Trip, admin_site)
+
     model = LinkedLocation
+    # formset = RequiredInlineFormSet
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
     extra = 5
