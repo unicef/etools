@@ -24,13 +24,13 @@ from .models import (
     ActionPoint,
     TravelRoutes,
     FileAttachment,
-    # TripLocation,
+    TripLocation,
 
 )
 from .forms import (
     TripForm,
     TravelRoutesForm,
-    RequiredInlineFormSet
+    RequiredInlineFormSet,
 )
 
 from .exports import TripResource, ActionPointResource
@@ -67,15 +67,12 @@ class ActionPointInlineAdmin(admin.StackedInline):
     )
 
 
-class SitesVisitedInlineAdmin(GenericTabularInline):
-    def __init__(self, parent_model, admin_site):
-        super(SitesVisitedInlineAdmin, self).__init__(Trip, admin_site)
-
-    model = LinkedLocation
-    # formset = RequiredInlineFormSet
+class SitesVisitedInlineAdmin(admin.TabularInline):
+    model = TripLocation
+    formset = RequiredInlineFormSet
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
-    extra = 5
+    extra = 1
 
 
 class FileAttachmentInlineAdmin(GenericTabularInline):

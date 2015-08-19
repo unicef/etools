@@ -11,7 +11,7 @@ from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget, DateWidget
 
 from partners.models import PCA
-from .models import Trip, TravelRoutes
+from .models import Trip, TravelRoutes, TripLocation
 
 
 class TravelRoutesForm(ModelForm):
@@ -178,7 +178,8 @@ class RequiredInlineFormSet(BaseInlineFormSet):
         Override the method to change the form attribute empty_permitted
         """
         form = super(RequiredInlineFormSet, self)._construct_form(i, **kwargs)
-        form.empty_permitted = False
+        if self.instance.travel_type == Trip.PROGRAMME_MONITORING:
+            form.empty_permitted = False
         return form
 
 
