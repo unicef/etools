@@ -247,7 +247,7 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     AWP = u'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Partner Cooperation Agreement"),
-        #(AWP, u"Annual Work Plan"),
+        (AWP, u"Annual Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
