@@ -29,7 +29,6 @@ class Migration(SchemaMigration):
         # Deleting field 'FileAttachment.report'
         db.delete_column(u'trips_fileattachment', 'report')
 
-
         # User chose to not deal with backwards NULL issues for 'FileAttachment.file'
         raise RuntimeError("Cannot reverse this migration. 'FileAttachment.file' and its values cannot be restored.")
         
