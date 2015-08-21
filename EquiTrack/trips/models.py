@@ -39,7 +39,8 @@ class Office(models.Model):
         User,
         blank=True, null=True,
         related_name='offices',
-        verbose_name='Chief')
+        verbose_name='Chief'
+    )
     location = models.ForeignKey(
         Governorate,
         blank=True, null=True,

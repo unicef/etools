@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 __author__ = 'jcranwellward'
 
 import datetime
@@ -15,6 +13,7 @@ from generic_links.admin import GenericLinkStackedInline
 
 from .forms import PCAForm
 from EquiTrack.forms import AutoSizeTextForm
+from .forms import PCAForm, ResultChainAdminForm, ResultInlineAdminFormSet
 from tpm.models import TPMVisit
 from EquiTrack.utils import get_changeform_link
 from locations.models import Location
@@ -283,9 +282,12 @@ class SpotChecksAdminInline(ReadOnlyMixin, admin.StackedInline):
 class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
     model = ResultChain
+    form = ResultChainAdminForm
+    formset = ResultInlineAdminFormSet
+    max_num = 0
 
 
-class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
+class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PCAForm
     resource_class = PCAResource
     # Add custom exports
@@ -305,7 +307,7 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'amended_at',
         'partner',
         'result_structure',
-        'sectors',
+        'sector_names',
         'title',
         'unicef_cash_budget',
         'total_cash',
@@ -382,8 +384,17 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
             u'classes': (u'suit-tab suit-tab-locations',),
             'fields': ('location_sector', 'p_codes',),
         }),
+        (_('Import log frame'), {
+            u'classes': (u'suit-tab suit-tab-results',),
+            'fields': ('log_frame_sector', 'log_frame',),
+        }),
     )
-    remove_fields_if_read_only = ('location_sector', 'p_codes',)
+    remove_fields_if_read_only = (
+        'location_sector',
+        'p_codes',
+        'log_frame_sector',
+        'log_frame',
+    )
 
     actions = ['create_amendment']
 
@@ -405,9 +416,9 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'checks', u'Spot Checks'),
     )
 
-    # suit_form_includes = (
-    #     ('admin/partners/log_frame.html', 'top', 'results'),
-    # )
+    suit_form_includes = (
+        ('admin/partners/log_frame.html', 'middle', 'results'),
+    )
 
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
@@ -424,6 +435,22 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         return ''
     view_original.allow_tags = True
     view_original.short_description = 'View Original PCA'
+
+    def get_form(self, request, obj=None, **kwargs):
+        """
+        Set up the form with extra data and initial values
+        """
+        form = super(PartnershipAdmin, self).get_form(request, obj, **kwargs)
+
+        # add the current request and object to the form
+        form.request = request
+        form.obj = obj
+
+        if obj.sector_children:
+            form.base_fields['location_sector'].queryset = obj.sector_children
+            form.base_fields['log_frame_sector'].queryset = obj.sector_children
+
+        return form
 
     def save_formset(self, request, form, formset, change):
         """
@@ -445,41 +472,6 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
                             pca_location=obj,
                             assigned_by=request.user
                         )
-
-    def save_model(self, request, obj, form, change):
-        """
-        Overriding this to create locations from p_codes
-        """
-        p_codes = form.cleaned_data['p_codes']
-        location_sector = form.cleaned_data['location_sector']
-        if p_codes:
-            p_codes_list = p_codes.split()
-            created, notfound = 0, 0
-            for p_code in p_codes_list:
-                try:
-                    location = Location.objects.get(
-                        p_code=p_code
-                    )
-                    loc, new = GwPCALocation.objects.get_or_create(
-                        sector=location_sector,
-                        governorate=location.locality.region.governorate,
-                        region=location.locality.region,
-                        locality=location.locality,
-                        location=location,
-                        pca=obj
-                    )
-                    if new:
-                        created += 1
-                except Location.DoesNotExist:
-                    notfound += 1
-
-            messages.info(
-                request,
-                'Assigned {} locations, {} were not found'.format(
-                    created, notfound
-                ))
-
-        super(PcaAdmin, self).save_model(request, obj, form, change)
 
 
 class AssessmentAdminInline(admin.StackedInline):
@@ -564,11 +556,10 @@ class AgreementAdmin(admin.ModelAdmin):
     )
 
 
+admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Agreement, AgreementAdmin)
-admin.site.register(PCA, PcaAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 admin.site.register(FACE, FACEAdmin)
 admin.site.register(Assessment, AssessmentAdmin)
-

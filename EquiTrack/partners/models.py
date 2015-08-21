@@ -396,11 +396,19 @@ class PCA(AdminURLMixin, models.Model):
         return title
 
     @property
+    def sector_children(self):
+        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
+        return Sector.objects.filter(id__in=sectors)
+
+    @property
     def sector_id(self):
-        sectors = self.pcasector_set.all()
-        if sectors:
-            return sectors[0].sector.id
+        if self.sector_children:
+            return self.sector_children[0].id
         return 0
+
+    @property
+    def sector_names(self):
+        return u', '.join(self.sector_children.values_list('name', flat=True))
 
     @property
     def sum_budget(self):
@@ -501,12 +509,6 @@ class PCA(AdminURLMixin, models.Model):
         partner_budget = self.partner_contribution_budget \
             if self.partner_contribution_budget else 0
         self.total_cash = partner_budget + self.total_unicef_contribution()
-
-        # populate sectors display string
-        if self.pcasector_set.all().count():
-            self.sectors = ", ".join(
-                [sector.sector.name for sector in self.pcasector_set.all()]
-            )
 
         super(PCA, self).save(**kwargs)
 
@@ -806,7 +808,7 @@ models.signals.post_save.connect(FACE.notify_face_change, sender=FACE)
 
 class ResultChain(models.Model):
 
-    partnership = models.ForeignKey(PCA)
+    partnership = models.ForeignKey(PCA, related_name='results')
     result_type = models.ForeignKey(ResultType)
     result = ChainedForeignKey(
         Result,
@@ -820,7 +822,8 @@ class ResultChain(models.Model):
         chained_field="result",
         chained_model_field="result",
         show_all=False,
-        auto_choose=True
+        auto_choose=True,
+        blank=True, null=True
     )
     governorate = models.ForeignKey(
         Governorate,
@@ -831,10 +834,9 @@ class ResultChain(models.Model):
     )
 
     def __unicode__(self):
-        return u'{} -> {} -> {} -> {}'.format(
+        return u'{} -> {} -> {}'.format(
             self.result.result_structure.name,
             self.result.sector.name,
             self.result.__unicode__(),
-            self.indicator.name,
         )
 
