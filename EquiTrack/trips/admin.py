@@ -7,7 +7,6 @@ from django.contrib.sites.models import Site
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.generic import GenericTabularInline
-from django.forms.models import BaseInlineFormSet
 
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin
