@@ -34,7 +34,6 @@ from partners.exports import (
 )
 from partners.models import (
     PCA,
-    FACE,
     PCAFile,
     FileType,
     PCAGrant,
@@ -349,30 +348,41 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'unicef_managers',
     )
     fieldsets = (
-        (_('Info'), {
+        (_('Programme submission reference'), {
+            u'classes': (u'suit-tab suit-tab-info',),
+            'fields':
+                ('partnership_type',
+                 'result_structure',
+                 'title',
+                 'status',
+                 'initiation_date',
+                 'submission_date',
+                 'number',)
+        }),
+        (_('Organization information'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 ('partner',
                  'agreement',
-                 'partnership_type',
-                 'result_structure',
-                 ('number', 'amendment', 'amendment_number', 'view_original',),
-                 'title',
-                 'status',
-                 'initiation_date')
+                 'partner_mng_first_name',
+                 'partner_mng_last_name',
+                 'partner_mng_email',
+                 'partner_mng_phone',
+                 'partner_focal_first_name',
+                 'partner_focal_last_name',
+                 'partner_focal_email',
+                 'partner_focal_phone',)
         }),
-        (_('Dates'), {
+        (_('Programme information'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 (('start_date', 'end_date',),
                  ('signed_by_unicef_date', 'signed_by_partner_date',),
                  ('unicef_mng_first_name', 'unicef_mng_last_name', 'unicef_mng_email',),
-                 ('unicef_managers',),
-                 ('partner_mng_first_name', 'partner_mng_last_name', 'partner_mng_email',),
-                ),
+                 ('unicef_managers',),),
 
         }),
-        (_('Budget'), {
+        (_('Programme budget'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 ('partner_contribution_budget',
@@ -446,7 +456,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         form.request = request
         form.obj = obj
 
-        if obj.sector_children:
+        if obj and obj.sector_children:
             form.base_fields['location_sector'].queryset = obj.sector_children
             form.base_fields['log_frame_sector'].queryset = obj.sector_children
 
@@ -506,17 +516,6 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     )
 
 
-class FACEAdmin(admin.ModelAdmin):
-    list_display = (
-        u'ref',
-        u'pca',
-        u'submited_on',
-        u'amount',
-        u'status',
-        u'date_paid'
-    )
-
-
 class RecommendationsInlineAdmin(admin.TabularInline):
     model = Recommendation
     extra = 0
@@ -561,5 +560,4 @@ admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
-admin.site.register(FACE, FACEAdmin)
 admin.site.register(Assessment, AssessmentAdmin)

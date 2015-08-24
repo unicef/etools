@@ -21,6 +21,7 @@ from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
+from model_utils import Choices
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
@@ -247,7 +248,7 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     AWP = u'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Partner Cooperation Agreement"),
-        (AWP, u"Annual Work Plan"),
+        #(AWP, u"Annual Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -349,6 +350,10 @@ class PCA(AdminURLMixin, models.Model):
         help_text=u'The date when planning began with the partner'
 
     )
+    submission_date = models.DateField(
+        help_text=u'The date the partnership was submitted to the PRC',
+        null=True, blank=True,
+    )
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
@@ -357,9 +362,16 @@ class PCA(AdminURLMixin, models.Model):
     unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
     unicef_managers = models.ManyToManyField('auth.User', blank=True)
+
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
+    partner_mng_phone = models.CharField(max_length=64L, blank=True)
+
+    partner_focal_first_name = models.CharField(max_length=64L, blank=True)
+    partner_focal_last_name = models.CharField(max_length=64L, blank=True)
+    partner_focal_email = models.CharField(max_length=128L, blank=True)
+    partner_focal_phone = models.CharField(max_length=64L, blank=True)
 
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -420,87 +432,6 @@ class PCA(AdminURLMixin, models.Model):
         in_kind = self.in_kind_amount_budget if self.in_kind_amount_budget else 0
         return cash + in_kind
     total_unicef_contribution.short_description = 'Total Unicef contribution budget'
-
-    def make_amendment(self, user):
-        """
-        Creates an amendment (new record) of this partnership copying
-        over all values and related objects, marks the existing
-        partnership as non current and creates a manual restore point.
-        The user who created the amendment is also captured.
-        """
-        with transaction.atomic(), reversion.create_revision():
-
-            # make original as non current
-            original = self
-            original.current = False
-            original.save()
-
-            # copy base properties to new object
-            amendment = deepcopy(original)
-            amendment.pk = None
-            amendment.amendment = True
-            amendment.amended_at = datetime.datetime.now()
-            amendment.amendment_number += 1  # increment amendment count
-            amendment.original = original
-            amendment.save()
-
-            # make manual revision point
-            reversion.set_user(user)
-            reversion.set_comment("Amendment {} created for partnership: {}".format(
-                amendment.amendment_number,
-                amendment.number)
-            )
-
-        amendment.unicef_managers = original.unicef_managers.all()
-
-        # copy over grants
-        for grant in original.pcagrant_set.all():
-            PCAGrant.objects.create(
-                pca=amendment,
-                grant=grant.grant,
-                funds=grant.funds
-            )
-
-        # copy over sectors
-        for pca_sector in original.pcasector_set.all():
-            new_sector = PCASector.objects.create(
-                pca=amendment,
-                sector=pca_sector.sector
-            )
-
-            for output in pca_sector.pcasectoroutput_set.all():
-                PCASectorOutput.objects.create(
-                    pca_sector=new_sector,
-                    output=output.output
-                )
-
-            for goal in pca_sector.pcasectorgoal_set.all():
-                PCASectorGoal.objects.create(
-                    pca_sector=new_sector,
-                    goal=goal.goal
-                )
-
-            for activity in pca_sector.pcasectoractivity_set.all():
-                PCASectorActivity.objects.create(
-                    pca_sector=pca_sector,
-                    activity=activity.activity
-                )
-
-            # copy over indicators for sectors and reset programmed number
-            for pca_indicator in pca_sector.indicatorprogress_set.all():
-                IndicatorProgress.objects.create(
-                    pca_sector=new_sector,
-                    indicator=pca_indicator.indicator,
-                    programmed=0
-                )
-
-            # copy over intermediate results and activities
-            for pca_ir in pca_sector.pcasectorimmediateresult_set.all():
-                new_ir = PCASectorImmediateResult.objects.create(
-                    pca_sector=new_sector,
-                    Intermediate_result=pca_ir.Intermediate_result
-                )
-                new_ir.wbs_activities = pca_ir.wbs_activities.all()
 
     def save(self, **kwargs):
         """
@@ -752,58 +683,6 @@ class SpotCheck(models.Model):
     partner_agrees = models.BooleanField(
         default=False
     )
-
-
-class FACE(models.Model):
-
-    REQUESTED = u'requested'
-    ACKNOWLEDGED = u'acknowledged'
-    PAID = u'paid'
-    CANCELLED = u'cancelled'
-    FACE_STATUS = (
-        (REQUESTED, u"Requested"),
-        (ACKNOWLEDGED, u"Acknowledged"),
-        (PAID, u"Paid"),
-        (CANCELLED, u"Cancelled"),
-    )
-
-    ref = models.CharField(max_length=100)
-    pca = models.ForeignKey(PCA, related_name='face_refs')
-    submited_on = models.DateTimeField(auto_now_add=True)
-    amount = models.CharField(max_length=100, default=0)
-    status = models.CharField(choices=FACE_STATUS, max_length=100, default=REQUESTED)
-    date_paid = models.DateField(verbose_name='Paid On', null=True, blank=True)
-
-    class Meta:
-        verbose_name = 'FACE'
-
-    def __unicode__(self):
-        return self.ref
-
-    @classmethod
-    def notify_face_change(cls, sender, instance, created, **kwargs):
-        if instance.PAID and instance.date_paid:
-            response = requests.post(
-                'https://api.rapidpro.io/api/v1/sms.json',
-                headers={
-                    'Authorization': 'Token {}'.format(settings.RAPIDPRO_TOKEN),
-                    'content-type': 'application/json'
-                },
-                data=json.dumps(
-                    {
-                        "phone": [instance.pca.partner.phone_number],
-                        "text": "Hi {name}, payment for {pca} FACE Ref# {face} has been processed.".format(
-                            name=instance.pca.partner.name,
-                            pca=instance.pca.number,
-                            face=instance.ref
-                        )
-                    }
-                )
-
-            )
-            return response
-
-models.signals.post_save.connect(FACE.notify_face_change, sender=FACE)
 
 
 class ResultChain(models.Model):

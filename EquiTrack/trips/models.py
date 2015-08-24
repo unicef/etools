@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from smart_selects.db_fields import ChainedForeignKey
 from django.contrib.contenttypes.generic import (
     GenericForeignKey, GenericRelation
 )
@@ -20,7 +21,7 @@ from EquiTrack.mixins import AdminURLMixin
 # from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
-from locations.models import Governorate
+from locations.models import Governorate, Locality, Location, Region
 from . import emails
 
 
@@ -371,6 +372,53 @@ class TripFunds(models.Model):
     class Meta:
         verbose_name = u'Funding'
         verbose_name_plural = u'Funding'
+
+
+class TripLocation(models.Model):
+    trip = models.ForeignKey(Trip)
+    governorate = models.ForeignKey(Governorate)
+    region = ChainedForeignKey(
+        Region,
+        chained_field="governorate",
+        chained_model_field="governorate",
+        show_all=False,
+        auto_choose=True,
+    )
+    locality = ChainedForeignKey(
+        Locality,
+        chained_field="region",
+        chained_model_field="region",
+        show_all=False,
+        auto_choose=True,
+        null=True, blank=True
+    )
+    location = ChainedForeignKey(
+        Location,
+        chained_field="locality",
+        chained_model_field="locality",
+        show_all=False,
+        auto_choose=False,
+        null=True, blank=True
+    )
+
+    def __unicode__(self):
+        desc = u'{} -> {}'.format(
+            self.governorate.name,
+            self.region.name,
+        )
+        if self.locality:
+            desc = u'{} -> {}'.format(
+                desc,
+                self.locality.name
+            )
+        if self.location:
+            desc = u'{} -> {} ({})'.format(
+                desc,
+                self.location.name,
+                self.location.gateway.name
+            )
+
+        return desc
 
 
 class TravelRoutes(models.Model):

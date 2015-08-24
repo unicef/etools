@@ -15,6 +15,10 @@ register = template.Library()
 
 @register.simple_tag
 def show_log_frame(value):
+
+    if not value:
+        return ''
+
     pca = PCA.objects.get(id=int(value))
     results = pca.results.all()
     data = tablib.Dataset()

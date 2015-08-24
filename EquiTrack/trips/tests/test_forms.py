@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 from django.test import TestCase
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import TripFactory, UserFactory
+from EquiTrack.factories import TripFactory, UserFactory, PartnerFactory
 from trips.forms import TripForm, TravelRoutesForm
 
 
@@ -88,14 +88,6 @@ class TestTripForm(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'Please put the date the budget owner approved this Trip')
 
-    def test_form_validation_for_status_approved(self):
-        trip_dict = to_dict(self.trip)
-        trip_dict['travel_type'] = u'advocacy'
-        trip_dict['status'] = u'approved'
-        form = TripForm(data=trip_dict)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(form.non_field_errors()[0], 'Only the supervisor can approve this trip')
-
     def test_form_validation_for_ta_drafted_vision(self):
         trip_dict = to_dict(self.trip)
         trip_dict['travel_type'] = u'advocacy'
@@ -149,3 +141,14 @@ class TestTripForm(TestCase):
                                       'arrive': datetime.now()})
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'Arrival must be greater than departure')
+
+    def test_form_validation_for_programme_monitoring(self):
+        trip_dict = to_dict(self.trip)
+        trip_dict['travel_type'] = u'programme_monitoring'
+        trip_dict['status'] = u'submitted'
+        trip_dict['programme_assistant'] = UserFactory().id
+        trip_dict['pcas'] = PartnerFactory().id
+        form = TripForm(data=trip_dict)
+        self.assertFalse(form.is_valid())
+        # self.assertEqual(form.non_field_errors()[0],
+        #                  'Only the TA travel assistant can complete the trip')
