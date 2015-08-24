@@ -49,7 +49,8 @@ from partners.models import (
     Agreement,
     SpotCheck,
     Recommendation,
-    ResultChain
+    ResultChain,
+    DistributionPlan,
 )
 
 from partners.filters import (
@@ -63,7 +64,8 @@ from partners.filters import (
     PCAIndicatorFilter,
     PCAOutputFilter
 )
-from partners.mixins import ReadOnlyMixin, SectorMixin
+from supplies.models import SupplyItem
+from .mixins import ReadOnlyMixin, SectorMixin
 
 
 class PcaIRInlineAdmin(ReadOnlyMixin, SectorMixin, admin.StackedInline):
@@ -286,6 +288,11 @@ class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     max_num = 0
 
 
+class DistributionPlanInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-supplies'
+    model = DistributionPlan
+
+
 class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PCAForm
     resource_class = PCAResource
@@ -416,6 +423,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         LinksInlineAdmin,
         SpotChecksAdminInline,
         #ResultsInlineAdmin,
+        DistributionPlanInlineAdmin,
     )
 
     suit_form_tabs = (
@@ -423,7 +431,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'results', u'Results'),
         (u'locations', u'Locations'),
         (u'trips', u'Trips'),
-        (u'checks', u'Spot Checks'),
+        (u'supplies', u'Supplies'),
     )
 
     suit_form_includes = (
@@ -554,7 +562,7 @@ class AgreementAdmin(admin.ModelAdmin):
         u'partner_email',
     )
 
-
+admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)

@@ -43,7 +43,8 @@ from locations.models import (
     Location,
     Region,
 )
-from partners import emails
+from supplies.models import SupplyItem
+from . import emails
 
 User = get_user_model()
 
@@ -718,4 +719,12 @@ class ResultChain(models.Model):
             self.result.sector.name,
             self.result.__unicode__(),
         )
+
+
+class DistributionPlan(models.Model):
+
+    partnership = models.ForeignKey(PCA)
+    item = models.ForeignKey(SupplyItem)
+    location = models.ForeignKey(Region)
+    quantity = models.PositiveIntegerField()
 
