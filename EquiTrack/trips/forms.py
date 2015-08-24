@@ -52,6 +52,7 @@ class TripForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(TripForm, self).__init__(*args, **kwargs)
+        # self.data.update({'approved_by_supervisor': self.instance.approved_by_supervisor})
 
     class Meta:
         model = Trip
@@ -79,14 +80,13 @@ class TripForm(ModelForm):
         ta_drafted = cleaned_data.get(u'ta_drafted')
         vision_approver = cleaned_data.get(u'vision_approver')
         programme_assistant = cleaned_data.get(u'programme_assistant')
-        approved_by_supervisor = cleaned_data.get(u'approved_by_supervisor')
+        approved_by_supervisor = cleaned_data.get('approved_by_supervisor')
         date_supervisor_approved = cleaned_data.get(u'date_supervisor_approved')
         approved_by_budget_owner = cleaned_data.get(u'approved_by_budget_owner')
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         trip_report = cleaned_data.get(u'main_observations')
         ta_trip_took_place_as_planned = cleaned_data.get(u'ta_trip_took_place_as_planned')
-
 
         if to_date < from_date:
             raise ValidationError('The to date must be greater than the from date')
@@ -119,7 +119,15 @@ class TripForm(ModelForm):
                 'Please put the date the budget owner approved this Trip'
             )
 
-        #TODO: Debug this
+        if status == Trip.SUBMITTED and to_date < datetime.date(datetime.now()):
+            raise ValidationError(
+                'This trip\'s dates happened in the past and therefore cannot be submitted'
+            )
+
+        if status == Trip.APPROVED and not self.instance.approved_by_supervisor:
+            raise ValidationError(
+                'Only the supervisor can approve this trip'
+            )
 
         if status == Trip.APPROVED and ta_drafted:
             if not vision_approver:
