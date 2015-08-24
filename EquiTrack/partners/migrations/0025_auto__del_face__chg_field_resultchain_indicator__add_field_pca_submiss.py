@@ -11,7 +11,6 @@ class Migration(SchemaMigration):
         # Deleting model 'FACE'
         db.delete_table(u'partners_face')
 
-
         # Changing field 'ResultChain.indicator'
         db.alter_column(u'partners_resultchain', 'indicator_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['reports.Indicator'], null=True))
         # Adding field 'PCA.submission_date'
@@ -44,16 +43,8 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(default='', max_length=64L, blank=True),
                       keep_default=False)
 
-
         # Changing field 'PCA.agreement'
         db.alter_column(u'partners_pca', 'agreement_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['partners.Agreement'], null=True))
-        # Deleting field 'Agreement.signed_by_unicef_rep'
-        db.delete_column(u'partners_agreement', 'signed_by_unicef_rep_id')
-
-        # Adding field 'Agreement.signed_by'
-        db.add_column(u'partners_agreement', 'signed_by',
-                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='signed_pcas', null=True, to=orm['auth.User']),
-                      keep_default=False)
 
 
     def backwards(self, orm):
