@@ -88,7 +88,6 @@ class TripForm(ModelForm):
         trip_report = cleaned_data.get(u'main_observations')
         ta_trip_took_place_as_planned = cleaned_data.get(u'ta_trip_took_place_as_planned')
 
-
         if to_date < from_date:
             raise ValidationError('The to date must be greater than the from date')
 
@@ -118,6 +117,11 @@ class TripForm(ModelForm):
         if approved_by_budget_owner and not date_budget_owner_approved:
             raise ValidationError(
                 'Please put the date the budget owner approved this Trip'
+            )
+
+        if status == Trip.SUBMITTED and to_date < datetime.date(datetime.now()):
+            raise ValidationError(
+                'This trip\'s dates happened in the past and therefore cannot be submitted'
             )
 
         if status == Trip.APPROVED:
