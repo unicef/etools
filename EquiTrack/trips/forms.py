@@ -64,22 +64,22 @@ class TripForm(ModelForm):
 
     def clean(self):
         cleaned_data = super(TripForm, self).clean()
-        status = cleaned_data.get('status')
-        travel_type = cleaned_data.get('travel_type')
-        from_date = cleaned_data.get('from_date')
-        to_date = cleaned_data.get('to_date')
-        owner = cleaned_data.get('owner')
-        supervisor = cleaned_data.get('supervisor')
-        budget_owner = cleaned_data.get('budget_owner')
-        ta_required = cleaned_data.get('ta_required')
-        pcas = cleaned_data.get('pcas')
-        no_pca = cleaned_data.get('no_pca')
-        international_travel = cleaned_data.get('international_travel')
-        representative = cleaned_data.get('representative')
+        status = cleaned_data.get(u'status')
+        travel_type = cleaned_data.get(u'travel_type')
+        from_date = cleaned_data.get(u'from_date')
+        to_date = cleaned_data.get(u'to_date')
+        owner = cleaned_data.get(u'owner')
+        supervisor = cleaned_data.get(u'supervisor')
+        budget_owner = cleaned_data.get(u'budget_owner')
+        ta_required = cleaned_data.get(u'ta_required')
+        pcas = cleaned_data.get(u'pcas')
+        no_pca = cleaned_data.get(u'no_pca')
+        international_travel = cleaned_data.get(u'international_travel')
+        representative = cleaned_data.get(u'representative')
         ta_drafted = cleaned_data.get(u'ta_drafted')
         vision_approver = cleaned_data.get(u'vision_approver')
         programme_assistant = cleaned_data.get(u'programme_assistant')
-        approved_by_supervisor = cleaned_data.get('approved_by_supervisor')
+        approved_by_supervisor = cleaned_data.get(u'approved_by_supervisor')
         date_supervisor_approved = cleaned_data.get(u'date_supervisor_approved')
         approved_by_budget_owner = cleaned_data.get(u'approved_by_budget_owner')
         date_budget_owner_approved = cleaned_data.get(u'date_budget_owner_approved')
@@ -156,8 +156,6 @@ class TripForm(ModelForm):
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
-
-
 
 
 class TripFilterByDateForm(Form):
