@@ -1,7 +1,7 @@
 Django==1.6.2
 bpython==0.12
 django-braces==1.2.2
-django-model-utils==1.4.0
+django-model-utils==2.3.1
 logutils==0.3.3
 South==1.0
 psycopg2==2.5.1
