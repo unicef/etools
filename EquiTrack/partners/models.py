@@ -351,7 +351,7 @@ class PCA(AdminURLMixin, models.Model):
 
     )
     submission_date = models.DateField(
-        help_text=u'The date the partnership was submitted to the PRC',
+        help_text=u'The date the partner submitted complete partnership documents',
         null=True, blank=True,
     )
     signed_by_unicef_date = models.DateField(null=True, blank=True)

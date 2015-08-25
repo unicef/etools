@@ -348,22 +348,17 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'unicef_managers',
     )
     fieldsets = (
-        (_('Programme submission reference'), {
-            u'classes': (u'suit-tab suit-tab-info',),
-            'fields':
-                ('partnership_type',
-                 'result_structure',
-                 'title',
-                 'status',
-                 'initiation_date',
-                 'submission_date',
-                 'number',)
-        }),
-        (_('Organization information'), {
+        (_('Programme overview'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 ('partner',
                  'agreement',
+                 'partnership_type',
+                 'result_structure',
+                 ('title','status',),
+                 'initiation_date',
+                 'submission_date',
+                 'number',
                  'partner_mng_first_name',
                  'partner_mng_last_name',
                  'partner_mng_email',
@@ -371,25 +366,33 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
                  'partner_focal_first_name',
                  'partner_focal_last_name',
                  'partner_focal_email',
-                 'partner_focal_phone',)
-        }),
-        (_('Programme information'), {
-            u'classes': (u'suit-tab suit-tab-info',),
-            'fields':
-                (('start_date', 'end_date',),
-                 ('signed_by_unicef_date', 'signed_by_partner_date',),
-                 ('unicef_mng_first_name', 'unicef_mng_last_name', 'unicef_mng_email',),
-                 ('unicef_managers',),),
+                 'partner_focal_phone',
 
+                 ('unicef_managers',),
+                 ('start_date', 'end_date',),
+                 'partner_contribution_budget',
+                 ('unicef_cash_budget', 'in_kind_amount_budget', 'total_unicef_contribution',),
+                 'total_cash',)
         }),
-        (_('Programme budget'), {
+        (_('Signatures and date'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
-                ('partner_contribution_budget',
-                 ('unicef_cash_budget', 'in_kind_amount_budget', 'total_unicef_contribution',),
-                 'total_cash',
-                ),
+                (
+                 ('signed_by_unicef_date', 'signed_by_partner_date',),
+                 ('unicef_mng_first_name', 'unicef_mng_last_name', 'unicef_mng_email',),)
         }),
+        # (_('Programme information'), {
+        #     u'classes': (u'suit-tab suit-tab-info',),
+        #     'fields':
+        #         (),
+        #
+        # }),
+        # (_('Programme budget'), {
+        #     u'classes': (u'suit-tab suit-tab-info',),
+        #     'fields':
+        #         (
+        #         ),
+        # }),
         (_('Add sites by P Code'), {
             u'classes': (u'suit-tab suit-tab-locations',),
             'fields': ('location_sector', 'p_codes',),
