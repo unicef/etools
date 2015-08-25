@@ -292,13 +292,13 @@ class PCA(AdminURLMixin, models.Model):
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
     )
-    PD = u'pd'
+    PCA = u'pca'
     MOU = u'mou'
     SSFA = u'ssfa'
     IC = u'ic'
     DCT = u'dct'
     PARTNERSHIP_TYPES = (
-        (PD, u'Programme Document'),
+        (PCA, u'Partner Cooperation Agreement'),
         (MOU, u'Memorandum of Understanding'),
         (SSFA, u'Small Scale Funding Agreement'),
         (IC, u'Institutional Contract'),
