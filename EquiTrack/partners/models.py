@@ -316,7 +316,7 @@ class PCA(AdminURLMixin, models.Model):
     )
     partnership_type = models.CharField(
         choices=PARTNERSHIP_TYPES,
-        default=PD,
+        default=PCA,
         blank=True, null=True,
         max_length=255
     )
