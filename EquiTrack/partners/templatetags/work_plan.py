@@ -14,7 +14,7 @@ from partners.models import (
 register = template.Library()
 
 @register.simple_tag
-def show_log_frame(value):
+def show_work_plan(value):
 
     if not value:
         return ''
@@ -22,7 +22,7 @@ def show_log_frame(value):
     pca = PCA.objects.get(id=int(value))
     results = pca.results.all()
     data = tablib.Dataset()
-    log_frame = SortedDict()
+    work_plan = SortedDict()
     governorates = SortedDict()
 
     for result in results:
@@ -30,7 +30,7 @@ def show_log_frame(value):
             governorates[result.governorate] = 0
 
     for result in results:
-        row = log_frame.get(result.result.code, SortedDict())
+        row = work_plan.get(result.result.code, SortedDict())
         row['Code'] = result.result.code
         row['Result Type'] = result.result_type.name
         row['Result'] = result.result.name
@@ -39,10 +39,10 @@ def show_log_frame(value):
         row.update(governorates)
         if result.governorate:
             row[result.governorate.name] = result.target or 0
-        log_frame[result.result.code] = row
+        work_plan[result.result.code] = row
 
-    if log_frame:
-        for row in log_frame.values():
+    if work_plan:
+        for row in work_plan.values():
             if not data.headers or len(data.headers) < len(row.values()):
                 data.headers = row.keys()
             data.append(row.values())

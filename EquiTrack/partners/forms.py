@@ -22,7 +22,8 @@ from .models import (
     PCA,
     GwPCALocation,
     ResultChain,
-    IndicatorProgress
+    IndicatorProgress,
+    AmendmentLog
 )
 
 
@@ -51,10 +52,14 @@ class IndicatorAdminModelForm(forms.ModelForm):
         self.fields['indicator'].queryset = []
 
 
-class ResultInlineAdminFormSet(BaseInlineFormSet):
+class ParentInlineAdminFormSet(BaseInlineFormSet):
+    """
+    Passes the parent instance to the form constructor for easy
+    access by child inline forms to use for conditional filtering
+    """
     def _construct_form(self, i, **kwargs):
         kwargs['parent_object'] = self.instance
-        return super(ResultInlineAdminFormSet, self)._construct_form(i, **kwargs)
+        return super(ParentInlineAdminFormSet, self)._construct_form(i, **kwargs)
 
 
 class ResultChainAdminForm(forms.ModelForm):
@@ -88,6 +93,24 @@ class ResultChainAdminForm(forms.ModelForm):
                 self.fields['indicator'].queryset = indicators.filter(result_id=self.instance.result_id)
 
 
+class AmendmentForm(forms.ModelForm):
+
+    class Meta:
+        model = AmendmentLog
+
+    def __init__(self, *args, **kwargs):
+        """
+        Only display the amendments related to this partnership
+        """
+        if 'parent_object' in kwargs:
+            self.parent_partnership = kwargs.pop('parent_object')
+
+        super(AmendmentForm, self).__init__(*args, **kwargs)
+
+        self.fields['amendment'].queryset = self.parent_partnership.amendments_list \
+            if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
+
+
 class PCAForm(forms.ModelForm):
 
     # fields needed to assign locations from p_codes
@@ -98,8 +121,8 @@ class PCAForm(forms.ModelForm):
     )
 
     # fields needed to import log frames/work plans from excel
-    log_frame = forms.FileField(required=False)
-    log_frame_sector = forms.ModelChoiceField(
+    work_plan = forms.FileField(required=False)
+    work_plan_sector = forms.ModelChoiceField(
         required=False,
         queryset=Sector.objects.all()
     )
@@ -142,14 +165,14 @@ class PCAForm(forms.ModelForm):
                 created, notfound
             ))
 
-    def import_results_from_log_frame(self, log_frame, sector):
+    def import_results_from_work_plan(self, work_plan, sector):
         """
-        Matches results from the log frame to country result structure.
+        Matches results from the work plan to country result structure.
         Will try to match indicators one to one or by name, this can be ran
-        multiple times to continually update the log frame
+        multiple times to continually update the work plan
         """
         try:  # first try to grab the excel as a table...
-            data = pandas.read_excel(log_frame, index_col=0)
+            data = pandas.read_excel(work_plan, index_col=0)
         except Exception as exp:
             raise ValidationError(exp.message)
 
@@ -206,8 +229,8 @@ class PCAForm(forms.ModelForm):
         p_codes =cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
 
-        log_frame = self.cleaned_data[u'log_frame']
-        log_frame_sector = self.cleaned_data[u'log_frame_sector']
+        work_plan = self.cleaned_data[u'work_plan']
+        work_plan_sector = self.cleaned_data[u'work_plan_sector']
 
         if partnership_type == PCA.PD and not agreement:
             raise ValidationError(
@@ -222,12 +245,12 @@ class PCAForm(forms.ModelForm):
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
-        if log_frame and not log_frame_sector:
+        if work_plan and not work_plan_sector:
             raise ValidationError(
                 u'Please select a sector to import results against'
             )
 
-        if log_frame and log_frame_sector:
-            self.import_results_from_log_frame(log_frame, log_frame_sector)
+        if work_plan and work_plan_sector:
+            self.import_results_from_work_plan(work_plan, work_plan_sector)
 
         return cleaned_data
