@@ -8,33 +8,22 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding field 'FileAttachment.trip'
-        db.add_column(u'trips_fileattachment', 'trip',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['trips.Trip'], null=True, blank=True),
-                      keep_default=False)
+        # Adding model 'TripLocation'
+        db.create_table(u'trips_triplocation', (
+            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
+            ('trip', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['trips.Trip'])),
+            ('governorate', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['locations.Governorate'])),
+            ('region', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['locations.Region'])),
+            ('locality', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['locations.Locality'], null=True, blank=True)),
+            ('location', self.gf('smart_selects.db_fields.ChainedForeignKey')(to=orm['locations.Location'], null=True, blank=True)),
+        ))
+        db.send_create_signal(u'trips', ['TripLocation'])
 
-        # Adding field 'FileAttachment.report'
-        db.add_column(u'trips_fileattachment', 'report',
-                      self.gf('django.db.models.fields.files.FileField')(default='', max_length=100),
-                      keep_default=False)
-
-
-        # Changing field 'FileAttachment.file'
-        db.alter_column(u'trips_fileattachment', 'file_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['filer.File'], null=True))
 
     def backwards(self, orm):
-        # Deleting field 'FileAttachment.trip'
-        db.delete_column(u'trips_fileattachment', 'trip_id')
+        # Deleting model 'TripLocation'
+        db.delete_table(u'trips_triplocation')
 
-        # Deleting field 'FileAttachment.report'
-        db.delete_column(u'trips_fileattachment', 'report')
-
-        # User chose to not deal with backwards NULL issues for 'FileAttachment.file'
-        raise RuntimeError("Cannot reverse this migration. 'FileAttachment.file' and its values cannot be restored.")
-        
-        # The following code is provided here to aid in writing a correct migration
-        # Changing field 'FileAttachment.file'
-        db.alter_column(u'trips_fileattachment', 'file_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['filer.File']))
 
     models = {
         u'activityinfo.database': {
@@ -113,14 +102,14 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "('name',)", 'unique_together': "(('parent', 'name'),)", 'object_name': 'Folder'},
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            'lft': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
+            u'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
+            u'lft': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'filer_owned_folders'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'parent': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'children'", 'null': 'True', 'to': "orm['filer.Folder']"}),
-            'rght': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            'tree_id': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
+            u'rght': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
+            u'tree_id': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
             'uploaded_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'})
         },
         u'funds.donor': {
@@ -133,6 +122,55 @@ class Migration(SchemaMigration):
             'donor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['funds.Donor']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128L'})
+        },
+        u'locations.gatewaytype': {
+            'Meta': {'ordering': "['name']", 'object_name': 'GatewayType'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '64L'})
+        },
+        u'locations.governorate': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Governorate'},
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#EFBAE1'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '45L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'})
+        },
+        u'locations.locality': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Locality'},
+            'cad_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
+            'cas_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
+            'cas_code_un': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
+            'cas_village_name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#945232'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'}),
+            'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Region']"})
+        },
+        u'locations.location': {
+            'Meta': {'ordering': "['name']", 'unique_together': "(('name', 'gateway', 'p_code'),)", 'object_name': 'Location'},
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'latitude': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
+            'locality': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Locality']"}),
+            'longitude': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '254L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'}),
+            'point': ('django.contrib.gis.db.models.fields.PointField', [], {'null': 'True', 'blank': 'True'})
+        },
+        u'locations.region': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Region'},
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#6947E9'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
+            'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '45L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'})
         },
         u'partners.filetype': {
             'Meta': {'object_name': 'FileType'},
@@ -245,14 +283,15 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
             'report': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
-            'trip': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Trip']", 'null': 'True', 'blank': 'True'}),
+            'trip': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "u'files'", 'null': 'True', 'to': u"orm['trips.Trip']"}),
             'type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.FileType']"})
         },
         u'trips.office': {
             'Meta': {'object_name': 'Office'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']", 'null': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'zonal_chief': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'zonal_chief'", 'null': 'True', 'to': u"orm['auth.User']"})
+            'zonal_chief': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'offices'", 'null': 'True', 'to': u"orm['auth.User']"})
         },
         u'trips.travelroutes': {
             'Meta': {'object_name': 'TravelRoutes'},
@@ -300,6 +339,8 @@ class Migration(SchemaMigration):
             'ta_drafted_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'ta_reference': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True', 'blank': 'True'}),
             'ta_required': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'ta_trip_final_claim': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'ta_trip_repay_travel_allowance': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'ta_trip_took_place_as_planned': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'to_date': ('django.db.models.fields.DateField', [], {}),
             'transport_booked': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -314,6 +355,15 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'trip': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Trip']"}),
             'wbs': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.WBS']"})
+        },
+        u'trips.triplocation': {
+            'Meta': {'object_name': 'TripLocation'},
+            'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'locality': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Locality']", 'null': 'True', 'blank': 'True'}),
+            'location': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Location']", 'null': 'True', 'blank': 'True'}),
+            'region': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Region']"}),
+            'trip': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Trip']"})
         }
     }
 
