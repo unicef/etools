@@ -1,13 +1,12 @@
+from __future__ import absolute_import
+
 __author__ = 'jcranwellward'
 
 from django.conf.urls import patterns, url
 
 from .views import (
     LocationView,
-    ValidatePCANumberView,
-    CreateFACERequestView,
-    PcaView,
-    PcaPDFView
+    PcaView
 )
 
 

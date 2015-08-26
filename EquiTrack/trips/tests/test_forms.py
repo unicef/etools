@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 from django.test import TestCase
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import TripFactory, UserFactory
+from EquiTrack.factories import TripFactory, UserFactory, PartnerFactory
 from trips.forms import TripForm, TravelRoutesForm
 from trips.models import Trip
 
@@ -55,7 +55,6 @@ class TestTripForm(TestCase):
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'The to date must be greater than the from date')
-
 
     def test_form_validation_for_past_trip(self):
         trip_dict = to_dict(self.trip)
@@ -170,3 +169,14 @@ class TestTripForm(TestCase):
                                       'arrive': datetime.now()})
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'Arrival must be greater than departure')
+
+    def test_form_validation_for_programme_monitoring_2(self):
+        trip_dict = to_dict(self.trip)
+        trip_dict['travel_type'] = u'programme_monitoring'
+        trip_dict['status'] = u'submitted'
+        trip_dict['programme_assistant'] = UserFactory().id
+        trip_dict['pcas'] = PartnerFactory().id
+        form = TripForm(data=trip_dict)
+        self.assertFalse(form.is_valid())
+        # self.assertEqual(form.non_field_errors()[0],
+        #                  'Only the TA travel assistant can complete the trip')

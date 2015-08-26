@@ -128,6 +128,7 @@ class IndicatorAdmin(ImportExportModelAdmin):
         'name',
         'sector',
         'result_structure',
+        'result',
         'in_activity_info',
         'view_on_dashboard',
     )

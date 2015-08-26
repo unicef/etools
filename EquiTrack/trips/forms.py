@@ -4,13 +4,14 @@ from datetime import datetime
 
 from django.forms import ModelForm, fields, Form
 from django.core.exceptions import ValidationError
+from django.forms.models import BaseInlineFormSet
 
 from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget, DateWidget
 
 from partners.models import PCA
-from .models import Trip, TravelRoutes
+from .models import Trip, TravelRoutes, TripLocation
 
 
 class TravelRoutesForm(ModelForm):
@@ -52,6 +53,7 @@ class TripForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(TripForm, self).__init__(*args, **kwargs)
+        # self.data.update({'approved_by_supervisor': self.instance.approved_by_supervisor})
 
     class Meta:
         model = Trip
@@ -156,6 +158,21 @@ class TripForm(ModelForm):
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
+
+
+class RequiredInlineFormSet(BaseInlineFormSet):
+    """
+    Generates an inline formset that is required
+    """
+
+    def _construct_form(self, i, **kwargs):
+        """
+        Override the method to change the form attribute empty_permitted
+        """
+        form = super(RequiredInlineFormSet, self)._construct_form(i, **kwargs)
+        if self.instance.travel_type == Trip.PROGRAMME_MONITORING:
+            form.empty_permitted = False
+        return form
 
 
 class TripFilterByDateForm(Form):

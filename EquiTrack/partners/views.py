@@ -1,19 +1,17 @@
+from __future__ import absolute_import
+
 __author__ = 'jcranwellward'
 
 from datetime import datetime
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.parsers import FormParser
-from easy_pdf.views import PDFTemplateView
 
 from django.forms.models import model_to_dict
 
 from partners.models import FACE
 # from partners.exports import render_to_pdf
 from locations.models import Location
-from .serializers import LocationSerializer, RapidProRequest, PartnershipSerializer, GWLocationSerializer
+from .serializers import LocationSerializer, PartnershipSerializer
 
 from partners.models import (
     PCA,
