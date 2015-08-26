@@ -330,6 +330,7 @@ THIRD_PARTY_APPS = (
     'paintstore',
     'messages_extends',
     'corsheaders',
+    'easy_pdf'
 )
 
 # Apps specific for this project go here.

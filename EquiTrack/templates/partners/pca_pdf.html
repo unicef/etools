@@ -1,0 +1,77 @@
+{% extends "easy_pdf/base.html" %}
+{% load humanize %}
+
+{% block style_base %}
+        {% comment %}
+            See DEFAULT_CSS in https://github.com/chrisglass/xhtml2pdf/blob/master/xhtml2pdf/default.py
+            for base style.
+        {% endcomment %}
+
+    {% block layout_style %}
+        <style type="text/css">
+            @page {
+                size: {{ pagesize|default:"letter" }};
+                margin-left: 2.0cm;
+                margin-right: 2.0cm;
+                margin-top: 2.0cm;
+                margin-bottom: 2cm;
+                @frame header {
+                    -pdf-frame-content: page-header;
+                    margin-top: 0cm;
+                    margin-right: 0mm;
+                    margin-bottom: 0.3cm;
+                    margin-left: 0cm;
+                    background-color: #0099ff;
+                height: 2cm;
+                }
+                @frame footer {
+                    -pdf-frame-content: page-footer;
+{#                    bottom: 0cm;#}
+                    margin-left: 1cm;
+                    margin-right: 1cm;
+                }
+            }
+        </style>
+    {%endblock%}
+    {% block extra_style %}
+        <style type="text/css">
+        #page-header {
+            background-color: #0099ff;
+            color: #ffffff;
+            line-height: 1.7cm;
+        }
+        #page-footer{
+            -pdf-frame-content: page-footer;
+{#            bottom: 0cm;#}
+            margin-left: 1cm;
+            margin-right: 1cm;
+            color: #0099ff;
+            line-height: 1.7cm;
+            background-color: #0099ff;
+        }
+        </style>
+    {% endblock %}
+{% endblock %}
+
+{% block content %}
+    <div id="page-header">
+{#    <img src="{{ STATIC_URL }}img/091008_UNICEFLogoWhTrans_3-19-15.png">#}
+    UNICEF
+    </div>
+
+    <div id="content">
+        <h1>{{ pca.number }} - {{ pca.title }}</h1>
+
+        <div id="pca-details">
+            <div>Partner: {{ pca.partner }}</div>
+            <div>agreement type: {{ pca.partnership_type }}</div>
+
+        </div>
+    </div>
+
+    <div id="page-footer">
+    © Copyright 2015 UNICEF. All Rights Reserved.
+    </div>
+
+
+{% endblock %}

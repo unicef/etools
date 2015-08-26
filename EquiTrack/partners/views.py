@@ -6,8 +6,12 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from rest_framework.parsers import FormParser
+from easy_pdf.views import PDFTemplateView
+
+from django.forms.models import model_to_dict
 
 from partners.models import FACE
+# from partners.exports import render_to_pdf
 from locations.models import Location
 from .serializers import LocationSerializer, RapidProRequest, PartnershipSerializer, GWLocationSerializer
 
@@ -18,6 +22,33 @@ from partners.models import (
     GwPCALocation
 )
 
+
+class PcaPDFView(PDFTemplateView):
+    template_name = "partners/pca_pdf.html"
+
+    def get_context_data(self, **kwargs):
+        pca_id = self.kwargs.get('pca', 270)
+        pca = PCA.objects.filter(id=pca_id)[0]
+        pca_dict = model_to_dict(pca)
+        p = pca_dict['partner']
+        pca_dict['partner'] = pca.partner.name
+
+        return super(PcaPDFView, self).get_context_data(
+            pagesize="Letter",
+            title="Partnership",
+            pca=pca_dict,
+            **kwargs
+        )
+
+# def myview(request):
+#     #Retrieve data or whatever you need
+#     return render_to_pdf(
+#             'mytemplate.html',
+#             {
+#                 'pagesize':'A4',
+#                 'mylist': results,
+#             }
+#         )
 
 class PcaView(ListAPIView):
 
