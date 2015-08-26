@@ -271,23 +271,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         ]:
             fields.remove(u'status')
 
-        if trip and trip.status == Trip.APPROVED:
-            if trip.ta_required is True and trip.ta_trip_took_place_as_planned is False and request.user in [
-                trip.travel_assistant
-            ]:
-                fields.remove(u'status')
-            elif trip.ta_required is True and trip.ta_trip_took_place_as_planned is True and request.user in [
-                trip.owner,
-                trip.travel_assistant,
-                trip.programme_assistant
-            ]:
-                fields.remove(u'status')
-            elif trip.ta_required is False and request.user in [
-                trip.owner,
-                trip.travel_assistant,
-                trip.programme_assistant
-            ]:
-                fields.remove(u'status')
+        if trip and trip.status == Trip.APPROVED and request.user in [
+            trip.owner,
+            trip.travel_assistant,
+            trip.programme_assistant
+        ]:
+            fields.remove(u'status')
 
         if trip and request.user == trip.supervisor:
             fields.remove(u'approved_by_supervisor')
@@ -319,6 +308,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(TripReportAdmin, self).get_form(request, obj, **kwargs)
+        form.request = request
         try:
             user_profile = request.user.get_profile()
             form.base_fields['owner'].initial = request.user
