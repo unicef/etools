@@ -5,7 +5,6 @@ __author__ = 'jcranwellward'
 import pandas
 
 from django import forms
-from django.forms.models import BaseInlineFormSet
 from django.contrib import messages
 #from autocomplete_light import forms
 from django.core.exceptions import (
@@ -16,6 +15,7 @@ from django.core.exceptions import (
 
 from suit.widgets import AutosizedTextarea
 
+from EquiTrack.forms import RequireOneFormSet
 from locations.models import Location
 from reports.models import Sector, Result, Indicator
 from .models import (
@@ -23,7 +23,10 @@ from .models import (
     GwPCALocation,
     ResultChain,
     IndicatorProgress,
-    AmendmentLog
+    AmendmentLog,
+    Agreement,
+    AuthorizedOfficer,
+    PartnerStaffMember,
 )
 
 
@@ -50,16 +53,6 @@ class IndicatorAdminModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(IndicatorAdminModelForm, self).__init__(*args, **kwargs)
         self.fields['indicator'].queryset = []
-
-
-class ParentInlineAdminFormSet(BaseInlineFormSet):
-    """
-    Passes the parent instance to the form constructor for easy
-    access by child inline forms to use for conditional filtering
-    """
-    def _construct_form(self, i, **kwargs):
-        kwargs['parent_object'] = self.instance
-        return super(ParentInlineAdminFormSet, self)._construct_form(i, **kwargs)
 
 
 class ResultChainAdminForm(forms.ModelForm):
@@ -111,7 +104,76 @@ class AmendmentForm(forms.ModelForm):
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
 
 
-class PCAForm(forms.ModelForm):
+class AuthorizedOfficesFormset(RequireOneFormSet):
+
+    def __init__(self, data=None, files=None, instance=None,
+                 save_as_new=False, prefix=None, queryset=None, **kwargs):
+        super(AuthorizedOfficesFormset, self).__init__(data=data, files=files, instance=instance,
+                 save_as_new=save_as_new, prefix=prefix, queryset=queryset, **kwargs)
+        self.required = False
+
+    def _construct_form(self, i, **kwargs):
+        form = super(AuthorizedOfficesFormset, self)._construct_form(i, **kwargs)
+        if self.instance.signed_by_partner_date:
+            self.required = True
+        return form
+
+
+class AuthorizedOfficersForm(forms.ModelForm):
+
+    class Meta:
+        model = AuthorizedOfficer
+
+    def __init__(self, *args, **kwargs):
+        """
+        Only display the amendments related to this partnership
+        """
+        if 'parent_object' in kwargs:
+            self.parent_agreement = kwargs.pop('parent_object')
+
+        super(AuthorizedOfficersForm, self).__init__(*args, **kwargs)
+
+        self.fields['officer'].queryset = PartnerStaffMember.objects.filter(
+            partner=self.parent_agreement.partner
+        ) if hasattr(self, 'parent_agreement') else PartnerStaffMember.objects.none()
+
+
+class AgreementForm(forms.ModelForm):
+
+    class Meta:
+        model = Agreement
+
+    def __init__(self, *args, **kwargs):
+        super(AgreementForm, self).__init__(*args, **kwargs)
+        self.fields['start'].required = True
+        self.fields['end'].required = True
+
+    def clean(self):
+        cleaned_data = super(AgreementForm, self).clean()
+
+        partner = cleaned_data[u'partner']
+        agreement_type = cleaned_data[u'agreement_type']
+        start = cleaned_data[u'start']
+        end = cleaned_data[u'end']
+
+        agreements = Agreement.objects.filter(
+            partner=partner,
+            start__lte=start,
+            end__gte=end
+        )
+        if self.instance:
+            agreements = agreements.exclude(id=self.instance.id)
+        if agreements:
+            raise ValidationError(
+                u'You can only have one current {} per partner'.format(
+                    agreement_type
+                )
+            )
+
+        return cleaned_data
+
+
+class PartnershipForm(forms.ModelForm):
 
     # fields needed to assign locations from p_codes
     p_codes = forms.CharField(widget=forms.Textarea, required=False)
@@ -222,7 +284,7 @@ class PCAForm(forms.ModelForm):
         """
         Add elements to the partnership based on imports
         """
-        cleaned_data = super(PCAForm, self).clean()
+        cleaned_data = super(PartnershipForm, self).clean()
 
         partnership_type = cleaned_data[u'partnership_type']
         agreement = cleaned_data[u'agreement']

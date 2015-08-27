@@ -13,7 +13,7 @@ from reversion import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
-from EquiTrack.forms import AutoSizeTextForm
+from EquiTrack.forms import AutoSizeTextForm, ParentInlineAdminFormSet
 from EquiTrack.utils import get_changeform_link
 from tpm.models import TPMVisit
 from locations.models import Location
@@ -69,10 +69,12 @@ from .filters import (
 )
 from .mixins import ReadOnlyMixin, SectorMixin
 from .forms import (
-    PCAForm,
+    PartnershipForm,
     ResultChainAdminForm,
-    ParentInlineAdminFormSet,
     AmendmentForm,
+    AgreementForm,
+    AuthorizedOfficersForm,
+    AuthorizedOfficesFormset,
 )
 
 
@@ -336,7 +338,7 @@ class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
 
 
 class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
-    form = PCAForm
+    form = PartnershipForm
     resource_class = PCAResource
     # Add custom exports
     formats = (
@@ -594,15 +596,20 @@ class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
 
 class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     model = AuthorizedOfficer
-    verbose_name = "Authorized Officer"
-    verbose_name_plural = "Authorized Officers"
+    form = AuthorizedOfficersForm
+    formset = AuthorizedOfficesFormset
+    verbose_name = "Partner Authorized Officer"
+    verbose_name_plural = "Partner Authorized Officers"
+    extra = 1
 
 
 class AgreementAdmin(admin.ModelAdmin):
+    form = AgreementForm
     fields = (
         u'partner',
         u'agreement_type',
         u'attached_agreement',
+        (u'start', u'end',),
         u'signed_by_unicef_date',
         u'signed_by',
         u'signed_by_partner_date',
@@ -611,7 +618,6 @@ class AgreementAdmin(admin.ModelAdmin):
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
-
 
 
 admin.site.register(PCA, PartnershipAdmin)

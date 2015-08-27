@@ -296,15 +296,20 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     )
 
     def __unicode__(self):
-        return u'{} for {}'.format(
+        return u'{} for {} ({} - {})'.format(
             self.agreement_type,
-            self.partner.name
+            self.partner.name,
+            self.start.strftime('%d-%m-%Y'),
+            self.end.strftime('%d-%m-%Y')
         )
 
 
 class AuthorizedOfficer(models.Model):
     agreement = models.ForeignKey(Agreement)
     officer = models.ForeignKey(PartnerStaffMember)
+
+    def __unicode__(self):
+        return self.officer
 
 
 class PCA(AdminURLMixin, models.Model):
@@ -352,7 +357,12 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
         help_text=u'Which result structure does this partnership report under?'
     )
-    number = models.CharField(max_length=45L, blank=True, default=u'UNASSIGNED')
+    number = models.CharField(
+        max_length=45L,
+        blank=True,
+        default=u'UNASSIGNED',
+        help_text=u'PRC Reference Number'
+    )
     title = models.CharField(max_length=256L)
     status = models.CharField(
         max_length=32L,
