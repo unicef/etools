@@ -265,7 +265,7 @@
             <div class="panel-heading">
                  <h3 class="panel-title">
                      <i class="fa fa-pencil"></i>&nbsp;
-                     My PCAs
+                     My Partnerships
                  </h3>
                     <div class="actions pull-right">
                         <i class="fa fa-chevron-down"></i>
@@ -276,11 +276,16 @@
             <div class="panel-body" style="max-height: 400px; min-height: 400px; overflow-y: scroll;">
                 <div class="list-group">
                     {% for pca in pcas %}
-                    <a href="{% url 'admin:partners_pca_change' pca.id %}" class="list-group-item">
-                        {{ pca.number }} - {{ pca.title }}
-                        <span class="pull-right text-muted small"><span class="label label-success">${{ pca.total_cash|intcomma }}</span>
-                        </span>
-                    </a>
+                         {% ifchanged pca.number %}
+                            <a href="{% url 'admin:partners_pca_change' pca.id %}" class="list-group-item list-group-item-success">
+                                {{ pca.number }} - {{ pca.title }}
+                                <span class="pull-right text-muted medium"><span class="label label-success">${{ pca.sum_budget|intcomma }}</span>
+                                </span>
+                            </a>
+                         {% else %}
+                                <a href="{% url 'admin:partners_pca_change' pca.id %}" class="list-group-item">
+                                {{ pca.number }} - {{ pca.title }} {% if pca.amendment_number == 0 %} Original {% else %} Amendment {{ pca.amendment_number }} {% endif %}
+                         {% endifchanged %}
                     {% endfor %}
                 </div>
                 <!-- /.list-group -->
@@ -294,3 +299,5 @@
 </section>
 
 {% endblock content %}
+
+

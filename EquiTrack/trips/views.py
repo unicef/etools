@@ -88,7 +88,6 @@ class TripActionView(RetrieveAPIView):
         return Response(serializer.data, Zstatus=status.HTTP_204_NO_CONTENT)
 
 
-
 class TripsByOfficeView(APIView):
 
     def get(self, request):

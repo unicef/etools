@@ -7,10 +7,10 @@ machine:
 dependencies:
   override:
     - docker info
-    - docker build -t unicef/equitrack .
+    - docker build -t unicef/equitrack:$CIRCLE_SHA1 .
 
 test:
-  pre:
+  pre: # bootstrap postgres to accept connections from our container
     - sudo bash -c "echo \"listen_addresses = '*'\" >>
       /etc/postgresql/9.4/main/postgresql.conf"
     - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
@@ -18,10 +18,13 @@ test:
     - sudo /etc/init.d/postgresql restart
   override:
     - export HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`;
-      docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/equitrack ./runtests.sh
+      docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/equitrack:$CIRCLE_SHA1 ./runtests.sh
 
 deployment:
-  staging:
+  hub:
     branch: develop
     commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker tag unicef/equitrack:$CIRCLE_SHA1 unicef/equitrack:develop
+      - docker push unicef/equitrack:develop
       - ./deploy_staging.sh

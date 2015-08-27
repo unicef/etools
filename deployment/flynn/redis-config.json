@@ -1,0 +1,17 @@
+{
+  "processes": {
+    "server": {
+      "cmd": ["redis-server"],
+      "data": true,
+      "ports": [{
+        "port": 6379,
+        "proto": "tcp",
+        "service": {
+          "name": "redis",
+          "create": true,
+          "check": { "type": "tcp" }
+        }
+      }]
+    }
+  }
+}

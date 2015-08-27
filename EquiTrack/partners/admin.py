@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 __author__ = 'jcranwellward'
 
 import datetime
@@ -12,6 +14,7 @@ from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
 from .forms import PCAForm
+from EquiTrack.forms import AutoSizeTextForm
 from tpm.models import TPMVisit
 from EquiTrack.utils import get_changeform_link
 from locations.models import Location
@@ -45,6 +48,7 @@ from partners.models import (
     PCASectorImmediateResult,
     PartnerOrganization,
     Assessment,
+    Agreement,
     SpotCheck,
     Recommendation,
     ResultChain
@@ -307,7 +311,7 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'total_cash',
     )
     list_filter = (
-        'agreement_type',
+        'partnership_type',
         'result_structure',
         PCASectorFilter,
         'status',
@@ -346,12 +350,13 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (_('Info'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
-                ('agreement_type',
+                ('partner',
+                 'agreement',
+                 'partnership_type',
                  'result_structure',
                  ('number', 'amendment', 'amendment_number', 'view_original',),
                  'title',
                  'status',
-                 'partner',
                  'initiation_date')
         }),
         (_('Dates'), {
@@ -389,19 +394,20 @@ class PcaAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PCAFileInline,
         LinksInlineAdmin,
         SpotChecksAdminInline,
-        ResultsInlineAdmin,
+        #ResultsInlineAdmin,
     )
 
     suit_form_tabs = (
         (u'info', u'Info'),
         (u'results', u'Results'),
         (u'locations', u'Locations'),
+        (u'trips', u'Trips'),
         (u'checks', u'Spot Checks'),
     )
 
-    suit_form_includes = (
-        ('admin/partners/log_frame.html', 'top', 'results'),
-    )
+    # suit_form_includes = (
+    #     ('admin/partners/log_frame.html', 'top', 'results'),
+    # )
 
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
@@ -494,6 +500,7 @@ class AssessmentAdminInline(admin.StackedInline):
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
+    form = AutoSizeTextForm
     resource_class = PartnerResource
     list_display = (
         u'name',
@@ -505,9 +512,6 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
         u'alternate_id',
         u'alternate_name',
     )
-    # inlines = [
-    #     AssessmentAdminInline,
-    # ]
 
 
 class FACEAdmin(admin.ModelAdmin):
@@ -546,6 +550,21 @@ class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
         )
 
 
+class AgreementAdmin(admin.ModelAdmin):
+    fields = (
+        u'partner',
+        u'agreement_type',
+        u'attached_agreement',
+        u'signed_by_unicef_date',
+        u'signed_by',
+        u'signed_by_partner_date',
+        u'partner_first_name',
+        u'partner_last_name',
+        u'partner_email',
+    )
+
+
+admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PCA, PcaAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)

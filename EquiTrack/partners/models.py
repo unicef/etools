@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
@@ -10,10 +11,16 @@ import reversion
 from django.conf import settings
 from django.db import models, transaction
 from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
+from django.db.models import Sum
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
+from model_utils.models import (
+    TimeFramedModel,
+    TimeStampedModel,
+)
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
@@ -36,6 +43,8 @@ from locations.models import (
     Region,
 )
 from partners import emails
+
+User = get_user_model()
 
 
 class PartnerOrganization(models.Model):
@@ -223,7 +232,6 @@ class Recommendation(models.Model):
     closed = models.BooleanField(default=False, verbose_name=u'Closed?')
     completed_date = models.DateField(blank=True, null=True)
 
-
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
         pass
@@ -231,6 +239,45 @@ class Recommendation(models.Model):
     class Meta:
         verbose_name = 'Key recommendation'
         verbose_name_plural = 'Key recommendations'
+
+
+class Agreement(TimeFramedModel, TimeStampedModel):
+
+    PCA = u'PCA'
+    AWP = u'AWP'
+    AGREEMENT_TYPES = (
+        (PCA, u"Partner Cooperation Agreement"),
+        (AWP, u"Annual Work Plan"),
+    )
+
+    partner = models.ForeignKey(PartnerOrganization)
+    agreement_type = models.CharField(
+        max_length=10,
+        choices=AGREEMENT_TYPES
+    )
+
+    attached_agreement = models.FileField(
+        upload_to=u'agreements',
+        blank=True,
+    )
+
+    signed_by_unicef_date = models.DateField(null=True, blank=True)
+    signed_by = models.ForeignKey(
+        User,
+        related_name='signed_pcas',
+        null=True, blank=True
+    )
+
+    signed_by_partner_date = models.DateField(null=True, blank=True)
+    partner_first_name = models.CharField(max_length=64L, blank=True)
+    partner_last_name = models.CharField(max_length=64L, blank=True)
+    partner_email = models.CharField(max_length=128L, blank=True)
+
+    def __unicode__(self):
+        return u'{} for {}'.format(
+            self.agreement_type,
+            self.partner.name
+        )
 
 
 class PCA(AdminURLMixin, models.Model):
@@ -248,16 +295,27 @@ class PCA(AdminURLMixin, models.Model):
     PCA = u'pca'
     MOU = u'mou'
     SSFA = u'ssfa'
-    AWP = u'awp'
-    AGREEMENT_TYPES = (
+    IC = u'ic'
+    DCT = u'dct'
+    PARTNERSHIP_TYPES = (
         (PCA, u'Partner Cooperation Agreement'),
         (MOU, u'Memorandum of Understanding'),
         (SSFA, u'Small Scale Funding Agreement'),
-        (AWP, u'Annual Work Plan'),
+        (IC, u'Institutional Contract'),
+        (DCT, u'Government Transfer'),
     )
 
-    agreement_type = models.CharField(
-        choices=AGREEMENT_TYPES,
+    partner = models.ForeignKey(PartnerOrganization)
+    agreement = ChainedForeignKey(
+        Agreement,
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=True,
+        blank=True, null=True,
+    )
+    partnership_type = models.CharField(
+        choices=PARTNERSHIP_TYPES,
         default=PCA,
         blank=True, null=True,
         max_length=255
@@ -265,7 +323,7 @@ class PCA(AdminURLMixin, models.Model):
     result_structure = models.ForeignKey(
         ResultStructure,
         blank=True, null=True,
-        help_text=u'Which result structure does this PCA report under?'
+        help_text=u'Which result structure does this partnership report under?'
     )
     number = models.CharField(max_length=45L, blank=True)
     title = models.CharField(max_length=256L)
@@ -276,17 +334,16 @@ class PCA(AdminURLMixin, models.Model):
         default=u'in_process',
         help_text=u'In Process = In discussion with partner, '
                   u'Active = Currently ongoing, '
-                  u'Implemented = PCA was completed, '
-                  u'Cancelled = PCA was cancelled'
+                  u'Implemented = completed, '
+                  u'Cancelled = cancelled or not approved'
     )
-    partner = models.ForeignKey(PartnerOrganization)
     start_date = models.DateField(
         null=True, blank=True,
-        help_text=u'The date the PCA will start'
+        help_text=u'The date the partnership will start'
     )
     end_date = models.DateField(
         null=True, blank=True,
-        help_text=u'The date the PCA will end'
+        help_text=u'The date the partnership will end'
     )
     initiation_date = models.DateField(
         help_text=u'The date when planning began with the partner'
@@ -303,8 +360,6 @@ class PCA(AdminURLMixin, models.Model):
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
-
-
 
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -347,6 +402,11 @@ class PCA(AdminURLMixin, models.Model):
             return sectors[0].sector.id
         return 0
 
+    @property
+    def sum_budget(self):
+        total_sum = PCA.objects.filter(number=self.number).aggregate(Sum("total_cash"))
+        return total_sum.values()[0]
+
     def total_unicef_contribution(self):
         cash = self.unicef_cash_budget if self.unicef_cash_budget else 0
         in_kind = self.in_kind_amount_budget if self.in_kind_amount_budget else 0
@@ -355,9 +415,9 @@ class PCA(AdminURLMixin, models.Model):
 
     def make_amendment(self, user):
         """
-        Creates an amendment (new record) of this PCA copying
+        Creates an amendment (new record) of this partnership copying
         over all values and related objects, marks the existing
-        PCA as non current and creates a manual restore point.
+        partnership as non current and creates a manual restore point.
         The user who created the amendment is also captured.
         """
         with transaction.atomic(), reversion.create_revision():
@@ -378,7 +438,7 @@ class PCA(AdminURLMixin, models.Model):
 
             # make manual revision point
             reversion.set_user(user)
-            reversion.set_comment("Amendment {} created for PCA: {}".format(
+            reversion.set_comment("Amendment {} created for partnership: {}".format(
                 amendment.amendment_number,
                 amendment.number)
             )
@@ -480,9 +540,13 @@ post_save.connect(PCA.send_changes, sender=PCA)
 
 
 class PCAGrant(models.Model):
+    """
+    Links a grant to a partnership with a specified amount
+    """
     pca = models.ForeignKey(PCA)
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
+    #TODO: Add multi-currency support
 
     class Meta:
         ordering = ['-funds']
@@ -492,7 +556,9 @@ class PCAGrant(models.Model):
 
 
 class GwPCALocation(models.Model):
-
+    """
+    Links a location to a partnership
+    """
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
     governorate = models.ForeignKey(Governorate)
@@ -524,7 +590,7 @@ class GwPCALocation(models.Model):
     tpm_visit = models.BooleanField(default=False)
 
     class Meta:
-        verbose_name = 'PCA Location'
+        verbose_name = 'Partnership Location'
 
     def __unicode__(self):
         return u'{} -> {}{}{}'.format(
@@ -541,7 +607,10 @@ class GwPCALocation(models.Model):
 
 
 class PCASector(models.Model):
-
+    """
+    Links a sector to a partnership
+    Many-to-many cardinality
+    """
     pca = models.ForeignKey(PCA)
     sector = models.ForeignKey(Sector)
 

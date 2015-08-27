@@ -30,10 +30,9 @@ SUIT_CONFIG = {
         {'label': 'Dashboard', 'icon': 'icon-dashboard', 'url': 'dashboard'},
 
         {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
-            {'model': 'partners.pca', 'label': 'Partnerships'},
-            {'model': 'partners.assessment', 'label': 'Assessments'},
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
-            {'model': 'partners.face', 'label': 'FACE'},
+            {'model': 'partners.agreement', 'label': 'Agreements'},
+            {'model': 'partners.pca', 'label': 'Partnerships'},
         ]},
 
         {'app': 'trips', 'icon': 'icon-road', 'models': [
@@ -78,9 +77,9 @@ DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now'
 }
-EMAIL_BACKEND = 'post_office.EmailBackend'
-POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
-CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"
+EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
+POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'  # Will ensure email is sent async
+CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
 MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
 ########## END EMAIL CONFIGURATION
 
@@ -125,11 +124,12 @@ DATABASES = {
         default='postgis:///equitrack'
     )
 }
+
 import djcelery
 djcelery.setup_loader()
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
-CELERY_BEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 ########## END DATABASE CONFIGURATION
 
 ########## MANAGER CONFIGURATION
@@ -211,34 +211,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-
-# The baseUrl to pass to the r.js optimizer.
-REQUIRE_BASE_URL = normpath(join(STATIC_ROOT, 'js'))
-
-# The name of a build profile to use for your project, relative to REQUIRE_BASE_URL.
-# A sensible value would be 'app.build.js'. Leave blank to use the built-in default build profile.
-# Set to False to disable running the default profile (e.g. if only using it to build Standalone
-# Modules)
-REQUIRE_BUILD_PROFILE = None
-
-# The name of the require.js script used by your project, relative to REQUIRE_BASE_URL.
-REQUIRE_JS = "main.js"
-
-# A dictionary of standalone modules to build with almond.js.
-# See the section on Standalone Modules, below.
-REQUIRE_STANDALONE_MODULES = {}
-
-# Whether to run django-require in debug mode.
-REQUIRE_DEBUG = DEBUG
-
-# A tuple of files to exclude from the compilation result of r.js.
-REQUIRE_EXCLUDE = ("build.txt",)
-
-# The execution environment in which to run r.js: auto, node or rhino.
-# auto will autodetect the environment and make use of node if available and rhino if not.
-# It can also be a path to a custom class that subclasses require.environments.Environment
-# and defines some "args" function that returns a list with the command arguments to execute.
-REQUIRE_ENVIRONMENT = "auto"
 ########## END STATIC FILE CONFIGURATION
 
 
@@ -302,7 +274,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
@@ -354,7 +325,6 @@ THIRD_PARTY_APPS = (
     'djcelery_email',
     'datetimewidget',
     'logentry_admin',
-    'dbbackup',
     'leaflet',
     'djgeojson',
     'paintstore',

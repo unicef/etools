@@ -1,5 +1,4 @@
 from django.conf.urls import patterns, include, url
-from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required
 
 import autocomplete_light
@@ -10,11 +9,12 @@ autocomplete_light.autodiscover()
 from django.contrib import admin
 admin.autodiscover()
 
-from users.views import EquiTrackRegistrationView
 from .views import (
     MapView,
     DashboardView,
-    UserDashboardView
+    UserDashboardView,
+    CmtDashboardView,
+    magic_info
 )
 
 urlpatterns = patterns(
@@ -22,6 +22,9 @@ urlpatterns = patterns(
     url(r'^$', login_required(UserDashboardView.as_view()), name='dashboard'),
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
+    url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
+
+    url(r'^version/$', magic_info),
 
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),
@@ -32,7 +35,7 @@ urlpatterns = patterns(
     url(r'', include('registration.auth_urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
-    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),

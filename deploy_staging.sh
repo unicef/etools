@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
 
-git remote add dokku dokku@staging-equitrack.uniceflebanon.org:staging
-git push dokku develop:master
+#pip install tutum
+CONTAINER_ID = "$(tutum service redeploy --sync web)"
+tutum container exec "${CONTAINER_ID}" python ./EquiTrack/manage.py syncdb --migrate

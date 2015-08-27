@@ -14,6 +14,7 @@ from generic_links.admin import GenericLinkStackedInline
 from messages_extends import constants as constants_messages
 from users.models import UserProfile
 
+from EquiTrack.forms import AutoSizeTextForm
 from locations.models import LinkedLocation
 from .models import (
     Trip,
@@ -26,7 +27,7 @@ from .models import (
 )
 from .forms import (
     TripForm,
-    TravelRoutesForm
+    TravelRoutesForm,
 )
 from .exports import TripResource, ActionPointResource
 
@@ -50,6 +51,7 @@ class TripFundsInlineAdmin(admin.TabularInline):
 
 class ActionPointInlineAdmin(admin.StackedInline):
     model = ActionPoint
+    form = AutoSizeTextForm
     suit_classes = u'suit-tab suit-tab-reporting'
     filter_horizontal = (u'persons_responsible',)
     extra = 1
@@ -71,6 +73,7 @@ class SitesVisitedInlineAdmin(GenericTabularInline):
 class FileAttachmentInlineAdmin(GenericTabularInline):
     model = FileAttachment
     suit_classes = u'suit-tab suit-tab-attachments'
+    fields = (u'type', u'report')
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
@@ -203,10 +206,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                 u'main_observations',),
         }),
 
-        (u'Travel Claim', {
+        (u'Travel Closure', {
             u'classes': (u'suit-tab suit-tab-reporting',),
             u'fields': (
-                u'ta_trip_took_place_as_planned',),
+                u'ta_trip_took_place_as_planned',
+                u'ta_trip_repay_travel_allowance',
+                u'ta_trip_final_claim'),
         }),
     )
     suit_form_tabs = (
@@ -232,6 +237,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                     trip.representative_approval = None
                     trip.date_representative_approved = None
                     trip.approved_date = None
+                    trip.approved_email_sent = False
                     trip.save()
 
         formset.save()
@@ -298,6 +304,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(TripReportAdmin, self).get_form(request, obj, **kwargs)
+        form.request = request
         try:
             user_profile = request.user.get_profile()
             form.base_fields['owner'].initial = request.user
@@ -316,94 +323,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         return super(TripReportAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
-
-    # def save_model(self, request, obj, form, change):
-    #
-    #     user = obj.owner
-    #     url = 'http://{}{}'.format(
-    #         Site.objects.get_current().domain,
-    #         obj.get_admin_url()
-    #     )
-    #     status = "Trip {} for {} has been {}: {}".format(
-    #         obj.reference(),
-    #         obj.owner.get_full_name(),
-    #         obj.status,
-    #         url
-    #     )
-    #
-    #     messages.add_message(
-    #         request,
-    #         constants_messages.INFO_PERSISTENT,
-    #         status,
-    #         user=user
-    #     )
-    #
-    #     if obj.status == Trip.SUBMITTED:
-    #         user = obj.supervisor
-    #         status = 'Please approve the trip for {}: {}'.format(
-    #             obj.owner.get_full_name(),
-    #             url
-    #         )
-    #
-    #         messages.add_message(
-    #             request,
-    #             constants_messages.INFO_PERSISTENT,
-    #             status,
-    #             user=user
-    #         )
-    #
-    #     elif obj.status == Trip.APPROVED:
-    #
-    #         if obj.travel_assistant and not obj.transport_booked:
-    #             user = obj.travel_assistant
-    #             status = 'Please book the transport for trip: {}'.format(
-    #                 url
-    #             )
-    #
-    #             messages.add_message(
-    #                 request,
-    #                 constants_messages.INFO_PERSISTENT,
-    #                 status,
-    #                 user=user
-    #             )
-    #
-    #         if obj.ta_required and obj.programme_assistant and not obj.ta_drafted:
-    #             user = obj.programme_assistant
-    #             status = 'Please draft the TA for trip: {}'.format(
-    #                 url
-    #             )
-    #
-    #             messages.add_message(
-    #                 request,
-    #                 constants_messages.INFO_PERSISTENT,
-    #                 status,
-    #                 user=user
-    #             )
-    #
-    #         if obj.ta_drafted and obj.vision_approver:
-    #             user = obj.vision_approver
-    #             status = 'Please approve the TA for trip: {}'.format(
-    #                 url
-    #             )
-    #
-    #             messages.add_message(
-    #                 request,
-    #                 constants_messages.INFO_PERSISTENT,
-    #                 status,
-    #                 user=user
-    #             )
-    #
-    #     super(TripReportAdmin, self).save_model(request, obj, form, change)
-
-    # def change_view(self, request, object_id, form_url='', extra_context=None):
-    #
-    #     try:
-    #         return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
-    #     except IndexError:
-    #
-    #         request.POST['linkedlocation_set-TOTAL_FORMS'] = 0
-    #
-    #         return super(TripReportAdmin, self).change_view(request, object_id, form_url, extra_context)
 
 
 class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
@@ -460,15 +379,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
             readonly_fields.remove(u'status')
 
         return readonly_fields
-    #
-
-    # def save_model(self, request, obj, form, change):
-    #     messages.add_message(
-    #         request,
-    #         constants_messages.INFO_PERSISTENT,
-    #         "Hola abc desde test",
-    #         user=request.user
-    #     )
 
 
 admin.site.register(Office)

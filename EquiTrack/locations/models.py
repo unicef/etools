@@ -23,6 +23,7 @@ def get_random_color():
 
 class GatewayType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
+
     class Meta:
         ordering = ['name']
 

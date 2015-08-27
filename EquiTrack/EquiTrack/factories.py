@@ -1,7 +1,9 @@
+"""
+Model factories used for generating models dynamically for tests
+"""
 __author__ = 'jcranwellward'
 
 from datetime import datetime, timedelta
-
 from django.db.models.signals import post_save
 
 import factory
@@ -9,6 +11,22 @@ import factory
 from users import models as user_models
 from trips import models as trip_models
 from reports import models as report_models
+from locations import models as location_models
+
+
+class GovernorateFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = location_models.Governorate
+
+    name = factory.Sequence(lambda n: 'Gov {}'.format(n))
+
+
+class RegionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = location_models.Region
+
+    name = factory.Sequence(lambda n: 'District {}'.format(n))
+    governorate = factory.SubFactory(GovernorateFactory)
 
 
 class OfficeFactory(factory.django.DjangoModelFactory):
@@ -16,6 +34,7 @@ class OfficeFactory(factory.django.DjangoModelFactory):
         model = trip_models.Office
 
     name = 'An Office'
+    location = factory.SubFactory(GovernorateFactory)
 
 
 class SectorFactory(factory.django.DjangoModelFactory):
@@ -68,3 +87,12 @@ class TripFactory(factory.django.DjangoModelFactory):
     supervisor = factory.SubFactory(UserFactory)
     from_date = datetime.today()
     to_date = from_date + timedelta(days=1)
+
+
+class LinkedLocationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = location_models.LinkedLocation
+
+    content_object = factory.SubFactory(TripFactory)
+    governorate = factory.SubFactory(GovernorateFactory)
+    region = factory.SubFactory(RegionFactory)

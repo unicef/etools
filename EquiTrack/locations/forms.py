@@ -8,13 +8,12 @@ from cartodb import CartoDBAPIKey, CartoDBException
 from autocomplete_light import forms as auto_forms
 
 from partners.models import GwPCALocation
-
 from .models import CartoDBTable
 
 logger = logging.getLogger('locations.models')
 
 
-# class LocationForm(auto_forms.ModelForm):
+# class LocationForm(forms.ModelForm):
 #
 #     class Media:
 #         """

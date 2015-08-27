@@ -4,6 +4,7 @@ import datetime
 
 from django.db import models
 from django.db.models import Q
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import (
@@ -16,10 +17,12 @@ from filer.fields.file import FilerFileField
 import reversion
 
 from EquiTrack.mixins import AdminURLMixin
-from locations.models import LinkedLocation
+# from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
+from locations.models import Governorate
 from . import emails
+
 
 User = get_user_model()
 
@@ -32,6 +35,15 @@ BOOL_CHOICES = (
 
 class Office(models.Model):
     name = models.CharField(max_length=254)
+    zonal_chief = models.ForeignKey(
+        User,
+        blank=True, null=True,
+        related_name='offices',
+        verbose_name='Chief')
+    location = models.ForeignKey(
+        Governorate,
+        blank=True, null=True,
+    )
 
     def __unicode__(self):
         return self.name
@@ -61,17 +73,14 @@ class Trip(AdminURLMixin, models.Model):
     FAMILY_VISIT = u'family_visit'
     EDUCATION_GRANT = u'education_grant'
     STAFF_DEVELOPMENT = u'staff_development'
+    STAFF_ENTITLEMENT = u'staff_entitlement'
     TRAVEL_TYPE = (
         (PROGRAMME_MONITORING, u'PROGRAMME MONITORING'),
         (ADVOCACY, u'ADVOCACY'),
         (TECHNICAL_SUPPORT, u'TECHNICAL SUPPORT'),
         (MEETING, u'MEETING'),
         (STAFF_DEVELOPMENT, u"STAFF DEVELOPMENT"),
-        # (DUTY_TRAVEL, u"DUTY TRAVEL"),
-        # (HOME_LEAVE, u"HOME LEAVE"),
-        # (FAMILY_VISIT, u"FAMILY VISIT"),
-        # (EDUCATION_GRANT, u"EDUCATION GRANT"),
-
+        (STAFF_ENTITLEMENT, u"STAFF ENTITLEMENT"),
     )
 
     status = models.CharField(
@@ -140,7 +149,7 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
-    locations = GenericRelation(LinkedLocation)
+    locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
     section = models.ForeignKey('reports.Sector', blank=True, null=True)
@@ -180,9 +189,18 @@ class Trip(AdminURLMixin, models.Model):
 
     ta_trip_took_place_as_planned = models.BooleanField(
         default=False,
-        help_text='Did the trip take place as planned and therefore no claim is required?'
+        verbose_name='Ta trip took place as attached',
+        help_text='I certify that the travel took place exactly as per the attached Travel Authorization and'
+                  ' that there were no changes to the itinerary'
     )
-
+    ta_trip_repay_travel_allowance = models.BooleanField(
+        default=False,
+        help_text='I certify that I will repay any travel allowance to which I am not entitled'
+    )
+    ta_trip_final_claim = models.BooleanField(
+        default=False,
+        help_text='I authorize UNICEF to treat this as the FINAL Claim'
+    )
     class Meta:
         ordering = ['-created_date']
 
@@ -214,13 +232,13 @@ class Trip(AdminURLMixin, models.Model):
     def trip_overdue(self):
         if self.to_date < datetime.date.today() and self.status != Trip.COMPLETED:
             return True
-        else:
-            return False
+        return False
 
     @property
     def requires_hr_approval(self):
         return self.travel_type in [
-            Trip.STAFF_DEVELOPMENT]
+            # Trip.STAFF_DEVELOPMENT
+        ]
 
     @property
     def requires_rep_approval(self):
@@ -246,17 +264,18 @@ class Trip(AdminURLMixin, models.Model):
             self.approved_date = datetime.datetime.today()
             self.status = Trip.APPROVED
 
+        if self.status is not Trip.CANCELLED and self.cancelled_reason:
+            self.status = Trip.CANCELLED
+
         super(Trip, self).save(**kwargs)
 
     @classmethod
     def get_all_trips(cls, user):
-        #user = self.request.user
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
         )
         my_trips = user.trips.filter()
         return my_trips | super_trips
-        #return cls.objects.filter(current=True, status=cls.ACTIVE)
 
     @classmethod
     def send_trip_request(cls, sender, instance, created, **kwargs):
@@ -267,6 +286,7 @@ class Trip(AdminURLMixin, models.Model):
         recipients = [
             instance.owner.email,
             instance.supervisor.email]
+
         if instance.budget_owner:
             if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
                 recipients.append(instance.budget_owner.email)
@@ -287,6 +307,8 @@ class Trip(AdminURLMixin, models.Model):
             # send an email to everyone if the trip is cancelled
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
+            for location in instance.locations.all():
+                recipients.append(location.governorate.office.zonal_chief.email)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
                 *recipients
@@ -313,6 +335,13 @@ class Trip(AdminURLMixin, models.Model):
             if not instance.approved_email_sent:
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
+
+                locations = instance.locations.all().values_list('governorate__id', flat=True)
+                offices = Office.objects.filter(location_id__in=locations)
+                recipients.extend(
+                    [office.zonal_chief.email for office in offices if office.zonal_chief]
+                )
+
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
                     *recipients
@@ -359,7 +388,7 @@ class TravelRoutes(models.Model):
 
 class ActionPoint(models.Model):
 
-    CLOSED = (
+    STATUS = (
         ('closed', 'Closed'),
         ('ongoing', 'On-going'),
         ('open', 'Open'),
@@ -374,25 +403,27 @@ class ActionPoint(models.Model):
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
-    status = models.CharField(choices=CLOSED, max_length=254, null=True, verbose_name='Status')
+    status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
     created_date = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
         return self.description
 
     @property
+    def overdue(self):
+        return self.due_date <= datetime.date.today()
+
+    @property
+    def due_soon(self):
+        delta = (self.due_date - datetime.date.today()).days
+        return delta <= 2
+
+    @property
     def traffic_color(self):
-        if self.status == 'ongoing' or self.status == 'open':
-            if self.due_date >= datetime.date.today():
-                delta = (self.due_date - datetime.date.today()).days
-                if delta > 2:
-                    return 'green'
-                else:
-                    return 'yellow'
-            else:
-                return 'red'
-        elif self.status == 'cancelled':
+        if self.overdue:
             return 'red'
+        elif self.due_soon:
+            return 'yellow'
         else:
             return 'green'
 
@@ -428,20 +459,19 @@ post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 class FileAttachment(models.Model):
 
+    trip = models.ForeignKey(Trip, null=True, blank=True, related_name=u'files')
     type = models.ForeignKey(u'partners.FileType')
-    file = FilerFileField()
+    file = FilerFileField(null=True, blank=True)
+    report = models.FileField(
+        upload_to=u'trip_reports'
+    )
 
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
-        return self.file.name
-
-    def download_url(self):
-        if self.file:
-            return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" >Download</a>'.format(self.file.file.url)
-        return u''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Files'
+        return u'{}: {}'.format(
+            self.type.name,
+            self.report.name
+        )
