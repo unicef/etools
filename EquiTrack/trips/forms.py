@@ -159,22 +159,15 @@ class TripForm(ModelForm):
         return cleaned_data
 
 
-# class LinkedLocationForm(ModelForm):
-#     def clean(self):
-#         cleaned_data = super(LinkedLocationForm, self).clean()
-#         print 'test'
-
-
-class RequiredInlineFormSet(BaseInlineFormSet):
+class RequiredLocationInlineFormSet(BaseInlineFormSet):
     """
-    Generates an inline formset that is required
+    Generates an inline formset that requires locations for certain trip types
     """
-
     def _construct_form(self, i, **kwargs):
         """
         Override the method to change the form attribute empty_permitted
         """
-        form = super(RequiredInlineFormSet, self)._construct_form(i, **kwargs)
+        form = super(RequiredLocationInlineFormSet, self)._construct_form(i, **kwargs)
         if self.instance.travel_type == Trip.PROGRAMME_MONITORING:
             form.empty_permitted = False
         return form

@@ -106,7 +106,7 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
 
 
-class PcaFactory(factory.django.DjangoModelFactory):
+class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PCA
 

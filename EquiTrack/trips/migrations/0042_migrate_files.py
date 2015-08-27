@@ -18,6 +18,7 @@ class Migration(DataMigration):
             files = orm.FileAttachment.objects.filter(content_type__pk=trip_type_id, object_id=trip.id)
             for file in files:
                 file.trip = trip
+                file.report = file.file.file.url
                 file.save()
                 migrated_files += 1
         print 'Migrated files: {}'.format(migrated_files)

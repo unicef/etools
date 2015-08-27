@@ -146,7 +146,7 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
     )
 
     def sectors(self, obj):
-        return obj.pca.sectors
+        return obj.pca.sector_names
 
     def unicef_manager(self, obj):
         return u'{} {} ({})'.format(
@@ -198,7 +198,7 @@ class TPMLocationsAdmin(admin.ModelAdmin):
     actions = ['create_tpm_visits']
 
     def sectors(self, obj):
-        return obj.pca.sectors
+        return obj.pca.sector_names
 
     def get_queryset(self, request):
         return PCALocation.objects.filter(

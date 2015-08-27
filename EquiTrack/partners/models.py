@@ -21,6 +21,7 @@ from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
+from model_utils import Choices
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
@@ -110,6 +111,22 @@ class PartnerOrganization(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class PartnerStaffMember(models.Model):
+
+    partner = models.ForeignKey(PartnerOrganization)
+    first_name = models.CharField(max_length=64L)
+    last_name = models.CharField(max_length=64L)
+    email = models.CharField(max_length=128L)
+    phone = models.CharField(max_length=64L, blank=True)
+
+    def __unicode__(self):
+        return u'{} {} ({})'.format(
+            self.first_name,
+            self.last_name,
+            self.partner.name
+        )
 
 
 class Assessment(models.Model):
@@ -247,7 +264,7 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     AWP = u'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Partner Cooperation Agreement"),
-        (AWP, u"Annual Work Plan"),
+        #(AWP, u"Annual Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -269,15 +286,25 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     )
 
     signed_by_partner_date = models.DateField(null=True, blank=True)
-    partner_first_name = models.CharField(max_length=64L, blank=True)
-    partner_last_name = models.CharField(max_length=64L, blank=True)
-    partner_email = models.CharField(max_length=128L, blank=True)
+    partner_manager = ChainedForeignKey(
+        PartnerStaffMember,
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=False,
+        blank=True, null=True,
+    )
 
     def __unicode__(self):
         return u'{} for {}'.format(
             self.agreement_type,
             self.partner.name
         )
+
+
+class AuthorizedOfficer(models.Model):
+    agreement = models.ForeignKey(Agreement)
+    officer = models.ForeignKey(PartnerStaffMember)
 
 
 class PCA(AdminURLMixin, models.Model):
@@ -292,13 +319,13 @@ class PCA(AdminURLMixin, models.Model):
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
     )
-    PD = u'pd'
+    PCA = u'pca'
     MOU = u'mou'
     SSFA = u'ssfa'
     IC = u'ic'
     DCT = u'dct'
     PARTNERSHIP_TYPES = (
-        (PD, u'Programme Document'),
+        (PCA, u'Partner Cooperation Agreement'),
         (MOU, u'Memorandum of Understanding'),
         (SSFA, u'Small Scale Funding Agreement'),
         (IC, u'Institutional Contract'),
@@ -316,7 +343,7 @@ class PCA(AdminURLMixin, models.Model):
     )
     partnership_type = models.CharField(
         choices=PARTNERSHIP_TYPES,
-        default=PD,
+        default=PCA,
         blank=True, null=True,
         max_length=255
     )
@@ -325,7 +352,7 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
         help_text=u'Which result structure does this partnership report under?'
     )
-    number = models.CharField(max_length=45L, blank=True)
+    number = models.CharField(max_length=45L, blank=True, default=u'UNASSIGNED')
     title = models.CharField(max_length=256L)
     status = models.CharField(
         max_length=32L,
@@ -337,6 +364,8 @@ class PCA(AdminURLMixin, models.Model):
                   u'Implemented = completed, '
                   u'Cancelled = cancelled or not approved'
     )
+
+    # dates
     start_date = models.DateField(
         null=True, blank=True,
         help_text=u'The date the partnership will start'
@@ -349,6 +378,14 @@ class PCA(AdminURLMixin, models.Model):
         help_text=u'The date when planning began with the partner'
 
     )
+    submission_date = models.DateField(
+        help_text=u'The date the partner submitted complete partnership documents',
+        null=True, blank=True,
+    )
+    review_date = models.DateField(
+        help_text=u'The date the PRC reviewed the partnership',
+        null=True, blank=True,
+    )
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
@@ -356,10 +393,43 @@ class PCA(AdminURLMixin, models.Model):
     unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
-    unicef_managers = models.ManyToManyField('auth.User', blank=True)
+
+    unicef_manager = models.ForeignKey(
+        'auth.User',
+        related_name='approved_partnerships',
+        blank=True, null=True
+    )
+    unicef_managers = models.ManyToManyField(
+        'auth.User',
+        verbose_name='Unicef focal points',
+        blank=True
+    )
+
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
+    partner_mng_phone = models.CharField(max_length=64L, blank=True)
+
+    partner_manager = ChainedForeignKey(
+        PartnerStaffMember,
+        related_name='signed_partnerships',
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=False,
+        blank=True, null=True,
+    )
+
+    partner_focal_point = ChainedForeignKey(
+        PartnerStaffMember,
+        related_name='my_partnerships',
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=False,
+        blank=True, null=True,
+    )
+
 
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -396,11 +466,19 @@ class PCA(AdminURLMixin, models.Model):
         return title
 
     @property
+    def sector_children(self):
+        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
+        return Sector.objects.filter(id__in=sectors)
+
+    @property
     def sector_id(self):
-        sectors = self.pcasector_set.all()
-        if sectors:
-            return sectors[0].sector.id
+        if self.sector_children:
+            return self.sector_children[0].id
         return 0
+
+    @property
+    def sector_names(self):
+        return u', '.join(self.sector_children.values_list('name', flat=True))
 
     @property
     def sum_budget(self):
@@ -502,12 +580,6 @@ class PCA(AdminURLMixin, models.Model):
             if self.partner_contribution_budget else 0
         self.total_cash = partner_budget + self.total_unicef_contribution()
 
-        # populate sectors display string
-        if self.pcasector_set.all().count():
-            self.sectors = ", ".join(
-                [sector.sector.name for sector in self.pcasector_set.all()]
-            )
-
         super(PCA, self).save(**kwargs)
 
     @classmethod
@@ -539,20 +611,96 @@ class PCA(AdminURLMixin, models.Model):
 post_save.connect(PCA.send_changes, sender=PCA)
 
 
-class PCAGrant(models.Model):
+class AmendmentLog(TimeStampedModel):
+
+    partnership = models.ForeignKey(PCA, related_name='amendments_list')
+    type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            'No Cost',
+            'Cost',
+            'Activity'
+        ))
+    amended_at = models.DateField(null=True)
+    amendment_number = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return u'{}: {} - {}'.format(
+            self.amendment_number,
+            self.type,
+            self.amended_at
+        )
+
+    def save(self, **kwargs):
+        """
+        Increment amendment number automatically
+        """
+        previous = AmendmentLog.objects.filter(
+            partnership=self.partnership
+        ).order_by('-amendment_number')
+
+        self.amendment_number = (previous[0].amendment_number + 1) if previous else 1
+
+        super(AmendmentLog, self).save(**kwargs)
+
+
+class PartnershipBudget(TimeStampedModel):
+    """
+    Tracks the overall budget for the partnership, with amendments
+    """
+    partnership = models.ForeignKey(PCA)
+    partner_contribution = models.IntegerField(default=0)
+    unicef_cash = models.IntegerField(default=0)
+    in_kind_amount = models.IntegerField(default=0)
+    total = models.IntegerField(default=0)
+    amendment = models.ForeignKey(
+        AmendmentLog,
+        related_name='budgets',
+        blank=True, null=True,
+    )
+
+    def total_unicef_contribution(self):
+        return self.unicef_cash + self.in_kind_amount
+
+    def save(self, **kwargs):
+        """
+        Calculate total budget on save
+        """
+        self.total = \
+            self.total_unicef_contribution() \
+            + self.partner_contribution
+
+        super(PartnershipBudget, self).save(**kwargs)
+
+    def __unicode__(self):
+        return u'{}: {}'.format(
+            self.partnership,
+            self.total
+        )
+
+
+class PCAGrant(TimeStampedModel):
     """
     Links a grant to a partnership with a specified amount
     """
-    pca = models.ForeignKey(PCA)
+    partnership = models.ForeignKey(PCA)
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
     #TODO: Add multi-currency support
+    amendment = models.ForeignKey(
+        AmendmentLog,
+        related_name='grants',
+        blank=True, null=True,
+    )
 
     class Meta:
         ordering = ['-funds']
 
     def __unicode__(self):
-        return self.grant
+        return u'{}: {}'.format(
+            self.grant,
+            self.funds
+        )
 
 
 class GwPCALocation(models.Model):
@@ -606,7 +754,7 @@ class GwPCALocation(models.Model):
     view_location.short_description = 'View Location'
 
 
-class PCASector(models.Model):
+class PCASector(TimeStampedModel):
     """
     Links a sector to a partnership
     Many-to-many cardinality
@@ -752,61 +900,9 @@ class SpotCheck(models.Model):
     )
 
 
-class FACE(models.Model):
-
-    REQUESTED = u'requested'
-    ACKNOWLEDGED = u'acknowledged'
-    PAID = u'paid'
-    CANCELLED = u'cancelled'
-    FACE_STATUS = (
-        (REQUESTED, u"Requested"),
-        (ACKNOWLEDGED, u"Acknowledged"),
-        (PAID, u"Paid"),
-        (CANCELLED, u"Cancelled"),
-    )
-
-    ref = models.CharField(max_length=100)
-    pca = models.ForeignKey(PCA, related_name='face_refs')
-    submited_on = models.DateTimeField(auto_now_add=True)
-    amount = models.CharField(max_length=100, default=0)
-    status = models.CharField(choices=FACE_STATUS, max_length=100, default=REQUESTED)
-    date_paid = models.DateField(verbose_name='Paid On', null=True, blank=True)
-
-    class Meta:
-        verbose_name = 'FACE'
-
-    def __unicode__(self):
-        return self.ref
-
-    @classmethod
-    def notify_face_change(cls, sender, instance, created, **kwargs):
-        if instance.PAID and instance.date_paid:
-            response = requests.post(
-                'https://api.rapidpro.io/api/v1/sms.json',
-                headers={
-                    'Authorization': 'Token {}'.format(settings.RAPIDPRO_TOKEN),
-                    'content-type': 'application/json'
-                },
-                data=json.dumps(
-                    {
-                        "phone": [instance.pca.partner.phone_number],
-                        "text": "Hi {name}, payment for {pca} FACE Ref# {face} has been processed.".format(
-                            name=instance.pca.partner.name,
-                            pca=instance.pca.number,
-                            face=instance.ref
-                        )
-                    }
-                )
-
-            )
-            return response
-
-models.signals.post_save.connect(FACE.notify_face_change, sender=FACE)
-
-
 class ResultChain(models.Model):
 
-    partnership = models.ForeignKey(PCA)
+    partnership = models.ForeignKey(PCA, related_name='results')
     result_type = models.ForeignKey(ResultType)
     result = ChainedForeignKey(
         Result,
@@ -820,7 +916,8 @@ class ResultChain(models.Model):
         chained_field="result",
         chained_model_field="result",
         show_all=False,
-        auto_choose=True
+        auto_choose=True,
+        blank=True, null=True
     )
     governorate = models.ForeignKey(
         Governorate,
@@ -831,10 +928,9 @@ class ResultChain(models.Model):
     )
 
     def __unicode__(self):
-        return u'{} -> {} -> {} -> {}'.format(
+        return u'{} -> {} -> {}'.format(
             self.result.result_structure.name,
             self.result.sector.name,
             self.result.__unicode__(),
-            self.indicator.name,
         )
 
