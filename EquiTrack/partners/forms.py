@@ -10,12 +10,12 @@ from django.contrib import messages
 from django.core.exceptions import (
     ValidationError,
     ObjectDoesNotExist,
-    MultipleObjectsReturned,
+    MultipleObjectsReturned
 )
 
-from suit.widgets import AutosizedTextarea
+from suit.widgets import AutosizedTextarea, LinkedSelect
 
-from EquiTrack.forms import RequireOneFormSet
+from EquiTrack.forms import RequireOneFormSet, UserGroupForm
 from locations.models import Location
 from reports.models import Sector, Result, Indicator
 from .models import (
@@ -106,10 +106,13 @@ class AmendmentForm(forms.ModelForm):
 
 class AuthorizedOfficesFormset(RequireOneFormSet):
 
-    def __init__(self, data=None, files=None, instance=None,
-                 save_as_new=False, prefix=None, queryset=None, **kwargs):
-        super(AuthorizedOfficesFormset, self).__init__(data=data, files=files, instance=instance,
-                 save_as_new=save_as_new, prefix=prefix, queryset=queryset, **kwargs)
+    def __init__(
+            self, data=None, files=None, instance=None,
+            save_as_new=False, prefix=None, queryset=None, **kwargs):
+        super(AuthorizedOfficesFormset, self).__init__(
+            data=data, files=files, instance=instance,
+            save_as_new=save_as_new, prefix=prefix,
+            queryset=queryset, **kwargs)
         self.required = False
 
     def _construct_form(self, i, **kwargs):
@@ -123,10 +126,13 @@ class AuthorizedOfficersForm(forms.ModelForm):
 
     class Meta:
         model = AuthorizedOfficer
+        widgets = {
+            'officer': LinkedSelect,
+        }
 
     def __init__(self, *args, **kwargs):
         """
-        Only display the amendments related to this partnership
+        Only display the officers of the partner related to the agreement
         """
         if 'parent_object' in kwargs:
             self.parent_agreement = kwargs.pop('parent_object')
@@ -138,10 +144,18 @@ class AuthorizedOfficersForm(forms.ModelForm):
         ) if hasattr(self, 'parent_agreement') else PartnerStaffMember.objects.none()
 
 
-class AgreementForm(forms.ModelForm):
+class AgreementForm(UserGroupForm):
+
+    user_field = u'signed_by'
+    group_name = u'Senior Management Team'
 
     class Meta:
         model = Agreement
+        widgets = {
+            'partner': LinkedSelect,
+            'signed_by': LinkedSelect,
+            'partner_manager': LinkedSelect,
+        }
 
     def __init__(self, *args, **kwargs):
         super(AgreementForm, self).__init__(*args, **kwargs)
@@ -156,6 +170,7 @@ class AgreementForm(forms.ModelForm):
         start = cleaned_data[u'start']
         end = cleaned_data[u'end']
 
+        # prevent more than one agreement being crated for the current period
         agreements = Agreement.objects.filter(
             partner=partner,
             start__lte=start,
@@ -173,7 +188,10 @@ class AgreementForm(forms.ModelForm):
         return cleaned_data
 
 
-class PartnershipForm(forms.ModelForm):
+class PartnershipForm(UserGroupForm):
+
+    user_field = u'unicef_manager'
+    group_name = u'Senior Management Team'
 
     # fields needed to assign locations from p_codes
     p_codes = forms.CharField(widget=forms.Textarea, required=False)
@@ -192,8 +210,8 @@ class PartnershipForm(forms.ModelForm):
     class Meta:
         model = PCA
         widgets = {
-            'title':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'title': AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'agreement': LinkedSelect,
         }
 
     def add_locations(self, p_codes, sector):
@@ -288,15 +306,41 @@ class PartnershipForm(forms.ModelForm):
 
         partnership_type = cleaned_data[u'partnership_type']
         agreement = cleaned_data[u'agreement']
+        unicef_manager = cleaned_data[u'unicef_manager']
+        signed_by_unicef_date = cleaned_data[u'signed_by_unicef_date']
+        partner_manager = cleaned_data[u'partner_manager']
+        signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
+
         p_codes =cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
 
         work_plan = self.cleaned_data[u'work_plan']
         work_plan_sector = self.cleaned_data[u'work_plan_sector']
 
-        if partnership_type == PCA.PD and not agreement:
+        if partnership_type == PCA.PD:
+
+            if not agreement:
+                raise ValidationError(
+                    u'Please select the PCA agreement this Programme Document relates to'
+                )
+
+            if partner_manager:
+                officers = agreement.authorized_officers.values_list('officer', flat=True)
+                if partner_manager not in officers:
+                    raise ValidationError(
+                        u'{} is not a named authorized officer in the {}'.format(
+                            partner_manager, agreement
+                        )
+                    )
+
+        if unicef_manager and not signed_by_unicef_date:
             raise ValidationError(
-                u'Please select the PCA agreement this Programme Document relates to'
+                u'Please select the date {} signed the partnership'.format(unicef_manager)
+            )
+
+        if partner_manager and not signed_by_partner_date:
+            raise ValidationError(
+                u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
         if p_codes and not location_sector:

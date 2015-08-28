@@ -116,6 +116,7 @@ class PartnerOrganization(models.Model):
 class PartnerStaffMember(models.Model):
 
     partner = models.ForeignKey(PartnerOrganization)
+    title = models.CharField(max_length=64L)
     first_name = models.CharField(max_length=64L)
     last_name = models.CharField(max_length=64L)
     email = models.CharField(max_length=128L)
@@ -272,6 +273,11 @@ class Agreement(TimeFramedModel, TimeStampedModel):
         max_length=10,
         choices=AGREEMENT_TYPES
     )
+    agreement_number = models.CharField(
+        max_length=45L,
+        unique=True,
+        help_text=u'PCA Reference Number'
+    )
 
     attached_agreement = models.FileField(
         upload_to=u'agreements',
@@ -305,8 +311,13 @@ class Agreement(TimeFramedModel, TimeStampedModel):
 
 
 class AuthorizedOfficer(models.Model):
-    agreement = models.ForeignKey(Agreement)
-    officer = models.ForeignKey(PartnerStaffMember)
+    agreement = models.ForeignKey(
+        Agreement,
+        related_name='authorized_officers'
+    )
+    officer = models.ForeignKey(
+        PartnerStaffMember
+    )
 
     def __unicode__(self):
         return self.officer
@@ -324,17 +335,19 @@ class PCA(AdminURLMixin, models.Model):
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
     )
-    PCA = u'pca'
+    PD = u'pd'
+    SHPD = u'shpd'
     MOU = u'mou'
     SSFA = u'ssfa'
     IC = u'ic'
     DCT = u'dct'
     PARTNERSHIP_TYPES = (
-        (PCA, u'Partner Cooperation Agreement'),
+        (PD, u'Programme Document'),
+        (SHPD, u'Simplified Humanitarian Programme Document'),
         (MOU, u'Memorandum of Understanding'),
         (SSFA, u'Small Scale Funding Agreement'),
         (IC, u'Institutional Contract'),
-        (DCT, u'Government Transfer'),
+        #(DCT, u'Government Transfer'),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -348,7 +361,7 @@ class PCA(AdminURLMixin, models.Model):
     )
     partnership_type = models.CharField(
         choices=PARTNERSHIP_TYPES,
-        default=PCA,
+        default=PD,
         blank=True, null=True,
         max_length=255
     )
@@ -389,7 +402,7 @@ class PCA(AdminURLMixin, models.Model):
 
     )
     submission_date = models.DateField(
-        help_text=u'The date the partner submitted complete partnership documents',
+        help_text=u'The date the partner submitted complete partnership documents to Unicef',
         null=True, blank=True,
     )
     review_date = models.DateField(
@@ -407,6 +420,7 @@ class PCA(AdminURLMixin, models.Model):
     unicef_manager = models.ForeignKey(
         'auth.User',
         related_name='approved_partnerships',
+        verbose_name='Unicef Representative',
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
@@ -491,96 +505,33 @@ class PCA(AdminURLMixin, models.Model):
         return u', '.join(self.sector_children.values_list('name', flat=True))
 
     @property
-    def sum_budget(self):
-        total_sum = PCA.objects.filter(number=self.number).aggregate(Sum("total_cash"))
-        return total_sum.values()[0]
+    def days_from_submission_to_signed(self):
+        if not self.submission_date:
+            return u'Not Submitted'
+        signed_date = self.signed_by_partner_date or datetime.date.today()
+        return (signed_date - self.submission_date).days
+
+    @property
+    def days_from_review_to_signed(self):
+        if not self.submission_date:
+            return u'Not Reviewed'
+        signed_date = self.signed_by_partner_date or datetime.date.today()
+        return (signed_date - self.review_date).days
+
+    @property
+    def duration(self):
+        if self.start_date and self.end_date:
+            return u'{} Months'.format(
+                (self.end_date - self.start_date).days / 22
+            )
+        else:
+            return u''
 
     def total_unicef_contribution(self):
         cash = self.unicef_cash_budget if self.unicef_cash_budget else 0
         in_kind = self.in_kind_amount_budget if self.in_kind_amount_budget else 0
         return cash + in_kind
     total_unicef_contribution.short_description = 'Total Unicef contribution budget'
-
-    def make_amendment(self, user):
-        """
-        Creates an amendment (new record) of this partnership copying
-        over all values and related objects, marks the existing
-        partnership as non current and creates a manual restore point.
-        The user who created the amendment is also captured.
-        """
-        with transaction.atomic(), reversion.create_revision():
-
-            # make original as non current
-            original = self
-            original.current = False
-            original.save()
-
-            # copy base properties to new object
-            amendment = deepcopy(original)
-            amendment.pk = None
-            amendment.amendment = True
-            amendment.amended_at = datetime.datetime.now()
-            amendment.amendment_number += 1  # increment amendment count
-            amendment.original = original
-            amendment.save()
-
-            # make manual revision point
-            reversion.set_user(user)
-            reversion.set_comment("Amendment {} created for partnership: {}".format(
-                amendment.amendment_number,
-                amendment.number)
-            )
-
-        amendment.unicef_managers = original.unicef_managers.all()
-
-        # copy over grants
-        for grant in original.pcagrant_set.all():
-            PCAGrant.objects.create(
-                pca=amendment,
-                grant=grant.grant,
-                funds=grant.funds
-            )
-
-        # copy over sectors
-        for pca_sector in original.pcasector_set.all():
-            new_sector = PCASector.objects.create(
-                pca=amendment,
-                sector=pca_sector.sector
-            )
-
-            for output in pca_sector.pcasectoroutput_set.all():
-                PCASectorOutput.objects.create(
-                    pca_sector=new_sector,
-                    output=output.output
-                )
-
-            for goal in pca_sector.pcasectorgoal_set.all():
-                PCASectorGoal.objects.create(
-                    pca_sector=new_sector,
-                    goal=goal.goal
-                )
-
-            for activity in pca_sector.pcasectoractivity_set.all():
-                PCASectorActivity.objects.create(
-                    pca_sector=pca_sector,
-                    activity=activity.activity
-                )
-
-            # copy over indicators for sectors and reset programmed number
-            for pca_indicator in pca_sector.indicatorprogress_set.all():
-                IndicatorProgress.objects.create(
-                    pca_sector=new_sector,
-                    indicator=pca_indicator.indicator,
-                    programmed=0
-                )
-
-            # copy over intermediate results and activities
-            for pca_ir in pca_sector.pcasectorimmediateresult_set.all():
-                new_ir = PCASectorImmediateResult.objects.create(
-                    pca_sector=new_sector,
-                    Intermediate_result=pca_ir.Intermediate_result
-                )
-                new_ir.wbs_activities = pca_ir.wbs_activities.all()
 
     def save(self, **kwargs):
         """

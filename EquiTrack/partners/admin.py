@@ -394,6 +394,9 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'amendment',
         'amendment_number',
         'view_original',
+        'days_from_submission_to_signed',
+        'days_from_review_to_signed',
+        'duration',
     )
     filter_horizontal = (
         'unicef_managers',
@@ -416,7 +419,8 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
                  ('partner_manager', 'signed_by_partner_date',),
                  'partner_focal_point',
                  'unicef_managers',
-                 ('start_date', 'end_date',),)
+                 ('days_from_submission_to_signed', 'days_from_review_to_signed',),
+                 ('start_date', 'end_date', 'duration',),)
         }),
         (_('Add sites by P Code'), {
             u'classes': (u'suit-tab suit-tab-locations',),
@@ -434,8 +438,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'work_plan',
     )
 
-    actions = ['create_amendment']
-
     inlines = (
         AmendmentLogInlineAdmin,
         PartnershipBudgetInlineAdmin,
@@ -444,7 +446,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
-        SpotChecksAdminInline,
+        #SpotChecksAdminInline,
         #ResultsInlineAdmin,
     )
 
@@ -608,6 +610,7 @@ class AgreementAdmin(admin.ModelAdmin):
     fields = (
         u'partner',
         u'agreement_type',
+        u'agreement_number',
         u'attached_agreement',
         (u'start', u'end',),
         u'signed_by_unicef_date',
