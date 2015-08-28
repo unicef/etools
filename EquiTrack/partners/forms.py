@@ -141,7 +141,8 @@ class AuthorizedOfficersForm(forms.ModelForm):
 
         self.fields['officer'].queryset = PartnerStaffMember.objects.filter(
             partner=self.parent_agreement.partner
-        ) if hasattr(self, 'parent_agreement') else PartnerStaffMember.objects.none()
+        ) if hasattr(self, 'parent_agreement') \
+             and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
 
 
 class AgreementForm(UserGroupForm):
