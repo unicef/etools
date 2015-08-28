@@ -13,8 +13,8 @@
                 size: {{ pagesize|default:"letter" }};
                 margin-left: 2.0cm;
                 margin-right: 2.0cm;
-                margin-top: 2.0cm;
-                margin-bottom: 2cm;
+                margin-top: 1.8cm;
+                margin-bottom: 1.8cm;
                 @frame header {
                     -pdf-frame-content: page-header;
                     margin-top: 0cm;
@@ -24,54 +24,156 @@
                     background-color: #0099ff;
                 height: 2cm;
                 }
-                @frame footer {
-                    -pdf-frame-content: page-footer;
-{#                    bottom: 0cm;#}
-                    margin-left: 1cm;
-                    margin-right: 1cm;
+                @frame footer_frame {           /* Static frame */
+                    -pdf-frame-content: footer_content;
+                    left: 50pt; width: 512pt; top: 772pt; height: 20pt;
                 }
+
             }
         </style>
     {%endblock%}
     {% block extra_style %}
         <style type="text/css">
         #page-header {
-            background-color: #0099ff;
-            color: #ffffff;
-            line-height: 1.7cm;
+{#            background-color: #0099ff;#}
+{#            color: #ffffff;#}
+{#            line-height: 0.5cm;#}
         }
-        #page-footer{
-            -pdf-frame-content: page-footer;
+{#        #page-footer{#}
+{#            -pdf-frame-content: page-footer;#}
 {#            bottom: 0cm;#}
-            margin-left: 1cm;
-            margin-right: 1cm;
-            color: #0099ff;
-            line-height: 1.7cm;
-            background-color: #0099ff;
+{#            margin-left: 1cm;#}
+{#            margin-right: 1cm;#}
+{#            color: #0099ff;#}
+{#            line-height: 1.0cm;#}
+{#            background-color: #0099ff;#}
+{#        }#}
+        .details div{
+{#            background-color: #f1f1f1;#}
+            border-radius: 25px;
+            border: 2px solid #f1f1f1;
+            padding: 20px;
+            width: 200px;
+            height: 150px;
+        }
+        ul{
+            list-style-type: none;
+        }
+        #content{
+            font-family: "Times New Roman";
+            font-size: 12pt;
+        }
+        .page-break{
+            page-break-after: always;
         }
         </style>
     {% endblock %}
 {% endblock %}
 
 {% block content %}
-    <div id="page-header">
-{#    <img src="{{ STATIC_URL }}img/091008_UNICEFLogoWhTrans_3-19-15.png">#}
-    UNICEF
-    </div>
-
     <div id="content">
-        <h1>{{ pca.number }} - {{ pca.title }}</h1>
-
-        <div id="pca-details">
-            <div>Partner: {{ pca.partner }}</div>
-            <div>agreement type: {{ pca.partnership_type }}</div>
-
-        </div>
+    <div id="title" style="text-align: center; padding-top: 15px">
+        <div style="text-align: right"><b><u>PCA REF #:</u></b></div>
+        <div style="font-size: 16pt"><b>PROGRAMME COOPERATION AGREEMENT (PCA)</b></div>
+        <div><b>BETWEEN</b></div>
+        <div><b>{{ agreement.partner|upper }}</b></div>
+        <div><b>AND THE</b></div>
+        <div><b>UNITED NATIONS CHILDREN'S FUND</b></div>
+        <div><b>FOR THE</b></div>
+        <div><b>IMPLEMENTATION of UNICEF-funded PROGRAMME RELATING TO THE UNICEF COUNTRY PROGRAMME FOR LEBANON</b></div>
+        <div>{{ agreement.partner }} and the United Nations Children’s Fund (referred to jointly as the “Parties” and each separately as a “Party”), hereby agree as follows:</div>
+        <div><b>ARTICLE I</b></div>
+        <div style="padding-top: 0px"><b>DEFINITION</b></div>
     </div>
 
-    <div id="page-footer">
-    © Copyright 2015 UNICEF. All Rights Reserved.
+    <div article-I>
+         <div style="padding-bottom: 10px; padding-left: 5px">In this Agreement, the expression:</div>
+        <ol style="padding-bottom: 10px">
+            <li>“<u>United Nations Children’s Fund</u>” or “<u>UNICEF</u>” means the subsidiary organ of the United Nations established by the General Assembly pursuant to resolution 57(I) of 11 December 1946.</li>
+            <li>“<u>Implementing Partner</u>” or “<u>IP</u>” means {{ agreement.partner }}, {{ agreement.partner.address }} </li>
+            <li>“<u>Country Programme</u>” means the UNICEF [country programme for Lebanon], approved by the Executive Board of the United Nations Children’s Fund for the period [year to year].</li>
+            <li>“<u>Programme Document</u>”  means the formal document (in standard format) attached to this Agreement, which is concluded by the Parties and reflects expected results, detailed activities, timeframes and budget, and defines what is to be accomplished. The Programme Document is the basis for requisitioning, committing and disbursing funds to carry out planned activities and for their monitoring and reporting.</li>
+            <li>“<u>Programme Document Progress Report</u>” or “<u>PDPR</u>” means UNICEF’s standard form of Workplan progress report, available at [	] or at such other URL as may be decided from time to time by UNICEF.</li>
+            <li>“<u>HACT</u>” means the Harmonized Approach to Cash Transfer of the United Nations Development Group (“<u>UNDG</u>”), available at http://www.undg.org/index.cfm?P=255 or at such other URL as UNDG may from time to time decide.</li>
+            <li>“<u>FACE form</u>” means the UNDG’s standard Funding Authorization and Certificate of Expenditure Form, a copy of which is available at http://www.undg.org/index.cfm?P=255 or at such other URL as UNDG may from time to time decide.</li>
+            <li>“<u>e-FACE</u>” means UNICEF’s electronic data entry facility for the information contained in FACE forms, when available.</li>
+            <li>“<u>Headquarters support costs</u>” means those costs incurred by the IP which cannot be unequivocally attributed to a specific activity implemented by the IP in accordance with this Agreement, including any Programme Document.</li>
+            <li>“<u>Authorized Officer</u>” means one of the following officers of the IP:</li>
+            {% for officer in auth_officers %}
+                <div>Full name: {{ officer.officer.first_name }} {{ officer.officer.last_name }} </div>
+                <div>Title: [enter title]</div>
+                <div>Sample signature: ____________________________</div>
+            {% endfor %}
+                <div style="background-color: #f1f1f1; border: 2px solid #000; padding-bottom: 1px; padding-top: 5px"><i><u>Note to UNICEF user:</u> Add details regarding further Authorized Officers as needed.</i></div>
+                <div style="padding-top: 15px">It is understood, for the avoidance of doubt, that any removals from or amendments to the (list of) Authorized Officer(s) identified above shall require a written amendment to this Agreement in accordance with section 20.0 of the General Terms and Conditions for Programme Cooperation Agreements appended hereto.</div>
+
+            <li>“<u>non-expendable equipment</u>” means any item that cost two thousand five hundred US dollars (US$2,500) or more, including costs of initial delivery and handling, and which has a service lifetime of at least three (3) years.</li>
+            <li>“<u>Government</u>” means the Government of Lebanon.</li>
+            <li>“<u>Country</u>” means LEB.</li>
+        </ol>
     </div>
+    <div class="page-break"></div>
+    <div id="article-II" style="padding-bottom: 10px">
+         <div style="text-align: center; padding-bottom: 0px"><b>ARTICLE II</b></div>
+         <div style="padding-top: 0px; text-align: center"><b>AGREEMENT DOCUMENTS</b></div>
+        <ol>
+            <li>
+                This Agreement consists of the following documents:
+                <div>(a) This Agreement;</div>
+                <div>(b) The General Terms and Conditions for Programme Cooperation Agreements appended hereto;</div>
+                <div>(c) Any Programme Documents concluded hereunder; and</div>
+                <div>(d) Any Special Conditions established with regard to a particular programme, IP, or Programme Document, attached to this Agreement.</div>
+            </li>
+        </ol>
+    </div>
+
+    <div id="article-III" style="padding-bottom: 10px">
+         <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE III</b></div>
+         <div style="padding-top: 0px; text-align: center"><b>PURPOSE AND SCOPE</b></div>
+        <ol>
+            <li>
+                This Agreement shall govern the implementation by the IP of the relevant parts of the Programme (including humanitarian response in the Country) through one or several Programme Documents.  It describes the relationship between the Parties and the Parties’ responsibilities.
+            </li>
+        </ol>
+    </div>
+
+    <div id="article-IV" style="padding-bottom: 10px">
+         <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE IV</b></div>
+         <div style="padding-top: 0px; text-align: center"><b>GENERAL RESPONSIBILITIES OF THE PARTIES</b></div>
+        <ol>
+            <li>The Parties will work together in a spirit of cooperation and partnership, with the responsibilities and accountabilities set out in this Agreement, to implement the Programme Documents) in full in a timely, efficient, and effective, manner.</li>
+            <li>The Parties agree to carry out their respective responsibilities in accordance with the provisions of this Agreement, including the Programme Documents.</li>
+            <li>The Parties shall keep each other informed of all relevant activities pertaining to the implementation of the Programme Documents, and shall hold consultations when either Party considers it appropriate, including any circumstance that may affect the achievement of the results of the Country Programme and the Programme Documents.</li>
+            <li>The Parties shall fulfill their commitments with the fullest regard for the terms and conditions of this Agreement and the principles of the United Nations.</li>
+        </ol>
+    </div>
+
+    <div id="article-V" style="padding-bottom: 10px">
+         <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE V</b></div>
+         <div style="padding-top: 0px; text-align: center"><b>RESPONSIBILITIES OF THE IP</b></div>
+        <ol>
+	        <li>The IP will contribute to the implementation of each Programme Document covered by this Agreement by undertaking the responsibilities allocated to it in this Agreement, in full cooperation with UNICEF, and will do so in accordance with the budget, schedule, and other details set out in the Programme Document, including by:</li>
+            <div>(a) Commencing work on the responsibilities allocated to it in the Programme Document promptly upon signing the Programme Document (but in no case prior to signing this Agreement) and, as applicable, receipt of the first installment of the cash, supplies and equipment to be transferred to it by UNICEF;</div>
+            <div>(b) Making its designated contributions of technical assistance, services, supplies and equipment towards the implementation of the Programme Document as provided for under this Agreement, including the Programme Document;</div>
+            <div>(c) Completing its responsibilities with diligence and efficiency, and in conformity with the requirements set out in the Programme Document (including in connection with the schedule and budget);</div>
+            <div>(d) Providing the reports required under this Agreement in a timely manner and satisfactory to UNICEF, and furnishing all other information covering the Programme Document and the use of any cash, supplies and equipment transferred to it by UNICEF that UNICEF may reasonably ask for;</div>
+            <div>(e) Exercising the highest standard of care when handling and administering the cash, supplies and equipment provided to it by UNICEF, and ensuring that its personnel will conduct itself with the highest standards of integrity and care in the administration of public assets including money.</div>
+            <li>In addition to the obligations set out in paragraph 1 above,</li>
+            <div>(a) The IP will maximize the use of any tax exemptions or exemptions from customs duties, excise or import taxes, available to it in the Country or elsewhere, with regard to the purchase, importing, registration, or use of supplies and equipment purchased using funds provided by UNICEF under this Agreement and shall consult with UNICEF in that regard.</div>
+            <div>(b) The IP will establish and maintain a system for monitoring progress of the implementation of the Programme Document using the defined results, including outputs, indicators and targets as set out in the Programme Document.</div>
+            <div>(c) The IP will accommodate monitoring visits of representatives of any donors that are contributing to the costs of implementing the Programme Document.  UNICEF will give the IP reasonable prior notice of any such visits.</div>
+        </ol>
+    </div>
+    <div id="article-VI" style="padding-bottom: 10px">
+         <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VI</b></div>
+         <div style="padding-top: 0px; text-align: center"><b>RESPONSIBILITIES OF UNICEF</b></div>
+        <ol>
+
+        </ol>
+    </div>
+
+<div id="footer_content" style="text-align: right"> <pdf:pagenumber>
+{#        of <pdf:pagecount>#}
 
 
 {% endblock %}

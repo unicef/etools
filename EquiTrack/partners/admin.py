@@ -7,6 +7,7 @@ import datetime
 from django.contrib import admin
 from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
+from django.utils.html import mark_safe
 
 import autocomplete_light
 from reversion import VersionAdmin
@@ -611,6 +612,14 @@ class AgreementAdmin(admin.ModelAdmin):
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
+    list_display = ['partner', 'download_url']
+
+    def download_url(self, obj):
+        return mark_safe('<a class="btn btn-primary default" href="{/partners/pca_pdf/' + str(obj.id) + '}" >Download</a>')
+
+    download_url.allow_tags = True
+    download_url.short_description = 'PDF Agreement'
+
 
 
 

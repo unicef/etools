@@ -5,11 +5,8 @@ __author__ = 'jcranwellward'
 from datetime import datetime
 from rest_framework.generics import ListAPIView
 from rest_framework.parsers import FormParser
+from easy_pdf.views import PDFTemplateView
 
-from django.forms.models import model_to_dict
-
-from partners.models import FACE
-# from partners.exports import render_to_pdf
 from locations.models import Location
 from .serializers import LocationSerializer, PartnershipSerializer
 
@@ -17,7 +14,8 @@ from partners.models import (
     PCA,
     PCAGrant,
     PCASector,
-    GwPCALocation
+    GwPCALocation,
+    Agreement
 )
 
 
@@ -25,28 +23,17 @@ class PcaPDFView(PDFTemplateView):
     template_name = "partners/pca_pdf.html"
 
     def get_context_data(self, **kwargs):
-        pca_id = self.kwargs.get('pca', 270)
-        pca = PCA.objects.filter(id=pca_id)[0]
-        pca_dict = model_to_dict(pca)
-        p = pca_dict['partner']
-        pca_dict['partner'] = pca.partner.name
+        agr_id = self.kwargs.get('agr', 5)
+        agreement = Agreement.objects.filter(id=agr_id)[0]
 
         return super(PcaPDFView, self).get_context_data(
             pagesize="Letter",
             title="Partnership",
-            pca=pca_dict,
+            agreement=agreement,
+            auth_officers=agreement.authorizedofficer_set.all(),
             **kwargs
         )
 
-# def myview(request):
-#     #Retrieve data or whatever you need
-#     return render_to_pdf(
-#             'mytemplate.html',
-#             {
-#                 'pagesize':'A4',
-#                 'mylist': results,
-#             }
-#         )
 
 class PcaView(ListAPIView):
 
@@ -213,53 +200,3 @@ class LocationView(ListAPIView):
         )
         return locs
 
-
-class RapidProWebHookMixin(object):
-
-    authentication_classes = ()
-    parser_classes = (FormParser,)
-    def get_data(self, request):
-        return RapidProRequest(data=request.DATA)
-
-
-class ValidatePCANumberView(RapidProWebHookMixin, APIView):
-
-    def post(self, request):
-        data = self.get_data(request)
-        if data.is_valid():
-            valid = PCA.objects.filter(
-                number=data.object['text'],
-                status=PCA.ACTIVE,
-                partner__phone_number=data.object['phone']).exists()
-            return Response({'valid': 'valid' if valid else 'invalid'},
-                            status=status.HTTP_200_OK)
-        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class CreateFACERequestView(RapidProWebHookMixin, APIView):
-
-    def post(self, request):
-        data = self.get_data(request)
-        if data.is_valid():
-            if data.object['values']:
-                pca_number = amount = None
-                for val in data.object['values']:
-                    if val["label"] == "pca_number":
-                        pca_number = val['text']
-                    if val["label"] == "amount":
-                        amount = val['text']
-                if pca_number and amount:
-                    pca = PCA.objects.filter(
-                        number=pca_number,
-                        status=PCA.ACTIVE,
-                        partner__phone_number=data.object['phone']
-                    ).order_by('-amendment_number').first()
-                    if pca:
-                        face = FACE.objects.create(
-                            ref='{}-{}'.format(pca.number, amount),
-                            amount=amount,
-                            pca=pca,
-                        )
-                        return Response({'faceref': face.ref},
-                                        status=status.HTTP_200_OK)
-        return Response(data.errors, status=status.HTTP_400_BAD_REQUEST)
