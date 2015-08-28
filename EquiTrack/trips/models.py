@@ -287,6 +287,11 @@ class Trip(AdminURLMixin, models.Model):
             instance.owner.email,
             instance.supervisor.email]
 
+        # get zonal chiefs emails if travelling in their respective zones
+        locations = instance.locations.all().values_list('governorate__id', flat=True)
+        offices = Office.objects.filter(location_id__in=locations)
+        zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
+
         if instance.budget_owner:
             if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
                 recipients.append(instance.budget_owner.email)
@@ -307,12 +312,13 @@ class Trip(AdminURLMixin, models.Model):
             # send an email to everyone if the trip is cancelled
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
-            for location in instance.locations.all():
-                recipients.append(location.governorate.office.zonal_chief.email)
+
+            recipients.extend(zonal_chiefs)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
                 *recipients
             )
+
         elif instance.status == Trip.APPROVED:
             if instance.travel_assistant and not instance.transport_booked:
                 emails.TripTravelAssistantEmail(instance).send(
@@ -336,12 +342,7 @@ class Trip(AdminURLMixin, models.Model):
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
 
-                locations = instance.locations.all().values_list('governorate__id', flat=True)
-                offices = Office.objects.filter(location_id__in=locations)
-                recipients.extend(
-                    [office.zonal_chief.email for office in offices if office.zonal_chief]
-                )
-
+                recipients.extend(zonal_chiefs)
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
                     *recipients
