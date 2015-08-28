@@ -305,8 +305,8 @@ class Agreement(TimeFramedModel, TimeStampedModel):
         return u'{} for {} ({} - {})'.format(
             self.agreement_type,
             self.partner.name,
-            self.start.strftime('%d-%m-%Y'),
-            self.end.strftime('%d-%m-%Y')
+            self.start.strftime('%d-%m-%Y') if self.start else '',
+            self.end.strftime('%d-%m-%Y') if self.end else ''
         )
 
 
