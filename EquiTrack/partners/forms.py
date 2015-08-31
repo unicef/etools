@@ -4,6 +4,8 @@ __author__ = 'jcranwellward'
 
 import pandas
 
+
+from django.utils.translation import ugettext as _
 from django import forms
 from django.contrib import messages
 #from autocomplete_light import forms
@@ -15,7 +17,11 @@ from django.core.exceptions import (
 
 from suit.widgets import AutosizedTextarea, LinkedSelect
 
-from EquiTrack.forms import RequireOneFormSet, UserGroupForm
+from EquiTrack.forms import (
+    ParentInlineAdminFormSet,
+    RequireOneFormSet,
+    UserGroupForm,
+)
 from locations.models import Location
 from reports.models import Sector, Result, Indicator
 from .models import (
@@ -27,6 +33,8 @@ from .models import (
     Agreement,
     AuthorizedOfficer,
     PartnerStaffMember,
+    SupplyItem,
+    DistributionPlan,
 )
 
 
@@ -143,6 +151,53 @@ class AuthorizedOfficersForm(forms.ModelForm):
             partner=self.parent_agreement.partner
         ) if hasattr(self, 'parent_agreement') \
              and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
+
+
+class DistributionPlanForm(forms.ModelForm):
+
+    class Meta:
+        model = DistributionPlan
+
+    def __init__(self, *args, **kwargs):
+        """
+        Only show supply items already in the supply plan
+        """
+        if 'parent_object' in kwargs:
+            self.parent_partnership = kwargs.pop('parent_object')
+
+        super(DistributionPlanForm, self).__init__(*args, **kwargs)
+
+        queryset = SupplyItem.objects.none()
+        if hasattr(self, 'parent_partnership'):
+
+            items = self.parent_partnership.supply_plans.all().values_list('item__id', flat=True)
+            queryset = SupplyItem.objects.filter(id__in=items)
+
+        self.fields['item'].queryset = queryset
+
+
+class DistributionPlanFormSet(ParentInlineAdminFormSet):
+
+    def clean(self):
+        cleaned_data = super(DistributionPlanFormSet, self).clean()
+
+        if self.instance:
+            for plan in self.instance.supply_plans.all():
+                total_quantity = 0
+                for form in self.forms:
+                    if not hasattr(form, 'cleaned_data'):
+                        continue
+                    data = form.cleaned_data
+                    if plan.item == data.get('item', 0):
+                        total_quantity += data.get('quantity', 0)
+
+                if total_quantity > plan.quantity:
+                    raise ValidationError(
+                        _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
+                            total_quantity, plan.item, plan.quantity))
+                    )
+
+        return cleaned_data
 
 
 class AgreementForm(UserGroupForm):

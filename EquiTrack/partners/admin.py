@@ -5,7 +5,6 @@ __author__ = 'jcranwellward'
 import datetime
 
 from django.contrib import admin
-from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
@@ -15,8 +14,8 @@ from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.forms import AutoSizeTextForm, ParentInlineAdminFormSet
 from EquiTrack.utils import get_changeform_link
+from supplies.models import SupplyItem
 from tpm.models import TPMVisit
-from locations.models import Location
 from funds.models import Grant
 from reports.models import (
     WBS,
@@ -53,7 +52,9 @@ from .models import (
     PartnerStaffMember,
     PartnershipBudget,
     AuthorizedOfficer,
-    AmendmentLog
+    AmendmentLog,
+    SupplyPlan,
+    DistributionPlan,
 )
 
 from .filters import (
@@ -75,6 +76,8 @@ from .forms import (
     AgreementForm,
     AuthorizedOfficersForm,
     AuthorizedOfficesFormset,
+    DistributionPlanForm,
+    DistributionPlanFormSet,
 )
 
 
@@ -337,6 +340,20 @@ class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     max_num = 0
 
 
+class SupplyPlanInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-supplies'
+    model = SupplyPlan
+    extra = 1
+
+
+class DistributionPlanInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-supplies'
+    model = DistributionPlan
+    form = DistributionPlanForm
+    formset = DistributionPlanFormSet
+    extra = 3
+
+
 class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PartnershipForm
     resource_class = PCAResource
@@ -448,6 +465,8 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         LinksInlineAdmin,
         #SpotChecksAdminInline,
         #ResultsInlineAdmin,
+        SupplyPlanInlineAdmin,
+        DistributionPlanInlineAdmin,
     )
 
     suit_form_tabs = (
@@ -456,6 +475,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'locations', u'Locations'),
         (u'trips', u'Trips'),
         #(u'checks', u'Spot Checks'),
+        (u'supplies', u'Supplies'),
         (u'attachments', u'Attachments')
     )
 
@@ -622,7 +642,7 @@ class AgreementAdmin(admin.ModelAdmin):
         AuthorizedOfficersInlineAdmin
     ]
 
-
+admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)

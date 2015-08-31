@@ -43,7 +43,8 @@ from locations.models import (
     Location,
     Region,
 )
-from partners import emails
+from supplies.models import SupplyItem
+from . import emails
 
 User = get_user_model()
 
@@ -262,9 +263,13 @@ class Recommendation(models.Model):
 class Agreement(TimeFramedModel, TimeStampedModel):
 
     PCA = u'PCA'
+    MOU = u'MOU'
+    SSFA = u'SSFA'
     AWP = u'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Partner Cooperation Agreement"),
+        (SSFA, u'Small Scale Funding Agreement'),
+        (MOU, u'Memorandum of Understanding'),
         #(AWP, u"Annual Work Plan"),
     )
 
@@ -294,6 +299,7 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     signed_by_partner_date = models.DateField(null=True, blank=True)
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
+        verbose_name=u'Signed by partner',
         chained_field="partner",
         chained_model_field="partner",
         show_all=False,
@@ -337,15 +343,11 @@ class PCA(AdminURLMixin, models.Model):
     )
     PD = u'pd'
     SHPD = u'shpd'
-    MOU = u'mou'
-    SSFA = u'ssfa'
     IC = u'ic'
     DCT = u'dct'
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (MOU, u'Memorandum of Understanding'),
-        (SSFA, u'Small Scale Funding Agreement'),
         (IC, u'Institutional Contract'),
         #(DCT, u'Government Transfer'),
     )
@@ -398,14 +400,16 @@ class PCA(AdminURLMixin, models.Model):
         help_text=u'The date the partnership will end'
     )
     initiation_date = models.DateField(
-        help_text=u'The date when planning began with the partner'
-
+        verbose_name=u'Submission Date',
+        help_text=u'The date the partner submitted complete partnership documents to Unicef',
     )
     submission_date = models.DateField(
-        help_text=u'The date the partner submitted complete partnership documents to Unicef',
+        verbose_name=u'Submission Date to PRC',
+        help_text=u'The date the documents were submitted to the PRC',
         null=True, blank=True,
     )
     review_date = models.DateField(
+        verbose_name=u'Review date by PRC',
         help_text=u'The date the PRC reviewed the partnership',
         null=True, blank=True,
     )
@@ -436,6 +440,7 @@ class PCA(AdminURLMixin, models.Model):
 
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
+        verbose_name=u'Signed by partner',
         related_name='signed_partnerships',
         chained_field="partner",
         chained_model_field="partner",
@@ -894,4 +899,29 @@ class ResultChain(models.Model):
             self.result.sector.name,
             self.result.__unicode__(),
         )
+
+
+class SupplyPlan(models.Model):
+
+    partnership = models.ForeignKey(
+        PCA,
+        related_name='supply_plans'
+    )
+    item = models.ForeignKey(SupplyItem)
+    quantity = models.PositiveIntegerField(
+        help_text=u'Total quantity needed for this intervention'
+    )
+
+
+class DistributionPlan(models.Model):
+
+    partnership = models.ForeignKey(
+        PCA,
+        related_name='distribution_plans'
+    )
+    item = models.ForeignKey(SupplyItem)
+    location = models.ForeignKey(Region)
+    quantity = models.PositiveIntegerField(
+        help_text=u'Quantity required for this location'
+    )
 
