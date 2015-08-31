@@ -479,8 +479,8 @@ class PCA(AdminURLMixin, models.Model):
     original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
-        verbose_name = 'Partnership'
-        verbose_name_plural = 'Partnerships'
+        verbose_name = 'Programme Intervention'
+        verbose_name_plural = 'Programme Interventions'
         ordering = ['-number', 'amendment']
 
     def __unicode__(self):

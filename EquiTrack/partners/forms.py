@@ -179,13 +179,16 @@ class DistributionPlanForm(forms.ModelForm):
 class DistributionPlanFormSet(ParentInlineAdminFormSet):
 
     def clean(self):
+        """
+        Ensure distribution plans are inline with overall supply plan
+        """
         cleaned_data = super(DistributionPlanFormSet, self).clean()
 
         if self.instance:
             for plan in self.instance.supply_plans.all():
                 total_quantity = 0
                 for form in self.forms:
-                    if not hasattr(form, 'cleaned_data'):
+                    if form.cleaned_data.get('DELETE', False):
                         continue
                     data = form.cleaned_data
                     if plan.item == data.get('item', 0):

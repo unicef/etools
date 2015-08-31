@@ -13,7 +13,7 @@ django-celery==3.1.10
 django-celery-email==1.1.1
 django-filer==0.9.5
 django-storages==1.1.8
-django-suit==0.2.8
+django-suit==0.2.14
 django-suit-ckeditor==0.0.2
 django-reversion==1.8.2
 django-import-export==0.1.5
