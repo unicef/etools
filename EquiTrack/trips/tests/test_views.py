@@ -30,7 +30,6 @@ class ViewTest(TestCase):
         force_authenticate(request, user=user)
         response = view(request)
         response.render()
-        print response.content
         self.assertEquals(response.status_code, 200)
 
     def test_view_trips_api(self):

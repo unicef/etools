@@ -8,20 +8,41 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Adding model 'DistributionPlan'
-        db.create_table(u'partners_distributionplan', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('partnership', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['partners.PCA'])),
-            ('item', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['supplies.SupplyItem'])),
-            ('location', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['locations.Region'])),
-            ('quantity', self.gf('django.db.models.fields.PositiveIntegerField')()),
-        ))
-        db.send_create_signal(u'partners', ['DistributionPlan'])
+
+        # Changing field 'AmendmentLog.amended_at'
+        db.alter_column(u'partners_amendmentlog', 'amended_at', self.gf('django.db.models.fields.DateField')(null=True))
+        # Adding field 'PartnerStaffMember.title'
+        db.add_column(u'partners_partnerstaffmember', 'title',
+                      self.gf('django.db.models.fields.CharField')(default='Officer', max_length=64L),
+                      keep_default=False)
+
+
+        # Changing field 'PartnershipBudget.amendment'
+        db.alter_column(u'partners_partnershipbudget', 'amendment_id', self.gf('django.db.models.fields.related.ForeignKey')(null=True, to=orm['partners.AmendmentLog']))
+
+        # Changing field 'PCAGrant.amendment'
+        db.alter_column(u'partners_pcagrant', 'amendment_id', self.gf('django.db.models.fields.related.ForeignKey')(null=True, to=orm['partners.AmendmentLog']))
+        # Adding field 'Agreement.agreement_number'
+        db.add_column(u'partners_agreement', 'agreement_number',
+                      self.gf('django.db.models.fields.CharField')(default='XXX/PCA/YYYY/VV', unique=True, max_length=45L),
+                      keep_default=False)
 
 
     def backwards(self, orm):
-        # Deleting model 'DistributionPlan'
-        db.delete_table(u'partners_distributionplan')
+
+        # Changing field 'AmendmentLog.amended_at'
+        db.alter_column(u'partners_amendmentlog', 'amended_at', self.gf('django.db.models.fields.DateTimeField')(null=True))
+        # Deleting field 'PartnerStaffMember.title'
+        db.delete_column(u'partners_partnerstaffmember', 'title')
+
+
+        # Changing field 'PartnershipBudget.amendment'
+        db.alter_column(u'partners_partnershipbudget', 'amendment_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(null=True, to=orm['partners.AmendmentLog']))
+
+        # Changing field 'PCAGrant.amendment'
+        db.alter_column(u'partners_pcagrant', 'amendment_id', self.gf('smart_selects.db_fields.ChainedForeignKey')(null=True, to=orm['partners.AmendmentLog']))
+        # Deleting field 'Agreement.agreement_number'
+        db.delete_column(u'partners_agreement', 'agreement_number')
 
 
     models = {
@@ -146,7 +167,7 @@ class Migration(SchemaMigration):
         },
         u'locations.governorate': {
             'Meta': {'ordering': "['name']", 'object_name': 'Governorate'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#2DFDE4'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#9C9221'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -159,7 +180,7 @@ class Migration(SchemaMigration):
             'cas_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_code_un': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_village_name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#35048D'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#A3F4FE'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -180,7 +201,7 @@ class Migration(SchemaMigration):
         },
         u'locations.region': {
             'Meta': {'ordering': "['name']", 'object_name': 'Region'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#B5C1CD'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#751631'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
@@ -190,6 +211,7 @@ class Migration(SchemaMigration):
         },
         u'partners.agreement': {
             'Meta': {'object_name': 'Agreement'},
+            'agreement_number': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'}),
             'agreement_type': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
             'attached_agreement': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'blank': 'True'}),
             'created': ('model_utils.fields.AutoCreatedField', [], {'default': 'datetime.datetime.now'}),
@@ -197,13 +219,21 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'modified': ('model_utils.fields.AutoLastModifiedField', [], {'default': 'datetime.datetime.now'}),
             'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
-            'partner_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
-            'partner_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'partner_last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
+            'partner_manager': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['partners.PartnerStaffMember']", 'null': 'True', 'blank': 'True'}),
             'signed_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'signed_pcas'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'signed_by_partner_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'signed_by_unicef_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'start': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'})
+        },
+        u'partners.amendmentlog': {
+            'Meta': {'object_name': 'AmendmentLog'},
+            'amended_at': ('django.db.models.fields.DateField', [], {'null': 'True'}),
+            'amendment_number': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'created': ('model_utils.fields.AutoCreatedField', [], {'default': 'datetime.datetime.now'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified': ('model_utils.fields.AutoLastModifiedField', [], {'default': 'datetime.datetime.now'}),
+            'partnership': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'amendments_list'", 'to': u"orm['partners.PCA']"}),
+            'type': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
         u'partners.assessment': {
             'Meta': {'object_name': 'Assessment'},
@@ -222,13 +252,11 @@ class Migration(SchemaMigration):
             'requesting_officer': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'requested_assessments'", 'to': u"orm['auth.User']"}),
             'type': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
-        u'partners.distributionplan': {
-            'Meta': {'object_name': 'DistributionPlan'},
+        u'partners.authorizedofficer': {
+            'Meta': {'object_name': 'AuthorizedOfficer'},
+            'agreement': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'authorized_officers'", 'to': u"orm['partners.Agreement']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'item': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['supplies.SupplyItem']"}),
-            'location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Region']"}),
-            'partnership': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']"}),
-            'quantity': ('django.db.models.fields.PositiveIntegerField', [], {})
+            'officer': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerStaffMember']"})
         },
         u'partners.filetype': {
             'Meta': {'object_name': 'FileType'},
@@ -269,6 +297,28 @@ class Migration(SchemaMigration):
             'type': ('django.db.models.fields.CharField', [], {'default': "u'national'", 'max_length': '50'}),
             'vendor_number': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
         },
+        u'partners.partnershipbudget': {
+            'Meta': {'object_name': 'PartnershipBudget'},
+            'amendment': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'budgets'", 'null': 'True', 'to': u"orm['partners.AmendmentLog']"}),
+            'created': ('model_utils.fields.AutoCreatedField', [], {'default': 'datetime.datetime.now'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'in_kind_amount': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'modified': ('model_utils.fields.AutoLastModifiedField', [], {'default': 'datetime.datetime.now'}),
+            'partner_contribution': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'partnership': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']"}),
+            'total': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'unicef_cash': ('django.db.models.fields.IntegerField', [], {'default': '0'})
+        },
+        u'partners.partnerstaffmember': {
+            'Meta': {'object_name': 'PartnerStaffMember'},
+            'email': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
+            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L'}),
+            'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
+            'phone': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
+            'title': ('django.db.models.fields.CharField', [], {'max_length': '64L'})
+        },
         u'partners.pca': {
             'Meta': {'ordering': "['-number', 'amendment']", 'object_name': 'PCA'},
             'agreement': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['partners.Agreement']", 'null': 'True', 'blank': 'True'}),
@@ -282,20 +332,19 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'in_kind_amount_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
             'initiation_date': ('django.db.models.fields.DateField', [], {}),
-            'number': ('django.db.models.fields.CharField', [], {'max_length': '45L', 'blank': 'True'}),
+            'number': ('django.db.models.fields.CharField', [], {'default': "u'UNASSIGNED'", 'max_length': '45L', 'blank': 'True'}),
             'original': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'amendments'", 'null': 'True', 'to': u"orm['partners.PCA']"}),
             'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
             'partner_contribution_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'partner_focal_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
-            'partner_focal_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'partner_focal_last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'partner_focal_phone': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
+            'partner_focal_point': ('smart_selects.db_fields.ChainedForeignKey', [], {'blank': 'True', 'related_name': "'my_partnerships'", 'null': 'True', 'to': u"orm['partners.PartnerStaffMember']"}),
+            'partner_manager': ('smart_selects.db_fields.ChainedForeignKey', [], {'blank': 'True', 'related_name': "'signed_partnerships'", 'null': 'True', 'to': u"orm['partners.PartnerStaffMember']"}),
             'partner_mng_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
             'partner_mng_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
             'partner_mng_last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
             'partner_mng_phone': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
             'partnership_type': ('django.db.models.fields.CharField', [], {'default': "u'pd'", 'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'result_structure': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.ResultStructure']", 'null': 'True', 'blank': 'True'}),
+            'review_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'sectors': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'signed_by_partner_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'signed_by_unicef_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
@@ -305,6 +354,7 @@ class Migration(SchemaMigration):
             'title': ('django.db.models.fields.CharField', [], {'max_length': '256L'}),
             'total_cash': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
             'unicef_cash_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
+            'unicef_manager': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'approved_partnerships'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'unicef_managers': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.User']", 'symmetrical': 'False', 'blank': 'True'}),
             'unicef_mng_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
             'unicef_mng_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
@@ -320,14 +370,19 @@ class Migration(SchemaMigration):
         },
         u'partners.pcagrant': {
             'Meta': {'ordering': "['-funds']", 'object_name': 'PCAGrant'},
+            'amendment': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'grants'", 'null': 'True', 'to': u"orm['partners.AmendmentLog']"}),
+            'created': ('model_utils.fields.AutoCreatedField', [], {'default': 'datetime.datetime.now'}),
             'funds': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'grant': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['funds.Grant']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'pca': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']"})
+            'modified': ('model_utils.fields.AutoLastModifiedField', [], {'default': 'datetime.datetime.now'}),
+            'partnership': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']"})
         },
         u'partners.pcasector': {
             'Meta': {'object_name': 'PCASector'},
+            'created': ('model_utils.fields.AutoCreatedField', [], {'default': 'datetime.datetime.now'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified': ('model_utils.fields.AutoLastModifiedField', [], {'default': 'datetime.datetime.now'}),
             'pca': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']"}),
             'sector': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.Sector']"})
         },
@@ -489,12 +544,6 @@ class Migration(SchemaMigration):
             'code': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '128L'})
-        },
-        u'supplies.supplyitem': {
-            'Meta': {'object_name': 'SupplyItem'},
-            'description': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'})
         }
     }
 

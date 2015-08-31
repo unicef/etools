@@ -56,8 +56,8 @@ class TestTripModels(TestCase):
 
     def test_submit_trip_international(self):
         """
-        Test that when an international trip is submitted and approved by supervisor, the rep is informed that they
-         must approve
+        Test that when an international trip is submitted and approved by supervisor,
+        the rep is informed that they must approve
         """
         self.trip.status = Trip.SUBMITTED
         self.trip.international_travel = True
@@ -198,7 +198,7 @@ class TestTripModels(TestCase):
         self.trip.status = Trip.APPROVED
         self.trip.save()
 
-         # Now test the email is correct for this action
+        # Now test the email is correct for this action
         self.assertEqual(len(mail.outbox), 1)
         self.assertTrue('Approved' in mail.outbox[0].subject)
         self.assertTrue('approved' in mail.outbox[0].body)

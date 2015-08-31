@@ -4,25 +4,37 @@ __author__ = 'jcranwellward'
 
 import pandas
 
+
+from django.utils.translation import ugettext as _
 from django import forms
-from django.forms.models import BaseInlineFormSet
 from django.contrib import messages
 #from autocomplete_light import forms
 from django.core.exceptions import (
     ValidationError,
     ObjectDoesNotExist,
-    MultipleObjectsReturned,
+    MultipleObjectsReturned
 )
 
-from suit.widgets import AutosizedTextarea
+from suit.widgets import AutosizedTextarea, LinkedSelect
 
+from EquiTrack.forms import (
+    ParentInlineAdminFormSet,
+    RequireOneFormSet,
+    UserGroupForm,
+)
 from locations.models import Location
 from reports.models import Sector, Result, Indicator
 from .models import (
     PCA,
     GwPCALocation,
     ResultChain,
-    IndicatorProgress
+    IndicatorProgress,
+    AmendmentLog,
+    Agreement,
+    AuthorizedOfficer,
+    PartnerStaffMember,
+    SupplyItem,
+    DistributionPlan,
 )
 
 
@@ -49,12 +61,6 @@ class IndicatorAdminModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(IndicatorAdminModelForm, self).__init__(*args, **kwargs)
         self.fields['indicator'].queryset = []
-
-
-class ResultInlineAdminFormSet(BaseInlineFormSet):
-    def _construct_form(self, i, **kwargs):
-        kwargs['parent_object'] = self.instance
-        return super(ResultInlineAdminFormSet, self)._construct_form(i, **kwargs)
 
 
 class ResultChainAdminForm(forms.ModelForm):
@@ -88,7 +94,159 @@ class ResultChainAdminForm(forms.ModelForm):
                 self.fields['indicator'].queryset = indicators.filter(result_id=self.instance.result_id)
 
 
-class PCAForm(forms.ModelForm):
+class AmendmentForm(forms.ModelForm):
+
+    class Meta:
+        model = AmendmentLog
+
+    def __init__(self, *args, **kwargs):
+        """
+        Only display the amendments related to this partnership
+        """
+        if 'parent_object' in kwargs:
+            self.parent_partnership = kwargs.pop('parent_object')
+
+        super(AmendmentForm, self).__init__(*args, **kwargs)
+
+        self.fields['amendment'].queryset = self.parent_partnership.amendments_list \
+            if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
+
+
+class AuthorizedOfficesFormset(RequireOneFormSet):
+
+    def __init__(
+            self, data=None, files=None, instance=None,
+            save_as_new=False, prefix=None, queryset=None, **kwargs):
+        super(AuthorizedOfficesFormset, self).__init__(
+            data=data, files=files, instance=instance,
+            save_as_new=save_as_new, prefix=prefix,
+            queryset=queryset, **kwargs)
+        self.required = False
+
+    def _construct_form(self, i, **kwargs):
+        form = super(AuthorizedOfficesFormset, self)._construct_form(i, **kwargs)
+        if self.instance.signed_by_partner_date:
+            self.required = True
+        return form
+
+
+class AuthorizedOfficersForm(forms.ModelForm):
+
+    class Meta:
+        model = AuthorizedOfficer
+        widgets = {
+            'officer': LinkedSelect,
+        }
+
+    def __init__(self, *args, **kwargs):
+        """
+        Only display the officers of the partner related to the agreement
+        """
+        if 'parent_object' in kwargs:
+            self.parent_agreement = kwargs.pop('parent_object')
+
+        super(AuthorizedOfficersForm, self).__init__(*args, **kwargs)
+
+        self.fields['officer'].queryset = PartnerStaffMember.objects.filter(
+            partner=self.parent_agreement.partner
+        ) if hasattr(self, 'parent_agreement') else PartnerStaffMember.objects.none()
+
+
+class DistributionPlanForm(forms.ModelForm):
+
+    class Meta:
+        model = DistributionPlan
+
+    def __init__(self, *args, **kwargs):
+        """
+        Only show supply items already in the supply plan
+        """
+        if 'parent_object' in kwargs:
+            self.parent_partnership = kwargs.pop('parent_object')
+
+        super(DistributionPlanForm, self).__init__(*args, **kwargs)
+
+        queryset = SupplyItem.objects.none()
+        if hasattr(self, 'parent_partnership'):
+
+            items = self.parent_partnership.supply_plans.all().values_list('item__id', flat=True)
+            queryset = SupplyItem.objects.filter(id__in=items)
+
+        self.fields['item'].queryset = queryset
+
+
+class DistributionPlanFormSet(ParentInlineAdminFormSet):
+
+    def clean(self):
+        cleaned_data = super(DistributionPlanFormSet, self).clean()
+
+        if self.instance:
+            for plan in self.instance.supply_plans.all():
+                total_quantity = 0
+                for form in self.forms:
+                    if not hasattr(form, 'cleaned_data'):
+                        continue
+                    data = form.cleaned_data
+                    if plan.item == data.get('item', 0):
+                        total_quantity += data.get('quantity', 0)
+
+                if total_quantity > plan.quantity:
+                    raise ValidationError(
+                        _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
+                            total_quantity, plan.item, plan.quantity))
+                    )
+
+        return cleaned_data
+
+
+class AgreementForm(UserGroupForm):
+
+    user_field = u'signed_by'
+    group_name = u'Senior Management Team'
+
+    class Meta:
+        model = Agreement
+        widgets = {
+            'partner': LinkedSelect,
+            'signed_by': LinkedSelect,
+            'partner_manager': LinkedSelect,
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(AgreementForm, self).__init__(*args, **kwargs)
+        self.fields['start'].required = True
+        self.fields['end'].required = True
+
+    def clean(self):
+        cleaned_data = super(AgreementForm, self).clean()
+
+        partner = cleaned_data[u'partner']
+        agreement_type = cleaned_data[u'agreement_type']
+        start = cleaned_data[u'start']
+        end = cleaned_data[u'end']
+
+        # prevent more than one agreement being crated for the current period
+        agreements = Agreement.objects.filter(
+            partner=partner,
+            start__lte=start,
+            end__gte=end
+        )
+        if self.instance:
+            agreements = agreements.exclude(id=self.instance.id)
+        if agreements:
+            raise ValidationError(
+                u'You can only have one current {} per partner'.format(
+                    agreement_type
+                )
+            )
+
+        return cleaned_data
+
+
+class PartnershipForm(UserGroupForm):
+
+    user_field = u'unicef_manager'
+    group_name = u'Senior Management Team'
 
     # fields needed to assign locations from p_codes
     p_codes = forms.CharField(widget=forms.Textarea, required=False)
@@ -98,8 +256,8 @@ class PCAForm(forms.ModelForm):
     )
 
     # fields needed to import log frames/work plans from excel
-    log_frame = forms.FileField(required=False)
-    log_frame_sector = forms.ModelChoiceField(
+    work_plan = forms.FileField(required=False)
+    work_plan_sector = forms.ModelChoiceField(
         required=False,
         queryset=Sector.objects.all()
     )
@@ -107,8 +265,8 @@ class PCAForm(forms.ModelForm):
     class Meta:
         model = PCA
         widgets = {
-            'title':
-                AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'title': AutosizedTextarea(attrs={'class': 'input-xlarge'}),
+            'agreement': LinkedSelect,
         }
 
     def add_locations(self, p_codes, sector):
@@ -142,14 +300,14 @@ class PCAForm(forms.ModelForm):
                 created, notfound
             ))
 
-    def import_results_from_log_frame(self, log_frame, sector):
+    def import_results_from_work_plan(self, work_plan, sector):
         """
-        Matches results from the log frame to country result structure.
+        Matches results from the work plan to country result structure.
         Will try to match indicators one to one or by name, this can be ran
-        multiple times to continually update the log frame
+        multiple times to continually update the work plan
         """
         try:  # first try to grab the excel as a table...
-            data = pandas.read_excel(log_frame, index_col=0)
+            data = pandas.read_excel(work_plan, index_col=0)
         except Exception as exp:
             raise ValidationError(exp.message)
 
@@ -199,19 +357,45 @@ class PCAForm(forms.ModelForm):
         """
         Add elements to the partnership based on imports
         """
-        cleaned_data = super(PCAForm, self).clean()
+        cleaned_data = super(PartnershipForm, self).clean()
 
         partnership_type = cleaned_data[u'partnership_type']
         agreement = cleaned_data[u'agreement']
+        unicef_manager = cleaned_data[u'unicef_manager']
+        signed_by_unicef_date = cleaned_data[u'signed_by_unicef_date']
+        partner_manager = cleaned_data[u'partner_manager']
+        signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
+
         p_codes =cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
 
-        log_frame = self.cleaned_data[u'log_frame']
-        log_frame_sector = self.cleaned_data[u'log_frame_sector']
+        work_plan = self.cleaned_data[u'work_plan']
+        work_plan_sector = self.cleaned_data[u'work_plan_sector']
 
-        if partnership_type == PCA.PD and not agreement:
+        if partnership_type == PCA.PD:
+
+            if not agreement:
+                raise ValidationError(
+                    u'Please select the PCA agreement this Programme Document relates to'
+                )
+
+            if partner_manager:
+                officers = agreement.authorized_officers.values_list('officer', flat=True)
+                if partner_manager not in officers:
+                    raise ValidationError(
+                        u'{} is not a named authorized officer in the {}'.format(
+                            partner_manager, agreement
+                        )
+                    )
+
+        if unicef_manager and not signed_by_unicef_date:
             raise ValidationError(
-                u'Please select the PCA agreement this Programme Document relates to'
+                u'Please select the date {} signed the partnership'.format(unicef_manager)
+            )
+
+        if partner_manager and not signed_by_partner_date:
+            raise ValidationError(
+                u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
         if p_codes and not location_sector:
@@ -222,12 +406,12 @@ class PCAForm(forms.ModelForm):
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
-        if log_frame and not log_frame_sector:
+        if work_plan and not work_plan_sector:
             raise ValidationError(
                 u'Please select a sector to import results against'
             )
 
-        if log_frame and log_frame_sector:
-            self.import_results_from_log_frame(log_frame, log_frame_sector)
+        if work_plan and work_plan_sector:
+            self.import_results_from_work_plan(work_plan, work_plan_sector)
 
         return cleaned_data
