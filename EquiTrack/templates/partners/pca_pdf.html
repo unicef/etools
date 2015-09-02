@@ -100,8 +100,8 @@
             <li>“<u>Headquarters support costs</u>” means those costs incurred by the IP which cannot be unequivocally attributed to a specific activity implemented by the IP in accordance with this Agreement, including any Programme Document.</li>
             <li>“<u>Authorized Officer</u>” means one of the following officers of the IP:</li>
             {% for officer in auth_officers %}
-                <div>Full name: {{ officer.officer.first_name }} {{ officer.officer.last_name }} </div>
-                <div>Title: [enter title]</div>
+                <div>Full name: {{ officer.first_name }} {{ officer.last_name }} </div>
+                <div>Title: {{ officer.title }}</div>
                 <div>Sample signature: ____________________________</div>
             {% endfor %}
                 <div style="background-color: #f1f1f1; border: 2px solid #000; padding-bottom: 1px; padding-top: 5px"><i><u>Note to UNICEF user:</u> Add details regarding further Authorized Officers as needed.</i></div>
