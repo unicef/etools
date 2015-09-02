@@ -384,8 +384,8 @@ class PartnershipForm(UserGroupForm):
                 )
 
             if partner_manager:
-                officers = agreement.authorized_officers.values_list('officer', flat=True)
-                if partner_manager not in officers:
+                officers = agreement.authorized_officers.all().values_list('officer', flat=True)
+                if partner_manager.id not in officers:
                     raise ValidationError(
                         u'{} is not a named authorized officer in the {}'.format(
                             partner_manager, agreement

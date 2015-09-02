@@ -424,7 +424,7 @@ class PCA(AdminURLMixin, models.Model):
     unicef_manager = models.ForeignKey(
         'auth.User',
         related_name='approved_partnerships',
-        verbose_name='Unicef Representative',
+        verbose_name=u'Signed by',
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
