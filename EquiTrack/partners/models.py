@@ -43,7 +43,8 @@ from locations.models import (
     Location,
     Region,
 )
-from partners import emails
+from supplies.models import SupplyItem
+from . import emails
 
 User = get_user_model()
 
@@ -116,6 +117,7 @@ class PartnerOrganization(models.Model):
 class PartnerStaffMember(models.Model):
 
     partner = models.ForeignKey(PartnerOrganization)
+    title = models.CharField(max_length=64L)
     first_name = models.CharField(max_length=64L)
     last_name = models.CharField(max_length=64L)
     email = models.CharField(max_length=128L)
@@ -261,9 +263,13 @@ class Recommendation(models.Model):
 class Agreement(TimeFramedModel, TimeStampedModel):
 
     PCA = u'PCA'
+    MOU = u'MOU'
+    SSFA = u'SSFA'
     AWP = u'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Partner Cooperation Agreement"),
+        (SSFA, u'Small Scale Funding Agreement'),
+        (MOU, u'Memorandum of Understanding'),
         #(AWP, u"Annual Work Plan"),
     )
 
@@ -271,6 +277,11 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES
+    )
+    agreement_number = models.CharField(
+        max_length=45L,
+        unique=True,
+        help_text=u'PCA Reference Number'
     )
 
     attached_agreement = models.FileField(
@@ -288,6 +299,7 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     signed_by_partner_date = models.DateField(null=True, blank=True)
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
+        verbose_name=u'Signed by partner',
         chained_field="partner",
         chained_model_field="partner",
         show_all=False,
@@ -296,15 +308,25 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     )
 
     def __unicode__(self):
-        return u'{} for {}'.format(
+        return u'{} for {} ({} - {})'.format(
             self.agreement_type,
-            self.partner.name
+            self.partner.name,
+            self.start.strftime('%d-%m-%Y') if self.start else '',
+            self.end.strftime('%d-%m-%Y') if self.end else ''
         )
 
 
 class AuthorizedOfficer(models.Model):
-    agreement = models.ForeignKey(Agreement)
-    officer = models.ForeignKey(PartnerStaffMember)
+    agreement = models.ForeignKey(
+        Agreement,
+        related_name='authorized_officers'
+    )
+    officer = models.ForeignKey(
+        PartnerStaffMember
+    )
+
+    def __unicode__(self):
+        return self.officer
 
 
 class PCA(AdminURLMixin, models.Model):
@@ -319,17 +341,15 @@ class PCA(AdminURLMixin, models.Model):
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
     )
-    PCA = u'pca'
-    MOU = u'mou'
-    SSFA = u'ssfa'
+    PD = u'pd'
+    SHPD = u'shpd'
     IC = u'ic'
     DCT = u'dct'
     PARTNERSHIP_TYPES = (
-        (PCA, u'Partner Cooperation Agreement'),
-        (MOU, u'Memorandum of Understanding'),
-        (SSFA, u'Small Scale Funding Agreement'),
+        (PD, u'Programme Document'),
+        (SHPD, u'Simplified Humanitarian Programme Document'),
         (IC, u'Institutional Contract'),
-        (DCT, u'Government Transfer'),
+        #(DCT, u'Government Transfer'),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -343,7 +363,7 @@ class PCA(AdminURLMixin, models.Model):
     )
     partnership_type = models.CharField(
         choices=PARTNERSHIP_TYPES,
-        default=PCA,
+        default=PD,
         blank=True, null=True,
         max_length=255
     )
@@ -352,7 +372,12 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
         help_text=u'Which result structure does this partnership report under?'
     )
-    number = models.CharField(max_length=45L, blank=True, default=u'UNASSIGNED')
+    number = models.CharField(
+        max_length=45L,
+        blank=True,
+        default=u'UNASSIGNED',
+        help_text=u'PRC Reference Number'
+    )
     title = models.CharField(max_length=256L)
     status = models.CharField(
         max_length=32L,
@@ -375,14 +400,16 @@ class PCA(AdminURLMixin, models.Model):
         help_text=u'The date the partnership will end'
     )
     initiation_date = models.DateField(
-        help_text=u'The date when planning began with the partner'
-
+        verbose_name=u'Submission Date',
+        help_text=u'The date the partner submitted complete partnership documents to Unicef',
     )
     submission_date = models.DateField(
-        help_text=u'The date the partner submitted complete partnership documents',
+        verbose_name=u'Submission Date to PRC',
+        help_text=u'The date the documents were submitted to the PRC',
         null=True, blank=True,
     )
     review_date = models.DateField(
+        verbose_name=u'Review date by PRC',
         help_text=u'The date the PRC reviewed the partnership',
         null=True, blank=True,
     )
@@ -397,6 +424,7 @@ class PCA(AdminURLMixin, models.Model):
     unicef_manager = models.ForeignKey(
         'auth.User',
         related_name='approved_partnerships',
+        verbose_name=u'Signed by',
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
@@ -412,6 +440,7 @@ class PCA(AdminURLMixin, models.Model):
 
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
+        verbose_name=u'Signed by partner',
         related_name='signed_partnerships',
         chained_field="partner",
         chained_model_field="partner",
@@ -450,8 +479,8 @@ class PCA(AdminURLMixin, models.Model):
     original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
-        verbose_name = 'Partnership'
-        verbose_name_plural = 'Partnerships'
+        verbose_name = 'Programme Intervention'
+        verbose_name_plural = 'Programme Interventions'
         ordering = ['-number', 'amendment']
 
     def __unicode__(self):
@@ -481,96 +510,33 @@ class PCA(AdminURLMixin, models.Model):
         return u', '.join(self.sector_children.values_list('name', flat=True))
 
     @property
-    def sum_budget(self):
-        total_sum = PCA.objects.filter(number=self.number).aggregate(Sum("total_cash"))
-        return total_sum.values()[0]
+    def days_from_submission_to_signed(self):
+        if not self.submission_date:
+            return u'Not Submitted'
+        signed_date = self.signed_by_partner_date or datetime.date.today()
+        return (signed_date - self.submission_date).days
+
+    @property
+    def days_from_review_to_signed(self):
+        if not self.submission_date:
+            return u'Not Reviewed'
+        signed_date = self.signed_by_partner_date or datetime.date.today()
+        return (signed_date - self.review_date).days
+
+    @property
+    def duration(self):
+        if self.start_date and self.end_date:
+            return u'{} Months'.format(
+                (self.end_date - self.start_date).days / 22
+            )
+        else:
+            return u''
 
     def total_unicef_contribution(self):
         cash = self.unicef_cash_budget if self.unicef_cash_budget else 0
         in_kind = self.in_kind_amount_budget if self.in_kind_amount_budget else 0
         return cash + in_kind
     total_unicef_contribution.short_description = 'Total Unicef contribution budget'
-
-    def make_amendment(self, user):
-        """
-        Creates an amendment (new record) of this partnership copying
-        over all values and related objects, marks the existing
-        partnership as non current and creates a manual restore point.
-        The user who created the amendment is also captured.
-        """
-        with transaction.atomic(), reversion.create_revision():
-
-            # make original as non current
-            original = self
-            original.current = False
-            original.save()
-
-            # copy base properties to new object
-            amendment = deepcopy(original)
-            amendment.pk = None
-            amendment.amendment = True
-            amendment.amended_at = datetime.datetime.now()
-            amendment.amendment_number += 1  # increment amendment count
-            amendment.original = original
-            amendment.save()
-
-            # make manual revision point
-            reversion.set_user(user)
-            reversion.set_comment("Amendment {} created for partnership: {}".format(
-                amendment.amendment_number,
-                amendment.number)
-            )
-
-        amendment.unicef_managers = original.unicef_managers.all()
-
-        # copy over grants
-        for grant in original.pcagrant_set.all():
-            PCAGrant.objects.create(
-                pca=amendment,
-                grant=grant.grant,
-                funds=grant.funds
-            )
-
-        # copy over sectors
-        for pca_sector in original.pcasector_set.all():
-            new_sector = PCASector.objects.create(
-                pca=amendment,
-                sector=pca_sector.sector
-            )
-
-            for output in pca_sector.pcasectoroutput_set.all():
-                PCASectorOutput.objects.create(
-                    pca_sector=new_sector,
-                    output=output.output
-                )
-
-            for goal in pca_sector.pcasectorgoal_set.all():
-                PCASectorGoal.objects.create(
-                    pca_sector=new_sector,
-                    goal=goal.goal
-                )
-
-            for activity in pca_sector.pcasectoractivity_set.all():
-                PCASectorActivity.objects.create(
-                    pca_sector=pca_sector,
-                    activity=activity.activity
-                )
-
-            # copy over indicators for sectors and reset programmed number
-            for pca_indicator in pca_sector.indicatorprogress_set.all():
-                IndicatorProgress.objects.create(
-                    pca_sector=new_sector,
-                    indicator=pca_indicator.indicator,
-                    programmed=0
-                )
-
-            # copy over intermediate results and activities
-            for pca_ir in pca_sector.pcasectorimmediateresult_set.all():
-                new_ir = PCASectorImmediateResult.objects.create(
-                    pca_sector=new_sector,
-                    Intermediate_result=pca_ir.Intermediate_result
-                )
-                new_ir.wbs_activities = pca_ir.wbs_activities.all()
 
     def save(self, **kwargs):
         """
@@ -933,4 +899,29 @@ class ResultChain(models.Model):
             self.result.sector.name,
             self.result.__unicode__(),
         )
+
+
+class SupplyPlan(models.Model):
+
+    partnership = models.ForeignKey(
+        PCA,
+        related_name='supply_plans'
+    )
+    item = models.ForeignKey(SupplyItem)
+    quantity = models.PositiveIntegerField(
+        help_text=u'Total quantity needed for this intervention'
+    )
+
+
+class DistributionPlan(models.Model):
+
+    partnership = models.ForeignKey(
+        PCA,
+        related_name='distribution_plans'
+    )
+    item = models.ForeignKey(SupplyItem)
+    location = models.ForeignKey(Region)
+    quantity = models.PositiveIntegerField(
+        help_text=u'Quantity required for this location'
+    )
 

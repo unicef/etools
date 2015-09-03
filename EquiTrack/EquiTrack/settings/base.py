@@ -27,12 +27,12 @@ SUIT_CONFIG = {
 
         {'app': 'auth', 'label': 'Users', 'icon': 'icon-user'},
 
-        {'label': 'Dashboard', 'icon': 'icon-dashboard', 'url': 'dashboard'},
+        {'label': 'Dashboard', 'icon': 'icon-globe', 'url': 'dashboard'},
 
         {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
-            {'model': 'partners.agreement', 'label': 'Agreements'},
-            {'model': 'partners.pca', 'label': 'Partnerships'},
+            {'model': 'partners.agreement'},
+            {'model': 'partners.pca'},
         ]},
 
         {'app': 'trips', 'icon': 'icon-road', 'models': [
@@ -55,7 +55,7 @@ SUIT_CONFIG = {
 
         {'app': 'activityinfo', 'label': 'ActivityInfo'},
 
-        {'app': 'locations', 'icon': 'icon-globe'},
+        {'app': 'locations', 'icon': 'icon-map-marker'},
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 
@@ -343,6 +343,7 @@ LOCAL_APPS = (
     'users',
     'registration',
     'tpm',
+    'supplies',
 )
 
 MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'

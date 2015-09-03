@@ -5,7 +5,6 @@ __author__ = 'jcranwellward'
 import datetime
 
 from django.contrib import admin
-from django.contrib import messages
 from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
@@ -13,10 +12,10 @@ from reversion import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
-from EquiTrack.forms import AutoSizeTextForm
+from EquiTrack.forms import AutoSizeTextForm, ParentInlineAdminFormSet
 from EquiTrack.utils import get_changeform_link
+from supplies.models import SupplyItem
 from tpm.models import TPMVisit
-from locations.models import Location
 from funds.models import Grant
 from reports.models import (
     WBS,
@@ -53,7 +52,9 @@ from .models import (
     PartnerStaffMember,
     PartnershipBudget,
     AuthorizedOfficer,
-    AmendmentLog
+    AmendmentLog,
+    SupplyPlan,
+    DistributionPlan,
 )
 
 from .filters import (
@@ -69,10 +70,14 @@ from .filters import (
 )
 from .mixins import ReadOnlyMixin, SectorMixin
 from .forms import (
-    PCAForm,
+    PartnershipForm,
     ResultChainAdminForm,
-    ParentInlineAdminFormSet,
     AmendmentForm,
+    AgreementForm,
+    AuthorizedOfficersForm,
+    AuthorizedOfficesFormset,
+    DistributionPlanForm,
+    DistributionPlanFormSet,
 )
 
 
@@ -335,8 +340,22 @@ class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     max_num = 0
 
 
+class SupplyPlanInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-supplies'
+    model = SupplyPlan
+    extra = 1
+
+
+class DistributionPlanInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-supplies'
+    model = DistributionPlan
+    form = DistributionPlanForm
+    formset = DistributionPlanFormSet
+    extra = 3
+
+
 class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
-    form = PCAForm
+    form = PartnershipForm
     resource_class = PCAResource
     # Add custom exports
     formats = (
@@ -392,6 +411,9 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'amendment',
         'amendment_number',
         'view_original',
+        'days_from_submission_to_signed',
+        'days_from_review_to_signed',
+        'duration',
     )
     filter_horizontal = (
         'unicef_managers',
@@ -410,11 +432,12 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
                  'submission_date',
                  'review_date',
                  'number',
-                 ('unicef_manager', 'signed_by_unicef_date',),
                  ('partner_manager', 'signed_by_partner_date',),
+                 ('unicef_manager', 'signed_by_unicef_date',),
                  'partner_focal_point',
                  'unicef_managers',
-                 ('start_date', 'end_date',),)
+                 ('days_from_submission_to_signed', 'days_from_review_to_signed',),
+                 ('start_date', 'end_date', 'duration',),)
         }),
         (_('Add sites by P Code'), {
             u'classes': (u'suit-tab suit-tab-locations',),
@@ -432,8 +455,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'work_plan',
     )
 
-    actions = ['create_amendment']
-
     inlines = (
         AmendmentLogInlineAdmin,
         PartnershipBudgetInlineAdmin,
@@ -442,8 +463,10 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
-        SpotChecksAdminInline,
+        #SpotChecksAdminInline,
         #ResultsInlineAdmin,
+        SupplyPlanInlineAdmin,
+        DistributionPlanInlineAdmin,
     )
 
     suit_form_tabs = (
@@ -451,7 +474,8 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'results', u'Results'),
         (u'locations', u'Locations'),
         (u'trips', u'Trips'),
-        (u'checks', u'Spot Checks'),
+        #(u'checks', u'Spot Checks'),
+        (u'supplies', u'Supplies'),
         (u'attachments', u'Attachments')
     )
 
@@ -594,15 +618,21 @@ class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
 
 class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     model = AuthorizedOfficer
-    verbose_name = "Authorized Officer"
-    verbose_name_plural = "Authorized Officers"
+    form = AuthorizedOfficersForm
+    formset = AuthorizedOfficesFormset
+    verbose_name = "Partner Authorized Officer"
+    verbose_name_plural = "Partner Authorized Officers"
+    extra = 1
 
 
 class AgreementAdmin(admin.ModelAdmin):
+    form = AgreementForm
     fields = (
         u'partner',
         u'agreement_type',
+        u'agreement_number',
         u'attached_agreement',
+        (u'start', u'end',),
         u'signed_by_unicef_date',
         u'signed_by',
         u'signed_by_partner_date',
@@ -612,8 +642,7 @@ class AgreementAdmin(admin.ModelAdmin):
         AuthorizedOfficersInlineAdmin
     ]
 
-
-
+admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PCASector, PcaSectorAdmin)
