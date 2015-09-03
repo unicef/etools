@@ -15,10 +15,12 @@ class Migration(DataMigration):
         trip_type_id = orm[u'contenttypes.ContentType'].objects.get(model='trip').id
         for trip in orm.Trip.objects.all():
             locations = orm['locations.LinkedLocation'].objects.filter(content_type__pk=trip_type_id, object_id=trip.id)
+
             for loc in locations:
+                district = orm['locations.Region'].objects.filter(name=loc.region.name)[0]
                 trip_loc, new = orm.TripLocation.objects.get_or_create(
                     trip=trip,
-                    governorate=loc.governorate,
+                    governorate=district.governorate,
                     region=loc.region,
                     locality=loc.locality,
                     location=loc.location,
@@ -29,6 +31,7 @@ class Migration(DataMigration):
 
     def backwards(self, orm):
         "Write your backwards methods here."
+        orm['trips.TripLocation'].objects.all().delete()
 
     models = {
         u'activityinfo.database': {
