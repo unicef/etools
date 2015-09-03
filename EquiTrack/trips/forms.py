@@ -53,7 +53,6 @@ class TripForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(TripForm, self).__init__(*args, **kwargs)
-        # self.data.update({'approved_by_supervisor': self.instance.approved_by_supervisor})
 
     class Meta:
         model = Trip
@@ -160,19 +159,14 @@ class TripForm(ModelForm):
         return cleaned_data
 
 
-class RequiredInlineFormSet(BaseInlineFormSet):
-    """
-    Generates an inline formset that is required
-    """
+class RequireOneLocationFormSet(BaseInlineFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
 
-    def _construct_form(self, i, **kwargs):
-        """
-        Override the method to change the form attribute empty_permitted
-        """
-        form = super(RequiredInlineFormSet, self)._construct_form(i, **kwargs)
-        if self.instance.travel_type == Trip.PROGRAMME_MONITORING:
-            form.empty_permitted = False
-        return form
+        form_count = len([f for f in self.forms if f.cleaned_data])
+        if form_count < 1 and self.instance.travel_type == Trip.PROGRAMME_MONITORING:
+            raise ValidationError('At least one Trip Location is required.')
 
 
 class TripFilterByDateForm(Form):

@@ -117,7 +117,7 @@ class Trip(AdminURLMixin, models.Model):
     pcas = models.ManyToManyField(
         u'partners.PCA',
         blank=True, null=True,
-        verbose_name=u"Related PCAs"
+        verbose_name=u"Related Partnerships"
     )
     partners = models.ManyToManyField(
         u'partners.PartnerOrganization',

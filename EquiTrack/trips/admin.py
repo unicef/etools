@@ -29,7 +29,7 @@ from .models import (
 from .forms import (
     TripForm,
     TravelRoutesForm,
-    RequiredInlineFormSet,
+    RequireOneLocationFormSet
 )
 
 from .exports import TripResource, ActionPointResource
@@ -66,12 +66,12 @@ class ActionPointInlineAdmin(admin.StackedInline):
     )
 
 
-class SitesVisitedInlineAdmin(admin.TabularInline):
+class TripLocationsInlineAdmin(admin.TabularInline):
     model = TripLocation
-    formset = RequiredInlineFormSet
+    formset = RequireOneLocationFormSet
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
-    extra = 1
+    # extra = 1
 
 
 class FileAttachmentInlineAdmin(GenericTabularInline):
@@ -112,7 +112,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     inlines = (
         TravelRoutesInlineAdmin,
         TripFundsInlineAdmin,
-        SitesVisitedInlineAdmin,
+        TripLocationsInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
@@ -178,7 +178,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                  (u'international_travel', u'representative',),
                  u'approved_by_human_resources',)
         }),
-        (u'PCA Details', {
+        (u'Partnership Details', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (u'pcas',
