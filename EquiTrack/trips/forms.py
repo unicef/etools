@@ -159,18 +159,14 @@ class TripForm(ModelForm):
         return cleaned_data
 
 
-class RequiredLocationInlineFormSet(BaseInlineFormSet):
-    """
-    Generates an inline formset that requires locations for certain trip types
-    """
-    def _construct_form(self, i, **kwargs):
-        """
-        Override the method to change the form attribute empty_permitted
-        """
-        form = super(RequiredLocationInlineFormSet, self)._construct_form(i, **kwargs)
-        if self.instance.travel_type == Trip.PROGRAMME_MONITORING:
-            form.empty_permitted = False
-        return form
+class RequireOneLocationFormSet(BaseInlineFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+
+        form_count = len([f for f in self.forms if f.cleaned_data])
+        if form_count < 1 and self.instance.travel_type == Trip.PROGRAMME_MONITORING:
+            raise ValidationError('At least one Trip Location is required.')
 
 
 class TripFilterByDateForm(Form):
