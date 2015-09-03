@@ -585,7 +585,8 @@ class AmendmentLog(TimeStampedModel):
         choices=Choices(
             'No Cost',
             'Cost',
-            'Activity'
+            'Activity',
+            'Other',
         ))
     amended_at = models.DateField(null=True)
     amendment_number = models.IntegerField(default=0)
@@ -652,7 +653,7 @@ class PCAGrant(TimeStampedModel):
     partnership = models.ForeignKey(PCA)
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
-    #TODO: Add multi-currency support
+    # TODO: Add multi-currency support
     amendment = models.ForeignKey(
         AmendmentLog,
         related_name='grants',
@@ -727,6 +728,11 @@ class PCASector(TimeStampedModel):
     """
     pca = models.ForeignKey(PCA)
     sector = models.ForeignKey(Sector)
+    amendment = models.ForeignKey(
+        AmendmentLog,
+        related_name='sectors',
+        blank=True, null=True,
+    )
 
     class Meta:
         verbose_name = 'PCA Sector'
