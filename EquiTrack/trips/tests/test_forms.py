@@ -1,10 +1,11 @@
 __author__ = 'unicef-leb-inn'
+
 from datetime import timedelta, datetime
 
 from django.test import TestCase
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import TripFactory, UserFactory, PartnerFactory
+from EquiTrack.factories import TripFactory, UserFactory, PartnerFactory, PartnershipFactory
 from trips.forms import TripForm, TravelRoutesForm
 from trips.models import Trip
 
@@ -175,7 +176,7 @@ class TestTripForm(TestCase):
         trip_dict['travel_type'] = u'programme_monitoring'
         trip_dict['status'] = u'submitted'
         trip_dict['programme_assistant'] = UserFactory().id
-        trip_dict['pcas'] = PartnerFactory().id
+        trip_dict['pcas'] = PartnershipFactory().id
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
         # self.assertEqual(form.non_field_errors()[0],
