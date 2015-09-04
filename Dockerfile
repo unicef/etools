@@ -10,7 +10,7 @@ RUN pip install -r requirements.txt
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN python EquiTrack/manage.py collectstatic --noinput
 # Start everything
-ENV PORT 8080
+ENV PORT 80
 EXPOSE $PORT
 ENV C_FORCE_ROOT true
 CMD honcho start
