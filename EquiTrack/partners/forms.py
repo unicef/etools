@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-#import pandas
-
 
 from django.utils.translation import ugettext as _
 from django import forms
