@@ -47,6 +47,45 @@ Dashboard - Visualization of cumulative (i.e. data from all PCAs) current and sh
 Map - a web-based public map with bubbles, representing PCAs, which are clustered depending on zoom level and categorized through sector, indicator and partner organization.
 
 
+**Installing the application locally on Mac**
+
+1.  Checkout the develop branch of the git repository
+> $ `git checkout develop https://github.com/UNICEFLebanonInnovation/EquiTrack [loc_folder]`
+
+2. Navigate to the parent folder
+> $ `cd [loc_folder]`
+
+3. Install Docker for Mac OSX
+> * Download and Install from:  [https://www.docker.com/toolbox]
+> * Make sure that your system supports Docker
+
+4. Create the Docker machine
+> $`docker-machine create --driver virtualbox eqdev`
+>> (eqdev is the name of the virtual machine)
+
+5. Bring in the environment variables from the docker vm
+> $`eval "$(docker-machine env dev)"`
+
+6. Spin up all containers and connect them
+> $`docker-compose up -d`
+>> (-d runs the containers deamonized - in the backroud)
+
+7. Download faux data from [here](https://example.com/link_to_come)
+> unpack the data file at `[download_path]/backup.sql`
+
+8. Get the data into the running database container by spinning up another container and linking it to the running db container.
+>  $`docker run -it --link [loc_folder]_db_1:postgres -v [download_path]:/sqlbackup --rm postgres sh`
+>> (notice [loc_folder] is the name that you originally checked out the git repo to.)
+
+9. Once the container is started, load the new data in:
+> \# `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres < /sqlbackup/backup.sql` \n
+> enter password \n
+> after the command executes exit out of the container \n
+> \# `exit`
+
+10. Find out the running docker machine’s ip address and navigate to it on port 8080
+> $`docker-machine ip eqdev`
+
 **The process**
 
 ![image](/screenshots/PCA_process.jpg "PCA Process")
