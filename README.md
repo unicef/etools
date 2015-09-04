@@ -50,7 +50,7 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 **Installing the application locally on Mac**
 
 1.  Checkout the develop branch of the git repository
-> $ `git checkout develop https://github.com/UNICEFLebanonInnovation/EquiTrack [loc_folder]`
+> $ `git clone https://github.com/UNICEFLebanonInnovation/EquiTrack [loc_folder]`
 
 2. Navigate to the parent folder
 > $ `cd [loc_folder]`
@@ -78,9 +78,15 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 >> (notice [loc_folder] is the name that you originally checked out the git repo to.)
 
 9. Once the container is started, load the new data in:
-> \# `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres < /sqlbackup/backup.sql` \n
-> enter password \n
-> after the command executes exit out of the container \n
+> \# `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres < /sqlbackup/backup.sql`
+
+
+> enter password
+
+
+> after the command executes exit out of the container
+
+
 > \# `exit`
 
 10. Find out the running docker machine’s ip address and navigate to it on port 8080
