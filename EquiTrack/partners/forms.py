@@ -106,7 +106,7 @@ class AmendmentForm(forms.ModelForm):
 
         super(AmendmentForm, self).__init__(*args, **kwargs)
 
-        self.fields['amendment'].queryset = self.parent_partnership.amendments_list \
+        self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
 
 
