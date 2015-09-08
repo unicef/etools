@@ -60,11 +60,11 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 > * Make sure that your system supports Docker
 
 4. Create the Docker machine
-> $`docker-machine create --driver virtualbox eqdev`
->> (eqdev is the name of the virtual machine)
+> $`docker-machine create --driver virtualbox eq`
+>> (eq is the name of the virtual machine)
 
 5. Bring in the environment variables from the docker vm
-> $`eval "$(docker-machine env dev)"`
+> $`eval "$(docker-machine env eq)"`
 
 6. Spin up all containers and connect them
 > $`docker-compose up -d`
@@ -90,7 +90,7 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 > \# `exit`
 
 10. Find out the running docker machine’s ip address and navigate to it on port 8080
-> $`docker-machine ip eqdev`
+> $`docker-machine ip eq`
 
 **The process**
 
