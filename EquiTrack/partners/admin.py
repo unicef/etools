@@ -275,7 +275,7 @@ class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     verbose_name = 'Budget'
     verbose_name_plural = 'Budget'
     suit_classes = u'suit-tab suit-tab-info'
-    extra = 1
+    extra = 0
     fields = (
         'partner_contribution',
         'unicef_cash',
@@ -302,6 +302,7 @@ class PcaGrantInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         'funds',
         'amendment',
     )
+    ordering = ['-amendment']
 
 
 class PcaSectorAdmin(ReadOnlyMixin, SectorMixin, VersionAdmin):

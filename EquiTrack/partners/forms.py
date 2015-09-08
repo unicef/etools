@@ -109,6 +109,8 @@ class AmendmentForm(forms.ModelForm):
         self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
 
+        self.fields['amendment'].empty_label = u'Original'
+
 
 class AuthorizedOfficesFormset(RequireOneFormSet):
 
