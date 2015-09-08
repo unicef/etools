@@ -302,7 +302,7 @@ class PcaGrantInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         'funds',
         'amendment',
     )
-    ordering = ['-amendment']
+    ordering = ['amendment']
 
 
 class PcaSectorAdmin(ReadOnlyMixin, SectorMixin, VersionAdmin):
@@ -484,6 +484,10 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     suit_form_includes = (
         ('admin/partners/work_plan.html', 'middle', 'results'),
     )
+
+    def get_queryset(self, request):
+        queryset = super(PartnershipAdmin, self).get_queryset(request)
+        return queryset.filter(amendment=False)
 
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
