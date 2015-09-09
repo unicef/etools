@@ -70,18 +70,34 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 > $`docker-compose up -d`
 >> (-d runs the containers deamonized - in the backroud)
 
-7. Download faux data from [here](https://example.com/link_to_come)
-> unpack the data file at `[download_path]/backup.sql`
+7. Set up the database
+> `docker run -it --link [LOC_FOLDER]_db_1:postgres --rm postgres sh`
+> `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres`
+> Once connected to the db:
+> \#`CREATE EXTENSION postgis;`
+> \#`CREATE EXTENSION postgis_topology;`
+> \#`exit`
 
-8. Get the data into the running database container by spinning up another container and linking it to the running db container.
->  $`docker run -it --link [loc_folder]_db_1:postgres -v [download_path]:/sqlbackup --rm postgres sh`
->> (notice [loc_folder] is the name that you originally checked out the git repo to.)
+8. Make the apporpriate migrations 
+> docker exec -it [LOC_FOLDER]_web_1 python equitrack/manage.py syncdb --migrate
+> docker exec -it [LOC_FOLDER]_web_1 python equitrack/manage.py migrate
 
-9. Once the container is started, load the new data in:
+9. Find out the running docker machine’s ip address and navigate to it on port 8080
+> $`docker-machine ip eq`
+
+** Bring in backed up data or faux data from backup.sql **
+1. Download faux data from [here](https://example.com/link_to_come)
+> unpack the data file at `[DOWNLOAD_PATH]/backup.sql`
+
+2. Get the data into the running database container by spinning up another container and linking it to the running db container.
+>  $`docker run -it --link [LOC_FOLDER]_db_1:postgres -v [DOWNLOAD_PATH]:/sqlbackup --rm postgres sh`
+>> (notice [LOC_FOLDER] is the name of the folder that you originally checked out the git repo to.)
+
+3. Once the container is started, load the new data in:
 > \# `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres < /sqlbackup/backup.sql`
 
 
-> enter password
+> enter db password
 
 
 > after the command executes exit out of the container
@@ -89,8 +105,7 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 
 > \# `exit`
 
-10. Find out the running docker machine’s ip address and navigate to it on port 8080
-> $`docker-machine ip eq`
+
 
 **The process**
 
