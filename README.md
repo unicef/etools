@@ -85,7 +85,8 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 9. Find out the running docker machine’s ip address and navigate to it on port 8080
 > $`docker-machine ip eq`
 
-** Bring in backed up data or faux data from backup.sql **
+**Bring in backed up data or faux data from backup.sq**
+
 1. Download faux data from [here](https://example.com/link_to_come)
 > unpack the data file at `[DOWNLOAD_PATH]/backup.sql`
 
