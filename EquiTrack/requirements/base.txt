@@ -42,7 +42,10 @@ django-post_office==1.1.2
 django-cors-headers==1.0.0
 django-mathfilters==0.3.0
 #pandas==0.15.0
+<<<<<<< HEAD
 
+=======
+>>>>>>> develop
 
 git+https://github.com/jamescw/django-paintstore.git
 git+https://github.com/UNICEFLebanonInnovation/ActvityInfoPython.git

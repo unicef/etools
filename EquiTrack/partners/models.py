@@ -326,7 +326,7 @@ class AuthorizedOfficer(models.Model):
     )
 
     def __unicode__(self):
-        return self.officer
+        return self.officer.__unicode__()
 
 
 class PCA(AdminURLMixin, models.Model):
@@ -532,6 +532,9 @@ class PCA(AdminURLMixin, models.Model):
         else:
             return u''
 
+    def amendments(self):
+        return self.amendments_log.all().count()
+
     def total_unicef_contribution(self):
         cash = self.unicef_cash_budget if self.unicef_cash_budget else 0
         in_kind = self.in_kind_amount_budget if self.in_kind_amount_budget else 0
@@ -579,13 +582,14 @@ post_save.connect(PCA.send_changes, sender=PCA)
 
 class AmendmentLog(TimeStampedModel):
 
-    partnership = models.ForeignKey(PCA, related_name='amendments_list')
+    partnership = models.ForeignKey(PCA, related_name='amendments_log')
     type = models.CharField(
         max_length=50,
         choices=Choices(
             'No Cost',
             'Cost',
-            'Activity'
+            'Activity',
+            'Other',
         ))
     amended_at = models.DateField(null=True)
     amendment_number = models.IntegerField(default=0)
@@ -614,7 +618,7 @@ class PartnershipBudget(TimeStampedModel):
     """
     Tracks the overall budget for the partnership, with amendments
     """
-    partnership = models.ForeignKey(PCA)
+    partnership = models.ForeignKey(PCA, related_name='budget_log')
     partner_contribution = models.IntegerField(default=0)
     unicef_cash = models.IntegerField(default=0)
     in_kind_amount = models.IntegerField(default=0)
@@ -652,7 +656,7 @@ class PCAGrant(TimeStampedModel):
     partnership = models.ForeignKey(PCA)
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
-    #TODO: Add multi-currency support
+    # TODO: Add multi-currency support
     amendment = models.ForeignKey(
         AmendmentLog,
         related_name='grants',
@@ -727,6 +731,11 @@ class PCASector(TimeStampedModel):
     """
     pca = models.ForeignKey(PCA)
     sector = models.ForeignKey(Sector)
+    amendment = models.ForeignKey(
+        AmendmentLog,
+        related_name='sectors',
+        blank=True, null=True,
+    )
 
     class Meta:
         verbose_name = 'PCA Sector'
