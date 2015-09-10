@@ -222,6 +222,8 @@ class PcaActivityInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
 
 class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = PCASector
+    form = AmendmentForm
+    formset = ParentInlineAdminFormSet
     verbose_name = 'Sector'
     verbose_name_plural = 'Sectors'
     suit_classes = u'suit-tab suit-tab-info'
@@ -229,6 +231,7 @@ class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     fields = (
         'sector',
         'changeform_link',
+        'amendment',
     )
     readonly_fields = (
         'changeform_link',
@@ -370,8 +373,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'created_date',
         'start_date',
         'end_date',
-        'amendment_number',
-        'amended_at',
         'partner',
         'result_structure',
         'sector_names',
@@ -627,6 +628,11 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
 
 class AgreementAdmin(admin.ModelAdmin):
     form = AgreementForm
+    list_display = (
+        u'agreement_number',
+        u'partner',
+        u'agreement_type',
+    )
     fields = (
         u'partner',
         u'agreement_type',
