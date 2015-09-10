@@ -4,7 +4,6 @@ from south.db import db
 from south.v2 import DataMigration
 from django.db import models
 
-
 class Migration(DataMigration):
 
     def forwards(self, orm):
@@ -12,18 +11,27 @@ class Migration(DataMigration):
         # Note: Don't use "from appname.models import ModelName". 
         # Use orm.ModelName to refer to models in this application,
         # and orm['appname.ModelName'] for models in other applications.
-        migrated_files = 0
+        migrated_locations = 0
         trip_type_id = orm[u'contenttypes.ContentType'].objects.get(model='trip').id
         for trip in orm.Trip.objects.all():
-            files = orm.FileAttachment.objects.filter(content_type__pk=trip_type_id, object_id=trip.id)
-            for file in files:
-                file.trip = trip
-                file.save()
-                migrated_files += 1
-        print 'Migrated files: {}'.format(migrated_files)
+            locations = orm['locations.LinkedLocation'].objects.filter(content_type__pk=trip_type_id, object_id=trip.id)
+
+            for loc in locations:
+                district = orm['locations.Region'].objects.filter(name=loc.region.name)[0]
+                trip_loc, new = orm.TripLocation.objects.get_or_create(
+                    trip=trip,
+                    governorate=district.governorate,
+                    region=loc.region,
+                    locality=loc.locality,
+                    location=loc.location,
+                )
+                if new:
+                    migrated_locations += 1
+        print 'Migrated locations: {}'.format(migrated_locations)
 
     def backwards(self, orm):
         "Write your backwards methods here."
+        orm['trips.TripLocation'].objects.all().delete()
 
     models = {
         u'activityinfo.database': {
@@ -123,6 +131,80 @@ class Migration(DataMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128L'})
         },
+        u'locations.gatewaytype': {
+            'Meta': {'ordering': "['name']", 'object_name': 'GatewayType'},
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '64L'})
+        },
+        u'locations.governorate': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Governorate'},
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#62CF6B'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '45L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'})
+        },
+        u'locations.locality': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Locality'},
+            'cad_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
+            'cas_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
+            'cas_code_un': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
+            'cas_village_name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#D958C4'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'}),
+            'region': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Region']"})
+        },
+        u'locations.location': {
+            'Meta': {'ordering': "['name']", 'unique_together': "(('name', 'gateway', 'p_code'),)", 'object_name': 'Location'},
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'latitude': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
+            'locality': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Locality']"}),
+            'longitude': ('django.db.models.fields.FloatField', [], {'null': 'True', 'blank': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '254L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'}),
+            'point': ('django.contrib.gis.db.models.fields.PointField', [], {'null': 'True', 'blank': 'True'})
+        },
+        u'locations.region': {
+            'Meta': {'ordering': "['name']", 'object_name': 'Region'},
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#66A0DA'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
+            'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
+            'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '45L'}),
+            'p_code': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'null': 'True', 'blank': 'True'})
+        },
+        u'locations.linkedlocation': {
+            'Meta': {'object_name': 'LinkedLocation'},
+            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
+            'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'locality': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Locality']", 'null': 'True', 'blank': 'True'}),
+            'location': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Location']", 'null': 'True', 'blank': 'True'}),
+            'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'region': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Region']"})
+        },
+        u'partners.agreement': {
+            'Meta': {'object_name': 'Agreement'},
+            'agreement_type': ('django.db.models.fields.CharField', [], {'max_length': '10'}),
+            'attached_agreement': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'blank': 'True'}),
+            'created': ('model_utils.fields.AutoCreatedField', [], {'default': 'datetime.datetime.now'}),
+            'end': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'modified': ('model_utils.fields.AutoLastModifiedField', [], {'default': 'datetime.datetime.now'}),
+            'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
+            'partner_manager': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['partners.PartnerStaffMember']", 'null': 'True', 'blank': 'True'}),
+            'signed_by': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'signed_pcas'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'signed_by_partner_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'signed_by_unicef_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'start': ('django.db.models.fields.DateTimeField', [], {'null': 'True', 'blank': 'True'})
+        },
         u'partners.filetype': {
             'Meta': {'object_name': 'FileType'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -143,9 +225,18 @@ class Migration(DataMigration):
             'type': ('django.db.models.fields.CharField', [], {'default': "u'national'", 'max_length': '50'}),
             'vendor_number': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
         },
+        u'partners.partnerstaffmember': {
+            'Meta': {'object_name': 'PartnerStaffMember'},
+            'email': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
+            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L'}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L'}),
+            'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
+            'phone': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'})
+        },
         u'partners.pca': {
             'Meta': {'ordering': "['-number', 'amendment']", 'object_name': 'PCA'},
-            'agreement_type': ('django.db.models.fields.CharField', [], {'default': "u'pca'", 'max_length': '255', 'null': 'True', 'blank': 'True'}),
+            'agreement': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['partners.Agreement']", 'null': 'True', 'blank': 'True'}),
             'amended_at': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
             'amendment': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'amendment_number': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
@@ -156,22 +247,29 @@ class Migration(DataMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'in_kind_amount_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
             'initiation_date': ('django.db.models.fields.DateField', [], {}),
-            'number': ('django.db.models.fields.CharField', [], {'max_length': '45L', 'blank': 'True'}),
+            'number': ('django.db.models.fields.CharField', [], {'default': "u'UNASSIGNED'", 'max_length': '45L', 'blank': 'True'}),
             'original': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'amendments'", 'null': 'True', 'to': u"orm['partners.PCA']"}),
             'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
             'partner_contribution_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
+            'partner_focal_point': ('smart_selects.db_fields.ChainedForeignKey', [], {'blank': 'True', 'related_name': "'my_partnerships'", 'null': 'True', 'to': u"orm['partners.PartnerStaffMember']"}),
+            'partner_manager': ('smart_selects.db_fields.ChainedForeignKey', [], {'blank': 'True', 'related_name': "'signed_partnerships'", 'null': 'True', 'to': u"orm['partners.PartnerStaffMember']"}),
             'partner_mng_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
             'partner_mng_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
             'partner_mng_last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
+            'partner_mng_phone': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
+            'partnership_type': ('django.db.models.fields.CharField', [], {'default': "u'pca'", 'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'result_structure': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.ResultStructure']", 'null': 'True', 'blank': 'True'}),
+            'review_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'sectors': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'signed_by_partner_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'signed_by_unicef_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'start_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'status': ('django.db.models.fields.CharField', [], {'default': "u'in_process'", 'max_length': '32L', 'blank': 'True'}),
+            'submission_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'title': ('django.db.models.fields.CharField', [], {'max_length': '256L'}),
             'total_cash': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
             'unicef_cash_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
+            'unicef_manager': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'approved_partnerships'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'unicef_managers': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.User']", 'symmetrical': 'False', 'blank': 'True'}),
             'unicef_mng_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
             'unicef_mng_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
@@ -240,8 +338,9 @@ class Migration(DataMigration):
         u'trips.office': {
             'Meta': {'object_name': 'Office'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']", 'null': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'zonal_chief': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'zonal_chief'", 'null': 'True', 'to': u"orm['auth.User']"})
+            'zonal_chief': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'offices'", 'null': 'True', 'to': u"orm['auth.User']"})
         },
         u'trips.travelroutes': {
             'Meta': {'object_name': 'TravelRoutes'},
@@ -289,6 +388,8 @@ class Migration(DataMigration):
             'ta_drafted_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'ta_reference': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True', 'blank': 'True'}),
             'ta_required': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'ta_trip_final_claim': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'ta_trip_repay_travel_allowance': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'ta_trip_took_place_as_planned': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'to_date': ('django.db.models.fields.DateField', [], {}),
             'transport_booked': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
@@ -303,6 +404,15 @@ class Migration(DataMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'trip': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Trip']"}),
             'wbs': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.WBS']"})
+        },
+        u'trips.triplocation': {
+            'Meta': {'object_name': 'TripLocation'},
+            'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
+            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'locality': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Locality']", 'null': 'True', 'blank': 'True'}),
+            'location': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Location']", 'null': 'True', 'blank': 'True'}),
+            'region': ('smart_selects.db_fields.ChainedForeignKey', [], {'to': u"orm['locations.Region']"}),
+            'trip': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Trip']"})
         }
     }
 

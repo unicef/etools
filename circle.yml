@@ -25,9 +25,6 @@ deployment:
     branch: develop
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-<<<<<<< HEAD
-      - docker push unicef/equitrack
-=======
       - docker tag unicef/equitrack:$CIRCLE_SHA1 unicef/equitrack:develop
       - docker push unicef/equitrack:develop
->>>>>>> develop
+      - ./deploy_staging.sh

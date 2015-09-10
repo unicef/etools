@@ -9,8 +9,6 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
 
-        db.execute("CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;")
-
         # Adding model 'Governorate'
         db.create_table(u'locations_governorate', (
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),

@@ -2,9 +2,9 @@ web:
   build: .
   command: honcho start
   volumes:
-    - ./EquiTrack:/code
+    - .:/code
   ports:
-    - "8000:8000"
+    - "8080:8080"
   links:
     - db
     - redis
@@ -13,7 +13,6 @@ web:
     - DATABASE_URL=postgis://postgres:password@db:5432/postgres
     - DJANGO_SETTINGS_MODULE=EquiTrack.settings.base
     - DJANGO_DEBUG=true
-    - PORT=8000
 
 db:
   image: mdillon/postgis
