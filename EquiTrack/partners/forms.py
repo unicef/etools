@@ -3,8 +3,11 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 #import pandas
 
+=======
+>>>>>>> develop
 =======
 >>>>>>> develop
 

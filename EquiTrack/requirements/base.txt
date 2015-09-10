@@ -43,7 +43,10 @@ django-cors-headers==1.0.0
 django-mathfilters==0.3.0
 #pandas==0.15.0
 <<<<<<< HEAD
+<<<<<<< HEAD
 
+=======
+>>>>>>> develop
 =======
 >>>>>>> develop
 
