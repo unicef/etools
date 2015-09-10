@@ -2,7 +2,7 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-import pandas
+#import pandas
 
 
 from django.utils.translation import ugettext as _

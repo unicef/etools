@@ -20,7 +20,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
 
-    profile = serializers.SerializerMethodField('get_profile')
+
+    # profile = serializers.SerializerMethodField('get_profile')
+    # It is redundant to specify `get_profile` on SerializerMethodField
+    # because it is the same as the default method name.
+
+    profile = serializers.SerializerMethodField()
 
     def get_profile(self, user):
         try:
