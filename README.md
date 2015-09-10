@@ -47,7 +47,7 @@ Dashboard - Visualization of cumulative (i.e. data from all PCAs) current and sh
 Map - a web-based public map with bubbles, representing PCAs, which are clustered depending on zoom level and categorized through sector, indicator and partner organization.
 
 
-**Installing the application locally on Mac**
+**Installing the application locally**
 
 1.  Checkout the develop branch of the git repository
 > $ `git clone https://github.com/UNICEFLebanonInnovation/EquiTrack [loc_folder]`
@@ -95,16 +95,10 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 >> (notice [LOC_FOLDER] is the name of the folder that you originally checked out the git repo to.)
 
 3. Once the container is started, load the new data in:
-> \# `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres < /sqlbackup/backup.sql`
-
-
-> enter db password
-
-
-> after the command executes exit out of the container
-
-
-> \# `exit`
+  > \# `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres < /sqlbackup/backup.sql` 
+  > enter db password
+  > \ after the command executes exit out of the container
+  > \# `exit`
 
 
 
