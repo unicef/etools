@@ -94,7 +94,7 @@ class TripsByOfficeView(APIView):
 
         months = get_trip_months()
         months.append(None)
-        month_num = request.QUERY_PARAMS.get('month', 0)
+        month_num = request.query_params.get('month', 0)
         month = months[int(month_num)]
 
         by_office = []
