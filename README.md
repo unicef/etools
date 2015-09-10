@@ -47,6 +47,61 @@ Dashboard - Visualization of cumulative (i.e. data from all PCAs) current and sh
 Map - a web-based public map with bubbles, representing PCAs, which are clustered depending on zoom level and categorized through sector, indicator and partner organization.
 
 
+**Installing the application locally**
+
+1.  Checkout the develop branch of the git repository
+> $ `git clone https://github.com/UNICEFLebanonInnovation/EquiTrack [loc_folder]`
+
+2. Navigate to the parent folder
+> $ `cd [loc_folder]`
+
+3. Install Docker for Mac OSX
+> * Download and Install from:  [https://www.docker.com/toolbox]
+> * Make sure that your system supports Docker
+
+4. Create the Docker machine
+> $`docker-machine create --driver virtualbox eq`
+>> (eq is the name of the virtual machine)
+
+5. Bring in the environment variables from the docker vm
+> $`eval "$(docker-machine env eq)"`
+
+6. Spin up all containers and connect them
+> $`docker-compose up -d`
+>> (-d runs the containers deamonized - in the backroud)
+
+7. Set up the database
+> `docker run -it --link [LOC_FOLDER]_db_1:postgres --rm postgres sh`
+> `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres`
+> Once connected to the db:
+> \#`CREATE EXTENSION postgis;`
+> \#`CREATE EXTENSION postgis_topology;`
+> \#`exit`
+
+8. Make the apporpriate migrations 
+> docker exec -it [LOC_FOLDER]_web_1 python equitrack/manage.py syncdb --migrate
+> docker exec -it [LOC_FOLDER]_web_1 python equitrack/manage.py migrate
+
+9. Find out the running docker machine’s ip address and navigate to it on port 8080
+> $`docker-machine ip eq`
+
+**Bring in backed up data or faux data from backup.sq**
+
+1. Download faux data from [here](https://example.com/link_to_come)
+> unpack the data file at `[DOWNLOAD_PATH]/backup.sql`
+
+2. Get the data into the running database container by spinning up another container and linking it to the running db container.
+>  $`docker run -it --link [LOC_FOLDER]_db_1:postgres -v [DOWNLOAD_PATH]:/sqlbackup --rm postgres sh`
+>> (notice [LOC_FOLDER] is the name of the folder that you originally checked out the git repo to.)
+
+3. Once the container is started, load the new data in:
+  > \# `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres < /sqlbackup/backup.sql` 
+  > enter db password
+  > \ after the command executes exit out of the container
+  > \# `exit`
+
+
+
 **The process**
 
 ![image](/screenshots/PCA_process.jpg "PCA Process")
