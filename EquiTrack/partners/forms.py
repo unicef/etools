@@ -216,11 +216,6 @@ class AgreementForm(UserGroupForm):
             'partner_manager': LinkedSelect,
         }
 
-    def __init__(self, *args, **kwargs):
-        super(AgreementForm, self).__init__(*args, **kwargs)
-        self.fields['start'].required = True
-        self.fields['end'].required = True
-
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()
 
