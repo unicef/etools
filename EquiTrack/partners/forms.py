@@ -112,6 +112,8 @@ class AmendmentForm(forms.ModelForm):
         self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
 
+        self.fields['amendment'].empty_label = u'Original'
+
 
 class AuthorizedOfficesFormset(RequireOneFormSet):
 
@@ -216,11 +218,6 @@ class AgreementForm(UserGroupForm):
             'signed_by': LinkedSelect,
             'partner_manager': LinkedSelect,
         }
-
-    def __init__(self, *args, **kwargs):
-        super(AgreementForm, self).__init__(*args, **kwargs)
-        self.fields['start'].required = True
-        self.fields['end'].required = True
 
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()

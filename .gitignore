@@ -65,6 +65,7 @@ htmlcov
 *.dat
 *.dir
 
+config.json
+
 *.key
 
-config.json

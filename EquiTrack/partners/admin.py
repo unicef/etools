@@ -275,7 +275,7 @@ class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     verbose_name = 'Budget'
     verbose_name_plural = 'Budget'
     suit_classes = u'suit-tab suit-tab-info'
-    extra = 1
+    extra = 0
     fields = (
         'partner_contribution',
         'unicef_cash',
@@ -302,6 +302,7 @@ class PcaGrantInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         'funds',
         'amendment',
     )
+    ordering = ['amendment']
 
 
 class PcaSectorAdmin(ReadOnlyMixin, SectorMixin, VersionAdmin):
@@ -484,6 +485,10 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         ('admin/partners/work_plan.html', 'middle', 'results'),
     )
 
+    def get_queryset(self, request):
+        queryset = super(PartnershipAdmin, self).get_queryset(request)
+        return queryset.filter(amendment=False)
+
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
     created_date.admin_order_field = '-created_at'
@@ -547,17 +552,11 @@ class AssessmentAdminInline(admin.TabularInline):
         u'planned_date',
         u'completed_date',
         u'rating',
-        u'download_url',
+        u'report',
+        u'current',
         u'changeform_link',
     )
-    readonly_fields = (
-        u'type',
-        u'planned_date',
-        u'completed_date',
-        u'rating',
-        u'download_url',
-        u'changeform_link',
-    )
+    readonly_fields = fields
 
     def has_add_permission(self, request):
         return False
@@ -578,13 +577,35 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = PartnerResource
     list_display = (
         u'name',
+        u'vendor_number',
         u'type',
-        u'description',
         u'email',
-        u'contact_person',
         u'phone_number',
         u'alternate_id',
         u'alternate_name',
+    )
+    readonly_fields = (
+        u'vendor_number',
+        u'rating',
+    )
+    fieldsets = (
+        (_('Partner Details'), {
+            'fields':
+                (u'name',
+                 (u'vendor_number', u'rating',),
+                 u'type',
+                 u'address',
+                 u'phone_number',
+                 u'email',
+                 u'alternate_id',
+                 u'alternate_name',
+                 (u'core_values_assessment', u'core_values_assessment_date',),)
+        }),
+        (_('Special Audit'), {
+            u'classes': (u'collapse',),
+            'fields':
+                ((u'special_audit_done', u'reason_for_special_audit',),)
+        }),
     )
     inlines = [
         AssessmentAdminInline,
@@ -600,11 +621,31 @@ class RecommendationsInlineAdmin(admin.TabularInline):
 class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
     inlines = [RecommendationsInlineAdmin]
     readonly_fields = (
-        u'download_url',
         u'requested_date',
         u'requesting_officer',
         u'approving_officer',
-
+        u'current',
+    )
+    fieldsets = (
+        (_('Assessment Details'), {
+            'fields':
+                (u'partner',
+                 u'type',
+                 u'other_UN',
+                 u'names_of_other_agencies',
+                 u'expected_budget',
+                 u'notes',
+                 u'requesting_officer',
+                 u'approving_officer',)
+        }),
+        (_('Report Details'), {
+            'fields':
+                (u'planned_date',
+                 u'completed_date',
+                 u'rating',
+                 u'report',
+                 u'current',)
+        }),
     )
 
     def save_model(self, request, obj, form, change):
@@ -643,6 +684,9 @@ class AgreementAdmin(admin.ModelAdmin):
         u'signed_by',
         u'signed_by_partner_date',
         u'partner_manager',
+    )
+    readonly_fields = (
+        u'start', u'end',
     )
     inlines = [
         AuthorizedOfficersInlineAdmin

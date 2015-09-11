@@ -19,7 +19,7 @@ BASE_DIR = dirname(SITE_ROOT)
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
 SUIT_CONFIG = {
-    'ADMIN_NAME': 'EquiTrack',
+    'ADMIN_NAME': 'eTools',
     'SEARCH_URL': '/admin/partners/pca/',
     'CONFIRM_UNSAVED_CHANGES': False,
 
@@ -31,6 +31,7 @@ SUIT_CONFIG = {
 
         {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
+            {'model': 'partners.assessment'},
             {'model': 'partners.agreement'},
             {'model': 'partners.pca'},
         ]},
