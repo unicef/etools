@@ -54,7 +54,7 @@ class TripSerializer(serializers.ModelSerializer):
     human_resources = serializers.CharField()
     approved_by_human_resources = serializers.CharField()
     vision_approver = serializers.CharField()
-    partners = serializers.CharField()
+    partners = serializers.SerializerMethodField()
     travel_routes = serializers.SerializerMethodField('get_TravelRoutes')
     trip_funds = serializers.SerializerMethodField('get_TripFunds')
     office =  serializers.CharField(source='office.name')
@@ -78,7 +78,7 @@ class TripSerializer(serializers.ModelSerializer):
     def transform_supervisor_name(self, obj, value):
         return obj.supervisor.get_full_name()
 
-    def get_partners(self, obj, value):
+    def get_partners(self, obj):
         return ', '.join([
             partner.name for partner in obj.partners.all()
         ])
