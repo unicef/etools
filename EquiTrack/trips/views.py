@@ -10,7 +10,6 @@ from django.core import serializers
 
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.renderers import JSONPRenderer
 from rest_framework.response import Response
 from rest_framework.authentication import BasicAuthentication
 from rest_framework import status
@@ -42,7 +41,6 @@ def get_trip_months():
 class TripsApprovedView(ListAPIView):
 
     model = Trip
-    renderer_classes = (JSONPRenderer,)
     serializer_class = TripSerializer
 
     def get_queryset(self):
