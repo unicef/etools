@@ -55,7 +55,7 @@ class TripsApi(ListAPIView):
 
     model = Trip
     serializer_class = TripSerializer
-    authentication_classes = (BasicAuthentication,)
+    #authentication_classes = (BasicAuthentication,)
 
     def get_queryset(self):
         user = self.request.user
