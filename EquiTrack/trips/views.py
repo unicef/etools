@@ -50,7 +50,7 @@ class TripsApprovedView(ListAPIView):
         )
 
 
-class TripsApi(ListAPIView):
+class TripsListApi(ListAPIView):
 
     model = Trip
     serializer_class = TripSerializer
