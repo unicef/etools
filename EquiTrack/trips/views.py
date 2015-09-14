@@ -83,7 +83,7 @@ class TripActionView(RetrieveAPIView):
             trip.date_supervisor_approved = datetime.now()
             trip.save()
             return Response(serializer.data, status=status.HTTP_200_OK,)
-        return Response(serializer.data, Zstatus=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
 
 class TripsByOfficeView(APIView):
