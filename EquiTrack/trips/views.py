@@ -10,11 +10,8 @@ from django.views.generic import FormView
 from django.core import serializers
 
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.renderers import JSONRenderer
+from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
-from rest_framework.authentication import BasicAuthentication
-from rest_framework import status
 from rest_framework.exceptions import APIException, PermissionDenied, ParseError
 
 
@@ -44,8 +41,8 @@ def get_trip_months():
 class TripsApprovedView(ListAPIView):
 
     model = Trip
-    renderer_classes = (JSONRenderer,)
     serializer_class = TripSerializer
+
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -57,7 +54,6 @@ class TripsApi(ListAPIView):
 
     model = Trip
     serializer_class = TripSerializer
-    #authentication_classes = (BasicAuthentication,)
 
     def get_queryset(self):
         user = self.request.user
@@ -65,7 +61,14 @@ class TripsApi(ListAPIView):
         return trips
 
 
-class TripActionView(RetrieveUpdateDestroyAPIView):
+class TripDetailsView(RetrieveUpdateDestroyAPIView):
+    model = Trip
+    serializer_class = TripSerializer
+    lookup_url_kwarg = 'trip'
+    queryset = Trip.objects.all()
+
+
+class TripActionView(GenericAPIView):
 
     model = Trip
     serializer_class = TripSerializer
@@ -73,78 +76,24 @@ class TripActionView(RetrieveUpdateDestroyAPIView):
     lookup_url_kwarg = 'trip'
     queryset = Trip.objects.all()
 
-    def update(self, request, *args, **kwargs):
-        action = self.request.data.get('action', False)
-        update_data = self.request.data.get('updates', False)
+    def post(self, request, *args, **kwargs):
+        action = kwargs.get('action', False)
 
-        if not action or not update_data:
-            raise ParseError(detail="field action and updates must be submitted")
-
-        if action not in ["approve", "deny", "update"]:
+        if action not in ["approved", "submitted", "cancelled"]:
             raise ParseError(detail="action must be a valid action")
 
         trip = self.get_object()
 
-        serializer = self.get_serializer(data=update_data, instance=trip, partial=True)
+        serializer = self.get_serializer(data={"status":action}, instance=trip, partial=True)
 
         if not serializer.is_valid():
             raise ParseError(detail="data submitted is not valid")
 
-        user = self.request.user
-
-        if user.id not in [trip.owner.id, trip.supervisor.id, trip.programme_assistant.id]:
-            raise PermissionDenied(detail="You have to be authorized to make changes.")
-
-        if action in ['approve', 'deny'] and not user.id ==trip.supervisor.id:
-            raise PermissionDenied(detail="Only the supervisor can approve the trip")
 
         serializer.save()
 
 
         return Response(serializer.data)
-
-
-
-    #def retrieve(self, request, *args, **kwargs):
-
-
-
-        # queryset = self.get_queryset()
-        # trip = self.get_object()
-        # #action = self.kwargs.get('action', None)
-        # action = self.request.data.action
-        #
-        # user = self.request.user
-        # # why get all trips?
-        # # one action should just respond with ok done or not good.
-        # # trips = Trip.get_all_trips(user)
-        #
-        # #serializer = TripSerializer(trips, many=True)
-        #
-        # if action == 'submit':
-        #     if not user.id == trip.traveller_id:
-        #         return Response({'success':False,
-        #                          'error': 'You cannot submit a trip that does not belong to you'},
-        #                         status=status.HTTP_403_FORBIDDEN)
-        #
-        #     if trip.status != Trip.SUBMITTED:
-        #         trip.status = Trip.SUBMITTED
-        #         trip.save()
-        #         #return Response(serializer.data, status=status.HTTP_200_OK)
-        #         return Response({"success": True, "action": "submit_trip"})
-        # elif action == 'approve':
-        #     if not trip.supervisor == user.id:
-        #         return Response({'success':False,
-        #                          'error': 'You are not the supervising officer'},
-        #                         status=status.HTTP_403_FORBIDDEN)
-        #
-        #     trip.approved_by_supervisor = True
-        #     trip.date_supervisor_approved = datetime.now()
-        #     trip.save()
-        #     #return Response(serializer.data, status=status.HTTP_200_OK,)
-        #     return Response({"success": True, "action": "approve_trip"})
-        # else:
-        #     return Response({"Success":True, "result":"trip was already submitted"}, status=status.HTTP_204_NO_CONTENT)
 
 
 class TripsByOfficeView(APIView):
