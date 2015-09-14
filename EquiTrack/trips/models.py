@@ -276,7 +276,9 @@ class Trip(AdminURLMixin, models.Model):
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
         )
-        my_trips = user.trips.filter()
+        my_trips = user.trips.filter(
+            Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
+        )
         return my_trips | super_trips
 
     @classmethod
