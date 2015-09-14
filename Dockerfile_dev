@@ -13,4 +13,5 @@ RUN python EquiTrack/manage.py collectstatic --noinput
 ENV PORT 8080
 EXPOSE $PORT
 ENV C_FORCE_ROOT true
-CMD honcho start
+#CMD honcho start
+CMD python EquiTrack/manage.py runserver 8080
