@@ -2,18 +2,24 @@ __author__ = 'jcranwellward'
 
 import json
 from datetime import datetime
+import logging
 
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.views.generic import FormView
 from django.core import serializers
 
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.renderers import JSONRenderer
+from rest_framework.generics import (
+    GenericAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView
+)
+
 from rest_framework.response import Response
-from rest_framework.authentication import BasicAuthentication
-from rest_framework import status
+from rest_framework.exceptions import APIException, PermissionDenied, ParseError
 
 
 from users.models import UserProfile
@@ -42,8 +48,8 @@ def get_trip_months():
 class TripsApprovedView(ListAPIView):
 
     model = Trip
-    renderer_classes = (JSONRenderer,)
     serializer_class = TripSerializer
+
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -51,11 +57,10 @@ class TripsApprovedView(ListAPIView):
         )
 
 
-class TripsApi(ListAPIView):
+class TripsListApi(ListAPIView):
 
     model = Trip
     serializer_class = TripSerializer
-    #authentication_classes = (BasicAuthentication,)
 
     def get_queryset(self):
         user = self.request.user
@@ -63,29 +68,39 @@ class TripsApi(ListAPIView):
         return trips
 
 
-class TripActionView(RetrieveAPIView):
+class TripDetailsView(RetrieveUpdateDestroyAPIView):
+    model = Trip
+    serializer_class = TripSerializer
+    lookup_url_kwarg = 'trip'
+    queryset = Trip.objects.all()
+
+
+class TripActionView(GenericAPIView):
 
     model = Trip
+    serializer_class = TripSerializer
+
     lookup_url_kwarg = 'trip'
+    queryset = Trip.objects.all()
 
-    def retrieve(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
+        action = kwargs.get('action', False)
+
+        if action not in ["approved", "submitted", "cancelled"]:
+            raise ParseError(detail="action must be a valid action")
+
         trip = self.get_object()
-        action = self.kwargs.get('action', None)
-        user = self.request.user
-        trips = Trip.get_all_trips(user)
-        serializer = TripSerializer(trips, many=True)
 
-        if action == 'submit':
-            if trip.status != Trip.SUBMITTED:
-                trip.status = Trip.SUBMITTED
-                trip.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        elif action == 'approve':
-            trip.approved_by_supervisor = True
-            trip.date_supervisor_approved = datetime.now()
-            trip.save()
-            return Response(serializer.data, status=status.HTTP_200_OK,)
-        return Response(serializer.data, Zstatus=status.HTTP_204_NO_CONTENT)
+        serializer = self.get_serializer(data={"status":action}, instance=trip, partial=True)
+
+        if not serializer.is_valid():
+            raise ParseError(detail="data submitted is not valid")
+
+
+        serializer.save()
+
+
+        return Response(serializer.data)
 
 
 class TripsByOfficeView(APIView):

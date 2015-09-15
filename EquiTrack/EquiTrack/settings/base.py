@@ -86,6 +86,7 @@ MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
 
 REST_FRAMEWORK = {
     # this setting fixes the bug where user can be logged in as AnonymousUser
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
