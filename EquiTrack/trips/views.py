@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 import json
 from datetime import datetime
 import logging
+
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
@@ -10,7 +11,13 @@ from django.views.generic import FormView
 from django.core import serializers
 
 from rest_framework.views import APIView
-from rest_framework.generics import GenericAPIView, ListAPIView, RetrieveAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (
+    GenericAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView
+)
+
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException, PermissionDenied, ParseError
 
