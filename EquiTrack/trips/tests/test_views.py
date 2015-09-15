@@ -8,7 +8,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from EquiTrack.factories import TripFactory, UserFactory
 from trips.models import Trip
-from trips.views import TripsApprovedView, TripsApi, TripsByOfficeView, TripActionView
+from trips.views import TripsApprovedView, TripsListApi, TripsByOfficeView, TripActionView
 
 
 class ViewTest(TestCase):
