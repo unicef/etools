@@ -19,7 +19,11 @@ from rest_framework.generics import (
 )
 
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException, PermissionDenied, ParseError
+from rest_framework.exceptions import (
+    APIException, 
+    PermissionDenied, 
+    ParseError,
+)
 
 
 from users.models import UserProfile
@@ -49,7 +53,6 @@ class TripsApprovedView(ListAPIView):
 
     model = Trip
     serializer_class = TripSerializer
-
 
     def get_queryset(self):
         return self.model.objects.filter(
@@ -96,9 +99,7 @@ class TripActionView(GenericAPIView):
         if not serializer.is_valid():
             raise ParseError(detail="data submitted is not valid")
 
-
         serializer.save()
-
 
         return Response(serializer.data)
 

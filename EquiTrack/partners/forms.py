@@ -219,30 +219,35 @@ class AgreementForm(UserGroupForm):
             'partner_manager': LinkedSelect,
         }
 
-    def clean(self):
-        cleaned_data = super(AgreementForm, self).clean()
-
-        partner = cleaned_data[u'partner']
-        agreement_type = cleaned_data[u'agreement_type']
-        start = cleaned_data[u'start']
-        end = cleaned_data[u'end']
-
-        # prevent more than one agreement being crated for the current period
-        agreements = Agreement.objects.filter(
-            partner=partner,
-            start__lte=start,
-            end__gte=end
-        )
-        if self.instance:
-            agreements = agreements.exclude(id=self.instance.id)
-        if agreements:
-            raise ValidationError(
-                u'You can only have one current {} per partner'.format(
-                    agreement_type
-                )
-            )
-
-        return cleaned_data
+    # def __init__(self, *args, **kwargs):
+    #     super(AgreementForm, self).__init__(*args, **kwargs)
+    #     self.fields['start'].required = True
+    #     self.fields['end'].required = True
+    #
+    # def clean(self):
+    #     cleaned_data = super(AgreementForm, self).clean()
+    #
+    #     partner = cleaned_data[u'partner']
+    #     agreement_type = cleaned_data[u'agreement_type']
+    #     start = cleaned_data[u'start']
+    #     end = cleaned_data[u'end']
+    #
+    #     # prevent more than one agreement being crated for the current period
+    #     agreements = Agreement.objects.filter(
+    #         partner=partner,
+    #         start__lte=start,
+    #         end__gte=end
+    #     )
+    #     if self.instance:
+    #         agreements = agreements.exclude(id=self.instance.id)
+    #     if agreements:
+    #         raise ValidationError(
+    #             u'You can only have one current {} per partner'.format(
+    #                 agreement_type
+    #             )
+    #         )
+    #
+    #     return cleaned_data
 
 
 class PartnershipForm(UserGroupForm):

@@ -256,6 +256,7 @@ class PCAFileInline(ReadOnlyMixin, admin.TabularInline):
 
 class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
+    verbose_name = u'Revision'
     model = AmendmentLog
     extra = 0
     fields = (
@@ -386,20 +387,10 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'result_structure',
         PCASectorFilter,
         'status',
-        'amendment',
         'current',
-        'start_date',
-        'end_date',
-        'signed_by_unicef_date',
         'partner',
         PCADonorFilter,
-        PCAGrantFilter,
-        PCAGovernorateFilter,
-        PCARegionFilter,
-        PCALocalityFilter,
         PCAGatewayTypeFilter,
-        PCAIndicatorFilter,
-        PCAOutputFilter
     )
     search_fields = (
         'number',
