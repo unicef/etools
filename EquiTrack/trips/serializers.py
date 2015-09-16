@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from .models import Trip, TravelRoutes, TripFunds, ActionPoint, FileAttachment
 
+import logging
 
 class TravelRoutesSerializer(serializers.ModelSerializer):
 
@@ -35,20 +36,27 @@ class TripFundsSerializer(serializers.ModelSerializer):
 
 class ActionPointSerializer(serializers.ModelSerializer):
 
-    description = serializers.CharField()
-
-    person_responsible = serializers.CharField()
-
-    def transform_person(self, obj):
-        return obj.get_full_name()
+    class Meta:
+        model = ActionPoint
+        fields = (
+            'id',
+            'person_responsible',
+            'status',
+            'description',
+            'due_date',
+            'comments'
+        )
+class ActionPointS(serializers.Serializer):
 
     class Meta:
         model = ActionPoint
         fields = (
+            'id',
             'person_responsible',
+            'status',
+            'description',
             'due_date',
-            'description'
-
+            'comments'
         )
 
 
@@ -79,7 +87,7 @@ class TripSerializer(serializers.ModelSerializer):
     vision_approver = serializers.CharField()
     partners = serializers.SerializerMethodField()
     travel_routes = serializers.SerializerMethodField()
-    action_points = serializers.SerializerMethodField()
+    actionpoint_set = ActionPointSerializer(many=True)
     files = serializers.SerializerMethodField()
     trip_funds = serializers.SerializerMethodField()
     office = serializers.CharField(source='office.name')
@@ -87,12 +95,6 @@ class TripSerializer(serializers.ModelSerializer):
     def get_travel_routes(self, trip):
         return TravelRoutesSerializer(
             trip.travelroutes_set.all(),
-            many=True
-        ).data
-
-    def get_action_points(self, trip):
-        return ActionPointSerializer(
-            trip.actionpoint_set.all(),
             many=True
         ).data
 
@@ -129,6 +131,32 @@ class TripSerializer(serializers.ModelSerializer):
             Site.objects.get_current(),
             obj.get_admin_url()
         )
+
+    def update(self, instance, validated_data):
+        logging.info(validated_data)
+        try:
+            aps_data = validated_data.pop('action_points')
+        except KeyError:
+            aps_data = []
+
+        for key, value in validated_data.iteritems():
+            setattr(instance, key, value)
+
+        trip = Trip.objects.update(**validated_data)
+
+        instance.save()
+
+        if aps_data:
+            existing_ap_ids = [obj.id for obj in instance.actionpoint_set.all()]
+            for ap_data in aps_data:
+                if ap_data.id in existing_ap_ids:
+                    # update current action point with data
+                    pass
+                else:
+                    #create a new action_point
+                    ActionPoint.objects.create(trip=trip, **ap_data)
+
+        return instance
 
     class Meta:
         model = Trip
@@ -176,7 +204,7 @@ class TripSerializer(serializers.ModelSerializer):
             'partners',
             'pcas',
             'travel_routes',
-            'action_points',
+            'actionpoint_set',
             'trip_funds'
 
 
