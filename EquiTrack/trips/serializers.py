@@ -4,7 +4,7 @@ from django.contrib.sites.models import Site
 
 from rest_framework import serializers
 
-from .models import Trip, TravelRoutes, TripFunds
+from .models import Trip, TravelRoutes, TripFunds, ActionPoint, FileAttachment
 
 
 class TravelRoutesSerializer(serializers.ModelSerializer):
@@ -33,6 +33,31 @@ class TripFundsSerializer(serializers.ModelSerializer):
         )
 
 
+class ActionPointSerializer(serializers.ModelSerializer):
+
+    description = serializers.CharField()
+
+    person_responsible = serializers.CharField()
+
+    def transform_person(self, obj):
+        return obj.get_full_name()
+
+    class Meta:
+        model = ActionPoint
+        fields = (
+            'person_responsible',
+            'due_date',
+            'description'
+
+        )
+
+
+class FileAttachmentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FileAttachment
+
+
 class TripSerializer(serializers.ModelSerializer):
 
     traveller = serializers.CharField(source='owner')
@@ -42,9 +67,6 @@ class TripSerializer(serializers.ModelSerializer):
     travel_type = serializers.CharField()
     # related_to_pca = serializers.CharField(source='no_pca')
     url = serializers.URLField(source='get_admin_url')
-
-    #It is redundant to specify `source='travel_assistant'`
-    # on field 'CharField' in serializer 'TripSerializer', because it is the same as the field name.
     travel_assistant = serializers.CharField()
     security_clearance_required = serializers.CharField()
     ta_required = serializers.CharField()
@@ -57,6 +79,8 @@ class TripSerializer(serializers.ModelSerializer):
     vision_approver = serializers.CharField()
     partners = serializers.SerializerMethodField()
     travel_routes = serializers.SerializerMethodField()
+    action_points = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
     trip_funds = serializers.SerializerMethodField()
     office = serializers.CharField(source='office.name')
 
@@ -66,6 +90,17 @@ class TripSerializer(serializers.ModelSerializer):
             many=True
         ).data
 
+    def get_action_points(self, trip):
+        return ActionPointSerializer(
+            trip.actionpoint_set.all(),
+            many=True
+        ).data
+
+    def get_files(self, trip):
+        return FileAttachmentSerializer(
+            trip.files.all(),
+            many=True
+        ).data
 
     def get_trip_funds(self, trip):
         return TripFundsSerializer(
@@ -121,6 +156,7 @@ class TripSerializer(serializers.ModelSerializer):
             'international_travel',
             'representative',
             'human_resources',
+            'files',
 
             'approved_by_supervisor',
             'date_supervisor_approved',
@@ -140,6 +176,7 @@ class TripSerializer(serializers.ModelSerializer):
             'partners',
             'pcas',
             'travel_routes',
+            'action_points',
             'trip_funds'
 
 

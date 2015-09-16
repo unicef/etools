@@ -59,6 +59,13 @@ class TripsApprovedView(ListAPIView):
             status=self.model.APPROVED,
         )
 
+class PlaygroundView(APIView):
+    def get(self, request, *args, **kwargs):
+        myobj = Trip.get_all_trips(self.request.user)
+        logging.info(self.request.user)
+        for trip in myobj:
+            logging.info(trip.files.all())
+        return Response({"check logs":"true"})
 
 class TripsListApi(ListAPIView):
 
