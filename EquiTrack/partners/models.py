@@ -373,7 +373,7 @@ class PCA(AdminURLMixin, models.Model):
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (IC, u'Institutional Contract'),
+        #(IC, u'Institutional Contract'),
         #(DCT, u'Government Transfer'),
     )
 

@@ -297,7 +297,7 @@ class Trip(AdminURLMixin, models.Model):
         zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
 
         if instance.budget_owner:
-            if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
+            if instance.budget_owner.email not in recipients:
                 recipients.append(instance.budget_owner.email)
 
         if instance.status == Trip.SUBMITTED:
