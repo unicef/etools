@@ -157,13 +157,13 @@ class TripSerializer(serializers.ModelSerializer):
             for ap_data in aps_data:
                 logging.info(ap_data)
                 if ap_data.get('id') and ap_data['id'] in existing_ap_ids:
-                    # update current action point with data
-                    logging.info('updating existing ap')
-                    pass
+                    # remove the id from the field
+                    del ap_data["id"]
+                    # update current action point with ap_data
+                    ActionPoint.objects.update(**ap_data)
                 else:
                     #create a new action_point
-                    logging.info('creating new ap')
-                    #ActionPoint.objects.create(trip=instance, **ap_data)
+                    ActionPoint.objects.create(trip=instance, **ap_data)
 
         return instance
 
