@@ -135,7 +135,13 @@ class TripSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
+        """
+        docs: http://www.django-rest-framework.org/api-guide/serializers/#writable-nested-representations
 
+        :param instance:
+        :param validated_data:
+        :return:
+        """
         try:
             aps_data = validated_data.pop('actionpoint_set')
         except KeyError:
@@ -152,6 +158,7 @@ class TripSerializer(serializers.ModelSerializer):
                 logging.info(ap_data)
                 if ap_data.get('id') and ap_data['id'] in existing_ap_ids:
                     # update current action point with data
+                    logging.info('updating existing ap')
                     pass
                 else:
                     #create a new action_point
@@ -173,6 +180,7 @@ class TripSerializer(serializers.ModelSerializer):
             'section',
             'purpose_of_travel',
             'office',
+            'main_observations',
             'travel_type',
             'from_date',
             'to_date',
@@ -187,7 +195,6 @@ class TripSerializer(serializers.ModelSerializer):
             'representative',
             'human_resources',
             'files',
-
             'approved_by_supervisor',
             'date_supervisor_approved',
             'approved_by_budget_owner',
@@ -207,7 +214,8 @@ class TripSerializer(serializers.ModelSerializer):
             'pcas',
             'travel_routes',
             'actionpoint_set',
-            'trip_funds'
+            'trip_funds',
+
 
 
 

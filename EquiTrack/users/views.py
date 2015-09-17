@@ -5,7 +5,12 @@ import string
 from django.http import HttpResponse
 from django.views.generic import TemplateView, FormView
 
-from rest_framework.generics import RetrieveAPIView
+from rest_framework.exceptions import (
+    APIException,
+    PermissionDenied,
+    ParseError,
+)
+from rest_framework.generics import RetrieveAPIView, ListAPIView
 from registration.backends.default.views import (
     RegistrationView,
 )
@@ -14,7 +19,8 @@ from trips.models import Office
 from reports.models import Sector
 from .forms import UnicefEmailRegistrationForm, ProfileForm
 from .models import EquiTrackRegistrationModel, User, UserProfile
-from .serializers import UserSerializer
+from .serializers import UserSerializer, SimpleProfileSerializer
+
 
 
 class EquiTrackRegistrationView(RegistrationView):
@@ -38,6 +44,7 @@ class UserAuthAPIView(RetrieveAPIView):
     model = User
     serializer_class = UserSerializer
 
+
     def get_object(self, queryset=None, **kwargs):
         user = self.request.user
         q = self.request.GET.get('device_id', None)
@@ -46,6 +53,12 @@ class UserAuthAPIView(RetrieveAPIView):
             profile.installation_id = string.replace(q, "_", "-")
             profile.save()
         return user
+
+
+class UsersView(ListAPIView):
+    model = UserProfile
+    serializer_class = SimpleProfileSerializer
+    queryset = model.objects.all()
 
 
 class ProfileView(TemplateView):
