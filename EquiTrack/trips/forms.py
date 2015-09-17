@@ -165,8 +165,8 @@ class RequireOneLocationFormSet(BaseInlineFormSet):
             return
 
         form_count = len([f for f in self.forms if f.cleaned_data])
-        if form_count < 1 and self.instance.travel_type == Trip.PROGRAMME_MONITORING:
-            raise ValidationError('At least one Trip Location is required.')
+        if form_count < 1 and self.instance.international_travel is False and self.instance.status != Trip.CANCELLED:
+            raise ValidationError('At least one Trip location is required. (governorate and region)')
 
 
 class TripFilterByDateForm(Form):
