@@ -147,7 +147,8 @@ class TripForm(ModelForm):
 
             if ta_required and ta_trip_took_place_as_planned is False and self.request.user != programme_assistant:
                 raise ValidationError(
-                    'Only the TA travel assistant can complete the trip'
+                    'Due to trip not being exactly as planned (attached) in the TA,'
+                    ' only the travel focal point can complete the trip'
                 )
 
             # if not approved_by_human_resources and travel_type == Trip.STAFF_DEVELOPMENT:
