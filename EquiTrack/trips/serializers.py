@@ -46,6 +46,8 @@ class ActionPointSerializer(serializers.ModelSerializer):
             'due_date',
             'comments'
         )
+        extra_kwargs = {'id': {'read_only': False}}
+
 class ActionPointS(serializers.Serializer):
 
     class Meta:
@@ -133,28 +135,28 @@ class TripSerializer(serializers.ModelSerializer):
         )
 
     def update(self, instance, validated_data):
-        logging.info(validated_data)
+
         try:
-            aps_data = validated_data.pop('action_points')
+            aps_data = validated_data.pop('actionpoint_set')
         except KeyError:
             aps_data = []
 
         for key, value in validated_data.iteritems():
             setattr(instance, key, value)
 
-        trip = Trip.objects.update(**validated_data)
-
         instance.save()
 
         if aps_data:
             existing_ap_ids = [obj.id for obj in instance.actionpoint_set.all()]
             for ap_data in aps_data:
-                if ap_data.id in existing_ap_ids:
+                logging.info(ap_data)
+                if ap_data.get('id') and ap_data['id'] in existing_ap_ids:
                     # update current action point with data
                     pass
                 else:
                     #create a new action_point
-                    ActionPoint.objects.create(trip=trip, **ap_data)
+                    logging.info('creating new ap')
+                    #ActionPoint.objects.create(trip=instance, **ap_data)
 
         return instance
 
