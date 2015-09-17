@@ -1,0 +1,27 @@
+web:
+  build: .
+  command: python EquiTrack/manage.py runserver "0.0.0.0:8080"
+  volumes:
+    - .:/code
+  ports:
+    - "8080:8080"
+  links:
+    - db
+    - redis
+  environment:
+    - REDIS_URL=redis://redis:6379/0
+    - DATABASE_URL=postgis://postgres:password@db:5432/postgres
+    - DJANGO_SETTINGS_MODULE=EquiTrack.settings.base
+    - DJANGO_DEBUG=true
+
+db:
+  image: mdillon/postgis
+  environment:
+    - POSTGRES_HOST=db
+    - POSTGRES_PORT=5432
+    - POSTGRES_NAME=postgres
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=password
+
+redis:
+  image: redis

@@ -7,7 +7,7 @@ from django.core.management.base import (
     BaseCommand,
     CommandError
 )
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 import reversion
 
 from partners.models import (
@@ -38,17 +38,40 @@ class Command(BaseCommand):
             if created:
                 print(u'1. Created partner staff: {}'.format(partner_staff))
 
+            pca, created = Agreement.objects.get_or_create(
+                partner=partnership.partner,
+                agreement_type=Agreement.PCA,
+                agreement_number=partnership.number,
+            )
+            if created:
+                print(u'2. Created new PCA: {}'.format(pca))
+
+            pca.signed_by_unicef_date = partnership.signed_by_unicef_date
             try:
-                pca, created = Agreement.objects.get_or_create(
-                    partner=partnership.partner,
-                    agreement_type=Agreement.PCA,
-                    agreement_number=partnership.number,
+                print(u'3. Get user for email: {}'.format(partnership.unicef_mng_email))
+                pca.signed_by = User.objects.get(email=partnership.unicef_mng_email)
+                group, created = Group.objects.get_or_create(
+                    name=u'Senior Management Team'
                 )
-                if created:
-                    print(u'2. Created new PCA: {}'.format(pca))
-            except:
-                print(u'2. Partnership {} does not have unique number please correct'.format(partnership.number))
-                continue
+                group.user_set.add(pca.signed_by)
+            except (User.DoesNotExist, User.MultipleObjectsReturned):
+                print(u'User {} does not exist (check email address on {}) or many users with same email'.format(
+                    partnership.unicef_mng_email, partnership)
+                )
+
+            pca.signed_by_partner_date = partnership.signed_by_partner_date
+            pca.partner_manager = partner_staff
+
+            if partnership.start_date and partnership.end_date:
+                pca.start = datetime.datetime.combine(
+                    partnership.start_date,
+                    datetime.time(00, 00)
+                )
+                pca.end = datetime.datetime.combine(
+                    partnership.end_date,
+                    datetime.time(00, 00)
+                )
+            pca.save()
 
             officer, created = AuthorizedOfficer.objects.get_or_create(
                 agreement=pca,
@@ -66,6 +89,9 @@ class Command(BaseCommand):
 
             partnership.agreement = pca
             partnership.partnership_type = PCA.PD
+            partnership.partner_manager = partner_staff
+            partnership.unicef_manager = pca.signed_by
+
             partnership.save()
 
             # merge amendments
@@ -96,15 +122,17 @@ class Command(BaseCommand):
 
                     # migrate grants
                     for grant in amendment.pcagrant_set.all():
-                        grant.partnership = partnership
-                        grant.amendment = amendment_log
-                        grant.save()
+                        if grant not in partnership.pcagrant_set.all():
+                            grant.partnership = partnership
+                            grant.amendment = amendment_log
+                            grant.save()
 
                     # migrate sectors
                     for sector in amendment.pcasector_set.all():
-                        sector.pca = partnership
-                        sector.amendment = amendment_log
-                        sector.save()
+                        if sector not in partnership.pcasector_set.all():
+                            sector.pca = partnership
+                            sector.amendment = amendment_log
+                            sector.save()
 
                     for file in partnership.pcafile_set.all():
                         file.pca = partnership
@@ -114,36 +142,26 @@ class Command(BaseCommand):
                         location.pca = partnership
                         location.save()
 
-                    partnership.end_date = amendment.end_date
-                    partnership.signed_by_partner_date = amendment.signed_by_partner_date
-                    partnership.signed_by_unicef_date = amendment.signed_by_unicef_date
+                    if amendment.end_date:
+                        partnership.end_date = amendment.end_date
+
+                    if amendment.signed_by_partner_date:
+                        partnership.signed_by_partner_date = amendment.signed_by_partner_date
+
+                    if amendment.signed_by_unicef_date:
+                        partnership.signed_by_unicef_date = amendment.signed_by_unicef_date
 
                     for manager in amendment.unicef_managers.all():
                         partnership.unicef_managers.add(manager)
 
                     partnership.save()
 
-                    if partnership.signed_by_unicef_date:
-                        pca.signed_by_unicef_date = datetime.datetime.combine(
-                            partnership.signed_by_unicef_date,
+                    if partnership.end_date:
+                        pca.end = datetime.datetime.combine(
+                            partnership.end_date,
                             datetime.time(00, 00)
                         )
-                        try:
-                            print(u'3. Get user for email: {}'.format(partnership.unicef_mng_email))
-                            pca.signed_by = User.objects.get(email=partnership.unicef_mng_email)
-                        except (User.DoesNotExist, User.MultipleObjectsReturned):
-                            print(u'User {} does not exist (check email address on {}) or many users with same email'.format(
-                                partnership.unicef_mng_email, partnership)
-                            )
-
-                    if partnership.signed_by_partner_date:
-                        pca.signed_by_partner_date = datetime.datetime.combine(
-                            partnership.signed_by_partner_date,
-                            datetime.time(00, 00)
-                        )
-                        pca.partner_manager = partner_staff
-
-                    pca.save()
+                        pca.save()
 
                 # make manual revision point
                 reversion.set_comment("Merged amendments for partnership: {}".format(

@@ -2,18 +2,13 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-import json
 import datetime
-from copy import deepcopy
 
-import requests
-import reversion
 from django.conf import settings
-from django.db import models, transaction
+from django.db import models
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
-from django.db.models import Sum
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
@@ -48,16 +43,29 @@ from . import emails
 
 User = get_user_model()
 
+HIGH = u'high'
+SIGNIFICANT = u'significant'
+MODERATE = u'moderate'
+LOW = u'low'
+RISK_RATINGS = (
+    (HIGH, u'High'),
+    (SIGNIFICANT, u'Significant'),
+    (MODERATE, u'Moderate'),
+    (LOW, u'Low'),
+)
+
 
 class PartnerOrganization(models.Model):
 
     NATIONAL = u'national'
     INTERNATIONAL = u'international'
     UNAGENCY = u'un-agency'
+    CBO = u'cbo'
     PARTNER_TYPES = (
         (NATIONAL, u"National"),
         (INTERNATIONAL, u"International"),
         (UNAGENCY, u"UN Agency"),
+        (CBO, u"Community Based Organisation"),
     )
 
     type = models.CharField(
@@ -67,7 +75,8 @@ class PartnerOrganization(models.Model):
     )
     name = models.CharField(
         max_length=255,
-        unique=True
+        unique=True,
+        verbose_name='Full Name',
     )
     description = models.CharField(
         max_length=256L,
@@ -78,10 +87,6 @@ class PartnerOrganization(models.Model):
         null=True
     )
     email = models.CharField(
-        max_length=255,
-        blank=True
-    )
-    contact_person = models.CharField(
         max_length=255,
         blank=True
     )
@@ -105,6 +110,23 @@ class PartnerOrganization(models.Model):
     activity_info_partner = models.ForeignKey(
         'activityinfo.Partner',
         blank=True, null=True
+    )
+    rating = models.CharField(
+        max_length=50,
+        choices=RISK_RATINGS,
+        default=HIGH,
+    )
+    core_values_assessment = models.BooleanField(
+        default=False
+    )
+    core_values_assessment_date = models.DateField(
+        blank=True, null=True
+    )
+    special_audit_done = models.BooleanField(
+        default=False
+    )
+    reason_for_special_audit = models.TextField(
+        blank=True
     )
 
     class Meta:
@@ -136,20 +158,11 @@ class Assessment(models.Model):
     SFMC = u'checklist'
     MICRO = u'micro'
     MACRO = u'macro'
-    HIGH = u'high'
-    SIGNIFICANT = u'significant'
-    MODERATE = u'moderate'
-    LOW = u'low'
+    CORE = u'core'
     ASSESSMENT_TYPES = (
-        (SFMC, u"Simplified financial management checklist"),
+        (CORE, u"Core values assessment"),
+        (SFMC, u"Simplified financial checklist"),
         (MICRO, u"Micro-Assessment"),
-        (MACRO, u"Macro-Assessment"),
-    )
-    RISK_RATINGS = (
-        (HIGH, u'High'),
-        (SIGNIFICANT, u'Significant'),
-        (MODERATE, u'Moderate'),
-        (LOW, u'Low'),
     )
 
     partner = models.ForeignKey(
@@ -159,9 +172,9 @@ class Assessment(models.Model):
         max_length=50,
         choices=ASSESSMENT_TYPES,
     )
-    previous_value_with_UN = models.IntegerField(
-        default=0,
-        help_text=u'Value of agreements with other '
+    other_UN = models.BooleanField(
+        default=False,
+        help_text=u'Has this organisation worked with other '
                   u'UN agencies in the last 5 years'
     )
     names_of_other_agencies = models.CharField(
@@ -170,7 +183,9 @@ class Assessment(models.Model):
         help_text=u'List the names of the other '
                   u'agencies they have worked with'
     )
-    expected_budget = models.IntegerField()
+    expected_budget = models.IntegerField(
+        verbose_name=u'Planned amount'
+    )
     notes = models.CharField(
         max_length=255,
         blank=True, null=True,
@@ -200,8 +215,12 @@ class Assessment(models.Model):
         choices=RISK_RATINGS,
         default=HIGH,
     )
-    report = FilerFileField(
-        blank=True, null=True
+    report = models.FileField(
+        blank=True, null=True,
+        upload_to='assessments'
+    )
+    current = models.BooleanField(
+        default=True
     )
 
     def __unicode__(self):
@@ -213,13 +232,19 @@ class Assessment(models.Model):
             self.completed_date else u'NOT COMPLETED'
         )
 
-    def download_url(self):
-        if self.report:
-            return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" >Download</a>'.format(self.report.file.url)
-        return u''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Report'
+    def save(self, **kwargs):
+
+        if self.pk is None:
+            previous = Assessment.objects.filter(
+                partner=self.partner,
+                type=self.type,
+            ).order_by('-requested_date')
+            if previous and previous[0].id != self.id:
+                last = previous[0]
+                last.current = False
+                last.save()
+
+        super(Assessment, self).save(**kwargs)
 
 
 class Recommendation(models.Model):
@@ -246,7 +271,7 @@ class Recommendation(models.Model):
     assessment = models.ForeignKey(Assessment)
     subject_area = models.CharField(max_length=50, choices=SUBJECT_AREAS)
     description = models.CharField(max_length=254)
-    level = models.CharField(max_length=50, choices=Assessment.RISK_RATINGS,
+    level = models.CharField(max_length=50, choices=RISK_RATINGS,
                              verbose_name=u'Priority Flag')
     closed = models.BooleanField(default=False, verbose_name=u'Closed?')
     completed_date = models.DateField(blank=True, null=True)
@@ -348,7 +373,7 @@ class PCA(AdminURLMixin, models.Model):
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (IC, u'Institutional Contract'),
+        #(IC, u'Institutional Contract'),
         #(DCT, u'Government Transfer'),
     )
 
@@ -365,7 +390,8 @@ class PCA(AdminURLMixin, models.Model):
         choices=PARTNERSHIP_TYPES,
         default=PD,
         blank=True, null=True,
-        max_length=255
+        max_length=255,
+        verbose_name=u'Document type'
     )
     result_structure = models.ForeignKey(
         ResultStructure,
@@ -479,8 +505,8 @@ class PCA(AdminURLMixin, models.Model):
     original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
-        verbose_name = 'Programme Intervention'
-        verbose_name_plural = 'Programme Interventions'
+        verbose_name = 'Intervention'
+        verbose_name_plural = 'Interventions'
         ordering = ['-number', 'amendment']
 
     def __unicode__(self):

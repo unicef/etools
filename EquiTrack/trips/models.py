@@ -276,7 +276,9 @@ class Trip(AdminURLMixin, models.Model):
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
         )
-        my_trips = user.trips.filter()
+        my_trips = user.trips.filter(
+            Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
+        )
         return my_trips | super_trips
 
     @classmethod
@@ -295,7 +297,7 @@ class Trip(AdminURLMixin, models.Model):
         zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
 
         if instance.budget_owner:
-            if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
+            if instance.budget_owner.email not in recipients:
                 recipients.append(instance.budget_owner.email)
 
         if instance.status == Trip.SUBMITTED:

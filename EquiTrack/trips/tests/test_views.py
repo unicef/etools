@@ -8,7 +8,7 @@ from rest_framework.test import APIRequestFactory, force_authenticate
 
 from EquiTrack.factories import TripFactory, UserFactory
 from trips.models import Trip
-from trips.views import TripsApprovedView, TripsApi, TripsByOfficeView, TripActionView
+from trips.views import TripsApprovedView, TripsListApi, TripsByOfficeView, TripActionView
 
 
 class ViewTest(TestCase):
@@ -35,7 +35,7 @@ class ViewTest(TestCase):
     def test_view_trips_api(self):
         factory = APIRequestFactory()
         user = UserFactory()
-        view = TripsApi.as_view()
+        view = TripsListApi.as_view()
         # Make an authenticated request to the view...
         request = factory.get('/api/')
         force_authenticate(request, user=user)
@@ -45,7 +45,7 @@ class ViewTest(TestCase):
     def test_view_trips_api_action(self):
         factory = APIRequestFactory()
         user = UserFactory()
-        view = TripsApi.as_view()
+        view = TripsListApi.as_view()
         # Make an authenticated request to the view...
         request = factory.get('/api/' + str(self.trip.id) + '/submit/')
         force_authenticate(request, user=user)
