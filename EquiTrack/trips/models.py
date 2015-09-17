@@ -271,6 +271,14 @@ class Trip(AdminURLMixin, models.Model):
 
         super(Trip, self).save(**kwargs)
 
+    @property
+    def all_files(self):
+        return FileAttachment.objects.filter(object_id=self.id)
+
+    @property
+    def all_aps(self):
+        return [obj.id for obj in self.actionpoint_set.all()]
+
     @classmethod
     def get_all_trips(cls, user):
         super_trips = user.supervised_trips.filter(

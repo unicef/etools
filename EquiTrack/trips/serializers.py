@@ -90,19 +90,13 @@ class TripSerializer(serializers.ModelSerializer):
     partners = serializers.SerializerMethodField()
     travel_routes = serializers.SerializerMethodField()
     actionpoint_set = ActionPointSerializer(many=True)
-    files = serializers.SerializerMethodField()
+    all_files = FileAttachmentSerializer(many=True)
     trip_funds = serializers.SerializerMethodField()
     office = serializers.CharField(source='office.name')
 
     def get_travel_routes(self, trip):
         return TravelRoutesSerializer(
             trip.travelroutes_set.all(),
-            many=True
-        ).data
-
-    def get_files(self, trip):
-        return FileAttachmentSerializer(
-            trip.files.all(),
             many=True
         ).data
 
@@ -194,7 +188,6 @@ class TripSerializer(serializers.ModelSerializer):
             'international_travel',
             'representative',
             'human_resources',
-            'files',
             'approved_by_supervisor',
             'date_supervisor_approved',
             'approved_by_budget_owner',
@@ -215,6 +208,8 @@ class TripSerializer(serializers.ModelSerializer):
             'travel_routes',
             'actionpoint_set',
             'trip_funds',
+            'all_files',
+            'all_aps'
 
 
 
