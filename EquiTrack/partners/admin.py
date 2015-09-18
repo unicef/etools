@@ -686,7 +686,7 @@ class AgreementAdmin(admin.ModelAdmin):
     list_display = ['partner', 'download_url']
 
     def download_url(self, obj):
-        return mark_safe('<a class="btn btn-primary default" href="{/partners/pca_pdf/' + str(obj.id) + '}" >Download</a>')
+        return mark_safe('<a class="btn btn-primary default" href="pdf/' + str(obj.id).encode() + '" >Download</a>')
 
     download_url.allow_tags = True
     download_url.short_description = 'PDF Agreement'

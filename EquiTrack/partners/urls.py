@@ -15,5 +15,5 @@ urlpatterns = patterns(
     '',
     url(r'locations/$', LocationView.as_view(), name='locations'),
     url(r'pcas/$', PcaView.as_view(), name='pcas'),
-    url(r'pca_pdf/(?P<agr>\d+)', PcaPDFView.as_view()),
+    url(r'agreement/pdf/(?P<agr>\d+)', PcaPDFView.as_view()),
 )
