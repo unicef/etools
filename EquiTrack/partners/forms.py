@@ -2,6 +2,9 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
+#import pandas
+
+
 
 from django.utils.translation import ugettext as _
 from django import forms
@@ -106,8 +109,10 @@ class AmendmentForm(forms.ModelForm):
 
         super(AmendmentForm, self).__init__(*args, **kwargs)
 
-        self.fields['amendment'].queryset = self.parent_partnership.amendments_list \
+        self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
+
+        self.fields['amendment'].empty_label = u'Original'
 
 
 class AuthorizedOfficesFormset(RequireOneFormSet):
@@ -214,35 +219,35 @@ class AgreementForm(UserGroupForm):
             'partner_manager': LinkedSelect,
         }
 
-    def __init__(self, *args, **kwargs):
-        super(AgreementForm, self).__init__(*args, **kwargs)
-        self.fields['start'].required = True
-        self.fields['end'].required = True
-
-    def clean(self):
-        cleaned_data = super(AgreementForm, self).clean()
-
-        partner = cleaned_data[u'partner']
-        agreement_type = cleaned_data[u'agreement_type']
-        start = cleaned_data[u'start']
-        end = cleaned_data[u'end']
-
-        # prevent more than one agreement being crated for the current period
-        agreements = Agreement.objects.filter(
-            partner=partner,
-            start__lte=start,
-            end__gte=end
-        )
-        if self.instance:
-            agreements = agreements.exclude(id=self.instance.id)
-        if agreements:
-            raise ValidationError(
-                u'You can only have one current {} per partner'.format(
-                    agreement_type
-                )
-            )
-
-        return cleaned_data
+    # def __init__(self, *args, **kwargs):
+    #     super(AgreementForm, self).__init__(*args, **kwargs)
+    #     self.fields['start'].required = True
+    #     self.fields['end'].required = True
+    #
+    # def clean(self):
+    #     cleaned_data = super(AgreementForm, self).clean()
+    #
+    #     partner = cleaned_data[u'partner']
+    #     agreement_type = cleaned_data[u'agreement_type']
+    #     start = cleaned_data[u'start']
+    #     end = cleaned_data[u'end']
+    #
+    #     # prevent more than one agreement being crated for the current period
+    #     agreements = Agreement.objects.filter(
+    #         partner=partner,
+    #         start__lte=start,
+    #         end__gte=end
+    #     )
+    #     if self.instance:
+    #         agreements = agreements.exclude(id=self.instance.id)
+    #     if agreements:
+    #         raise ValidationError(
+    #             u'You can only have one current {} per partner'.format(
+    #                 agreement_type
+    #             )
+    #         )
+    #
+    #     return cleaned_data
 
 
 class PartnershipForm(UserGroupForm):
