@@ -1,12 +1,13 @@
 __author__ = 'jcranwellward'
 
+#import logging
+
 from django.contrib.sites.models import Site
 
 from rest_framework import serializers
 
 from .models import Trip, TravelRoutes, TripFunds, ActionPoint, FileAttachment
 
-import logging
 
 class TravelRoutesSerializer(serializers.ModelSerializer):
 
@@ -47,19 +48,6 @@ class ActionPointSerializer(serializers.ModelSerializer):
             'comments'
         )
         extra_kwargs = {'id': {'read_only': False}}
-
-class ActionPointS(serializers.Serializer):
-
-    class Meta:
-        model = ActionPoint
-        fields = (
-            'id',
-            'person_responsible',
-            'status',
-            'description',
-            'due_date',
-            'comments'
-        )
 
 
 class FileAttachmentSerializer(serializers.ModelSerializer):
@@ -149,7 +137,7 @@ class TripSerializer(serializers.ModelSerializer):
         if aps_data:
             existing_ap_ids = [obj.id for obj in instance.actionpoint_set.all()]
             for ap_data in aps_data:
-                logging.info(ap_data)
+                #logging.info(ap_data)
                 if ap_data.get('id') and ap_data['id'] in existing_ap_ids:
                     # remove the id from the field
                     del ap_data["id"]
