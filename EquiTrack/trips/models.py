@@ -151,6 +151,11 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
+    driver = models.ForeignKey(User, verbose_name='Driver', null=True, blank=True)
+    driver_supervisor = models.ForeignKey(User, verbose_name='Supervisor for Driver', null=True, blank=True)
+    driver_approved_date = models.DateField(blank=True, null=True, verbose_name='Date supervisor approved driver')
+    driver_approved = models.BooleanField(default=False)
+
     locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
@@ -353,6 +358,12 @@ class Trip(AdminURLMixin, models.Model):
                 )
                 instance.approved_email_sent = True
                 instance.save()
+
+            if instance.driver and instance.driver_supervisor:
+                emails.TripDriverAddedEmail(instance).send(
+                    instance.driver.email,
+                    instance.driver_supervisor.email
+                )
 
         elif instance.status == Trip.COMPLETED:
             emails.TripCompletedEmail(instance).send(

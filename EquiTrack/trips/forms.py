@@ -87,6 +87,8 @@ class TripForm(ModelForm):
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         trip_report = cleaned_data.get(u'main_observations')
         ta_trip_took_place_as_planned = cleaned_data.get(u'ta_trip_took_place_as_planned')
+        driver = cleaned_data.get(u'driver')
+        driver_supervisor = cleaned_data.get(u'driver_supervisor')
 
         if to_date < from_date:
             raise ValidationError('The to date must be greater than the from date')
@@ -138,6 +140,9 @@ class TripForm(ModelForm):
             raise ValidationError(
                 'Only the supervisor can approve this trip'
             )
+
+        if driver and driver_supervisor is None:
+                raise ValidationError('You must enter a supervisor for the selected driver')
 
         if status == Trip.COMPLETED:
             if not trip_report and travel_type != Trip.STAFF_ENTITLEMENT:

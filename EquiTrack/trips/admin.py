@@ -111,8 +111,8 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     form = TripForm
     inlines = (
         TravelRoutesInlineAdmin,
-        TripFundsInlineAdmin,
         TripLocationsInlineAdmin,
+        TripFundsInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
@@ -196,7 +196,10 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'Travel/Admin', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (u'transport_booked',
+                (
+                (u'driver', u'driver_supervisor'),
+                (u'driver_approved', u'driver_approved_date'),
+                 u'transport_booked',
                  u'security_granted',
                  u'ta_drafted',
                  u'ta_reference',
@@ -295,8 +298,11 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             fields.remove(u'date_human_resources_approved')
 
         rep_group, created = Group.objects.get_or_create(
-            name=u'Representative Office'
-        )
+            name=u'Representative Office')
+
+        driver_group, created = Group.objects.get_or_create(
+            name=u'Driver')
+
         if trip and rep_group in request.user.groups.all():
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
@@ -322,6 +328,10 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
         if db_field.name == u'representative':
             rep_group = Group.objects.get(name=u'Representative Office')
+            kwargs['queryset'] = rep_group.user_set.all()
+
+        if db_field.name == u'driver':
+            rep_group = Group.objects.get(name=u'Driver')
             kwargs['queryset'] = rep_group.user_set.all()
 
         return super(TripReportAdmin, self).formfield_for_foreignkey(
