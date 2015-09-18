@@ -61,17 +61,31 @@ class PartnerOrganization(models.Model):
     INTERNATIONAL = u'international'
     UNAGENCY = u'un-agency'
     CBO = u'cbo'
+    ACADEMIC = u'academic',
+    FOUNDATION = u'foundation',
     PARTNER_TYPES = (
-        (NATIONAL, u"National"),
         (INTERNATIONAL, u"International"),
-        (UNAGENCY, u"UN Agency"),
-        (CBO, u"Community Based Organisation"),
+        (NATIONAL, u"CSO"),
+        (CBO, u"CBO"),
+        (ACADEMIC, u"Academic Inst."),
+        (FOUNDATION, u"Foundation")
     )
 
     type = models.CharField(
         max_length=50,
         choices=PARTNER_TYPES,
         default=NATIONAL
+    )
+    partner_type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            u'Government',
+            u'Civil Society Organisation',
+            u'UN Agency',
+            u'Inter-governmental Organisation',
+            u'Bi-Lateral Organisation'
+        ),
+	blank=True, null=True
     )
     name = models.CharField(
         max_length=255,
@@ -115,6 +129,7 @@ class PartnerOrganization(models.Model):
         max_length=50,
         choices=RISK_RATINGS,
         default=HIGH,
+        verbose_name=u'Risk Rating'
     )
     core_values_assessment = models.BooleanField(
         default=False
@@ -155,22 +170,18 @@ class PartnerStaffMember(models.Model):
 
 class Assessment(models.Model):
 
-    SFMC = u'checklist'
-    MICRO = u'micro'
-    MACRO = u'macro'
-    CORE = u'core'
-    ASSESSMENT_TYPES = (
-        (CORE, u"Core values assessment"),
-        (SFMC, u"Simplified financial checklist"),
-        (MICRO, u"Micro-Assessment"),
-    )
-
     partner = models.ForeignKey(
         PartnerOrganization
     )
     type = models.CharField(
         max_length=50,
-        choices=ASSESSMENT_TYPES,
+        choices=Choices(
+            u'Micro Assessment',
+            u'High Risk Assumed',
+            u'Negative Audit Result',
+            u'Simplified Checklist',
+            u'Other',
+        ),
     )
     other_UN = models.BooleanField(
         default=False,

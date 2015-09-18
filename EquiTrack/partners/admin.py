@@ -578,24 +578,29 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     readonly_fields = (
         u'vendor_number',
         u'rating',
+        u'core_values_assessment_date',
     )
     fieldsets = (
         (_('Partner Details'), {
             'fields':
                 (u'name',
-                 (u'vendor_number', u'rating',),
+                 u'partner_type',
                  u'type',
+                 u'core_values_assessment_date',
+                 (u'vendor_number', u'rating',),
                  u'address',
                  u'phone_number',
-                 u'email',
-                 u'alternate_id',
-                 u'alternate_name',
-                 (u'core_values_assessment', u'core_values_assessment_date',),)
+                 u'email',)
         }),
         (_('Special Audit'), {
             u'classes': (u'collapse',),
             'fields':
                 ((u'special_audit_done', u'reason_for_special_audit',),)
+        }),
+        (_('Meta Data'), {
+            u'classes': (u'collapse',),
+            'fields':
+                ((u'alternate_id', u'alternate_name',),)
         }),
     )
     inlines = [
@@ -671,10 +676,10 @@ class AgreementAdmin(admin.ModelAdmin):
         u'agreement_number',
         u'attached_agreement',
         (u'start', u'end',),
-        u'signed_by_unicef_date',
-        u'signed_by',
         u'signed_by_partner_date',
         u'partner_manager',
+        u'signed_by_unicef_date',
+        u'signed_by',
     )
     readonly_fields = (
         u'start', u'end',
