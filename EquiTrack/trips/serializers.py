@@ -197,7 +197,6 @@ class TripSerializer(serializers.ModelSerializer):
             'actionpoint_set',
             'trip_funds',
             'all_files',
-            'all_aps'
 
 
 
