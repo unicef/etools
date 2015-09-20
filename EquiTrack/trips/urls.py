@@ -2,10 +2,14 @@ __author__ = 'jcranwellward'
 
 from django.conf.urls import patterns, url
 
-from .views import TripsApprovedView, \
-    TripsByOfficeView, TripsDashboard, \
-    TripsListApi, TripActionView, \
+from .views import (
+    TripsApprovedView,
+    TripsByOfficeView,
+    TripsDashboard,
+    TripsListApi,
+    TripActionView,
     TripDetailsView
+)
 
 
 urlpatterns = patterns(
