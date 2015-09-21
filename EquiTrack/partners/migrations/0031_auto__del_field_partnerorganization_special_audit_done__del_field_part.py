@@ -24,6 +24,11 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=50, blank=True),
                       keep_default=False)
 
+        # Adding field 'PartnerOrganization.rating'
+        db.add_column(u'partners_partnerorganization', 'rating',
+                      self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=50, blank=True),
+                      keep_default=False)
+
 
         # Changing field 'PartnerOrganization.core_values_assessment'
         db.alter_column(u'partners_partnerorganization', 'core_values_assessment', self.gf('django.db.models.fields.files.FileField')(max_length=100))
