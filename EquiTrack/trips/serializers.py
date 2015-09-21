@@ -37,11 +37,16 @@ class TripFundsSerializer(serializers.ModelSerializer):
 
 class ActionPointSerializer(serializers.ModelSerializer):
 
+
+    person_responsible_name = serializers.CharField(source="person_responsible",
+                                                    read_only=True)
+
     class Meta:
         model = ActionPoint
         fields = (
             'id',
             'person_responsible',
+            'person_responsible_name',
             'status',
             'description',
             'due_date',
@@ -124,6 +129,7 @@ class TripSerializer(serializers.ModelSerializer):
         :param validated_data:
         :return:
         """
+        #logging.info(validated_data)
         try:
             aps_data = validated_data.pop('actionpoint_set')
         except KeyError:
@@ -139,10 +145,12 @@ class TripSerializer(serializers.ModelSerializer):
             for ap_data in aps_data:
                 #logging.info(ap_data)
                 if ap_data.get('id') and ap_data['id'] in existing_ap_ids:
-                    # remove the id from the field
+                    ap_id = ap_data["id"]
+                    # remove the id from the field to avoid errors
                     del ap_data["id"]
                     # update current action point with ap_data
-                    ActionPoint.objects.update(**ap_data)
+                    ActionPoint.objects.filter(pk=ap_id).update(**ap_data)
+
                 else:
                     #create a new action_point
                     ActionPoint.objects.create(trip=instance, **ap_data)
