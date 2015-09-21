@@ -8,16 +8,46 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+        # Deleting field 'PartnerOrganization.special_audit_done'
+        db.delete_column(u'partners_partnerorganization', 'special_audit_done')
+
+        # Deleting field 'PartnerOrganization.reason_for_special_audit'
+        db.delete_column(u'partners_partnerorganization', 'reason_for_special_audit')
+
         # Adding field 'PartnerOrganization.partner_type'
         db.add_column(u'partners_partnerorganization', 'partner_type',
                       self.gf('django.db.models.fields.CharField')(max_length=50, null=True, blank=True),
                       keep_default=False)
 
+        # Adding field 'PartnerOrganization.short_name'
+        db.add_column(u'partners_partnerorganization', 'short_name',
+                      self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=50, blank=True),
+                      keep_default=False)
+
+
+        # Changing field 'PartnerOrganization.core_values_assessment'
+        db.alter_column(u'partners_partnerorganization', 'core_values_assessment', self.gf('django.db.models.fields.files.FileField')(max_length=100))
 
     def backwards(self, orm):
+        # Adding field 'PartnerOrganization.special_audit_done'
+        db.add_column(u'partners_partnerorganization', 'special_audit_done',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
+        # Adding field 'PartnerOrganization.reason_for_special_audit'
+        db.add_column(u'partners_partnerorganization', 'reason_for_special_audit',
+                      self.gf('django.db.models.fields.TextField')(default='', blank=True),
+                      keep_default=False)
+
         # Deleting field 'PartnerOrganization.partner_type'
         db.delete_column(u'partners_partnerorganization', 'partner_type')
 
+        # Deleting field 'PartnerOrganization.short_name'
+        db.delete_column(u'partners_partnerorganization', 'short_name')
+
+
+        # Changing field 'PartnerOrganization.core_values_assessment'
+        db.alter_column(u'partners_partnerorganization', 'core_values_assessment', self.gf('django.db.models.fields.BooleanField')())
 
     models = {
         u'activityinfo.activity': {
@@ -141,7 +171,7 @@ class Migration(SchemaMigration):
         },
         u'locations.governorate': {
             'Meta': {'ordering': "['name']", 'object_name': 'Governorate'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#7A0536'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#0A9AF3'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -154,7 +184,7 @@ class Migration(SchemaMigration):
             'cas_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_code_un': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_village_name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#65DBA9'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#6F23B4'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -175,7 +205,7 @@ class Migration(SchemaMigration):
         },
         u'locations.region': {
             'Meta': {'ordering': "['name']", 'object_name': 'Region'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#E90549'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#57BBC3'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
@@ -271,7 +301,7 @@ class Migration(SchemaMigration):
             'address': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'alternate_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'alternate_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'core_values_assessment': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'core_values_assessment': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'blank': 'True'}),
             'core_values_assessment_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '256L', 'blank': 'True'}),
             'email': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
@@ -280,8 +310,7 @@ class Migration(SchemaMigration):
             'partner_type': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'blank': 'True'}),
             'rating': ('django.db.models.fields.CharField', [], {'default': "u'high'", 'max_length': '50'}),
-            'reason_for_special_audit': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'special_audit_done': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'short_name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '50', 'blank': 'True'}),
             'type': ('django.db.models.fields.CharField', [], {'default': "u'national'", 'max_length': '50'}),
             'vendor_number': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
         },

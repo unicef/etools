@@ -74,7 +74,8 @@ class PartnerOrganization(models.Model):
     type = models.CharField(
         max_length=50,
         choices=PARTNER_TYPES,
-        default=NATIONAL
+        default=NATIONAL,
+        verbose_name=u'CSO Type'
     )
     partner_type = models.CharField(
         max_length=50,
@@ -84,13 +85,18 @@ class PartnerOrganization(models.Model):
             u'UN Agency',
             u'Inter-governmental Organisation',
             u'Bi-Lateral Organisation'
-        ),
-	blank=True, null=True
+        ), blank=True, null=True
     )
     name = models.CharField(
         max_length=255,
         unique=True,
         verbose_name='Full Name',
+        help_text=u'Please make sure this matches the name you enter in VISION'
+    )
+    short_name = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True
     )
     description = models.CharField(
         max_length=256L,
@@ -131,17 +137,14 @@ class PartnerOrganization(models.Model):
         default=HIGH,
         verbose_name=u'Risk Rating'
     )
-    core_values_assessment = models.BooleanField(
-        default=False
+    core_values_assessment = models.FileField(
+        upload_to='core_values_assessments',
+        verbose_name=u'Core values attachment',
+        blank=True
     )
     core_values_assessment_date = models.DateField(
-        blank=True, null=True
-    )
-    special_audit_done = models.BooleanField(
-        default=False
-    )
-    reason_for_special_audit = models.TextField(
-        blank=True
+        blank=True, null=True,
+        verbose_name=u'Date positively assessed against core values'
     )
 
     class Meta:
@@ -177,9 +180,9 @@ class Assessment(models.Model):
         max_length=50,
         choices=Choices(
             u'Micro Assessment',
-            u'High Risk Assumed',
-            u'Negative Audit Result',
             u'Simplified Checklist',
+            u'Scheduled Audit report',
+            u'Special Audit report',
             u'Other',
         ),
     )
@@ -231,7 +234,8 @@ class Assessment(models.Model):
         upload_to='assessments'
     )
     current = models.BooleanField(
-        default=True
+        default=True,
+        verbose_name=u'Basis for risk rating'
     )
 
     def __unicode__(self):
