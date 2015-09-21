@@ -21,7 +21,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'PartnerOrganization.rating'
         db.add_column(u'partners_partnerorganization', 'rating',
-                      self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=50, blank=True),
+                      self.gf('django.db.models.fields.CharField')(default='', max_length=50, blank=True),
                       keep_default=False)
 
 
