@@ -8,11 +8,6 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        # Deleting field 'PartnerOrganization.special_audit_done'
-        db.delete_column(u'partners_partnerorganization', 'special_audit_done')
-
-        # Deleting field 'PartnerOrganization.reason_for_special_audit'
-        db.delete_column(u'partners_partnerorganization', 'reason_for_special_audit')
 
         # Adding field 'PartnerOrganization.partner_type'
         db.add_column(u'partners_partnerorganization', 'partner_type',
@@ -29,9 +24,6 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(default='', unique=True, max_length=50, blank=True),
                       keep_default=False)
 
-
-        # Changing field 'PartnerOrganization.core_values_assessment'
-        db.alter_column(u'partners_partnerorganization', 'core_values_assessment', self.gf('django.db.models.fields.files.FileField')(max_length=100))
 
     def backwards(self, orm):
         # Adding field 'PartnerOrganization.special_audit_done'
