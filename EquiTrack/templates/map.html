@@ -434,7 +434,7 @@
         function main(map, options) {
             map1=map;
             layer_control = L.control.layers().addTo(map);
-            //get all cartodb tables from equitrack and pull data from CartoDB
+            //get all cartodb tables from etools and pull data from CartoDB
             $.getJSON("{% url 'cartodbtables' %}", function (data) {
                 $.each(data, function (key, val) {
                     $.getJSON(

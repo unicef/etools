@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from smart_selects.db_fields import ChainedForeignKey
 from django.contrib.contenttypes.generic import (
     GenericForeignKey, GenericRelation
 )
@@ -20,7 +21,7 @@ from EquiTrack.mixins import AdminURLMixin
 # from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
-from locations.models import Governorate
+from locations.models import Governorate, Locality, Location, Region
 from . import emails
 
 
@@ -39,7 +40,8 @@ class Office(models.Model):
         User,
         blank=True, null=True,
         related_name='offices',
-        verbose_name='Chief')
+        verbose_name='Chief'
+    )
     location = models.ForeignKey(
         Governorate,
         blank=True, null=True,
@@ -115,7 +117,7 @@ class Trip(AdminURLMixin, models.Model):
     pcas = models.ManyToManyField(
         u'partners.PCA',
         blank=True, null=True,
-        verbose_name=u"Related PCAs"
+        verbose_name=u"Related Partnerships"
     )
     partners = models.ManyToManyField(
         u'partners.PartnerOrganization',
@@ -269,12 +271,18 @@ class Trip(AdminURLMixin, models.Model):
 
         super(Trip, self).save(**kwargs)
 
+    @property
+    def all_files(self):
+        return FileAttachment.objects.filter(object_id=self.id)
+
     @classmethod
     def get_all_trips(cls, user):
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
         )
-        my_trips = user.trips.filter()
+        my_trips = user.trips.filter(
+            Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED) | Q(status=Trip.PLANNED)
+        )
         return my_trips | super_trips
 
     @classmethod
@@ -293,7 +301,7 @@ class Trip(AdminURLMixin, models.Model):
         zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
 
         if instance.budget_owner:
-            if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
+            if instance.budget_owner.email not in recipients:
                 recipients.append(instance.budget_owner.email)
 
         if instance.status == Trip.SUBMITTED:
@@ -371,6 +379,53 @@ class TripFunds(models.Model):
     class Meta:
         verbose_name = u'Funding'
         verbose_name_plural = u'Funding'
+
+
+class TripLocation(models.Model):
+    trip = models.ForeignKey(Trip)
+    governorate = models.ForeignKey(Governorate)
+    region = ChainedForeignKey(
+        Region,
+        chained_field="governorate",
+        chained_model_field="governorate",
+        show_all=False,
+        auto_choose=True,
+    )
+    locality = ChainedForeignKey(
+        Locality,
+        chained_field="region",
+        chained_model_field="region",
+        show_all=False,
+        auto_choose=True,
+        null=True, blank=True
+    )
+    location = ChainedForeignKey(
+        Location,
+        chained_field="locality",
+        chained_model_field="locality",
+        show_all=False,
+        auto_choose=False,
+        null=True, blank=True
+    )
+
+    def __unicode__(self):
+        desc = u'{} -> {}'.format(
+            self.governorate.name,
+            self.region.name,
+        )
+        if self.locality:
+            desc = u'{} -> {}'.format(
+                desc,
+                self.locality.name
+            )
+        if self.location:
+            desc = u'{} -> {} ({})'.format(
+                desc,
+                self.location.name,
+                self.location.gateway.name
+            )
+
+        return desc
 
 
 class TravelRoutes(models.Model):

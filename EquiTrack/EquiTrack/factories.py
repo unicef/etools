@@ -12,6 +12,7 @@ from users import models as user_models
 from trips import models as trip_models
 from reports import models as report_models
 from locations import models as location_models
+from partners import models as partner_models
 
 
 class GovernorateFactory(factory.django.DjangoModelFactory):
@@ -96,3 +97,19 @@ class LinkedLocationFactory(factory.django.DjangoModelFactory):
     content_object = factory.SubFactory(TripFactory)
     governorate = factory.SubFactory(GovernorateFactory)
     region = factory.SubFactory(RegionFactory)
+
+
+class PartnerFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PartnerOrganization
+
+    name = factory.Sequence(lambda n: 'Partner {}'.format(n))
+
+
+class PartnershipFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PCA
+
+    title = factory.Sequence(lambda n: 'PCA {}'.format(n))
+    initiation_date = datetime.today()
+    partner = factory.SubFactory(PartnerFactory)

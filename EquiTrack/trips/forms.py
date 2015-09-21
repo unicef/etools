@@ -4,13 +4,14 @@ from datetime import datetime
 
 from django.forms import ModelForm, fields, Form
 from django.core.exceptions import ValidationError
+from django.forms.models import BaseInlineFormSet
 
 from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget, DateWidget
 
 from partners.models import PCA
-from .models import Trip, TravelRoutes
+from .models import Trip, TravelRoutes, TripLocation
 
 
 class TravelRoutesForm(ModelForm):
@@ -156,6 +157,16 @@ class TripForm(ModelForm):
 
         #TODO: this can be removed once we upgrade to 1.7
         return cleaned_data
+
+
+class RequireOneLocationFormSet(BaseInlineFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+
+        form_count = len([f for f in self.forms if f.cleaned_data])
+        if form_count < 1 and self.instance.travel_type == Trip.PROGRAMME_MONITORING:
+            raise ValidationError('At least one Trip Location is required.')
 
 
 class TripFilterByDateForm(Form):

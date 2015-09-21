@@ -3,6 +3,10 @@ __author__ = 'jcranwellward'
 from django.db import models
 
 from paintstore.fields import ColorPickerField
+from model_utils.models import (
+    TimeFramedModel,
+    TimeStampedModel,
+)
 
 
 class ResultStructure(models.Model):

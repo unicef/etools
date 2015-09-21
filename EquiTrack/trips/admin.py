@@ -22,13 +22,16 @@ from .models import (
     TripFunds,
     ActionPoint,
     TravelRoutes,
-    FileAttachment
+    FileAttachment,
+    TripLocation,
 
 )
 from .forms import (
     TripForm,
     TravelRoutesForm,
+    RequireOneLocationFormSet
 )
+
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -63,11 +66,12 @@ class ActionPointInlineAdmin(admin.StackedInline):
     )
 
 
-class SitesVisitedInlineAdmin(GenericTabularInline):
-    model = LinkedLocation
+class TripLocationsInlineAdmin(admin.TabularInline):
+    model = TripLocation
+    formset = RequireOneLocationFormSet
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
-    extra = 5
+    # extra = 1
 
 
 class FileAttachmentInlineAdmin(GenericTabularInline):
@@ -108,7 +112,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     inlines = (
         TravelRoutesInlineAdmin,
         TripFundsInlineAdmin,
-        SitesVisitedInlineAdmin,
+        TripLocationsInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
@@ -174,7 +178,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                  (u'international_travel', u'representative',),
                  u'approved_by_human_resources',)
         }),
-        (u'PCA Details', {
+        (u'Partnership Details', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (u'pcas',
@@ -384,3 +388,4 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
 admin.site.register(Office)
 admin.site.register(Trip, TripReportAdmin)
 admin.site.register(ActionPoint, ActionPointsAdmin)
+admin.site.register(TripLocation)
