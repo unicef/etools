@@ -61,22 +61,42 @@ class PartnerOrganization(models.Model):
     INTERNATIONAL = u'international'
     UNAGENCY = u'un-agency'
     CBO = u'cbo'
+    ACADEMIC = u'academic',
+    FOUNDATION = u'foundation',
     PARTNER_TYPES = (
-        (NATIONAL, u"National"),
         (INTERNATIONAL, u"International"),
-        (UNAGENCY, u"UN Agency"),
-        (CBO, u"Community Based Organisation"),
+        (NATIONAL, u"CSO"),
+        (CBO, u"CBO"),
+        (ACADEMIC, u"Academic Inst."),
+        (FOUNDATION, u"Foundation")
     )
 
     type = models.CharField(
         max_length=50,
         choices=PARTNER_TYPES,
-        default=NATIONAL
+        default=NATIONAL,
+        verbose_name=u'CSO Type'
+    )
+    partner_type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            u'Government',
+            u'Civil Society Organisation',
+            u'UN Agency',
+            u'Inter-governmental Organisation',
+            u'Bi-Lateral Organisation'
+        ), blank=True, null=True
     )
     name = models.CharField(
         max_length=255,
         unique=True,
         verbose_name='Full Name',
+        help_text=u'Please make sure this matches the name you enter in VISION'
+    )
+    short_name = models.CharField(
+        max_length=50,
+        unique=True,
+        blank=True
     )
     description = models.CharField(
         max_length=256L,
@@ -115,18 +135,16 @@ class PartnerOrganization(models.Model):
         max_length=50,
         choices=RISK_RATINGS,
         default=HIGH,
+        verbose_name=u'Risk Rating'
     )
-    core_values_assessment = models.BooleanField(
-        default=False
+    core_values_assessment = models.FileField(
+        upload_to='core_values_assessments',
+        verbose_name=u'Core values attachment',
+        blank=True
     )
     core_values_assessment_date = models.DateField(
-        blank=True, null=True
-    )
-    special_audit_done = models.BooleanField(
-        default=False
-    )
-    reason_for_special_audit = models.TextField(
-        blank=True
+        blank=True, null=True,
+        verbose_name=u'Date positively assessed against core values'
     )
 
     class Meta:
@@ -155,22 +173,18 @@ class PartnerStaffMember(models.Model):
 
 class Assessment(models.Model):
 
-    SFMC = u'checklist'
-    MICRO = u'micro'
-    MACRO = u'macro'
-    CORE = u'core'
-    ASSESSMENT_TYPES = (
-        (CORE, u"Core values assessment"),
-        (SFMC, u"Simplified financial checklist"),
-        (MICRO, u"Micro-Assessment"),
-    )
-
     partner = models.ForeignKey(
         PartnerOrganization
     )
     type = models.CharField(
         max_length=50,
-        choices=ASSESSMENT_TYPES,
+        choices=Choices(
+            u'Micro Assessment',
+            u'Simplified Checklist',
+            u'Scheduled Audit report',
+            u'Special Audit report',
+            u'Other',
+        ),
     )
     other_UN = models.BooleanField(
         default=False,
@@ -220,7 +234,8 @@ class Assessment(models.Model):
         upload_to='assessments'
     )
     current = models.BooleanField(
-        default=True
+        default=True,
+        verbose_name=u'Basis for risk rating'
     )
 
     def __unicode__(self):

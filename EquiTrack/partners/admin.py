@@ -535,17 +535,38 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
 
 
 class AssessmentAdminInline(admin.TabularInline):
-    can_delete = False
     model = Assessment
     extra = 0
     fields = (
         u'type',
-        u'planned_date',
         u'completed_date',
-        u'rating',
-        u'report',
         u'current',
-        u'changeform_link',
+        u'report',
+    )
+    verbose_name = u'Assessments and Audits record'
+    verbose_name_plural = u'Assessments and Audits records'
+
+
+class PartnerStaffMemberInlineAdmin(admin.TabularInline):
+    model = PartnerStaffMember
+
+
+class DocumentInlineAdmin(admin.TabularInline):
+    model = PCA
+    can_delete = False
+    verbose_name = 'Intervention'
+    verbose_name_plural = 'Interventions'
+    extra = 0
+    fields = (
+        'number',
+        'status',
+        'start_date',
+        'end_date',
+        'result_structure',
+        'sector_names',
+        'title',
+        'total_cash',
+        'changeform_link',
     )
     readonly_fields = fields
 
@@ -553,14 +574,10 @@ class AssessmentAdminInline(admin.TabularInline):
         return False
 
     def changeform_link(self, obj):
-        return get_changeform_link(obj.pca_sector.pca,
-                                   link_name='View Assessment')
+        return get_changeform_link(obj, link_name='View Intervention')
+
     changeform_link.allow_tags = True
-    changeform_link.short_description = 'View Assessment Details'
-
-
-class PartnerStaffMemberInlineAdmin(admin.TabularInline):
-    model = PartnerStaffMember
+    changeform_link.short_description = 'View Intervention Details'
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -578,29 +595,32 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     readonly_fields = (
         u'vendor_number',
         u'rating',
+        u'core_values_assessment_date',
     )
     fieldsets = (
         (_('Partner Details'), {
             'fields':
                 (u'name',
-                 (u'vendor_number', u'rating',),
-                 u'type',
+                 u'short_name',
+                 (u'partner_type', u'type',),
+                 u'vendor_number',
+                 u'rating',
                  u'address',
                  u'phone_number',
                  u'email',
-                 u'alternate_id',
-                 u'alternate_name',
-                 (u'core_values_assessment', u'core_values_assessment_date',),)
+                 u'core_values_assessment_date',
+                 u'core_values_assessment')
         }),
-        (_('Special Audit'), {
+        (_('Meta Data'), {
             u'classes': (u'collapse',),
             'fields':
-                ((u'special_audit_done', u'reason_for_special_audit',),)
+                ((u'alternate_id', u'alternate_name',),)
         }),
     )
     inlines = [
         AssessmentAdminInline,
         PartnerStaffMemberInlineAdmin,
+        DocumentInlineAdmin,
     ]
 
 
@@ -671,10 +691,10 @@ class AgreementAdmin(admin.ModelAdmin):
         u'agreement_number',
         u'attached_agreement',
         (u'start', u'end',),
-        u'signed_by_unicef_date',
-        u'signed_by',
         u'signed_by_partner_date',
         u'partner_manager',
+        u'signed_by_unicef_date',
+        u'signed_by',
     )
     readonly_fields = (
         u'start', u'end',
@@ -682,6 +702,7 @@ class AgreementAdmin(admin.ModelAdmin):
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
+
 
 admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
