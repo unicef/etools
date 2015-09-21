@@ -595,7 +595,7 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     readonly_fields = (
         u'vendor_number',
         u'rating',
-        u'core_values_assessment_date',
+        #u'core_values_assessment_date',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -608,8 +608,9 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
                  u'address',
                  u'phone_number',
                  u'email',
-                 u'core_values_assessment_date',
-                 u'core_values_assessment')
+                 # u'core_values_assessment_date',
+                 # u'core_values_assessment'
+                 )
         }),
         (_('Meta Data'), {
             u'classes': (u'collapse',),
