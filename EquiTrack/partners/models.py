@@ -95,7 +95,6 @@ class PartnerOrganization(models.Model):
     )
     short_name = models.CharField(
         max_length=50,
-        unique=True,
         blank=True
     )
     description = models.CharField(
