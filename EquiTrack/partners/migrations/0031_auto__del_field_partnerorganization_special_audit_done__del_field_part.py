@@ -47,7 +47,7 @@ class Migration(SchemaMigration):
 
         # Adding field 'PartnerOrganization.core_values_assessment'
         db.add_column(u'partners_partnerorganization', 'core_values_assessment',
-                      self.gf('django.db.models.fields.FileField')(blank=True),
+                      self.gf('django.db.models.fields.FileField')(blank=True, max_length=100),
                       keep_default=False)
 
         # Adding field 'PartnerOrganization.core_values_assessment_date'
