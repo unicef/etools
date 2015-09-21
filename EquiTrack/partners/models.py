@@ -136,15 +136,15 @@ class PartnerOrganization(models.Model):
         default=HIGH,
         verbose_name=u'Risk Rating'
     )
-    core_values_assessment = models.FileField(
-        upload_to='core_values_assessments',
-        verbose_name=u'Core values attachment',
-        blank=True
-    )
-    core_values_assessment_date = models.DateField(
-        blank=True, null=True,
-        verbose_name=u'Date positively assessed against core values'
-    )
+    # core_values_assessment = models.FileField(
+    #     upload_to='core_values_assessments',
+    #     verbose_name=u'Core values attachment',
+    #     blank=True
+    # )
+    # core_values_assessment_date = models.DateField(
+    #     blank=True, null=True,
+    #     verbose_name=u'Date positively assessed against core values'
+    # )
 
     class Meta:
         ordering = ['name']
