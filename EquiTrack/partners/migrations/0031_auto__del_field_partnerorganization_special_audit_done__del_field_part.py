@@ -24,17 +24,39 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(default='', max_length=50, blank=True),
                       keep_default=False)
 
+        # Adding field 'Assessment.current'
+        db.add_column(u'partners_assessment', 'current',
+                      self.gf('django.db.models.fields.BooleanField')(default=True),
+                      keep_default=False)
 
-    def backwards(self, orm):
-        # Adding field 'PartnerOrganization.special_audit_done'
-        db.add_column(u'partners_partnerorganization', 'special_audit_done',
+
+        # Renaming column for 'Assessment.report' to match new field type.
+        db.rename_column(u'partners_assessment', 'report_id', 'report')
+        # Changing field 'Assessment.report'
+        db.alter_column(u'partners_assessment', 'report', self.gf('django.db.models.fields.files.FileField')(max_length=100, null=True))
+        # Removing index on 'Assessment', fields ['report']
+        db.delete_index(u'partners_assessment', ['report_id'])
+
+        # Deleting field 'PartnerOrganization.contact_person'
+        db.delete_column(u'partners_partnerorganization', 'contact_person')
+
+        # Adding field 'PartnerOrganization.rating'
+        db.add_column(u'partners_partnerorganization', 'rating',
+                      self.gf('django.db.models.fields.CharField')(default=u'high', max_length=50),
+                      keep_default=False)
+
+        # Adding field 'PartnerOrganization.core_values_assessment'
+        db.add_column(u'partners_partnerorganization', 'core_values_assessment',
                       self.gf('django.db.models.fields.BooleanField')(default=False),
                       keep_default=False)
 
-        # Adding field 'PartnerOrganization.reason_for_special_audit'
-        db.add_column(u'partners_partnerorganization', 'reason_for_special_audit',
-                      self.gf('django.db.models.fields.TextField')(default='', blank=True),
+        # Adding field 'PartnerOrganization.core_values_assessment_date'
+        db.add_column(u'partners_partnerorganization', 'core_values_assessment_date',
+                      self.gf('django.db.models.fields.FileField')(blank=True),
                       keep_default=False)
+
+
+    def backwards(self, orm):
 
         # Deleting field 'PartnerOrganization.partner_type'
         db.delete_column(u'partners_partnerorganization', 'partner_type')
@@ -42,9 +64,15 @@ class Migration(SchemaMigration):
         # Deleting field 'PartnerOrganization.short_name'
         db.delete_column(u'partners_partnerorganization', 'short_name')
 
+                # Deleting field 'PartnerOrganization.rating'
+        db.delete_column(u'partners_partnerorganization', 'rating')
 
-        # Changing field 'PartnerOrganization.core_values_assessment'
-        db.alter_column(u'partners_partnerorganization', 'core_values_assessment', self.gf('django.db.models.fields.BooleanField')())
+        # Deleting field 'PartnerOrganization.core_values_assessment'
+        db.delete_column(u'partners_partnerorganization', 'core_values_assessment')
+
+        # Deleting field 'PartnerOrganization.core_values_assessment_date'
+        db.delete_column(u'partners_partnerorganization', 'core_values_assessment_date')
+
 
     models = {
         u'activityinfo.activity': {
