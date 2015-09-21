@@ -40,11 +40,6 @@ class Migration(SchemaMigration):
         # Deleting field 'PartnerOrganization.contact_person'
         db.delete_column(u'partners_partnerorganization', 'contact_person')
 
-        # Adding field 'PartnerOrganization.rating'
-        db.add_column(u'partners_partnerorganization', 'rating',
-                      self.gf('django.db.models.fields.CharField')(default=u'high', max_length=50),
-                      keep_default=False)
-
         # Adding field 'PartnerOrganization.core_values_assessment'
         db.add_column(u'partners_partnerorganization', 'core_values_assessment',
                       self.gf('django.db.models.fields.FileField')(blank=True, max_length=100),
