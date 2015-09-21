@@ -67,12 +67,6 @@ class Migration(SchemaMigration):
                 # Deleting field 'PartnerOrganization.rating'
         db.delete_column(u'partners_partnerorganization', 'rating')
 
-        # Deleting field 'PartnerOrganization.core_values_assessment'
-        db.delete_column(u'partners_partnerorganization', 'core_values_assessment')
-
-        # Deleting field 'PartnerOrganization.core_values_assessment_date'
-        db.delete_column(u'partners_partnerorganization', 'core_values_assessment_date')
-
 
     models = {
         u'activityinfo.activity': {
