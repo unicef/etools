@@ -388,3 +388,4 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
 admin.site.register(Office)
 admin.site.register(Trip, TripReportAdmin)
 admin.site.register(ActionPoint, ActionPointsAdmin)
+admin.site.register(TripLocation)

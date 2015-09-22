@@ -290,12 +290,14 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     PCA = u'PCA'
     MOU = u'MOU'
     SSFA = u'SSFA'
+    IC = u'ic'
     AWP = u'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Partner Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
-        #(AWP, u"Annual Work Plan"),
+        (IC, u'Institutional Contract'),
+        (AWP, u"Annual Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -368,13 +370,11 @@ class PCA(AdminURLMixin, models.Model):
     )
     PD = u'pd'
     SHPD = u'shpd'
-    IC = u'ic'
     DCT = u'dct'
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        #(IC, u'Institutional Contract'),
-        #(DCT, u'Government Transfer'),
+        (DCT, u'DCT to Government'),
     )
 
     partner = models.ForeignKey(PartnerOrganization)

@@ -1,10 +1,12 @@
 __author__ = 'jcranwellward'
 
+#import logging
+
 from django.contrib.sites.models import Site
 
 from rest_framework import serializers
 
-from .models import Trip, TravelRoutes, TripFunds
+from .models import Trip, TravelRoutes, TripFunds, ActionPoint, FileAttachment
 
 
 class TravelRoutesSerializer(serializers.ModelSerializer):
@@ -33,6 +35,27 @@ class TripFundsSerializer(serializers.ModelSerializer):
         )
 
 
+class ActionPointSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ActionPoint
+        fields = (
+            'id',
+            'person_responsible',
+            'status',
+            'description',
+            'due_date',
+            'comments'
+        )
+        extra_kwargs = {'id': {'read_only': False}}
+
+
+class FileAttachmentSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FileAttachment
+
+
 class TripSerializer(serializers.ModelSerializer):
 
     traveller = serializers.CharField(source='owner')
@@ -42,9 +65,6 @@ class TripSerializer(serializers.ModelSerializer):
     travel_type = serializers.CharField()
     # related_to_pca = serializers.CharField(source='no_pca')
     url = serializers.URLField(source='get_admin_url')
-
-    #It is redundant to specify `source='travel_assistant'`
-    # on field 'CharField' in serializer 'TripSerializer', because it is the same as the field name.
     travel_assistant = serializers.CharField()
     security_clearance_required = serializers.CharField()
     ta_required = serializers.CharField()
@@ -57,6 +77,8 @@ class TripSerializer(serializers.ModelSerializer):
     vision_approver = serializers.CharField()
     partners = serializers.SerializerMethodField()
     travel_routes = serializers.SerializerMethodField()
+    actionpoint_set = ActionPointSerializer(many=True)
+    all_files = FileAttachmentSerializer(many=True)
     trip_funds = serializers.SerializerMethodField()
     office = serializers.CharField(source='office.name')
 
@@ -65,7 +87,6 @@ class TripSerializer(serializers.ModelSerializer):
             trip.travelroutes_set.all(),
             many=True
         ).data
-
 
     def get_trip_funds(self, trip):
         return TripFundsSerializer(
@@ -95,6 +116,39 @@ class TripSerializer(serializers.ModelSerializer):
             obj.get_admin_url()
         )
 
+    def update(self, instance, validated_data):
+        """
+        docs: http://www.django-rest-framework.org/api-guide/serializers/#writable-nested-representations
+
+        :param instance:
+        :param validated_data:
+        :return:
+        """
+        try:
+            aps_data = validated_data.pop('actionpoint_set')
+        except KeyError:
+            aps_data = []
+
+        for key, value in validated_data.iteritems():
+            setattr(instance, key, value)
+
+        instance.save()
+
+        if aps_data:
+            existing_ap_ids = [obj.id for obj in instance.actionpoint_set.all()]
+            for ap_data in aps_data:
+                #logging.info(ap_data)
+                if ap_data.get('id') and ap_data['id'] in existing_ap_ids:
+                    # remove the id from the field
+                    del ap_data["id"]
+                    # update current action point with ap_data
+                    ActionPoint.objects.update(**ap_data)
+                else:
+                    #create a new action_point
+                    ActionPoint.objects.create(trip=instance, **ap_data)
+
+        return instance
+
     class Meta:
         model = Trip
         fields = (
@@ -108,6 +162,7 @@ class TripSerializer(serializers.ModelSerializer):
             'section',
             'purpose_of_travel',
             'office',
+            'main_observations',
             'travel_type',
             'from_date',
             'to_date',
@@ -121,7 +176,6 @@ class TripSerializer(serializers.ModelSerializer):
             'international_travel',
             'representative',
             'human_resources',
-
             'approved_by_supervisor',
             'date_supervisor_approved',
             'approved_by_budget_owner',
@@ -140,7 +194,10 @@ class TripSerializer(serializers.ModelSerializer):
             'partners',
             'pcas',
             'travel_routes',
-            'trip_funds'
+            'actionpoint_set',
+            'trip_funds',
+            'all_files',
+
 
 
 

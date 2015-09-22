@@ -28,7 +28,7 @@ from rest_framework.exceptions import (
 
 from users.models import UserProfile
 from reports.models import Sector
-from .models import Trip, Office, ActionPoint
+from .models import Trip, Office
 from .serializers import TripSerializer
 from .forms import TripFilterByDateForm
 

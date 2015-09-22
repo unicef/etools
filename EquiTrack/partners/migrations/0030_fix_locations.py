@@ -1,103 +1,25 @@
 # -*- coding: utf-8 -*-
 from south.utils import datetime_utils as datetime
 from south.db import db
-from south.v2 import SchemaMigration
+from south.v2 import DataMigration
 from django.db import models
 
-
-class Migration(SchemaMigration):
+class Migration(DataMigration):
 
     def forwards(self, orm):
-        # Deleting field 'Assessment.previous_value_with_UN'
-        db.delete_column(u'partners_assessment', 'previous_value_with_UN')
-
-        # Adding field 'Assessment.other_UN'
-        db.add_column(u'partners_assessment', 'other_UN',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Adding field 'Assessment.current'
-        db.add_column(u'partners_assessment', 'current',
-                      self.gf('django.db.models.fields.BooleanField')(default=True),
-                      keep_default=False)
-
-
-        # Renaming column for 'Assessment.report' to match new field type.
-        db.rename_column(u'partners_assessment', 'report_id', 'report')
-        # Changing field 'Assessment.report'
-        db.alter_column(u'partners_assessment', 'report', self.gf('django.db.models.fields.files.FileField')(max_length=100, null=True))
-        # Removing index on 'Assessment', fields ['report']
-        db.delete_index(u'partners_assessment', ['report_id'])
-
-        # Deleting field 'PartnerOrganization.contact_person'
-        db.delete_column(u'partners_partnerorganization', 'contact_person')
-
-        # Adding field 'PartnerOrganization.rating'
-        db.add_column(u'partners_partnerorganization', 'rating',
-                      self.gf('django.db.models.fields.CharField')(default=u'high', max_length=50),
-                      keep_default=False)
-
-        # Adding field 'PartnerOrganization.core_values_assessment'
-        db.add_column(u'partners_partnerorganization', 'core_values_assessment',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Adding field 'PartnerOrganization.core_values_assessment_date'
-        db.add_column(u'partners_partnerorganization', 'core_values_assessment_date',
-                      self.gf('django.db.models.fields.DateField')(null=True, blank=True),
-                      keep_default=False)
-
-        # Adding field 'PartnerOrganization.special_audit_done'
-        db.add_column(u'partners_partnerorganization', 'special_audit_done',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
-        # Adding field 'PartnerOrganization.reason_for_special_audit'
-        db.add_column(u'partners_partnerorganization', 'reason_for_special_audit',
-                      self.gf('django.db.models.fields.TextField')(default='', blank=True),
-                      keep_default=False)
-
+        "Write your forwards methods here."
+        # Note: Don't use "from appname.models import ModelName". 
+        # Use orm.ModelName to refer to models in this application,
+        # and orm['appname.ModelName'] for models in other applications.
+        migrated_locations = 0
+        for location in orm.GwPCALocation.objects.all():
+            district = orm['locations.Region'].objects.filter(name=location.region.name)[0]
+            orm.GwPCALocation.objects.filter(id=location.id).update(governorate=district.governorate)
+            migrated_locations += 1
+        print 'Migrated locations: {}'.format(migrated_locations)
 
     def backwards(self, orm):
-        # Adding index on 'Assessment', fields ['report']
-        db.create_index(u'partners_assessment', ['report_id'])
-
-        # Adding field 'Assessment.previous_value_with_UN'
-        db.add_column(u'partners_assessment', 'previous_value_with_UN',
-                      self.gf('django.db.models.fields.IntegerField')(default=0),
-                      keep_default=False)
-
-        # Deleting field 'Assessment.other_UN'
-        db.delete_column(u'partners_assessment', 'other_UN')
-
-        # Deleting field 'Assessment.current'
-        db.delete_column(u'partners_assessment', 'current')
-
-
-        # Renaming column for 'Assessment.report' to match new field type.
-        db.rename_column(u'partners_assessment', 'report', 'report_id')
-        # Changing field 'Assessment.report'
-        db.alter_column(u'partners_assessment', 'report_id', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['filer.File'], null=True))
-        # Adding field 'PartnerOrganization.contact_person'
-        db.add_column(u'partners_partnerorganization', 'contact_person',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=255, blank=True),
-                      keep_default=False)
-
-        # Deleting field 'PartnerOrganization.rating'
-        db.delete_column(u'partners_partnerorganization', 'rating')
-
-        # Deleting field 'PartnerOrganization.core_values_assessment'
-        db.delete_column(u'partners_partnerorganization', 'core_values_assessment')
-
-        # Deleting field 'PartnerOrganization.core_values_assessment_date'
-        db.delete_column(u'partners_partnerorganization', 'core_values_assessment_date')
-
-        # Deleting field 'PartnerOrganization.special_audit_done'
-        db.delete_column(u'partners_partnerorganization', 'special_audit_done')
-
-        # Deleting field 'PartnerOrganization.reason_for_special_audit'
-        db.delete_column(u'partners_partnerorganization', 'reason_for_special_audit')
-
+        "Write your backwards methods here."
 
     models = {
         u'activityinfo.activity': {
@@ -193,14 +115,14 @@ class Migration(SchemaMigration):
             'Meta': {'ordering': "('name',)", 'unique_together': "(('parent', 'name'),)", 'object_name': 'Folder'},
             'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            'lft': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
+            u'level': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
+            u'lft': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
             'modified_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'filer_owned_folders'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'parent': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'children'", 'null': 'True', 'to': "orm['filer.Folder']"}),
-            'rght': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
-            'tree_id': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
+            u'rght': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
+            u'tree_id': ('django.db.models.fields.PositiveIntegerField', [], {'db_index': 'True'}),
             'uploaded_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'})
         },
         u'funds.donor': {
@@ -221,7 +143,7 @@ class Migration(SchemaMigration):
         },
         u'locations.governorate': {
             'Meta': {'ordering': "['name']", 'object_name': 'Governorate'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#4F7688'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#3E7CDB'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -234,7 +156,7 @@ class Migration(SchemaMigration):
             'cas_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_code_un': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_village_name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#769A96'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#FDDFCF'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -255,7 +177,7 @@ class Migration(SchemaMigration):
         },
         u'locations.region': {
             'Meta': {'ordering': "['name']", 'object_name': 'Region'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#8B7D47'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#BE899C'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
@@ -293,16 +215,15 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Assessment'},
             'approving_officer': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True', 'blank': 'True'}),
             'completed_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'current': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
             'expected_budget': ('django.db.models.fields.IntegerField', [], {}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'names_of_other_agencies': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'notes': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'other_UN': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
             'planned_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'previous_value_with_UN': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             'rating': ('django.db.models.fields.CharField', [], {'default': "u'high'", 'max_length': '50'}),
-            'report': ('django.db.models.fields.files.FileField', [], {'max_length': '100', 'null': 'True', 'blank': 'True'}),
+            'report': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['filer.File']", 'null': 'True', 'blank': 'True'}),
             'requested_date': ('django.db.models.fields.DateField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'requesting_officer': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'requested_assessments'", 'to': u"orm['auth.User']"}),
             'type': ('django.db.models.fields.CharField', [], {'max_length': '50'})
@@ -351,16 +272,12 @@ class Migration(SchemaMigration):
             'address': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'alternate_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'alternate_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'core_values_assessment': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'core_values_assessment_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
+            'contact_person': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '256L', 'blank': 'True'}),
             'email': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'blank': 'True'}),
-            'rating': ('django.db.models.fields.CharField', [], {'default': "u'high'", 'max_length': '50'}),
-            'reason_for_special_audit': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'special_audit_done': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'type': ('django.db.models.fields.CharField', [], {'default': "u'national'", 'max_length': '50'}),
             'vendor_number': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
         },
@@ -629,3 +546,4 @@ class Migration(SchemaMigration):
     }
 
     complete_apps = ['partners']
+    symmetrical = True
