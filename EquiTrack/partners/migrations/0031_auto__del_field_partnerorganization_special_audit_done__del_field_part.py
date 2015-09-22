@@ -29,7 +29,6 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.BooleanField')(default=True),
                       keep_default=False)
 
-
         # Renaming column for 'Assessment.report' to match new field type.
         db.rename_column(u'partners_assessment', 'report_id', 'report')
         # Changing field 'Assessment.report'
@@ -39,6 +38,16 @@ class Migration(SchemaMigration):
 
         # Deleting field 'PartnerOrganization.contact_person'
         db.delete_column(u'partners_partnerorganization', 'contact_person')
+
+        # Adding field 'PartnerOrganization.core_values_assessment'
+        db.add_column(u'partners_partnerorganization', 'core_values_assessment',
+                      self.gf('django.db.models.fields.files.FileField')(null=True, blank=True),
+                      keep_default=False)
+
+        # Adding field 'PartnerOrganization.core_values_assessment_date'
+        db.add_column(u'partners_partnerorganization', 'core_values_assessment_date',
+                      self.gf('django.db.models.fields.DateField')(null=True, blank=True),
+                      keep_default=False)
 
     def backwards(self, orm):
 
