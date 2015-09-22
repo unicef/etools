@@ -58,12 +58,14 @@ class Trip(AdminURLMixin, models.Model):
     APPROVED = u'approved'
     COMPLETED = u'completed'
     CANCELLED = u'cancelled'
+    DRIVER_APPROVED = u'driver_approved'
     TRIP_STATUS = (
         (PLANNED, u"Planned"),
         (SUBMITTED, u"Submitted"),
         (APPROVED, u"Approved"),
         (COMPLETED, u"Completed"),
         (CANCELLED, u"Cancelled"),
+        (DRIVER_APPROVED, u"Driver Approved")
     )
 
     PROGRAMME_MONITORING = u'programme_monitoring'
@@ -265,6 +267,14 @@ class Trip(AdminURLMixin, models.Model):
             return False
         return True
 
+    @property
+    def driver_can_be_approved(self):
+        if self.status != Trip.APPROVED:
+            return False
+        if not self.driver_approved:
+            return False
+        return True
+
     def save(self, **kwargs):
         # check if trip can be approved
         if self.can_be_approved:
@@ -273,6 +283,10 @@ class Trip(AdminURLMixin, models.Model):
 
         if self.status is not Trip.CANCELLED and self.cancelled_reason:
             self.status = Trip.CANCELLED
+
+        if self.driver_can_be_approved:
+            self.driver_approved_date = datetime.datetime.today()
+            self.status = Trip.DRIVER_APPROVED
 
         super(Trip, self).save(**kwargs)
 
