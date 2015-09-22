@@ -19,36 +19,6 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.CharField')(default='', max_length=50, blank=True),
                       keep_default=False)
 
-        # Adding field 'PartnerOrganization.rating'
-        db.add_column(u'partners_partnerorganization', 'rating',
-                      self.gf('django.db.models.fields.CharField')(default='', max_length=50, blank=True),
-                      keep_default=False)
-
-        # Adding field 'Assessment.current'
-        db.add_column(u'partners_assessment', 'current',
-                      self.gf('django.db.models.fields.BooleanField')(default=True),
-                      keep_default=False)
-
-        # Renaming column for 'Assessment.report' to match new field type.
-        db.rename_column(u'partners_assessment', 'report_id', 'report')
-        # Changing field 'Assessment.report'
-        db.alter_column(u'partners_assessment', 'report', self.gf('django.db.models.fields.files.FileField')(max_length=100, null=True))
-        # Removing index on 'Assessment', fields ['report']
-        db.delete_index(u'partners_assessment', ['report_id'])
-
-        # Deleting field 'PartnerOrganization.contact_person'
-        db.delete_column(u'partners_partnerorganization', 'contact_person')
-
-        # Adding field 'PartnerOrganization.core_values_assessment'
-        db.add_column(u'partners_partnerorganization', 'core_values_assessment',
-                      self.gf('django.db.models.fields.files.FileField')(null=True, blank=True),
-                      keep_default=False)
-
-        # Adding field 'PartnerOrganization.core_values_assessment_date'
-        db.add_column(u'partners_partnerorganization', 'core_values_assessment_date',
-                      self.gf('django.db.models.fields.DateField')(null=True, blank=True),
-                      keep_default=False)
-
     def backwards(self, orm):
 
         # Deleting field 'PartnerOrganization.partner_type'
@@ -56,10 +26,6 @@ class Migration(SchemaMigration):
 
         # Deleting field 'PartnerOrganization.short_name'
         db.delete_column(u'partners_partnerorganization', 'short_name')
-
-                # Deleting field 'PartnerOrganization.rating'
-        db.delete_column(u'partners_partnerorganization', 'rating')
-
 
     models = {
         u'activityinfo.activity': {
