@@ -217,6 +217,7 @@ class AgreementForm(UserGroupForm):
             'partner': LinkedSelect,
             'signed_by': LinkedSelect,
             'partner_manager': LinkedSelect,
+            'bank_address': AutosizedTextarea(attrs={'class': 'input-xlarge'}),
         }
 
     # def __init__(self, *args, **kwargs):

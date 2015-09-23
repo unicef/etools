@@ -139,7 +139,8 @@ class PartnerOrganization(models.Model):
     core_values_assessment = models.FileField(
         upload_to='core_values_assessments',
         verbose_name=u'Core values attachment',
-        blank=True, null=True,
+        blank=True,
+        null=True
     )
     core_values_assessment_date = models.DateField(
         blank=True, null=True,
@@ -350,10 +351,12 @@ class Agreement(TimeFramedModel, TimeStampedModel):
 
     #bank information
     bank_name = models.CharField(max_length=255, null=True, blank=True)
-    bank_address = models.CharField(max_length=255, null=True, blank=True)
+    bank_address = models.CharField(
+        max_length=256L,
+        blank=True)
     account_title = models.CharField(max_length=255, null=True, blank=True)
     account_number = models.CharField(max_length=50, null=True, blank=True)
-    routing_details =  models.CharField(
+    routing_details = models.CharField(
         max_length=255,
         null=True,
         blank=True,

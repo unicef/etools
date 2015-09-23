@@ -687,16 +687,32 @@ class AgreementAdmin(admin.ModelAdmin):
         u'partner',
         u'agreement_type',
     )
-    fields = (
-        u'partner',
-        u'agreement_type',
-        u'agreement_number',
-        u'attached_agreement',
-        (u'start', u'end',),
-        u'signed_by_partner_date',
-        u'partner_manager',
-        u'signed_by_unicef_date',
-        u'signed_by',
+    fieldsets = (
+        (u'Agreement Details', {
+            u'fields':
+                (
+                    u'partner',
+                    u'agreement_type',
+                    u'agreement_number',
+                    u'attached_agreement',
+                    (u'start', u'end',),
+                    u'signed_by_partner_date',
+                    u'partner_manager',
+                    u'signed_by_unicef_date',
+                    u'signed_by',
+                )
+        }),
+        (u'Bank Details', {
+            u'fields':
+                (
+                    u'bank_name',
+                    u'bank_address',
+                    u'account_title',
+                    u'account_number',
+                    u'routing_details',
+                    u'bank_contact_person'
+                )
+        })
     )
     readonly_fields = (
         u'start', u'end',
