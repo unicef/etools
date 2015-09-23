@@ -519,7 +519,7 @@ class FileAttachment(models.Model):
     type = models.ForeignKey(u'partners.FileType')
     file = FilerFileField(null=True, blank=True)
     report = models.FileField(
-        upload_to=u'trip_reports'
+        upload_to=lambda instance, filename: '/'.join(['trip_reports', str(instance.trip.id), filename]),
     )
 
     content_type = models.ForeignKey(ContentType)

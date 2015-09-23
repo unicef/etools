@@ -59,6 +59,11 @@ class FileAttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileAttachment
+        fields = (
+            "id",
+            "report",
+            "type"
+        )
 
 
 class TripSerializer(serializers.ModelSerializer):
