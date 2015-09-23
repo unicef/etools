@@ -108,9 +108,9 @@ class IndicatorProgressInlineAdmin(admin.TabularInline):
 
     def changeform_link(self, obj):
         return get_changeform_link(obj.pca_sector.pca,
-                                   link_name='View PCA')
+                                   link_name='View Intervention')
     changeform_link.allow_tags = True
-    changeform_link.short_description = 'View PCA Details'
+    changeform_link.short_description = 'View Intervention Details'
 
 
 class IndicatorAdmin(ImportExportModelAdmin):
