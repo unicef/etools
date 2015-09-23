@@ -35,7 +35,7 @@ urlpatterns = patterns(
 
     #api
     url(r'^profile/', UserAuthAPIView.as_view()),
-    url(r'', UsersView.as_view()),
+    url(r'^$', UsersView.as_view()),
 
 
 
