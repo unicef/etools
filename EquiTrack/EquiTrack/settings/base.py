@@ -31,7 +31,6 @@ SUIT_CONFIG = {
 
         {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
-            {'model': 'partners.assessment'},
             {'model': 'partners.agreement'},
             {'model': 'partners.pca'},
         ]},
