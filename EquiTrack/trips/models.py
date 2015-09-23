@@ -69,6 +69,7 @@ class Trip(AdminURLMixin, models.Model):
     )
 
     PROGRAMME_MONITORING = u'programme_monitoring'
+    SPOT_CHECK = u'spot_check'
     ADVOCACY = u'advocacy'
     TECHNICAL_SUPPORT = u'technical_support'
     MEETING = u'meeting'
@@ -79,7 +80,8 @@ class Trip(AdminURLMixin, models.Model):
     STAFF_DEVELOPMENT = u'staff_development'
     STAFF_ENTITLEMENT = u'staff_entitlement'
     TRAVEL_TYPE = (
-        (PROGRAMME_MONITORING, u'PROGRAMME MONITORING'),
+        (PROGRAMME_MONITORING, u'PROGRAMMATIC VISIT'),
+        (SPOT_CHECK, u'SPOT CHECK'),
         (ADVOCACY, u'ADVOCACY'),
         (TECHNICAL_SUPPORT, u'TECHNICAL SUPPORT'),
         (MEETING, u'MEETING'),
