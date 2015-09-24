@@ -86,9 +86,7 @@ class TripUploadPictureView(APIView):
         # TODO: potentially process the image at this point to reduce size / create thumbnails
         FileAttachment.objects.create(**{"report": file_obj,
                             "type": pictureType,
-                            "trip": trip,
-                            "object_id": tripId,
-                            "content_type": ContentType.objects.get_for_model(trip)})
+                            "trip": trip})
 
         # TODO: return a more meaningful response
         return Response(status=204)
