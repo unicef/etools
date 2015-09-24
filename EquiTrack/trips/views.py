@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.views.generic import FormView
 from django.core import serializers
+from django.contrib.contenttypes.models import ContentType
 
 from rest_framework.views import APIView
 from rest_framework.generics import (
@@ -24,11 +25,13 @@ from rest_framework.exceptions import (
     PermissionDenied, 
     ParseError,
 )
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 from users.models import UserProfile
 from reports.models import Sector
-from .models import Trip, Office
+from partners.models import FileType
+from .models import Trip, Office, FileAttachment
 from .serializers import TripSerializer
 from .forms import TripFilterByDateForm
 
@@ -58,6 +61,36 @@ class TripsApprovedView(ListAPIView):
         return self.model.objects.filter(
             status=self.model.APPROVED,
         )
+
+
+class TripUploadPictureView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, **kwargs):
+        #get the file object
+        file_obj = request.data['file']
+
+        #get the trip id from the url
+        tripId = kwargs.get("trip")
+        trip = Trip.objects.filter(pk=tripId).get()
+
+        # rename the file to picture
+        # the file field automatically adds incremental numbers
+        file_obj.name = "picture." + file_obj.name.split(".")[-1]
+
+        # get the picture type
+        pictureType, created = FileType.objects.get_or_create(name='Picture')
+
+        # create the FileAttachment object
+        # TODO: desperate need of validation here: need to check if file is indeed a valid picture type
+        # TODO: potentially process the image at this point to reduce size / create thumbnails
+        FileAttachment.objects.create(**{"report": file_obj,
+                            "type": pictureType,
+                            "trip": trip})
+
+        # TODO: return a more meaningful response
+        return Response(status=204)
+
 
 
 class TripsListApi(ListAPIView):
