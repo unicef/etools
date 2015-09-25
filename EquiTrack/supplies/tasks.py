@@ -37,7 +37,7 @@ def set_docs(docs):
     response = requests.post(
         os.path.join(settings.COUCHBASE_URL, '_bulk_docs'),
         headers={'content-type': 'application/json'},
-        auth=HTTPBasicAuth(settings.COUCHBASE_USER, 'W!nT3er!zAtioN'),
+        auth=HTTPBasicAuth(settings.COUCHBASE_USER, settings.COUCHBASE_PASS),
         data=payload_json,
     )
     print response
