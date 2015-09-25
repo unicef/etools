@@ -39,6 +39,7 @@ from locations.models import (
     Region,
 )
 from supplies.models import SupplyItem
+from supplies.tasks import set_unisupply_distibution
 from . import emails
 
 User = get_user_model()
@@ -185,11 +186,11 @@ class Assessment(models.Model):
             u'Other',
         ),
     )
-    other_UN = models.BooleanField(
-        default=False,
-        help_text=u'Has this organisation worked with other '
-                  u'UN agencies in the last 5 years'
-    )
+    # other_UN = models.BooleanField(
+    #     default=False,
+    #     help_text=u'Has this organisation worked with other '
+    #               u'UN agencies in the last 5 years'
+    # )
     names_of_other_agencies = models.CharField(
         max_length=255,
         blank=True, null=True,
@@ -973,4 +974,30 @@ class DistributionPlan(models.Model):
     quantity = models.PositiveIntegerField(
         help_text=u'Quantity required for this location'
     )
+    send = models.BooleanField(
+        default=False,
+        verbose_name=u'Send to partner?'
+    )
+    sent = models.BooleanField(default=False)
+    delivered = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return u'Distribution: {}-{}-{}-{}'.format(
+            self.partnership,
+            self.item,
+            self.location,
+            self.quantity
+        )
+
+    @classmethod
+    def send_distribution(cls, sender, instance, created, **kwargs):
+
+        if instance.send and not instance.sent:
+            set_unisupply_distibution([instance])
+            instance.sent = True
+            instance.save()
+
+
+post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
+
 
