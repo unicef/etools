@@ -76,7 +76,15 @@ class TripUploadPictureView(APIView):
 
         # rename the file to picture
         # the file field automatically adds incremental numbers
-        file_obj.name = "picture." + file_obj.name.split(".")[-1]
+        mime_types = {"image/jpeg": "jpeg",
+                      "image/png": "png"}
+
+        if mime_types.get(file_obj.content_type):
+            ext = mime_types.get(file_obj.content_type)
+        else:
+            raise ParseError(detail="File type not supported")
+
+        file_obj.name = "picture." + ext
 
         # get the picture type
         pictureType, created = FileType.objects.get_or_create(name='Picture')
@@ -104,6 +112,8 @@ class TripsListApi(ListAPIView):
         return trips
 
 
+
+
 class TripDetailsView(RetrieveUpdateDestroyAPIView):
     model = Trip
     serializer_class = TripSerializer
@@ -127,12 +137,14 @@ class TripActionView(GenericAPIView):
 
         trip = self.get_object()
 
-        serializer = self.get_serializer(data={"status":action}, instance=trip, partial=True)
+        serializer = self.get_serializer(data={"status":action},
+                                         instance=trip,
+                                         partial=True)
 
         if not serializer.is_valid():
             raise ParseError(detail="data submitted is not valid")
-
         serializer.save()
+
 
         return Response(serializer.data)
 
