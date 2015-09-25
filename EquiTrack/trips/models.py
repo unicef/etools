@@ -131,10 +131,10 @@ class Trip(AdminURLMixin, models.Model):
     constraints = models.TextField(
         blank=True, null=True
     )
-    lesssons_learned = models.TextField(
+    lessons_learned = models.TextField(
         blank=True, null=True
     )
-    opportunitites = models.TextField(
+    opportunities = models.TextField(
         blank=True, null=True
     )
 
