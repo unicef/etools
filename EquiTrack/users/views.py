@@ -58,7 +58,7 @@ class UserAuthAPIView(RetrieveAPIView):
 class UsersView(ListAPIView):
     model = UserProfile
     serializer_class = SimpleProfileSerializer
-    queryset = model.objects.all()
+    queryset = model.objects.order_by('user__first_name')
 
 
 class ProfileView(TemplateView):
