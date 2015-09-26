@@ -6,8 +6,9 @@ import requests
 import datetime
 
 from django.conf import settings
-from requests.auth import HTTPBasicAuth
+from django.template.defaultfilters import slugify
 
+from requests.auth import HTTPBasicAuth
 from pymongo import MongoClient
 
 from EquiTrack.celery import app
@@ -25,7 +26,6 @@ def send(message):
         )
 
 
-@app.task
 def set_docs(docs):
 
     payload_json = json.dumps(
@@ -40,7 +40,7 @@ def set_docs(docs):
         auth=HTTPBasicAuth(settings.COUCHBASE_USER, settings.COUCHBASE_PASS),
         data=payload_json,
     )
-    print response
+    return response
 
 
 def set_unisupply_user(username, password):
@@ -59,36 +59,44 @@ def set_unisupply_user(username, password):
     set_docs.delay(user_docs)
 
 
-def set_unisupply_distibution(distibution_plans):
+@app.task
+def set_unisupply_distribution(distribution_plan):
 
-    plans = []
-    for plan in distibution_plans:
-        plans.append(
+        response = set_docs([
             {
-                "_id": "test-1-1-1-1-1",
-                "partner_name": plan.partnership.partner.name,
+                "_id": slugify("{} {} {} {}".format(
+                    distribution_plan.partnership,
+                    distribution_plan.item,
+                    distribution_plan.location,
+                    distribution_plan.quantity
+                )),
+                "partner_name": distribution_plan.partnership.partner.name,
                 "assessment_type": "institution",
                 "criticality": "0",
                 "item_list": [
                     {
                         "item_id": "SB001",
-                        "item_type": plan.item.name,
-                        "quantity": plan.quantity
+                        "item_type": distribution_plan.item.name,
+                        "quantity": distribution_plan.quantity
                     }
                 ],
                 "location": {
-                    "location_type": plan.location.gateway.name,
-                    "p_code": plan.location.p_code,
-                    "p_code_name": plan.location.name,
+                    "location_type": distribution_plan.location.gateway.name,
+                    "p_code": distribution_plan.location.p_code,
+                    "p_code_name": distribution_plan.location.name,
                 },
                 "type": "assessment",
                 "completed": False,
                 "creation_date": datetime.datetime.now().isoformat(),
                 "name": "N/A",
             }
-        )
+        ])
+        if response.status_code in [requests.codes.ok, requests.codes.created]:
+            distribution_plan.send = False
+            distribution_plan.sent = True
+            distribution_plan.save()
 
-    set_docs.delay(plans)
+        return response.text
 
 
 def import_docs(**kwargs):

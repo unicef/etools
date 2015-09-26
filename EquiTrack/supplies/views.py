@@ -4,50 +4,27 @@ import os
 import csv
 import datetime
 
-from django.conf import settings
-from django.http import HttpResponse
-from django.http import StreamingHttpResponse
+from django.db.models import F, Sum
 from django.views.generic import TemplateView
 from django.core.servers.basehttp import FileWrapper
 
 #from django_datatables_view.base_datatable_view import BaseDatatableView
+
+from partners.models import DistributionPlan
 
 
 class SuppliesDashboardView(TemplateView):
 
     template_name = 'supplies/dashboard.html'
 
-    # def get_context_data(self, **kwargs):
-    #     return {
-    #         'assessed': winter.data.find(
-    #             {'type': 'assessment',
-    #              'completion_date': {'$exists': True}}
-    #         ).count(),
-    #         'completed': winter.data.find(
-    #             {'$and': [
-    #                 {'type': 'assessment'},
-    #                 {'completion_date': {'$ne': ''}},
-    #                 {'completion_date': {'$exists': True}}
-    #             ]}).count(),
-    #         'children_targeted': winter.data.aggregate([
-    #             {'$match': {'type': 'assessment'}},
-    #             {'$project': {'children': '$child_list.age'}},
-    #             {'$unwind': '$children'},
-    #             {'$group': {'_id': "$children", 'count': {'$sum': 1}}},
-    #             {'$group': {'_id': None, 'total': {'$sum': "$count"}}}
-    #         ])['result'][0]['total'],
-    #         'children_completed': winter.data.aggregate([
-    #             {'$match': {'type': 'assessment'}},
-    #             {'$match': {'$or': [
-    #                 {'child_list': {'$elemMatch': {'status': "COMPLETED"}}},
-    #                 {'child_list': {'$elemMatch': {'status': "EDITED"}}}
-    #             ]}},
-    #             {'$project': {'children': '$child_list.age'}},
-    #             {'$unwind': '$children'},
-    #             {'$group': {'_id': "$children", 'count': {'$sum': 1}}},
-    #             {'$group': {'_id': None, 'total': {'$sum': "$count"}}}
-    #         ])['result'][0]['total']
-    #     }
+    def get_context_data(self, **kwargs):
+        plans = DistributionPlan.objects.filter(sent=True)
+        return {
+            'distributions': plans.count(),
+            'completed': plans.filter(quantity=F('delivered')).count(),
+            'supplies_planned': plans.aggregate(Sum('quantity')).values()[0],
+            'supplies_delivered': plans.aggregate(Sum('delivered')).values()[0]
+        }
 
 
 # @login_required
