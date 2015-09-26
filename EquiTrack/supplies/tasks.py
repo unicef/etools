@@ -9,12 +9,8 @@ from django.conf import settings
 from django.template.defaultfilters import slugify
 
 from requests.auth import HTTPBasicAuth
-from pymongo import MongoClient
 
 from EquiTrack.celery import app
-
-
-supplies = MongoClient(settings.MONGODB_URL)[settings.MONGODB_DATABASE]
 
 
 @app.task
