@@ -134,7 +134,7 @@ class TripSerializer(serializers.ModelSerializer):
         :param validated_data:
         :return:
         """
-        #logging.info(validated_data)
+
         try:
             aps_data = validated_data.pop('actionpoint_set')
         except KeyError:
@@ -148,7 +148,7 @@ class TripSerializer(serializers.ModelSerializer):
         if aps_data:
             existing_ap_ids = [obj.id for obj in instance.actionpoint_set.all()]
             for ap_data in aps_data:
-                #logging.info(ap_data)
+
                 if ap_data.get('id') and ap_data['id'] in existing_ap_ids:
                     ap_id = ap_data["id"]
                     # remove the id from the field to avoid errors
