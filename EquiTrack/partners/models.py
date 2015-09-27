@@ -126,10 +126,6 @@ class PartnerOrganization(models.Model):
         blank=True,
         null=True
     )
-    activity_info_partner = models.ForeignKey(
-        'activityinfo.Partner',
-        blank=True, null=True
-    )
     rating = models.CharField(
         max_length=50,
         choices=RISK_RATINGS,
@@ -245,20 +241,6 @@ class Assessment(models.Model):
             date=self.completed_date.strftime("%d-%m-%Y") if
             self.completed_date else u'NOT COMPLETED'
         )
-
-    def save(self, **kwargs):
-
-        if self.pk is None:
-            previous = Assessment.objects.filter(
-                partner=self.partner,
-                type=self.type,
-            ).order_by('-requested_date')
-            if previous and previous[0].id != self.id:
-                last = previous[0]
-                last.current = False
-                last.save()
-
-        super(Assessment, self).save(**kwargs)
 
 
 class Recommendation(models.Model):
@@ -498,7 +480,6 @@ class PCA(AdminURLMixin, models.Model):
         auto_choose=False,
         blank=True, null=True,
     )
-
 
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -787,11 +768,6 @@ class PCASector(TimeStampedModel):
             self.sector.name,
         )
 
-    def changeform_link(self):
-        return get_changeform_link(self, link_name='Details')
-    changeform_link.allow_tags = True
-    changeform_link.short_description = 'View Sector Details'
-
 
 class PCASectorOutput(models.Model):
 
@@ -888,31 +864,6 @@ class PCAFile(models.Model):
         return u''
     download_url.allow_tags = True
     download_url.short_description = 'Download Files'
-
-
-class SpotCheck(models.Model):
-
-    pca = models.ForeignKey(PCA)
-    sector = models.ForeignKey(
-        Sector,
-        blank=True, null=True
-    )
-    planned_date = models.DateField(
-        blank=True, null=True
-    )
-    completed_date = models.DateField(
-        blank=True, null=True
-    )
-    amount = models.IntegerField(
-        null=True, blank=True,
-        default=0
-    )
-    recommendations = models.TextField(
-        blank=True, null=True
-    )
-    partner_agrees = models.BooleanField(
-        default=False
-    )
 
 
 class ResultChain(models.Model):
