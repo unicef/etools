@@ -176,11 +176,11 @@ class Assessment(models.Model):
             u'Other',
         ),
     )
-    other_UN = models.BooleanField(
-        default=False,
-        help_text=u'Has this organisation worked with other '
-                  u'UN agencies in the last 5 years'
-    )
+    # other_UN = models.BooleanField(
+    #     default=False,
+    #     help_text=u'Has this organisation worked with other '
+    #               u'UN agencies in the last 5 years'
+    # )
     names_of_other_agencies = models.CharField(
         max_length=255,
         blank=True, null=True,
