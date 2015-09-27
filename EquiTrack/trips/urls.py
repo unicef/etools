@@ -8,7 +8,8 @@ from .views import (
     TripsDashboard,
     TripsListApi,
     TripActionView,
-    TripDetailsView
+    TripDetailsView,
+    TripUploadPictureView,
 )
 
 
@@ -16,6 +17,7 @@ urlpatterns = patterns(
     '',
     url(r'^approved/$', TripsApprovedView.as_view()),
     url(r'api/list/$', TripsListApi.as_view()),
+    url(r'api/(?P<trip>\d+)/upload/$', TripUploadPictureView.as_view()),
     url(r'api/(?P<trip>\d+)/(?P<action>\D+)/$', TripActionView.as_view()),
     url(r'api/(?P<trip>\d+)/$', TripDetailsView.as_view()),
     url(r'offices/$', TripsByOfficeView.as_view()),
