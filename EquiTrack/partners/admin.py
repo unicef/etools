@@ -217,6 +217,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     form = DistributionPlanForm
     formset = DistributionPlanFormSet
     extra = 3
+    readonly_fields = [u'delivered', u'sent']
 
 
 class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
@@ -316,7 +317,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
-        #SpotChecksAdminInline,
         #ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
@@ -327,7 +327,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'results', u'Results'),
         (u'locations', u'Locations'),
         (u'trips', u'Trips'),
-        #(u'checks', u'Spot Checks'),
         (u'supplies', u'Supplies'),
         (u'attachments', u'Attachments')
     )

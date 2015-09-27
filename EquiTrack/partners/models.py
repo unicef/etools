@@ -39,6 +39,7 @@ from locations.models import (
     Region,
 )
 from supplies.models import SupplyItem
+from supplies.tasks import set_unisupply_distribution
 from . import emails
 
 User = get_user_model()
@@ -919,4 +920,28 @@ class DistributionPlan(models.Model):
     quantity = models.PositiveIntegerField(
         help_text=u'Quantity required for this location'
     )
+    send = models.BooleanField(
+        default=False,
+        verbose_name=u'Send to partner?'
+    )
+    sent = models.BooleanField(default=False)
+    delivered = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return u'{}-{}-{}-{}'.format(
+            self.partnership,
+            self.item,
+            self.location,
+            self.quantity
+        )
+
+    @classmethod
+    def send_distribution(cls, sender, instance, created, **kwargs):
+
+        if instance.send and not instance.sent:
+            set_unisupply_distribution.delay(instance)
+
+
+post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
+
 
