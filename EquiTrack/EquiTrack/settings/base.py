@@ -100,6 +100,40 @@ REST_FRAMEWORK = {
     )
 }
 
+########## JWT AUTH CONFIGURATION
+JWT_AUTH = {
+    'JWT_ENCODE_HANDLER':
+    'rest_framework_jwt.utils.jwt_encode_handler',
+
+    'JWT_DECODE_HANDLER':
+    'rest_framework_jwt.utils.jwt_decode_handler',
+
+    'JWT_PAYLOAD_HANDLER':
+    'rest_framework_jwt.utils.jwt_payload_handler',
+
+    'JWT_PAYLOAD_GET_USER_ID_HANDLER':
+    'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
+
+    'JWT_RESPONSE_PAYLOAD_HANDLER':
+    'rest_framework_jwt.utils.jwt_response_payload_handler',
+
+    # this is temporary secret key
+    'JWT_SECRET_KEY': "secretkey123",
+    'JWT_ALGORITHM': 'HS256',
+    'JWT_VERIFY': True,
+    'JWT_VERIFY_EXPIRATION': True,
+    'JWT_LEEWAY': 0,
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
+    'JWT_AUDIENCE': None,
+    'JWT_ISSUER': None,
+
+    'JWT_ALLOW_REFRESH': False,
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
+
+    'JWT_AUTH_HEADER_PREFIX': 'JWT',
+}
+######## END JWT AUTH CONFIGURATION
+
 CORS_ORIGIN_ALLOW_ALL = True
 
 # Add our project to our pythonpath, this way we don't need to type our project
@@ -136,6 +170,15 @@ djcelery.setup_loader()
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+SLACK_URL = os.environ.get('SLACK_URL')
+
+COUCHBASE_URL = os.environ.get('COUCHBASE_URL')
+COUCHBASE_USER = os.environ.get('COUCHBASE_USER')
+COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
+
+MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')
+MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
 ########## END DATABASE CONFIGURATION
 
 ########## MANAGER CONFIGURATION
@@ -383,39 +426,6 @@ CACHES = {
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 ########## END WSGI CONFIGURATION
 
-########## JWT AUTH CONFIGURATION
-JWT_AUTH = {
-    'JWT_ENCODE_HANDLER':
-    'rest_framework_jwt.utils.jwt_encode_handler',
-
-    'JWT_DECODE_HANDLER':
-    'rest_framework_jwt.utils.jwt_decode_handler',
-
-    'JWT_PAYLOAD_HANDLER':
-    'rest_framework_jwt.utils.jwt_payload_handler',
-
-    'JWT_PAYLOAD_GET_USER_ID_HANDLER':
-    'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
-
-    'JWT_RESPONSE_PAYLOAD_HANDLER':
-    'rest_framework_jwt.utils.jwt_response_payload_handler',
-
-    # this is temporary secret key
-    'JWT_SECRET_KEY': "secretkey123",
-    'JWT_ALGORITHM': 'HS256',
-    'JWT_VERIFY': True,
-    'JWT_VERIFY_EXPIRATION': True,
-    'JWT_LEEWAY': 0,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
-    'JWT_AUDIENCE': None,
-    'JWT_ISSUER': None,
-
-    'JWT_ALLOW_REFRESH': False,
-    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
-
-    'JWT_AUTH_HEADER_PREFIX': 'JWT',
-}
-######## END JWT AUTH CONFIGURATION
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,

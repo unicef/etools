@@ -46,7 +46,6 @@ from .models import (
     PartnerOrganization,
     Assessment,
     Agreement,
-    SpotCheck,
     Recommendation,
     ResultChain,
     PartnerStaffMember,
@@ -81,37 +80,6 @@ from .forms import (
 )
 
 
-class PcaIRInlineAdmin(ReadOnlyMixin, SectorMixin, admin.StackedInline):
-    model = PCASectorImmediateResult
-    filter_horizontal = ('wbs_activities',)
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show IRs for the chosen Sector and valid time range
-        """
-        if db_field.rel.to is IntermediateResult:
-            kwargs['queryset'] = self.get_sector(request).intermediateresult_set.filter(
-                from_date__lte=datetime.datetime.today(),
-                to_date__gte=datetime.datetime.today(),
-            )
-        return super(PcaIRInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-        """
-        Only show WBSs for the chosen Sector
-        """
-        if db_field.rel.to is WBS:
-            kwargs['queryset'] = WBS.objects.filter(
-                Intermediate_result__sector=self.get_sector(request)
-            )
-        return super(PcaIRInlineAdmin, self).formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
-
-
 class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = GwPCALocation
     verbose_name = 'Location'
@@ -128,98 +96,6 @@ class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     extra = 5
 
 
-class PcaIndicatorInlineAdmin(ReadOnlyMixin, SectorMixin, admin.StackedInline):
-
-    model = IndicatorProgress
-    verbose_name = 'Indicator'
-    verbose_name_plural = 'Indicators'
-    fields = (
-        'indicator',
-        'programmed',
-        'current',
-        'shortfall',
-        'unit',
-
-    )
-    readonly_fields = (
-        'shortfall',
-        'unit',
-    )
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show Indicators for the chosen Sector and optional Result Structure
-        """
-        if db_field.rel.to is Indicator:
-            indicators = Indicator.objects.filter(
-                sector=self.get_sector(request),
-            )
-            if self.get_pca(request).result_structure:
-                indicators = indicators.filter(
-                    result_structure=self.get_pca(request).result_structure
-                )
-            kwargs['queryset'] = indicators
-        return super(PcaIndicatorInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
-class PcaGoalInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
-    verbose_name = 'CCC'
-    verbose_name_plural = 'CCCs'
-    model = PCASectorGoal
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show CCCs for the chosen Sector
-        """
-        if db_field.rel.to is Goal:
-            kwargs['queryset'] = Goal.objects.filter(
-                sector=self.get_sector(request),
-            )
-        return super(PcaGoalInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
-class PcaOutputInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
-    verbose_name = 'Output'
-    model = PCASectorOutput
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show Outputs for the chosen Sector and Result Structure
-        """
-        if db_field.rel.to is Rrp5Output:
-            kwargs['queryset'] = Rrp5Output.objects.filter(
-                sector=self.get_sector(request),
-                result_structure=self.get_pca(request).result_structure,
-            )
-        return super(PcaOutputInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
-class PcaActivityInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
-    model = PCASectorActivity
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show Activities for the chosen Sector
-        """
-        if db_field.rel.to is Activity:
-            kwargs['queryset'] = Activity.objects.filter(
-                sector=self.get_sector(request),
-            )
-        return super(PcaActivityInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
 class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = PCASector
     form = AmendmentForm
@@ -230,11 +106,7 @@ class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     extra = 0
     fields = (
         'sector',
-        'changeform_link',
         'amendment',
-    )
-    readonly_fields = (
-        'changeform_link',
     )
 
 
@@ -318,23 +190,11 @@ class PcaSectorAdmin(ReadOnlyMixin, SectorMixin, VersionAdmin):
         'pca',
         'sector',
     )
-    inlines = (
-        PcaOutputInlineAdmin,
-        PcaGoalInlineAdmin,
-        PcaIRInlineAdmin,
-        PcaIndicatorInlineAdmin,
-        PcaActivityInlineAdmin,
-    )
 
 
 class LinksInlineAdmin(ReadOnlyMixin, GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
-
-
-class SpotChecksAdminInline(ReadOnlyMixin, admin.StackedInline):
-    suit_classes = u'suit-tab suit-tab-checks'
-    model = SpotCheck
 
 
 class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -357,6 +217,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     form = DistributionPlanForm
     formset = DistributionPlanFormSet
     extra = 3
+    readonly_fields = [u'delivered', u'sent']
 
 
 class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
@@ -456,7 +317,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
-        #SpotChecksAdminInline,
         #ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
@@ -467,7 +327,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'results', u'Results'),
         (u'locations', u'Locations'),
         (u'trips', u'Trips'),
-        #(u'checks', u'Spot Checks'),
         (u'supplies', u'Supplies'),
         (u'attachments', u'Attachments')
     )
@@ -608,9 +467,7 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
                  u'address',
                  u'phone_number',
                  u'email',
-                 u'core_values_assessment_date',
-                 u'core_values_assessment'
-                 )
+                 u'core_values_assessment_date',)
         }),
         (_('Meta Data'), {
             u'classes': (u'collapse',),
@@ -643,7 +500,6 @@ class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
             'fields':
                 (u'partner',
                  u'type',
-                 u'other_UN',
                  u'names_of_other_agencies',
                  u'expected_budget',
                  u'notes',

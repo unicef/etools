@@ -74,7 +74,7 @@ class TripLocationsInlineAdmin(admin.TabularInline):
     # extra = 1
 
 
-class FileAttachmentInlineAdmin(GenericTabularInline):
+class FileAttachmentInlineAdmin(admin.TabularInline):
     model = FileAttachment
     suit_classes = u'suit-tab suit-tab-attachments'
     fields = (u'type', u'report')

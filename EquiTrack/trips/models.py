@@ -130,6 +130,15 @@ class Trip(AdminURLMixin, models.Model):
     main_observations = models.TextField(
         blank=True, null=True
     )
+    constraints = models.TextField(
+        blank=True, null=True
+    )
+    lessons_learned = models.TextField(
+        blank=True, null=True
+    )
+    opportunities = models.TextField(
+        blank=True, null=True
+    )
 
     ta_required = models.BooleanField(
         default=False,
@@ -546,11 +555,13 @@ class FileAttachment(models.Model):
     type = models.ForeignKey(u'partners.FileType')
     file = FilerFileField(null=True, blank=True)
     report = models.FileField(
-        upload_to=u'trip_reports'
+        #upload_to=lambda instance, filename: '/'.join(['trip_reports', str(instance.content_object.id), filename])
+        upload_to=lambda instance, filename: '/'.join(['trip_reports', str(instance.trip.id), filename])
+        #upload_to=u'trip_reports''
     )
 
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
