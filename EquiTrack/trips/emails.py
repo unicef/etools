@@ -97,6 +97,7 @@ class TripRepresentativeEmail(TripCreatedEmail):
     Thank you.
     """
 
+
 class TripTravelAssistantEmail(TripCreatedEmail):
 
     template_name = "travel/trip/travel_or_admin_assistant"
@@ -118,26 +119,6 @@ class TripTravelAssistantEmail(TripCreatedEmail):
     def get_context(self):
         context = super(TripTravelAssistantEmail, self).get_context()
         context['travel_assistant'] = self.object.travel_assistant.first_name
-        return context
-
-
-class TripDriverAddedEmail(TripCreatedEmail):
-    template_name = 'trips/trip/Driver_submitted'
-    description = ("This email is sent to the relevant Driver of the Trip.")
-    subject = 'EquiTrack - Trip {{number}} has been submitted for driver {{driver_name}}'
-    content = """
-    Dear Colleague,
-
-    Trip {{number}} has been submitted for driver {{driver_name}} here:
-    {{url}}
-    Purpose of travel: {{ purpose_of_travel }}
-
-    Thank you.
-    """
-
-    def get_context(self):
-        context = super(TripDriverAddedEmail, self).get_context()
-        context['driver_name'] = self.object.driver.first_name + '' + self.object.driver.last_name
         return context
 
 
