@@ -278,14 +278,6 @@ class Trip(AdminURLMixin, models.Model):
             return False
         return True
 
-    @property
-    def driver_can_be_approved(self):
-        if self.status != Trip.APPROVED:
-            return False
-        if not self.driver_approved:
-            return False
-        return True
-
     def save(self, **kwargs):
         # check if trip can be approved
         if self.can_be_approved:
