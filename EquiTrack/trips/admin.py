@@ -197,8 +197,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (
-                (u'driver', u'driver_supervisor'),
-                (u'driver_approved', u'driver_approved_date'),
                  u'transport_booked',
                  u'security_granted',
                  u'ta_drafted',

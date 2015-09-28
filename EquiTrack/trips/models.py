@@ -164,10 +164,10 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
-    driver = models.ForeignKey(User, related_name='driver_trips', verbose_name='Driver', null=True, blank=True)
-    driver_supervisor = models.ForeignKey(User, verbose_name='Supervisor for Driver', related_name='driver_supervised_trips', null=True, blank=True)
-    driver_approved_date = models.DateField(blank=True, null=True, verbose_name='Date supervisor approved driver')
-    driver_approved = models.BooleanField(default=False)
+    # driver = models.ForeignKey(User, related_name='driver_trips', verbose_name='Driver', null=True, blank=True)
+    # driver_supervisor = models.ForeignKey(User, verbose_name='Supervisor for Driver', related_name='driver_supervised_trips', null=True, blank=True)
+    # driver_approved_date = models.DateField(blank=True, null=True, verbose_name='Date supervisor approved driver')
+    # driver_approved = models.BooleanField(default=False)
 
     locations = GenericRelation('locations.LinkedLocation')
 
