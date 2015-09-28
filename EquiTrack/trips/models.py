@@ -58,14 +58,12 @@ class Trip(AdminURLMixin, models.Model):
     APPROVED = u'approved'
     COMPLETED = u'completed'
     CANCELLED = u'cancelled'
-    DRIVER_APPROVED = u'driver_approved'
     TRIP_STATUS = (
         (PLANNED, u"Planned"),
         (SUBMITTED, u"Submitted"),
         (APPROVED, u"Approved"),
         (COMPLETED, u"Completed"),
         (CANCELLED, u"Cancelled"),
-        (DRIVER_APPROVED, u"Driver Approved")
     )
 
     PROGRAMME_MONITORING = u'programme_monitoring'
@@ -163,11 +161,6 @@ class Trip(AdminURLMixin, models.Model):
         blank=True, null=True,
         verbose_name='VISION Approver'
     )
-
-    # driver = models.ForeignKey(User, related_name='driver_trips', verbose_name='Driver', null=True, blank=True)
-    # driver_supervisor = models.ForeignKey(User, verbose_name='Supervisor for Driver', related_name='driver_supervised_trips', null=True, blank=True)
-    # driver_approved_date = models.DateField(blank=True, null=True, verbose_name='Date supervisor approved driver')
-    # driver_approved = models.BooleanField(default=False)
 
     locations = GenericRelation('locations.LinkedLocation')
 
@@ -287,10 +280,6 @@ class Trip(AdminURLMixin, models.Model):
         if self.status is not Trip.CANCELLED and self.cancelled_reason:
             self.status = Trip.CANCELLED
 
-        if self.driver_can_be_approved:
-            self.driver_approved_date = datetime.datetime.today()
-            self.status = Trip.DRIVER_APPROVED
-
         super(Trip, self).save(**kwargs)
 
     @property
@@ -379,12 +368,6 @@ class Trip(AdminURLMixin, models.Model):
                 )
                 instance.approved_email_sent = True
                 instance.save()
-
-            if instance.driver and instance.driver_supervisor:
-                emails.TripDriverAddedEmail(instance).send(
-                    instance.driver.email,
-                    instance.driver_supervisor.email
-                )
 
         elif instance.status == Trip.COMPLETED:
             emails.TripCompletedEmail(instance).send(
