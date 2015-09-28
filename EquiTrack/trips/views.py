@@ -240,31 +240,30 @@ class TripsDashboard(FormView):
             }
             by_month.append(row)
 
+        trips = Trip.objects.all()
+        if month is not None:
+            trips = trips.filter(
+                    from_date__year=month.year,
+                    from_date__month=month.month
+                )
+
         kwargs.update({
             'months': months,
             'current_month': month,
             'current_month_num': month_num,
             'trips': {
-                'planned': Trip.objects.filter(
+                'planned': trips.filter(
                     Q(status=Trip.PLANNED) |
                     Q(status=Trip.SUBMITTED),
-                    from_date__year=month.year,
-                    from_date__month=month.month
                 ).count(),
-                'approved': Trip.objects.filter(
+                'approved': trips.filter(
                     status=Trip.APPROVED,
-                    from_date__year=month.year,
-                    from_date__month=month.month
                 ).count(),
-                'completed': Trip.objects.filter(
+                'completed': trips.filter(
                     status=Trip.COMPLETED,
-                    from_date__year=month.year,
-                    from_date__month=month.month
                 ).count(),
-                'cancelled': Trip.objects.filter(
+                'cancelled': trips.filter(
                     status=Trip.CANCELLED,
-                    from_date__year=month.year,
-                    from_date__month=month.month
                 ).count(),
             },
             'by_month': by_month,

@@ -63,6 +63,6 @@ class ViewTest(TestCase):
         self.assertEquals(response.status_code, 200)
 
     def test_view_trips_dashboard(self):
-        response = self.client_stub.get('/trips/?month=0')
+        response = self.client_stub.get('/trips/')
         self.assertEquals(response.status_code, 200)
 
