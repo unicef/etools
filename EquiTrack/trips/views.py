@@ -202,16 +202,24 @@ class TripsDashboard(FormView):
             'trips': {
                 'planned': Trip.objects.filter(
                     Q(status=Trip.PLANNED) |
-                    Q(status=Trip.SUBMITTED)
+                    Q(status=Trip.SUBMITTED),
+                    from_date__year=month.year,
+                    from_date__month=month.month
                 ).count(),
                 'approved': Trip.objects.filter(
                     status=Trip.APPROVED,
+                    from_date__year=month.year,
+                    from_date__month=month.month
                 ).count(),
                 'completed': Trip.objects.filter(
                     status=Trip.COMPLETED,
+                    from_date__year=month.year,
+                    from_date__month=month.month
                 ).count(),
                 'cancelled': Trip.objects.filter(
                     status=Trip.CANCELLED,
+                    from_date__year=month.year,
+                    from_date__month=month.month
                 ).count(),
             },
             'by_month': by_month,
