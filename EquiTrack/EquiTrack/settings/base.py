@@ -49,8 +49,6 @@ SUIT_CONFIG = {
             {'model': 'reports.result'},
             {'model': 'reports.indicator'},
             {'model': 'reports.goal'},
-            {'model': 'reports.intermediateresult'},
-            {'model': 'reports.wbs'},
         ]},
 
         {'app': 'activityinfo', 'label': 'ActivityInfo'},
