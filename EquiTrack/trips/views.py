@@ -67,12 +67,17 @@ class TripUploadPictureView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, **kwargs):
-        #get the file object
-        file_obj = request.data['file']
 
-        #get the trip id from the url
-        tripId = kwargs.get("trip")
-        trip = Trip.objects.filter(pk=tripId).get()
+        #get the file object
+        file_obj = request.data.get('file')
+        logging.info(file_obj)
+        logging.info(request.data)
+        if not file_obj:
+            raise ParseError(detail="No file was sent.")
+
+        # get the trip id from the url
+        trip_id = kwargs.get("trip")
+        trip = Trip.objects.filter(pk=trip_id).get()
 
         # rename the file to picture
         # the file field automatically adds incremental numbers
@@ -131,20 +136,39 @@ class TripActionView(GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         action = kwargs.get('action', False)
+        current_user = self.request.user
 
+        # for now... hardcoding some validation in here.
         if action not in ["approved", "submitted", "cancelled"]:
             raise ParseError(detail="action must be a valid action")
 
         trip = self.get_object()
 
+        # save the following for testing purposes.
+
         serializer = self.get_serializer(data={"status":action},
                                          instance=trip,
                                          partial=True)
 
+        # if action == 'approved':
+        #     # make sure the current user is the supervisor:
+        #     # maybe in the future allow an admin to make this change as well.
+        #     if not current_user.id == trip.supervisor.id:
+        #         raise PermissionDenied(detail="You must be the supervisor to approve this trip")
+        #
+        #     data = {"approved_by_supervisor": True}
+        #
+        # else:
+        #     data = {"status": action,
+        #             "approved_by_supervisor": False}
+        #
+        # serializer = self.get_serializer(data=data,
+        #                                  instance=trip,
+        #                                  partial=True)
+
         if not serializer.is_valid():
             raise ParseError(detail="data submitted is not valid")
         serializer.save()
-
 
         return Response(serializer.data)
 
