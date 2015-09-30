@@ -12,9 +12,6 @@ class Migration(SchemaMigration):
         # Deleting model 'SpotCheck'
         db.delete_table(u'partners_spotcheck')
 
-        # Deleting field 'Assessment.other_UN'
-        db.delete_column(u'partners_assessment', 'other_UN')
-
         # Adding field 'DistributionPlan.send'
         db.add_column(u'partners_distributionplan', 'send',
                       self.gf('django.db.models.fields.BooleanField')(default=False),
@@ -47,11 +44,6 @@ class Migration(SchemaMigration):
             (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
         ))
         db.send_create_signal(u'partners', ['SpotCheck'])
-
-        # Adding field 'Assessment.other_UN'
-        db.add_column(u'partners_assessment', 'other_UN',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
 
         # Deleting field 'DistributionPlan.send'
         db.delete_column(u'partners_distributionplan', 'send')
