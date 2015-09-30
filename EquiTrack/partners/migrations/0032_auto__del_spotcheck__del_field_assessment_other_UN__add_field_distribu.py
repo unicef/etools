@@ -12,11 +12,26 @@ class Migration(SchemaMigration):
         # Deleting model 'SpotCheck'
         db.delete_table(u'partners_spotcheck')
 
+        # Deleting field 'Assessment.other_UN'
+        db.delete_column(u'partners_assessment', 'other_UN')
+
+        # Adding field 'DistributionPlan.send'
+        db.add_column(u'partners_distributionplan', 'send',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
+        # Adding field 'DistributionPlan.sent'
+        db.add_column(u'partners_distributionplan', 'sent',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
+        # Adding field 'DistributionPlan.delivered'
+        db.add_column(u'partners_distributionplan', 'delivered',
+                      self.gf('django.db.models.fields.IntegerField')(default=0),
+                      keep_default=False)
+
         # Deleting field 'PartnerOrganization.activity_info_partner'
         db.delete_column(u'partners_partnerorganization', 'activity_info_partner_id')
-
-        # Deleting field 'PartnerOrganization.core_values_assessment'
-        db.delete_column(u'partners_partnerorganization', 'core_values_assessment')
 
 
     def backwards(self, orm):
@@ -33,15 +48,25 @@ class Migration(SchemaMigration):
         ))
         db.send_create_signal(u'partners', ['SpotCheck'])
 
+        # Adding field 'Assessment.other_UN'
+        db.add_column(u'partners_assessment', 'other_UN',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
+        # Deleting field 'DistributionPlan.send'
+        db.delete_column(u'partners_distributionplan', 'send')
+
+        # Deleting field 'DistributionPlan.sent'
+        db.delete_column(u'partners_distributionplan', 'sent')
+
+        # Deleting field 'DistributionPlan.delivered'
+        db.delete_column(u'partners_distributionplan', 'delivered')
+
         # Adding field 'PartnerOrganization.activity_info_partner'
         db.add_column(u'partners_partnerorganization', 'activity_info_partner',
                       self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Partner'], null=True, blank=True),
                       keep_default=False)
 
-        # Adding field 'PartnerOrganization.core_values_assessment'
-        db.add_column(u'partners_partnerorganization', 'core_values_assessment',
-                      self.gf('django.db.models.fields.files.FileField')(default='', max_length=100, blank=True),
-                      keep_default=False)
 
     models = {
         u'activityinfo.activity': {
@@ -157,7 +182,7 @@ class Migration(SchemaMigration):
         },
         u'locations.governorate': {
             'Meta': {'ordering': "['name']", 'object_name': 'Governorate'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#A28A44'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#B530EC'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -170,7 +195,7 @@ class Migration(SchemaMigration):
             'cas_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_code_un': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_village_name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#D493C7'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#4696A1'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -191,7 +216,7 @@ class Migration(SchemaMigration):
         },
         u'locations.region': {
             'Meta': {'ordering': "['name']", 'object_name': 'Region'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#C25578'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#A2C74C'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
@@ -234,7 +259,6 @@ class Migration(SchemaMigration):
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'names_of_other_agencies': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
             'notes': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'other_UN': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
             'planned_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'rating': ('django.db.models.fields.CharField', [], {'default': "u'high'", 'max_length': '50'}),
@@ -251,11 +275,14 @@ class Migration(SchemaMigration):
         },
         u'partners.distributionplan': {
             'Meta': {'object_name': 'DistributionPlan'},
+            'delivered': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'item': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['supplies.SupplyItem']"}),
             'location': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Region']"}),
             'partnership': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'distribution_plans'", 'to': u"orm['partners.PCA']"}),
-            'quantity': ('django.db.models.fields.PositiveIntegerField', [], {})
+            'quantity': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'send': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'sent': ('django.db.models.fields.BooleanField', [], {'default': 'False'})
         },
         u'partners.filetype': {
             'Meta': {'object_name': 'FileType'},

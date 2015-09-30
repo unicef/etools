@@ -431,7 +431,7 @@ LOGGING = {
         # Send all messages to console
         'console': {
             'class': 'logging.StreamHandler',
-            'level': 'INFO'
+            'level': 'DEBUG'
         },
     },
     'root': {
