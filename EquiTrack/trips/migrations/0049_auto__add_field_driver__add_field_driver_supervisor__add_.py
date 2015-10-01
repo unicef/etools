@@ -8,61 +8,34 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
+
         # Adding field 'Trip.driver'
         db.add_column(u'trips_trip', 'driver',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True),
+                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='trips_driver', null=True, to=orm['auth.User']),
                       keep_default=False)
 
         # Adding field 'Trip.driver_supervisor'
         db.add_column(u'trips_trip', 'driver_supervisor',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True),
+                      self.gf('django.db.models.fields.related.ForeignKey')(blank=True, related_name='driver_supervised_trips', null=True, to=orm['auth.User']),
                       keep_default=False)
 
-        # Adding field 'Trip.driver_approved_date'
-        db.add_column(u'trips_trip', 'driver_approved_date',
-                      self.gf('django.db.models.fields.DateField')(null=True, blank=True),
+        # Adding field 'Trip.driver_trip'
+        db.add_column(u'trips_trip', 'driver_trip',
+                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['trips.Trip'], null=True, blank=True),
                       keep_default=False)
-
-        # Adding field 'Trip.driver_approved'
-        db.add_column(u'trips_trip', 'driver_approved',
-                      self.gf('django.db.models.fields.BooleanField')(default=False),
-                      keep_default=False)
-
 
     def backwards(self, orm):
+
         # Deleting field 'Trip.driver'
         db.delete_column(u'trips_trip', 'driver_id')
 
         # Deleting field 'Trip.driver_supervisor'
         db.delete_column(u'trips_trip', 'driver_supervisor_id')
 
-        # Deleting field 'Trip.driver_approved_date'
-        db.delete_column(u'trips_trip', 'driver_approved_date')
-
-        # Deleting field 'Trip.driver_approved'
-        db.delete_column(u'trips_trip', 'driver_approved')
-
+        # Deleting field 'Trip.driver_trip'
+        db.delete_column(u'trips_trip', 'driver_trip_id')
 
     models = {
-        u'activityinfo.database': {
-            'Meta': {'object_name': 'Database'},
-            'ai_country_id': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True'}),
-            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
-            'country_name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'password': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'username': ('django.db.models.fields.CharField', [], {'max_length': '254'})
-        },
-        u'activityinfo.partner': {
-            'Meta': {'ordering': "['name']", 'object_name': 'Partner'},
-            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {'unique': 'True'}),
-            'database': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Database']"}),
-            'full_name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '254'})
-        },
         u'auth.group': {
             'Meta': {'object_name': 'Group'},
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -148,7 +121,7 @@ class Migration(SchemaMigration):
         },
         u'locations.governorate': {
             'Meta': {'ordering': "['name']", 'object_name': 'Governorate'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#95C485'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#3D6F0E'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -161,7 +134,7 @@ class Migration(SchemaMigration):
             'cas_code': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_code_un': ('django.db.models.fields.CharField', [], {'max_length': '11L'}),
             'cas_village_name': ('django.db.models.fields.CharField', [], {'max_length': '128L'}),
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#A6E234'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#1FC003'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -182,7 +155,7 @@ class Migration(SchemaMigration):
         },
         u'locations.region': {
             'Meta': {'ordering': "['name']", 'object_name': 'Region'},
-            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#A293A0'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
+            'color': ('paintstore.fields.ColorPickerField', [], {'default': "'#754A7D'", 'max_length': '7', 'null': 'True', 'blank': 'True'}),
             'gateway': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.GatewayType']", 'null': 'True', 'blank': 'True'}),
             'geom': ('django.contrib.gis.db.models.fields.MultiPolygonField', [], {'null': 'True', 'blank': 'True'}),
             'governorate': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['locations.Governorate']"}),
@@ -213,20 +186,18 @@ class Migration(SchemaMigration):
         },
         u'partners.partnerorganization': {
             'Meta': {'ordering': "['name']", 'object_name': 'PartnerOrganization'},
-            'activity_info_partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Partner']", 'null': 'True', 'blank': 'True'}),
             'address': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'alternate_id': ('django.db.models.fields.IntegerField', [], {'null': 'True', 'blank': 'True'}),
             'alternate_name': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'core_values_assessment': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'core_values_assessment_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'description': ('django.db.models.fields.CharField', [], {'max_length': '256L', 'blank': 'True'}),
             'email': ('django.db.models.fields.CharField', [], {'max_length': '255', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '255'}),
+            'partner_type': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
             'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'blank': 'True'}),
             'rating': ('django.db.models.fields.CharField', [], {'default': "u'high'", 'max_length': '50'}),
-            'reason_for_special_audit': ('django.db.models.fields.TextField', [], {'blank': 'True'}),
-            'special_audit_done': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'short_name': ('django.db.models.fields.CharField', [], {'max_length': '50', 'blank': 'True'}),
             'type': ('django.db.models.fields.CharField', [], {'default': "u'national'", 'max_length': '50'}),
             'vendor_number': ('django.db.models.fields.BigIntegerField', [], {'null': 'True', 'blank': 'True'})
         },
@@ -333,10 +304,10 @@ class Migration(SchemaMigration):
         },
         u'trips.fileattachment': {
             'Meta': {'object_name': 'FileAttachment'},
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
+            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']", 'null': 'True', 'blank': 'True'}),
             'file': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['filer.File']", 'null': 'True', 'blank': 'True'}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'object_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
+            'object_id': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True', 'blank': 'True'}),
             'report': ('django.db.models.fields.files.FileField', [], {'max_length': '100'}),
             'trip': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "u'files'", 'null': 'True', 'to': u"orm['trips.Trip']"}),
             'type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.FileType']"})
@@ -367,21 +338,23 @@ class Migration(SchemaMigration):
             'approved_email_sent': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'budget_owner': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'budgeted_trips'", 'null': 'True', 'to': u"orm['auth.User']"}),
             'cancelled_reason': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True', 'blank': 'True'}),
+            'constraints': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'created_date': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'date_budget_owner_approved': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'date_human_resources_approved': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'date_representative_approved': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
             'date_supervisor_approved': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'driver': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True'}),
-            'driver_approved': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'driver_approved_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'driver_supervisor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']", 'null': 'True'}),
+            'driver': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'trips_driver'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'driver_supervisor': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'driver_supervised_trips'", 'null': 'True', 'to': u"orm['auth.User']"}),
+            'driver_trip': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Trip']", 'null': 'True', 'blank': 'True'}),
             'from_date': ('django.db.models.fields.DateField', [], {}),
             'human_resources': ('django.db.models.fields.related.ForeignKey', [], {'blank': 'True', 'related_name': "'certified_trips'", 'null': 'True', 'to': u"orm['auth.User']"}),
             u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'international_travel': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
+            'lessons_learned': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'main_observations': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'office': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.Office']", 'null': 'True', 'blank': 'True'}),
+            'opportunities': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
             'owner': ('django.db.models.fields.related.ForeignKey', [], {'related_name': "'trips'", 'to': u"orm['auth.User']"}),
             'partners': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['partners.PartnerOrganization']", 'null': 'True', 'blank': 'True'}),
             'pcas': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'to': u"orm['partners.PCA']", 'null': 'True', 'blank': 'True'}),

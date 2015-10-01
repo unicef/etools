@@ -162,6 +162,10 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
+    driver = models.ForeignKey(User, related_name='trips_driver', verbose_name='Driver', null=True, blank=True)
+    driver_supervisor = models.ForeignKey(User, verbose_name='Supervisor for Driver', related_name='driver_supervised_trips', null=True, blank=True)
+    driver_trip = models.ForeignKey('self', null=True, blank=True)
+
     locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
@@ -279,6 +283,19 @@ class Trip(AdminURLMixin, models.Model):
 
         if self.status is not Trip.CANCELLED and self.cancelled_reason:
             self.status = Trip.CANCELLED
+
+        if self.status == Trip.APPROVED and \
+        self.driver is not None and \
+        self.driver_supervisor is not None and \
+        self.driver_trip is None:
+            trip = self
+            trip.pk = None
+            trip.status = Trip.SUBMITTED
+            trip.id = None
+            trip.owner = self.driver
+            trip.supervisor = self.driver_supervisor
+            super(Trip, trip).save(**kwargs)
+            print trip
 
         super(Trip, self).save(**kwargs)
 
