@@ -76,14 +76,10 @@ class TripSerializer(serializers.ModelSerializer):
     # related_to_pca = serializers.CharField(source='no_pca')
     url = serializers.URLField(source='get_admin_url')
     travel_assistant = serializers.CharField()
-    security_clearance_required = serializers.CharField()
-    ta_required = serializers.CharField()
     budget_owner = serializers.CharField()
     staff_responsible_ta = serializers.CharField(source='programme_assistant')
-    international_travel = serializers.CharField()
     representative = serializers.CharField()
     human_resources = serializers.CharField()
-    approved_by_human_resources = serializers.CharField()
     vision_approver = serializers.CharField()
     partners = serializers.SerializerMethodField()
     travel_routes = serializers.SerializerMethodField()
@@ -115,9 +111,7 @@ class TripSerializer(serializers.ModelSerializer):
         return obj.supervisor.get_full_name()
 
     def get_partners(self, obj):
-        return ', '.join([
-            partner.name for partner in obj.partners.all()
-        ])
+        return [partner.name for partner in obj.partners.all()]
 
     def transform_url(self, obj):
         return 'http://{}{}'.format(
