@@ -2,6 +2,9 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
+#import pandas
+
+
 
 from django.utils.translation import ugettext as _
 from django import forms
@@ -216,35 +219,35 @@ class AgreementForm(UserGroupForm):
             'partner_manager': LinkedSelect,
         }
 
-    def __init__(self, *args, **kwargs):
-        super(AgreementForm, self).__init__(*args, **kwargs)
-        self.fields['start'].required = True
-        self.fields['end'].required = True
-
-    def clean(self):
-        cleaned_data = super(AgreementForm, self).clean()
-
-        partner = cleaned_data[u'partner']
-        agreement_type = cleaned_data[u'agreement_type']
-        start = cleaned_data[u'start']
-        end = cleaned_data[u'end']
-
-        # prevent more than one agreement being crated for the current period
-        agreements = Agreement.objects.filter(
-            partner=partner,
-            start__lte=start,
-            end__gte=end
-        )
-        if self.instance:
-            agreements = agreements.exclude(id=self.instance.id)
-        if agreements:
-            raise ValidationError(
-                u'You can only have one current {} per partner'.format(
-                    agreement_type
-                )
-            )
-
-        return cleaned_data
+    # def __init__(self, *args, **kwargs):
+    #     super(AgreementForm, self).__init__(*args, **kwargs)
+    #     self.fields['start'].required = True
+    #     self.fields['end'].required = True
+    #
+    # def clean(self):
+    #     cleaned_data = super(AgreementForm, self).clean()
+    #
+    #     partner = cleaned_data[u'partner']
+    #     agreement_type = cleaned_data[u'agreement_type']
+    #     start = cleaned_data[u'start']
+    #     end = cleaned_data[u'end']
+    #
+    #     # prevent more than one agreement being crated for the current period
+    #     agreements = Agreement.objects.filter(
+    #         partner=partner,
+    #         start__lte=start,
+    #         end__gte=end
+    #     )
+    #     if self.instance:
+    #         agreements = agreements.exclude(id=self.instance.id)
+    #     if agreements:
+    #         raise ValidationError(
+    #             u'You can only have one current {} per partner'.format(
+    #                 agreement_type
+    #             )
+    #         )
+    #
+    #     return cleaned_data
 
 
 class PartnershipForm(UserGroupForm):
@@ -369,6 +372,7 @@ class PartnershipForm(UserGroupForm):
         signed_by_unicef_date = cleaned_data[u'signed_by_unicef_date']
         partner_manager = cleaned_data[u'partner_manager']
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
+        start_date = cleaned_data[u'start_date']
 
         p_codes =cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
@@ -400,6 +404,11 @@ class PartnershipForm(UserGroupForm):
         if partner_manager and not signed_by_partner_date:
             raise ValidationError(
                 u'Please select the date {} signed the partnership'.format(partner_manager)
+            )
+
+        if start_date < signed_by_unicef_date:
+            raise ValidationError(
+                u'The start date must be greater or equal to the singed by date'
             )
 
         if p_codes and not location_sector:

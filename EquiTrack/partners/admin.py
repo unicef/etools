@@ -46,7 +46,6 @@ from .models import (
     PartnerOrganization,
     Assessment,
     Agreement,
-    SpotCheck,
     Recommendation,
     ResultChain,
     PartnerStaffMember,
@@ -81,37 +80,6 @@ from .forms import (
 )
 
 
-class PcaIRInlineAdmin(ReadOnlyMixin, SectorMixin, admin.StackedInline):
-    model = PCASectorImmediateResult
-    filter_horizontal = ('wbs_activities',)
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show IRs for the chosen Sector and valid time range
-        """
-        if db_field.rel.to is IntermediateResult:
-            kwargs['queryset'] = self.get_sector(request).intermediateresult_set.filter(
-                from_date__lte=datetime.datetime.today(),
-                to_date__gte=datetime.datetime.today(),
-            )
-        return super(PcaIRInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-        """
-        Only show WBSs for the chosen Sector
-        """
-        if db_field.rel.to is WBS:
-            kwargs['queryset'] = WBS.objects.filter(
-                Intermediate_result__sector=self.get_sector(request)
-            )
-        return super(PcaIRInlineAdmin, self).formfield_for_manytomany(
-            db_field, request, **kwargs
-        )
-
-
 class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = GwPCALocation
     verbose_name = 'Location'
@@ -128,98 +96,6 @@ class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     extra = 5
 
 
-class PcaIndicatorInlineAdmin(ReadOnlyMixin, SectorMixin, admin.StackedInline):
-
-    model = IndicatorProgress
-    verbose_name = 'Indicator'
-    verbose_name_plural = 'Indicators'
-    fields = (
-        'indicator',
-        'programmed',
-        'current',
-        'shortfall',
-        'unit',
-
-    )
-    readonly_fields = (
-        'shortfall',
-        'unit',
-    )
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show Indicators for the chosen Sector and optional Result Structure
-        """
-        if db_field.rel.to is Indicator:
-            indicators = Indicator.objects.filter(
-                sector=self.get_sector(request),
-            )
-            if self.get_pca(request).result_structure:
-                indicators = indicators.filter(
-                    result_structure=self.get_pca(request).result_structure
-                )
-            kwargs['queryset'] = indicators
-        return super(PcaIndicatorInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
-class PcaGoalInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
-    verbose_name = 'CCC'
-    verbose_name_plural = 'CCCs'
-    model = PCASectorGoal
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show CCCs for the chosen Sector
-        """
-        if db_field.rel.to is Goal:
-            kwargs['queryset'] = Goal.objects.filter(
-                sector=self.get_sector(request),
-            )
-        return super(PcaGoalInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
-class PcaOutputInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
-    verbose_name = 'Output'
-    model = PCASectorOutput
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show Outputs for the chosen Sector and Result Structure
-        """
-        if db_field.rel.to is Rrp5Output:
-            kwargs['queryset'] = Rrp5Output.objects.filter(
-                sector=self.get_sector(request),
-                result_structure=self.get_pca(request).result_structure,
-            )
-        return super(PcaOutputInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
-class PcaActivityInlineAdmin(ReadOnlyMixin, SectorMixin, admin.TabularInline):
-    model = PCASectorActivity
-    extra = 0
-
-    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
-        """
-        Only show Activities for the chosen Sector
-        """
-        if db_field.rel.to is Activity:
-            kwargs['queryset'] = Activity.objects.filter(
-                sector=self.get_sector(request),
-            )
-        return super(PcaActivityInlineAdmin, self).formfield_for_foreignkey(
-            db_field, request, **kwargs
-        )
-
-
 class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = PCASector
     form = AmendmentForm
@@ -230,11 +106,7 @@ class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     extra = 0
     fields = (
         'sector',
-        'changeform_link',
         'amendment',
-    )
-    readonly_fields = (
-        'changeform_link',
     )
 
 
@@ -256,6 +128,7 @@ class PCAFileInline(ReadOnlyMixin, admin.TabularInline):
 
 class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
+    verbose_name = u'Revision'
     model = AmendmentLog
     extra = 0
     fields = (
@@ -317,23 +190,11 @@ class PcaSectorAdmin(ReadOnlyMixin, SectorMixin, VersionAdmin):
         'pca',
         'sector',
     )
-    inlines = (
-        PcaOutputInlineAdmin,
-        PcaGoalInlineAdmin,
-        PcaIRInlineAdmin,
-        PcaIndicatorInlineAdmin,
-        PcaActivityInlineAdmin,
-    )
 
 
 class LinksInlineAdmin(ReadOnlyMixin, GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
-
-
-class SpotChecksAdminInline(ReadOnlyMixin, admin.StackedInline):
-    suit_classes = u'suit-tab suit-tab-checks'
-    model = SpotCheck
 
 
 class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -356,6 +217,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     form = DistributionPlanForm
     formset = DistributionPlanFormSet
     extra = 3
+    readonly_fields = [u'delivered', u'sent']
 
 
 class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
@@ -386,20 +248,10 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'result_structure',
         PCASectorFilter,
         'status',
-        'amendment',
         'current',
-        'start_date',
-        'end_date',
-        'signed_by_unicef_date',
         'partner',
         PCADonorFilter,
-        PCAGrantFilter,
-        PCAGovernorateFilter,
-        PCARegionFilter,
-        PCALocalityFilter,
         PCAGatewayTypeFilter,
-        PCAIndicatorFilter,
-        PCAOutputFilter
     )
     search_fields = (
         'number',
@@ -465,7 +317,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
-        #SpotChecksAdminInline,
         #ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
@@ -476,7 +327,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'results', u'Results'),
         (u'locations', u'Locations'),
         (u'trips', u'Trips'),
-        #(u'checks', u'Spot Checks'),
         (u'supplies', u'Supplies'),
         (u'attachments', u'Attachments')
     )
@@ -544,38 +394,49 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
 
 
 class AssessmentAdminInline(admin.TabularInline):
-    can_delete = False
     model = Assessment
     extra = 0
     fields = (
         u'type',
-        u'planned_date',
         u'completed_date',
-        u'rating',
-        u'download_url',
-        u'changeform_link',
+        u'current',
+        u'report',
     )
-    readonly_fields = (
-        u'type',
-        u'planned_date',
-        u'completed_date',
-        u'rating',
-        u'download_url',
-        u'changeform_link',
+    verbose_name = u'Assessments and Audits record'
+    verbose_name_plural = u'Assessments and Audits records'
+
+
+class PartnerStaffMemberInlineAdmin(admin.TabularInline):
+    model = PartnerStaffMember
+
+
+class DocumentInlineAdmin(admin.TabularInline):
+    model = PCA
+    can_delete = False
+    verbose_name = 'Intervention'
+    verbose_name_plural = 'Interventions'
+    extra = 0
+    fields = (
+        'number',
+        'status',
+        'start_date',
+        'end_date',
+        'result_structure',
+        'sector_names',
+        'title',
+        'total_cash',
+        'changeform_link',
     )
+    readonly_fields = fields
 
     def has_add_permission(self, request):
         return False
 
     def changeform_link(self, obj):
-        return get_changeform_link(obj.pca_sector.pca,
-                                   link_name='View Assessment')
+        return get_changeform_link(obj, link_name='View Intervention')
+
     changeform_link.allow_tags = True
-    changeform_link.short_description = 'View Assessment Details'
-
-
-class PartnerStaffMemberInlineAdmin(admin.TabularInline):
-    model = PartnerStaffMember
+    changeform_link.short_description = 'View Intervention Details'
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
@@ -583,17 +444,41 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     resource_class = PartnerResource
     list_display = (
         u'name',
+        u'vendor_number',
         u'type',
-        u'description',
         u'email',
-        u'contact_person',
         u'phone_number',
         u'alternate_id',
         u'alternate_name',
     )
+    readonly_fields = (
+        u'vendor_number',
+        u'rating',
+        u'core_values_assessment_date',
+    )
+    fieldsets = (
+        (_('Partner Details'), {
+            'fields':
+                (u'name',
+                 u'short_name',
+                 (u'partner_type', u'type',),
+                 u'vendor_number',
+                 u'rating',
+                 u'address',
+                 u'phone_number',
+                 u'email',
+                 u'core_values_assessment_date',)
+        }),
+        (_('Meta Data'), {
+            u'classes': (u'collapse',),
+            'fields':
+                ((u'alternate_id', u'alternate_name',),)
+        }),
+    )
     inlines = [
         AssessmentAdminInline,
         PartnerStaffMemberInlineAdmin,
+        DocumentInlineAdmin,
     ]
 
 
@@ -605,11 +490,30 @@ class RecommendationsInlineAdmin(admin.TabularInline):
 class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
     inlines = [RecommendationsInlineAdmin]
     readonly_fields = (
-        u'download_url',
         u'requested_date',
         u'requesting_officer',
         u'approving_officer',
-
+        u'current',
+    )
+    fieldsets = (
+        (_('Assessment Details'), {
+            'fields':
+                (u'partner',
+                 u'type',
+                 u'names_of_other_agencies',
+                 u'expected_budget',
+                 u'notes',
+                 u'requesting_officer',
+                 u'approving_officer',)
+        }),
+        (_('Report Details'), {
+            'fields':
+                (u'planned_date',
+                 u'completed_date',
+                 u'rating',
+                 u'report',
+                 u'current',)
+        }),
     )
 
     def save_model(self, request, obj, form, change):
@@ -644,14 +548,18 @@ class AgreementAdmin(admin.ModelAdmin):
         u'agreement_number',
         u'attached_agreement',
         (u'start', u'end',),
-        u'signed_by_unicef_date',
-        u'signed_by',
         u'signed_by_partner_date',
         u'partner_manager',
+        u'signed_by_unicef_date',
+        u'signed_by',
+    )
+    readonly_fields = (
+        u'start', u'end',
     )
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
+
 
 admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)

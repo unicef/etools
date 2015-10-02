@@ -67,6 +67,7 @@ class Trip(AdminURLMixin, models.Model):
     )
 
     PROGRAMME_MONITORING = u'programme_monitoring'
+    SPOT_CHECK = u'spot_check'
     ADVOCACY = u'advocacy'
     TECHNICAL_SUPPORT = u'technical_support'
     MEETING = u'meeting'
@@ -77,7 +78,8 @@ class Trip(AdminURLMixin, models.Model):
     STAFF_DEVELOPMENT = u'staff_development'
     STAFF_ENTITLEMENT = u'staff_entitlement'
     TRAVEL_TYPE = (
-        (PROGRAMME_MONITORING, u'PROGRAMME MONITORING'),
+        (PROGRAMME_MONITORING, u'PROGRAMMATIC VISIT'),
+        (SPOT_CHECK, u'SPOT CHECK'),
         (ADVOCACY, u'ADVOCACY'),
         (TECHNICAL_SUPPORT, u'TECHNICAL SUPPORT'),
         (MEETING, u'MEETING'),
@@ -124,6 +126,15 @@ class Trip(AdminURLMixin, models.Model):
         blank=True, null=True
     )
     main_observations = models.TextField(
+        blank=True, null=True
+    )
+    constraints = models.TextField(
+        blank=True, null=True
+    )
+    lessons_learned = models.TextField(
+        blank=True, null=True
+    )
+    opportunities = models.TextField(
         blank=True, null=True
     )
 
@@ -263,7 +274,7 @@ class Trip(AdminURLMixin, models.Model):
     def save(self, **kwargs):
         # check if trip can be approved
         if self.can_be_approved:
-            self.approved_date = datetime.datetime.today()
+            self.approved_date = datetime.date.today()
             self.status = Trip.APPROVED
 
         if self.status is not Trip.CANCELLED and self.cancelled_reason:
@@ -271,12 +282,18 @@ class Trip(AdminURLMixin, models.Model):
 
         super(Trip, self).save(**kwargs)
 
+    @property
+    def all_files(self):
+        return FileAttachment.objects.filter(object_id=self.id)
+
     @classmethod
     def get_all_trips(cls, user):
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
         )
-        my_trips = user.trips.filter()
+        my_trips = user.trips.filter(
+            Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED) | Q(status=Trip.PLANNED)
+        )
         return my_trips | super_trips
 
     @classmethod
@@ -295,7 +312,7 @@ class Trip(AdminURLMixin, models.Model):
         zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
 
         if instance.budget_owner:
-            if instance.budget_owner != instance.owner and instance.budget_owner != instance.supervisor:
+            if instance.budget_owner.email not in recipients:
                 recipients.append(instance.budget_owner.email)
 
         if instance.status == Trip.SUBMITTED:
@@ -513,11 +530,13 @@ class FileAttachment(models.Model):
     type = models.ForeignKey(u'partners.FileType')
     file = FilerFileField(null=True, blank=True)
     report = models.FileField(
-        upload_to=u'trip_reports'
+        #upload_to=lambda instance, filename: '/'.join(['trip_reports', str(instance.content_object.id), filename])
+        upload_to=lambda instance, filename: '/'.join(['trip_reports', str(instance.trip.id), filename])
+        #upload_to=u'trip_reports''
     )
 
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(ContentType, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):

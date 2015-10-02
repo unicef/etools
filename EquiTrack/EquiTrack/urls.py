@@ -30,6 +30,7 @@ urlpatterns = patterns(
     url(r'partners/', include('partners.urls')),
     url(r'trips/', include('trips.urls')),
     url(r'users/', include('users.urls')),
+    url(r'supplies/', include('supplies.urls')),
 
     # auth
     url(r'', include('registration.auth_urls')),
@@ -44,5 +45,6 @@ urlpatterns = patterns(
     url(r'^messages/', include('messages_extends.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
+    url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 )
