@@ -25,16 +25,16 @@ class PcaView(ListAPIView):
         """
         Return locations with GPS points only
         """
-        status = self.request.QUERY_PARAMS.get('status', None)
-        result_structure = self.request.QUERY_PARAMS.get('result_structure', None)
-        sector = self.request.QUERY_PARAMS.get('sector', None)
-        gateway = self.request.QUERY_PARAMS.get('gateway', None)
-        governorate = self.request.QUERY_PARAMS.get('governorate', None)
-        donor = self.request.QUERY_PARAMS.get('donor', None)
-        partner = self.request.QUERY_PARAMS.get('partner', None)
-        district = self.request.QUERY_PARAMS.get('district', None)
-        from_date = self.request.QUERY_PARAMS.get('from_date', None)
-        to_date = self.request.QUERY_PARAMS.get('to_date', None)
+        status = self.request.query_params.get('status', None)
+        result_structure = self.request.query_params.get('result_structure', None)
+        sector = self.request.query_params.get('sector', None)
+        gateway = self.request.query_params.get('gateway', None)
+        governorate = self.request.query_params.get('governorate', None)
+        donor = self.request.query_params.get('donor', None)
+        partner = self.request.query_params.get('partner', None)
+        district = self.request.query_params.get('district', None)
+        from_date = self.request.query_params.get('from_date', None)
+        to_date = self.request.query_params.get('to_date', None)
 
         queryset = self.model.objects.filter(
             current=True,
@@ -114,14 +114,14 @@ class LocationView(ListAPIView):
         """
         Return locations with GPS points only
         """
-        status = self.request.QUERY_PARAMS.get('status', PCA.ACTIVE)
-        result_structure = self.request.QUERY_PARAMS.get('result_structure', None)
-        sector = self.request.QUERY_PARAMS.get('sector', None)
-        gateway = self.request.QUERY_PARAMS.get('gateway', None)
-        governorate = self.request.QUERY_PARAMS.get('governorate', None)
-        donor = self.request.QUERY_PARAMS.get('donor', None)
-        partner = self.request.QUERY_PARAMS.get('partner', None)
-        district = self.request.QUERY_PARAMS.get('district', None)
+        status = self.request.query_params.get('status', PCA.ACTIVE)
+        result_structure = self.request.query_params.get('result_structure', None)
+        sector = self.request.query_params.get('sector', None)
+        gateway = self.request.query_params.get('gateway', None)
+        governorate = self.request.query_params.get('governorate', None)
+        donor = self.request.query_params.get('donor', None)
+        partner = self.request.query_params.get('partner', None)
+        district = self.request.query_params.get('district', None)
 
         queryset = self.model.objects.filter(
             pca__status=status,
