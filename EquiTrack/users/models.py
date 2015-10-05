@@ -1,23 +1,50 @@
-
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 
 from registration.models import RegistrationManager, RegistrationProfile
-
-#from trips.models import Office
-from reports.models import Sector
+from tenant_schemas.models import TenantMixin
+from locations.models import Governorate
 
 User.__unicode__ = lambda user: user.get_full_name()
 User._meta.ordering = ['first_name']
 
 
+class Country(TenantMixin):
+    name = models.CharField(max_length=100)
+
+    def __unicode__(self):
+        return self.name
+
+
+class Section(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __unicode__(self):
+        return self.name
+
+
+class Office(models.Model):
+    name = models.CharField(max_length=254)
+    zonal_chief = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        blank=True, null=True,
+        related_name='offices',
+        verbose_name='Chief'
+    )
+
+    def __unicode__(self):
+        return self.name
+
+
 class UserProfile(models.Model):
 
     user = models.OneToOneField(User, related_name='profile')
-    office = models.ForeignKey('trips.Office', null=True, blank=True)
-    section = models.ForeignKey(Sector, null=True, blank=True)
+    country = models.ForeignKey(Country, null=True, blank=True)
+    section = models.ForeignKey(Section, null=True, blank=True)
+    office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
@@ -69,6 +96,7 @@ class EquiTrackRegistrationManager(RegistrationManager):
         user_profile.section = cleaned_data['section']
         user_profile.job_title = cleaned_data['job_title']
         user_profile.phone_number = cleaned_data['phone_number']
+        user_profile.country = cleaned_data['country']
 
         reg_profile = self.create_profile(new_user)
 
@@ -91,8 +119,3 @@ class EquiTrackRegistrationManager(RegistrationManager):
 class EquiTrackRegistrationModel(RegistrationProfile):
 
     objects = EquiTrackRegistrationManager()
-
-
-
-
-

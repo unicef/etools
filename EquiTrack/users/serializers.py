@@ -17,6 +17,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'user',
         )
 
+
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
     user_id = serializers.CharField(source="user.id")

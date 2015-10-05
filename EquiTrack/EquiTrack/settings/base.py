@@ -6,6 +6,7 @@ from os.path import abspath, basename, dirname, join, normpath
 from sys import path
 import datetime
 
+import dj_database_url
 import saml2
 from saml2 import saml
 
@@ -43,7 +44,6 @@ SUIT_CONFIG = {
         {'app': 'trips', 'icon': 'icon-road', 'models': [
             {'model': 'trips.trip'},
             {'model': 'trips.actionpoint'},
-            {'model': 'trips.office'},
         ]},
 
         {'app': 'funds', 'icon': 'icon-briefcase'},
@@ -66,7 +66,7 @@ SUIT_CONFIG = {
     )
 }
 
-LOGIN_URL = '/saml2/login/'
+LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
@@ -255,12 +255,20 @@ TEMPLATE_DEBUG = DEBUG
 
 ########## DATABASE CONFIGURATION #########
 POSTGIS_VERSION = (2, 1)
-import dj_database_url
+db_config = dj_database_url.config(
+    env="DATABASE_URL",
+    default='postgis:///equitrack'
+)
+ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
+db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
 DATABASES = {
-    'default': dj_database_url.config(
-        env="DATABASE_URL",
-        default='postgis:///equitrack'
-    )
+    'default': db_config
+}
+DATABASE_ROUTERS = (
+    'tenant_schemas.routers.TenantSyncRouter',
+)
+SOUTH_DATABASE_ADAPTERS = {
+    'default': 'south.db.postgresql_psycopg2',
 }
 
 import djcelery
@@ -388,13 +396,13 @@ FIXTURE_DIRS = (
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-context-processors
 TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
+    'django.core.context_processors.request',
     'django.core.context_processors.debug',
     'django.core.context_processors.i18n',
     'django.core.context_processors.media',
     'django.core.context_processors.static',
     'django.core.context_processors.tz',
     'django.contrib.messages.context_processors.messages',
-    'django.core.context_processors.request',
 )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-loaders
@@ -414,10 +422,11 @@ TEMPLATE_DIRS = (
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#middleware-classes
 MIDDLEWARE_CLASSES = (
     # Default Django middleware.
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'EquiTrack.mixins.EToolsTenantMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
@@ -432,7 +441,7 @@ ROOT_URLCONF = '%s.urls' % SITE_NAME
 
 
 ########## APP CONFIGURATION
-DJANGO_APPS = (
+SHARED_APPS = (
     # Default Django apps:
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -450,12 +459,8 @@ DJANGO_APPS = (
     'django.contrib.admin',
     # 'django.contrib.admindocs',
     'django.contrib.humanize',
-    'mathfilters'
-)
+    'mathfilters',
 
-THIRD_PARTY_APPS = (
-    # Database migration helpers:
-    'south',
     'easy_thumbnails',
     'filer',
     'storages',
@@ -475,26 +480,25 @@ THIRD_PARTY_APPS = (
     'leaflet',
     'djgeojson',
     'paintstore',
-    'messages_extends',
     'corsheaders',
     'djangosaml2',
+
+    'registration',
+    'users',  # you must list the app where your tenant model resides in
 )
 
 # Apps specific for this project go here.
-LOCAL_APPS = (
+TENANT_APPS = (
     'funds',
     'locations',
     'activityinfo',
     'reports',
     'partners',
     'trips',
-    'users',
-    'registration',
     'tpm',
     'supplies',
 )
 
-MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
 
 LEAFLET_CONFIG = {
     'TILES':  'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg',
@@ -506,7 +510,8 @@ LEAFLET_CONFIG = {
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
+TENANT_MODEL = "users.Country"  # app.Model
 ########## END APP CONFIGURATION
 
 
@@ -532,7 +537,7 @@ LOGGING = {
         # Send all messages to console
         'console': {
             'class': 'logging.StreamHandler',
-            'level': 'DEBUG'
+            'level': 'INFO'
         },
     },
     'root': {

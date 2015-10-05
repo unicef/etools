@@ -1,11 +1,11 @@
 __author__ = 'jcranwellward'
 
-from django.test import TestCase
+from tenant_schemas.test.cases import TenantTestCase
 
 from EquiTrack.factories import UserFactory
 
 
-class TestUserModel(TestCase):
+class TestUserModel(TenantTestCase):
 
     def test_create_user(self):
         user = UserFactory(
@@ -13,5 +13,5 @@ class TestUserModel(TestCase):
         )
         self.assertTrue(
             'Chief Tea Maker',
-            user.get_profile().job_title
+            user.profile.job_title
         )

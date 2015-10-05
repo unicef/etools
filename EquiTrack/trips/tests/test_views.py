@@ -1,20 +1,17 @@
 __author__ = 'unicef-leb-inn'
 
-from datetime import timedelta, datetime
-
-from django.template.loader import render_to_string
-from django.test import TestCase, Client, RequestFactory
+from tenant_schemas.test.cases import TenantTestCase
+from tenant_schemas.test.client import TenantClient
 from rest_framework.test import APIRequestFactory, force_authenticate
 
 from EquiTrack.factories import TripFactory, UserFactory
-from trips.models import Trip
 from trips.views import TripsApprovedView, TripsListApi, TripsByOfficeView, TripActionView
 
 
-class ViewTest(TestCase):
+class ViewTest(TenantTestCase):
 
     def setUp(self):
-        self.client_stub = Client()
+        self.client = TenantClient(self.tenant)
         self.trip = TripFactory(
             owner__first_name='Fred',
             owner__last_name='Test',
@@ -63,6 +60,10 @@ class ViewTest(TestCase):
         self.assertEquals(response.status_code, 200)
 
     def test_view_trips_dashboard(self):
-        response = self.client_stub.get('/trips/')
+
+        self.client.login(
+            username=self.trip.owner.username,
+            password='test')
+        response = self.client.get('/trips/')
         self.assertEquals(response.status_code, 200)
 

@@ -2,20 +2,15 @@ __author__ = 'jcranwellward'
 
 from django.db.models import Q
 from django.contrib import admin
-from django.contrib import messages
-from django.contrib.sites.models import Site
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.contrib.contenttypes.generic import GenericTabularInline
 
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
-from messages_extends import constants as constants_messages
-from users.models import UserProfile
+from users.models import UserProfile, Office
 
 from EquiTrack.forms import AutoSizeTextForm
-from locations.models import LinkedLocation
 from .models import (
     Trip,
     Office,
@@ -56,7 +51,6 @@ class ActionPointInlineAdmin(admin.StackedInline):
     model = ActionPoint
     form = AutoSizeTextForm
     suit_classes = u'suit-tab suit-tab-reporting'
-    filter_horizontal = (u'persons_responsible',)
     extra = 1
     fields = (
         (u'description', u'due_date',),
@@ -338,7 +332,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         u'description',
         u'due_date',
         u'person_responsible',
-        u'originally_responsible',
         u'actions_taken',
         u'comments',
         u'status'
@@ -357,15 +350,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
     def trip(self, obj):
         return unicode(obj.trip)
 
-    def originally_responsible(self, obj):
-        return ', '.join(
-            [
-                user.get_full_name()
-                for user in
-                obj.persons_responsible.all()
-            ]
-        )
-
     def get_readonly_fields(self, request, obj=None):
 
         readonly_fields = [
@@ -373,7 +357,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
             u'description',
             u'due_date',
             u'person_responsible',
-            u'persons_responsible',
             u'comments',
             u'status',
         ]
@@ -385,7 +368,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         return readonly_fields
 
 
-admin.site.register(Office)
 admin.site.register(Trip, TripReportAdmin)
 admin.site.register(ActionPoint, ActionPointsAdmin)
 admin.site.register(TripLocation)

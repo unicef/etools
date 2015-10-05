@@ -7,7 +7,6 @@ import datetime
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import Group
-from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 
 from filer.fields.file import FilerFileField
@@ -42,7 +41,6 @@ from supplies.models import SupplyItem
 from supplies.tasks import set_unisupply_distribution
 from . import emails
 
-User = get_user_model()
 
 HIGH = u'high'
 SIGNIFICANT = u'significant'
@@ -197,11 +195,11 @@ class Assessment(models.Model):
         auto_now_add=True
     )
     requesting_officer = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         related_name='requested_assessments'
     )
     approving_officer = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         blank=True, null=True
     )
     planned_date = models.DateField(
@@ -305,7 +303,7 @@ class Agreement(TimeFramedModel, TimeStampedModel):
 
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         related_name='signed_pcas',
         null=True, blank=True
     )
@@ -435,13 +433,13 @@ class PCA(AdminURLMixin, models.Model):
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
 
     unicef_manager = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         related_name='approved_partnerships',
         verbose_name=u'Signed by',
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         verbose_name='Unicef focal points',
         blank=True
     )

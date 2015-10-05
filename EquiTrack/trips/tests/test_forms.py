@@ -1,11 +1,11 @@
 __author__ = 'unicef-leb-inn'
 
 from datetime import timedelta, datetime
-
-from django.test import TestCase
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import TripFactory, UserFactory, PartnerFactory, PartnershipFactory
+from tenant_schemas.test.cases import TenantTestCase
+
+from EquiTrack.factories import TripFactory, UserFactory, PartnershipFactory
 from trips.forms import TripForm, TravelRoutesForm
 from trips.models import Trip
 
@@ -24,7 +24,7 @@ def to_dict(instance):
     return data
 
 
-class TestTripForm(TestCase):
+class TestTripForm(TenantTestCase):
 
     def setUp(self):
         self.trip = TripFactory(

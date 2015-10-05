@@ -4,9 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 
 from registration.forms import EmailRegistrationForm, RegistrationForm
-from trips.models import Office
-from reports.models import Sector
-from users.models import UserProfile
+from .models import UserProfile, Country, Section, Office
 
 User = get_user_model()
 
@@ -24,13 +22,18 @@ class UnicefEmailRegistrationForm(EmailRegistrationForm):
 
     first_name = forms.CharField(max_length=254)
     last_name = forms.CharField(max_length=254)
+    country = forms.ModelChoiceField(
+        Country.objects.all(),
+        empty_label='Country',
+        widget=forms.Select(attrs={'class': 'form-control input-sm'})
+    )
     office = forms.ModelChoiceField(
         Office.objects.all(),
         empty_label='Office',
         widget=forms.Select(attrs={'class': 'form-control input-sm'})
     )
     section = forms.ModelChoiceField(
-        Sector.objects.all(),
+        Section.objects.all(),
         empty_label='Section',
         widget=forms.Select(attrs={'class': 'form-control input-sm'})
     )
@@ -52,13 +55,13 @@ class UnicefEmailRegistrationForm(EmailRegistrationForm):
 
 
 class ProfileForm(forms.ModelForm):
-    office = forms.ModelChoiceField(
-        Office.objects.all(),
-        empty_label='Office',
+    country = forms.ModelChoiceField(
+        Country.objects.all(),
+        empty_label='Country',
         widget=forms.Select(attrs={'class': 'form-control input-sm'})
     )
     section = forms.ModelChoiceField(
-        Sector.objects.all(),
+        Section.objects.all(),
         empty_label='Section',
         widget=forms.Select(attrs={'class': 'form-control input-sm'})
     )

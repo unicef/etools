@@ -7,7 +7,7 @@ from django.contrib.auth.admin import UserAdmin
 from import_export import resources
 from import_export.admin import ImportExportMixin
 
-from .models import UserProfile
+from .models import UserProfile, Country, Office
 
 
 class ProfileInline(admin.StackedInline):
@@ -47,3 +47,6 @@ class ProfileAdmin(admin.ModelAdmin):
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
+admin.site.register(Country)
+admin.site.register(Office)
+

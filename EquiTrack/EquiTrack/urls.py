@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+
+from django.conf import settings
 from django.conf.urls import patterns, include, url
 from django.contrib.auth.decorators import login_required
 
@@ -42,9 +45,16 @@ urlpatterns = patterns(
     url(r'^admin/', include(admin.site.urls)),
 
     # helper urls
-    url(r'^messages/', include('messages_extends.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 )
+
+if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns += patterns(
+        '',
+        url(r'^__debug__/', include(debug_toolbar.urls)),
+    )

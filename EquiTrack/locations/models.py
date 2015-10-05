@@ -39,7 +39,7 @@ class Governorate(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
+    color = ColorPickerField(null=True, blank=True, default=get_random_color)
 
     geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
@@ -60,7 +60,7 @@ class Region(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
+    color = ColorPickerField(null=True, blank=True, default=get_random_color)
 
     geom = models.MultiPolygonField(null=True, blank=True)
     objects = models.GeoManager()
@@ -86,7 +86,7 @@ class Locality(models.Model):
         blank=True, null=True,
         verbose_name='Admin type'
     )
-    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
+    color = ColorPickerField(null=True, blank=True, default=get_random_color)
 
 
     geom = models.MultiPolygonField(null=True, blank=True)
@@ -198,7 +198,7 @@ class CartoDBTable(models.Model):
     name_col = models.CharField(max_length=254, default='name')
     pcode_col = models.CharField(max_length=254, default='pcode')
     parent_code_col = models.CharField(max_length=254, null=True, blank=True)
-    color = ColorPickerField(null=True, blank=True, default=lambda: get_random_color())
+    color = ColorPickerField(null=True, blank=True, default=get_random_color)
 
     def __unicode__(self):
         return self.table_name

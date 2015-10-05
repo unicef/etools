@@ -4,8 +4,7 @@ import datetime
 
 from django.db import models
 from django.db.models import Q
-from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from smart_selects.db_fields import ChainedForeignKey
 from django.contrib.contenttypes.generic import (
@@ -18,37 +17,17 @@ from filer.fields.file import FilerFileField
 import reversion
 
 from EquiTrack.mixins import AdminURLMixin
-# from locations.models import LinkedLocation
 from reports.models import WBS
 from funds.models import Grant
+from users.models import Office, Section
 from locations.models import Governorate, Locality, Location, Region
 from . import emails
-
-
-User = get_user_model()
 
 BOOL_CHOICES = (
     (None, "N/A"),
     (True, "Yes"),
     (False, "No")
 )
-
-
-class Office(models.Model):
-    name = models.CharField(max_length=254)
-    zonal_chief = models.ForeignKey(
-        User,
-        blank=True, null=True,
-        related_name='offices',
-        verbose_name='Chief'
-    )
-    location = models.ForeignKey(
-        Governorate,
-        blank=True, null=True,
-    )
-
-    def __unicode__(self):
-        return self.name
 
 
 class Trip(AdminURLMixin, models.Model):
@@ -143,7 +122,7 @@ class Trip(AdminURLMixin, models.Model):
         help_text='Is a Travel Authorisation (TA) is required?'
     )
     programme_assistant = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         blank=True, null=True,
         verbose_name='Staff Responsible for TA',
         help_text='Needed if a Travel Authorisation (TA) is required',
@@ -157,18 +136,18 @@ class Trip(AdminURLMixin, models.Model):
     ta_drafted_date = models.DateField(blank=True, null=True)
     ta_reference = models.CharField(max_length=254, blank=True, null=True)
     vision_approver = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         blank=True, null=True,
         verbose_name='VISION Approver'
     )
 
     locations = GenericRelation('locations.LinkedLocation')
 
-    owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
-    section = models.ForeignKey('reports.Sector', blank=True, null=True)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Traveller', related_name='trips')
+    section = models.ForeignKey(Section, blank=True, null=True)
     office = models.ForeignKey(Office, blank=True, null=True)
     travel_assistant = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         blank=True, null=True,
         related_name='organised_trips',
         verbose_name='Travel focal point'
@@ -176,15 +155,15 @@ class Trip(AdminURLMixin, models.Model):
     transport_booked = models.BooleanField(default=False)
     security_granted = models.BooleanField(default=False)
 
-    supervisor = models.ForeignKey(User, related_name='supervised_trips')
+    supervisor = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='supervised_trips')
     approved_by_supervisor = models.BooleanField(default=False)
     date_supervisor_approved = models.DateField(blank=True, null=True)
 
-    budget_owner = models.ForeignKey(User, related_name='budgeted_trips', blank=True, null=True,)
+    budget_owner = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='budgeted_trips', blank=True, null=True,)
     approved_by_budget_owner = models.BooleanField(default=False)
     date_budget_owner_approved = models.DateField(blank=True, null=True)
 
-    human_resources = models.ForeignKey(User, related_name='certified_trips', blank=True, null=True)
+    human_resources = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='certified_trips', blank=True, null=True)
     approved_by_human_resources = models.NullBooleanField(
         default=None,
         choices=BOOL_CHOICES,
@@ -192,7 +171,7 @@ class Trip(AdminURLMixin, models.Model):
         help_text='HR must approve all trips relating to training and staff development')
     date_human_resources_approved = models.DateField(blank=True, null=True)
 
-    representative = models.ForeignKey(User, related_name='approved_trips', blank=True, null=True)
+    representative = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='approved_trips', blank=True, null=True)
     representative_approval = models.NullBooleanField(default=None, choices=BOOL_CHOICES)
     date_representative_approved = models.DateField(blank=True, null=True)
 
@@ -306,10 +285,11 @@ class Trip(AdminURLMixin, models.Model):
             instance.owner.email,
             instance.supervisor.email]
 
+        #TODO: Make this work now that offices are moved into the global schema
         # get zonal chiefs emails if travelling in their respective zones
-        locations = instance.locations.all().values_list('governorate__id', flat=True)
-        offices = Office.objects.filter(location_id__in=locations)
-        zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
+        # locations = instance.locations.all().values_list('governorate__id', flat=True)
+        # offices = Office.objects.filter(location_id__in=locations)
+        # zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
 
         if instance.budget_owner:
             if instance.budget_owner.email not in recipients:
@@ -332,7 +312,7 @@ class Trip(AdminURLMixin, models.Model):
             if instance.travel_assistant:
                 recipients.append(instance.travel_assistant.email)
 
-            recipients.extend(zonal_chiefs)
+            #recipients.extend(zonal_chiefs)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
                 *recipients
@@ -361,7 +341,7 @@ class Trip(AdminURLMixin, models.Model):
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
 
-                recipients.extend(zonal_chiefs)
+                #recipients.extend(zonal_chiefs)
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
                     *recipients
@@ -465,8 +445,7 @@ class ActionPoint(models.Model):
     trip = models.ForeignKey(Trip)
     description = models.CharField(max_length=254)
     due_date = models.DateField()
-    person_responsible = models.ForeignKey(User, related_name='for_action')
-    persons_responsible = models.ManyToManyField(User, blank=True, null=True)
+    person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='for_action')
     actions_taken = models.TextField(blank=True, null=True)
     completed_date = models.DateField(blank=True, null=True)
     comments = models.TextField(blank=True, null=True)
@@ -524,15 +503,17 @@ class ActionPoint(models.Model):
 post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 
+def get_report_filename():
+    return '/'.join(['trip_reports'])
+
+
 class FileAttachment(models.Model):
 
     trip = models.ForeignKey(Trip, null=True, blank=True, related_name=u'files')
     type = models.ForeignKey(u'partners.FileType')
     file = FilerFileField(null=True, blank=True)
     report = models.FileField(
-        #upload_to=lambda instance, filename: '/'.join(['trip_reports', str(instance.content_object.id), filename])
-        upload_to=lambda instance, filename: '/'.join(['trip_reports', str(instance.trip.id), filename])
-        #upload_to=u'trip_reports''
+        upload_to=get_report_filename
     )
 
     content_type = models.ForeignKey(ContentType, null=True, blank=True)

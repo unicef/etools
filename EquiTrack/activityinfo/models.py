@@ -201,8 +201,8 @@ class AttributeGroup(models.Model):
     activity = models.ForeignKey(Activity)
     ai_id = models.PositiveIntegerField(unique=True)
     name = models.CharField(max_length=254)
-    multiple_allowed = models.BooleanField()
-    mandatory = models.BooleanField()
+    multiple_allowed = models.BooleanField(default=False)
+    mandatory = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.name

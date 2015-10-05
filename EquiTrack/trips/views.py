@@ -28,10 +28,10 @@ from rest_framework.exceptions import (
 from rest_framework.parsers import MultiPartParser, FormParser
 
 
-from users.models import UserProfile
+from users.models import UserProfile, Office
 from reports.models import Sector
 from partners.models import FileType
-from .models import Trip, Office, FileAttachment
+from .models import Trip, FileAttachment
 from .serializers import TripSerializer
 from .forms import TripFilterByDateForm
 
@@ -105,7 +105,6 @@ class TripUploadPictureView(APIView):
         return Response(status=204)
 
 
-
 class TripsListApi(ListAPIView):
 
     model = Trip
@@ -115,8 +114,6 @@ class TripsListApi(ListAPIView):
         user = self.request.user
         trips = Trip.get_all_trips(user)
         return trips
-
-
 
 
 class TripDetailsView(RetrieveUpdateDestroyAPIView):
