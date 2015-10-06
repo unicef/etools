@@ -304,7 +304,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         form = super(TripReportAdmin, self).get_form(request, obj, **kwargs)
         form.request = request
         try:
-            user_profile = request.user.get_profile()
+            user_profile = request.user.profile
             form.base_fields['owner'].initial = request.user
             form.base_fields['office'].initial = user_profile.office
             form.base_fields['section'].initial = user_profile.section

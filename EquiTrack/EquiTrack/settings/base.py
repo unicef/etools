@@ -484,7 +484,9 @@ SHARED_APPS = (
     'djangosaml2',
 
     'registration',
-    'users',  # you must list the app where your tenant model resides in
+
+    # you must list the app where your tenant model resides in
+    'users',
 )
 
 # Apps specific for this project go here.

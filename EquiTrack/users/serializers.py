@@ -33,6 +33,7 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
             'full_name'
         )
 
+
 class UserSerializer(serializers.ModelSerializer):
 
     # profile = serializers.SerializerMethodField('get_profile')
@@ -43,7 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_profile(self, user):
         try:
             return UserProfileSerializer(
-                user.get_profile()
+                user.profile
             ).data
         except Exception:
             return None

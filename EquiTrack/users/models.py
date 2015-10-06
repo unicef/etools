@@ -8,7 +8,7 @@ from registration.models import RegistrationManager, RegistrationProfile
 from tenant_schemas.models import TenantMixin
 from locations.models import Governorate
 
-User.__unicode__ = lambda user: user.get_full_name()
+User.__unicode__ = lambda user: u'{} ({})'.format(user.get_full_name(), user.profile.country)
 User._meta.ordering = ['first_name']
 
 

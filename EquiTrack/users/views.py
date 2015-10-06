@@ -41,7 +41,7 @@ class UserAuthAPIView(RetrieveAPIView):
         user = self.request.user
         q = self.request.GET.get('device_id', None)
         if q is not None:
-            profile = user.get_profile()
+            profile = user.profile
             profile.installation_id = string.replace(q, "_", "-")
             profile.save()
         return user
@@ -97,7 +97,7 @@ class ProfileEdit(FormView):
         """  Returns the initial data to use for forms on this view.  """
         initial = super(ProfileEdit, self).get_initial()
         try:
-            profile = self.request.user.get_profile()
+            profile = self.request.user.profile
             initial['office'] = profile.office
             initial['section'] = profile.section
             initial['job_title'] = profile.job_title
