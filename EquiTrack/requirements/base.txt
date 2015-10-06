@@ -8,7 +8,7 @@ dj-database-url==0.2.2
 easy-thumbnails==1.4
 celery==3.1.12
 dealer==2.0.4
-django-celery==3.1.10
+django-celery==3.1.16
 django-celery-email==1.1.1
 django-filer==0.9.12
 django-storages==1.1.8
