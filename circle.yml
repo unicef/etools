@@ -27,4 +27,9 @@ deployment:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker tag unicef/equitrack:$CIRCLE_SHA1 unicef/equitrack:develop
       - docker push unicef/equitrack:develop
-      - ./deploy_staging.sh
+
+    branch: etools
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker tag unicef/equitrack:$CIRCLE_SHA1 unicef/equitrack:etools
+      - docker push unicef/equitrack:etools
