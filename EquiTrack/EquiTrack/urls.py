@@ -45,6 +45,7 @@ urlpatterns = patterns(
     url(r'^admin/', include(admin.site.urls)),
 
     # helper urls
+    url(r'^saml2/', include('djangosaml2.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
@@ -57,4 +58,5 @@ if settings.DEBUG:
     urlpatterns += patterns(
         '',
         url(r'^__debug__/', include(debug_toolbar.urls)),
+        url(r'^test/', 'djangosaml2.views.echo_attributes'),
     )

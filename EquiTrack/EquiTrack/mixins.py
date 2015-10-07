@@ -5,13 +5,13 @@ __author__ = 'jcranwellward'
 
 from django.conf import settings
 from django.db import connection
-from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
 
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
+from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 
 
 class AdminURLMixin(object):
@@ -38,7 +38,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
         # the tenant metadata is stored.
         connection.set_schema_to_public()
 
-        if u'login' in request.path or u'register' in request.path:
+        if u'login' in request.path or u'api' in request.path:
             return None
         elif request.user.is_anonymous():
             return HttpResponseRedirect(settings.LOGIN_URL)
@@ -62,3 +62,17 @@ class EToolsTenantMiddleware(TenantMiddleware):
         # Do we have a public-specific urlconf?
         if hasattr(settings, 'PUBLIC_SCHEMA_URLCONF') and request.tenant.schema_name == get_public_schema_name():
             request.urlconf = settings.PUBLIC_SCHEMA_URLCONF
+
+
+class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
+    """
+    Handles setting the tenant after a JWT successful authentication
+    """
+    def authenticate(self, request):
+
+        user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
+
+        connection.set_tenant(user.profile.country)
+
+        return user, jwt_value
+
