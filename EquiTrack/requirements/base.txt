@@ -42,6 +42,7 @@ django-cors-headers==1.0.0
 django-mathfilters==0.3.0
 django-tenant-schemas==1.5.7
 djangosaml2==0.13.0
+tenant-schemas-celery==0.1.5
 
 # testing libs
 coverage==4.0
