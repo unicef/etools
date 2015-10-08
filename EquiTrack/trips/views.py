@@ -70,15 +70,11 @@ class TripUploadPictureView(APIView):
 
         #get the file object
         file_obj = request.data.get('file')
-        logging.info(file_obj)
-        logging.info(request.data)
         if not file_obj:
             raise ParseError(detail="No file was sent.")
-
         # get the trip id from the url
         trip_id = kwargs.get("trip")
         trip = Trip.objects.filter(pk=trip_id).get()
-
         # rename the file to picture
         # the file field automatically adds incremental numbers
         mime_types = {"image/jpeg": "jpeg",
@@ -91,8 +87,10 @@ class TripUploadPictureView(APIView):
 
         #file_obj.name = "picture." + ext
         # format it "tenant_picture_01.jpg" this way will be making the file easier to search
-        file_obj.name = request.user.contry.name + "_picture." + ext
 
+        file_obj.name = request.tenant.name + "_picture." + ext
+
+        logging.info('got so far no problem 3')
         # get the picture type
         pictureType, created = FileType.objects.get_or_create(name='Picture')
 
