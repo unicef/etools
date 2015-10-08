@@ -278,7 +278,7 @@ class Trip(AdminURLMixin, models.Model):
     def save(self, **kwargs):
         # check if trip can be approved
         if self.can_be_approved:
-            self.approved_date = datetime.datetime.today()
+            self.approved_date = datetime.date.today()
             self.status = Trip.APPROVED
 
         if self.status is not Trip.CANCELLED and self.cancelled_reason:

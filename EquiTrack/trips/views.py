@@ -1,7 +1,7 @@
 __author__ = 'jcranwellward'
 
 import json
-from datetime import datetime
+import datetime
 import logging
 
 from django.db.models import Q
@@ -47,7 +47,7 @@ def get_trip_months():
 
     dates = set(trips.values_list('from_date', flat=True))
 
-    months = list(set([datetime(date.year, date.month, 1) for date in dates]))
+    months = list(set([datetime.datetime(date.year, date.month, 1) for date in dates]))
 
     return sorted(months, reverse=True)
 
@@ -67,12 +67,17 @@ class TripUploadPictureView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, **kwargs):
-        #get the file object
-        file_obj = request.data['file']
 
-        #get the trip id from the url
-        tripId = kwargs.get("trip")
-        trip = Trip.objects.filter(pk=tripId).get()
+        #get the file object
+        file_obj = request.data.get('file')
+        logging.info(file_obj)
+        logging.info(request.data)
+        if not file_obj:
+            raise ParseError(detail="No file was sent.")
+
+        # get the trip id from the url
+        trip_id = kwargs.get("trip")
+        trip = Trip.objects.filter(pk=trip_id).get()
 
         # rename the file to picture
         # the file field automatically adds incremental numbers
@@ -131,20 +136,45 @@ class TripActionView(GenericAPIView):
 
     def post(self, request, *args, **kwargs):
         action = kwargs.get('action', False)
+        current_user = self.request.user
 
+        # for now... hardcoding some validation in here.
         if action not in ["approved", "submitted", "cancelled"]:
             raise ParseError(detail="action must be a valid action")
 
         trip = self.get_object()
 
-        serializer = self.get_serializer(data={"status":action},
+        # some more hard-coded validation:
+        if current_user.id not in [trip.owner.id, trip.supervisor.id]:
+            raise PermissionDenied(detail="You must be the traveller or the supervisor to change the status of the trip")
+
+
+        # serializer = self.get_serializer(data={"status":action},
+        #                                  instance=trip,
+        #                                  partial=True)
+
+        if action == 'approved':
+            # make sure the current user is the supervisor:
+            # maybe in the future allow an admin to make this change as well.
+            if not current_user.id == trip.supervisor.id:
+                raise PermissionDenied(detail="You must be the supervisor to approve this trip")
+
+            data = {"approved_by_supervisor": True,
+                    "date_supervisor_approved": datetime.date.today()}
+
+        else:
+            data = {"status": action,
+                    "approved_by_supervisor": False,
+                    "approved_date": None,
+                    "date_supervisor_approved": None}
+
+        serializer = self.get_serializer(data=data,
                                          instance=trip,
                                          partial=True)
 
         if not serializer.is_valid():
             raise ParseError(detail="data submitted is not valid")
         serializer.save()
-
 
         return Response(serializer.data)
 
