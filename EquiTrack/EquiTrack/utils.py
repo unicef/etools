@@ -9,7 +9,6 @@ import traceback
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
 from django.utils.datastructures import SortedDict
-from django.http.response import HttpResponseRedirect
 
 from import_export.resources import ModelResource
 from post_office.models import EmailTemplate

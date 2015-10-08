@@ -55,4 +55,89 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
+LOGIN_URL = '/saml2/login/'
+SAML_ATTRIBUTE_MAPPING = {
+    'upn': ('username', ),
+    'emailAddress': ('email', ),
+    'givenname': ('first_name', ),
+    'surname': ('last_name', ),
+}
+SAML_USE_NAME_ID_AS_USERNAME = True
+SAML_CREATE_UNKNOWN_USER = True
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'djangosaml2.backends.Saml2Backend',
+)
+SAML_CONFIG = {
+    # full path to the xmlsec1 binary programm
+    'xmlsec_binary': '/usr/local/bin/xmlsec1',
 
+    # your entity id, usually your subdomain plus the url to the metadata view
+    'entityid': 'https://{}/saml2/metadata/'.format('etools.localtunnel.me'),
+
+    # directory with attribute mapping
+    'attribute_map_dir': join(DJANGO_ROOT, 'saml/attribute-maps'),
+
+    # this block states what services we provide
+    'service': {
+        # we are just a lonely SP
+        'sp': {
+            'name': 'eTools',
+            'name_id_format': saml.NAMEID_FORMAT_PERSISTENT,
+            'endpoints': {
+                # url and binding to the assetion consumer service view
+                # do not change the binding or service name
+                'assertion_consumer_service': [
+                    ('https://{}/saml2/acs/'.format(HOST),
+                     saml2.BINDING_HTTP_POST),
+                ],
+                # url and binding to the single logout service view
+                # do not change the binding or service name
+                'single_logout_service': [
+                    ('https://{}/saml2/ls/'.format(HOST),
+                     saml2.BINDING_HTTP_REDIRECT),
+                    ('https://{}/saml2/ls/post'.format(HOST),
+                     saml2.BINDING_HTTP_POST),
+                ],
+
+            },
+
+            # attributes that this project needs to identify a user
+            'required_attributes': ['upn', 'emailAddress'],
+        },
+    },
+    # where the remote metadata is stored
+    'metadata': {
+        "local": [join(DJANGO_ROOT, 'saml/federationmetadata.xml')],
+        # "remote": [
+        #     {
+        #         "url": "http://sts.unicef.org/federationmetadata/2007-06/federationmetadata.xml",
+        #         "cert": join(DJANGO_ROOT, 'saml/certs/sts.unicef.org.cer')
+        #     }
+        # ],
+    },
+
+    # set to 1 to output debugging information
+    'debug': 1,
+
+    # certificate
+    'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
+    'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
+
+    # own metadata settings
+    'contact_person': [
+        {'given_name': 'James',
+         'sur_name': 'Cranwell-Ward',
+         'company': 'UNICEF',
+         'email_address': 'jcranwellward@unicef.org',
+         'contact_type': 'technical'},
+    ],
+    # you can set multilanguage information here
+    'organization': {
+        'name': [('UNICEF', 'en')],
+        'display_name': [('UNICEF', 'en')],
+        'url': [('http://www.unicef.org', 'en')],
+    },
+    'valid_for': 24,  # how long is our metadata valid
+}
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.PickleSerializer'
