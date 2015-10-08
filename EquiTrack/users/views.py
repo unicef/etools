@@ -50,7 +50,10 @@ class UserAuthAPIView(RetrieveAPIView):
 class UsersView(ListAPIView):
     model = UserProfile
     serializer_class = SimpleProfileSerializer
-    queryset = model.objects.order_by('user__first_name')
+
+    def get_queryset(self):
+        user = self.request.user
+        return self.model.objects.filter(country=user.profile.country).order_by('user__first_name')
 
 
 class ProfileView(TemplateView):
