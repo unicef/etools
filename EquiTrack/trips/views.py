@@ -91,7 +91,7 @@ class TripUploadPictureView(APIView):
 
         #file_obj.name = "picture." + ext
         # format it "tenant_picture_01.jpg" this way will be making the file easier to search
-        file_obj.name = request.tenant.name + "_picture." + ext
+        file_obj.name = request.user.contry.name + "_picture." + ext
 
         # get the picture type
         pictureType, created = FileType.objects.get_or_create(name='Picture')
