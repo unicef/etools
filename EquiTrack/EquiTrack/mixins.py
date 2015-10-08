@@ -73,6 +73,7 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
 
         connection.set_tenant(user.profile.country)
+        request.tenant = user.profile.country
 
         return user, jwt_value
 

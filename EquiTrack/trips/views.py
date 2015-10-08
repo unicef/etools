@@ -68,10 +68,9 @@ class TripUploadPictureView(APIView):
 
     def post(self, request, **kwargs):
 
-        #get the file object
+        # get the file object
         file_obj = request.data.get('file')
-        logging.info(file_obj)
-        logging.info(request.data)
+        logging.info("File received: {}".format(file_obj))
         if not file_obj:
             raise ParseError(detail="No file was sent.")
 
@@ -79,7 +78,6 @@ class TripUploadPictureView(APIView):
         trip_id = kwargs.get("trip")
         trip = Trip.objects.filter(pk=trip_id).get()
 
-        # rename the file to picture
         # the file field automatically adds incremental numbers
         mime_types = {"image/jpeg": "jpeg",
                       "image/png": "png"}
@@ -89,17 +87,20 @@ class TripUploadPictureView(APIView):
         else:
             raise ParseError(detail="File type not supported")
 
+        # format it "picture_01.jpg" this way will be making the file easier to search
         file_obj.name = "picture." + ext
 
         # get the picture type
-        pictureType, created = FileType.objects.get_or_create(name='Picture')
+        picture_type, created = FileType.objects.get_or_create(name='Picture')
 
         # create the FileAttachment object
         # TODO: desperate need of validation here: need to check if file is indeed a valid picture type
         # TODO: potentially process the image at this point to reduce size / create thumbnails
-        FileAttachment.objects.create(**{"report": file_obj,
-                            "type": pictureType,
-                            "trip": trip})
+        FileAttachment.objects.create(
+            **{"report": file_obj,
+            "type": picture_type,
+            "trip": trip}
+        )
 
         # TODO: return a more meaningful response
         return Response(status=204)
@@ -144,11 +145,6 @@ class TripActionView(GenericAPIView):
         # some more hard-coded validation:
         if current_user.id not in [trip.owner.id, trip.supervisor.id]:
             raise PermissionDenied(detail="You must be the traveller or the supervisor to change the status of the trip")
-
-
-        # serializer = self.get_serializer(data={"status":action},
-        #                                  instance=trip,
-        #                                  partial=True)
 
         if action == 'approved':
             # make sure the current user is the supervisor:

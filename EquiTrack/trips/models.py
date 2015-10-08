@@ -476,12 +476,7 @@ class ActionPoint(models.Model):
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
 
-        recipients = [
-            user.email
-            for user in
-            instance.persons_responsible.all()
-        ]
-        recipients.append(instance.trip.supervisor.email)
+        recipients = [instance.person_responsible.email, instance.trip.supervisor.email]
 
         if created:
             emails.TripActionPointCreated(instance).send(
@@ -503,8 +498,13 @@ class ActionPoint(models.Model):
 post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 
-def get_report_filename():
-    return '/'.join(['trip_reports'])
+def get_report_filename(instance, filename):
+    return '/'.join([
+        'trip_reports',
+        instance.trip.owner.profile.country.name,
+        str(instance.trip.id),
+        filename
+    ])
 
 
 class FileAttachment(models.Model):

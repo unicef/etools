@@ -193,12 +193,7 @@ class TripActionPointCreated(BaseEmail):
                 self.object.get_admin_url()
             ),
             'owner_name': self.object.owner.get_full_name(),
-            'responsible': ', '.join(
-                [
-                    user.get_full_name()
-                    for user in self.action.persons_responsible.all()
-                ]
-            ),
+            'responsible': self.action.person_responsible.get_full_name(),
             'state': 'Created'
         }
 
