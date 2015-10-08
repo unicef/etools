@@ -30,6 +30,7 @@ urlpatterns = patterns(
     url(r'partners/', include('partners.urls')),
     url(r'trips/', include('trips.urls')),
     url(r'users/', include('users.urls')),
+    url(r'supplies/', include('supplies.urls')),
 
     # auth
     url(r'', include('registration.auth_urls')),

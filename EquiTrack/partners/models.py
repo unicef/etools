@@ -2,18 +2,13 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-import json
 import datetime
-from copy import deepcopy
 
-import requests
-import reversion
 from django.conf import settings
-from django.db import models, transaction
+from django.db import models
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
-from django.db.models import Sum
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
@@ -44,9 +39,21 @@ from locations.models import (
     Region,
 )
 from supplies.models import SupplyItem
+from supplies.tasks import set_unisupply_distribution
 from . import emails
 
 User = get_user_model()
+
+HIGH = u'high'
+SIGNIFICANT = u'significant'
+MODERATE = u'moderate'
+LOW = u'low'
+RISK_RATINGS = (
+    (HIGH, u'High'),
+    (SIGNIFICANT, u'Significant'),
+    (MODERATE, u'Moderate'),
+    (LOW, u'Low'),
+)
 
 
 class PartnerOrganization(models.Model):
@@ -54,20 +61,42 @@ class PartnerOrganization(models.Model):
     NATIONAL = u'national'
     INTERNATIONAL = u'international'
     UNAGENCY = u'un-agency'
+    CBO = u'cbo'
+    ACADEMIC = u'academic',
+    FOUNDATION = u'foundation',
     PARTNER_TYPES = (
-        (NATIONAL, u"National"),
         (INTERNATIONAL, u"International"),
-        (UNAGENCY, u"UN Agency"),
+        (NATIONAL, u"CSO"),
+        (CBO, u"CBO"),
+        (ACADEMIC, u"Academic Inst."),
+        (FOUNDATION, u"Foundation")
     )
 
     type = models.CharField(
         max_length=50,
         choices=PARTNER_TYPES,
-        default=NATIONAL
+        default=NATIONAL,
+        verbose_name=u'CSO Type'
+    )
+    partner_type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            u'Government',
+            u'Civil Society Organisation',
+            u'UN Agency',
+            u'Inter-governmental Organisation',
+            u'Bi-Lateral Organisation'
+        ), blank=True, null=True
     )
     name = models.CharField(
         max_length=255,
-        unique=True
+        unique=True,
+        verbose_name='Full Name',
+        help_text=u'Please make sure this matches the name you enter in VISION'
+    )
+    short_name = models.CharField(
+        max_length=50,
+        blank=True
     )
     description = models.CharField(
         max_length=256L,
@@ -78,10 +107,6 @@ class PartnerOrganization(models.Model):
         null=True
     )
     email = models.CharField(
-        max_length=255,
-        blank=True
-    )
-    contact_person = models.CharField(
         max_length=255,
         blank=True
     )
@@ -102,9 +127,15 @@ class PartnerOrganization(models.Model):
         blank=True,
         null=True
     )
-    activity_info_partner = models.ForeignKey(
-        'activityinfo.Partner',
-        blank=True, null=True
+    rating = models.CharField(
+        max_length=50,
+        choices=RISK_RATINGS,
+        default=HIGH,
+        verbose_name=u'Risk Rating'
+    )
+    core_values_assessment_date = models.DateField(
+        blank=True, null=True,
+        verbose_name=u'Date positively assessed against core values'
     )
 
     class Meta:
@@ -133,36 +164,18 @@ class PartnerStaffMember(models.Model):
 
 class Assessment(models.Model):
 
-    SFMC = u'checklist'
-    MICRO = u'micro'
-    MACRO = u'macro'
-    HIGH = u'high'
-    SIGNIFICANT = u'significant'
-    MODERATE = u'moderate'
-    LOW = u'low'
-    ASSESSMENT_TYPES = (
-        (SFMC, u"Simplified financial management checklist"),
-        (MICRO, u"Micro-Assessment"),
-        (MACRO, u"Macro-Assessment"),
-    )
-    RISK_RATINGS = (
-        (HIGH, u'High'),
-        (SIGNIFICANT, u'Significant'),
-        (MODERATE, u'Moderate'),
-        (LOW, u'Low'),
-    )
-
     partner = models.ForeignKey(
         PartnerOrganization
     )
     type = models.CharField(
         max_length=50,
-        choices=ASSESSMENT_TYPES,
-    )
-    previous_value_with_UN = models.IntegerField(
-        default=0,
-        help_text=u'Value of agreements with other '
-                  u'UN agencies in the last 5 years'
+        choices=Choices(
+            u'Micro Assessment',
+            u'Simplified Checklist',
+            u'Scheduled Audit report',
+            u'Special Audit report',
+            u'Other',
+        ),
     )
     names_of_other_agencies = models.CharField(
         max_length=255,
@@ -170,7 +183,9 @@ class Assessment(models.Model):
         help_text=u'List the names of the other '
                   u'agencies they have worked with'
     )
-    expected_budget = models.IntegerField()
+    expected_budget = models.IntegerField(
+        verbose_name=u'Planned amount'
+    )
     notes = models.CharField(
         max_length=255,
         blank=True, null=True,
@@ -200,8 +215,13 @@ class Assessment(models.Model):
         choices=RISK_RATINGS,
         default=HIGH,
     )
-    report = FilerFileField(
-        blank=True, null=True
+    report = models.FileField(
+        blank=True, null=True,
+        upload_to='assessments'
+    )
+    current = models.BooleanField(
+        default=True,
+        verbose_name=u'Basis for risk rating'
     )
 
     def __unicode__(self):
@@ -212,14 +232,6 @@ class Assessment(models.Model):
             date=self.completed_date.strftime("%d-%m-%Y") if
             self.completed_date else u'NOT COMPLETED'
         )
-
-    def download_url(self):
-        if self.report:
-            return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" >Download</a>'.format(self.report.file.url)
-        return u''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Report'
 
 
 class Recommendation(models.Model):
@@ -246,7 +258,7 @@ class Recommendation(models.Model):
     assessment = models.ForeignKey(Assessment)
     subject_area = models.CharField(max_length=50, choices=SUBJECT_AREAS)
     description = models.CharField(max_length=254)
-    level = models.CharField(max_length=50, choices=Assessment.RISK_RATINGS,
+    level = models.CharField(max_length=50, choices=RISK_RATINGS,
                              verbose_name=u'Priority Flag')
     closed = models.BooleanField(default=False, verbose_name=u'Closed?')
     completed_date = models.DateField(blank=True, null=True)
@@ -265,12 +277,14 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     PCA = u'PCA'
     MOU = u'MOU'
     SSFA = u'SSFA'
+    IC = u'ic'
     AWP = u'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Partner Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
-        #(AWP, u"Annual Work Plan"),
+        (IC, u'Institutional Contract'),
+        (AWP, u"Annual Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -343,13 +357,11 @@ class PCA(AdminURLMixin, models.Model):
     )
     PD = u'pd'
     SHPD = u'shpd'
-    IC = u'ic'
     DCT = u'dct'
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (IC, u'Institutional Contract'),
-        #(DCT, u'Government Transfer'),
+        (DCT, u'DCT to Government'),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -365,7 +377,8 @@ class PCA(AdminURLMixin, models.Model):
         choices=PARTNERSHIP_TYPES,
         default=PD,
         blank=True, null=True,
-        max_length=255
+        max_length=255,
+        verbose_name=u'Document type'
     )
     result_structure = models.ForeignKey(
         ResultStructure,
@@ -459,7 +472,6 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
     )
 
-
     # budget
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
     unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -479,8 +491,8 @@ class PCA(AdminURLMixin, models.Model):
     original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
-        verbose_name = 'Programme Intervention'
-        verbose_name_plural = 'Programme Interventions'
+        verbose_name = 'Intervention'
+        verbose_name_plural = 'Interventions'
         ordering = ['-number', 'amendment']
 
     def __unicode__(self):
@@ -747,11 +759,6 @@ class PCASector(TimeStampedModel):
             self.sector.name,
         )
 
-    def changeform_link(self):
-        return get_changeform_link(self, link_name='Details')
-    changeform_link.allow_tags = True
-    changeform_link.short_description = 'View Sector Details'
-
 
 class PCASectorOutput(models.Model):
 
@@ -850,31 +857,6 @@ class PCAFile(models.Model):
     download_url.short_description = 'Download Files'
 
 
-class SpotCheck(models.Model):
-
-    pca = models.ForeignKey(PCA)
-    sector = models.ForeignKey(
-        Sector,
-        blank=True, null=True
-    )
-    planned_date = models.DateField(
-        blank=True, null=True
-    )
-    completed_date = models.DateField(
-        blank=True, null=True
-    )
-    amount = models.IntegerField(
-        null=True, blank=True,
-        default=0
-    )
-    recommendations = models.TextField(
-        blank=True, null=True
-    )
-    partner_agrees = models.BooleanField(
-        default=False
-    )
-
-
 class ResultChain(models.Model):
 
     partnership = models.ForeignKey(PCA, related_name='results')
@@ -933,4 +915,28 @@ class DistributionPlan(models.Model):
     quantity = models.PositiveIntegerField(
         help_text=u'Quantity required for this location'
     )
+    send = models.BooleanField(
+        default=False,
+        verbose_name=u'Send to partner?'
+    )
+    sent = models.BooleanField(default=False)
+    delivered = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return u'{}-{}-{}-{}'.format(
+            self.partnership,
+            self.item,
+            self.location,
+            self.quantity
+        )
+
+    @classmethod
+    def send_distribution(cls, sender, instance, created, **kwargs):
+
+        if instance.send and not instance.sent:
+            set_unisupply_distribution.delay(instance)
+
+
+post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
+
 

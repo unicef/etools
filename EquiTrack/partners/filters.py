@@ -45,7 +45,7 @@ class PCADonorFilter(admin.SimpleListFilter):
 
         if self.value():
             donor = Donor.objects.get(pk=self.value())
-            pca_ids = PCAGrant.objects.filter(grant__donor=donor).values_list('pca__id')
+            pca_ids = PCAGrant.objects.filter(grant__donor=donor).values_list('partnership__id')
             return queryset.filter(id__in=pca_ids)
         return queryset
 
@@ -65,7 +65,7 @@ class PCAGrantFilter(admin.SimpleListFilter):
 
         if self.value():
             grant = Grant.objects.get(pk=self.value())
-            pca_ids = PCAGrant.objects.filter(grant=grant).values_list('pca__id')
+            pca_ids = PCAGrant.objects.filter(grant=grant).values_list('partnership__id')
             return queryset.filter(id__in=pca_ids)
         return queryset
 

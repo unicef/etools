@@ -1,24 +1,37 @@
 __author__ = 'jcranwellward'
 
 import json
-from datetime import datetime
+import datetime
+import logging
 
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.views.generic import FormView
 from django.core import serializers
+from django.contrib.contenttypes.models import ContentType
 
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.renderers import JSONRenderer
+from rest_framework.generics import (
+    GenericAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    RetrieveUpdateDestroyAPIView
+)
+
 from rest_framework.response import Response
-from rest_framework.authentication import BasicAuthentication
-from rest_framework import status
+from rest_framework.exceptions import (
+    APIException, 
+    PermissionDenied, 
+    ParseError,
+)
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 from users.models import UserProfile
 from reports.models import Sector
-from .models import Trip, Office, ActionPoint
+from partners.models import FileType
+from .models import Trip, Office, FileAttachment
 from .serializers import TripSerializer
 from .forms import TripFilterByDateForm
 
@@ -34,7 +47,7 @@ def get_trip_months():
 
     dates = set(trips.values_list('from_date', flat=True))
 
-    months = list(set([datetime(date.year, date.month, 1) for date in dates]))
+    months = list(set([datetime.datetime(date.year, date.month, 1) for date in dates]))
 
     return sorted(months, reverse=True)
 
@@ -42,7 +55,6 @@ def get_trip_months():
 class TripsApprovedView(ListAPIView):
 
     model = Trip
-    renderer_classes = (JSONRenderer,)
     serializer_class = TripSerializer
 
     def get_queryset(self):
@@ -51,11 +63,53 @@ class TripsApprovedView(ListAPIView):
         )
 
 
-class TripsApi(ListAPIView):
+class TripUploadPictureView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, **kwargs):
+
+        #get the file object
+        file_obj = request.data.get('file')
+        logging.info(file_obj)
+        logging.info(request.data)
+        if not file_obj:
+            raise ParseError(detail="No file was sent.")
+
+        # get the trip id from the url
+        trip_id = kwargs.get("trip")
+        trip = Trip.objects.filter(pk=trip_id).get()
+
+        # rename the file to picture
+        # the file field automatically adds incremental numbers
+        mime_types = {"image/jpeg": "jpeg",
+                      "image/png": "png"}
+
+        if mime_types.get(file_obj.content_type):
+            ext = mime_types.get(file_obj.content_type)
+        else:
+            raise ParseError(detail="File type not supported")
+
+        file_obj.name = "picture." + ext
+
+        # get the picture type
+        pictureType, created = FileType.objects.get_or_create(name='Picture')
+
+        # create the FileAttachment object
+        # TODO: desperate need of validation here: need to check if file is indeed a valid picture type
+        # TODO: potentially process the image at this point to reduce size / create thumbnails
+        FileAttachment.objects.create(**{"report": file_obj,
+                            "type": pictureType,
+                            "trip": trip})
+
+        # TODO: return a more meaningful response
+        return Response(status=204)
+
+
+
+class TripsListApi(ListAPIView):
 
     model = Trip
     serializer_class = TripSerializer
-    authentication_classes = (BasicAuthentication,)
 
     def get_queryset(self):
         user = self.request.user
@@ -63,29 +117,66 @@ class TripsApi(ListAPIView):
         return trips
 
 
-class TripActionView(RetrieveAPIView):
+
+
+class TripDetailsView(RetrieveUpdateDestroyAPIView):
+    model = Trip
+    serializer_class = TripSerializer
+    lookup_url_kwarg = 'trip'
+    queryset = Trip.objects.all()
+
+
+class TripActionView(GenericAPIView):
 
     model = Trip
+    serializer_class = TripSerializer
+
     lookup_url_kwarg = 'trip'
+    queryset = Trip.objects.all()
 
-    def retrieve(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
+        action = kwargs.get('action', False)
+        current_user = self.request.user
+
+        # for now... hardcoding some validation in here.
+        if action not in ["approved", "submitted", "cancelled"]:
+            raise ParseError(detail="action must be a valid action")
+
         trip = self.get_object()
-        action = self.kwargs.get('action', None)
-        user = self.request.user
-        trips = Trip.get_all_trips(user)
-        serializer = TripSerializer(trips, many=True)
 
-        if action == 'submit':
-            if trip.status != Trip.SUBMITTED:
-                trip.status = Trip.SUBMITTED
-                trip.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
-        elif action == 'approve':
-            trip.approved_by_supervisor = True
-            trip.date_supervisor_approved = datetime.now()
-            trip.save()
-            return Response(serializer.data, status=status.HTTP_200_OK,)
-        return Response(serializer.data, Zstatus=status.HTTP_204_NO_CONTENT)
+        # some more hard-coded validation:
+        if current_user.id not in [trip.owner.id, trip.supervisor.id]:
+            raise PermissionDenied(detail="You must be the traveller or the supervisor to change the status of the trip")
+
+
+        # serializer = self.get_serializer(data={"status":action},
+        #                                  instance=trip,
+        #                                  partial=True)
+
+        if action == 'approved':
+            # make sure the current user is the supervisor:
+            # maybe in the future allow an admin to make this change as well.
+            if not current_user.id == trip.supervisor.id:
+                raise PermissionDenied(detail="You must be the supervisor to approve this trip")
+
+            data = {"approved_by_supervisor": True,
+                    "date_supervisor_approved": datetime.date.today()}
+
+        else:
+            data = {"status": action,
+                    "approved_by_supervisor": False,
+                    "approved_date": None,
+                    "date_supervisor_approved": None}
+
+        serializer = self.get_serializer(data=data,
+                                         instance=trip,
+                                         partial=True)
+
+        if not serializer.is_valid():
+            raise ParseError(detail="data submitted is not valid")
+        serializer.save()
+
+        return Response(serializer.data)
 
 
 class TripsByOfficeView(APIView):
