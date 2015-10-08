@@ -70,7 +70,7 @@ AUTHENTICATION_BACKENDS = (
 )
 SAML_CONFIG = {
     # full path to the xmlsec1 binary programm
-    'xmlsec_binary': '/usr/local/bin/xmlsec1',
+    'xmlsec_binary': '/usr/bin/xmlsec1',
 
     # your entity id, usually your subdomain plus the url to the metadata view
     'entityid': 'https://{}/saml2/metadata/'.format('etools.localtunnel.me'),
