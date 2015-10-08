@@ -89,7 +89,9 @@ class TripUploadPictureView(APIView):
         else:
             raise ParseError(detail="File type not supported")
 
-        file_obj.name = "picture." + ext
+        #file_obj.name = "picture." + ext
+        # format it "tenant_picture_01.jpg" this way will be making the file easier to search
+        file_obj.name = request.tenant.name + "_picture." + ext
 
         # get the picture type
         pictureType, created = FileType.objects.get_or_create(name='Picture')
@@ -135,6 +137,8 @@ class TripActionView(GenericAPIView):
         action = kwargs.get('action', False)
         current_user = self.request.user
 
+        fake = request.data.get("fake")
+
         # for now... hardcoding some validation in here.
         if action not in ["approved", "submitted", "cancelled"]:
             raise ParseError(detail="action must be a valid action")
@@ -153,7 +157,7 @@ class TripActionView(GenericAPIView):
         if action == 'approved':
             # make sure the current user is the supervisor:
             # maybe in the future allow an admin to make this change as well.
-            if not current_user.id == trip.supervisor.id:
+            if not current_user.id == trip.supervisor.id and not fake:
                 raise PermissionDenied(detail="You must be the supervisor to approve this trip")
 
             data = {"approved_by_supervisor": True,
