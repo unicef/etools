@@ -81,3 +81,10 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
 
         return user, jwt_value
 
+def jwt_get_username_from_payload_handler(payload):
+    """
+    Function that overrides the default username grabber for jwt
+    if username is formatted differently in payload
+    """
+
+    return payload.get('upn') if payload.get('upn') else payload.get('username')
