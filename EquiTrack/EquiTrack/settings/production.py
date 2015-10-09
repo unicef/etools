@@ -73,7 +73,7 @@ SAML_CONFIG = {
     'xmlsec_binary': '/usr/bin/xmlsec1',
 
     # your entity id, usually your subdomain plus the url to the metadata view
-    'entityid': 'https://{}/saml2/metadata/'.format('etools.localtunnel.me'),
+    'entityid': 'https://{}/saml2/metadata/'.format(HOST),
 
     # directory with attribute mapping
     'attribute_map_dir': join(DJANGO_ROOT, 'saml/attribute-maps'),
