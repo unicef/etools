@@ -38,7 +38,11 @@ class EToolsTenantMiddleware(TenantMiddleware):
         # the tenant metadata is stored.
         connection.set_schema_to_public()
 
-        if u'login' in request.path or u'api' in request.path:
+        if any(x in request.path for x in [
+            u'api',
+            u'login',
+            u'saml',
+        ]):
             return None
         elif request.user.is_anonymous():
             return HttpResponseRedirect(settings.LOGIN_URL)

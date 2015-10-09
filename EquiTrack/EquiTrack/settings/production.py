@@ -62,7 +62,7 @@ SAML_ATTRIBUTE_MAPPING = {
     'givenname': ('first_name', ),
     'surname': ('last_name', ),
 }
-SAML_USE_NAME_ID_AS_USERNAME = True
+SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_CREATE_UNKNOWN_USER = True
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -73,7 +73,7 @@ SAML_CONFIG = {
     'xmlsec_binary': '/usr/bin/xmlsec1',
 
     # your entity id, usually your subdomain plus the url to the metadata view
-    'entityid': 'https://{}/saml2/metadata/'.format('etools.localtunnel.me'),
+    'entityid': 'https://{}/saml2/metadata/'.format(HOST),
 
     # directory with attribute mapping
     'attribute_map_dir': join(DJANGO_ROOT, 'saml/attribute-maps'),
@@ -108,7 +108,7 @@ SAML_CONFIG = {
     },
     # where the remote metadata is stored
     'metadata': {
-        "local": [join(DJANGO_ROOT, 'saml/federationmetadata.xml')],
+        "local": [join(DJANGO_ROOT, 'saml/FederationMetadata.xml')],
         # "remote": [
         #     {
         #         "url": "http://sts.unicef.org/federationmetadata/2007-06/federationmetadata.xml",
