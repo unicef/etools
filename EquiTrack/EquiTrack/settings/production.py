@@ -108,7 +108,7 @@ SAML_CONFIG = {
     },
     # where the remote metadata is stored
     'metadata': {
-        "local": [join(DJANGO_ROOT, 'saml/federationmetadata.xml')],
+        "local": [join(DJANGO_ROOT, 'saml/FederationMetadata.xml')],
         # "remote": [
         #     {
         #         "url": "http://sts.unicef.org/federationmetadata/2007-06/federationmetadata.xml",
