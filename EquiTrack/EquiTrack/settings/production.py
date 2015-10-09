@@ -23,14 +23,16 @@ MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
     'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
 )
 
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME', None)
+AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)
+AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY', None)
+AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER', None)
 
-if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
-    # use S3 for file storage if all AWS settings are set in this environment
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
-    MEDIA_URL = 'https://{}.s3.amazonaws.com/'.format(AWS_STORAGE_BUCKET_NAME)
+if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
+
+    DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
+    MEDIA_URL = 'https://{}.blob.core.windows.net/{}/'.format(
+        AZURE_ACCOUNT_NAME, AZURE_CONTAINER
+    )
     FILER_IS_PUBLIC_DEFAULT = False
     FILER_STORAGES = {
         'public': {
@@ -47,20 +49,15 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_STORAGE_BUCKET_NAME:
         },
     }
 
-    DBBACKUP_STORAGE = 'dbbackup.storage.s3_storage'
-    DBBACKUP_S3_BUCKET = AWS_STORAGE_BUCKET_NAME
-    DBBACKUP_S3_ACCESS_KEY = AWS_ACCESS_KEY_ID
-    DBBACKUP_S3_SECRET_KEY = AWS_SECRET_ACCESS_KEY
-
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
-LOGIN_URL = '/saml2/login/'
+LOGIN_URL = '/login/'
 SAML_ATTRIBUTE_MAPPING = {
-    'upn': ('username', ),
-    'emailAddress': ('email', ),
-    'givenname': ('first_name', ),
-    'surname': ('last_name', ),
+    'upn': ('username',),
+    'emailAddress': ('email',),
+    'givenname': ('first_name',),
+    'surname': ('last_name',),
 }
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_CREATE_UNKNOWN_USER = True

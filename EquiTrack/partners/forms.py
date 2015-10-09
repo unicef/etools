@@ -27,6 +27,7 @@ from locations.models import Location
 from reports.models import Sector, Result, Indicator
 from .models import (
     PCA,
+    PartnerOrganization,
     GwPCALocation,
     ResultChain,
     IndicatorProgress,
@@ -52,6 +53,13 @@ from .models import (
 #
 #     class Meta:
 #         model = GwPCALocation
+
+class PartnersAdminForm(forms.ModelForm):
+
+    class Meta:
+        model = PartnerOrganization
+
+
 
 
 class IndicatorAdminModelForm(forms.ModelForm):
@@ -307,58 +315,58 @@ class PartnershipForm(UserGroupForm):
                 created, notfound
             ))
 
-    def import_results_from_work_plan(self, work_plan, sector):
-        """
-        Matches results from the work plan to country result structure.
-        Will try to match indicators one to one or by name, this can be ran
-        multiple times to continually update the work plan
-        """
-        try:  # first try to grab the excel as a table...
-            data = pandas.read_excel(work_plan, index_col=0)
-        except Exception as exp:
-            raise ValidationError(exp.message)
-
-        imported = found = not_found = 0
-        for code, row in data.iterrows():
-            create_args = dict(
-                partnership=self.obj
-            )
-            try:
-                result = Result.objects.get(
-                    sector=sector,
-                    code=code
-                )
-                create_args['result'] = result
-                create_args['result_type'] = result.result_type
-                indicators = result.indicator_set.all()
-                if indicators:
-                    if indicators.count() == 1:
-                        # use this indicator if we only have one
-                        create_args['indicator'] = indicators[0]
-                    else:
-                        # attempt to fuzzy match by name
-                        candidates = indicators.filter(
-                            name__icontains=row['Indicator']
-                        )
-                        if candidates:
-                            create_args['indicator'] = candidates[0]
-                    # if we got this far also take the target
-                    create_args['target'] = row.get('Target')
-            except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
-                not_found += 1
-                #TODO: Log this
-            else:
-                result_chain, new = ResultChain.objects.get_or_create(**create_args)
-                if new:
-                    imported += 1
-                else:
-                    found += 1
-
-        messages.info(
-            self.request,
-            u'Imported {} results, {} were imported already and {} were not found'.format(
-                imported, found, not_found
-            ))
+    # def import_results_from_work_plan(self, work_plan, sector):
+    #     """
+    #     Matches results from the work plan to country result structure.
+    #     Will try to match indicators one to one or by name, this can be ran
+    #     multiple times to continually update the work plan
+    #     """
+    #     try:  # first try to grab the excel as a table...
+    #         data = pandas.read_excel(work_plan, index_col=0)
+    #     except Exception as exp:
+    #         raise ValidationError(exp.message)
+    #
+    #     imported = found = not_found = 0
+    #     for code, row in data.iterrows():
+    #         create_args = dict(
+    #             partnership=self.obj
+    #         )
+    #         try:
+    #             result = Result.objects.get(
+    #                 sector=sector,
+    #                 code=code
+    #             )
+    #             create_args['result'] = result
+    #             create_args['result_type'] = result.result_type
+    #             indicators = result.indicator_set.all()
+    #             if indicators:
+    #                 if indicators.count() == 1:
+    #                     # use this indicator if we only have one
+    #                     create_args['indicator'] = indicators[0]
+    #                 else:
+    #                     # attempt to fuzzy match by name
+    #                     candidates = indicators.filter(
+    #                         name__icontains=row['Indicator']
+    #                     )
+    #                     if candidates:
+    #                         create_args['indicator'] = candidates[0]
+    #                 # if we got this far also take the target
+    #                 create_args['target'] = row.get('Target')
+    #         except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
+    #             not_found += 1
+    #             #TODO: Log this
+    #         else:
+    #             result_chain, new = ResultChain.objects.get_or_create(**create_args)
+    #             if new:
+    #                 imported += 1
+    #             else:
+    #                 found += 1
+    #
+    #     messages.info(
+    #         self.request,
+    #         u'Imported {} results, {} were imported already and {} were not found'.format(
+    #             imported, found, not_found
+    #         ))
 
     def clean(self):
         """
