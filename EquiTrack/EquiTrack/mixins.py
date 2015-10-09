@@ -80,4 +80,3 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         request.tenant = user.profile.country
 
         return user, jwt_value
-
