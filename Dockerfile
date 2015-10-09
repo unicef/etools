@@ -1,5 +1,5 @@
 FROM python:2.7
-RUN apt-get update && apt-get -y install python-gdal gdal-bin libgdal-dev libgdal1h libgdal1-dev libxml2-dev libxslt-dev python-dev
+RUN apt-get update && apt-get -y install python-gdal gdal-bin libgdal-dev libgdal1h libgdal1-dev libxml2-dev libxslt-dev python-dev xmlsec1
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ENV PYTHONUNBUFFERED 1

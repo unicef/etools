@@ -71,101 +71,6 @@ LOGIN_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
-AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
-    'djangosaml2.backends.Saml2Backend',
-)
-
-SAML_ATTRIBUTE_MAPPING = {
-    'uid': ('username', ),
-    'mail': ('email', ),
-    'cn': ('first_name', ),
-    'sn': ('last_name', ),
-}
-SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
-SAML_CONFIG = {
-    # full path to the xmlsec1 binary programm
-    'xmlsec_binary': '/usr/local/bin/xmlsec1',
-
-    # your entity id, usually your subdomain plus the url to the metadata view
-    'entityid': 'https://{}/saml2/metadata/'.format(HOST),
-
-    # directory with attribute mapping
-    'attribute_map_dir': join(DJANGO_ROOT, 'saml/attribute-maps'),
-
-    # this block states what services we provide
-    'service': {
-        # we are just a lonely SP
-        'sp': {
-            'name': 'eTools',
-            'name_id_format': saml.NAMEID_FORMAT_PERSISTENT,
-            'endpoints': {
-                # url and binding to the assetion consumer service view
-                # do not change the binding or service name
-                'assertion_consumer_service': [
-                    ('https://{}/saml2/acs/'.format(HOST),
-                     saml2.BINDING_HTTP_POST),
-                ],
-                # url and binding to the single logout service view
-                # do not change the binding or service name
-                'single_logout_service': [
-                    ('https://{}/saml2/ls/'.format(HOST),
-                     saml2.BINDING_HTTP_REDIRECT),
-                    ('https://{}/saml2/ls/post'.format(HOST),
-                     saml2.BINDING_HTTP_POST),
-                ],
-
-            },
-
-            # attributes that this project needs to identify a user
-            'required_attributes': ['emailAddress'],
-
-            # in this section the list of IdPs we talk to are defined
-            'idp': {
-                # we do not need a WAYF service since there is
-                # only an IdP defined here. This IdP should be
-                # present in our metadata
-
-                # the keys of this dictionary are entity ids
-                'https://sts.unicef.org': {
-                    'single_sign_on_service': {
-                        saml2.BINDING_HTTP_REDIRECT: 'https://sts.unicef.org/adfs/ls/',
-                    },
-                    'single_logout_service': {
-                        saml2.BINDING_HTTP_REDIRECT: 'https://sts.unicef.org/adfs/ls/',
-                    },
-                },
-            },
-        },
-    },  # where the remote metadata is stored
-    'metadata': {
-        'local': [join(DJANGO_ROOT, 'saml/FederationMetadata.xml')],
-    },
-
-    # set to 1 to output debugging information
-    'debug': 1,
-
-    # certificate
-    'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
-    'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
-
-    # own metadata settings
-    'contact_person': [
-        {'given_name': 'James',
-         'sur_name': 'Cranwell-Ward',
-         'company': 'UNICEF',
-         'email_address': 'jcranwellward@unicef.org',
-         'contact_type': 'technical'},
-    ],
-    # you can set multilanguage information here
-    'organization': {
-        'name': [('UNICEF', 'en')],
-        'display_name': [('UNICEF', 'en')],
-        'url': [('http://www.unicef.org', 'en')],
-    },
-    'valid_for': 24,  # how long is our metadata valid
-}
-
 REGISTRATION_OPEN = True
 ACCOUNT_ACTIVATION_DAYS = 7
 
@@ -193,7 +98,6 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
         'EquiTrack.mixins.EToolsTenantJWTAuthentication',
     )
 }
@@ -424,12 +328,12 @@ MIDDLEWARE_CLASSES = (
     # Default Django middleware.
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'EquiTrack.mixins.EToolsTenantMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'EquiTrack.mixins.EToolsTenantMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
