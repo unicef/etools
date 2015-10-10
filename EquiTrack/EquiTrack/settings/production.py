@@ -52,7 +52,7 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 
-LOGIN_URL = '/login/'
+LOGIN_URL = '/saml2/login/'
 SAML_ATTRIBUTE_MAPPING = {
     'upn': ('username',),
     'emailAddress': ('email',),

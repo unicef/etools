@@ -135,7 +135,6 @@ class PartnerOrganization(models.Model):
     core_values_assessment = models.FileField(
         blank=True, null=True,
         upload_to='partners/core_values/',
-        verbose_name=u'Date positively assessed against core values'
     )
 
     class Meta:
