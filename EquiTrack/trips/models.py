@@ -17,7 +17,7 @@ from filer.fields.file import FilerFileField
 import reversion
 
 from EquiTrack.mixins import AdminURLMixin
-from reports.models import WBS
+from reports.models import Result
 from funds.models import Grant
 from users.models import Office, Section
 from locations.models import Governorate, Locality, Location, Region
@@ -361,7 +361,7 @@ post_save.connect(Trip.send_trip_request, sender=Trip)
 class TripFunds(models.Model):
 
     trip = models.ForeignKey(Trip)
-    wbs = models.ForeignKey(WBS)
+    wbs = models.ForeignKey(Result)
     grant = models.ForeignKey(Grant)
     amount = models.PositiveIntegerField(
         verbose_name='Percentage (%)'

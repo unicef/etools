@@ -17,14 +17,6 @@ from EquiTrack.utils import get_changeform_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
-from reports.models import (
-    WBS,
-    Goal,
-    Activity,
-    Indicator,
-    Rrp5Output,
-    IntermediateResult
-)
 from .exports import (
     # KMLFormat,
     DonorsFormat,
@@ -38,11 +30,6 @@ from .models import (
     PCAGrant,
     PCASector,
     GwPCALocation,
-    PCASectorOutput,
-    PCASectorGoal,
-    PCASectorActivity,
-    IndicatorProgress,
-    PCASectorImmediateResult,
     PartnerOrganization,
     Assessment,
     Agreement,
@@ -60,9 +47,6 @@ from .filters import (
     PCASectorFilter,
     PCADonorFilter,
     PCAGrantFilter,
-    PCAGovernorateFilter,
-    PCARegionFilter,
-    PCALocalityFilter,
     PCAGatewayTypeFilter,
     PCAIndicatorFilter,
     PCAOutputFilter
@@ -202,7 +186,7 @@ class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = ResultChain
     form = ResultChainAdminForm
     formset = ParentInlineAdminFormSet
-    max_num = 0
+    extra = 3
 
 
 class SupplyPlanInlineAdmin(admin.TabularInline):
@@ -297,10 +281,10 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
             u'classes': (u'suit-tab suit-tab-locations',),
             'fields': ('location_sector', 'p_codes',),
         }),
-        (_('Import work plan'), {
-            u'classes': (u'suit-tab suit-tab-results',),
-            'fields': ('work_plan_sector', 'work_plan',),
-        }),
+        # (_('Import work plan'), {
+        #     u'classes': (u'suit-tab suit-tab-results',),
+        #     'fields': ('work_plan_sector', 'work_plan',),
+        # }),
     )
     remove_fields_if_read_only = (
         'location_sector',
@@ -317,7 +301,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
-        #ResultsInlineAdmin,
+        ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
     )
@@ -331,9 +315,9 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         (u'attachments', u'Attachments')
     )
 
-    suit_form_includes = (
-        ('admin/partners/work_plan.html', 'middle', 'results'),
-    )
+    # suit_form_includes = (
+    #     ('admin/partners/work_plan.html', 'middle', 'results'),
+    # )
 
     def get_queryset(self, request):
         queryset = super(PartnershipAdmin, self).get_queryset(request)

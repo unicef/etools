@@ -2,6 +2,7 @@ __author__ = 'jcranwellward'
 
 from django.db import models
 
+from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
 from model_utils.models import (
     TimeFramedModel,
@@ -62,46 +63,23 @@ class Sector(models.Model):
         )
 
 
-class RRPObjective(models.Model):
-
-    result_structure = models.ForeignKey(
-        ResultStructure, blank=True, null=True)
-    sector = models.ForeignKey(Sector)
-    name = models.CharField(max_length=256L)
-
-    class Meta:
-        ordering = ['name']
-        verbose_name = 'Objective'
-
-    def __unicode__(self):
-        return self.name
-
-
-class Rrp5Output(models.Model):
-
-    result_structure = models.ForeignKey(
-        ResultStructure, blank=True, null=True)
-    sector = models.ForeignKey(Sector)
-    objective = models.ForeignKey(
-        RRPObjective, blank=True, null=True)
-    name = models.CharField(max_length=256L)
-
-    class Meta:
-        verbose_name = 'Output'
-        unique_together = ('result_structure', 'name')
-        ordering = ['name']
-
-    def __unicode__(self):
-        return u'({}) {}'.format(self.result_structure, self.name)
-
-
-class Result(models.Model):
+class Result(MPTTModel):
 
     result_structure = models.ForeignKey(ResultStructure)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector)
-    name = models.CharField(max_length=256L)
+    name = models.CharField(max_length=256L, unique=True)
     code = models.CharField(max_length=10, null=True, blank=True)
+
+    humanitarian_tag = models.BooleanField(default=False)
+    wbs = models.CharField(max_length=20, null=True, blank=True)
+    vision_id = models.CharField(max_length=10, null=True, blank=True)
+    gic_code = models.CharField(max_length=8, null=True, blank=True)
+    gic_name = models.CharField(max_length=255, null=True, blank=True)
+    sic_code = models.CharField(max_length=8, null=True, blank=True)
+    sic_name = models.CharField(max_length=255, null=True, blank=True)
+
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
 
     class Meta:
         ordering = ['name']
@@ -198,70 +176,3 @@ class Indicator(models.Model):
         total = programmed.aggregate(models.Sum('current'))
         return (total[total.keys()[0]] or 0) + self.current if self.current else 0
 
-
-class IntermediateResult(models.Model):
-
-    sector = models.ForeignKey(Sector)
-    ir_wbs_reference = models.CharField(max_length=50L)
-    name = models.CharField(max_length=128L, unique=True)
-    from_date = models.DateField()
-    to_date = models.DateField()
-    alternate_id = models.IntegerField(
-        blank=True,
-        null=True
-    )
-    alternate_name = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
-
-    class Meta:
-        ordering = ['name']
-
-    def __unicode__(self):
-        return self.name
-
-
-class WBS(models.Model):
-    Intermediate_result = models.ForeignKey(IntermediateResult)
-    name = models.CharField(max_length=128L)
-    code = models.CharField(max_length=128L)
-
-    class Meta:
-        ordering = ['name']
-
-    def __unicode__(self):
-        return u'{}/{}'.format(
-            self.Intermediate_result.ir_wbs_reference,
-            self.name
-        )
-
-
-class Activity(models.Model):
-    sector = models.ForeignKey(Sector)
-    name = models.CharField(
-        max_length=128L,
-        unique=True
-    )
-    type = models.CharField(
-        max_length=30L,
-        blank=True,
-        null=True
-    )
-    alternate_id = models.IntegerField(
-        blank=True,
-        null=True
-    )
-    alternate_name = models.CharField(
-        max_length=255,
-        blank=True,
-        null=True
-    )
-
-    class Meta:
-        ordering = ['name']
-        verbose_name_plural = 'Activities'
-
-    def __unicode__(self):
-        return self.name
