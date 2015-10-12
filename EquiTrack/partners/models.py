@@ -22,13 +22,9 @@ from EquiTrack.mixins import AdminURLMixin
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
-    IntermediateResult,
-    Rrp5Output,
     Indicator,
-    Activity,
     Sector,
     Goal,
-    WBS,
     ResultType,
     Result)
 from locations.models import (
@@ -135,7 +131,6 @@ class PartnerOrganization(models.Model):
     core_values_assessment = models.FileField(
         blank=True, null=True,
         upload_to='partners/core_values/',
-        verbose_name=u'Date positively assessed against core values'
     )
 
     class Meta:
@@ -760,20 +755,6 @@ class PCASector(TimeStampedModel):
         )
 
 
-class PCASectorOutput(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    output = models.ForeignKey(Rrp5Output)
-
-    class Meta:
-        verbose_name = 'Output'
-        verbose_name_plural = 'Outputs'
-
-    @property
-    def pca(self):
-        return self.pca_sector.pca
-
-
 class PCASectorGoal(models.Model):
 
     pca_sector = models.ForeignKey(PCASector)
@@ -782,31 +763,6 @@ class PCASectorGoal(models.Model):
     class Meta:
         verbose_name = 'CCC'
         verbose_name_plural = 'CCCs'
-
-
-class PCASectorActivity(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    activity = models.ForeignKey(Activity)
-
-    class Meta:
-        verbose_name = 'Activity'
-        verbose_name_plural = 'Activities'
-
-
-class PCASectorImmediateResult(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    Intermediate_result = models.ForeignKey(IntermediateResult)
-
-    wbs_activities = models.ManyToManyField(WBS)
-
-    class Meta:
-        verbose_name = 'Intermediate Result'
-        verbose_name_plural = 'Intermediate Results'
-
-    def __unicode__(self):
-        return self.Intermediate_result.name
 
 
 class IndicatorProgress(models.Model):

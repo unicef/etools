@@ -9,14 +9,9 @@ from EquiTrack.forms import AutoSizeTextForm
 from partners.models import IndicatorProgress
 from reports.models import (
     Sector,
-    WBS,
     Goal,
     Unit,
-    Activity,
     Indicator,
-    Rrp5Output,
-    RRPObjective,
-    IntermediateResult,
     ResultStructure,
     ResultType,
     Result
@@ -159,13 +154,8 @@ class WBSAdmin(ImportExportModelAdmin):
 
 admin.site.register(Result, ResultAdmin)
 admin.site.register(ResultType)
-admin.site.register(RRPObjective, ImportExportModelAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
 admin.site.register(Sector, SectorAdmin)
-admin.site.register(Activity, ImportExportModelAdmin)
-admin.site.register(IntermediateResult, IntermediateResultAdmin)
-admin.site.register(Rrp5Output, ResultStructureAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-admin.site.register(WBS, WBSAdmin)

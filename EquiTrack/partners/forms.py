@@ -30,7 +30,6 @@ from .models import (
     PartnerOrganization,
     GwPCALocation,
     ResultChain,
-    IndicatorProgress,
     AmendmentLog,
     Agreement,
     AuthorizedOfficer,
@@ -60,18 +59,6 @@ class PartnersAdminForm(forms.ModelForm):
         model = PartnerOrganization
 
 
-
-
-class IndicatorAdminModelForm(forms.ModelForm):
-
-    class Meta:
-        model = IndicatorProgress
-
-    def __init__(self, *args, **kwargs):
-        super(IndicatorAdminModelForm, self).__init__(*args, **kwargs)
-        self.fields['indicator'].queryset = []
-
-
 class ResultChainAdminForm(forms.ModelForm):
 
     class Meta:
@@ -91,16 +78,10 @@ class ResultChainAdminForm(forms.ModelForm):
             results = Result.objects.filter(
                 result_structure=self.parent_partnership.result_structure
             )
-            indicators = Indicator.objects.filter(
-                result_structure=self.parent_partnership.result_structure
-            )
-            for sector in self.parent_partnership.sector_children:
-                results = results.filter(sector=sector)
-                indicators = indicators.filter(sector=sector)
+            self.fields['result'].queryset = results
 
             if self.instance.result_id:
                 self.fields['result'].queryset = results.filter(id=self.instance.result_id)
-                self.fields['indicator'].queryset = indicators.filter(result_id=self.instance.result_id)
 
 
 class AmendmentForm(forms.ModelForm):
@@ -427,12 +408,12 @@ class PartnershipForm(UserGroupForm):
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
-        if work_plan and not work_plan_sector:
-            raise ValidationError(
-                u'Please select a sector to import results against'
-            )
-
-        if work_plan and work_plan_sector:
-            self.import_results_from_work_plan(work_plan, work_plan_sector)
+        # if work_plan and not work_plan_sector:
+        #     raise ValidationError(
+        #         u'Please select a sector to import results against'
+        #     )
+        #
+        # if work_plan and work_plan_sector:
+        #     self.import_results_from_work_plan(work_plan, work_plan_sector)
 
         return cleaned_data

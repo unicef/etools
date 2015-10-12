@@ -1,6 +1,5 @@
 __author__ = 'jcranwellward'
 
-from django.db.models import Q
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -8,25 +7,23 @@ from django.contrib.auth.models import Group
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
-from users.models import UserProfile, Office
+from users.models import UserProfile
 
 from EquiTrack.forms import AutoSizeTextForm
 from .models import (
     Trip,
-    Office,
     TripFunds,
     ActionPoint,
     TravelRoutes,
     FileAttachment,
     TripLocation,
-
 )
 from .forms import (
     TripForm,
     TravelRoutesForm,
     RequireOneLocationFormSet
 )
-
+from .filters import TripReportFilter, PartnerFilter
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -79,26 +76,6 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
-class TripReportFilter(admin.SimpleListFilter):
-
-    title = 'Report'
-    parameter_name = 'report'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            ('Yes', 'Completed'),
-            ('No', 'Not-Completed'),
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            is_null = Q(main_observations='')
-            return queryset.filter(is_null if self.value() == 'No' else ~is_null)
-        return queryset
-
-
 class TripReportAdmin(ExportMixin, VersionAdmin):
     resource_class = TripResource
     save_as = True  # TODO: There is a bug using this
@@ -146,6 +123,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'status',
         u'approved_date',
         TripReportFilter,
+        PartnerFilter,
     )
     filter_vertical = (
         u'pcas',
@@ -173,7 +151,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                  u'approved_by_human_resources',)
         }),
         (u'Partnership Details', {
-            u'classes': (u'suit-tab suit-tab-planning',),
+            u'classes': (u'suit-tab suit-tab-planning', u'collapse',),
             u'fields':
                 (u'pcas',
                  u'partners',),

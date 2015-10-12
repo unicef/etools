@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.contrib.admin.models import LogEntry
 from django.http.response import HttpResponse
 
-from partners.models import PCA, PartnerOrganization, PCASectorOutput
+from partners.models import PCA, PartnerOrganization
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
@@ -107,7 +107,6 @@ class MapView(TemplateView):
             'region_list': Region.objects.all(),
             'partner_list': PartnerOrganization.objects.all(),
             'indicator_list': Indicator.objects.all(),
-            'output_list': PCASectorOutput.objects.all(),
             'donor_list': Donor.objects.all()
         }
 

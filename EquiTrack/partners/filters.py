@@ -14,10 +14,9 @@ from partners.models import (
     PCAGrant,
     GwPCALocation,
     IndicatorProgress,
-    PCASectorOutput
 )
 from reports.admin import SectorListFilter
-from reports.models import Sector, Indicator, Rrp5Output
+from reports.models import Sector, Indicator
 
 
 class PCASectorFilter(SectorListFilter):

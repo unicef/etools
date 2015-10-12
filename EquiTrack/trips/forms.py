@@ -96,7 +96,7 @@ class TripForm(ModelForm):
 
         if not pcas and travel_type == Trip.PROGRAMME_MONITORING:
             raise ValidationError(
-                'You must select the PCAs related to this trip'
+                'You must select the interventions related to this trip'
                 ' or change the Travel Type'
             )
 
