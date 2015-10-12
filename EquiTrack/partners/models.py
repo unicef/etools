@@ -58,16 +58,13 @@ class PartnerOrganization(models.Model):
 
     NATIONAL = u'national'
     INTERNATIONAL = u'international'
-    UNAGENCY = u'un-agency'
     CBO = u'cbo'
     ACADEMIC = u'academic',
-    FOUNDATION = u'foundation',
     PARTNER_TYPES = (
-        (INTERNATIONAL, u"International"),
-        (NATIONAL, u"CSO"),
+        (INTERNATIONAL, u"International NGO"),
+        {NATIONAL, u"NGO"},
         (CBO, u"CBO"),
-        (ACADEMIC, u"Academic Inst."),
-        (FOUNDATION, u"Foundation")
+        (ACADEMIC, u"Academic Institution"),
     )
 
     type = models.CharField(
@@ -84,7 +81,7 @@ class PartnerOrganization(models.Model):
             u'UN Agency',
             u'Inter-governmental Organisation',
             u'Bi-Lateral Organisation'
-        ), blank=True, null=True
+        ),
     )
     name = models.CharField(
         max_length=255,
@@ -133,6 +130,11 @@ class PartnerOrganization(models.Model):
     )
     core_values_assessment_date = models.DateField(
         blank=True, null=True,
+        verbose_name=u'Date positively assessed against core values'
+    )
+    core_values_assessment = models.FileField(
+        blank=True, null=True,
+        upload_to='partners/core_values/',
         verbose_name=u'Date positively assessed against core values'
     )
 
