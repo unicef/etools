@@ -38,7 +38,7 @@ class TestTripForm(TenantTestCase):
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0],
-                         "You must select the PCAs related to this trip or change the Travel Type")
+                         "You must select the interventions related to this trip or change the Travel Type")
 
     def test_form_validation_for_international_travel(self):
         trip_dict = to_dict(self.trip)
