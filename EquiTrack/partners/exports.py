@@ -25,6 +25,7 @@ from partners.models import (
     PCA,
     GwPCALocation,
     PartnerOrganization,
+    PartnershipBudget
 )
 
 
@@ -315,6 +316,26 @@ class PCAResource(BaseExportResource):
 
         return row
 
+    def fill_budget(self, row, pca):
+
+        unicef_cash = 0
+        in_kind = 0
+        partner_contribution = 0
+        total = 0
+
+        for budget in PartnershipBudget.objects.filter(partnership=pca):
+            total += budget.total
+            unicef_cash += budget.unicef_cash
+            in_kind += budget.in_kind_amount
+            partner_contribution += budget.partner_contribution
+
+        self.insert_column(row, 'Partner contribution budget', partner_contribution)
+        self.insert_column(row, 'Unicef cash budget', unicef_cash)
+        self.insert_column(row, 'In kind amount budget', in_kind)
+        self.insert_column(row, 'Total budget', total)
+
+        return row
+
     def fill_pca_row(self, row, pca):
 
         self.insert_column(row, 'ID', pca.id)
@@ -336,10 +357,6 @@ class PCAResource(BaseExportResource):
         self.insert_column(row, 'Partner mng first name', pca.partner_mng_first_name)
         self.insert_column(row, 'Partner mng last name', pca.partner_mng_last_name)
         self.insert_column(row, 'Partner mng email', pca.partner_mng_email)
-        self.insert_column(row, 'Partner contribution budget', pca.partner_contribution_budget)
-        self.insert_column(row, 'Unicef cash budget', pca.unicef_cash_budget)
-        self.insert_column(row, 'In kind amount budget', pca.in_kind_amount_budget)
-        self.insert_column(row, 'Total budget', pca.total_cash)
 
         return row
 
@@ -349,6 +366,7 @@ class PCAResource(BaseExportResource):
         """
 
         self.fill_pca_row(row, pca)
+        self.fill_budget(row,pca)
         self.fill_pca_grants(row, pca)
 
         for sector in sorted(pca.pcasector_set.all()):
