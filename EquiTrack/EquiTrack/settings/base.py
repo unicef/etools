@@ -5,6 +5,8 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 from sys import path
 import datetime
+from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.backends import default_backend
 
 import dj_database_url
 import saml2
@@ -103,9 +105,16 @@ REST_FRAMEWORK = {
 }
 
 # this secret key should be the same as the saml secret key
-JWT_SECRET_KEY = os.environ.get('SECRET_KEY', '5b734cf8450e48350477eff0b49ab39b')
+#JWT_SECRET_KEY = os.environ.get('SECRET_KEY', '5b734cf8450e48350477eff0b49ab39b')
+
+
+
+
 
 ########## JWT AUTH CONFIGURATION
+certificate_text = open(join(DJANGO_ROOT, 'saml/stspem.cer'), 'r').read()
+certificate = load_pem_x509_certificate(certificate_text, default_backend())
+JWT_SECRET_KEY = certificate.public_key()
 JWT_AUTH = {
     'JWT_ENCODE_HANDLER':
     'rest_framework_jwt.utils.jwt_encode_handler',
@@ -131,7 +140,7 @@ JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_LEEWAY': 0,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
-    'JWT_AUDIENCE': None,
+    'JWT_AUDIENCE': 'https://etools-staging.unicef.org/API',
     'JWT_ISSUER': None,
 
     'JWT_ALLOW_REFRESH': False,
