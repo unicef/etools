@@ -1,35 +1,27 @@
 __author__ = 'jcranwellward'
 
-import json
 import datetime
 import logging
 
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.views.generic import FormView
-from django.core import serializers
-from django.contrib.contenttypes.models import ContentType
 
 from rest_framework.views import APIView
 from rest_framework.generics import (
     GenericAPIView,
     ListAPIView,
-    RetrieveAPIView,
     RetrieveUpdateDestroyAPIView
 )
-
 from rest_framework.response import Response
 from rest_framework.exceptions import (
-    APIException, 
-    PermissionDenied, 
+    PermissionDenied,
     ParseError,
 )
 from rest_framework.parsers import MultiPartParser, FormParser
 
-
-from users.models import UserProfile, Office
-from reports.models import Sector
+from users.models import UserProfile, Office, Section
+from locations.models import get_random_color
 from partners.models import FileType
 from .models import Trip, FileAttachment
 from .serializers import TripSerializer
@@ -182,9 +174,8 @@ class TripsByOfficeView(APIView):
         month = months[int(month_num)]
 
         by_office = []
-        sections = Sector.objects.filter(
-            dashboard=True
-        )
+        section_ids = Trip.objects.all().values_list('section', flat=True)
+        sections = Section.objects.filter(id__in=section_ids)
         for office in Office.objects.all():
             trips = office.trip_set.filter(
                 Q(status=Trip.APPROVED) |
@@ -197,17 +188,17 @@ class TripsByOfficeView(APIView):
                 )
 
             office = {'name': office.name}
-            for sector in sections:
-                office[sector.name] = trips.filter(
-                    section=sector).count()
+            for section in sections:
+                office[section.name] = trips.filter(
+                    section=section).count()
             by_office.append(office)
 
         payload = {
             'data': by_office,
             'xkey': 'name',
-            'ykeys': [sector.name for sector in sections],
-            'labels': [sector.name for sector in sections],
-            'barColors': [sector.color for sector in sections]
+            'ykeys': [section.name for section in sections],
+            'labels': [section.name for section in sections],
+            'barColors': [get_random_color() for section in sections]
         }
 
         return Response(data=payload)
@@ -230,8 +221,9 @@ class TripsDashboard(FormView):
         month = months[int(month_num)]
 
         by_month = []
-        for section in Sector.objects.filter(
-                dashboard=True
+        section_ids = Trip.objects.all().values_list('section', flat=True)
+        for section in Section.objects.filter(
+            id__in=section_ids
         ):
             trips = section.trip_set.all()
             if month is not None:

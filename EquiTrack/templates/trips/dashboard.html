@@ -151,7 +151,6 @@
                                     <th>Total Actions</th>
                                     <th>Closed Actions</th>
                                     <th>Percentage</th>
-                                    <th>Color</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -163,7 +162,6 @@
                                             <td>{{ section.actions }}</td>
                                             <td>{{ section.closed_actions }}</td>
                                             <td>{% widthratio section.closed_actions section.actions 100 %}%</td>
-                                            <td style="background-color: {{ section.color }};"></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>

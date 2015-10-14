@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 
 from import_export.admin import ImportExportModelAdmin
+from mptt.admin import MPTTModelAdmin
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
@@ -135,7 +136,7 @@ class IndicatorAdmin(ImportExportModelAdmin):
     ]
 
 
-class ResultAdmin(ImportExportModelAdmin):
+class ResultAdmin(MPTTModelAdmin):
     form = AutoSizeTextForm
     list_filter = (
         'result_structure',

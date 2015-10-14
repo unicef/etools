@@ -68,7 +68,7 @@ class Result(MPTTModel):
     result_structure = models.ForeignKey(ResultStructure)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector)
-    name = models.CharField(max_length=256L, unique=True)
+    name = models.TextField(unique=True)
     code = models.CharField(max_length=10, null=True, blank=True)
 
     humanitarian_tag = models.BooleanField(default=False)

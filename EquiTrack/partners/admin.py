@@ -537,9 +537,6 @@ class AgreementAdmin(admin.ModelAdmin):
         u'signed_by_unicef_date',
         u'signed_by',
     )
-    readonly_fields = (
-        u'start', u'end',
-    )
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]

@@ -72,6 +72,7 @@ class PartnerOrganization(models.Model):
     partner_type = models.CharField(
         max_length=50,
         choices=Choices(
+            u'--------',
             u'Government',
             u'Civil Society Organisation',
             u'UN Agency',
@@ -279,7 +280,7 @@ class Agreement(TimeFramedModel, TimeStampedModel):
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
         (IC, u'Institutional Contract'),
-        (AWP, u"Annual Work Plan"),
+        (AWP, u"Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -289,10 +290,9 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     )
     agreement_number = models.CharField(
         max_length=45L,
-        unique=True,
-        help_text=u'PCA Reference Number'
+        unique=True, blank=True,
+        help_text=u'Reference Number'
     )
-
     attached_agreement = models.FileField(
         upload_to=u'agreements',
         blank=True,
