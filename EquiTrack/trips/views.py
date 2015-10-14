@@ -88,6 +88,8 @@ class TripUploadPictureView(APIView):
             raise ParseError(detail="File type not supported")
 
         # format it "picture_01.jpg" this way will be making the file easier to search
+        # if the file doesn't get auto_incremented use this:
+        # file_obj.name = "picture_"+ str(trip.files.count()) + "." + ext
         file_obj.name = "picture." + ext
 
         # get the picture type
