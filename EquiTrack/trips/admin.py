@@ -14,6 +14,7 @@ from generic_links.admin import GenericLinkStackedInline
 from messages_extends import constants as constants_messages
 from users.models import UserProfile
 
+from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
 from locations.models import LinkedLocation
 from .models import (
@@ -198,7 +199,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'fields':
                 (
                 (u'driver', u'driver_supervisor'),
-                u'driver_trip',
+                # u'view_driver_trip',
                 u'transport_booked',
                 u'security_granted',
                 u'ta_drafted',
@@ -226,6 +227,13 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'reporting', u'Reporting'),
         (u'attachments', u'Attachments')
     )
+
+    def view_driver_trip(self, obj):
+        if obj.driver_trip:
+            return get_changeform_link(obj.driver_trip, link_name='View Driver')
+        return ''
+    view_driver_trip.allow_tags = True
+    # view_driver_trip.short_description = ''
 
     def save_formset(self, request, form, formset, change):
         """
