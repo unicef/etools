@@ -243,7 +243,7 @@ class TripsDashboard(FormView):
                 closed_action_points += profile.user.for_action.filter(status='closed').count()
             row = {
                 'section': section.name,
-                'color': section.color,
+                'color': get_random_color(),
                 'total_approved': trips.filter(
                     status=Trip.APPROVED
                 ).count(),

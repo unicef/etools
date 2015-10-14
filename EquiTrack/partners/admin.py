@@ -451,7 +451,8 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
                  u'address',
                  u'phone_number',
                  u'email',
-                 u'core_values_assessment_date',)
+                 u'core_values_assessment_date',
+                 u'core_values_assessment',)
         }),
         (_('Meta Data'), {
             u'classes': (u'collapse',),
