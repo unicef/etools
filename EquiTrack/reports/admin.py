@@ -144,6 +144,11 @@ class ResultAdmin(MPTTModelAdmin):
         'sector',
         'result_type'
     )
+    list_display = (
+        'name',
+        'result_type',
+        'wbs',
+    )
 
 
 class IntermediateResultAdmin(ImportExportModelAdmin):

@@ -387,7 +387,7 @@ class PCA(AdminURLMixin, models.Model):
         max_length=45L,
         blank=True,
         default=u'UNASSIGNED',
-        help_text=u'PRC Reference Number'
+        help_text=u'Document Reference Number'
     )
     title = models.CharField(max_length=256L)
     status = models.CharField(

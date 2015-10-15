@@ -35,12 +35,14 @@ class UserAdminPlus(ImportExportMixin, UserAdmin):
 class ProfileAdmin(admin.ModelAdmin):
     list_display = (
         'username',
+        'country',
         'office',
         'section',
         'job_title',
         'phone_number',
     )
     list_editable = (
+        'country',
         'office',
         'section',
         'job_title',

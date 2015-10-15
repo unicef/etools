@@ -403,6 +403,7 @@ SHARED_APPS = (
     'mptt',
 
     'registration',
+    'vision',
 
     # you must list the app where your tenant model resides in
     'users',
