@@ -119,6 +119,7 @@ class IndicatorAdmin(ImportExportModelAdmin):
     list_filter = (
         SectorListFilter,
         'result_structure',
+        'result__result_type'
     )
     list_display = (
         'name',

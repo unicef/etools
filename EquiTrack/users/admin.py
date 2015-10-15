@@ -24,7 +24,12 @@ class UserResource(resources.ModelResource):
 
 class UserAdminPlus(ImportExportMixin, UserAdmin):
     resource_class = UserResource
-    inlines = (ProfileInline,)
+
+    def get_queryset(self, request):
+        queryset = super(UserAdminPlus,self).get_queryset(request)
+        if not request.user.is_superuser:
+            queryset = queryset.filter(profile__country=request.tenant)
+        return queryset
 
 
 class ProfileAdmin(admin.ModelAdmin):

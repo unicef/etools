@@ -61,6 +61,7 @@ from .forms import (
     AuthorizedOfficesFormset,
     DistributionPlanForm,
     DistributionPlanFormSet,
+    PartnershipBudgetAdminForm
 )
 
 
@@ -127,7 +128,7 @@ class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
 
 class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = PartnershipBudget
-    form = AmendmentForm
+    form = PartnershipBudgetAdminForm
     formset = ParentInlineAdminFormSet
     verbose_name = 'Budget'
     verbose_name_plural = 'Budget'
@@ -138,6 +139,7 @@ class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         'unicef_cash',
         'in_kind_amount',
         'total',
+        'year',
         'amendment',
     )
     readonly_fields = (
@@ -465,6 +467,9 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
         PartnerStaffMemberInlineAdmin,
         DocumentInlineAdmin,
     ]
+    suit_form_includes = (
+        ('admin/partners/assurance_table.html', '', ''),
+    )
 
 
 class RecommendationsInlineAdmin(admin.TabularInline):
