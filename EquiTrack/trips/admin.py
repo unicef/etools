@@ -139,6 +139,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'status',
         u'approved_date',
         u'outstanding_actions',
+        'show_driver_trip',
     )
     list_filter = (
         u'owner',
@@ -160,6 +161,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     )
     readonly_fields = (
         u'reference',
+        u'show_driver_trip',
     )
     fieldsets = (
         (u'Traveler', {
@@ -199,7 +201,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'fields':
                 (
                 (u'driver', u'driver_supervisor'),
-                # u'view_driver_trip',
+                # u'show_driver_trip',
                 u'transport_booked',
                 u'security_granted',
                 u'ta_drafted',
@@ -228,12 +230,12 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'attachments', u'Attachments')
     )
 
-    def view_driver_trip(self, obj):
+    def show_driver_trip(self, obj):
         if obj.driver_trip:
             return get_changeform_link(obj.driver_trip, link_name='View Driver')
         return ''
-    view_driver_trip.allow_tags = True
-    # view_driver_trip.short_description = ''
+    show_driver_trip.allow_tags = True
+    show_driver_trip.short_description = 'Trip for Driver'
 
     def save_formset(self, request, form, formset, change):
         """
