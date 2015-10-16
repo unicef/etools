@@ -292,6 +292,12 @@ class Trip(AdminURLMixin, models.Model):
         self.driver_trip is None:
             self.create_driver_trip()
 
+        if self.status == Trip.COMPLETED and self.driver_trip:
+            driver_trip = Trip.objects.get(id=self.driver_trip.id)
+            driver_trip.status = Trip.COMPLETED
+            driver_trip.save()
+            # super(Trip, driver_trip).save(**kwargs)
+
         super(Trip, self).save(**kwargs)
 
     def create_driver_trip(self):
