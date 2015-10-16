@@ -10,6 +10,7 @@ from model_utils.models import (
 )
 
 
+# TODO: move to the global schema
 class ResultStructure(models.Model):
 
     name = models.CharField(max_length=150)
@@ -67,28 +68,29 @@ class Result(MPTTModel):
 
     result_structure = models.ForeignKey(ResultStructure)
     result_type = models.ForeignKey(ResultType)
-    sector = models.ForeignKey(Sector)
-    name = models.CharField(max_length=256L, unique=True)
+    sector = models.ForeignKey(Sector, null=True, blank=True)
+    name = models.TextField()
     code = models.CharField(max_length=10, null=True, blank=True)
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
 
     humanitarian_tag = models.BooleanField(default=False)
-    wbs = models.CharField(max_length=20, null=True, blank=True)
+    wbs = models.CharField(max_length=50, null=True, blank=True)
     vision_id = models.CharField(max_length=10, null=True, blank=True)
     gic_code = models.CharField(max_length=8, null=True, blank=True)
     gic_name = models.CharField(max_length=255, null=True, blank=True)
     sic_code = models.CharField(max_length=8, null=True, blank=True)
     sic_name = models.CharField(max_length=255, null=True, blank=True)
-
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
+    activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
+    activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         ordering = ['name']
 
     def __unicode__(self):
-        return u'{} {} {} {}: {}'.format(
+        return u'{} {} {}: {}'.format(
             self.result_structure.name,
             self.code if self.code else u'',
-            self.sector.name,
+            #self.sector.name,
             self.result_type.name,
             self.name
         )

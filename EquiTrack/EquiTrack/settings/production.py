@@ -56,7 +56,7 @@ LOGIN_URL = '/saml2/login/'
 SAML_ATTRIBUTE_MAPPING = {
     'upn': ('username',),
     'emailAddress': ('email',),
-    'givenname': ('first_name',),
+    'givenName': ('first_name',),
     'surname': ('last_name',),
 }
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'

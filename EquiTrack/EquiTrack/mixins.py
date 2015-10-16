@@ -47,6 +47,8 @@ class EToolsTenantMiddleware(TenantMiddleware):
             return None
         elif request.user.is_anonymous():
             return HttpResponseRedirect(settings.LOGIN_URL)
+        elif request.user.is_superuser and not request.user.profile.country:
+            return None
 
         try:
             request.tenant = request.user.profile.country

@@ -58,13 +58,13 @@ SUIT_CONFIG = {
             {'model': 'reports.goal'},
         ]},
 
-        {'app': 'activityinfo', 'label': 'ActivityInfo'},
+        #{'app': 'activityinfo', 'label': 'ActivityInfo'},
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
         {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 
-        {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
+        #{'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
 
@@ -400,8 +400,10 @@ SHARED_APPS = (
     'paintstore',
     'corsheaders',
     'djangosaml2',
+    'mptt',
 
     'registration',
+    'vision',
 
     # you must list the app where your tenant model resides in
     'users',

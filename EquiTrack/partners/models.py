@@ -57,8 +57,9 @@ class PartnerOrganization(models.Model):
     CBO = u'cbo'
     ACADEMIC = u'academic',
     PARTNER_TYPES = (
+        (u'', u'------'),
         (INTERNATIONAL, u"International NGO"),
-        {NATIONAL, u"NGO"},
+        {NATIONAL, u"National NGO"},
         (CBO, u"CBO"),
         (ACADEMIC, u"Academic Institution"),
     )
@@ -131,6 +132,7 @@ class PartnerOrganization(models.Model):
     core_values_assessment = models.FileField(
         blank=True, null=True,
         upload_to='partners/core_values/',
+        help_text=u'Only required for CSO partners'
     )
 
     class Meta:
@@ -275,11 +277,11 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     IC = u'ic'
     AWP = u'AWP'
     AGREEMENT_TYPES = (
-        (PCA, u"Partner Cooperation Agreement"),
+        (PCA, u"Programme Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
         (IC, u'Institutional Contract'),
-        (AWP, u"Annual Work Plan"),
+        (AWP, u"Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -289,10 +291,9 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     )
     agreement_number = models.CharField(
         max_length=45L,
-        unique=True,
-        help_text=u'PCA Reference Number'
+        unique=True, blank=True,
+        help_text=u'Reference Number'
     )
-
     attached_agreement = models.FileField(
         upload_to=u'agreements',
         blank=True,
@@ -353,10 +354,12 @@ class PCA(AdminURLMixin, models.Model):
     PD = u'pd'
     SHPD = u'shpd'
     DCT = u'dct'
+    SSFA = u'ssfa'
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (DCT, u'DCT to Government'),
+        (DCT, u'Cash Transfer'),
+        (SSFA, u'SSFA ToR'),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -384,7 +387,7 @@ class PCA(AdminURLMixin, models.Model):
         max_length=45L,
         blank=True,
         default=u'UNASSIGNED',
-        help_text=u'PRC Reference Number'
+        help_text=u'Document Reference Number'
     )
     title = models.CharField(max_length=256L)
     status = models.CharField(
@@ -628,7 +631,10 @@ class PartnershipBudget(TimeStampedModel):
     partnership = models.ForeignKey(PCA, related_name='budget_log')
     partner_contribution = models.IntegerField(default=0)
     unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(default=0)
+    in_kind_amount = models.IntegerField(
+        default=0, verbose_name='UNICEF Supplies')
+    year = models.CharField(
+        max_length=5, blank=True, null=True)
     total = models.IntegerField(default=0)
     amendment = models.ForeignKey(
         AmendmentLog,

@@ -179,7 +179,17 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'Report', {
             u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
             u'fields': (
-                u'main_observations',),
+                u'main_observations',
+            ),
+        }),
+
+        (u'Constraints/Challenges/Opportunities', {
+            u'classes': (u'suit-tab suit-tab-reporting',),
+            u'fields': (
+                u'constraints',
+                u'lessons_learned',
+                u'opportunities',
+            ),
         }),
 
         (u'Travel Closure', {

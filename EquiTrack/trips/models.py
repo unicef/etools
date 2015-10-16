@@ -131,6 +131,7 @@ class Trip(AdminURLMixin, models.Model):
 
     ta_drafted = models.BooleanField(
         default=False,
+        verbose_name='TA',
         help_text='Has the TA been drafted in vision if applicable?'
     )
     ta_drafted_date = models.DateField(blank=True, null=True)
@@ -361,7 +362,9 @@ post_save.connect(Trip.send_trip_request, sender=Trip)
 class TripFunds(models.Model):
 
     trip = models.ForeignKey(Trip)
-    wbs = models.ForeignKey(Result)
+    wbs = models.ForeignKey(
+        Result, verbose_name='WBS'
+    )
     grant = models.ForeignKey(Grant)
     amount = models.PositiveIntegerField(
         verbose_name='Percentage (%)'

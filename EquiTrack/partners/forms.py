@@ -2,10 +2,6 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-#import pandas
-
-
-
 from django.utils.translation import ugettext as _
 from django import forms
 from django.contrib import messages
@@ -36,6 +32,7 @@ from .models import (
     PartnerStaffMember,
     SupplyItem,
     DistributionPlan,
+    PartnershipBudget
 )
 
 
@@ -208,35 +205,36 @@ class AgreementForm(UserGroupForm):
             'partner_manager': LinkedSelect,
         }
 
-    # def __init__(self, *args, **kwargs):
-    #     super(AgreementForm, self).__init__(*args, **kwargs)
-    #     self.fields['start'].required = True
-    #     self.fields['end'].required = True
-    #
-    # def clean(self):
-    #     cleaned_data = super(AgreementForm, self).clean()
-    #
-    #     partner = cleaned_data[u'partner']
-    #     agreement_type = cleaned_data[u'agreement_type']
-    #     start = cleaned_data[u'start']
-    #     end = cleaned_data[u'end']
-    #
-    #     # prevent more than one agreement being crated for the current period
-    #     agreements = Agreement.objects.filter(
-    #         partner=partner,
-    #         start__lte=start,
-    #         end__gte=end
-    #     )
-    #     if self.instance:
-    #         agreements = agreements.exclude(id=self.instance.id)
-    #     if agreements:
-    #         raise ValidationError(
-    #             u'You can only have one current {} per partner'.format(
-    #                 agreement_type
-    #             )
-    #         )
-    #
-    #     return cleaned_data
+    def clean(self):
+        cleaned_data = super(AgreementForm, self).clean()
+
+        partner = cleaned_data[u'partner']
+        agreement_type = cleaned_data[u'agreement_type']
+        agreement_number = cleaned_data[u'agreement_number']
+        start = cleaned_data[u'start']
+        end = cleaned_data[u'end']
+
+        if agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
+            raise ValidationError(
+                _(u'Please provide the agreement reference for this {}'.format(agreement_type))
+            )
+
+        # TODO: prevent more than one agreement being crated for the current period
+        # agreements = Agreement.objects.filter(
+        #     partner=partner,
+        #     start__lte=start,
+        #     end__gte=end
+        # )
+        # if self.instance:
+        #     agreements = agreements.exclude(id=self.instance.id)
+        # if agreements:
+        #     raise ValidationError(
+        #         u'You can only have one current {} per partner'.format(
+        #             agreement_type
+        #         )
+        #     )
+
+        return cleaned_data
 
 
 class PartnershipForm(UserGroupForm):
@@ -395,7 +393,7 @@ class PartnershipForm(UserGroupForm):
                 u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
-        if start_date < signed_by_unicef_date:
+        if signed_by_unicef_date and start_date and (start_date < signed_by_unicef_date):
             raise ValidationError(
                 u'The start date must be greater or equal to the singed by date'
             )
@@ -417,3 +415,21 @@ class PartnershipForm(UserGroupForm):
         #     self.import_results_from_work_plan(work_plan, work_plan_sector)
 
         return cleaned_data
+
+
+class PartnershipBudgetAdminForm(AmendmentForm):
+
+    class Meta:
+        model = PartnershipBudget
+
+    def __init__(self, *args, **kwargs):
+        super(PartnershipBudgetAdminForm, self).__init__(*args, **kwargs)
+
+        years = None
+        if hasattr(self, 'parent_partnership') and self.parent_partnership.start_date and self.parent_partnership.end_date:
+
+            years = range(self.parent_partnership.end_date.year, self.parent_partnership.start_date.year+1)
+
+        self.fields['year'] = forms.ChoiceField(
+            choices=[(year, year) for year in years] if years else []
+        )

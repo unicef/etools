@@ -133,8 +133,8 @@ class UserDashboardView(TemplateView):
                 Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)),
             'log': LogEntry.objects.select_related().filter(
                 user=self.request.user).order_by("-id")[:10],
-            'pcas': PCA.objects.filter(
-                unicef_managers=user, status=PCA.ACTIVE
+            'pcas': PCA.objects.filter(unicef_managers=user).filter(
+                Q(status=PCA.ACTIVE) | Q(status=PCA.IN_PROCESS)
             ).order_by("number", "-amendment_number")[:10],
             'action_points': ActionPoint.objects.filter(
                 Q(status='open') | Q(status='ongoing'),
