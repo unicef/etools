@@ -80,6 +80,8 @@ class TripUploadPictureView(APIView):
             raise ParseError(detail="File type not supported")
 
         # format it "picture_01.jpg" this way will be making the file easier to search
+        # if the file doesn't get auto_incremented use this:
+        # file_obj.name = "picture_"+ str(trip.files.count()) + "." + ext
         file_obj.name = "picture." + ext
 
         # get the picture type
@@ -129,7 +131,7 @@ class TripActionView(GenericAPIView):
         current_user = self.request.user
 
         # for now... hardcoding some validation in here.
-        if action not in ["approved", "submitted", "cancelled"]:
+        if action not in ["approved", "submitted", "cancelled", "completed"]:
             raise ParseError(detail="action must be a valid action")
 
         trip = self.get_object()
@@ -146,6 +148,26 @@ class TripActionView(GenericAPIView):
 
             data = {"approved_by_supervisor": True,
                     "date_supervisor_approved": datetime.date.today()}
+
+        elif action == 'completed':
+
+            if trip.status != Trip.APPROVED:
+                raise ParseError(
+                    detail='The trip has to be previously approved in order to complete it'
+                )
+
+            if not trip.main_observations and trip.travel_type != Trip.STAFF_ENTITLEMENT:
+                raise ParseError(
+                    detail='You must provide a narrative report before the trip can be completed'
+                )
+
+            if trip.ta_required and trip.ta_trip_took_place_as_planned is False and current_user != trip.programme_assistant:
+                raise ParseError(
+                    detail='Only the TA travel assistant can complete the trip'
+                )
+            data = {
+                "status": action,
+            }
 
         else:
             data = {"status": action,
