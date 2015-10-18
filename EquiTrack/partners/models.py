@@ -57,7 +57,6 @@ class PartnerOrganization(models.Model):
     CBO = u'cbo'
     ACADEMIC = u'academic',
     PARTNER_TYPES = (
-        (u'', u'------'),
         (INTERNATIONAL, u"International NGO"),
         {NATIONAL, u"National NGO"},
         (CBO, u"CBO"),
@@ -66,9 +65,14 @@ class PartnerOrganization(models.Model):
 
     type = models.CharField(
         max_length=50,
-        choices=PARTNER_TYPES,
-        default=NATIONAL,
-        verbose_name=u'CSO Type'
+        choices=Choices(
+            u'International NGO',
+            u'National NGO',
+            u'CBO',
+            u'Academic Institution',
+        ),
+        verbose_name=u'CSO Type',
+        blank=True,
     )
     partner_type = models.CharField(
         max_length=50,
@@ -162,7 +166,8 @@ class PartnerStaffMember(models.Model):
 class Assessment(models.Model):
 
     partner = models.ForeignKey(
-        PartnerOrganization
+        PartnerOrganization,
+        related_name='assessments'
     )
     type = models.CharField(
         max_length=50,
@@ -181,7 +186,8 @@ class Assessment(models.Model):
                   u'agencies they have worked with'
     )
     expected_budget = models.IntegerField(
-        verbose_name=u'Planned amount'
+        verbose_name=u'Planned amount',
+        blank=True, null=True,
     )
     notes = models.CharField(
         max_length=255,
@@ -195,7 +201,8 @@ class Assessment(models.Model):
     )
     requesting_officer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='requested_assessments'
+        related_name='requested_assessments',
+        blank=True, null=True
     )
     approving_officer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -217,7 +224,7 @@ class Assessment(models.Model):
         upload_to='assessments'
     )
     current = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name=u'Basis for risk rating'
     )
 
@@ -269,7 +276,7 @@ class Recommendation(models.Model):
         verbose_name_plural = 'Key recommendations'
 
 
-class Agreement(TimeFramedModel, TimeStampedModel):
+class Agreement(TimeStampedModel):
 
     PCA = u'PCA'
     MOU = u'MOU'
@@ -298,6 +305,8 @@ class Agreement(TimeFramedModel, TimeStampedModel):
         upload_to=u'agreements',
         blank=True,
     )
+    start = models.DateField(null=True, blank=True)
+    end = models.DateField(null=True, blank=True)
 
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by = models.ForeignKey(
@@ -849,7 +858,7 @@ class ResultChain(models.Model):
     def __unicode__(self):
         return u'{} -> {} -> {}'.format(
             self.result.result_structure.name,
-            self.result.sector.name,
+            self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
 
