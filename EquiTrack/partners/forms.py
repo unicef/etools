@@ -12,9 +12,10 @@ from django.core.exceptions import (
     MultipleObjectsReturned
 )
 
-from suit.widgets import AutosizedTextarea, LinkedSelect
+from suit.widgets import AutosizedTextarea, LinkedSelect, SuitDateWidget
 
 from EquiTrack.forms import (
+    AutoSizeTextForm,
     ParentInlineAdminFormSet,
     RequireOneFormSet,
     UserGroupForm,
@@ -24,6 +25,7 @@ from reports.models import Sector, Result, Indicator
 from .models import (
     PCA,
     PartnerOrganization,
+    Assessment,
     GwPCALocation,
     ResultChain,
     AmendmentLog,
@@ -50,10 +52,52 @@ from .models import (
 #     class Meta:
 #         model = GwPCALocation
 
-class PartnersAdminForm(forms.ModelForm):
+class PartnersAdminForm(AutoSizeTextForm):
 
     class Meta:
         model = PartnerOrganization
+
+    def clean(self):
+        cleaned_data = super(PartnersAdminForm, self).clean()
+
+        partner_type = cleaned_data[u'partner_type']
+        cso_type = cleaned_data[u'type']
+
+        if partner_type and not cso_type:
+            raise ValidationError(
+                _(u'You must select a type for this CSO')
+            )
+
+        return cleaned_data
+
+
+class AssessmentAdminForm(AutoSizeTextForm):
+
+    class Meta:
+        model = Assessment
+
+    def __init__(self, *args, **kwargs):
+        """
+        Filter linked results by sector and result structure
+        """
+        if 'parent_object' in kwargs:
+            self.parent_partnership = kwargs.pop('parent_object')
+
+        super(AssessmentAdminForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super(AssessmentAdminForm, self).clean()
+
+        current = cleaned_data[u'current']
+
+        if hasattr(self, 'parent_partnership'):
+            exisiting = self.parent_partnership.assessments.filter(current=True).exclude(pk=self.instance.id)
+            if exisiting and current:
+                raise ValidationError(
+                    _(u'You can only have assessment or audit as the basis of the risk rating')
+                )
+
+        return cleaned_data
 
 
 class ResultChainAdminForm(forms.ModelForm):
@@ -139,7 +183,7 @@ class AuthorizedOfficersForm(forms.ModelForm):
         self.fields['officer'].queryset = PartnerStaffMember.objects.filter(
             partner=self.parent_agreement.partner
         ) if hasattr(self, 'parent_agreement') \
-             and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
+            and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
 
 
 class DistributionPlanForm(forms.ModelForm):
@@ -203,18 +247,20 @@ class AgreementForm(UserGroupForm):
             'partner': LinkedSelect,
             'signed_by': LinkedSelect,
             'partner_manager': LinkedSelect,
+            'start': SuitDateWidget,
+            'end': SuitDateWidget,
         }
+
+    def __init__(self, *args, **kwargs):
+        super(AgreementForm, self).__init__(*args, **kwargs)
 
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()
 
-        partner = cleaned_data[u'partner']
         agreement_type = cleaned_data[u'agreement_type']
         agreement_number = cleaned_data[u'agreement_number']
-        start = cleaned_data[u'start']
-        end = cleaned_data[u'end']
 
-        if agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
+        if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
             raise ValidationError(
                 _(u'Please provide the agreement reference for this {}'.format(agreement_type))
             )

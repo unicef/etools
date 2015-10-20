@@ -54,6 +54,8 @@ from .filters import (
 from .mixins import ReadOnlyMixin, SectorMixin
 from .forms import (
     PartnershipForm,
+    PartnersAdminForm,
+    AssessmentAdminForm,
     ResultChainAdminForm,
     AmendmentForm,
     AgreementForm,
@@ -381,6 +383,8 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
 
 class AssessmentAdminInline(admin.TabularInline):
     model = Assessment
+    form = AssessmentAdminForm
+    formset = ParentInlineAdminFormSet
     extra = 0
     fields = (
         u'type',
@@ -426,7 +430,7 @@ class DocumentInlineAdmin(admin.TabularInline):
 
 
 class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
-    form = AutoSizeTextForm
+    form = PartnersAdminForm
     resource_class = PartnerResource
     list_display = (
         u'name',
