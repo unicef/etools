@@ -515,6 +515,12 @@ class FileAttachment(models.Model):
     trip = models.ForeignKey(Trip, null=True, blank=True, related_name=u'files')
     type = models.ForeignKey(u'partners.FileType')
     file = FilerFileField(null=True, blank=True)
+    caption = models.TextField(
+        null=True,
+        blank=True,
+        verbose_name='Caption / Description',
+        help_text='Description of the file to upload: optional',
+    )
     report = models.FileField(
         upload_to=get_report_filename
     )
