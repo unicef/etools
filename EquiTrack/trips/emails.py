@@ -97,6 +97,7 @@ class TripRepresentativeEmail(TripCreatedEmail):
     Thank you.
     """
 
+
 class TripTravelAssistantEmail(TripCreatedEmail):
 
     template_name = "travel/trip/travel_or_admin_assistant"

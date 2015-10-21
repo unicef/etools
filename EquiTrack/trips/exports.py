@@ -33,16 +33,23 @@ class TripResource(BaseExportResource):
 
     def fill_trip_partners(self, row, trip):
 
-        partners = [pca.partner.name for pca in trip.pcas.all()]
-        partners.extend(
-            [partner.name for partner in trip.partners.all()]
-        )
+        for partner in trip.partners.all():
+            self.insert_column(
+                row,
+                partner.name,
+                'x',
+            )
 
-        self.insert_column(
-            row,
-            'Partners',
-            ', '.join(set(partners))
-        )
+        # partners = [pca.partner.name for pca in trip.pcas.all()]
+        # partners.extend(
+        #     [partner.name for partner in trip.partners.all()]
+        # )
+        #
+        # self.insert_column(
+        #     row,
+        #     'Partners',
+        #     ', '.join(set(partners))
+        # )
 
     def fill_trip_row(self, row, trip):
 

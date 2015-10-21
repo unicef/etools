@@ -1,6 +1,7 @@
 __author__ = 'jcranwellward'
 
 import datetime
+from copy import deepcopy
 
 from django.db import models
 from django.db.models import Q
@@ -19,7 +20,7 @@ import reversion
 
 from EquiTrack.mixins import AdminURLMixin
 # from locations.models import LinkedLocation
-from reports.models import WBS
+from reports.models import WBS, Sector
 from funds.models import Grant
 from locations.models import Governorate, Locality, Location, Region
 from . import emails
@@ -162,6 +163,11 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
+    driver = models.ForeignKey(User, related_name='trips_driver', verbose_name='Driver', null=True, blank=True)
+    driver_supervisor = models.ForeignKey(User, verbose_name='Supervisor for Driver',
+                                          related_name='driver_supervised_trips', null=True, blank=True)
+    driver_trip = models.ForeignKey('self', null=True, blank=True, related_name='drivers_trip')
+
     locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(User, verbose_name='Traveller', related_name='trips')
@@ -280,7 +286,64 @@ class Trip(AdminURLMixin, models.Model):
         if self.status is not Trip.CANCELLED and self.cancelled_reason:
             self.status = Trip.CANCELLED
 
+        if self.status == Trip.APPROVED and \
+        self.driver is not None and \
+        self.driver_supervisor is not None and \
+        self.driver_trip is None:
+            self.create_driver_trip()
+
+        if self.status == Trip.COMPLETED and self.driver_trip:
+            driver_trip = Trip.objects.get(id=self.driver_trip.id)
+            driver_trip.status = Trip.COMPLETED
+            driver_trip.save()
+            # super(Trip, driver_trip).save(**kwargs)
+
         super(Trip, self).save(**kwargs)
+
+    def create_driver_trip(self):
+        trip = deepcopy(self)
+        trip.pk = None
+        trip.status = Trip.SUBMITTED
+        trip.id = None
+        trip.owner = self.driver
+        trip.supervisor = self.driver_supervisor
+        trip.approved_by_supervisor = False
+        trip.date_supervisor_approved = None
+        trip.approved_by_budget_owner = False
+        trip.date_budget_owner_approved = None
+        trip.approved_by_human_resources = None
+        trip.representative_approval = None
+        trip.date_representative_approved = None
+        trip.approved_date = None
+        trip.approved_email_sent = False
+        trip.driver = None
+        trip.driver_supervisor = None
+
+        super(Trip, trip).save()
+
+        for route in self.travelroutes_set.all():
+            TravelRoutes.objects.create(
+                trip=trip,
+                origin=route.origin,
+                destination=route.destination,
+                depart=route.depart,
+                arrive=route.arrive,
+                remarks=route.remarks
+            )
+
+        for location in self.triplocation_set.all():
+            TripLocation.objects.create(
+                trip=trip,
+                governorate=location.governorate,
+                region=location.region,
+                locality=location.locality,
+                location=location.location
+            )
+
+        self.driver_trip = trip
+        print trip
+
+
 
     @property
     def all_files(self):

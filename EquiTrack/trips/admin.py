@@ -14,6 +14,7 @@ from generic_links.admin import GenericLinkStackedInline
 from messages_extends import constants as constants_messages
 from users.models import UserProfile
 
+from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
 from locations.models import LinkedLocation
 from .models import (
@@ -111,8 +112,8 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     form = TripForm
     inlines = (
         TravelRoutesInlineAdmin,
-        TripFundsInlineAdmin,
         TripLocationsInlineAdmin,
+        TripFundsInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
@@ -138,6 +139,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'status',
         u'approved_date',
         u'outstanding_actions',
+        'show_driver_trip',
     )
     list_filter = (
         u'owner',
@@ -159,6 +161,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     )
     readonly_fields = (
         u'reference',
+        u'show_driver_trip',
     )
     fieldsets = (
         (u'Traveler', {
@@ -196,12 +199,15 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'Travel/Admin', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (u'transport_booked',
-                 u'security_granted',
-                 u'ta_drafted',
-                 u'ta_reference',
-                 u'ta_drafted_date',
-                 u'vision_approver',),
+                (
+                (u'driver', u'driver_supervisor'),
+                # u'show_driver_trip',
+                u'transport_booked',
+                u'security_granted',
+                u'ta_drafted',
+                u'ta_reference',
+                u'ta_drafted_date',
+                u'vision_approver',),
         }),
 
         (u'Report', {
@@ -223,6 +229,13 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         (u'reporting', u'Reporting'),
         (u'attachments', u'Attachments')
     )
+
+    def show_driver_trip(self, obj):
+        if obj.driver_trip:
+            return get_changeform_link(obj.driver_trip, link_name='View Driver')
+        return ''
+    show_driver_trip.allow_tags = True
+    show_driver_trip.short_description = 'Trip for Driver'
 
     def save_formset(self, request, form, formset, change):
         """
@@ -295,8 +308,11 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             fields.remove(u'date_human_resources_approved')
 
         rep_group, created = Group.objects.get_or_create(
-            name=u'Representative Office'
-        )
+            name=u'Representative Office')
+
+        driver_group, created = Group.objects.get_or_create(
+            name=u'Driver')
+
         if trip and rep_group in request.user.groups.all():
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
@@ -322,6 +338,10 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
         if db_field.name == u'representative':
             rep_group = Group.objects.get(name=u'Representative Office')
+            kwargs['queryset'] = rep_group.user_set.all()
+
+        if db_field.name == u'driver':
+            rep_group = Group.objects.get(name=u'Driver')
             kwargs['queryset'] = rep_group.user_set.all()
 
         return super(TripReportAdmin, self).formfield_for_foreignkey(
