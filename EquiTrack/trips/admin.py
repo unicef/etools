@@ -3,6 +3,8 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import models
+from django.forms import Textarea
 
 from reversion import VersionAdmin
 from import_export.admin import ExportMixin
@@ -68,7 +70,14 @@ class TripLocationsInlineAdmin(admin.TabularInline):
 class FileAttachmentInlineAdmin(admin.TabularInline):
     model = FileAttachment
     suit_classes = u'suit-tab suit-tab-attachments'
-    fields = (u'type', u'report')
+    # make the textarea a little smaller by default. they can be extended if needed
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':40})},
+    }
+    fields = (u'type', u'caption', u'report')
+    # get the number of extra fields (it looks to bulky with 3
+    # if more are needed the "add another fileAttachment" appears
+    extra = 1
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):

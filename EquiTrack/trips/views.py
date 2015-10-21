@@ -66,6 +66,9 @@ class TripUploadPictureView(APIView):
         if not file_obj:
             raise ParseError(detail="No file was sent.")
 
+        caption = request.data.get('caption')
+        logging.info("Caption received :{}".format(caption))
+
         # get the trip id from the url
         trip_id = kwargs.get("trip")
         trip = Trip.objects.filter(pk=trip_id).get()
@@ -90,11 +93,15 @@ class TripUploadPictureView(APIView):
         # create the FileAttachment object
         # TODO: desperate need of validation here: need to check if file is indeed a valid picture type
         # TODO: potentially process the image at this point to reduce size / create thumbnails
-        FileAttachment.objects.create(
-            **{"report": file_obj,
+        my_file_attachment = {
+            "report": file_obj,
             "type": picture_type,
-            "trip": trip}
-        )
+            "trip": trip
+        }
+        if caption:
+            my_file_attachment['caption'] = caption
+
+        FileAttachment.objects.create(**my_file_attachment)
 
         # TODO: return a more meaningful response
         return Response(status=204)
