@@ -126,7 +126,6 @@ class IndicatorAdmin(ImportExportModelAdmin):
         'sector',
         'result_structure',
         'result',
-        'in_activity_info',
         'view_on_dashboard',
     )
     filter_horizontal = (
@@ -160,7 +159,6 @@ class WBSAdmin(ImportExportModelAdmin):
 
 
 admin.site.register(Result, ResultAdmin)
-admin.site.register(ResultType)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
 admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)
