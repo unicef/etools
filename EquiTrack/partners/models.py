@@ -530,7 +530,7 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def days_from_review_to_signed(self):
-        if not self.submission_date:
+        if not self.submission_date or not self.review_date:
             return u'Not Reviewed'
         signed_date = self.signed_by_partner_date or datetime.date.today()
         return (signed_date - self.review_date).days
