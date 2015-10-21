@@ -22,8 +22,8 @@ class Command(BaseCommand):
 
                 result_structure, created = ResultStructure.objects.get_or_create(
                     name=result['COUNTRY_PROGRAMME_NAME'],
-                    from_date=datetime.date(2011, 1, 1),
-                    to_date=datetime.date(2015, 12, 31),
+                    from_date=datetime.date(2012, 1, 1),
+                    to_date=datetime.date(2016, 12, 31),
                 )
 
                 outcome, created = Result.objects.get_or_create(

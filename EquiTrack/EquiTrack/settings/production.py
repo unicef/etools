@@ -30,20 +30,20 @@ AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER', None)
 if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
 
     DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-    MEDIA_URL = 'https://{}.blob.core.windows.net/{}/'.format(
-        AZURE_ACCOUNT_NAME, AZURE_CONTAINER
-    )
+    # MEDIA_URL = 'https://{}.blob.core.windows.net/{}/'.format(
+    #     AZURE_ACCOUNT_NAME, AZURE_CONTAINER
+    # )
     FILER_IS_PUBLIC_DEFAULT = False
     FILER_STORAGES = {
         'public': {
             'main': {
-                'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
+                'ENGINE': 'storages.backends.azure_storage.AzureStorage',
                 'UPLOAD_TO': 'partners.utils.by_pca',
             },
         },
         'private': {
             'main': {
-                'ENGINE': 'storages.backends.s3boto.S3BotoStorage',
+                'ENGINE': 'storages.backends.azure_storage.AzureStorage',
                 'UPLOAD_TO': 'partners.utils.by_pca',
             },
         },
