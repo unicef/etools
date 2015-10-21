@@ -8,6 +8,7 @@ from django.db import connection
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
+from rest_framework.exceptions import PermissionDenied
 
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
@@ -77,6 +78,8 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
     def authenticate(self, request):
 
         user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
+        if not user.profile.country:
+            raise PermissionDenied(detail='No country found for user')
 
         connection.set_tenant(user.profile.country)
         request.tenant = user.profile.country

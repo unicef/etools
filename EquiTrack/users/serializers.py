@@ -9,6 +9,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     office = serializers.CharField(source='office.name')
     section = serializers.CharField(source='section.name')
+    country_name = serializers.CharField(source='country.name')
 
     class Meta:
         model = UserProfile
@@ -42,12 +43,7 @@ class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
 
     def get_profile(self, user):
-        try:
-            return UserProfileSerializer(
-                user.profile
-            ).data
-        except Exception:
-            return None
+        return UserProfileSerializer(user.profile).data
 
     class Meta:
         model = User
