@@ -9,9 +9,6 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
 
-        # Deleting model 'SpotCheck'
-        db.delete_table(u'partners_spotcheck')
-
         # Adding field 'DistributionPlan.send'
         db.add_column(u'partners_distributionplan', 'send',
                       self.gf('django.db.models.fields.BooleanField')(default=False),
@@ -27,23 +24,7 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.IntegerField')(default=0),
                       keep_default=False)
 
-        # Deleting field 'PartnerOrganization.activity_info_partner'
-        db.delete_column(u'partners_partnerorganization', 'activity_info_partner_id')
-
-
     def backwards(self, orm):
-        # Adding model 'SpotCheck'
-        db.create_table(u'partners_spotcheck', (
-            ('sector', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['reports.Sector'], null=True, blank=True)),
-            ('amount', self.gf('django.db.models.fields.IntegerField')(default=0, null=True, blank=True)),
-            ('recommendations', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-            ('planned_date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-            ('partner_agrees', self.gf('django.db.models.fields.BooleanField')(default=False)),
-            ('pca', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['partners.PCA'])),
-            ('completed_date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-        ))
-        db.send_create_signal(u'partners', ['SpotCheck'])
 
         # Deleting field 'DistributionPlan.send'
         db.delete_column(u'partners_distributionplan', 'send')
@@ -53,12 +34,6 @@ class Migration(SchemaMigration):
 
         # Deleting field 'DistributionPlan.delivered'
         db.delete_column(u'partners_distributionplan', 'delivered')
-
-        # Adding field 'PartnerOrganization.activity_info_partner'
-        db.add_column(u'partners_partnerorganization', 'activity_info_partner',
-                      self.gf('django.db.models.fields.related.ForeignKey')(to=orm['activityinfo.Partner'], null=True, blank=True),
-                      keep_default=False)
-
 
     models = {
         u'activityinfo.activity': {
