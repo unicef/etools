@@ -133,10 +133,10 @@ class PartnerOrganization(models.Model):
         default=HIGH,
         verbose_name=u'Risk Rating'
     )
-    core_values_assessment_date = models.DateField(
-        blank=True, null=True,
-        verbose_name=u'Date positively assessed against core values'
-    )
+    # core_values_assessment_date = models.DateField(
+    #     blank=True, null=True,
+    #     verbose_name=u'Date positively assessed against core values'
+    # )
 
     class Meta:
         ordering = ['name']
