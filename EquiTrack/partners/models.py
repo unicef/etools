@@ -367,7 +367,7 @@ class PCA(AdminURLMixin, models.Model):
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (DCT, u'Cash Transfer'),
+        (DCT, u'Cash Transfers to Government'),
         (SSFA, u'SSFA ToR'),
     )
 
