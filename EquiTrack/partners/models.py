@@ -72,7 +72,7 @@ class PartnerOrganization(models.Model):
             u'Academic Institution',
         ),
         verbose_name=u'CSO Type',
-        blank=True,
+        blank=True, null=True
     )
     partner_type = models.CharField(
         max_length=50,

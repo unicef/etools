@@ -63,7 +63,7 @@ class PartnersAdminForm(AutoSizeTextForm):
         partner_type = cleaned_data[u'partner_type']
         cso_type = cleaned_data[u'type']
 
-        if partner_type and not cso_type:
+        if partner_type == u'Civil Society Organisation' and not cso_type:
             raise ValidationError(
                 _(u'You must select a type for this CSO')
             )

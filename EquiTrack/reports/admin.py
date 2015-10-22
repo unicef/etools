@@ -113,7 +113,6 @@ class IndicatorAdmin(ImportExportModelAdmin):
     form = IndicatorAdminForm
     search_fields = ('name',)
     list_editable = (
-        'in_activity_info',
         'view_on_dashboard',
     )
     list_filter = (
@@ -127,9 +126,6 @@ class IndicatorAdmin(ImportExportModelAdmin):
         'result_structure',
         'result',
         'view_on_dashboard',
-    )
-    filter_horizontal = (
-        'activity_info_indicators',
     )
     inlines = [
         IndicatorProgressInlineAdmin,
