@@ -307,6 +307,7 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     signed_by = models.ForeignKey(
         User,
         related_name='signed_pcas',
+        verbose_name='Signed by unicef',
         null=True, blank=True
     )
 
@@ -603,8 +604,13 @@ class AmendmentLog(TimeStampedModel):
             'Activity',
             'Other',
         ))
-    amended_at = models.DateField(null=True)
+    amended_at = models.DateField(null=True, verbose_name='Signed At')
     amendment_number = models.IntegerField(default=0)
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=Choices('In Process', 'Active', 'Signed', 'Cancelled'),
+        )
 
     def __unicode__(self):
         return u'{}: {} - {}'.format(
