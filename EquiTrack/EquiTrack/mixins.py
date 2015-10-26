@@ -5,6 +5,7 @@ __author__ = 'jcranwellward'
 
 from django.conf import settings
 from django.db import connection
+from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
@@ -54,6 +55,11 @@ class EToolsTenantMiddleware(TenantMiddleware):
             request.tenant = request.user.profile.country
             connection.set_tenant(request.tenant)
         except Exception as exp:
+            messages.info(
+                request,
+                'Your country instance is not yet configured, '
+                'probably because eTools has not been rolled in your office yet. '
+                'Please contact a member of the eTools team for more information.')
             raise self.TENANT_NOT_FOUND_EXCEPTION(
                 'No country found for user {}'.format(request.user))
 

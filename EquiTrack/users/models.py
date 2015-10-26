@@ -17,7 +17,7 @@ class UsersManager(UserManager):
     def get_query_set(self):
         return super(UsersManager, self).get_query_set().filter(profile__country=connection.tenant)
 
-#User.objects = UsersManager
+User.objects = UsersManager
 
 
 class Country(TenantMixin):

@@ -104,12 +104,6 @@ REST_FRAMEWORK = {
     )
 }
 
-# this secret key should be the same as the saml secret key
-#JWT_SECRET_KEY = os.environ.get('SECRET_KEY', '5b734cf8450e48350477eff0b49ab39b')
-
-
-
-
 
 ########## JWT AUTH CONFIGURATION
 certificate_text = open(join(DJANGO_ROOT, 'saml/stspem.cer'), 'r').read()

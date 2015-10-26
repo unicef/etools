@@ -67,7 +67,7 @@ class VisionAPIClient(object):
         )
         return response
 
-    def get_buisness_areas(self):
+    def get_business_areas(self):
         return self.make_request('GetBusinessAreaList_JSON').json()
 
     def get_programme_structure(self, business_area):
@@ -103,7 +103,7 @@ def main():
             password=args.password,
         )
 
-        print client.get_buisness_areas()
+        print client.get_business_areas()
 
     except Exception as exp:
         print str(exp)
