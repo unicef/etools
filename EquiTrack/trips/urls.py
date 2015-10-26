@@ -10,12 +10,20 @@ from .views import (
     TripActionView,
     TripDetailsView,
     TripUploadPictureView,
+    AppsTemplateView,
+    AppsIOSTemplateView,
+    AppsAndroidTemplateView,
+    AppsIOSPlistView,
 )
 
 
 urlpatterns = patterns(
     '',
     url(r'^approved/$', TripsApprovedView.as_view()),
+    url(r'apps/$', AppsTemplateView.as_view()),
+    url(r'apps/ios/$', AppsIOSTemplateView.as_view()),
+    url(r'apps/android/$', AppsAndroidTemplateView.as_view()),
+    url(r'apps/ios/etrips.plist$', AppsIOSPlistView.as_view(), name="eTrips_plist"),
     url(r'api/list/$', TripsListApi.as_view()),
     url(r'api/(?P<trip>\d+)/upload/$', TripUploadPictureView.as_view()),
     url(r'api/(?P<trip>\d+)/(?P<action>\D+)/$', TripActionView.as_view()),
