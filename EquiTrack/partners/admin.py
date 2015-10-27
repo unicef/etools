@@ -133,6 +133,7 @@ class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     extra = 0
     fields = (
         'type',
+        'status',
         'amended_at',
         'amendment_number',
     )
@@ -252,6 +253,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'partner',
         PCADonorFilter,
         PCAGatewayTypeFilter,
+        PCAGrantFilter,
     )
     search_fields = (
         'number',
@@ -278,6 +280,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
             'fields':
                 ('partner',
                  'agreement',
+                 'number',
                  'partnership_type',
                  'result_structure',
                  'title',
@@ -285,7 +288,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
                  'initiation_date',
                  'submission_date',
                  'review_date',
-                 'number',
                  ('partner_manager', 'signed_by_partner_date',),
                  ('unicef_manager', 'signed_by_unicef_date',),
                  'partner_focal_point',
