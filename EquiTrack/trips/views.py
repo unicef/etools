@@ -48,30 +48,25 @@ def get_trip_months():
 
 class AppsTemplateView(TemplateView):
     template_name = "apps.html"
-    def get_context_data(self):
-        one = self.request.GET.get("one")
-        return {"one":one}
+
 
 class AppsIOSTemplateView(TemplateView):
     template_name = "apps_ios.html"
-    def get_context_data(self):
-        one = self.request.GET.get("one")
-        return {"one":one}
+
 
 class AppsAndroidTemplateView(TemplateView):
     template_name = "apps_android.html"
-    def get_context_data(self):
-        one = self.request.GET.get("one")
-        return {"one":one}
 
 
 class AppsIOSPlistView(View):
 
     def get(self, request):
-
+        # not serving this as a static file in case in the future we want to be able to change versions
         with open(settings.SITE_ROOT + '/trips/templates/etrips.plist', 'r') as my_f:
             result = my_f.read()
+
         return HttpResponse(result, content_type="application/octet-stream")
+
 
 class TripsApprovedView(ListAPIView):
 

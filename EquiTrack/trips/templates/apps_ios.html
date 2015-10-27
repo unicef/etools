@@ -26,11 +26,10 @@
             <div class="jumbotron padding">
                 
                 <p>
-                    <a class="btn btn-primary btn-block padding" href="itms-services://?action=download-manifest&amp;url={{ request.get_host }}{% url 'eTrips_plist' %}" role="button">Install Latest Version</a>
+                    <a class="btn btn-primary btn-block padding" href="itms-services://?action=download-manifest&amp;url=https://{{ request.get_host }}{% url 'eTrips_plist' %}" role="button">Install Latest Version</a>
                 </p>
             
+            </div>
         </div>
-        
- 
     </body>
 </html>
