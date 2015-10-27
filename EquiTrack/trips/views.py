@@ -5,7 +5,9 @@ import logging
 
 from django.db.models import Q
 from django.contrib.auth import get_user_model
-from django.views.generic import FormView
+from django.views.generic import FormView, TemplateView, View
+from django.http import HttpResponse
+from django.conf import settings
 
 from rest_framework.views import APIView
 from rest_framework.generics import (
@@ -42,6 +44,28 @@ def get_trip_months():
     months = list(set([datetime.datetime(date.year, date.month, 1) for date in dates]))
 
     return sorted(months, reverse=True)
+
+
+class AppsTemplateView(TemplateView):
+    template_name = "trips/apps/apps.html"
+
+
+class AppsIOSTemplateView(TemplateView):
+    template_name = "trips/apps/apps_ios.html"
+
+
+class AppsAndroidTemplateView(TemplateView):
+    template_name = "trips/apps/apps_android.html"
+
+
+class AppsIOSPlistView(View):
+
+    def get(self, request):
+        # not serving this as a static file in case in the future we want to be able to change versions
+        with open(settings.SITE_ROOT + '/templates/trips/apps/etrips.plist', 'r') as my_f:
+            result = my_f.read()
+
+        return HttpResponse(result, content_type="application/octet-stream")
 
 
 class TripsApprovedView(ListAPIView):
