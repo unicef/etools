@@ -21,7 +21,7 @@ from .views import (
 urlpatterns = patterns(
     '',
     url(r'^approved/$', TripsApprovedView.as_view()),
-    url(r'apps/$', AppsTemplateView.as_view()),
+    url(r'apps/$', AppsTemplateView.as_view(), name="etrips_apps"),
     url(r'apps/ios/$', AppsIOSTemplateView.as_view()),
     url(r'apps/android/$', AppsAndroidTemplateView.as_view()),
     url(r'api/apps/ios/etrips.plist$', AppsIOSPlistView.as_view(), name="eTrips_plist"),
