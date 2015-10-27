@@ -11,6 +11,7 @@ from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 from users.models import UserProfile
 
+from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import AutoSizeTextForm
 from .models import (
     Trip,
@@ -85,7 +86,7 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
-class TripReportAdmin(ExportMixin, VersionAdmin):
+class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     resource_class = TripResource
     save_as = True  # TODO: There is a bug using this
     form = TripForm

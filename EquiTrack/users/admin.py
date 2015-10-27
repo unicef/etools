@@ -26,7 +26,7 @@ class UserAdminPlus(ImportExportMixin, UserAdmin):
     resource_class = UserResource
 
     def get_queryset(self, request):
-        queryset = super(UserAdminPlus,self).get_queryset(request)
+        queryset = super(UserAdminPlus, self).get_queryset(request)
         if not request.user.is_superuser:
             queryset = queryset.filter(profile__country=request.tenant)
         return queryset

@@ -1,6 +1,6 @@
 from django.conf import settings
-from django.db import models, connection
-from django.contrib.auth.models import User, UserManager
+from django.db import models
+from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 
@@ -10,14 +10,6 @@ from locations.models import Governorate
 
 User.__unicode__ = lambda user: user.get_full_name()
 User._meta.ordering = ['first_name']
-
-
-class UsersManager(UserManager):
-
-    def get_query_set(self):
-        return super(UsersManager, self).get_query_set().filter(profile__country=connection.tenant)
-
-User.objects = UsersManager
 
 
 class Country(TenantMixin):

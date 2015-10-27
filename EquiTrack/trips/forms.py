@@ -41,7 +41,7 @@ class TravelRoutesForm(ModelForm):
                 depart = depart.date()
                 arrive = arrive.date()
 
-                #check if itinerary dates are outside the entire trip date range
+                # check if itinerary dates are outside the entire trip date range
                 if to_date < depart or depart < from_date or to_date < arrive or arrive < from_date:
                     raise ValidationError(
                         'Travel dates must be within overall trip dates'

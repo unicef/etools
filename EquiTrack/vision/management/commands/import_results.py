@@ -1,12 +1,12 @@
 __author__ = 'jcranwellward'
 
-
 import json
 import datetime
 
 from django.core.management.base import BaseCommand
 
 from reports.models import ResultStructure, ResultType, Result
+from vision.utils import wcf_json_date_as_datetime
 
 
 class Command(BaseCommand):
@@ -18,12 +18,14 @@ class Command(BaseCommand):
         with open(path) as file:
             data = json.load(file)
 
-            for result in data:
+            # data is actually wrapped in a top level property as per WCF
+            results = json.loads(data.values()[0])
+            for result in results:
 
                 result_structure, created = ResultStructure.objects.get_or_create(
                     name=result['COUNTRY_PROGRAMME_NAME'],
-                    from_date=datetime.date(2012, 1, 1),
-                    to_date=datetime.date(2016, 12, 31),
+                    from_date=wcf_json_date_as_datetime(result['CP_START_DATE']),
+                    to_date=wcf_json_date_as_datetime(result['CP_END_DATE']),
                 )
 
                 outcome, created = Result.objects.get_or_create(

@@ -12,7 +12,8 @@ from reversion import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
-from EquiTrack.forms import AutoSizeTextForm, ParentInlineAdminFormSet
+from EquiTrack.mixins import CountryUsersAdminMixin
+from EquiTrack.forms import ParentInlineAdminFormSet
 from EquiTrack.utils import get_changeform_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
@@ -208,7 +209,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     readonly_fields = [u'delivered', u'sent']
 
 
-class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
+class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, VersionAdmin):
     form = PartnershipForm
     resource_class = PCAResource
     # Add custom exports
@@ -447,7 +448,7 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
         u'core_values_assessment_date',
     )
     fieldsets = (
-        (_('Partner Details'), {
+        (_('Intervention Details'), {
             'fields':
                 (u'name',
                  u'short_name',
@@ -529,7 +530,7 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     extra = 1
 
 
-class AgreementAdmin(admin.ModelAdmin):
+class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
     list_display = (
         u'agreement_number',

@@ -6,6 +6,7 @@ __author__ = 'jcranwellward'
 from django.conf import settings
 from django.db import connection
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
@@ -29,6 +30,25 @@ class AdminURLMixin(object):
             model_name=content_type.model,
             action='change'
         ), args=(self.id,))
+
+
+class CountryUsersAdminMixin(object):
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+
+        if db_field.rel.to is User:
+            if connection.tenant:
+                kwargs["queryset"] = User.objects.filter(profile__country=connection.tenant)
+
+        return super(CountryUsersAdminMixin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+
+        if db_field.rel.to is User:
+            if connection.tenant:
+                kwargs["queryset"] = User.objects.filter(profile__country=connection.tenant)
+
+        return super(CountryUsersAdminMixin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 
 class EToolsTenantMiddleware(TenantMiddleware):
