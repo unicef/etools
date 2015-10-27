@@ -307,7 +307,6 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     signed_by = models.ForeignKey(
         User,
         related_name='signed_pcas',
-        verbose_name='Signed by unicef',
         null=True, blank=True
     )
 
@@ -609,7 +608,7 @@ class AmendmentLog(TimeStampedModel):
     status = models.CharField(
         max_length=32L,
         blank=True,
-        choices=Choices('In Process', 'Active', 'Signed', 'Cancelled'),
+        choices=PCA.PCA_STATUS,
         )
 
     def __unicode__(self):
