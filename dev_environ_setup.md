@@ -98,8 +98,7 @@
   <p>While inside the virtual environment (after making sure the app can run ./manage.py runserver 8080) tackle the migrations:</p>
   
   <blockquote>
-    <p>$<code>python manage.py makemigrations</code> <br>
-    $<code>python manage.py migrate_schemas</code></p>
+    <p>$<code>python manage.py migrate_schemas</code></p>
   </blockquote>
 </blockquote>
 
@@ -157,6 +156,8 @@
 <p><a href="http://jasdeep.ca/2012/05/installing-redis-on-mac-os-x/">http://jasdeep.ca/2012/05/installing-redis-on-mac-os-x/</a></p>
 
 <p><a href="https://virtualenv.pypa.io/en/latest/userguide.html">https://virtualenv.pypa.io/en/latest/userguide.html</a></p>
+
+<p><a href="https://www.jetbrains.com/pycharm/help/run-debug-configuration.html">https://www.jetbrains.com/pycharm/help/run-debug-configuration.html</a></p>
 
 <p><a href="http://postgis.net/install">http://postgis.net/install</a></p>
 
