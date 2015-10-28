@@ -400,7 +400,7 @@ class PartnershipForm(UserGroupForm):
                 u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
-        if start_date < signed_by_unicef_date:
+        if start_date and start_date < signed_by_unicef_date:
             raise ValidationError(
                 u'The start date must be greater or equal to the singed by date'
             )
