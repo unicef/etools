@@ -227,9 +227,12 @@ class TripsByOfficeView(APIView):
         month = months[int(month_num)]
 
         by_office = []
-        section_ids = Trip.objects.all().values_list('section', flat=True)
+        section_ids = Trip.objects.all().values_list(
+        	'section', flat=True)
+        office_ids = Trip.objects.all().values_list(
+        	'office', flat=True)
         sections = Section.objects.filter(id__in=section_ids)
-        for office in Office.objects.all():
+        for office in Office.objects.filter(id__in=office_ids):
             trips = office.trip_set.filter(
                 Q(status=Trip.APPROVED) |
                 Q(status=Trip.COMPLETED)
@@ -274,7 +277,8 @@ class TripsDashboard(FormView):
         month = months[int(month_num)]
 
         by_month = []
-        section_ids = Trip.objects.all().values_list('section', flat=True)
+        section_ids = Trip.objects.all().values_list(
+        	'section', flat=True)
         for section in Section.objects.filter(
             id__in=section_ids
         ):
