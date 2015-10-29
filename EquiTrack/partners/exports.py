@@ -4,6 +4,7 @@ import tablib
 import tempfile
 import zipfile
 import datetime
+from pytz import timezone
 # from lxml import etree
 
 try:
@@ -249,7 +250,7 @@ class PCAResource(BaseExportResource):
         partner_contribution = 0
         total = 0
 
-        if pca.created_at > datetime.datetime(2015, 9, 21):
+        if pca.created_at > datetime.datetime(2015, 9, 21).replace(tzinfo=timezone('UTC')):
             try:
                 budget = pca.budget_log.latest('created')
                 unicef_cash = budget.unicef_cash
