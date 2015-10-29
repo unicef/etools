@@ -609,7 +609,7 @@ class AmendmentLog(TimeStampedModel):
         max_length=32L,
         blank=True,
         choices=PCA.PCA_STATUS,
-        )
+    )
 
     def __unicode__(self):
         return u'{}: {} - {}'.format(

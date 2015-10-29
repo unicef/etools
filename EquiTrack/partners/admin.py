@@ -137,9 +137,9 @@ class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         'amended_at',
         'amendment_number',
     )
-    readonly_fields = (
+    readonly_fields = [
         'amendment_number',
-    )
+    ]
 
 
 class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):

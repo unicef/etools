@@ -341,9 +341,6 @@ class Trip(AdminURLMixin, models.Model):
             )
 
         self.driver_trip = trip
-        print trip
-
-
 
     @property
     def all_files(self):
