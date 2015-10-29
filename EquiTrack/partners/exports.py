@@ -295,12 +295,12 @@ class PCAResource(BaseExportResource):
         self.insert_column(row, 'Amendment number', amendment.amendment_number if amendment else 0)
         self.insert_column(row, 'Amendment status', amendment.status if amendment else '')
         self.insert_column(row, 'Amended at', amendment.amended_at if amendment else '')
-        self.insert_column(row, 'Unicef mng first name', pca.unicef_mng_first_name)
-        self.insert_column(row, 'Unicef mng last name', pca.unicef_mng_last_name)
-        self.insert_column(row, 'Unicef mng email', pca.unicef_mng_email)
-        self.insert_column(row, 'Partner mng first name', pca.partner_mng_first_name)
-        self.insert_column(row, 'Partner mng last name', pca.partner_mng_last_name)
-        self.insert_column(row, 'Partner mng email', pca.partner_mng_email)
+        self.insert_column(row, 'Unicef mng first name', pca.unicef_manager.first_name if pca.unicef_manager else '')
+        self.insert_column(row, 'Unicef mng last name', pca.unicef_manager.last_name if pca.unicef_manager else '')
+        self.insert_column(row, 'Unicef mng email', pca.unicef_manager.email if pca.unicef_manager else '')
+        self.insert_column(row, 'Partner mng first name', pca.partner_manager.first_name if pca.partner_manager else '')
+        self.insert_column(row, 'Partner mng last name', pca.partner_manager.last_name if pca.partner_manager else '')
+        self.insert_column(row, 'Partner mng email', pca.partner_manager.email if pca.partner_manager else '')
 
         return row
 
