@@ -26,7 +26,8 @@ from partners.models import (
     PCA,
     GwPCALocation,
     PartnerOrganization,
-    PartnershipBudget
+    PartnershipBudget,
+    AmendmentLog
 )
 
 
@@ -249,13 +250,16 @@ class PCAResource(BaseExportResource):
         total = 0
 
         if pca.created_at > datetime.datetime(2015, 9, 21):
-            budget = pca.budget_log.latest('created')
-            unicef_cash = budget.unicef_cash
-            in_kind = budget.in_kind_amount
-            partner_contribution = budget.partner_contribution
-            total = budget.total
+            try:
+                budget = pca.budget_log.latest('created')
+                unicef_cash = budget.unicef_cash
+                in_kind = budget.in_kind_amount
+                partner_contribution = budget.partner_contribution
+                total = budget.total
+            except PartnershipBudget.DoesNotExist:
+                pass
         else:
-            for budget in PartnershipBudget.objects.filter(partnership=pca):
+            for budget in pca.budget_log.all():
                 total += budget.total
                 unicef_cash += budget.unicef_cash
                 in_kind += budget.in_kind_amount
@@ -270,7 +274,10 @@ class PCAResource(BaseExportResource):
 
     def fill_pca_row(self, row, pca):
 
-        amendment = pca.amendments_log.latest('created')
+        try:
+            amendment = pca.amendments_log.latest('created')
+        except AmendmentLog.DoesNotExist:
+            amendment = None
 
         self.insert_column(row, 'ID', pca.id)
         self.insert_column(row, 'Sectors', pca.sector_names)
