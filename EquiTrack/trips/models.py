@@ -135,8 +135,15 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='TA drafted?',
         help_text='Has the TA been drafted in vision if applicable?'
     )
-    ta_drafted_date = models.DateField(blank=True, null=True)
-    ta_reference = models.CharField(max_length=254, blank=True, null=True)
+    ta_drafted_date = models.DateField(
+        blank=True, null=True,
+        verbose_name='TA drafted date',
+    )
+    ta_reference = models.CharField(
+        max_length=254,
+        verbose_name='TA reference',
+        blank=True, null=True
+    )
     vision_approver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         blank=True, null=True,
