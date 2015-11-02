@@ -171,13 +171,8 @@ class TestTripForm(TenantTestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'Arrival must be greater than departure')
 
-    def test_form_validation_for_programme_monitoring_2(self):
+    def test_form_validation_for_no_trip_location(self):
         trip_dict = to_dict(self.trip)
-        trip_dict['travel_type'] = u'programme_monitoring'
         trip_dict['status'] = u'submitted'
-        trip_dict['programme_assistant'] = UserFactory().id
-        trip_dict['pcas'] = PartnershipFactory().id
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        # self.assertEqual(form.non_field_errors()[0],
-        #                  'Only the TA travel assistant can complete the trip')

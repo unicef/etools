@@ -121,6 +121,7 @@ class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     extra = 0
     fields = (
         'type',
+        'status',
         'amended_at',
         'amendment_number',
     )
@@ -241,6 +242,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
         'partner',
         PCADonorFilter,
         PCAGatewayTypeFilter,
+        PCAGrantFilter,
     )
     search_fields = (
         'number',
@@ -267,6 +269,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
             'fields':
                 ('partner',
                  'agreement',
+                 'number',
                  'partnership_type',
                  'result_structure',
                  'title',
@@ -274,7 +277,6 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
                  'initiation_date',
                  'submission_date',
                  'review_date',
-                 'number',
                  ('partner_manager', 'signed_by_partner_date',),
                  ('unicef_manager', 'signed_by_unicef_date',),
                  'partner_focal_point',
@@ -444,8 +446,8 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     readonly_fields = (
         u'vendor_number',
-        u'rating',
-        u'core_values_assessment_date',
+        # u'rating',
+        # u'core_values_assessment_date',
     )
     fieldsets = (
         (_('Intervention Details'), {

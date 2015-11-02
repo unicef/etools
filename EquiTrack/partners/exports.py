@@ -3,6 +3,8 @@ __author__ = 'jcranwellward'
 import tablib
 import tempfile
 import zipfile
+import datetime
+from pytz import timezone
 # from lxml import etree
 
 try:
@@ -21,10 +23,12 @@ from shapely.geometry import Point, mapping
 
 from EquiTrack.utils import BaseExportResource
 from locations.models import Location
-from partners.models import (
+from .models import (
     PCA,
     GwPCALocation,
     PartnerOrganization,
+    PartnershipBudget,
+    AmendmentLog
 )
 
 
@@ -315,19 +319,55 @@ class PCAResource(BaseExportResource):
 
         return row
 
+    def fill_budget(self, row, pca):
+
+        unicef_cash = 0
+        in_kind = 0
+        partner_contribution = 0
+        total = 0
+
+        if pca.created_at > datetime.datetime(2015, 9, 21).replace(tzinfo=timezone('UTC')):
+            try:
+                budget = pca.budget_log.latest('created')
+                unicef_cash = budget.unicef_cash
+                in_kind = budget.in_kind_amount
+                partner_contribution = budget.partner_contribution
+                total = budget.total
+            except PartnershipBudget.DoesNotExist:
+                pass
+        else:
+            for budget in pca.budget_log.all():
+                total += budget.total
+                unicef_cash += budget.unicef_cash
+                in_kind += budget.in_kind_amount
+                partner_contribution += budget.partner_contribution
+
+        self.insert_column(row, 'Partner contribution budget', partner_contribution)
+        self.insert_column(row, 'Unicef cash budget', unicef_cash)
+        self.insert_column(row, 'In kind amount budget', in_kind)
+        self.insert_column(row, 'Total budget', total)
+
+        return row
+
     def fill_pca_row(self, row, pca):
+
+        try:
+            amendment = pca.amendments_log.latest('created')
+        except AmendmentLog.DoesNotExist:
+            amendment = None
 
         self.insert_column(row, 'ID', pca.id)
         self.insert_column(row, 'Sectors', pca.sector_names)
         self.insert_column(row, 'Number', pca.number)
-        self.insert_column(row, 'Amendment', 'Yes' if pca.amendment else 'No')
-        self.insert_column(row, 'Amendment date', pca.amended_at.strftime("%d-%m-%Y") if pca.amended_at else '')
         self.insert_column(row, 'Title', pca.title)
+        self.insert_column(row, 'Status', pca.status)
         self.insert_column(row, 'Partner Organisation', pca.partner.name)
         self.insert_column(row, 'Initiation Date', pca.initiation_date.strftime("%d-%m-%Y") if pca.initiation_date else '')
-        self.insert_column(row, 'Status', pca.status)
         self.insert_column(row, 'Start Date', pca.start_date.strftime("%d-%m-%Y") if pca.start_date else '')
         self.insert_column(row, 'End Date', pca.end_date.strftime("%d-%m-%Y") if pca.end_date else '')
+        self.insert_column(row, 'Amendment number', amendment.amendment_number if amendment else 0)
+        self.insert_column(row, 'Amendment status', amendment.status if amendment else '')
+        self.insert_column(row, 'Amended at', amendment.amended_at if amendment else '')
         self.insert_column(row, 'Signed by unicef date', pca.signed_by_unicef_date.strftime("%d-%m-%Y") if pca.signed_by_unicef_date else '')
         self.insert_column(row, 'Signed by partner date', pca.signed_by_partner_date.strftime("%d-%m-%Y") if pca.signed_by_partner_date else '')
         self.insert_column(row, 'Unicef mng first name', pca.unicef_mng_first_name)
@@ -336,10 +376,6 @@ class PCAResource(BaseExportResource):
         self.insert_column(row, 'Partner mng first name', pca.partner_mng_first_name)
         self.insert_column(row, 'Partner mng last name', pca.partner_mng_last_name)
         self.insert_column(row, 'Partner mng email', pca.partner_mng_email)
-        self.insert_column(row, 'Partner contribution budget', pca.partner_contribution_budget)
-        self.insert_column(row, 'Unicef cash budget', pca.unicef_cash_budget)
-        self.insert_column(row, 'In kind amount budget', pca.in_kind_amount_budget)
-        self.insert_column(row, 'Total budget', pca.total_cash)
 
         return row
 
@@ -349,6 +385,7 @@ class PCAResource(BaseExportResource):
         """
 
         self.fill_pca_row(row, pca)
+        self.fill_budget(row,pca)
         self.fill_pca_grants(row, pca)
 
         for sector in sorted(pca.pcasector_set.all()):

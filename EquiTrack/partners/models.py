@@ -610,8 +610,13 @@ class AmendmentLog(TimeStampedModel):
             'Activity',
             'Other',
         ))
-    amended_at = models.DateField(null=True)
+    amended_at = models.DateField(null=True, verbose_name='Signed At')
     amendment_number = models.IntegerField(default=0)
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=PCA.PCA_STATUS,
+    )
 
     def __unicode__(self):
         return u'{}: {} - {}'.format(
