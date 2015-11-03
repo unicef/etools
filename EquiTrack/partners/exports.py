@@ -250,21 +250,14 @@ class PCAResource(BaseExportResource):
         partner_contribution = 0
         total = 0
 
-        if pca.created_at > datetime.datetime(2015, 9, 21).replace(tzinfo=timezone('UTC')):
-            try:
-                budget = pca.budget_log.latest('created')
-                unicef_cash = budget.unicef_cash
-                in_kind = budget.in_kind_amount
-                partner_contribution = budget.partner_contribution
-                total = budget.total
-            except PartnershipBudget.DoesNotExist:
-                pass
-        else:
-            for budget in pca.budget_log.all():
-                total += budget.total
-                unicef_cash += budget.unicef_cash
-                in_kind += budget.in_kind_amount
-                partner_contribution += budget.partner_contribution
+        try:
+            budget = pca.budget_log.latest('created')
+            unicef_cash = budget.unicef_cash
+            in_kind = budget.in_kind_amount
+            partner_contribution = budget.partner_contribution
+            total = budget.total
+        except PartnershipBudget.DoesNotExist:
+            pass
 
         self.insert_column(row, 'Partner contribution budget', partner_contribution)
         self.insert_column(row, 'Unicef cash budget', unicef_cash)
