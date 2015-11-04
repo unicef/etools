@@ -260,8 +260,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     search_fields = (
         'number',
         'title',
-        'total_unicef_cash',
-        'total_budget',
     )
     readonly_fields = (
         'total_unicef_contribution',
