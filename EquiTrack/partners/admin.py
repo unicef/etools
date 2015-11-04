@@ -233,6 +233,7 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
     date_hierarchy = 'start_date'
     list_display = (
         'number',
+        'partnership_type',
         'status',
         'created_date',
         'start_date',
@@ -241,8 +242,8 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'result_structure',
         'sector_names',
         'title',
-        'unicef_cash_budget',
-        'total_cash',
+        'total_unicef_cash',
+        'total_budget',
     )
     list_filter = (
         'partnership_type',
@@ -254,12 +255,13 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         PCADonorFilter,
         PCAGatewayTypeFilter,
         PCAGrantFilter,
+        PCAGovernorateFilter
     )
     search_fields = (
         'number',
         'title',
-        'unicef_cash_budget',
-        'total_cash',
+        'total_unicef_cash',
+        'total_budget',
     )
     readonly_fields = (
         'total_unicef_contribution',
