@@ -281,6 +281,8 @@ class PCAResource(BaseExportResource):
         self.insert_column(row, 'Partner Organisation', pca.partner.name)
         self.insert_column(row, 'Created date', pca.created_at)
         self.insert_column(row, 'Initiation Date', pca.initiation_date.strftime("%d-%m-%Y") if pca.initiation_date else '')
+        self.insert_column(row, 'Submission Date to PRC', pca.submission_date)
+        self.insert_column(row, 'Review date by PRC', pca.review_date)
         self.insert_column(row, 'Signed by unicef date', pca.signed_by_unicef_date.strftime("%d-%m-%Y") if pca.signed_by_unicef_date else '')
         self.insert_column(row, 'Signed by partner date', pca.signed_by_partner_date.strftime("%d-%m-%Y") if pca.signed_by_partner_date else '')
         self.insert_column(row, 'Start Date', pca.start_date.strftime("%d-%m-%Y") if pca.start_date else '')
@@ -306,11 +308,11 @@ class PCAResource(BaseExportResource):
         self.fill_budget(row,pca)
         self.fill_pca_grants(row, pca)
 
-        for sector in sorted(pca.pcasector_set.all()):
-
-            self.fill_sector_outputs(row, sector)
-            self.fill_sector_goals(row, sector)
-            self.fill_sector_indicators(row, sector)
-            self.fill_sector_wbs(row, sector)
-            self.fill_sector_activities(row, sector)
+        # for sector in sorted(pca.pcasector_set.all()):
+        #
+        #     self.fill_sector_outputs(row, sector)
+        #     self.fill_sector_goals(row, sector)
+        #     self.fill_sector_indicators(row, sector)
+        #     self.fill_sector_wbs(row, sector)
+        #     self.fill_sector_activities(row, sector)
 

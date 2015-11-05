@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-import datetime
-
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
