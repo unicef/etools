@@ -446,8 +446,8 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     )
     readonly_fields = (
         u'vendor_number',
-        # u'rating',
-        # u'core_values_assessment_date',
+        u'rating',
+        u'core_values_assessment_date',
     )
     fieldsets = (
         (_('Intervention Details'), {
