@@ -248,11 +248,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
         'title',
     )
     readonly_fields = (
-        'total_unicef_contribution',
         'total_cash',
-        'amendment',
-        'amendment_number',
-        'view_original',
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
         'duration',
