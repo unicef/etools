@@ -279,7 +279,7 @@
                          {% ifchanged pca.number %}
                             <a href="{% url 'admin:partners_pca_change' pca.id %}" class="list-group-item">
                                 {{ pca.number }} - {{ pca.title }}
-                                <span class="pull-right text-muted medium"><span class="label label-success">${{ pca.total_cash|intcomma }}</span>
+                                <span class="pull-right text-muted medium"><span class="label label-success">${{ pca.total_budget|intcomma }}</span>
                                 </span>
                             </a>
                          {% else %}
