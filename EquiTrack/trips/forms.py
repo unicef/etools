@@ -71,6 +71,7 @@ class TripForm(ModelForm):
         to_date = cleaned_data.get(u'to_date')
         owner = cleaned_data.get(u'owner')
         supervisor = cleaned_data.get(u'supervisor')
+        travel_assistant = cleaned_data.get(u'travel_assistant')
         budget_owner = cleaned_data.get(u'budget_owner')
         ta_required = cleaned_data.get(u'ta_required')
         pcas = cleaned_data.get(u'pcas')
@@ -151,7 +152,9 @@ class TripForm(ModelForm):
                     'You must provide a narrative report before the trip can be completed'
                 )
 
-            if ta_required and pending_ta_amendment is True and self.request.user != programme_assistant:
+            if ta_required and pending_ta_amendment is True \
+                    and self.request.user != programme_assistant \
+                    and self.request.user != travel_assistant:
                 raise ValidationError(
                     'Due to trip having a pending amendment to the TA, '
                     ' only the travel focal point can complete the trip'

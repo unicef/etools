@@ -13,10 +13,18 @@ class Migration(SchemaMigration):
                       self.gf('django.db.models.fields.BooleanField')(default=False),
                       keep_default=False)
 
+        # Adding field 'Trip.submitted_email_sent'
+        db.add_column(u'trips_trip', 'submitted_email_sent',
+                      self.gf('django.db.models.fields.BooleanField')(default=False),
+                      keep_default=False)
+
 
     def backwards(self, orm):
         # Deleting field 'Trip.pending_ta_amendment'
         db.delete_column(u'trips_trip', 'pending_ta_amendment')
+
+        # Deleting field 'Trip.submitted_email_sent'
+        db.delete_column(u'trips_trip', 'submitted_email_sent')
 
 
     models = {
