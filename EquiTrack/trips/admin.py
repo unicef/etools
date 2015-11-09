@@ -120,7 +120,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'status',
         u'approved_date',
         u'outstanding_actions',
-        'show_driver_trip',
+        u'show_driver_trip',
     )
     list_filter = (
         u'owner',

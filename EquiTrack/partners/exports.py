@@ -121,82 +121,6 @@ class DonorsFormat(SHPFormat):
         return self.zip_response(shpfile, 'Donors')
 
 
-# class KMLFormat(Format):
-#
-#     def get_title(self):
-#         return self.get_extension()
-#
-#     def create_dataset(self, in_stream):
-#         """
-#         Create dataset from given string.
-#         """
-#         raise NotImplementedError()
-#
-#     def export_data(self, dataset):
-#         """
-#         Returns format representation for given dataset.
-#         """
-#         kml_doc = KML.Document(KML.name('PCA Locations'))
-#
-#         for pca_data in dataset.dict:
-#
-#             locations = GwPCALocation.objects.filter(pca__id=pca_data['ID'])
-#
-#             for loc in locations:
-#
-#                 data_copy = pca_data.copy()
-#                 data_copy['Locality'] = loc.locality.name
-#                 data_copy['CAD_CODE'] = loc.locality.cad_code
-#                 data_copy['CAS_CODE'] = loc.locality.cas_code
-#                 data_copy['Gateway'] = loc.location.gateway.name
-#                 data_copy['Location Name'] = loc.location.name
-#
-#                 data = KML.ExtendedData()
-#                 for key, value in data_copy.items():
-#                     data.append(
-#                         KML.Data(KML.value(value), name=key)
-#                     )
-#
-#                 point = KML.Placemark(
-#                     KML.name(data_copy['Number']),
-#                     data,
-#                     KML.Point(
-#                         KML.coordinates('{long},{lat}'.format(
-#                             lat=loc.location.point.y,
-#                             long=loc.location.point.x)
-#                         ),
-#                     ),
-#                 )
-#
-#                 kml_doc.append(point)
-#
-#         return etree.tostring(etree.ElementTree(KML.kml(kml_doc)), pretty_print=True)
-#
-#     def is_binary(self):
-#         """
-#         Returns if this format is binary.
-#         """
-#         return False
-#
-#     def get_read_mode(self):
-#         """
-#         Returns mode for opening files.
-#         """
-#         return 'rb'
-#
-#     def get_extension(self):
-#         """
-#         Returns extension for this format files.
-#         """
-#         return "kml"
-#
-#     def can_import(self):
-#         return False
-#
-#     def can_export(self):
-#         return True
-
-
 class PartnerResource(resources.ModelResource):
 
     class Meta:
@@ -326,21 +250,14 @@ class PCAResource(BaseExportResource):
         partner_contribution = 0
         total = 0
 
-        if pca.created_at > datetime.datetime(2015, 9, 21).replace(tzinfo=timezone('UTC')):
-            try:
-                budget = pca.budget_log.latest('created')
-                unicef_cash = budget.unicef_cash
-                in_kind = budget.in_kind_amount
-                partner_contribution = budget.partner_contribution
-                total = budget.total
-            except PartnershipBudget.DoesNotExist:
-                pass
-        else:
-            for budget in pca.budget_log.all():
-                total += budget.total
-                unicef_cash += budget.unicef_cash
-                in_kind += budget.in_kind_amount
-                partner_contribution += budget.partner_contribution
+        try:
+            budget = pca.budget_log.latest('created')
+            unicef_cash = budget.unicef_cash
+            in_kind = budget.in_kind_amount
+            partner_contribution = budget.partner_contribution
+            total = budget.total
+        except PartnershipBudget.DoesNotExist:
+            pass
 
         self.insert_column(row, 'Partner contribution budget', partner_contribution)
         self.insert_column(row, 'Unicef cash budget', unicef_cash)
@@ -357,25 +274,28 @@ class PCAResource(BaseExportResource):
             amendment = None
 
         self.insert_column(row, 'ID', pca.id)
-        self.insert_column(row, 'Sectors', pca.sector_names)
-        self.insert_column(row, 'Number', pca.number)
-        self.insert_column(row, 'Title', pca.title)
-        self.insert_column(row, 'Status', pca.status)
+        self.insert_column(row, 'Number', pca.number
         self.insert_column(row, 'Partner Organisation', pca.partner.name)
+        self.insert_column(row, 'Title', pca.title)
+        self.insert_column(row, 'Sectors', pca.sector_names)
+        self.insert_column(row, 'Status', pca.status)
+        self.insert_column(row, 'Created date', pca.created_at)
         self.insert_column(row, 'Initiation Date', pca.initiation_date.strftime("%d-%m-%Y") if pca.initiation_date else '')
+        self.insert_column(row, 'Submission Date to PRC', pca.submission_date)
+        self.insert_column(row, 'Review date by PRC', pca.review_date)
+        self.insert_column(row, 'Signed by unicef date', pca.signed_by_unicef_date.strftime("%d-%m-%Y") if pca.signed_by_unicef_date else '')
+        self.insert_column(row, 'Signed by partner date', pca.signed_by_partner_date.strftime("%d-%m-%Y") if pca.signed_by_partner_date else '')
         self.insert_column(row, 'Start Date', pca.start_date.strftime("%d-%m-%Y") if pca.start_date else '')
         self.insert_column(row, 'End Date', pca.end_date.strftime("%d-%m-%Y") if pca.end_date else '')
         self.insert_column(row, 'Amendment number', amendment.amendment_number if amendment else 0)
         self.insert_column(row, 'Amendment status', amendment.status if amendment else '')
         self.insert_column(row, 'Amended at', amendment.amended_at if amendment else '')
-        self.insert_column(row, 'Signed by unicef date', pca.signed_by_unicef_date.strftime("%d-%m-%Y") if pca.signed_by_unicef_date else '')
-        self.insert_column(row, 'Signed by partner date', pca.signed_by_partner_date.strftime("%d-%m-%Y") if pca.signed_by_partner_date else '')
-        self.insert_column(row, 'Unicef mng first name', pca.unicef_mng_first_name)
-        self.insert_column(row, 'Unicef mng last name', pca.unicef_mng_last_name)
-        self.insert_column(row, 'Unicef mng email', pca.unicef_mng_email)
-        self.insert_column(row, 'Partner mng first name', pca.partner_mng_first_name)
-        self.insert_column(row, 'Partner mng last name', pca.partner_mng_last_name)
-        self.insert_column(row, 'Partner mng email', pca.partner_mng_email)
+        self.insert_column(row, 'Unicef mng first name', pca.unicef_manager.first_name if pca.unicef_manager else '')
+        self.insert_column(row, 'Unicef mng last name', pca.unicef_manager.last_name if pca.unicef_manager else '')
+        self.insert_column(row, 'Unicef mng email', pca.unicef_manager.email if pca.unicef_manager else '')
+        self.insert_column(row, 'Partner mng first name', pca.partner_manager.first_name if pca.partner_manager else '')
+        self.insert_column(row, 'Partner mng last name', pca.partner_manager.last_name if pca.partner_manager else '')
+        self.insert_column(row, 'Partner mng email', pca.partner_manager.email if pca.partner_manager else '')
 
         return row
 
@@ -388,11 +308,11 @@ class PCAResource(BaseExportResource):
         self.fill_budget(row,pca)
         self.fill_pca_grants(row, pca)
 
-        for sector in sorted(pca.pcasector_set.all()):
-
-            self.fill_sector_outputs(row, sector)
-            self.fill_sector_goals(row, sector)
-            self.fill_sector_indicators(row, sector)
-            self.fill_sector_wbs(row, sector)
-            self.fill_sector_activities(row, sector)
+        # for sector in sorted(pca.pcasector_set.all()):
+        #
+        #     self.fill_sector_outputs(row, sector)
+        #     self.fill_sector_goals(row, sector)
+        #     self.fill_sector_indicators(row, sector)
+        #     self.fill_sector_wbs(row, sector)
+        #     self.fill_sector_activities(row, sector)
 

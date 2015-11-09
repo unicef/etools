@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-import datetime
-
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
@@ -125,9 +123,9 @@ class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         'amended_at',
         'amendment_number',
     )
-    readonly_fields = (
+    readonly_fields = [
         'amendment_number',
-    )
+    ]
 
 
 class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -222,6 +220,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
     date_hierarchy = 'start_date'
     list_display = (
         'number',
+        'partnership_type',
         'status',
         'created_date',
         'start_date',
@@ -230,8 +229,8 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
         'result_structure',
         'sector_names',
         'title',
-        'unicef_cash_budget',
-        'total_cash',
+        'total_unicef_cash',
+        'total_budget',
     )
     list_filter = (
         'partnership_type',
@@ -247,8 +246,6 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
     search_fields = (
         'number',
         'title',
-        'unicef_cash_budget',
-        'total_cash',
     )
     readonly_fields = (
         'total_unicef_contribution',

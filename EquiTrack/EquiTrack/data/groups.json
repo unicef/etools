@@ -134,5 +134,13 @@
       "name": "Representative Office",
       "permissions": []
     }
+  },
+  {
+    "pk": 5,
+    "model": "auth.group",
+    "fields": {
+      "name": "Driver",
+      "permissions": []
+    }
   }
 ]

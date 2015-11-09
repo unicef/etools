@@ -364,11 +364,14 @@ class PCA(AdminURLMixin, models.Model):
     SHPD = u'shpd'
     DCT = u'dct'
     SSFA = u'ssfa'
+    SSFA = u'ssfa'
+    IC = u'ic'
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
         (DCT, u'Cash Transfers to Government'),
-        (SSFA, u'SSFA ToR'),
+        (SSFA, u'SSFA TOR'),
+        (IC, u'IC TOR'),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -537,7 +540,7 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def days_from_review_to_signed(self):
-        if not self.submission_date:
+        if not self.submission_date or not self.review_date:
             return u'Not Reviewed'
         signed_date = self.signed_by_partner_date or datetime.date.today()
         return (signed_date - self.review_date).days
@@ -551,22 +554,33 @@ class PCA(AdminURLMixin, models.Model):
         else:
             return u''
 
+    @property
     def amendments(self):
         return self.amendments_log.all().count()
 
-    def total_unicef_contribution(self):
-        cash = self.unicef_cash_budget if self.unicef_cash_budget else 0
-        in_kind = self.in_kind_amount_budget if self.in_kind_amount_budget else 0
-        return cash + in_kind
-    total_unicef_contribution.short_description = 'Total Unicef contribution budget'
+    @property
+    def total_unicef_cash(self):
+
+        total = 0
+        if self.budget_log.exists():
+            total = self.budget_log.latest('created').unicef_cash
+        return total
+
+    @property
+    def total_budget(self):
+
+        total = 0
+        if self.budget_log.exists():
+            budget = self.budget_log.latest('created')
+            total += budget.unicef_cash
+            total += budget.in_kind_amount
+            total += budget.partner_contribution
+        return total
 
     def save(self, **kwargs):
         """
         Calculate total cash on save
         """
-        partner_budget = self.partner_contribution_budget \
-            if self.partner_contribution_budget else 0
-        self.total_cash = partner_budget + self.total_unicef_contribution()
 
         super(PCA, self).save(**kwargs)
 
