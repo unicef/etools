@@ -87,6 +87,7 @@ class TripForm(ModelForm):
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         trip_report = cleaned_data.get(u'main_observations')
         ta_trip_took_place_as_planned = cleaned_data.get(u'ta_trip_took_place_as_planned')
+        pending_ta_amendment = cleaned_data.get(u'pending_ta_amendment')
         driver = cleaned_data.get(u'driver')
         driver_supervisor = cleaned_data.get(u'driver_supervisor')
 
@@ -150,9 +151,9 @@ class TripForm(ModelForm):
                     'You must provide a narrative report before the trip can be completed'
                 )
 
-            if ta_required and ta_trip_took_place_as_planned is False and self.request.user != programme_assistant:
+            if ta_required and pending_ta_amendment is True and self.request.user != programme_assistant:
                 raise ValidationError(
-                    'Due to trip not being exactly as planned (attached) in the TA,'
+                    'Due to trip having a pending amendment to the TA, '
                     ' only the travel focal point can complete the trip'
                 )
 

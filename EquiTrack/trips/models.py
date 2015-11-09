@@ -220,6 +220,9 @@ class Trip(AdminURLMixin, models.Model):
         default=False,
         help_text='I authorize UNICEF to treat this as the FINAL Claim'
     )
+    pending_ta_amendment = models.BooleanField(
+        default=False,
+    )
     class Meta:
         ordering = ['-created_date']
 
