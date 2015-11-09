@@ -444,9 +444,15 @@
                     .done(function (data) {
                         var newlayer;
                         color = val.color;
-                          tableArr.push({table_name: val.table_name, pcode_col: val.pcode_col, color: color, display_name: val.display_name});
+                          tableArr.push({
+                              table_name: val.table_name,
+                              pcode_col: val.pcode_col,
+                              color: color,
+                              display_name: val.display_name
+                          });
                         if (data.features[0].geometry != null) {
-                            if (data.features[0].geometry.type == "MultiPolygon" || data.features[0].geometry.type == "Polygon") {
+                            if (data.features[0].geometry.type == "MultiPolygon" ||
+                                    data.features[0].geometry.type == "Polygon") {
                                 newlayer = L.geoJson(data, {
                                     style: {
                                         color: "#fff",
@@ -478,7 +484,6 @@
                             }
                         }
                         else{
-                            //var color = getRandomColor();
                             newlayer = L.geoJson(data, {
                                 style: function (feature) {
                                     return feature.properties && feature.properties.style;
@@ -499,7 +504,6 @@
                         layer_control.addOverlay(newlayer, val.display_name);
 
                         $.each(tableArr, function(keyt,valt) {
-                            //alert($("span:contains(" + valt.table_name + ")").html());
                             $("span:contains(" + valt.display_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
                             $("span:contains(" + valt.display_name + ")").css("color", "#fff");
                         });
@@ -524,13 +528,13 @@
                 $.each( pca_locations1, function( keyq, valueq ) {
                     var popup_content_start = "<div class='row col-md-12'><label class='col-md-3 control-label'>Location</label><div id='location_name' class='col-md-9'>" + valueq.location_name + "</div></div>" +
                                     "<div class='row col-md-12'><label class='col-md-3 control-label'>Gateway</label><div id='location_type' class='col-md-9'>" + valueq.location_type + "</div></div>" +
-                                    "<div class='row col-md-12'><label class='col-md-8 control-label'>PCAs associated with this location:</label><div id='PCAs' class='col-md-4'>" +  "</div></div>" +
+                                    "<div class='row col-md-12'><label class='col-md-8 control-label'>Interventions associated with this location:</label><div id='Interventions' class='col-md-4'>" +  "</div></div>" +
                             '<div class="content" id="mytab" style="padding:20px col-md-11">' +
                                                 '';
                     var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
                     var popup_content_tabs = '<div class="tab-content" id="infotabs">';
                     var popup_content='';
-                    //looping through all PCAs for one location
+                    //looping through all Interventions for one location
                     $.each( valueq.parterships, function( keyp, valuep ) {
                             popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
                             popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
@@ -541,7 +545,7 @@
                             "</div>";
 
 
-                            //looping for sectors for one PCA
+                            //looping for sectors for one PD
                             $.each( valuep.sectors, function( keys, valueSec ) {
                                 var popup_content_tabs_indicator='';
 
