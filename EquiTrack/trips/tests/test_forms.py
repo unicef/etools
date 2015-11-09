@@ -137,19 +137,19 @@ class TestTripForm(TestCase):
         form = TripForm(data=trip_dict)
         self.assertTrue(form.is_valid())
 
-    def test_form_validation_for_completed_ta_required(self):
-        trip_dict = to_dict(self.trip)
-        trip_dict['travel_type'] = u'advocacy'
-        trip_dict['status'] = u'completed'
-        trip_dict['programme_assistant'] = UserFactory().id
-        trip_dict['ta_required'] = True
-        trip_dict['pending_ta_amendment'] = True
-        trip_dict['main_observations'] = 'Test'
-        form = TripForm(data=trip_dict)
-        self.assertFalse(form.is_valid())
-        self.assertEqual(form.non_field_errors()[0],
-                         'Due to trip having a pending amendment to the TA, '
-                         ' only the travel focal point can complete the trip')
+    # def test_form_validation_for_completed_ta_required(self):
+    #     trip_dict = to_dict(self.trip)
+    #     trip_dict['travel_type'] = u'advocacy'
+    #     trip_dict['status'] = u'completed'
+    #     trip_dict['programme_assistant'] = UserFactory().id
+    #     trip_dict['ta_required'] = True
+    #     trip_dict['pending_ta_amendment'] = True
+    #     trip_dict['main_observations'] = 'Test'
+    #     form = TripForm(data=trip_dict)
+    #     self.assertFalse(form.is_valid())
+    #     self.assertEqual(form.non_field_errors()[0],
+    #                      'Due to trip having a pending amendment to the TA, '
+    #                      ' only the travel focal point can complete the trip')
 
 
     # def test_form_validation_for_staff_development(self):
