@@ -1,0 +1,99 @@
+import logging
+from django.db import IntegrityError
+from cartodb import CartoDBAPIKey, CartoDBException
+
+from EquiTrack.celery import app
+from .models import Governorate, Region, Locality, Location
+
+logger = logging.getLogger('locations.models')
+
+
+@app.task
+def update_sites_from_cartodb(carto_table):
+
+    client = CartoDBAPIKey(carto_table.api_key, carto_table.domain)
+
+    sites_created = sites_updated = sites_not_added = 0
+    try:
+        sites = client.sql(
+            'select * from {}'.format(carto_table.table_name)
+        )
+    except CartoDBException as e:
+        logging.exception("CartoDB exception occured", exc_info=True)
+    else:
+
+        if carto_table.location_type.name == 'Governorate':
+            parent, level = None, Governorate
+        elif carto_table.location_type.name == 'District':
+            parent, level = Governorate, Region
+        elif carto_table.location_type.name == 'Sub-district':
+            parent, level = Region, Locality
+        else:
+            parent, level = Locality, Location
+
+        for row in sites['rows']:
+            pcode = str(row[carto_table.pcode_col]).strip()
+            site_name = row[carto_table.name_col].encode('UTF-8')
+
+            if not site_name or site_name.isspace():
+                logger.warning("No name for site with PCode: {}".format(pcode))
+                sites_not_added += 1
+                continue
+
+            parent_code = None
+            parent_instance = None
+            if carto_table.parent_code_col and parent:
+                try:
+                    parent_code = row[carto_table.parent_code_col]
+                    parent_instance = parent.objects.get(p_code=parent_code)
+                except (parent.DoesNotExist, parent.MultipleObjectsReturned) as exp:
+                    msg = "{} locality found for parent code: {}".format(
+                        'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
+                        parent_code
+                    )
+                    logger.warning(msg)
+                    sites_not_added += 1
+                    continue
+
+            try:
+                create_args = {
+                    'p_code': pcode,
+                    'gateway': carto_table.location_type
+                }
+                if parent and parent_instance:
+                    create_args[parent.__name__.lower()] = parent_instance
+                location, created = level.objects.get_or_create(**create_args)
+            except level.MultipleObjectsReturned:
+                logger.warning("Multiple locations found for: {}, {} ({})".format(
+                    carto_table.location_type, site_name, pcode
+                ))
+                sites_not_added += 1
+                continue
+            else:
+                if created:
+                    sites_created += 1
+                else:
+                    sites_updated += 1
+
+            location.name = site_name
+            if level is Location:
+                location.point = row['the_geom']
+            else:
+                location.geom = row['the_geom']
+
+            try:
+                location.save()
+            except IntegrityError as e:
+                logger.exception('Error whilst saving location: {}'.format(site_name))
+                sites_not_added += 1
+                continue
+
+            logger.info('{}: {} ({})'.format(
+                'Added' if created else 'Updated',
+                location.name,
+                carto_table.location_type.name
+            ))
+
+    return "{} sites created, {} sites updated, {} sites skipped".format(
+                sites_created, sites_updated, sites_not_added
+            )
