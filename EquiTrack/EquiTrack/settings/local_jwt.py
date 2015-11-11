@@ -1,6 +1,6 @@
 """Common settings and globals."""
 from os import environ
-from base import *
+from local import *
 
 JWT_AUTH = {
    'JWT_ENCODE_HANDLER':
