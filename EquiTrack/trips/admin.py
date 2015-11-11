@@ -153,6 +153,8 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'budget_owner',
         u'status',
         u'approved_date',
+        u'partners',
+        u'pending_ta_amendment',
         TripReportFilter,
     )
     filter_vertical = (
@@ -221,7 +223,8 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'fields': (
                 u'ta_trip_took_place_as_planned',
                 u'ta_trip_repay_travel_allowance',
-                u'ta_trip_final_claim'),
+                u'ta_trip_final_claim',
+                u'pending_ta_amendment'),
         }),
     )
     suit_form_tabs = (
@@ -255,6 +258,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                     trip.date_representative_approved = None
                     trip.approved_date = None
                     trip.approved_email_sent = False
+                    trip.submitted_email_sent = False
                     trip.save()
 
         formset.save()
