@@ -10,7 +10,7 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
         # Adding field 'PCAFile.attachment'
         db.add_column(u'partners_pcafile', 'attachment',
-                      self.gf('django.db.models.fields.files.FileField')(default='', max_length=100),
+                      self.gf('django.db.models.fields.files.FileField')(default='', max_length=255),
                       keep_default=False)
 
 

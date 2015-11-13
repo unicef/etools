@@ -865,6 +865,7 @@ class PCAFile(models.Model):
     type = models.ForeignKey(FileType)
     file = FilerFileField()
     attachment = models.FileField(
+        max_length=255,
         upload_to=lambda instance, filename: '/'.join(['file_attachments', str(instance.pca.id), filename])
     )
 
