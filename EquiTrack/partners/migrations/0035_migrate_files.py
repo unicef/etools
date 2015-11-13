@@ -13,7 +13,9 @@ class Migration(DataMigration):
         # and orm['appname.ModelName'] for models in other applications.
         migrated_files = 0
         for file in orm.PCAFile.objects.all():
-            file.attachment = file.file.file.url
+            url = file.file.file.url
+            print '{}: {}'.format(url, len(url))
+            file.attachment = url
             file.save()
             migrated_files += 1
         print 'Migrated files: {}'.format(migrated_files)
