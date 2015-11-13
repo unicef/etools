@@ -116,7 +116,7 @@ class PCAFileInline(ReadOnlyMixin, admin.TabularInline):
     extra = 0
     fields = (
         'type',
-        'file',
+        'attachment',
         'download_url',
     )
     readonly_fields = (
@@ -260,11 +260,6 @@ class PartnershipAdmin(ReadOnlyMixin, ExportMixin, VersionAdmin):
         'title',
     )
     readonly_fields = (
-        'total_unicef_contribution',
-        'total_cash',
-        'amendment',
-        'amendment_number',
-        'view_original',
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
         'duration',
@@ -454,7 +449,6 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
     readonly_fields = (
         u'vendor_number',
         u'rating',
-        u'core_values_assessment_date',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -466,8 +460,7 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
                  u'rating',
                  u'address',
                  u'phone_number',
-                 u'email',
-                 u'core_values_assessment_date',)
+                 u'email',)
         }),
         (_('Meta Data'), {
             u'classes': (u'collapse',),

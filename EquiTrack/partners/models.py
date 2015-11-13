@@ -861,9 +861,12 @@ class FileType(models.Model):
 
 class PCAFile(models.Model):
 
-    pca = models.ForeignKey(PCA)
+    pca = models.ForeignKey(PCA, related_name='attachments')
     type = models.ForeignKey(FileType)
     file = FilerFileField()
+    attachment = models.FileField(
+        upload_to=lambda instance, filename: '/'.join(['file_attachments', str(instance.pca.id), filename])
+    )
 
     def __unicode__(self):
         return self.file.file.name
