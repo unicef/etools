@@ -43,6 +43,7 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, related_name='profile')
     country = models.ForeignKey(Country, null=True, blank=True)
+    country_override = models.ForeignKey(Country, null=True, blank=True, related_name="country_override")
     section = models.ForeignKey(Section, null=True, blank=True)
     office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
