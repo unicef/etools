@@ -12,11 +12,10 @@ class Migration(DataMigration):
         # Use orm.ModelName to refer to models in this application,
         # and orm['appname.ModelName'] for models in other applications.
         migrated_files = 0
-        for pca in orm.PCA.objects.all():
-            for file in pca.attachments:
-                file.attachment = file.file.file.url
-                file.save()
-                migrated_files += 1
+        for file in orm.PCAFile.objects.all():
+            file.attachment = file.file.file.url
+            file.save()
+            migrated_files += 1
         print 'Migrated files: {}'.format(migrated_files)
 
     def backwards(self, orm):
