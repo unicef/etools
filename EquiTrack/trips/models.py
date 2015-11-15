@@ -205,6 +205,7 @@ class Trip(AdminURLMixin, models.Model):
     approved_date = models.DateField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     approved_email_sent = models.BooleanField(default=False)
+    submitted_email_sent = models.BooleanField(default=False)
 
     ta_trip_took_place_as_planned = models.BooleanField(
         default=False,
@@ -219,6 +220,9 @@ class Trip(AdminURLMixin, models.Model):
     ta_trip_final_claim = models.BooleanField(
         default=False,
         help_text='I authorize UNICEF to treat this as the FINAL Claim'
+    )
+    pending_ta_amendment = models.BooleanField(
+        default=False,
     )
     class Meta:
         ordering = ['-created_date']
@@ -376,10 +380,14 @@ class Trip(AdminURLMixin, models.Model):
                 recipients.append(instance.budget_owner.email)
 
         if instance.status == Trip.SUBMITTED:
-            emails.TripCreatedEmail(instance).send(
-                instance.owner.email,
-                *recipients
-            )
+            if instance.submitted_email_sent is False:
+                emails.TripCreatedEmail(instance).send(
+                    instance.owner.email,
+                    *recipients
+                )
+                instance.submitted_email_sent = True
+                instance.save()
+
             if instance.international_travel and instance.approved_by_supervisor:
                 recipients.append(instance.representative.email)
                 emails.TripRepresentativeEmail(instance).send(

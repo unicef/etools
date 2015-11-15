@@ -65,7 +65,7 @@ class TestTripModels(TestCase):
         self.trip.representative = UserFactory()
         self.trip.save()
         self.assertEqual(Trip.SUBMITTED, self.trip.status)
-        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(len(mail.outbox), 3)
 
         # Now test the email is correct for this action
         self.assertTrue('Approval' in mail.outbox[1].subject)
