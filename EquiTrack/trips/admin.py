@@ -108,7 +108,7 @@ class TripReportFilter(admin.SimpleListFilter):
 
 class TripReportAdmin(ExportMixin, VersionAdmin):
     resource_class = TripResource
-    save_as = True  # TODO: There is a bug using this
+    save_as = True
     form = TripForm
     inlines = (
         TravelRoutesInlineAdmin,
@@ -138,8 +138,9 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'supervisor',
         u'status',
         u'approved_date',
+        u'attachments',
         u'outstanding_actions',
-        'show_driver_trip',
+        u'show_driver_trip',
     )
     list_filter = (
         u'owner',
@@ -239,6 +240,9 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         return ''
     show_driver_trip.allow_tags = True
     show_driver_trip.short_description = 'Trip for Driver'
+
+    def attachments(self, obj):
+        return obj.files.all().count()
 
     def save_formset(self, request, form, formset, change):
         """
