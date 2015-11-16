@@ -64,6 +64,8 @@ SAML_ATTRIBUTE_MAPPING = {
     'emailAddress': ('email',),
     'givenName': ('first_name',),
     'surname': ('last_name',),
+    # uncomment this in a following deploy
+    #'country': ('country',),
 }
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_CREATE_UNKNOWN_USER = True

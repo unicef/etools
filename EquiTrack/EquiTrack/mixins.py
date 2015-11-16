@@ -15,6 +15,10 @@ from rest_framework.exceptions import PermissionDenied
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework_jwt.settings import api_settings
+
+
+jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 
 
 class AdminURLMixin(object):
@@ -109,6 +113,12 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
             raise PermissionDenied(detail='No valid authentication provided')
         if not user.profile.country:
             raise PermissionDenied(detail='No country found for user')
+
+        payload = jwt_decode_handler(jwt_value)
+
+        if payload.get('country') and user.profile.country != payload['country']:
+            user.profile.country = payload['country']
+            user.save()
 
         connection.set_tenant(user.profile.country)
         request.tenant = user.profile.country
