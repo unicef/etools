@@ -241,9 +241,6 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     show_driver_trip.allow_tags = True
     show_driver_trip.short_description = 'Trip for Driver'
 
-    def attachments(self, obj):
-        return obj.files.all().count()
-
     def save_formset(self, request, form, formset, change):
         """
         Override here to check if the itinerary has changed

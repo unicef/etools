@@ -243,6 +243,9 @@ class Trip(AdminURLMixin, models.Model):
         ) if self.id else None
     reference.short_description = 'Reference'
 
+    def attachments(self):
+        return self.files.all().count()
+
     def outstanding_actions(self):
         return self.actionpoint_set.filter(
             status='open').count()
