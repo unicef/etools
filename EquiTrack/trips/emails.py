@@ -11,7 +11,7 @@ class TripCreatedEmail(BaseEmail):
     template_name = 'trips/trip/created/updated'
     description = ('The email that is sent to the supervisor,'
                    ' budget owner, traveller for any update')
-    subject = 'EquiTrack - Trip {{number}} has been {{state}} for {{owner_name}}'
+    subject = 'eTools {{environment}} - Trip {{number}} has been {{state}} for {{owner_name}}'
     content = """
     Dear Colleague,
 
@@ -31,8 +31,8 @@ class TripCreatedEmail(BaseEmail):
             'url': 'http://{}{}'.format(
                 self.get_current_site().domain,
                 self.object.get_admin_url()),
-            'purpose_of_travel': self.object.purpose_of_travel
-
+            'purpose_of_travel': self.object.purpose_of_travel,
+            'environment': self.get_environment()
         }
 
 
@@ -48,7 +48,7 @@ class TripApprovedEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/approved'
     description = 'The email that is sent to the traveller if a trip has been approved'
-    subject = "EquiTrack - Trip Approved: {{trip_reference}}"
+    subject = "eTools {{environment}} - Trip Approved: {{trip_reference}}"
     content = """
     The following trip has been approved: {{trip_reference}}
 
@@ -57,11 +57,12 @@ class TripApprovedEmail(TripCreatedEmail):
     Thank you.
     """
 
+
 class TripCancelledEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/cancelled'
     description = 'The email that is sent to everyone if a trip has been cancelled'
-    subject = "EquiTrack - Trip Cancelled: {{trip_reference}}"
+    subject = "eTools {{environment}} - Trip Cancelled: {{trip_reference}}"
     content = """
     The following trip has been cancelled: {{trip_reference}}
 
@@ -70,11 +71,12 @@ class TripCancelledEmail(TripCreatedEmail):
     Thank you.
     """
 
+
 class TripCompletedEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/completed'
     description = 'The email that is sent to travelller and supervisor  when a trip has been completed'
-    subject = "EquiTrack - Trip Completed: {{trip_reference}}"
+    subject = "eTools {{environment}} - Trip Completed: {{trip_reference}}"
     content = """
     The following trip has been completed: {{trip_reference}}
 
@@ -88,7 +90,7 @@ class TripRepresentativeEmail(TripCreatedEmail):
 
     template_name = 'trips/trip/representative'
     description = 'The email that is sent to the rep  to approve a trip'
-    subject = "EquiTrack - Trip Approval Needed: {{trip_reference}}"
+    subject = "eTools {{environment}} - Trip Approval Needed: {{trip_reference}}"
     content = """
     The following trip needs representative approval: {{trip_reference}}
 
@@ -97,13 +99,14 @@ class TripRepresentativeEmail(TripCreatedEmail):
     Thank you.
     """
 
+
 class TripTravelAssistantEmail(TripCreatedEmail):
 
     template_name = "travel/trip/travel_or_admin_assistant"
     description = ("This e-mail will be sent when the trip is approved by the supervisor. "
                    "It will go to the travel assistant to prompt them to organise the travel "
                    "(vehicles, flights etc.) and request security clearance.")
-    subject = "EquiTrack - Travel for {{owner_name}}"
+    subject = "eTools {{environment}} - Travel for {{owner_name}}"
     content = """
     Dear {{travel_assistant}},
 
@@ -126,7 +129,7 @@ class TripTAEmail(TripCreatedEmail):
     template_name = 'trips/trip/TA_request'
     description = ("This email is sent to the relevant programme assistant to create "
                     "the TA for the staff in concern after the approval of the supervisor.")
-    subject = "EquiTrack - Travel Authorization request for {{owner_name}}"
+    subject = "eTools {{environment}} - Travel Authorization request for {{owner_name}}"
     content = """
     Dear {{pa_assistant}},
 
@@ -149,7 +152,7 @@ class TripTADraftedEmail(TripCreatedEmail):
     template_name = 'trips/trip/TA_drafted'
     description = ("This email is sent to the relevant colleague to approve "
                    "the TA for the staff in concern after the TA has been drafted in VISION.")
-    subject = "EquiTrack - Travel Authorization drafted for {{owner_name}}"
+    subject = "eTools {{environment}} - Travel Authorization drafted for {{owner_name}}"
     content = """
     Dear {{vision_approver}},"
 
@@ -172,7 +175,7 @@ class TripActionPointCreated(BaseEmail):
 
     template_name = 'trips/action/created'
     description = 'Sent when trip action points are created'
-    subject = 'EquiTrack - Trip action point {{state}} for trip: {{trip_reference}}'
+    subject = 'eTools {{environment}} - Trip action point {{state}} for trip: {{trip_reference}}'
     content = """
     Trip action point by {{owner_name}} for {{responsible}} was {{state}}:"
 
@@ -194,7 +197,8 @@ class TripActionPointCreated(BaseEmail):
             ),
             'owner_name': self.object.owner.get_full_name(),
             'responsible': self.action.person_responsible.get_full_name(),
-            'state': 'Created'
+            'state': 'Created',
+            'environment': self.get_environment()
         }
 
 
@@ -218,7 +222,7 @@ class TripSummaryEmail(BaseEmail):
 
     template_name = 'trips/trip/summary'
     description = 'A summary of trips sent to the owner'
-    subject = "EquiTrack - Trip Summary"
+    subject = "eTools {{environment}} - Trip Summary"
     content = """
     The following is a trip summary for this week:
     <br/>
@@ -269,6 +273,7 @@ class TripSummaryEmail(BaseEmail):
             'trips_coming_text': trips_coming_text,
             'trips_overdue_text': trips_overdue_text,
             'owner_name': self.object.get_full_name(),
+            'environment': self.get_environment()
         }
 
 
