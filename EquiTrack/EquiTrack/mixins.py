@@ -128,7 +128,7 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         # only set the schema based on what we know on our end
         # this will allow for a faster country change / no csv endpoint needed
 
-        # if user.profile.country_alternative:
+        # if user.profile.country_override:
         #     connection.set_tenant(user.profile.country_override)
         #     request.tenant = user.profile.country_override
         # else:
