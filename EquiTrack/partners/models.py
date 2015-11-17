@@ -870,7 +870,7 @@ class PCAFile(models.Model):
     )
 
     def __unicode__(self):
-        return self.file.file.name
+        return self.attachment.name
 
     def download_url(self):
         if self.file:
