@@ -36,7 +36,7 @@ urlpatterns = patterns(
     #api
     url(r'^api/profile/$', UserAuthAPIView.as_view()),
     url(r'^api/$', UsersView.as_view()),
-    url(r'^api/co/$', CountryOverridenUsersCSV.as_view()),
+    url(r'^api/country_updates.csv/$', CountryOverridenUsersCSV.as_view()),
 
     #user profile
     url(r'^profile_view/$', ProfileEdit.as_view(), name='user_profile'),
