@@ -8,6 +8,7 @@ from leaflet.admin import LeafletGeoAdmin
 
 from . import models
 from .forms import CartoDBTableForm
+from .tasks import update_sites_from_cartodb
 from EquiTrack.forms import AutoSizeTextForm
 
 
@@ -90,13 +91,7 @@ class CartoDBTableAdmin(admin.ModelAdmin):
     def import_sites(self, request, queryset):
 
         for table in queryset:
-            created, updated, skipped = table.update_sites_from_cartodb()
-            self.message_user(
-                request, "{} sites created, {} sites updated, {} sites skipped".format(
-                    created, updated, skipped
-                )
-            )
-
+            update_sites_from_cartodb.delay(table)
 
 admin.site.register(models.Governorate, GovernorateAdmin)
 admin.site.register(models.Region, RegionAdmin)

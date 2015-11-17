@@ -122,6 +122,7 @@ class Trip(AdminURLMixin, models.Model):
 
     ta_required = models.BooleanField(
         default=False,
+        verbose_name='TA required?',
         help_text='Is a Travel Authorisation (TA) is required?'
     )
     programme_assistant = models.ForeignKey(
@@ -134,11 +135,18 @@ class Trip(AdminURLMixin, models.Model):
 
     ta_drafted = models.BooleanField(
         default=False,
-        verbose_name='TA',
+        verbose_name='TA drafted?',
         help_text='Has the TA been drafted in vision if applicable?'
     )
-    ta_drafted_date = models.DateField(blank=True, null=True)
-    ta_reference = models.CharField(max_length=254, blank=True, null=True)
+    ta_drafted_date = models.DateField(
+        blank=True, null=True,
+        verbose_name='TA drafted date',
+    )
+    ta_reference = models.CharField(
+        max_length=254,
+        verbose_name='TA reference',
+        blank=True, null=True
+    )
     vision_approver = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         blank=True, null=True,
@@ -190,7 +198,7 @@ class Trip(AdminURLMixin, models.Model):
 
     ta_trip_took_place_as_planned = models.BooleanField(
         default=False,
-        verbose_name='Ta trip took place as attached',
+        verbose_name='TA trip took place as attached',
         help_text='I certify that the travel took place exactly as per the attached Travel Authorization and'
                   ' that there were no changes to the itinerary'
     )

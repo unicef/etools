@@ -23,10 +23,14 @@ MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
     'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
 )
 
+
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)
 AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY', None)
 AZURE_CONTAINER = os.environ.get('AZURE_CONTAINER', None)
 AZURE_SSL = True
+AZURE_AUTO_SIGN = True  # flag for automatically signing urls
+AZURE_ACCESS_POLICY_EXPIRY = 120  # length of time before signature expires in seconds
+AZURE_ACCESS_POLICY_PERMISSION = 'r'  # read permission
 
 if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
 

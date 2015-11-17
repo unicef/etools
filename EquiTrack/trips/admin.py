@@ -218,7 +218,13 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     suit_form_tabs = (
         (u'planning', u'Planning'),
         (u'reporting', u'Reporting'),
-        (u'attachments', u'Attachments')
+        (u'attachments', u'Attachments'),
+        (u'checklists', u'Checklists'),
+
+    )
+
+    suit_form_includes = (
+        ('admin/trips/checklists-tab.html', 'top', 'checklists'),
     )
 
     def show_driver_trip(self, obj):
