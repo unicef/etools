@@ -3,14 +3,15 @@ __author__ = 'jcranwellward'
 import os
 import csv
 import datetime
-import tasks
+import sys
 from django.db.models import F, Sum
 from django.views.generic import TemplateView
 from django.core.servers.basehttp import FileWrapper
-
 from django_datatables_view.base_datatable_view import BaseDatatableView
-
 from partners.models import DistributionPlan
+from .tasks import initiate_mongo_connection
+from django.http.response import StreamingHttpResponse
+
 
 
 class SuppliesDashboardView(TemplateView):
@@ -29,71 +30,19 @@ class SuppliesDashboardView(TemplateView):
 
 
 #@login_required
-def send_apk(request):
-
-    filename = os.path.join(settings.STATIC_ROOT, 'app/UniSupply.apk')
-
-    wrapper = FileWrapper(file(filename))
-    response = HttpResponse(wrapper)
-    response['Content-Length'] = os.path.getsize(filename)
-    response['Content-Type'] = 'application/vnd.android.package-archive'
-    response['Content-Disposition'] = 'inline; filename={}'.format('UniSupply.apk')
-    return response
+# def send_apk(request):
+#
+#     filename = os.path.join(settings.STATIC_ROOT, 'app/UniSupply.apk')
+#
+#     wrapper = FileWrapper(file(filename))
+#     response = HttpResponse(wrapper)
+#     response['Content-Length'] = os.path.getsize(filename)
+#     response['Content-Type'] = 'application/vnd.android.package-archive'
+#     response['Content-Disposition'] = 'inline; filename={}'.format('UniSupply.apk')
+#     return response
 
 
 class SiteListJson(BaseDatatableView):
-    # columns = [
-    #     '_id',
-    #     'pcodename',
-    #     'mohafaza',
-    #     'district',
-    #     'cadastral',
-    #     'municipaliy',
-    #     'no_tent',
-    #     'no_ind',
-    #     'lat',
-    #     'long',
-    #     'elevation',
-    #     'confirmed_ip',
-    #     'actual_ip',
-    #     'unicef_priority',
-    #     'assessment_date',
-    #     'num_assessments',
-    #     'completed',
-    #     'remaining',
-    #     'distribution_date',
-    #     '3 months',
-    #     'Completed 3 months',
-    #     'Remaining 3 months',
-    #     '12 months',
-    #     'Completed 12 months',
-    #     'Remaining 12 months',
-    #     '2 years',
-    #     'Completed 2 years',
-    #     'Remaining 2 years',
-    #     '3 years',
-    #     'Completed 3 years',
-    #     'Remaining 3 years',
-    #     '5 years',
-    #     'Completed 5 years',
-    #     'Remaining 5 years',
-    #     '7 years',
-    #     'Completed 7 years',
-    #     'Remaining 7 years',
-    #     '9 years',
-    #     'Completed 9 years',
-    #     'Remaining 9 years',
-    #     '12 years',
-    #     'Completed 12 years',
-    #     'Remaining 12 years',
-    #     '14 years',
-    #     'Completed 14 years',
-    #     'Remaining 14 years',
-    #     'total_kits',
-    #     'total_completed',
-    #     'total_remaining',
-    # ]
-
 
     columns = [
         '_id',
@@ -109,6 +58,7 @@ class SiteListJson(BaseDatatableView):
         'id_type',
         'gender',
         'marital_status',
+        'dob',
         'creation_date',
         'partner_name',
         'Do you have school-aged children not attending school?',
@@ -166,8 +116,8 @@ class SiteListJson(BaseDatatableView):
         # these are simply objects displayed in datatable
         # You should not filter data returned here by any filter values entered by user. This is because
         # we need some base queryset to count total number of records.
-        db = tasks.initiate_mongo_connection()
-        return db.data.manifest.find()
+        db = initiate_mongo_connection()
+        return db.manifest.find()
 
     def filter_queryset(self, qs):
         # use request parameters to filter queryset
