@@ -89,7 +89,7 @@ class LinksInlineAdmin(GenericLinkStackedInline):
 
 class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     resource_class = TripResource
-    save_as = True  # TODO: There is a bug using this
+    save_as = True
     form = TripForm
     inlines = (
         TravelRoutesInlineAdmin,
@@ -119,6 +119,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'supervisor',
         u'status',
         u'approved_date',
+        u'attachments',
         u'outstanding_actions',
         u'show_driver_trip',
     )
@@ -134,6 +135,8 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'budget_owner',
         u'status',
         u'approved_date',
+        u'partners',
+        u'pending_ta_amendment',
         TripReportFilter,
         PartnerFilter,
     )
@@ -212,7 +215,8 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
             u'fields': (
                 u'ta_trip_took_place_as_planned',
                 u'ta_trip_repay_travel_allowance',
-                u'ta_trip_final_claim'),
+                u'ta_trip_final_claim',
+                u'pending_ta_amendment'),
         }),
     )
     suit_form_tabs = (
@@ -252,6 +256,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                     trip.date_representative_approved = None
                     trip.approved_date = None
                     trip.approved_email_sent = False
+                    trip.submitted_email_sent = False
                     trip.save()
 
         formset.save()

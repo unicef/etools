@@ -104,7 +104,7 @@ class PCAFileInline(ReadOnlyMixin, admin.TabularInline):
     extra = 0
     fields = (
         'type',
-        'file',
+        'attachment',
         'download_url',
     )
     readonly_fields = (
