@@ -112,8 +112,7 @@ def import_docs(**kwargs):
         rows = data['rows']
 
         connection = initiate_mongo_connection()
-        db = connection.winter
-        lebanon = db.data
+        lebanon = connection.data
         for row in rows:
              doc = row['doc']
             ## CHANGE IDIOT PARTNERS
@@ -153,11 +152,11 @@ def import_docs(**kwargs):
 def initiate_mongo_connection():
     connection = MongoClient(host='localhost',port=27017)
     db = connection.winter
-    return db.data
+    return db
 
 def crunch_winter_data(**kwargs):
-    data = initiate_mongo_connection()
-    cursor = data.aggregate([
+    db = initiate_mongo_connection()
+    cursor = db.data.aggregate([
         {'$match': {'type': 'assessment'}},
         {'$unwind': '$child_list'},
         {'$project':
@@ -285,7 +284,8 @@ def crunch_winter_data(**kwargs):
                 'WFP Survey Q11 - Did you inform the bank?': {'$last': '$WFP Survey Q11'},
 
             }
-        }
+        },
+        {'$out':'manifest'}
     ])
     return cursor
 
