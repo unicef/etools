@@ -35,7 +35,10 @@ from locations.models import (
     Region,
 )
 from supplies.models import SupplyItem
-from supplies.tasks import set_unisupply_distribution
+from supplies.tasks import (
+    set_unisupply_distribution,
+    set_unisupply_user
+)
 from . import emails
 
 
@@ -145,6 +148,14 @@ class PartnerOrganization(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    @classmethod
+    def create_user(cls, sender, instance, created, **kwargs):
+
+        set_unisupply_user(instance.short_name.lower(), instance.alternate_name.lower())
+
+
+post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 
 
 class PartnerStaffMember(models.Model):

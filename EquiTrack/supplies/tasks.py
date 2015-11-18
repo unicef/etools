@@ -39,6 +39,7 @@ def set_docs(docs):
     return response
 
 
+@app.task
 def set_unisupply_user(username, password):
 
     user_docs = []
@@ -46,13 +47,15 @@ def set_unisupply_user(username, password):
         {
             "_id": username,
             "type": "user",
+            "channels": ["users"],
             "username": username,
             "password": password,
             "organisation": username,
         }
     )
 
-    set_docs.delay(user_docs)
+    response = set_docs(user_docs)
+    return response.text
 
 
 @app.task
@@ -66,12 +69,12 @@ def set_unisupply_distribution(distribution_plan):
                     distribution_plan.location,
                     distribution_plan.quantity
                 )),
+                "channels": [distribution_plan.partnership.partner.short_name],
                 "partner_name": distribution_plan.partnership.partner.name,
-                "assessment_type": "institution",
+                "icon": "institution",
                 "criticality": "0",
                 "item_list": [
                     {
-                        "item_id": "SB001",
                         "item_type": distribution_plan.item.name,
                         "quantity": distribution_plan.quantity
                     }
@@ -81,10 +84,10 @@ def set_unisupply_distribution(distribution_plan):
                     "p_code": distribution_plan.location.p_code,
                     "p_code_name": distribution_plan.location.name,
                 },
-                "type": "assessment",
+                "type": "distribution",
                 "completed": False,
                 "creation_date": datetime.datetime.now().isoformat(),
-                "name": "N/A",
+                "name": distribution_plan.location.name,
             }
         ])
         if response.status_code in [requests.codes.ok, requests.codes.created]:
