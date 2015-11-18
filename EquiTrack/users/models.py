@@ -3,6 +3,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
+from djangosaml2.signals import pre_user_save
+#from djangosaml2 import backends
+
 
 from registration.models import RegistrationManager, RegistrationProfile
 from tenant_schemas.models import TenantMixin
@@ -67,8 +70,21 @@ class UserProfile(models.Model):
             cls.objects.create(user=instance)
 
 
+
+
+def custom_update_user(sender, attributes, user_modified, **kwargs):
+   print "custom updater called with"
+   print sender
+   print attributes
+   print user_modified
+
+   return True  # I modified the user object
+
+
 post_save.connect(UserProfile.create_user_profile, sender=User)
 
+
+pre_user_save.connect(custom_update_user)
 
 class EquiTrackRegistrationManager(RegistrationManager):
 

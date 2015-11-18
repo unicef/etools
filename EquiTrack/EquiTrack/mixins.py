@@ -76,8 +76,15 @@ class EToolsTenantMiddleware(TenantMiddleware):
             return None
 
         try:
+            # approach 2 would be to change the tenant to country_override
+            # if request.user.profile.country_override:
+            #     request.tenant = request.user.profile.country_override
+            # else:
+            #     request.tenant = request.user.profile.country
+
             request.tenant = request.user.profile.country
             connection.set_tenant(request.tenant)
+
         except Exception as exp:
             messages.info(
                 request,

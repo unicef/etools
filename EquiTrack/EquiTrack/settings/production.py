@@ -10,18 +10,18 @@ ALLOWED_HOSTS = [
 ]
 ########## END HOST CONFIGURATION
 
-# Sentry config
-RAVEN_CONFIG = {
-    'dsn': environ.get('SENTRY_DSN', None),
-}
-
-INSTALLED_APPS = INSTALLED_APPS + (
-    'raven.contrib.django.raven_compat',
-)
-
-MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
-    'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
-)
+# # Sentry config
+# RAVEN_CONFIG = {
+#     'dsn': environ.get('SENTRY_DSN', None),
+# }
+#
+# INSTALLED_APPS = INSTALLED_APPS + (
+#     'raven.contrib.django.raven_compat',
+# )
+#
+# MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+#     'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
+# )
 
 
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)
@@ -65,7 +65,7 @@ SAML_ATTRIBUTE_MAPPING = {
     'givenName': ('first_name',),
     'surname': ('last_name',),
     # uncomment this in a following deploy
-    #'country': ('country',),
+    'countryName': ('country',),
 }
 SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_CREATE_UNKNOWN_USER = True
@@ -75,10 +75,12 @@ AUTHENTICATION_BACKENDS = (
 )
 SAML_CONFIG = {
     # full path to the xmlsec1 binary programm
-    'xmlsec_binary': '/usr/bin/xmlsec1',
+    #'xmlsec_binary': '/usr/bin/xmlsec1',
+    'xmlsec_binary': '/usr/local/Cellar/libxmlsec1/1.2.20/bin/xmlsec1',
 
     # your entity id, usually your subdomain plus the url to the metadata view
-    'entityid': 'https://{}/saml2/metadata/'.format(HOST),
+    #'entityid': 'https://{}/saml2/metadata/'.format(HOST),
+    'entityid': 'https://etoolsdev.localtunnel.me/saml2/metadata/'.format(HOST),
 
     # directory with attribute mapping
     'attribute_map_dir': join(DJANGO_ROOT, 'saml/attribute-maps'),
@@ -93,15 +95,15 @@ SAML_CONFIG = {
                 # url and binding to the assetion consumer service view
                 # do not change the binding or service name
                 'assertion_consumer_service': [
-                    ('https://{}/saml2/acs/'.format(HOST),
+                    ('https://etoolsdev.localtunnel.me/saml2/acs/',#.format(HOST),
                      saml2.BINDING_HTTP_POST),
                 ],
                 # url and binding to the single logout service view
                 # do not change the binding or service name
                 'single_logout_service': [
-                    ('https://{}/saml2/ls/'.format(HOST),
+                    ('https://etoolsdev.localtunnel.me/saml2/ls/',#.format(HOST),
                      saml2.BINDING_HTTP_REDIRECT),
-                    ('https://{}/saml2/ls/post'.format(HOST),
+                    ('https://etoolsdev.localtunnel.me/saml2/ls/post',#.format(HOST),
                      saml2.BINDING_HTTP_POST),
                 ],
 

@@ -7,6 +7,7 @@ MAP = {
     "fro": {
         'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress': 'emailAddress',
         'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname': 'givenName',
+        'http://unicef.org/identity/claims/unicefDutyStationCountryName': 'countryName',
         'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name': 'name',
         'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn': 'upn',
         'http://schemas.xmlsoap.org/claims/commonname': 'commonName',
@@ -27,6 +28,7 @@ MAP = {
     "to": {
         'emailAddress': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress',
         'givenName': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname',
+        'countryName': 'http://unicef.org/identity/claims/unicefDutyStationCountryName',
         'name': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name',
         'upn': 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/upn',
         'commonName': 'http://schemas.xmlsoap.org/claims/commonname',
