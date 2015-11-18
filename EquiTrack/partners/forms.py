@@ -167,9 +167,6 @@ class AuthorizedOfficersForm(forms.ModelForm):
 
     class Meta:
         model = AuthorizedOfficer
-        widgets = {
-            'officer': LinkedSelect,
-        }
 
     def __init__(self, *args, **kwargs):
         """
@@ -470,7 +467,7 @@ class PartnershipBudgetAdminForm(AmendmentForm):
         years = None
         if hasattr(self, 'parent_partnership') and self.parent_partnership.start_date and self.parent_partnership.end_date:
 
-            years = range(self.parent_partnership.end_date.year, self.parent_partnership.start_date.year+1)
+            years = range(self.parent_partnership.start_date.year, self.parent_partnership.end_date.year+1)
 
         self.fields['year'] = forms.ChoiceField(
             choices=[(year, year) for year in years] if years else []

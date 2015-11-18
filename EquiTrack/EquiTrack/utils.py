@@ -6,6 +6,7 @@ __author__ = 'jcranwellward'
 import tablib
 import traceback
 
+from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
 from django.utils.datastructures import SortedDict
@@ -45,6 +46,10 @@ class BaseEmail(object):
 
     def __init__(self, object):
         self.object = object
+
+    @classmethod
+    def get_environment(cls):
+        return settings.ENVIRONMENT
 
     @classmethod
     def get_current_site(cls):
