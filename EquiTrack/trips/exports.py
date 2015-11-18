@@ -1,5 +1,6 @@
 __author__ = 'jcranwellward'
 
+from django.conf import settings
 
 from EquiTrack.utils import BaseExportResource
 from users.models import UserProfile
@@ -59,7 +60,7 @@ class TripResource(BaseExportResource):
         self.insert_column(row, 'To Date', str(trip.to_date))
         self.insert_column(row, 'Report', 'Yes' if trip.main_observations else 'No')
         self.insert_column(row, 'Attachments', trip.attachments())
-        self.insert_column(row, 'URL', 'https://equitrack.uniceflebanon.org{}'.format(trip.get_admin_url()))
+        self.insert_column(row, 'URL', 'https://{}{}'.format(settings.HOST, trip.get_admin_url()))
         return row
 
     def fill_row(self, trip, row):
