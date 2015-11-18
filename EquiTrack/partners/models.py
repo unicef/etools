@@ -833,14 +833,14 @@ class PCAFile(models.Model):
 
     pca = models.ForeignKey(PCA, related_name='attachments')
     type = models.ForeignKey(FileType)
-    file = FilerFileField()
+    file = FilerFileField(blank=True, null=True)
     attachment = models.FileField(
         max_length=255,
         upload_to=lambda instance, filename: '/'.join(['file_attachments', str(instance.pca.id), filename])
     )
 
     def __unicode__(self):
-        return self.file.file.name
+        return self.attachment.name
 
     def download_url(self):
         if self.file:
