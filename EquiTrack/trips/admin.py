@@ -233,10 +233,10 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
 
     def show_driver_trip(self, obj):
         if obj.driver_trip:
-            return get_changeform_link(obj.driver_trip, link_name='View Driver')
+            return get_changeform_link(obj.driver_trip, link_name='View Driver Trip')
         return ''
     show_driver_trip.allow_tags = True
-    show_driver_trip.short_description = 'Trip for Driver'
+    show_driver_trip.short_description = 'Driver Trip'
 
     def save_formset(self, request, form, formset, change):
         """
