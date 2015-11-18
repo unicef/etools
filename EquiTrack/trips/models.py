@@ -583,8 +583,8 @@ post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 def get_report_filename(instance, filename):
     return '/'.join([
-        'trip_reports',
         instance.trip.owner.profile.country.name,
+        'trip_reports',
         str(instance.trip.id),
         filename
     ])

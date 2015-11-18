@@ -4,6 +4,7 @@ __author__ = 'jcranwellward'
 
 import datetime
 
+from django.db import connection
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import Group
@@ -829,6 +830,16 @@ class FileType(models.Model):
         return self.name
 
 
+def get_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'interventions',
+         str(instance.pca.id),
+         filename]
+    )
+
+
 class PCAFile(models.Model):
 
     pca = models.ForeignKey(PCA, related_name='attachments')
@@ -836,7 +847,7 @@ class PCAFile(models.Model):
     file = FilerFileField(blank=True, null=True)
     attachment = models.FileField(
         max_length=255,
-        upload_to=lambda instance, filename: '/'.join(['file_attachments', str(instance.pca.id), filename])
+        upload_to=get_file_path
     )
 
     def __unicode__(self):
