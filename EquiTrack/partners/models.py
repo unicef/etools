@@ -4,6 +4,7 @@ __author__ = 'jcranwellward'
 
 import datetime
 
+from django.db import connection
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import Group
@@ -364,11 +365,14 @@ class PCA(AdminURLMixin, models.Model):
     SHPD = u'shpd'
     DCT = u'dct'
     SSFA = u'ssfa'
+    SSFA = u'ssfa'
+    IC = u'ic'
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
         (DCT, u'Cash Transfers to Government'),
-        (SSFA, u'SSFA ToR'),
+        (SSFA, u'SSFA TOR'),
+        (IC, u'IC TOR'),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -537,7 +541,7 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def days_from_review_to_signed(self):
-        if not self.submission_date:
+        if not self.submission_date or not self.review_date:
             return u'Not Reviewed'
         signed_date = self.signed_by_partner_date or datetime.date.today()
         return (signed_date - self.review_date).days
@@ -551,22 +555,33 @@ class PCA(AdminURLMixin, models.Model):
         else:
             return u''
 
+    @property
     def amendments(self):
         return self.amendments_log.all().count()
 
-    def total_unicef_contribution(self):
-        cash = self.unicef_cash_budget if self.unicef_cash_budget else 0
-        in_kind = self.in_kind_amount_budget if self.in_kind_amount_budget else 0
-        return cash + in_kind
-    total_unicef_contribution.short_description = 'Total Unicef contribution budget'
+    @property
+    def total_unicef_cash(self):
+
+        total = 0
+        if self.budget_log.exists():
+            total = self.budget_log.latest('created').unicef_cash
+        return total
+
+    @property
+    def total_budget(self):
+
+        total = 0
+        if self.budget_log.exists():
+            budget = self.budget_log.latest('created')
+            total += budget.unicef_cash
+            total += budget.in_kind_amount
+            total += budget.partner_contribution
+        return total
 
     def save(self, **kwargs):
         """
         Calculate total cash on save
         """
-        partner_budget = self.partner_contribution_budget \
-            if self.partner_contribution_budget else 0
-        self.total_cash = partner_budget + self.total_unicef_contribution()
 
         super(PCA, self).save(**kwargs)
 
@@ -610,8 +625,13 @@ class AmendmentLog(TimeStampedModel):
             'Activity',
             'Other',
         ))
-    amended_at = models.DateField(null=True)
+    amended_at = models.DateField(null=True, verbose_name='Signed At')
     amendment_number = models.IntegerField(default=0)
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=PCA.PCA_STATUS,
+    )
 
     def __unicode__(self):
         return u'{}: {} - {}'.format(
@@ -810,14 +830,28 @@ class FileType(models.Model):
         return self.name
 
 
+def get_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'interventions',
+         str(instance.pca.id),
+         filename]
+    )
+
+
 class PCAFile(models.Model):
 
-    pca = models.ForeignKey(PCA)
+    pca = models.ForeignKey(PCA, related_name='attachments')
     type = models.ForeignKey(FileType)
-    file = FilerFileField()
+    file = FilerFileField(blank=True, null=True)
+    attachment = models.FileField(
+        max_length=255,
+        upload_to=get_file_path
+    )
 
     def __unicode__(self):
-        return self.file.file.name
+        return self.attachment.name
 
     def download_url(self):
         if self.file:

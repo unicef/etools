@@ -1,6 +1,7 @@
 __author__ = 'jcranwellward'
 
 import datetime
+from copy import deepcopy
 
 from django.db import models
 from django.db.models import Q
@@ -17,11 +18,13 @@ from filer.fields.file import FilerFileField
 import reversion
 
 from EquiTrack.mixins import AdminURLMixin
-from reports.models import Result
+from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
 from locations.models import Governorate, Locality, Location, Region
 from . import emails
+
+User = settings.AUTH_USER_MODEL
 
 BOOL_CHOICES = (
     (None, "N/A"),
@@ -150,6 +153,11 @@ class Trip(AdminURLMixin, models.Model):
         verbose_name='VISION Approver'
     )
 
+    driver = models.ForeignKey(User, related_name='trips_driver', verbose_name='Driver', null=True, blank=True)
+    driver_supervisor = models.ForeignKey(User, verbose_name='Supervisor for Driver',
+                                          related_name='driver_supervised_trips', null=True, blank=True)
+    driver_trip = models.ForeignKey('self', null=True, blank=True, related_name='drivers_trip')
+
     locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Traveller', related_name='trips')
@@ -187,6 +195,7 @@ class Trip(AdminURLMixin, models.Model):
     approved_date = models.DateField(blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     approved_email_sent = models.BooleanField(default=False)
+    submitted_email_sent = models.BooleanField(default=False)
 
     ta_trip_took_place_as_planned = models.BooleanField(
         default=False,
@@ -201,6 +210,9 @@ class Trip(AdminURLMixin, models.Model):
     ta_trip_final_claim = models.BooleanField(
         default=False,
         help_text='I authorize UNICEF to treat this as the FINAL Claim'
+    )
+    pending_ta_amendment = models.BooleanField(
+        default=False,
     )
     class Meta:
         ordering = ['-created_date']
@@ -220,6 +232,9 @@ class Trip(AdminURLMixin, models.Model):
             self.trip_revision
         ) if self.id else None
     reference.short_description = 'Reference'
+
+    def attachments(self):
+        return self.files.all().count()
 
     def outstanding_actions(self):
         return self.actionpoint_set.filter(
@@ -268,7 +283,60 @@ class Trip(AdminURLMixin, models.Model):
         if self.status is not Trip.CANCELLED and self.cancelled_reason:
             self.status = Trip.CANCELLED
 
+        if self.status == Trip.APPROVED and \
+        self.driver is not None and \
+        self.driver_supervisor is not None and \
+        self.driver_trip is None:
+            self.create_driver_trip()
+
+        if self.status == Trip.COMPLETED and self.driver_trip:
+            driver_trip = Trip.objects.get(id=self.driver_trip.id)
+            driver_trip.status = Trip.COMPLETED
+            driver_trip.save()
+
         super(Trip, self).save(**kwargs)
+
+    def create_driver_trip(self):
+        trip = deepcopy(self)
+        trip.pk = None
+        trip.status = Trip.SUBMITTED
+        trip.id = None
+        trip.owner = self.driver
+        trip.supervisor = self.driver_supervisor
+        trip.approved_by_supervisor = False
+        trip.date_supervisor_approved = None
+        trip.approved_by_budget_owner = False
+        trip.date_budget_owner_approved = None
+        trip.approved_by_human_resources = None
+        trip.representative_approval = None
+        trip.date_representative_approved = None
+        trip.approved_date = None
+        trip.approved_email_sent = False
+        trip.driver = None
+        trip.driver_supervisor = None
+
+        super(Trip, trip).save()
+
+        for route in self.travelroutes_set.all():
+            TravelRoutes.objects.create(
+                trip=trip,
+                origin=route.origin,
+                destination=route.destination,
+                depart=route.depart,
+                arrive=route.arrive,
+                remarks=route.remarks
+            )
+
+        for location in self.triplocation_set.all():
+            TripLocation.objects.create(
+                trip=trip,
+                governorate=location.governorate,
+                region=location.region,
+                locality=location.locality,
+                location=location.location
+            )
+
+        self.driver_trip = trip
 
     @property
     def all_files(self):
@@ -305,10 +373,14 @@ class Trip(AdminURLMixin, models.Model):
                 recipients.append(instance.budget_owner.email)
 
         if instance.status == Trip.SUBMITTED:
-            emails.TripCreatedEmail(instance).send(
-                instance.owner.email,
-                *recipients
-            )
+            if instance.submitted_email_sent is False:
+                emails.TripCreatedEmail(instance).send(
+                    instance.owner.email,
+                    *recipients
+                )
+                instance.submitted_email_sent = True
+                instance.save()
+
             if instance.international_travel and instance.approved_by_supervisor:
                 recipients.append(instance.representative.email)
                 emails.TripRepresentativeEmail(instance).send(
@@ -511,8 +583,8 @@ post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 def get_report_filename(instance, filename):
     return '/'.join([
-        'trip_reports',
         instance.trip.owner.profile.country.name,
+        'trip_reports',
         str(instance.trip.id),
         filename
     ])

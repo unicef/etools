@@ -71,6 +71,7 @@ class TripForm(ModelForm):
         to_date = cleaned_data.get(u'to_date')
         owner = cleaned_data.get(u'owner')
         supervisor = cleaned_data.get(u'supervisor')
+        travel_assistant = cleaned_data.get(u'travel_assistant')
         budget_owner = cleaned_data.get(u'budget_owner')
         ta_required = cleaned_data.get(u'ta_required')
         pcas = cleaned_data.get(u'pcas')
@@ -87,6 +88,9 @@ class TripForm(ModelForm):
         approved_by_human_resources = cleaned_data.get(u'approved_by_human_resources')
         trip_report = cleaned_data.get(u'main_observations')
         ta_trip_took_place_as_planned = cleaned_data.get(u'ta_trip_took_place_as_planned')
+        pending_ta_amendment = cleaned_data.get(u'pending_ta_amendment')
+        driver = cleaned_data.get(u'driver')
+        driver_supervisor = cleaned_data.get(u'driver_supervisor')
 
         if to_date < from_date:
             raise ValidationError('The to date must be greater than the from date')
@@ -139,15 +143,21 @@ class TripForm(ModelForm):
                 'Only the supervisor can approve this trip'
             )
 
+        if driver and driver_supervisor is None:
+                raise ValidationError('You must enter a supervisor for the selected driver')
+
         if status == Trip.COMPLETED:
             if not trip_report and travel_type != Trip.STAFF_ENTITLEMENT:
                 raise ValidationError(
                     'You must provide a narrative report before the trip can be completed'
                 )
 
-            if ta_required and ta_trip_took_place_as_planned is False and self.request.user != programme_assistant:
+            if ta_required and pending_ta_amendment is True \
+                    and self.request.user != programme_assistant \
+                    and self.request.user != travel_assistant:
                 raise ValidationError(
-                    'Only the TA travel assistant can complete the trip'
+                    'Due to trip having a pending amendment to the TA, '
+                    ' only the travel focal point can complete the trip'
                 )
 
             # if not approved_by_human_resources and travel_type == Trip.STAFF_DEVELOPMENT:
@@ -165,8 +175,8 @@ class RequireOneLocationFormSet(BaseInlineFormSet):
             return
 
         form_count = len([f for f in self.forms if f.cleaned_data])
-        if form_count < 1 and self.instance.travel_type == Trip.PROGRAMME_MONITORING:
-            raise ValidationError('At least one Trip Location is required.')
+        if form_count < 1 and self.instance.international_travel is False and self.instance.status != Trip.CANCELLED:
+            raise ValidationError('At least one Trip location is required. (governorate and region)')
 
 
 class TripFilterByDateForm(Form):

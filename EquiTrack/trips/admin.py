@@ -11,6 +11,7 @@ from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 from users.models import UserProfile
 
+from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import AutoSizeTextForm
 from .models import (
@@ -88,12 +89,12 @@ class LinksInlineAdmin(GenericLinkStackedInline):
 
 class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     resource_class = TripResource
-    save_as = True  # TODO: There is a bug using this
+    save_as = True
     form = TripForm
     inlines = (
         TravelRoutesInlineAdmin,
-        TripFundsInlineAdmin,
         TripLocationsInlineAdmin,
+        TripFundsInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
@@ -118,7 +119,9 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'supervisor',
         u'status',
         u'approved_date',
+        u'attachments',
         u'outstanding_actions',
+        u'show_driver_trip',
     )
     list_filter = (
         u'owner',
@@ -132,6 +135,8 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'budget_owner',
         u'status',
         u'approved_date',
+        u'partners',
+        u'pending_ta_amendment',
         TripReportFilter,
         PartnerFilter,
     )
@@ -141,6 +146,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     )
     readonly_fields = (
         u'reference',
+        u'show_driver_trip',
     )
     fieldsets = (
         (u'Traveler', {
@@ -178,12 +184,14 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         (u'Travel/Admin', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
-                (u'transport_booked',
+                (
+                 (u'driver', u'driver_supervisor'),
+                 u'transport_booked',
                  u'security_granted',
                  u'ta_drafted',
                  u'ta_reference',
                  u'ta_drafted_date',
-                 u'vision_approver',),
+                 u'vision_approver'),
         }),
 
         (u'Report', {
@@ -207,7 +215,8 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
             u'fields': (
                 u'ta_trip_took_place_as_planned',
                 u'ta_trip_repay_travel_allowance',
-                u'ta_trip_final_claim'),
+                u'ta_trip_final_claim',
+                u'pending_ta_amendment'),
         }),
     )
     suit_form_tabs = (
@@ -221,6 +230,13 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     suit_form_includes = (
         ('admin/trips/checklists-tab.html', 'top', 'checklists'),
     )
+
+    def show_driver_trip(self, obj):
+        if obj.driver_trip:
+            return get_changeform_link(obj.driver_trip, link_name='View Driver Trip')
+        return ''
+    show_driver_trip.allow_tags = True
+    show_driver_trip.short_description = 'Driver Trip'
 
     def save_formset(self, request, form, formset, change):
         """
@@ -240,6 +256,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                     trip.date_representative_approved = None
                     trip.approved_date = None
                     trip.approved_email_sent = False
+                    trip.submitted_email_sent = False
                     trip.save()
 
         formset.save()
@@ -295,6 +312,10 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         rep_group, created = Group.objects.get_or_create(
             name=u'Representative Office'
         )
+
+        driver_group, created = Group.objects.get_or_create(
+            name=u'Driver')
+
         if trip and rep_group in request.user.groups.all():
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
@@ -320,6 +341,10 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
 
         if db_field.name == u'representative':
             rep_group = Group.objects.get(name=u'Representative Office')
+            kwargs['queryset'] = rep_group.user_set.all()
+
+        if db_field.name == u'driver':
+            rep_group = Group.objects.get(name=u'Driver')
             kwargs['queryset'] = rep_group.user_set.all()
 
         return super(TripReportAdmin, self).formfield_for_foreignkey(

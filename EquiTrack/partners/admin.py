@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-import datetime
-
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
@@ -106,7 +104,7 @@ class PCAFileInline(ReadOnlyMixin, admin.TabularInline):
     extra = 0
     fields = (
         'type',
-        'file',
+        'attachment',
         'download_url',
     )
     readonly_fields = (
@@ -121,12 +119,13 @@ class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     extra = 0
     fields = (
         'type',
+        'status',
         'amended_at',
         'amendment_number',
     )
-    readonly_fields = (
+    readonly_fields = [
         'amendment_number',
-    )
+    ]
 
 
 class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -221,6 +220,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
     date_hierarchy = 'start_date'
     list_display = (
         'number',
+        'partnership_type',
         'status',
         'created_date',
         'start_date',
@@ -229,8 +229,8 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
         'result_structure',
         'sector_names',
         'title',
-        'unicef_cash_budget',
-        'total_cash',
+        'total_unicef_cash',
+        'total_budget',
     )
     list_filter = (
         'partnership_type',
@@ -241,19 +241,14 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
         'partner',
         PCADonorFilter,
         PCAGatewayTypeFilter,
+        PCAGrantFilter,
     )
     search_fields = (
         'number',
         'title',
-        'unicef_cash_budget',
-        'total_cash',
     )
     readonly_fields = (
-        'total_unicef_contribution',
         'total_cash',
-        'amendment',
-        'amendment_number',
-        'view_original',
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
         'duration',
@@ -267,6 +262,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
             'fields':
                 ('partner',
                  'agreement',
+                 'number',
                  'partnership_type',
                  'result_structure',
                  'title',
@@ -274,7 +270,6 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
                  'initiation_date',
                  'submission_date',
                  'review_date',
-                 'number',
                  ('partner_manager', 'signed_by_partner_date',),
                  ('unicef_manager', 'signed_by_unicef_date',),
                  'partner_focal_point',

@@ -244,9 +244,6 @@ class AgreementForm(UserGroupForm):
     class Meta:
         model = Agreement
         widgets = {
-            'partner': LinkedSelect,
-            'signed_by': LinkedSelect,
-            'partner_manager': LinkedSelect,
             'start': SuitDateWidget,
             'end': SuitDateWidget,
         }
@@ -306,7 +303,6 @@ class PartnershipForm(UserGroupForm):
         model = PCA
         widgets = {
             'title': AutosizedTextarea(attrs={'class': 'input-xlarge'}),
-            'agreement': LinkedSelect,
         }
 
     def add_locations(self, p_codes, sector):
