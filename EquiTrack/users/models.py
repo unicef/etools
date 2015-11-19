@@ -69,22 +69,48 @@ class UserProfile(models.Model):
         if created:
             cls.objects.create(user=instance)
 
+    @classmethod
+    def custom_update_user(cls, sender, attributes, user_modified, **kwargs):
+        changes = False
+        # each claim in attributes is a list of strings
+        adfs_country = attributes.get('countryName')
 
+        # if the claims contain a country
+        if adfs_country:
+            new_country = Country.objects.get(name=adfs_country[0])
+            if new_country:
 
+                # if this user has never been activated and doesn't have a default country
+                if not sender.profile.country:
+                    # set the default country to his current adfs claim country
+                    sender.profile.country = new_country
+                    # set the adfs country in it's own field
+                    # sender.profile.country_adfs = new_country
+                    changes = True  # I modified the user object
 
-def custom_update_user(sender, attributes, user_modified, **kwargs):
-   print "custom updater called with"
-   print sender
-   print attributes
-   print user_modified
+                # if the current country that we have from adfs is not
+                # the same as the one coming from the claims
+                elif new_country != sender.profile.country:
 
-   return True  # I modified the user object
+                    # if there isn't a manual override for the country set
+                    # the current country to the new adfs country
+                    if not sender.profile.country_override:
+                        sender.profile.country = new_country
+                        changes = True  # I modified the user object
+                    elif sender.profile.country_override != sender.profile.country:
+                        sender.profile.country = sender.profile.country_override
+                        changes = True
+
+        if changes:
+            sender.profile.save()
+
+        return changes
 
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
 
 
-pre_user_save.connect(custom_update_user)
+pre_user_save.connect(UserProfile.custom_update_user)
 
 class EquiTrackRegistrationManager(RegistrationManager):
 
