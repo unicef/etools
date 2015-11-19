@@ -400,27 +400,44 @@ class PartnershipForm(UserGroupForm):
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
 
-        p_codes =cleaned_data[u'p_codes']
+        p_codes = cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
 
         work_plan = self.cleaned_data[u'work_plan']
         work_plan_sector = self.cleaned_data[u'work_plan_sector']
 
-        if partnership_type and partnership_type == PCA.PD:
+        agreement_types = dict(Agreement.AGREEMENT_TYPES)
+        partnership_types = dict(PCA.PARTNERSHIP_TYPES)
+        agreement_types[PCA.PD] = agreement_types[Agreement.PCA]
+        agreement_types[PCA.SHPD] = agreement_types[Agreement.PCA]
+
+        if partnership_type:  #TODO: Remove check once partnership type is madatory
 
             if not agreement:
                 raise ValidationError(
-                    u'Please select the PCA agreement this Programme Document relates to'
+                    u'Please select the Agreement this Document relates to'
                 )
+            else:
 
-            if partner_manager:
-                officers = agreement.authorized_officers.all().values_list('officer', flat=True)
-                if partner_manager.id not in officers:
-                    raise ValidationError(
-                        u'{} is not a named authorized officer in the {}'.format(
-                            partner_manager, agreement
+                if agreement.agreement_type != partnership_type:
+                    if agreement.agreement_type == Agreement.PCA and partnership_type in [PCA.PD, PCA.SHPD]:
+                        pass  # This is acceptable as both PDs and SHPDs both relate to PCAs
+                    else:
+                        raise ValidationError(
+                            u'Only {} can be selected for {}'.format(
+                                agreement_types[partnership_type],
+                                partnership_types[partnership_type]
+                            )
                         )
-                    )
+
+                if partner_manager:
+                    officers = agreement.authorized_officers.all().values_list('officer', flat=True)
+                    if partner_manager.id not in officers:
+                        raise ValidationError(
+                            u'{} is not a named authorized officer in the {}'.format(
+                                partner_manager, agreement
+                            )
+                        )
 
         if unicef_manager and not signed_by_unicef_date:
             raise ValidationError(

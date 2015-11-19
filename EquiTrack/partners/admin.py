@@ -17,7 +17,6 @@ from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
 from .exports import (
-    # KMLFormat,
     DonorsFormat,
     PCAResource,
     PartnerResource,
@@ -47,8 +46,6 @@ from .filters import (
     PCADonorFilter,
     PCAGrantFilter,
     PCAGatewayTypeFilter,
-    PCAIndicatorFilter,
-    PCAOutputFilter
 )
 from .mixins import ReadOnlyMixin, SectorMixin
 from .forms import (
@@ -126,6 +123,15 @@ class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     readonly_fields = [
         'amendment_number',
     ]
+
+    def get_max_num(self, request, obj=None, **kwargs):
+        """
+        Overriding here to disable adding amendments to non-active partnerships
+        """
+        if obj and obj.status == PCA.ACTIVE:
+            return self.max_num
+
+        return 0
 
 
 class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -315,9 +321,10 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
         (u'attachments', u'Attachments')
     )
 
-    # suit_form_includes = (
-    #     ('admin/partners/work_plan.html', 'middle', 'results'),
-    # )
+    suit_form_includes = (
+        #('admin/partners/work_plan.html', 'middle', 'results'),
+        ('admin/partners/attachments_note.html', 'top', 'attachments'),
+    )
 
     def get_queryset(self, request):
         queryset = super(PartnershipAdmin, self).get_queryset(request)

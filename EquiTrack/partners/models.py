@@ -152,8 +152,10 @@ class PartnerOrganization(models.Model):
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
 
-        set_unisupply_user(instance.short_name.lower(), instance.alternate_name.lower())
-
+        set_unisupply_user.delay(
+            instance.short_name.lower(),
+            instance.alternate_name.lower()
+        )
 
 post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 
@@ -293,7 +295,7 @@ class Agreement(TimeStampedModel):
     PCA = u'PCA'
     MOU = u'MOU'
     SSFA = u'SSFA'
-    IC = u'ic'
+    IC = u'IC'
     AWP = u'AWP'
     AGREEMENT_TYPES = (
         (PCA, u"Programme Cooperation Agreement"),
@@ -372,16 +374,15 @@ class PCA(AdminURLMixin, models.Model):
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
     )
-    PD = u'pd'
-    SHPD = u'shpd'
-    DCT = u'dct'
-    SSFA = u'ssfa'
-    SSFA = u'ssfa'
-    IC = u'ic'
+    PD = u'PD'
+    SHPD = u'SHPD'
+    AWP = u'AWP'
+    SSFA = u'SSFA'
+    IC = u'IC'
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (DCT, u'Cash Transfers to Government'),
+        (AWP, u'Cash Transfers to Government'),
         (SSFA, u'SSFA TOR'),
         (IC, u'IC TOR'),
     )
