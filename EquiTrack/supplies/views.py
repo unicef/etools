@@ -106,7 +106,6 @@ class SiteListJson(BaseDatatableView):
 
 
     order_columns = {
-        'district': 'asc',
         'partner_name':'asc',
         'pcodename': 'asc',
     }
@@ -133,10 +132,11 @@ class SiteListJson(BaseDatatableView):
         """ Get parameters from the request and prepare order by clause
         """
         order = []
-        for col, direct in self.order_columns.iteritems():
-            sdir = -1 if direct == 'desc' else 1
-            order.append((col, sdir))
-        return qs.sort(order)
+        # for col, direct in self.order_columns.iteritems():
+        #     sdir = -1 if direct == 'desc' else 1
+        #     order.append((col, sdir))
+        # return qs.sort(order)
+        return qs
 
     def paging(self, qs):
         # disable server side paging

@@ -102,7 +102,7 @@ def set_unisupply_distribution(distribution_plan):
 
 
 @app.task
-def import_docs(**kwargs):
+def import_docs():
 
         data = requests.get(
             os.path.join(settings.COUCHBASE_URL,'_all_docs?include_docs=true'),
@@ -148,13 +148,14 @@ def import_docs(**kwargs):
 
 
 
-
+@app.task
 def initiate_mongo_connection():
-    connection = MongoClient(host='localhost',port=27017)
+    connection = MongoClient(host='localhost', port=27017)
     db = connection.winter
     return db
 
-def crunch_winter_data(**kwargs):
+@app.task
+def crunch_winter_data():
     db = initiate_mongo_connection()
     cursor = db.data.aggregate([
         {'$match': {'type': 'assessment'}},
