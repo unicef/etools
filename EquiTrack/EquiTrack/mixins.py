@@ -120,18 +120,6 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
             raise PermissionDenied(detail='No country found for user')
 
 
-        # approach 1 - get the country from ADFS token
-        # this approach will ensure that JWT actually has the same value as the tennant schema
-
-        #payload = jwt_decode_handler(jwt_value)
-        #if payload.get('country') and user.profile.country != payload['country']:
-        #    user.profile.country = payload['country']
-        #    user.save()
-
-
-        # approach 2
-        # only set the schema based on what we know on our end
-        # this will allow for a faster country change / no csv endpoint needed
 
         if user.profile.country_override and user.profile.country != user.profile.country_override:
             user.profile.country = user.profile.country_override
@@ -142,8 +130,5 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         else:
             connection.set_tenant(user.profile.country)
             request.tenant = user.profile.country
-
-        #connection.set_tenant(user.profile.country)
-        #request.tenant = user.profile.country
 
         return user, jwt_value

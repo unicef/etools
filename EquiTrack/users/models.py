@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from djangosaml2.signals import pre_user_save
-#from djangosaml2 import backends
 
 
 from registration.models import RegistrationManager, RegistrationProfile
@@ -71,40 +70,26 @@ class UserProfile(models.Model):
 
     @classmethod
     def custom_update_user(cls, sender, attributes, user_modified, **kwargs):
-        changes = False
-        # each claim in attributes is a list of strings
-        adfs_country = attributes.get('countryName')
 
-        # if the claims contain a country
+        # if there is a country_override, don't bother updating the user
+        if sender.profile.country_override:
+            if sender.profile.country != sender.profile.country_override:
+                sender.profile.country = sender.profile.country_override
+                sender.profile.save()
+                return True
+            return False
+
+        adfs_country = attributes.get("countryName")
+
         if adfs_country:
             new_country = Country.objects.get(name=adfs_country[0])
-            if new_country:
+            if (new_country and
+                    new_country != sender.profile.country):
+                sender.profile.country = new_country
+                sender.profile.save()
+                return True
 
-                # if this user has never been activated and doesn't have a default country
-                if not sender.profile.country:
-                    # set the default country to his current adfs claim country
-                    sender.profile.country = new_country
-                    # set the adfs country in it's own field
-                    # sender.profile.country_adfs = new_country
-                    changes = True  # I modified the user object
-
-                # if the current country that we have from adfs is not
-                # the same as the one coming from the claims
-                elif new_country != sender.profile.country:
-
-                    # if there isn't a manual override for the country set
-                    # the current country to the new adfs country
-                    if not sender.profile.country_override:
-                        sender.profile.country = new_country
-                        changes = True  # I modified the user object
-                    elif sender.profile.country_override != sender.profile.country:
-                        sender.profile.country = sender.profile.country_override
-                        changes = True
-
-        if changes:
-            sender.profile.save()
-
-        return changes
+        return False
 
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
