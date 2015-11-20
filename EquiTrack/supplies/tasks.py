@@ -70,7 +70,7 @@ def set_unisupply_distribution(distribution_plan):
                     distribution_plan.quantity
                 )),
                 "channels": [distribution_plan.partnership.partner.short_name],
-                "partner_name": distribution_plan.partnership.partner.name,
+                "partner_name": distribution_plan.partnership.partner.short_name,
                 "icon": "institution",
                 "criticality": "0",
                 "item_list": [
