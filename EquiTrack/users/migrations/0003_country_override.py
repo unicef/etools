@@ -4,11 +4,10 @@ from django.db import models, migrations
 
 
 def updateCountryOverride(apps, schema_editor):
-    "transform all vote field from choice Model to a vote model with root user as owner"
 
     UserProfile = apps.get_model("users", "UserProfile")
     for profile in UserProfile.objects.all():
-        if profile.country.name == "UAT":
+        if profile.country and profile.country.name == "UAT":
             profile.country_override = profile.country
             profile.save()
 
