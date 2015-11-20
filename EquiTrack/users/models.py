@@ -70,28 +70,19 @@ class UserProfile(models.Model):
 
     @classmethod
     def custom_update_user(cls, sender, attributes, user_modified, **kwargs):
-
-        # if there is a country_override, don't bother updating the user
-        if sender.profile.country_override:
-            if sender.profile.country != sender.profile.country_override:
-                sender.profile.country = sender.profile.country_override
-                sender.profile.save()
-                return True
-            return False
-
         adfs_country = attributes.get("countryName")
-
-        if adfs_country:
+        new_country = None
+        if sender.profile.country_override:
+            new_country = sender.profile.country_override
+        elif adfs_country:
             try:
                 new_country = Country.objects.get(name=adfs_country[0])
             except Country.DoesNotExist:
                 return False
-
-            if new_country != sender.profile.country:
-                sender.profile.country = new_country
-                sender.profile.save()
-                return True
-
+        if new_country and new_country != sender.profile.country:
+            sender.profile.country = new_country
+            sender.profile.save()
+            return True
         return False
 
 
