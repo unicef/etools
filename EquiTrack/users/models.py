@@ -82,9 +82,12 @@ class UserProfile(models.Model):
         adfs_country = attributes.get("countryName")
 
         if adfs_country:
-            new_country = Country.objects.get(name=adfs_country[0])
-            if (new_country and
-                    new_country != sender.profile.country):
+            try:
+                new_country = Country.objects.get(name=adfs_country[0])
+            except Country.DoesNotExist:
+                return False
+
+            if new_country != sender.profile.country:
                 sender.profile.country = new_country
                 sender.profile.save()
                 return True
