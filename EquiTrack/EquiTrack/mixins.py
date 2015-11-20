@@ -113,22 +113,13 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         except TypeError as exp:
             raise PermissionDenied(detail='No valid authentication provided')
         if not user.profile.country:
-            # we could implement the same updating system as for the web for user countries
-            # instead of permission denied, if considered that logging in through the app
-            # should allow the user to also create an account on the fly.
-            # otherwise every user has to have their first login on the web.
             raise PermissionDenied(detail='No country found for user')
-
-
 
         if user.profile.country_override and user.profile.country != user.profile.country_override:
             user.profile.country = user.profile.country_override
             user.profile.save()
 
-            connection.set_tenant(user.profile.country_override)
-            request.tenant = user.profile.country_override
-        else:
-            connection.set_tenant(user.profile.country)
-            request.tenant = user.profile.country
+        connection.set_tenant(user.profile.country)
+        request.tenant = user.profile.country
 
         return user, jwt_value
