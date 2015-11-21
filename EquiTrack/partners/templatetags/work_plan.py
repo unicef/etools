@@ -25,21 +25,23 @@ def show_work_plan(value):
     work_plan = SortedDict()
     governorates = SortedDict()
 
-    for result in results:
-        if result.governorate:
-            governorates[result.governorate] = 0
+    # for result in results:
+    #     if result.governorate:
+    #         governorates[result.governorate] = 0
 
     for result in results:
         row = work_plan.get(result.result.code, SortedDict())
         row['Code'] = result.result.code
-        row['Result Type'] = result.result_type.name
-        row['Result'] = result.result.name
-        row['Indicator'] = result.indicator.name if result.indicator else u'NOT FOUND'
-        row['Target'] = result.target
-        row.update(governorates)
-        if result.governorate:
-            row[result.governorate.name] = result.target or 0
-        work_plan[result.result.code] = row
+        row['Indicator'] = result.indicator.name if result.indicator else result.result.name
+        row['Targets'] = result.target
+        row['Total'] = result.total
+        row['CSO'] = result.partner_contribution
+        row['UNICEF Cash'] = result.unicef_cash
+        row['UNICEF Supplies'] = result.in_kind_amount
+        # row.update(governorates)
+        # if result.governorate:
+        #     row[result.governorate.name] = result.target or 0
+        # work_plan[result.result.code] = row
 
     if work_plan:
         for row in work_plan.values():

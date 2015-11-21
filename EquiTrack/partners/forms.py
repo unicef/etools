@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
+import pandas
+
 from django.utils.translation import ugettext as _
 from django import forms
 from django.contrib import messages
@@ -21,7 +23,7 @@ from EquiTrack.forms import (
     UserGroupForm,
 )
 from locations.models import Location
-from reports.models import Sector, Result, Indicator
+from reports.models import Sector, Result, ResultType, Indicator
 from .models import (
     PCA,
     PartnerOrganization,
@@ -333,58 +335,90 @@ class PartnershipForm(UserGroupForm):
                 created, notfound
             ))
 
-    # def import_results_from_work_plan(self, work_plan, sector):
-    #     """
-    #     Matches results from the work plan to country result structure.
-    #     Will try to match indicators one to one or by name, this can be ran
-    #     multiple times to continually update the work plan
-    #     """
-    #     try:  # first try to grab the excel as a table...
-    #         data = pandas.read_excel(work_plan, index_col=0)
-    #     except Exception as exp:
-    #         raise ValidationError(exp.message)
-    #
-    #     imported = found = not_found = 0
-    #     for code, row in data.iterrows():
-    #         create_args = dict(
-    #             partnership=self.obj
-    #         )
-    #         try:
-    #             result = Result.objects.get(
-    #                 sector=sector,
-    #                 code=code
-    #             )
-    #             create_args['result'] = result
-    #             create_args['result_type'] = result.result_type
-    #             indicators = result.indicator_set.all()
-    #             if indicators:
-    #                 if indicators.count() == 1:
-    #                     # use this indicator if we only have one
-    #                     create_args['indicator'] = indicators[0]
-    #                 else:
-    #                     # attempt to fuzzy match by name
-    #                     candidates = indicators.filter(
-    #                         name__icontains=row['Indicator']
-    #                     )
-    #                     if candidates:
-    #                         create_args['indicator'] = candidates[0]
-    #                 # if we got this far also take the target
-    #                 create_args['target'] = row.get('Target')
-    #         except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
-    #             not_found += 1
-    #             #TODO: Log this
-    #         else:
-    #             result_chain, new = ResultChain.objects.get_or_create(**create_args)
-    #             if new:
-    #                 imported += 1
-    #             else:
-    #                 found += 1
-    #
-    #     messages.info(
-    #         self.request,
-    #         u'Imported {} results, {} were imported already and {} were not found'.format(
-    #             imported, found, not_found
-    #         ))
+    def import_results_from_work_plan(self, work_plan, sector):
+        """
+        Matches results from the work plan to country result structure.
+        Will try to match indicators one to one or by name, this can be ran
+        multiple times to continually update the work plan
+        """
+        try:  # first try to grab the excel as a table...
+            data = pandas.read_excel(work_plan, index_col=0)
+        except Exception as exp:
+            raise ValidationError(exp.message)
+
+        current_output = None
+        imported = found = not_found = 0
+        for label, row in data.iterrows():
+            create_args = dict(
+                partnership=self.obj
+            )
+            try:
+                type = label.split()[0].trim()
+                statement = row['Details'].trim()
+                # we can interpret the type we are dealing with by its code
+                result_type = ResultType.object.get(
+                    name__icontains=type
+                )
+                try:
+                    # now we try to look up the result based on the statement
+                    result = Result.objects.get(
+                        sector=sector,
+                        result_type=result_type,
+                        name__icontains=statement
+                    )
+                    if result_type.name == 'Output':
+                        current_output = result
+                except Result.DoesNotExist as exp:
+                    # if we didn't find it we are ether dealing with a new
+                    # activity or a badly worded output statement
+                    if result_type.name == 'Activity' and current_output:
+                        # in the case of an activity we can create it
+                        result = Result.objects.create(
+                            result_structure=self.obj.result_strucutre,
+                            result_type=result_type,
+                            sector=sector,
+                            name=statement,
+                            code=label,
+                            parent=current_output
+                        )
+                    else:
+                        # not much we can do, raise error
+                        raise exp
+
+                create_args['result'] = result
+                create_args['result_type'] = result.result_type
+                if 'Targets' in row:
+                    create_args['target'] = int(row['Targets'])
+                if 'CSO' in row:
+                    create_args['partner_contribution'] = int(row['CSO'])
+                if 'UNICEF Cash' in row:
+                    create_args['unicef_cash'] = int(row['UNICEF Cash'])
+                if 'UNICEF Supplies' in row:
+                    create_args['in_kind_amount'] = int(row['UNICEF Supplies'])
+
+                if 'indicator' in label:
+                    Indicator.objects.get_or_create(
+                        sector=sector,
+                        result=result,
+                        code=label,
+                        name=statement
+                    )
+
+            except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
+                not_found += 1
+                raise ValidationError(exp.message)
+            else:
+                result_chain, new = ResultChain.objects.get_or_create(**create_args)
+                if new:
+                    imported += 1
+                else:
+                    found += 1
+
+        messages.info(
+            self.request,
+            u'Imported {} results, {} were imported already and {} were not found'.format(
+                imported, found, not_found
+            ))
 
     def clean(self):
         """
@@ -462,13 +496,13 @@ class PartnershipForm(UserGroupForm):
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
-        # if work_plan and not work_plan_sector:
-        #     raise ValidationError(
-        #         u'Please select a sector to import results against'
-        #     )
-        #
-        # if work_plan and work_plan_sector:
-        #     self.import_results_from_work_plan(work_plan, work_plan_sector)
+        if work_plan and not work_plan_sector:
+            raise ValidationError(
+                u'Please select a sector to import results against'
+            )
+
+        if work_plan and work_plan_sector:
+            self.import_results_from_work_plan(work_plan, work_plan_sector)
 
         return cleaned_data
 

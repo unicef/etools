@@ -128,11 +128,11 @@ class Indicator(models.Model):
     result_structure = models.ForeignKey(
         ResultStructure, blank=True, null=True)
 
-    result = models.ForeignKey(Result, blank=True, null=True)
+    result = models.ForeignKey(Result)
     name = models.CharField(max_length=128L, unique=True)
     code = models.CharField(max_length=10, null=True, blank=True)
-    unit = models.ForeignKey(Unit)
-    total = models.IntegerField(verbose_name='UNICEF Target')
+    unit = models.ForeignKey(Unit, null=True, blank=True)
+    total = models.IntegerField(verbose_name='UNICEF Target', null=True, blank=True)
     sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
     current = models.IntegerField(null=True, blank=True, default=0)
     sector_current = models.IntegerField(null=True, blank=True)

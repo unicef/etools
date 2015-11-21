@@ -287,10 +287,10 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
             u'classes': (u'suit-tab suit-tab-locations',),
             'fields': ('location_sector', 'p_codes',),
         }),
-        # (_('Import work plan'), {
-        #     u'classes': (u'suit-tab suit-tab-results',),
-        #     'fields': ('work_plan_sector', 'work_plan',),
-        # }),
+        (_('Import work plan'), {
+            u'classes': (u'suit-tab suit-tab-results',),
+            'fields': ('work_plan_sector', 'work_plan',),
+        }),
     )
     remove_fields_if_read_only = (
         'location_sector',
@@ -307,7 +307,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
-        ResultsInlineAdmin,
+        #ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
     )
@@ -322,7 +322,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
     )
 
     suit_form_includes = (
-        #('admin/partners/work_plan.html', 'middle', 'results'),
+        ('admin/partners/work_plan.html', 'middle', 'results'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 

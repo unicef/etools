@@ -877,6 +877,7 @@ class PCAFile(models.Model):
 class ResultChain(models.Model):
 
     partnership = models.ForeignKey(PCA, related_name='results')
+    code = models.CharField(max_length=10, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     result = ChainedForeignKey(
         Result,
@@ -900,6 +901,13 @@ class ResultChain(models.Model):
     target = models.PositiveIntegerField(
         blank=True, null=True
     )
+    partner_contribution = models.IntegerField(default=0)
+    unicef_cash = models.IntegerField(default=0)
+    in_kind_amount = models.IntegerField(default=0)
+
+    @property
+    def total(self):
+        return self.unicef_cash + self.in_kind_amount + self.partner_contribution
 
     def __unicode__(self):
         return u'{} -> {} -> {}'.format(
