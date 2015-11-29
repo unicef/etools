@@ -36,6 +36,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_display = (
         'username',
         'country',
+        'country_override',
         'office',
         'section',
         'job_title',
@@ -43,6 +44,7 @@ class ProfileAdmin(admin.ModelAdmin):
     )
     list_editable = (
         'country',
+        'country_override',
         'office',
         'section',
         'job_title',

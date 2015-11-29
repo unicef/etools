@@ -2,6 +2,8 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
+from djangosaml2.signals import pre_user_save
+
 
 from tenant_schemas.models import TenantMixin
 
@@ -40,6 +42,7 @@ class UserProfile(models.Model):
 
     user = models.OneToOneField(User, related_name='profile')
     country = models.ForeignKey(Country, null=True, blank=True)
+    country_override = models.ForeignKey(Country, null=True, blank=True, related_name="country_override")
     section = models.ForeignKey(Section, null=True, blank=True)
     office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
@@ -62,6 +65,24 @@ class UserProfile(models.Model):
         if created:
             cls.objects.create(user=instance)
 
+    @classmethod
+    def custom_update_user(cls, sender, attributes, user_modified, **kwargs):
+        adfs_country = attributes.get("countryName")
+        new_country = None
+        if sender.profile.country_override:
+            new_country = sender.profile.country_override
+        elif adfs_country:
+            try:
+                new_country = Country.objects.get(name=adfs_country[0])
+            except Country.DoesNotExist:
+                return False
+        if new_country and new_country != sender.profile.country:
+            sender.profile.country = new_country
+            sender.profile.save()
+            return True
+        return False
+
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
 
+pre_user_save.connect(UserProfile.custom_update_user)
