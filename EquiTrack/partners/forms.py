@@ -58,6 +58,7 @@ class PartnersAdminForm(AutoSizeTextForm):
 
     class Meta:
         model = PartnerOrganization
+        fields = '__all__'
 
     def clean(self):
         cleaned_data = super(PartnersAdminForm, self).clean()
@@ -77,6 +78,7 @@ class AssessmentAdminForm(AutoSizeTextForm):
 
     class Meta:
         model = Assessment
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -106,6 +108,7 @@ class ResultChainAdminForm(forms.ModelForm):
 
     class Meta:
         model = ResultChain
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -131,6 +134,7 @@ class AmendmentForm(forms.ModelForm):
 
     class Meta:
         model = AmendmentLog
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -169,6 +173,7 @@ class AuthorizedOfficersForm(forms.ModelForm):
 
     class Meta:
         model = AuthorizedOfficer
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -189,6 +194,7 @@ class DistributionPlanForm(forms.ModelForm):
 
     class Meta:
         model = DistributionPlan
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -242,6 +248,7 @@ class AgreementForm(UserGroupForm):
 
     class Meta:
         model = Agreement
+        fields = '__all__'
         widgets = {
             'start': SuitDateWidget,
             'end': SuitDateWidget,
@@ -279,6 +286,16 @@ class AgreementForm(UserGroupForm):
         return cleaned_data
 
 
+def check_and_return_value(column, row):
+
+    value = 0
+    if column in row:
+        if not pandas.isnull(row[column]):
+            value = row[column]
+        row.pop(column)
+    return value
+
+
 class PartnershipForm(UserGroupForm):
 
     user_field = u'unicef_manager'
@@ -300,6 +317,7 @@ class PartnershipForm(UserGroupForm):
 
     class Meta:
         model = PCA
+        fields = '__all__'
         widgets = {
             'title': AutosizedTextarea(attrs={'class': 'input-xlarge'}),
         }
@@ -346,73 +364,80 @@ class PartnershipForm(UserGroupForm):
         except Exception as exp:
             raise ValidationError(exp.message)
 
+        data.fillna('', inplace=True)
         current_output = None
         imported = found = not_found = 0
-        for label, row in data.iterrows():
+        for label, series in data.iterrows():
             create_args = dict(
                 partnership=self.obj
             )
+            row = series.to_dict()
             try:
-                type = label.split()[0].trim()
-                statement = row['Details'].trim()
-                # we can interpret the type we are dealing with by its code
-                result_type = ResultType.object.get(
-                    name__icontains=type
-                )
+                type = label.split()[0].strip()
+                statement = row['Details'].strip()
+                row.pop('Details')
                 try:
+                    result_type = ResultType.objects.get(
+                        name__icontains=type
+                    )
+                except ResultType.DoesNotExist as exp:
+                    # we can interpret the type we are dealing with by its label
+                    if 'indicator' in label and current_output:
+                        pass
+                    else:
+                        raise exp
+                else:
+                    # we are dealing with a result statement
                     # now we try to look up the result based on the statement
-                    result = Result.objects.get(
-                        sector=sector,
+                    result, created = Result.objects.get_or_create(
+                        result_structure=self.obj.result_structure,
                         result_type=result_type,
-                        name__icontains=statement
+                        sector=sector,
+                        name=statement,
+                        code=label,
                     )
                     if result_type.name == 'Output':
                         current_output = result
-                except Result.DoesNotExist as exp:
-                    # if we didn't find it we are ether dealing with a new
-                    # activity or a badly worded output statement
-                    if result_type.name == 'Activity' and current_output:
-                        # in the case of an activity we can create it
-                        result = Result.objects.create(
-                            result_structure=self.obj.result_strucutre,
-                            result_type=result_type,
-                            sector=sector,
-                            name=statement,
-                            code=label,
-                            parent=current_output
-                        )
-                    else:
-                        # not much we can do, raise error
-                        raise exp
+                    elif result_type.name == 'Activity' and current_output:
+                        result.parent = current_output
+                        result.save()
 
                 create_args['result'] = result
                 create_args['result_type'] = result.result_type
-                if 'Targets' in row:
-                    create_args['target'] = int(row['Targets'])
-                if 'CSO' in row:
-                    create_args['partner_contribution'] = int(row['CSO'])
-                if 'UNICEF Cash' in row:
-                    create_args['unicef_cash'] = int(row['UNICEF Cash'])
-                if 'UNICEF Supplies' in row:
-                    create_args['in_kind_amount'] = int(row['UNICEF Supplies'])
+                create_args['target'] = check_and_return_value('Targets', row)
+                create_args['partner_contribution'] = check_and_return_value('CSO', row)
+                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row)
+                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row)
+                check_and_return_value('Total', row)
 
                 if 'indicator' in label:
-                    Indicator.objects.get_or_create(
+                    indicator, created = Indicator.objects.get_or_create(
                         sector=sector,
                         result=result,
                         code=label,
                         name=statement
                     )
+                    create_args['indicator'] = indicator
 
-            except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
-                not_found += 1
-                raise ValidationError(exp.message)
-            else:
                 result_chain, new = ResultChain.objects.get_or_create(**create_args)
+
+                if row:
+                    for key in row.keys():
+                        if 'Unnamed' in key:
+                            del row[key]
+                        elif pandas.isnull(row[key]):
+                            row[key] = ''
+                    result_chain.disaggregation = row
+                    result_chain.save()
+
                 if new:
                     imported += 1
                 else:
                     found += 1
+
+            except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
+                not_found += 1
+                raise ValidationError(exp.message)
 
         messages.info(
             self.request,
@@ -511,6 +536,7 @@ class PartnershipBudgetAdminForm(AmendmentForm):
 
     class Meta:
         model = PartnershipBudget
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         super(PartnershipBudgetAdminForm, self).__init__(*args, **kwargs)

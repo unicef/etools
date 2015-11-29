@@ -2,34 +2,15 @@ __author__ = 'jcranwellward'
 
 import string
 
-from django.views.generic import TemplateView, FormView
+from django.views.generic import FormView
 
 from rest_framework.generics import RetrieveAPIView, ListAPIView
-from registration.backends.default.views import (
-    RegistrationView,
-)
 
 from users.models import Office
 from reports.models import Sector
-from .forms import UnicefEmailRegistrationForm, ProfileForm
-from .models import EquiTrackRegistrationModel, User, UserProfile
+from .forms import ProfileForm
+from .models import User, UserProfile
 from .serializers import UserSerializer, SimpleProfileSerializer
-
-
-class EquiTrackRegistrationView(RegistrationView):
-
-    form_class = UnicefEmailRegistrationForm
-    registration_profile = EquiTrackRegistrationModel
-
-    def register(self, request, send_email=True, **cleaned_data):
-        """
-        We override the register method to disable email sending
-        """
-        send_email = False
-
-        return super(EquiTrackRegistrationView, self).register(
-            request, send_email, **cleaned_data
-        )
 
 
 class UserAuthAPIView(RetrieveAPIView):
@@ -53,31 +34,24 @@ class UsersView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return self.model.objects.filter(country=user.profile.country).order_by('user__first_name')
-
-
-class ProfileView(TemplateView):
-
-    template_name = 'profile.html'
-
-    def get_context_data(self, **kwargs):
-        return {
-            'office_list': Office.objects.all().order_by('name'),
-            'section_list': Sector.objects.all().order_by('name')
-        }
+        return self.model.objects.filter(
+            country=user.profile.country
+        ).order_by('user__first_name')
 
 
 class ProfileEdit(FormView):
 
-    template_name = 'registration/profile.html'
+    template_name = 'users/profile.html'
     form_class = ProfileForm
     success_url = 'complete'
 
     def get_context_data(self, **kwargs):
-        return {
+        context = super(ProfileEdit, self).get_context_data(**kwargs)
+        context.update({
             'office_list': Office.objects.all().order_by('name'),
             'section_list': Sector.objects.all().order_by('name')
-        }
+        })
+        return context
 
     def form_valid(self, form):
         # This method is called when valid form data has been POSTed.
@@ -91,10 +65,6 @@ class ProfileEdit(FormView):
         profile.phone_number = form.cleaned_data['phone_number']
         profile.save()
         return super(ProfileEdit, self).form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        context = super(ProfileEdit, self).get_context_data(**kwargs)
-        return context
 
     def get_initial(self):
         """  Returns the initial data to use for forms on this view.  """

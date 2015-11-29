@@ -18,6 +18,7 @@ class TravelRoutesForm(ModelForm):
 
     class Meta:
         model = TravelRoutes
+        fields = '__all__'
 
     depart = fields.DateTimeField(label='Depart', widget=DateTimeWidget(bootstrap_version=3),
                                   input_formats=['%d/%m/%Y %H:%M'])
@@ -56,6 +57,7 @@ class TripForm(ModelForm):
 
     class Meta:
         model = Trip
+        fields = '__all__'
         widgets = {
             'purpose_of_travel':
                 AutosizedTextarea(attrs={'class': 'input-xlarge'}),

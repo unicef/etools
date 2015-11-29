@@ -31,6 +31,7 @@ class CartoDBTableForm(forms.ModelForm):
 
     class Meta:
         model = CartoDBTable
+        fields = '__all__'
 
     def clean(self):
 

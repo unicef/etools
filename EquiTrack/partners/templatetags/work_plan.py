@@ -23,25 +23,20 @@ def show_work_plan(value):
     results = pca.results.all()
     data = tablib.Dataset()
     work_plan = SortedDict()
-    governorates = SortedDict()
 
-    # for result in results:
-    #     if result.governorate:
-    #         governorates[result.governorate] = 0
+    for num, result in enumerate(results):
+        row = SortedDict()
+        row['Code'] = result.indicator.code if result.indicator else result.result.code
+        row['Details'] = result.indicator.name if result.indicator else result.result.name
+        row['Targets'] = result.target if result.target else ''
+        if result.disaggregation:
+            row.update(result.disaggregation)
+        row['Total'] = result.total if result.total else ''
+        row['CSO'] = result.partner_contribution if result.partner_contribution else ''
+        row['UNICEF Cash'] = result.unicef_cash if result.unicef_cash else ''
+        row['UNICEF Supplies'] = result.in_kind_amount if result.in_kind_amount else ''
 
-    for result in results:
-        row = work_plan.get(result.result.code, SortedDict())
-        row['Code'] = result.result.code
-        row['Indicator'] = result.indicator.name if result.indicator else result.result.name
-        row['Targets'] = result.target
-        row['Total'] = result.total
-        row['CSO'] = result.partner_contribution
-        row['UNICEF Cash'] = result.unicef_cash
-        row['UNICEF Supplies'] = result.in_kind_amount
-        # row.update(governorates)
-        # if result.governorate:
-        #     row[result.governorate.name] = result.target or 0
-        # work_plan[result.result.code] = row
+        work_plan[num] = row
 
     if work_plan:
         for row in work_plan.values():
@@ -49,6 +44,6 @@ def show_work_plan(value):
                 data.headers = row.keys()
             data.append(row.values())
 
-        return data.sort('Code').html
+        return data.html
 
     return '<p>No results</p>'

@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resultchain',
             name='code',
-            field=models.CharField(max_length=10, null=True, blank=True),
+            field=models.CharField(max_length=50, null=True, blank=True),
             preserve_default=True,
         ),
         migrations.AddField(

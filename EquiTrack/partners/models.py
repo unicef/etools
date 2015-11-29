@@ -9,6 +9,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
+from django.contrib.postgres.fields import HStoreField
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
@@ -877,7 +878,7 @@ class PCAFile(models.Model):
 class ResultChain(models.Model):
 
     partnership = models.ForeignKey(PCA, related_name='results')
-    code = models.CharField(max_length=10, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     result = ChainedForeignKey(
         Result,
@@ -894,10 +895,8 @@ class ResultChain(models.Model):
         auto_choose=True,
         blank=True, null=True
     )
-    governorate = models.ForeignKey(
-        Governorate,
-        blank=True, null=True
-    )
+
+    # fixed columns
     target = models.PositiveIntegerField(
         blank=True, null=True
     )
@@ -905,8 +904,12 @@ class ResultChain(models.Model):
     unicef_cash = models.IntegerField(default=0)
     in_kind_amount = models.IntegerField(default=0)
 
+    # variable disaggregation's that may be present in the work plan
+    disaggregation = HStoreField(null=True)
+
     @property
     def total(self):
+
         return self.unicef_cash + self.in_kind_amount + self.partner_contribution
 
     def __unicode__(self):

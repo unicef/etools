@@ -70,9 +70,10 @@ class Result(MPTTModel):
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector, null=True, blank=True)
     name = models.TextField()
-    code = models.CharField(max_length=10, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True)
     parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
 
+    # activity level attributes
     humanitarian_tag = models.BooleanField(default=False)
     wbs = models.CharField(max_length=50, null=True, blank=True)
     vision_id = models.CharField(max_length=10, null=True, blank=True)
@@ -130,7 +131,7 @@ class Indicator(models.Model):
 
     result = models.ForeignKey(Result)
     name = models.CharField(max_length=128L, unique=True)
-    code = models.CharField(max_length=10, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True)
     unit = models.ForeignKey(Unit, null=True, blank=True)
     total = models.IntegerField(verbose_name='UNICEF Target', null=True, blank=True)
     sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)

@@ -30,7 +30,7 @@ def set_docs(docs):
             'all_or_nothing': True
         }
     )
-    response = requests.post(
+    response = requests.put(
         os.path.join(settings.COUCHBASE_URL, '_bulk_docs'),
         headers={'content-type': 'application/json'},
         auth=HTTPBasicAuth(settings.COUCHBASE_USER, settings.COUCHBASE_PASS),

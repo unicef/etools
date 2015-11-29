@@ -157,7 +157,7 @@ class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
 
 class PcaGrantInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     form = autocomplete_light.modelform_factory(
-        Grant
+        Grant, fields=['name', 'donor']
     )
     model = PCAGrant
     verbose_name = 'Grant'
@@ -170,20 +170,6 @@ class PcaGrantInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         'amendment',
     )
     ordering = ['amendment']
-
-
-class PcaSectorAdmin(ReadOnlyMixin, SectorMixin, VersionAdmin):
-    form = autocomplete_light.modelform_factory(
-        PCASector
-    )
-    fields = (
-        'pca',
-        'sector',
-    )
-    readonly_fields = (
-        'pca',
-        'sector',
-    )
 
 
 class LinksInlineAdmin(ReadOnlyMixin, GenericLinkStackedInline):
@@ -558,7 +544,6 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
 admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Agreement, AgreementAdmin)
-admin.site.register(PCASector, PcaSectorAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 admin.site.register(Assessment, AssessmentAdmin)

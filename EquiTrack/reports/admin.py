@@ -134,14 +134,14 @@ class IndicatorAdmin(ImportExportModelAdmin):
 
 class ResultAdmin(MPTTModelAdmin):
     form = AutoSizeTextForm
+    mptt_indent_field = '__unicode__'
     list_filter = (
         'result_structure',
         'sector',
         'result_type'
     )
     list_display = (
-        'name',
-        'result_type',
+        '__unicode__',
         'wbs',
     )
 

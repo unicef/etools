@@ -10,7 +10,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('registration', '__first__'),
     ]
 
     operations = [
@@ -26,15 +25,6 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
             bases=(models.Model,),
-        ),
-        migrations.CreateModel(
-            name='EquiTrackRegistrationModel',
-            fields=[
-                ('registrationprofile_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='registration.RegistrationProfile')),
-            ],
-            options={
-            },
-            bases=('registration.registrationprofile',),
         ),
         migrations.CreateModel(
             name='Office',

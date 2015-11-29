@@ -140,9 +140,6 @@ DATABASES = {
 DATABASE_ROUTERS = (
     'tenant_schemas.routers.TenantSyncRouter',
 )
-SOUTH_DATABASE_ADAPTERS = {
-    'default': 'south.db.postgresql_psycopg2',
-}
 
 import djcelery
 djcelery.setup_loader()
@@ -160,15 +157,15 @@ MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')
 MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
 ########## END DATABASE CONFIGURATION
 
-########## MANAGER CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
-ADMINS = (
-    ('James Cranwell-Ward', 'jcranwellward@unicef.org'),
-)
-
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
-MANAGERS = ADMINS
-########## END MANAGER CONFIGURATION
+# ########## MANAGER CONFIGURATION
+# # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
+# ADMINS = (
+#     ('James Cranwell-Ward', 'jcranwellward@unicef.org'),
+# )
+#
+# # See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
+# MANAGERS = ADMINS
+# ########## END MANAGER CONFIGURATION
 
 
 ########## GENERAL CONFIGURATION
@@ -323,6 +320,7 @@ SHARED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django.contrib.postgres',
     # Useful template tags:
     # 'django.contrib.humanize',
 
@@ -357,12 +355,13 @@ SHARED_APPS = (
     'djangosaml2',
     'mptt',
 
-    'registration',
     'vision',
 
     # you must list the app where your tenant model resides in
     'users',
 )
+
+MPTT_ADMIN_LEVEL_INDENT = 20
 
 # Apps specific for this project go here.
 TENANT_APPS = (
