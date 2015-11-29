@@ -5,6 +5,7 @@ import string
 from django.views.generic import TemplateView, FormView
 
 from rest_framework.generics import RetrieveAPIView, ListAPIView
+from rest_framework_csv import renderers as r
 from registration.backends.default.views import (
     RegistrationView,
 )
@@ -13,7 +14,7 @@ from users.models import Office
 from reports.models import Sector
 from .forms import UnicefEmailRegistrationForm, ProfileForm
 from .models import EquiTrackRegistrationModel, User, UserProfile
-from .serializers import UserSerializer, SimpleProfileSerializer
+from .serializers import UserSerializer, SimpleProfileSerializer, UserCountryCSVSerializer
 
 
 class EquiTrackRegistrationView(RegistrationView):
@@ -45,6 +46,15 @@ class UserAuthAPIView(RetrieveAPIView):
             profile.installation_id = string.replace(q, "_", "-")
             profile.save()
         return user
+
+class CountryOverridenUsersCSV(ListAPIView):
+
+    renderer_classes = (r.CSVRenderer, )
+    model = User
+    serializer_class = UserCountryCSVSerializer
+
+    def get_queryset(self):
+        return self.model.objects.exclude(profile__country_override=None).only("email", "profile__country_override")
 
 
 class UsersView(ListAPIView):
