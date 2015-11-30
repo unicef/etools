@@ -1,15 +1,9 @@
 __author__ = 'jcranwellward'
 import datetime
-import json
-import platform
-import subprocess
-
-from dealer.git import git
 
 from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
-from django.http.response import HttpResponse
 
 from partners.models import PCA, PartnerOrganization
 from reports.models import Sector, ResultStructure, Indicator
