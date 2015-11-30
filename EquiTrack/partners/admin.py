@@ -249,7 +249,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
         'unicef_managers',
     )
     fieldsets = (
-        (_('Programme overview'), {
+        (_('Intervention Details'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 ('partner',
@@ -436,7 +436,7 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
         u'core_values_assessment_date',
     )
     fieldsets = (
-        (_('Intervention Details'), {
+        (_('Partner Details'), {
             'fields':
                 (u'name',
                  u'short_name',

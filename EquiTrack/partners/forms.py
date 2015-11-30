@@ -63,8 +63,8 @@ class PartnersAdminForm(AutoSizeTextForm):
     def clean(self):
         cleaned_data = super(PartnersAdminForm, self).clean()
 
-        partner_type = cleaned_data[u'partner_type']
-        cso_type = cleaned_data[u'type']
+        partner_type = cleaned_data.get(u'partner_type')
+        cso_type = cleaned_data.get(u'type')
 
         if partner_type and partner_type == u'Civil Society Organisation' and not cso_type:
             raise ValidationError(

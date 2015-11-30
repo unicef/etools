@@ -87,7 +87,7 @@ class PartnerOrganization(models.Model):
             u'UN Agency',
             u'Inter-governmental Organisation',
             u'Bi-Lateral Organisation'
-        ),
+        )
     )
     name = models.CharField(
         max_length=255,
@@ -154,8 +154,8 @@ class PartnerOrganization(models.Model):
     def create_user(cls, sender, instance, created, **kwargs):
 
         set_unisupply_user.delay(
-            instance.short_name.lower(),
-            instance.alternate_name.lower()
+            instance.short_name,
+            instance.alternate_name
         )
 
 post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
