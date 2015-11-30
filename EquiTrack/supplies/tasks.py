@@ -13,6 +13,7 @@ from requests.auth import HTTPBasicAuth
 from EquiTrack.celery import app
 
 
+
 @app.task
 def send(message):
     if settings.SLACK_URL:
@@ -30,8 +31,9 @@ def set_docs(docs):
             'all_or_nothing': True
         }
     )
-    response = requests.put(
-        os.path.join(settings.COUCHBASE_URL, '_bulk_docs'),
+    path = os.path.join(settings.COUCHBASE_URL, '_bulk_docs')
+    response = requests.post(
+        path,
         headers={'content-type': 'application/json'},
         auth=HTTPBasicAuth(settings.COUCHBASE_USER, settings.COUCHBASE_PASS),
         data=payload_json,
@@ -59,8 +61,10 @@ def set_unisupply_user(username, password):
 
 
 @app.task
-def set_unisupply_distribution(distribution_plan):
+def set_unisupply_distribution(distribution_plan_id):
 
+        from partners.models import DistributionPlan
+        distribution_plan = DistributionPlan.objects.get(id=distribution_plan_id)
         response = set_docs([
             {
                 "_id": slugify("{} {} {} {}".format(
@@ -94,6 +98,7 @@ def set_unisupply_distribution(distribution_plan):
             }
         ])
         if response.status_code in [requests.codes.ok, requests.codes.created]:
+
             distribution_plan.send = False
             distribution_plan.sent = True
             distribution_plan.save()

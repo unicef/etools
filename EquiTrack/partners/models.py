@@ -962,7 +962,7 @@ class DistributionPlan(models.Model):
     def send_distribution(cls, sender, instance, created, **kwargs):
 
         if instance.send and not instance.sent:
-            set_unisupply_distribution.delay(instance)
+            set_unisupply_distribution.delay(instance.id)
 
 
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
