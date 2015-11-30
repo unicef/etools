@@ -391,6 +391,7 @@ class PCA(AdminURLMixin, models.Model):
     partner = models.ForeignKey(PartnerOrganization)
     agreement = ChainedForeignKey(
         Agreement,
+        related_name='interventions',
         chained_field="partner",
         chained_model_field="partner",
         show_all=False,

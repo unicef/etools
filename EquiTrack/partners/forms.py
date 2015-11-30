@@ -260,12 +260,18 @@ class AgreementForm(UserGroupForm):
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()
 
+        partner = cleaned_data[u'partner']
         agreement_type = cleaned_data[u'agreement_type']
         agreement_number = cleaned_data[u'agreement_number']
 
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
             raise ValidationError(
                 _(u'Please provide the agreement reference for this {}'.format(agreement_type))
+            )
+
+        if agreement_type == Agreement.PCA and partner.partner_type != u'Civil Society Organisation':
+            raise ValidationError(
+                _(u'Only Civil Society Organisations can sign Programme Cooperation Agreements')
             )
 
         # TODO: prevent more than one agreement being crated for the current period
@@ -497,6 +503,14 @@ class PartnershipForm(UserGroupForm):
                                 partner_manager, agreement
                             )
                         )
+
+                if partnership_type not in [PCA.PD, PCA.SHPD]:
+                    if not self.instance.pk and agreement.interventions.count():
+                        raise ValidationError(
+                                u'Only one intervention can be linked to this {}'.format(
+                                    agreement
+                                )
+                            )
 
         if unicef_manager and not signed_by_unicef_date:
             raise ValidationError(
