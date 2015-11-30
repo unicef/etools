@@ -17,7 +17,6 @@ from .views import (
     DashboardView,
     UserDashboardView,
     CmtDashboardView,
-    magic_info
 )
 
 urlpatterns = patterns(
@@ -26,8 +25,6 @@ urlpatterns = patterns(
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
-
-    url(r'^version/$', magic_info),
 
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),

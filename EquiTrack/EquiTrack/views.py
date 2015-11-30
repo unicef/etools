@@ -141,24 +141,3 @@ class UserDashboardView(TemplateView):
                 person_responsible=user).order_by("-due_date")[:10]
         }
 
-
-def magic_info(request):
-    """
-    Return JSON string with some basic state information about this server.
-
-    You must be logged in as a staff user to access this URL.
-    """
-    if not request.user.is_staff:
-        return HttpResponse("You must be logged in as a superuser to "
-                            "perform this operation!", status=403)
-
-    info = {'commit_id': git.revision,
-            'os': platform.system(),
-            'arch': platform.machine(),
-            'hostname': platform.node(),
-            'python': platform.python_version(),
-            'server': request.META['SERVER_NAME'],
-            'server_port': request.META['SERVER_PORT'],
-            }
-
-    return HttpResponse(json.dumps(info), content_type="text/json")
