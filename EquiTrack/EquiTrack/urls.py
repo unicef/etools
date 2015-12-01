@@ -12,6 +12,7 @@ admin.autodiscover()
 from .views import (
     MapView,
     DashboardView,
+    PartnershipsView,
     UserDashboardView,
     CmtDashboardView,
     magic_info
@@ -21,6 +22,7 @@ urlpatterns = patterns(
     '',
     url(r'^$', login_required(UserDashboardView.as_view()), name='dashboard'),
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
+    url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnership_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
 

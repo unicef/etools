@@ -69,3 +69,5 @@ config.json
 
 *.key
 
+EquiTrack/static
+

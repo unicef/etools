@@ -1,8 +1,9 @@
+from __future__ import division
+
 __author__ = 'jcranwellward'
 import datetime
 import json
 import platform
-import subprocess
 
 from dealer.git import git
 
@@ -91,6 +92,51 @@ class DashboardView(TemplateView):
                 ).count(),
             }
         }
+
+
+class PartnershipsView(DashboardView):
+
+    template_name = 'partnerships/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        data = super(PartnershipsView, self).get_context_data(**kwargs)
+
+        active_partnerships = PCA.objects.filter(
+            status=PCA.ACTIVE,
+            partnership_type__in=[PCA.PD, PCA.SHPD, PCA.SSFA]
+        )
+        today = datetime.datetime.today()
+        active_this_year = active_partnerships.filter(
+            signed_by_unicef_date__year=today.year
+        )
+        active_last_year = active_partnerships.filter(
+            signed_by_unicef_date__year=today.year-1
+        )
+        expire_in_two_months = active_partnerships.filter(
+            end_date__range=[today, today + datetime.timedelta(days=60)]
+        )
+
+        # (1) Number and value of Active Partnerships for this year
+        data['active_count'] = active_partnerships.count()
+        data['active_value'] = sum([pd.total_budget for pd in active_partnerships.all()])
+        data['active_percentage'] = "{0:.0f}%".format(active_partnerships.count()/active_partnerships.count() * 100)
+
+        # (2a) Number and value of Approved Partnerships this year
+        data['active_this_year_count'] = active_this_year.count()
+        data['active_this_year_value'] = sum([pd.total_budget for pd in active_this_year.all()])
+        data['active_this_year_percentage'] = "{0:.0f}%".format(active_this_year.count()/active_partnerships.count() * 100)
+
+        # (2a) Number and value of Approved Partnerships this year
+        data['active_last_year_count'] = active_last_year.count()
+        data['active_last_year_value'] = sum([pd.total_budget for pd in active_last_year.all()])
+        data['active_last_year_percentage'] = "{0:.0f}%".format(active_last_year.count()/active_partnerships.count() * 100)
+
+        # (3) Number and Value of Expiring Partnerships in next two months
+        data['expire_in_two_months_count'] = expire_in_two_months.count()
+        data['expire_in_two_months_value'] = sum([pd.total_budget for pd in expire_in_two_months.all()])
+        data['expire_in_two_months_percentage'] = "{0:.0f}%".format(expire_in_two_months.count()/active_partnerships.count() * 100)
+
+        return data
 
 
 class MapView(TemplateView):
