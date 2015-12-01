@@ -130,7 +130,7 @@ TEMPLATE_DEBUG = DEBUG
 POSTGIS_VERSION = (2, 1)
 db_config = dj_database_url.config(
     env="DATABASE_URL",
-    default='postgis:///equitrack'
+    default='postgis://postgres:password@localhost:5432/postgres'
 )
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
@@ -176,7 +176,7 @@ TIME_ZONE = 'EET'
 LANGUAGE_CODE = 'en-us'
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#site-id
-SITE_ID = 1
+SITE_ID = 3
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-i18n
 USE_I18N = True
@@ -264,27 +264,51 @@ FIXTURE_DIRS = (
 
 ########## TEMPLATE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-context-processors
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.request',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.tz',
-    'django.contrib.messages.context_processors.messages',
-)
+# TEMPLATE_CONTEXT_PROCESSORS = (
+#     'django.contrib.auth.context_processors.auth',
+#     'django.core.context_processors.request',
+#     'django.core.context_processors.debug',
+#     'django.core.context_processors.i18n',
+#     'django.core.context_processors.media',
+#     'django.core.context_processors.static',
+#     'django.core.context_processors.tz',
+#     'django.contrib.messages.context_processors.messages',
+# )
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-loaders
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
+# deprecated in Django 1.8 and added by default
+# TEMPLATE_LOADERS = (
+#     'django.template.loaders.filesystem.Loader',
+#     'django.template.loaders.app_directories.Loader',
+# )
 
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-dirs
-TEMPLATE_DIRS = (
-    normpath(join(SITE_ROOT, 'templates')),
-)
+# # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-dirs
+# TEMPLATE_DIRS = (
+#     normpath(join(SITE_ROOT, 'templates')),
+# )
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [normpath(join(SITE_ROOT, 'templates'))],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                # Already defined Django-related contexts here
+
+                # `allauth` needs this from django
+                'django.contrib.auth.context_processors.auth',
+                'django.core.context_processors.request',
+                'django.core.context_processors.debug',
+                'django.core.context_processors.i18n',
+                'django.core.context_processors.media',
+                'django.core.context_processors.static',
+                'django.core.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 ########## END TEMPLATE CONFIGURATION
 
 
@@ -353,8 +377,16 @@ SHARED_APPS = (
     'paintstore',
     'corsheaders',
     'djangosaml2',
-    'mptt',
+    #allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    # allauth providers you want to enable:
+    #'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.google',
+    #'allauth.socialaccount.providers.twitter',
 
+    'mptt',
     'vision',
 
     # you must list the app where your tenant model resides in

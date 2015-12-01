@@ -39,6 +39,7 @@ urlpatterns = patterns(
     url(r'^admin/', include(admin.site.urls)),
 
     # helper urls
+    url(r'^accounts/', include('allauth.urls')),
     url(r'^saml2/', include('djangosaml2.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),

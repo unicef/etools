@@ -7,6 +7,8 @@ import pandas
 from django.utils.translation import ugettext as _
 from django import forms
 from django.contrib import messages
+from django.db.models import Q
+
 #from autocomplete_light import forms
 from django.core.exceptions import (
     ValidationError,
@@ -22,6 +24,9 @@ from EquiTrack.forms import (
     RequireOneFormSet,
     UserGroupForm,
 )
+
+from django.contrib.auth.models import User
+
 from locations.models import Location
 from reports.models import Sector, Result, ResultType, Indicator
 from .models import (
@@ -167,6 +172,31 @@ class AuthorizedOfficesFormset(RequireOneFormSet):
         if self.instance.signed_by_partner_date:
             self.required = True
         return form
+
+
+class PartnerStaffMemberForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(PartnerStaffMemberForm, self).__init__(*args, **kwargs)
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super(PartnerStaffMemberForm, self).clean()
+        email = cleaned_data['email']
+        # TODO: have an email validation here.
+
+        if not self.instance.id:
+            existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
+            if existing_user and existing_user.profile.partner_staff_member:
+                raise ValidationError("This user already exists under a different partnership: {}".format(email))
+        else:
+            # make sure email addresses are not editable after creation.. user must be removed and re-added
+            if email != self.instance.email:
+                raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
+        return cleaned_data
 
 
 class AuthorizedOfficersForm(forms.ModelForm):

@@ -16,6 +16,7 @@ from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
@@ -68,6 +69,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
             u'api',
             u'login',
             u'saml',
+            u'accounts',
         ]):
             return None
         elif request.user.is_anonymous():
@@ -123,3 +125,47 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         request.tenant = user.profile.country
 
         return user, jwt_value
+
+
+class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
+
+    def new_user(self, request, sociallogin):
+        """
+        Instantiates a new User instance.
+        """
+        print "new_user"
+        print sociallogin.user
+        return super(CustomSocialAccountAdapter, self).new_user(request, sociallogin)
+
+    def populate_user(self,
+                      request,
+                      sociallogin,
+                      data):
+        print "populate user"
+        print data
+        return super(CustomSocialAccountAdapter, self).populate_user(request, sociallogin, data)
+
+    def pre_social_login(self, request, sociallogin):
+        print "pre_social_login"
+        #print sociallogin.account.user.to_dict()
+        # TODO: make sure that the partnership is still in good standing or valid or whatever
+        print sociallogin.user
+
+    def save_user(self, request, sociallogin, form=None):
+        print "save user"
+        raise PermissionDenied(detail='no creating user for you')
+        user = sociallogin.user
+        user.first_name = "strula"
+        #save the user in order to get a profile
+        user.save()
+        # TODO: check out what partner organization he belongs to and save it on the profile
+        #
+        # TODO: give the user default permissions based on what partner organization he belongs to
+        user.profile.job_title = "cooljob"
+        #save the profile
+        user.profile.save()
+        #print sociallogin.user.profile
+        #raise PermissionDenied(detail='no creating user for you')
+        return super(CustomSocialAccountAdapter, self).save_user(request,sociallogin,form)
+
+#import allauth.socialaccount.models
