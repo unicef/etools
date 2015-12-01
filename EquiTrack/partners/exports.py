@@ -276,6 +276,7 @@ class PCAResource(BaseExportResource):
         self.insert_column(row, 'ID', pca.id)
         self.insert_column(row, 'Sectors', pca.sector_names)
         self.insert_column(row, 'Number', pca.number)
+        self.insert_column(row, 'Document Type', pca.partnership_type)
         self.insert_column(row, 'Title', pca.title)
         self.insert_column(row, 'Status', pca.status)
         self.insert_column(row, 'Partner Organisation', pca.partner.name)
