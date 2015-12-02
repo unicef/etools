@@ -83,7 +83,8 @@ DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now'
 }
-EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
+#EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Will send email via our template system
 POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'  # Will ensure email is sent async
 CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
 MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
@@ -188,6 +189,29 @@ USE_L10N = True
 USE_TZ = True
 ########## END GENERAL CONFIGURATION
 
+
+########## ALLAUTH CONFIGURATION
+SOCIALACCOUNT_PROVIDERS = \
+    { 'google':
+        { 'SCOPE': ['profile', 'email'],
+          'AUTH_PARAMS': { 'access_type': 'online' } }}
+
+SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
+ACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomAccountAdapter'
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+# ACCOUNT_USERNAME_REQUIRED = False
+
+SOCIALACCOUNT_STORE_TOKENS = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_LOGOUT_REDIRECT_URL = "/login"
+ACCOUNT_LOGOUT_ON_GET = True
+
+ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
+########## END ALLAUTH CONFIGURATION
 
 ########## MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root

@@ -115,16 +115,15 @@ def create_user(sender, instance, created, **kwargs):
 
 
 def delete_partner_relationship(sender, instance, **kwargs):
-    profile = UserProfile.objects.filter(partner_staff_member=instance.id).get()
-    if profile:
+    try:
+        profile = UserProfile.objects.filter(partner_staff_member=instance.id).get()
         with transaction.atomic():
             profile.partner_staff_member = None
             profile.save()
             profile.user.is_active = False
             profile.user.save()
-
-
-    pass
+    except:
+        pass
 
 pre_delete.connect(delete_partner_relationship, sender=PartnerStaffMember)
 post_save.connect(create_user, sender=PartnerStaffMember)

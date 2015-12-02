@@ -2,6 +2,7 @@
 Project wide mixins for models and classes
 """
 __author__ = 'jcranwellward'
+from django import forms
 
 from django.conf import settings
 from django.db import connection
@@ -10,6 +11,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http.response import HttpResponseRedirect
+
 from rest_framework.exceptions import PermissionDenied
 
 from tenant_schemas.middleware import TenantMiddleware
@@ -17,6 +19,9 @@ from tenant_schemas.utils import get_public_schema_name
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from allauth.account.adapter import  DefaultAccountAdapter
+from allauth.account.utils import (perform_login, complete_signup,
+                                   user_username)
 
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
@@ -129,43 +134,68 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
+
+    def authentication_error(self,
+                             request,
+                             provider_id,
+                             error=None,
+                             exception=None,
+                             extra_context=None):
+        print "authentication_error"
+
     def new_user(self, request, sociallogin):
         """
         Instantiates a new User instance.
         """
         print "new_user"
-        print sociallogin.user
+        #sociallogin.state['process'] = 'connect'
+        #return user
         return super(CustomSocialAccountAdapter, self).new_user(request, sociallogin)
 
     def populate_user(self,
                       request,
                       sociallogin,
                       data):
-        print "populate user"
-        print data
+        # print "populate user"
+        # print data
+        # try:
+        #     user = User.objects.filter(email=data['email']).get()
+        # except:
+        #     raise Exception("no user found")
+        #sociallogin.user = user
+        #return user
         return super(CustomSocialAccountAdapter, self).populate_user(request, sociallogin, data)
 
     def pre_social_login(self, request, sociallogin):
-        print "pre_social_login"
-        #print sociallogin.account.user.to_dict()
         # TODO: make sure that the partnership is still in good standing or valid or whatever
-        print sociallogin.user
+        if sociallogin.user.pk:
+            return
+        try:
+            new_login_user = User.objects.get(email=sociallogin.user.email)  # if user exists, connect the account to the existing account and login
+            if not new_login_user.is_active:
+                new_login_user.is_active=True
+                new_login_user.save()
+
+            sociallogin.connect(request, new_login_user)
+            perform_login(request,
+                          new_login_user,
+                          'none',
+                          redirect_url=sociallogin.get_redirect_url(request),
+                          signal_kwargs={"sociallogin": sociallogin})
+
+        except User.DoesNotExist:
+           raise Exception("no user found")
+
+        #return super(CustomSocialAccountAdapter, self).pre_social_login(request, sociallogin)
 
     def save_user(self, request, sociallogin, form=None):
         print "save user"
-        raise PermissionDenied(detail='no creating user for you')
-        user = sociallogin.user
-        user.first_name = "strula"
-        #save the user in order to get a profile
-        user.save()
-        # TODO: check out what partner organization he belongs to and save it on the profile
-        #
-        # TODO: give the user default permissions based on what partner organization he belongs to
-        user.profile.job_title = "cooljob"
-        #save the profile
-        user.profile.save()
-        #print sociallogin.user.profile
-        #raise PermissionDenied(detail='no creating user for you')
         return super(CustomSocialAccountAdapter, self).save_user(request,sociallogin,form)
 
-#import allauth.socialaccount.models
+
+class CustomAccountAdapter(DefaultAccountAdapter):
+    def is_open_for_signup(self, request):
+        # quick way of disabling signups.
+        return False
+
+

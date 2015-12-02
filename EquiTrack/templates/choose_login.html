@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="main-content-wrapper">
+    <section id="main-content">
+        <div>
+            Partner:
+            <br>
+            <a href="{% url 'account_login' %}">Partner Portal</a>
+        </div>
+        <br>
+        <br>
+        <div>
+            Unicef Staff:
+            <br>
+            <a href="{% url 'saml2_login' %}">Staff Member login here</a>
+        </div>
+    </section>
+</section>
+{% endblock content %}

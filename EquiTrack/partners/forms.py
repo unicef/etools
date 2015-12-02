@@ -189,9 +189,12 @@ class PartnerStaffMemberForm(forms.ModelForm):
         # TODO: have an email validation here.
 
         if not self.instance.id:
-            existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-            if existing_user and existing_user.profile.partner_staff_member:
-                raise ValidationError("This user already exists under a different partnership: {}".format(email))
+            try:
+                existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
+                if existing_user.profile.partner_staff_member:
+                    raise ValidationError("This user already exists under a different partnership: {}".format(email))
+            except User.DoesNotExist:
+                pass
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
