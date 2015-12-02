@@ -107,10 +107,10 @@ class PartnershipsView(DashboardView):
         )
         today = datetime.datetime.today()
         active_this_year = active_partnerships.filter(
-            signed_by_unicef_date__year=today.year
+            start_date__year=today.year
         )
         active_last_year = active_partnerships.filter(
-            signed_by_unicef_date__year=today.year-1
+            start_date__year=today.year-1
         )
         expire_in_two_months = active_partnerships.filter(
             end_date__range=[today, today + datetime.timedelta(days=60)]
