@@ -260,9 +260,11 @@ class AgreementForm(UserGroupForm):
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()
 
-        partner = cleaned_data[u'partner']
-        agreement_type = cleaned_data[u'agreement_type']
-        agreement_number = cleaned_data[u'agreement_number']
+        partner = cleaned_data.get(u'partner')
+        agreement_type = cleaned_data.get(u'agreement_type')
+        agreement_number = cleaned_data.get(u'agreement_number')
+        start = cleaned_data.get(u'start')
+        end = cleaned_data.get(u'end')
 
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
             raise ValidationError(
@@ -273,6 +275,12 @@ class AgreementForm(UserGroupForm):
             raise ValidationError(
                 _(u'Only Civil Society Organisations can sign Programme Cooperation Agreements')
             )
+
+        if agreement_type == Agreement.SSFA and start and end:
+            if (end - start).days > 365:
+                raise ValidationError(
+                    _(u'SSFA can not be more than a year')
+                )
 
         # TODO: prevent more than one agreement being crated for the current period
         # agreements = Agreement.objects.filter(

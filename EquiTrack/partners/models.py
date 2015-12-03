@@ -349,6 +349,20 @@ class Agreement(TimeStampedModel):
             self.end.strftime('%d-%m-%Y') if self.end else ''
         )
 
+    def save(self, **kwargs):
+
+        if self.agreement_type == Agreement.PCA:
+
+            if self.partner_manager:
+                self.authorized_officers.add(self.partner_manager)
+
+            # PCAs last as long as the most recent CPD
+            result_structure = ResultStructure.objects.last()
+            if result_structure:
+                self.end = result_structure.to_date
+
+        super(Agreement, self).save(**kwargs)
+
 
 class AuthorizedOfficer(models.Model):
     agreement = models.ForeignKey(
