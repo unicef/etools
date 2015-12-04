@@ -10,6 +10,8 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+
+from django.utils.http import urlencode, urlsafe_base64_encode
 from django.http.response import HttpResponseRedirect
 
 from rest_framework.exceptions import PermissionDenied
@@ -18,6 +20,8 @@ from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
+
+from allauth.exceptions import ImmediateHttpResponse
 from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.adapter import  DefaultAccountAdapter
 from allauth.account.utils import (perform_login, complete_signup,
@@ -134,36 +138,13 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
-
-    def authentication_error(self,
-                             request,
-                             provider_id,
-                             error=None,
-                             exception=None,
-                             extra_context=None):
-        print "authentication_error"
-
     def new_user(self, request, sociallogin):
-        """
-        Instantiates a new User instance.
-        """
-        print "new_user"
-        #sociallogin.state['process'] = 'connect'
-        #return user
         return super(CustomSocialAccountAdapter, self).new_user(request, sociallogin)
 
     def populate_user(self,
                       request,
                       sociallogin,
                       data):
-        # print "populate user"
-        # print data
-        # try:
-        #     user = User.objects.filter(email=data['email']).get()
-        # except:
-        #     raise Exception("no user found")
-        #sociallogin.user = user
-        #return user
         return super(CustomSocialAccountAdapter, self).populate_user(request, sociallogin, data)
 
     def pre_social_login(self, request, sociallogin):
@@ -172,9 +153,6 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             return
         try:
             new_login_user = User.objects.get(email=sociallogin.user.email)  # if user exists, connect the account to the existing account and login
-            if not new_login_user.is_active:
-                new_login_user.is_active=True
-                new_login_user.save()
 
             sociallogin.connect(request, new_login_user)
             perform_login(request,
@@ -184,9 +162,8 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
                           signal_kwargs={"sociallogin": sociallogin})
 
         except User.DoesNotExist:
-           raise Exception("no user found")
-
-        #return super(CustomSocialAccountAdapter, self).pre_social_login(request, sociallogin)
+            url = reverse('sociallogin_notamember', kwargs={'email': urlsafe_base64_encode(sociallogin.user.email)})
+            raise ImmediateHttpResponse(HttpResponseRedirect(url))
 
     def save_user(self, request, sociallogin, form=None):
         print "save user"
@@ -197,5 +174,9 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     def is_open_for_signup(self, request):
         # quick way of disabling signups.
         return False
+
+    def login(self, request, user):
+        # if we need to add any other login validation, here would be the place.
+        return super(CustomAccountAdapter, self).login(request, user)
 
 

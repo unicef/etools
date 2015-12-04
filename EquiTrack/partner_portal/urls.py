@@ -6,7 +6,8 @@ from EquiTrack.utils import partner_required
 
 
 from .views import (
-    DashView
+    DashView,
+    LoginFailedView
 )
 
 
@@ -14,6 +15,9 @@ from .views import (
 
 urlpatterns = patterns(
     '',
-    url(r'$', partner_required(DashView.as_view())),
+    url(r'^$', partner_required(DashView.as_view())),
+    url(r'^accounts/loginfailed/(?P<email>.+)/$', LoginFailedView.as_view(), name='sociallogin_notamember'),
+
+
 
 )

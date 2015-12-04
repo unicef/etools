@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save, pre_delete
 from djangosaml2.signals import pre_user_save
 
-from django.db import transaction
+from django.db import transaction, connection
 
 from tenant_schemas.models import TenantMixin
 from partners.models import PartnerStaffMember
@@ -105,10 +105,17 @@ def create_user(sender, instance, created, **kwargs):
         # TODO: here we have a decision.. either we update the user with the info just received from
         # TODO: or we update the instance with the user we already have. this might have implications on login.
         with transaction.atomic():
+            try:
+                country = Country.objects.get(schema_name=connection.schema_name)
+            except Country.DoesNotExist:
+                raise Exception("no country set")
             user.email = instance.email
+
             user.first_name = instance.first_name
             user.last_name = instance.last_name
+            user.is_active = True
             user.save()
+            user.profile.country = country
             user.profile.partner_staff_member = instance.id
             user.profile.save()
 
