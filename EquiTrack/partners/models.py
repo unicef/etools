@@ -353,8 +353,13 @@ class Agreement(TimeStampedModel):
 
         if self.agreement_type == Agreement.PCA:
 
-            if self.partner_manager:
-                self.authorized_officers.add(self.partner_manager)
+            if self.partner_manager not in self.authorized_officers.all():
+                self.authorized_officers.add(
+                    AuthorizedOfficer.objects.create(
+                        agreement=self,
+                        officer=self.partner_manager
+                    )
+                )
 
             # PCAs last as long as the most recent CPD
             result_structure = ResultStructure.objects.last()
@@ -977,7 +982,7 @@ class DistributionPlan(models.Model):
     def send_distribution(cls, sender, instance, created, **kwargs):
 
         if instance.send and not instance.sent:
-            set_unisupply_distribution.delay(instance.id)
+            set_unisupply_distribution.delay(instance)
 
 
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)

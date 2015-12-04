@@ -352,7 +352,7 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
             obj.number = obj.agreement.agreement_number
 
             obj.unicef_manager = obj.agreement.signed_by
-            obj.signed_by_unicef_date = obj.agreement.signed_by
+            obj.signed_by_unicef_date = obj.agreement.signed_by_unicef_date
 
             obj.partner_manager = obj.agreement.partner_manager
             obj.signed_by_partner_date = obj.agreement.signed_by_partner_date
