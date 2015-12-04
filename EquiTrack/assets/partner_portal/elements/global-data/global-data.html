@@ -1,0 +1,47 @@
+
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+
+<!--
+An element providing a solution to no problem in particular.
+
+Example:
+
+    <my-customel></my-customel>
+
+@group Seed Elements
+@element my-customel
+@demo demo/index.html
+@hero hero.svg
+-->
+<dom-module id="global-data">
+</dom-module>
+
+<script>
+(function() {
+  'use strict';
+
+  Polymer({
+
+    is: 'global-data',
+
+    properties: {
+        siteinfo: {
+            type: Object,
+            notify: true,
+            value: function (){
+                return {
+                    'baseSite':    'https://localhost:8099',
+                    'userInfoEp':  'https://localhost:8099/users/api/profile/',
+                    
+                    
+                };
+            }
+        }
+        
+    },
+    
+  });
+})();
+
+</script>
