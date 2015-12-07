@@ -83,7 +83,7 @@
                         <ul class="dropdown-menu" role="menu">
                             {% for structure in structures %}
                                 <li>
-                                    <a href="{% url 'partnership_dashboard' %}?structure={{ structure.id }}">{{ structure.name }}</a>
+                                    <a href="{% url 'partnerships_dashboard' %}?structure={{ structure.id }}">{{ structure.name }}</a>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -144,6 +144,68 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="panel panel-default">
+                          <div class="panel-heading">
+                            <h3 class="panel-title">Partners</h3>
+                            <div class="actions pull-right">
+                                <i class="fa fa-chevron-down"></i>
+                                <i class="fa fa-times"></i>
+                            </div>
+                          </div>
+                          <div class="panel-body">
+                            <table class="table">
+                              <thead>
+                                <tr>
+                                  <th>Partner Types</th>
+                                  <th>Active Partnerships</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {% for key, value in partners.items %}
+                                    <tr>
+                                      <td>{{ key }}</td>
+                                      <td>{{ value }}</td>
+                                    </tr>
+                                {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                           <div class="panel panel-default">
+                          <div class="panel-heading">
+                            <h3 class="panel-title">Governorates</h3>
+                            <div class="actions pull-right">
+                                <i class="fa fa-chevron-down"></i>
+                                <i class="fa fa-times"></i>
+                            </div>
+                          </div>
+                          <div class="panel-body">
+                            <table class="table table-striped">
+                              <thead>
+                                <tr>
+                                  <th>Governorate</th>
+                                  <th>Active Partnerships</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {% for key, value in govs.items %}
+                                    <tr>
+                                      <td>{{ key }}</td>
+                                      <td>{{ value }}</td>
+                                    </tr>
+                                {% endfor %}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+
 
         </section>
     </section>

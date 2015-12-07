@@ -12,7 +12,7 @@ from django.db.models import Q
 from django.contrib.admin.models import LogEntry
 from django.http.response import HttpResponse
 
-from partners.models import PCA, PartnerOrganization, PCASectorOutput
+from partners.models import PCA, PartnerOrganization, PCASectorOutput, GwPCALocation
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
@@ -103,7 +103,7 @@ class PartnershipsView(DashboardView):
 
         active_partnerships = PCA.objects.filter(
             status=PCA.ACTIVE,
-            partnership_type__in=[PCA.PD, PCA.SHPD, PCA.SSFA]
+            partnership_type__in=[PCA.PD, PCA.SHPD, PCA.SSFA, PCA.DCT]
         )
         today = datetime.datetime.today()
         active_this_year = active_partnerships.filter(
@@ -115,6 +115,19 @@ class PartnershipsView(DashboardView):
         expire_in_two_months = active_partnerships.filter(
             end_date__range=[today, today + datetime.timedelta(days=60)]
         )
+
+        govs = {}
+        for gov in Governorate.objects.all():
+            govs[gov.name] = GwPCALocation.objects.filter(governorate=gov, pca__status=PCA.ACTIVE).distinct('pca').count()
+
+        data['govs'] = govs
+
+        partners = {}
+        partner_types = dict(PartnerOrganization.PARTNER_TYPES)
+        for type, label in partner_types.iteritems():
+            partners[label] = active_partnerships.filter(partner__type=type).count()
+
+        data['partners'] = partners
 
         # (1) Number and value of Active Partnerships for this year
         data['active_count'] = active_partnerships.count()
