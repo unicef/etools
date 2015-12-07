@@ -1,8 +1,9 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 __author__ = 'jcranwellward'
 
 import datetime
+from dateutil import relativedelta
 
 from django.conf import settings
 from django.db import models
@@ -543,7 +544,9 @@ class PCA(AdminURLMixin, models.Model):
     def duration(self):
         if self.start_date and self.end_date:
             return u'{} Months'.format(
-                (self.end_date - self.start_date).days / 22
+                relativedelta.relativedelta(
+                    self.end_date, self.start_date
+                ).months
             )
         else:
             return u''
@@ -570,6 +573,18 @@ class PCA(AdminURLMixin, models.Model):
             total += budget.in_kind_amount
             total += budget.partner_contribution
         return total
+
+    def calculate_budget_for_year(self, year):
+
+        year_start = datetime.date(year, 1, 1)
+        year_end = datetime.date(year, 12, 31)
+        start_date = self.start_date if self.start_date > year_start else year_start
+        end_date = self.end_date if self.end_date < year_end else year_end
+        total_days = (self.end_date - self.start_date).days
+        days_in_year = (end_date - start_date).days
+        percent = days_in_year / total_days
+        budget = percent * self.total_budget
+        return budget
 
     def save(self, **kwargs):
         """

@@ -249,6 +249,7 @@ class PCAResource(BaseExportResource):
         in_kind = 0
         partner_contribution = 0
         total = 0
+        today = datetime.datetime.today()
 
         try:
             budget = pca.budget_log.latest('created')
@@ -263,6 +264,7 @@ class PCAResource(BaseExportResource):
         self.insert_column(row, 'Unicef cash budget', unicef_cash)
         self.insert_column(row, 'In kind amount budget', in_kind)
         self.insert_column(row, 'Total budget', total)
+        self.insert_column(row, 'This year ({})'.format(today.year), pca.calculate_budget_for_year(today.year))
 
         return row
 
