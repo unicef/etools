@@ -18377,12 +18377,8 @@ if (!window.Promise) {
         },
         ready: function() {
           this.items = [
-            'Responsive Web App boilerplate',
-            'Iron Elements and Paper Elements',
-            'End-to-end Build Tooling (including Vulcanize)',
-            'Unit testing with Web Component Tester',
-            'Routing with Page.js',
-            'Offline support with the Platinum Service Worker Elements'
+            'Viewing your information!',
+            'More to come...'
           ];
         }
       });
@@ -18471,18 +18467,24 @@ if (!window.Promise) {
         display: block;
       }
     </style>
-    <div> User info goes here! </div>
+    <div> This is your current information: </div>
     <content></content>
     
     <iron-ajax auto="" id="ajax" url="[[url]]" handle-as="json" on-response="handleResponse" #last-response="{{user}}" debounce-duration="300">
     </iron-ajax>
 
    <template is="dom-if" if="{{checkMe(user)}}">
-       
+       <br>
        <div>
-        {{user['first_name']}}
-        Moo
-    </div>
+            <iron-icon icon="mail"></iron-icon>
+            <span> {{user.email}}</span>
+       </div>
+       <br>
+       <div>
+            <iron-icon icon="language"></iron-icon>
+            <span> {{user.profile.country_name}}</span>
+       </div>
+    
    </template>
    
         
@@ -18524,7 +18526,7 @@ if (!window.Promise) {
                 'username': 'robert.selfdefense@gmail.com', 
                 'first_name': 'No User Logedin',
                 'last_name': '',
-                'email': '',
+                'email': 'email@example.com',
                 'is_staff': false,
                 'is_active': true,
                 'date_joined': '2015-12-03T16:17:01Z'
@@ -18548,7 +18550,8 @@ if (!window.Promise) {
       this.user = rsp.detail.xhr.response;
     },
     checkMe: function(user) {
-        return user.first_name === 'Bonka';
+        return user.id;
+        //return user.first_name !== 'Some Name';
     }
     
   });
