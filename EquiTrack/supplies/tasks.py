@@ -85,7 +85,8 @@ def set_unisupply_distribution(distribution_plan):
                 "item_list": [
                     {
                         "item_type": distribution_plan.item.name,
-                        "quantity": distribution_plan.quantity
+                        "quantity": distribution_plan.quantity,
+                        "delivered": 0
                     }
                 ],
                 "location": {
@@ -132,11 +133,14 @@ def import_docs(**kwargs):
                         distribution = DistributionPlan.objects.get(
                             id=distribution_id
                         )
+                        distribution.delivered = row['doc']['item_list'][0]['delivered']
+                        distribution.save()
                     except DistributionPlan.DoesNotExist:
                         print 'Distribution ID {} not found for Country {}'.format(
                             distribution_id, country.name
                         )
-                    else:
-                        distribution.delivered = row['doc']['item_list'][0]['delivered']
-                        distribution.save()
+                    except Exception as exp:
+                        print exp.message
+
+
 
