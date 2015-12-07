@@ -8,7 +8,7 @@ from django.conf import settings
 #     template_name = "partner_portal/dash.html"
 
 
-class DashView(View):
+class PortalDashView(View):
 
     def get(self, request):
         # not serving this as a static file in case in the future we want to be able to change versions
@@ -17,11 +17,11 @@ class DashView(View):
 
         return HttpResponse(result)
 
-class LoginFailedView(TemplateView):
+class PortalLoginFailedView(TemplateView):
 
     template_name = "partner_portal/loginfailed.html"
 
     def get_context_data(self, **kwargs):
-        context = super(LoginFailedView, self).get_context_data(**kwargs)
+        context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
         context['email'] = urlsafe_base64_decode(context['email'])
         return context

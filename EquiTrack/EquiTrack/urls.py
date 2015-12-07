@@ -34,9 +34,10 @@ urlpatterns = patterns(
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
 
-    url(r'partner/', include('partner_portal.urls')),
+    #url(r'partner/', include('partner_portal.urls')),
     url(r'locations/', include('locations.urls')),
     url(r'partners/', include('partners.urls')),
+    url(r'partner/', include('partners.urls')),
     url(r'trips/', include('trips.urls')),
     url(r'users/', include('users.urls')),
     url(r'supplies/', include('supplies.urls')),

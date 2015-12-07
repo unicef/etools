@@ -36,6 +36,7 @@ django-cors-headers==1.1.0
 django-mathfilters==0.3.0
 django-tenant-schemas==1.5.7
 djangosaml2==0.13.0
+django-allauth==0.24.1
 tenant-schemas-celery==0.1.5
 azure-storage==0.20.2
 pandas==0.17.1
