@@ -5,13 +5,15 @@ import json
 import requests
 import datetime
 
+from django.db import connection
 from django.conf import settings
 from django.template.defaultfilters import slugify
 
 from requests.auth import HTTPBasicAuth
+from tenant_schemas.utils import tenant_context
 
 from EquiTrack.celery import app
-
+from users.models import Country
 
 
 @app.task
@@ -61,10 +63,8 @@ def set_unisupply_user(username, password):
 
 
 @app.task
-def set_unisupply_distribution(distribution_plan_id):
+def set_unisupply_distribution(distribution_plan):
 
-        from partners.models import DistributionPlan
-        distribution_plan = DistributionPlan.objects.get(id=distribution_plan_id)
         response = set_docs([
             {
                 "_id": slugify("{} {} {} {}".format(
@@ -73,6 +73,8 @@ def set_unisupply_distribution(distribution_plan_id):
                     distribution_plan.location,
                     distribution_plan.quantity
                 )),
+                "country": connection.schema_name,
+                "distribution_id": distribution_plan.id,
                 "intervention": "{}: {}".format(
                     distribution_plan.partnership.number,
                     distribution_plan.partnership.title),
@@ -83,7 +85,8 @@ def set_unisupply_distribution(distribution_plan_id):
                 "item_list": [
                     {
                         "item_type": distribution_plan.item.name,
-                        "quantity": distribution_plan.quantity
+                        "quantity": distribution_plan.quantity,
+                        "delivered": 0
                     }
                 ],
                 "location": {
@@ -106,26 +109,38 @@ def set_unisupply_distribution(distribution_plan_id):
         return response.text
 
 
+@app.task
 def import_docs(**kwargs):
     """
     Imports docs from couch base
     """
+    from partners.models import DistributionPlan
+
     data = requests.get(
-        os.path.join(settings.COUCHBASE_URL, '_all_docs'),
+        os.path.join(settings.COUCHBASE_URL, '_all_docs?include_docs=true'),
         auth=HTTPBasicAuth(settings.COUCHBASE_USER, settings.COUCHBASE_PASS)
     ).json()
 
-    existing = supplies.data.find(**kwargs).count()
-    for row in data['rows']:
-        doc = row['doc']
-        supplies.data.update({'_id': doc['_id']}, doc, upsert=True)
+    countries = Country.objects.all().exclude(schema_name='public')
 
-    imported = supplies.data.find(**kwargs).count()
+    for country in countries:
+        with tenant_context(country):
 
-    send('Import finished: '
-         '{} new assessments, '
-         'total now {}'.format(
-         imported - existing,
-         imported,
-    ))
+            for row in data['rows']:
+                if 'distribution_id' in row['doc']:
+                    distribution_id = row['doc']['distribution_id']
+                    try:
+                        distribution = DistributionPlan.objects.get(
+                            id=distribution_id
+                        )
+                        distribution.delivered = row['doc']['item_list'][0]['delivered']
+                        distribution.save()
+                    except DistributionPlan.DoesNotExist:
+                        print 'Distribution ID {} not found for Country {}'.format(
+                            distribution_id, country.name
+                        )
+                    except Exception as exp:
+                        print exp.message
+
+
 

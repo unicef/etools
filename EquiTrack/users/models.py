@@ -7,7 +7,6 @@ from djangosaml2.signals import pre_user_save
 from django.db import transaction, connection
 
 from tenant_schemas.models import TenantMixin
-from partners.models import PartnerStaffMember
 
 User.__unicode__ = lambda user: user.get_full_name()
 User._meta.ordering = ['first_name']
@@ -132,7 +131,7 @@ def delete_partner_relationship(sender, instance, **kwargs):
     except:
         pass
 
-pre_delete.connect(delete_partner_relationship, sender=PartnerStaffMember)
-post_save.connect(create_user, sender=PartnerStaffMember)
+pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
+post_save.connect(create_user, sender='partners.PartnerStaffMember')
 
 pre_user_save.connect(UserProfile.custom_update_user)

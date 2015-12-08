@@ -28,6 +28,7 @@ from allauth.account.utils import (perform_login, complete_signup,
                                    user_username)
 
 
+
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 
 
@@ -150,11 +151,16 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     def pre_social_login(self, request, sociallogin):
         # TODO: make sure that the partnership is still in good standing or valid or whatever
         if sociallogin.user.pk:
+            connection.set_tenant(sociallogin.user.profile.country)
+            request.tenant = sociallogin.user.profile.country
+            print "setting connection to {}".format(sociallogin.user.profile.country)
             return
         try:
             new_login_user = User.objects.get(email=sociallogin.user.email)  # if user exists, connect the account to the existing account and login
 
             sociallogin.connect(request, new_login_user)
+            connection.set_tenant(new_login_user.profile.country)
+            request.tenant = new_login_user.profile.country
             perform_login(request,
                           new_login_user,
                           'none',

@@ -347,6 +347,20 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
             form.base_fields['location_sector'].queryset = obj.sector_children
             form.base_fields['work_plan_sector'].queryset = obj.sector_children
 
+        if obj and obj.agreement:
+            # if linked to a agreement auto fill some details from that
+
+            obj.number = obj.agreement.agreement_number
+
+            obj.unicef_manager = obj.agreement.signed_by
+            obj.signed_by_unicef_date = obj.agreement.signed_by_unicef_date
+
+            obj.partner_manager = obj.agreement.partner_manager
+            obj.signed_by_partner_date = obj.agreement.signed_by_partner_date
+
+            obj.start_date = obj.agreement.start
+            obj.end_date = obj.agreement.end
+
         return form
 
     def save_formset(self, request, form, formset, change):
@@ -384,6 +398,8 @@ class AssessmentAdminInline(admin.TabularInline):
     )
     verbose_name = u'Assessments and Audits record'
     verbose_name_plural = u'Assessments and Audits records'
+
+
 
 
 class PartnerStaffMemberInlineAdmin(admin.TabularInline):

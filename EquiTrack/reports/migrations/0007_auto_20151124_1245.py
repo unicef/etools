@@ -13,12 +13,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='indicator',
-            name='result',
-            field=models.ForeignKey(to='reports.Result'),
-            preserve_default=True,
-        ),
-        migrations.AlterField(
-            model_name='indicator',
             name='total',
             field=models.IntegerField(null=True, verbose_name=b'UNICEF Target', blank=True),
             preserve_default=True,

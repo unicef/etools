@@ -83,8 +83,7 @@ DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
     'DEFAULT_PRIORITY': 'now'
 }
-#EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Will send email via our template system
+EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
 POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'  # Will ensure email is sent async
 CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
 MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
@@ -132,6 +131,7 @@ POSTGIS_VERSION = (2, 1)
 db_config = dj_database_url.config(
     env="DATABASE_URL",
     default='postgis://postgres:password@localhost:5432/postgres'
+    #default='postgis:///etools'
 )
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'

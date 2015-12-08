@@ -129,7 +129,7 @@ class Indicator(models.Model):
     result_structure = models.ForeignKey(
         ResultStructure, blank=True, null=True)
 
-    result = models.ForeignKey(Result)
+    result = models.ForeignKey(Result, null=True, blank=True)
     name = models.CharField(max_length=128L, unique=True)
     code = models.CharField(max_length=50, null=True, blank=True)
     unit = models.ForeignKey(Unit, null=True, blank=True)
