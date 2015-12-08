@@ -21,7 +21,6 @@ from partners.models import (
     GwPCALocation
 )
 
-
 class LocationView(ListAPIView):
 
     model = GwPCALocation

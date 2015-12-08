@@ -19,7 +19,7 @@
 
 
   <!-- build:css /static/partner_portal/styles/main.css -->
-  <link rel="stylesheet" href="/static/styles/main.css">
+  <link rel="stylesheet" href="/static/partner_portal/styles/main.css">
   <!-- endbuild-->
 
   <!-- build:js /static/partner_portal/bower_components/webcomponentsjs/webcomponents-lite.min.js -->
@@ -28,6 +28,17 @@
 
   <!-- will be replaced with /static/partner_portal/elements/elements.vulcanized.html -->
   <link rel="import" href="/static/partner_portal/bower_components/paper-card/paper-card.html">
+  <link rel="import" href="/static/partner_portal/bower_components/paper-material/paper-material.html">
+  <link rel="import" href="/static/partner_portal/bower_components/paper-button/paper-button.html">
+  <link rel="import" href="/static/partner_portal/bower_components/paper-input/paper-input.html">
+  <link rel="import" href="/static/partner_portal/bower_components/paper-checkbox/paper-checkbox.html">
+  <link rel="import" href="/static/partner_portal/bower_components/iron-form/iron-form.html">
+<link rel="import"
+        href="/static/partner_portal/bower_components/paper-header-panel/paper-header-panel.html">
+  <link rel="import"
+        href="/static/partner_portal/bower_components/paper-toolbar/paper-toolbar.html">
+  <link rel="import"
+        href="/static/partner_portal/bower_components/iron-flex-layout/iron-flex-layout.html">
   <!-- endreplace-->
 
     {% block extra_head %}
@@ -35,14 +46,15 @@
 </head>
 
 {% block body %}
-    <body class="animated fadeIn">
+    <body class="fullbleed vertical layout">
+    <paper-header-panel class="flex">
+        <paper-toolbar>
+          <div>UNINCEF eTools</div>
+        </paper-toolbar>
+        <div>
+        </div>
+      </paper-header-panel>
     <section id="container" style="padding: 5%;">
-    <paper-card heading="Card Title">
-      <div class="card-content">Some content</div>
-      <div class="card-actions">
-        <paper-button>Some action</paper-button>
-      </div>
-    </paper-card>
 
         <!--main content start-->
         {% block content %}
@@ -67,12 +79,12 @@
 </script>
 <script>
       document.addEventListener('WebComponentsReady', function() {
-        var input = document.querySelector('paper-input');
-        var button = document.querySelector('paper-button');
-        var greeting = document.getElementById("greeting");
-        button.addEventListener('click', function() {
-          greeting.textContent = 'Hello, ' + input.value;
-        });
+        //var input = document.querySelector('paper-input');
+        //var button = document.querySelector('paper-button');
+        //var greeting = document.getElementById("greeting");
+        //button.addEventListener('click', function() {
+        //  greeting.textContent = 'Hello, ' + input.value;
+        //});
       });
 </script>
 {% block extra_js %}

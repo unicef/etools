@@ -1,20 +1,58 @@
-{% extends "base.html" %}
+{% extends "base1.html" %}
+
+
+{% block extra_head %}
+
+<style>
+    paper-button.fancy {
+      width: 40%;
+        min-width:300px;
+      margin: 0 auto;
+      background: #0099FF;
+      color: #ffffff;
+    }
+    .card-content {
+        display: block;
+        margin: 0 auto;
+        text-align: center;
+    }
+    .padding{
+        padding: 2%;
+    }
+    paper-card .card-actions {
+        margin-top: 4%;
+    }
+
+    paper-card {
+        max-width: 800px;
+        min-width: 410px;
+        width: 90%;
+        margin: 2% auto;
+        display:block;
+        position: relative;
+    }
+</style>
+
+
+ {% endblock %}
+
 
 {% block content %}
-<section class="main-content-wrapper">
-    <section id="main-content">
-        <div>
-            Partner:
-            <br>
-            <a href="{% url 'account_login' %}">Partner Portal</a>
-        </div>
-        <br>
-        <br>
-        <div>
-            Unicef Staff:
-            <br>
-            <a href="{% url 'saml2_login' %}">Staff Member login here</a>
-        </div>
-    </section>
-</section>
+<div class="flex">
+
+<paper-card heading="Partner Portal">
+      <div class="card-content">
+           <a href="{% url 'account_login' %}"><paper-button raised class="fancy">Partner Login</paper-button></a>
+      </div>
+
+</paper-card>
+
+
+<paper-card heading="UNICEF Staff">
+      <div class="card-content">
+           <a href="{% url 'saml2_login' %}"><paper-button raised class="fancy">Staff Login</paper-button></a>
+      </div>
+
+</paper-card>
+</div>
 {% endblock content %}

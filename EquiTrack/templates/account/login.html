@@ -3,48 +3,120 @@
 {% load i18n %}
 {% load account socialaccount %}
 
-{% block head_title %}{% trans "Sign In" %}{% endblock %}
+{% block head_title %}{% trans "Partner Sign In" %}{% endblock %}
+
+{% block extra_head %}
+
+<style>
+    paper-button.fancy {
+      background: #0099FF;
+      color: #ffffff;
+    }
+    .padding{
+        padding: 2%;
+    }
+    paper-card .card-actions {
+        margin-top: 4%;
+    }
+
+    paper-card {
+        max-width: 800px;
+        min-width: 410px;
+        width: 90%;
+        margin: 2% auto;
+        display:block;
+        position: relative;
+    }
+</style>
+ {% endblock %}
 
 {% block content %}
-
-<h1>{% trans "Sign In" %}</h1>
 
 {% get_providers as socialaccount_providers %}
 
 {% if socialaccount_providers %}
-<p>{% blocktrans with site.name as site_name %}Please sign in with one
-of your existing third party accounts.{% endblocktrans %}</p>
+<paper-card heading="Sign In with Social Account" class="padding">
+      <div class="card-content">
 
-<div class="socialaccount_ballot">
+            <p>{% blocktrans with site.name as site_name %}Please sign in with one
+            of your existing third party accounts:{% endblocktrans %}</p>
 
-  <ul class="socialaccount_providers">
-    {% include "socialaccount/snippets/provider_list.html" with process="login" %}
-  </ul>
+            <div class="socialaccount_ballot">
 
-  <div class="login-or">{% trans 'or' %}</div>
-
-</div>
-
-{% include "socialaccount/snippets/login_extra.html" %}
-
+              <ul class="socialaccount_providers">
+                {% include "socialaccount/snippets/provider_list.html" with process="login" %}
+              </ul>
+            </div>
+      </div>
+</paper-card>
 {% endif %}
 
+<paper-card heading="Sign In with Local Credentials" class="padding">
 
-<form class="login" method="POST" action="{% url 'account_login' %}">
-  {% csrf_token %}
-  {{ form.as_p }}
-  {% if redirect_field_value %}
-  <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-  {% endif %}
-  <a class="button secondaryAction" href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a>
-  <button class="primaryAction" type="submit">{% trans "Sign In" %}</button>
-</form>
+    <form id="form" method="POST" action="{% url 'account_login' %}">
+        {% csrf_token %}
+        {% for field in form %}
 
-<div>
+
+
+            {% if field.field.widget.input_type %}
+
+
+
+                <paper-input name="{{ field.name }}"
+                             error-message="{% for error in field.errors %}{{ error }}{% endfor %}"
+                              {% for error in field.errors %}
+                                  {% if error %}
+                                       invalid="true"
+                                  {% endif %}
+                              {% endfor %}
+                             label="{{ field.label }}"
+                             type="{{ field.field.widget.input_type }}"
+                             autovalidate="true" required></paper-input>
+            {% else %}
+                <br>
+                <paper-checkbox name="{{ field.name }}">{{ field.label }}</paper-checkbox>
+
+            {% endif %}
+            {% if field.help_text %}
+                <p class="help">{{ field.help_text|safe }}</p>
+            {% endif %}
+
+        {% endfor %}
+
+        {% if redirect_field_value %}
+            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+        {% endif %}
+        <br>
+
+
+
+    <div class="card-actions padding">
+        <paper-item><a href="{% url 'account_reset_password' %}">{% trans "Forgot Password?" %}</a></paper-item>
+
+        <paper-button class="fancy" onclick="submitForm()" type="submit">{% trans "Sign In" %}</paper-button>
+    </div>
+
+    </form>
+    <iron-icon icon="warning"></iron-icon>
     <p>If you never logged in before, and you don't yet have a password, then please
     <a href="{% url 'account_reset_password' %}">Set your Password</a> first.</p>
-</div>
+</paper-card>
+
+
+
+
+
+
+
 
 {% endblock %}
+{% block extra_js %}
+<script>
+        function submitForm() {
+          document.getElementById('form').submit();
+        }
 
+</script>
+{% endblock %}
 
