@@ -197,3 +197,22 @@ def partner_required(function=None, home_url="/", redirect_field_name=None):
         return _dec
     else:
         return _dec(function)
+
+def staff_required(function=None, home_url="/partner", redirect_field_name=None):
+    def _dec(view_func):
+        def _view(request, *args, **kwargs):
+            if request.user.is_authenticated():
+                if not "unicef.org" in request.user.email:
+                    return HttpResponseRedirect(home_url)
+                else:
+                    return view_func(request, *args, **kwargs)
+            else:
+                return HttpResponseRedirect("/login")
+        _view.__name__ = view_func.__name__
+        _view.__dict__ = view_func.__dict__
+        _view.__doc__ = view_func.__doc__
+        return _view
+    if function is None:
+        return _dec
+    else:
+        return _dec(function)

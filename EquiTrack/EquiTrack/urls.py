@@ -15,6 +15,7 @@ autocomplete_light.autodiscover()
 from django.contrib import admin
 admin.autodiscover()
 
+from .utils import staff_required
 from .views import (
     MainView,
     MapView,
@@ -29,7 +30,7 @@ from .views import (
 urlpatterns = patterns(
     '',
     # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
-    url(r'^$', login_required(UserDashboardView.as_view()), name='dashboard'),
+    url(r'^$', staff_required(UserDashboardView.as_view()), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),

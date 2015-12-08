@@ -100,11 +100,8 @@ class LocationView(ListAPIView):
 class PortalDashView(View):
 
     def get(self, request):
-        # not serving this as a static file in case in the future we want to be able to change versions
-        print request.tenant
         with open(settings.SITE_ROOT + '/templates/partner_portal/index.html', 'r') as my_f:
             result = my_f.read()
-
         return HttpResponse(result)
 
 
