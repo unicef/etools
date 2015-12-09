@@ -27,6 +27,10 @@
         display:block;
         position: relative;
     }
+
+    .form-error {
+        color: #F03300
+    }
 </style>
  {% endblock %}
 
@@ -55,6 +59,15 @@
 
     <form id="form" method="POST" action="{% url 'account_login' %}">
         {% csrf_token %}
+        {% for error in form.non_field_errors %}
+              {% if error %}
+                  <span class="form-error">
+                  <iron-icon icon="error"></iron-icon>
+                  <span>{{ error }}</span>
+                  </span>
+              {% endif %}
+        {% endfor %}
+        {{ form.NON_FIELD_ERRORS }}
         {% for field in form %}
 
 
@@ -98,9 +111,9 @@
     </div>
 
     </form>
-    <iron-icon icon="warning"></iron-icon>
-    <p>If you never logged in before, and you don't yet have a password, then please
-    <a href="{% url 'account_reset_password' %}">Set your Password</a> first.</p>
+    <iron-icon icon="info"></iron-icon>
+    <span>If you never logged in before, and you don't yet have a password, then please
+    <a href="{% url 'account_reset_password' %}">Set your Password</a> first.</span>
 </paper-card>
 
 
