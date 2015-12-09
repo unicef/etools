@@ -37,12 +37,12 @@ urlpatterns = patterns(
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
 
     #url(r'partner/', include('partner_portal.urls')),
-    url(r'locations/', include('locations.urls')),
-    url(r'partners/', include('partners.urls')),
-    url(r'partner/', include('partners.urls')),
-    url(r'trips/', include('trips.urls')),
-    url(r'users/', include('users.urls')),
-    url(r'supplies/', include('supplies.urls')),
+    url(r'^locations/', include('locations.urls')),
+    url(r'^partners/', include('partners.urls')),
+    url(r'^partner/', include('partners.urls')),
+    url(r'^trips/', include('trips.urls')),
+    url(r'^users/', include('users.urls')),
+    url(r'^supplies/', include('supplies.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
     #url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
