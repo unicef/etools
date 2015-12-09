@@ -139,15 +139,6 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
-    def new_user(self, request, sociallogin):
-        return super(CustomSocialAccountAdapter, self).new_user(request, sociallogin)
-
-    def populate_user(self,
-                      request,
-                      sociallogin,
-                      data):
-        return super(CustomSocialAccountAdapter, self).populate_user(request, sociallogin, data)
-
     def pre_social_login(self, request, sociallogin):
         # TODO: make sure that the partnership is still in good standing or valid or whatever
         if sociallogin.user.pk:
@@ -156,7 +147,8 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             print "setting connection to {}".format(sociallogin.user.profile.country)
             return
         try:
-            new_login_user = User.objects.get(email=sociallogin.user.email)  # if user exists, connect the account to the existing account and login
+             # if user exists, connect the account to the existing account and login
+            new_login_user = User.objects.get(email=sociallogin.user.email)
 
             sociallogin.connect(request, new_login_user)
             connection.set_tenant(new_login_user.profile.country)
@@ -171,9 +163,6 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             url = reverse('sociallogin_notamember', kwargs={'email': urlsafe_base64_encode(sociallogin.user.email)})
             raise ImmediateHttpResponse(HttpResponseRedirect(url))
 
-    def save_user(self, request, sociallogin, form=None):
-        print "save user"
-        return super(CustomSocialAccountAdapter, self).save_user(request,sociallogin,form)
 
 
 class CustomAccountAdapter(DefaultAccountAdapter):
