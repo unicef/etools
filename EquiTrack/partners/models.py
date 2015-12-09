@@ -576,15 +576,17 @@ class PCA(AdminURLMixin, models.Model):
 
     def calculate_budget_for_year(self, year):
 
-        year_start = datetime.date(year, 1, 1)
-        year_end = datetime.date(year, 12, 31)
-        start_date = self.start_date if self.start_date > year_start else year_start
-        end_date = self.end_date if self.end_date < year_end else year_end
-        total_days = (self.end_date - self.start_date).days
-        days_in_year = (end_date - start_date).days
-        percent = days_in_year / total_days
-        budget = percent * self.total_budget
-        return budget
+        if self.start_date and self.end_date:
+            year_start = datetime.date(year, 1, 1)
+            year_end = datetime.date(year, 12, 31)
+            start_date = self.start_date if self.start_date > year_start else year_start
+            end_date = self.end_date if self.end_date < year_end else year_end
+            total_days = (self.end_date - self.start_date).days
+            days_in_year = (end_date - start_date).days
+            percent = days_in_year / total_days
+            budget = percent * self.total_budget
+            return budget
+        return 0
 
     def save(self, **kwargs):
         """
