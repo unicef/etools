@@ -93,7 +93,7 @@
                                         </li>
                                     {% endfor %}
 
-                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i class="fa fa-angle-right"></i></a>
+{#                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i class="fa fa-angle-right"></i></a>#}
                                 </ul>
                             </li>
                         {% endif %}
@@ -121,7 +121,7 @@
                                 </ul>
                             </li>
                         {% else %}
-                            <li><a href="{% url 'login' %}">Sign In</a></li>
+                            <li><a href="{% url 'account_login' %}">Sign In</a></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -172,6 +172,7 @@
             </aside>
         {% endblock %}
         <!--sidebar left end-->
+
 
         <!--main content start-->
         {% block content %}
