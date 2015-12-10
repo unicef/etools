@@ -28,6 +28,9 @@ SOCIALACCOUNT_PROVIDERS = \
           'AUTH_PARAMS': { 'access_type': 'online' } }}
 
 SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+
+
 
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)
 AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY', None)
