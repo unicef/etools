@@ -130,8 +130,7 @@ TEMPLATE_DEBUG = DEBUG
 POSTGIS_VERSION = (2, 1)
 db_config = dj_database_url.config(
     env="DATABASE_URL",
-    default='postgis://postgres:password@localhost:5432/postgres'
-    #default='postgis:///etools'
+    default='postgis:///etools'
 )
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
