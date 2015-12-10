@@ -259,8 +259,12 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
                  'result_structure',
                  'title',
                  'status',
-                 'initiation_date',
-                 'submission_date',
+                 'initiation_date',)
+        }),
+        (_('Dates and Signatures'), {
+            u'classes': (u'suit-tab suit-tab-info',),
+            'fields':
+                ('submission_date',
                  'review_date',
                  ('partner_manager', 'signed_by_partner_date',),
                  ('unicef_manager', 'signed_by_unicef_date',),
