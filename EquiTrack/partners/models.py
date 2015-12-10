@@ -10,6 +10,7 @@ from django.db import models
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.contrib.postgres.fields import HStoreField
+from django.contrib.auth.models import User
 
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
@@ -21,6 +22,7 @@ from model_utils import Choices
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
+
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -40,6 +42,7 @@ from supplies.tasks import (
     set_unisupply_distribution,
     set_unisupply_user
 )
+
 from . import emails
 
 
@@ -167,8 +170,9 @@ class PartnerStaffMember(models.Model):
     title = models.CharField(max_length=64L)
     first_name = models.CharField(max_length=64L)
     last_name = models.CharField(max_length=64L)
-    email = models.CharField(max_length=128L)
+    email = models.CharField(max_length=128L, unique=True)
     phone = models.CharField(max_length=64L, blank=True)
+
 
     def __unicode__(self):
         return u'{} {} ({})'.format(

@@ -2,6 +2,12 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
+
+from django.views.generic import FormView, TemplateView, View
+from django.utils.http import urlsafe_base64_decode
+from django.http import HttpResponse
+from django.conf import settings
+
 from datetime import datetime
 from rest_framework.generics import ListAPIView
 
@@ -14,7 +20,6 @@ from partners.models import (
     PCASector,
     GwPCALocation
 )
-
 
 class LocationView(ListAPIView):
 
@@ -92,3 +97,19 @@ class LocationView(ListAPIView):
         return locs
 
 
+class PortalDashView(View):
+
+    def get(self, request):
+        with open(settings.SITE_ROOT + '/templates/partner_portal/index.html', 'r') as my_f:
+            result = my_f.read()
+        return HttpResponse(result)
+
+
+class PortalLoginFailedView(TemplateView):
+
+    template_name = "partner_portal/loginfailed.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
+        context['email'] = urlsafe_base64_decode(context['email'])
+        return context

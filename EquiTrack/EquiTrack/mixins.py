@@ -2,6 +2,7 @@
 Project wide mixins for models and classes
 """
 __author__ = 'jcranwellward'
+from django import forms
 
 from django.conf import settings
 from django.db import connection
@@ -9,13 +10,23 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+
+from django.utils.http import urlencode, urlsafe_base64_encode
 from django.http.response import HttpResponseRedirect
+
 from rest_framework.exceptions import PermissionDenied
 
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
+
+from allauth.exceptions import ImmediateHttpResponse
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from allauth.account.adapter import  DefaultAccountAdapter
+from allauth.account.utils import (perform_login, complete_signup,
+                                   user_username)
+
 
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
@@ -68,6 +79,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
             u'api',
             u'login',
             u'saml',
+            u'accounts',
         ]):
             return None
         elif request.user.is_anonymous():
@@ -123,3 +135,43 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         request.tenant = user.profile.country
 
         return user, jwt_value
+
+
+class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
+
+    def pre_social_login(self, request, sociallogin):
+        # TODO: make sure that the partnership is still in good standing or valid or whatever
+        if sociallogin.user.pk:
+            connection.set_tenant(sociallogin.user.profile.country)
+            request.tenant = sociallogin.user.profile.country
+            print "setting connection to {}".format(sociallogin.user.profile.country)
+            return
+        try:
+             # if user exists, connect the account to the existing account and login
+            new_login_user = User.objects.get(email=sociallogin.user.email)
+
+            sociallogin.connect(request, new_login_user)
+            connection.set_tenant(new_login_user.profile.country)
+            request.tenant = new_login_user.profile.country
+            perform_login(request,
+                          new_login_user,
+                          'none',
+                          redirect_url=sociallogin.get_redirect_url(request),
+                          signal_kwargs={"sociallogin": sociallogin})
+
+        except User.DoesNotExist:
+            url = reverse('sociallogin_notamember', kwargs={'email': urlsafe_base64_encode(sociallogin.user.email)})
+            raise ImmediateHttpResponse(HttpResponseRedirect(url))
+
+
+
+class CustomAccountAdapter(DefaultAccountAdapter):
+    def is_open_for_signup(self, request):
+        # quick way of disabling signups.
+        return False
+
+    def login(self, request, user):
+        # if we need to add any other login validation, here would be the place.
+        return super(CustomAccountAdapter, self).login(request, user)
+
+

@@ -59,7 +59,8 @@ from .forms import (
     AuthorizedOfficesFormset,
     DistributionPlanForm,
     DistributionPlanFormSet,
-    PartnershipBudgetAdminForm
+    PartnershipBudgetAdminForm,
+    PartnerStaffMemberForm
 )
 
 
@@ -403,7 +404,11 @@ class AssessmentAdminInline(admin.TabularInline):
 
 class PartnerStaffMemberInlineAdmin(admin.TabularInline):
     model = PartnerStaffMember
+    form = PartnerStaffMemberForm
 
+class PartnerStaffMemberAdmin(admin.ModelAdmin):
+    model = PartnerStaffMember
+    form = PartnerStaffMemberForm
 
 class DocumentInlineAdmin(admin.TabularInline):
     model = PCA
@@ -563,4 +568,4 @@ admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(PartnerStaffMember)
+admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)

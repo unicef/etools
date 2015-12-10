@@ -16,7 +16,7 @@ urlpatterns = patterns(
 
     #api
     url(r'^api/profile/$', UserAuthAPIView.as_view()),
-    url(r'^api/$', UsersView.as_view()),
+    url(r'^api/$', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
     url(r'^api/country_updates.csv/$', CountryOverridenUsersCSV.as_view()),
 
     #user profile

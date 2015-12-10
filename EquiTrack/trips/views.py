@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.views.generic import FormView, TemplateView, View
 from django.http import HttpResponse
 from django.conf import settings
+from django.db import connection
 
 from rest_framework.views import APIView
 from rest_framework.generics import (

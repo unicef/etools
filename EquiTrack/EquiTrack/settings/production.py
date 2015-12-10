@@ -10,7 +10,7 @@ ALLOWED_HOSTS = [
 ]
 ########## END HOST CONFIGURATION
 
-# Sentry config
+#Sentry config
 RAVEN_CONFIG = {
     'dsn': environ.get('SENTRY_DSN', None),
 }
@@ -22,7 +22,12 @@ INSTALLED_APPS = INSTALLED_APPS + (
 MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
     'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
 )
+SOCIALACCOUNT_PROVIDERS = \
+    { 'google':
+        { 'SCOPE': ['profile', 'email'],
+          'AUTH_PARAMS': { 'access_type': 'online' } }}
 
+SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
 
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)
 AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY', None)
@@ -58,7 +63,8 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-LOGIN_URL = '/saml2/login/'
+#LOGIN_URL = '/saml2/login/'
+LOGIN_URL = '/login/'
 SAML_ATTRIBUTE_MAPPING = {
     'upn': ('username',),
     'emailAddress': ('email',),
@@ -70,6 +76,7 @@ SAML_CREATE_UNKNOWN_USER = True
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'djangosaml2.backends.Saml2Backend',
+    'allauth.account.auth_backends.AuthenticationBackend',
 )
 SAML_CONFIG = {
     # full path to the xmlsec1 binary programm
