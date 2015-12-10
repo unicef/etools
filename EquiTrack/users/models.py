@@ -1,9 +1,10 @@
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 from djangosaml2.signals import pre_user_save
 
+from django.db import transaction, connection
 
 from tenant_schemas.models import TenantMixin
 
@@ -41,6 +42,10 @@ class Office(models.Model):
 class UserProfile(models.Model):
 
     user = models.OneToOneField(User, related_name='profile')
+    partner_staff_member = models.IntegerField(
+        null=True,
+        blank=True
+    )
     country = models.ForeignKey(Country, null=True, blank=True)
     country_override = models.ForeignKey(Country, null=True, blank=True, related_name="country_override")
     section = models.ForeignKey(Section, null=True, blank=True)
@@ -84,5 +89,49 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
+
+
+def create_user(sender, instance, created, **kwargs):
+    if created:
+        user, ucreated = User.objects.get_or_create(username=instance.email)
+
+        # there should be a check before PartnerStaffMember is saved to insure that no users
+        # with that email address are present in the user model
+        if not ucreated and user.profile.partner_staff_member:
+            instance.delete()
+            raise Exception("Something unexpected happened.")
+
+        # TODO: here we have a decision.. either we update the user with the info just received from
+        # TODO: or we update the instance with the user we already have. this might have implications on login.
+        with transaction.atomic():
+            try:
+                country = Country.objects.get(schema_name=connection.schema_name)
+            except Country.DoesNotExist:
+                raise Exception("no country set")
+            user.email = instance.email
+
+            user.first_name = instance.first_name
+            user.last_name = instance.last_name
+            user.is_active = True
+            user.save()
+            user.profile.country = country
+            user.profile.partner_staff_member = instance.id
+            user.profile.save()
+
+
+
+def delete_partner_relationship(sender, instance, **kwargs):
+    try:
+        profile = UserProfile.objects.filter(partner_staff_member=instance.id).get()
+        with transaction.atomic():
+            profile.partner_staff_member = None
+            profile.save()
+            profile.user.is_active = False
+            profile.user.save()
+    except:
+        pass
+
+pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
+post_save.connect(create_user, sender='partners.PartnerStaffMember')
 
 pre_user_save.connect(UserProfile.custom_update_user)

@@ -9,7 +9,9 @@ import traceback
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
+from django.http.response import HttpResponseRedirect
 from django.utils.datastructures import SortedDict
+from django.contrib.auth.decorators import user_passes_test
 
 from import_export.resources import ModelResource
 from post_office.models import EmailTemplate
@@ -177,3 +179,17 @@ class BaseExportResource(ModelResource):
         for row in rows:
             data.append(row.values())
         return data
+
+
+
+def staff_test(u):
+    if u.is_authenticated and u.email.endswith("unicef.org"):
+        return True
+    return False
+
+
+def staff_required(function, home_url="/partner", redirect_field_name=None):
+    actual_decorator = user_passes_test(staff_test, home_url, redirect_field_name)
+    return actual_decorator(function)
+
+
