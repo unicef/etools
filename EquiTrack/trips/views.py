@@ -139,15 +139,7 @@ class TripsListApi(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-
-        # this is not the right place for it, but it's important to notice that api views
-        # do not have a tenant set on the connection unless it uses JWT
-        if not hasattr(self.request, 'tenant'):
-            self.request.tenant = user.profile.country
-            connection.set_tenant(user.profile.country)
-
         trips = Trip.get_all_trips(user)
-        print self.request.tenant
         return trips
 
 
