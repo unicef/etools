@@ -288,7 +288,7 @@ FIXTURE_DIRS = (
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [normpath(join(SITE_ROOT, 'templates'))],
+        'DIRS': [normpath(join(SITE_ROOT, 'templates')), normpath(join(SITE_ROOT, 'templates', 'frontend'))],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
