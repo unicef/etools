@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
@@ -97,6 +99,7 @@ class UserProfile(models.Model):
                 try:
                     new_country = Country.objects.get(name=adfs_country[0])
                 except Country.DoesNotExist:
+                    logging.error("country: {} from ADFS does not match any countries".format(adfs_country[0]))
                     return False
             if new_country and new_country != sender.profile.country:
                 sender.profile.country = new_country
