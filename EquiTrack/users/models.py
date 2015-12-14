@@ -77,34 +77,34 @@ class UserProfile(models.Model):
     def custom_update_user(cls, sender, attributes, user_modified, **kwargs):
         # This signal is called on every login
         mods_made = False
-        with transaction.atomic():
-            # make sure this setting is not already set.
-            if not sender.is_staff:
-                try:
-                    g = Group.objects.get(name='UNICEF User')
-                    g.user_set.add(sender)
-                except Group.DoesNotExist:
-                    #raise Exception('UNICEF User group does not exist')
-                    # since exceptions are not raised from inside signals, do nothing
-                    pass
-                sender.is_staff = True
-                sender.save()
-                mods_made = True
 
-            adfs_country = attributes.get("countryName")
-            new_country = None
-            if sender.profile.country_override:
-                new_country = sender.profile.country_override
-            elif adfs_country:
-                try:
-                    new_country = Country.objects.get(name=adfs_country[0])
-                except Country.DoesNotExist:
-                    logging.error("country: {} from ADFS does not match any countries".format(adfs_country[0]))
-                    return False
-            if new_country and new_country != sender.profile.country:
-                sender.profile.country = new_country
-                sender.profile.save()
-                return True
+        # make sure this setting is not already set.
+        if not sender.is_staff:
+            try:
+                g = Group.objects.get(name='UNICEF User')
+                g.user_set.add(sender)
+            except Group.DoesNotExist:
+                #raise Exception('UNICEF User group does not exist')
+                # since exceptions are not raised from inside signals, do nothing
+                pass
+            sender.is_staff = True
+            sender.save()
+            mods_made = True
+
+        adfs_country = attributes.get("countryName")
+        new_country = None
+        if sender.profile.country_override:
+            new_country = sender.profile.country_override
+        elif adfs_country:
+            try:
+                new_country = Country.objects.get(name=adfs_country[0])
+            except Country.DoesNotExist:
+                logging.error("country: {} from ADFS does not match any countries".format(adfs_country[0]))
+                return False
+        if new_country and new_country != sender.profile.country:
+            sender.profile.country = new_country
+            sender.profile.save()
+            return True
 
         return mods_made
 
