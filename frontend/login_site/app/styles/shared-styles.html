@@ -1,0 +1,32 @@
+
+<!-- shared styles for all elements and index.html -->
+<dom-module id="shared-styles">
+  <template>
+    <style>
+      .page-title {
+        @apply(--paper-font-display2);
+      }
+      paper-menu a > *, paper-menu paper-item > *, paper-menu paper-icon-item > * {
+        pointer-events: none;
+      }
+      @media (max-width: 600px) {
+        .page-title {
+          font-size: 24px!important;
+        }
+      }
+      .container {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-justified);
+        @apply(--layout-wrap);
+      }
+      .flexchild {
+        @apply(--layout-flex-2);
+      }
+
+      .flex6child {
+        @apply(--layout-flex-4);
+      }
+    </style>
+    
+  </template>
+</dom-module>

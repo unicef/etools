@@ -1,0 +1,115 @@
+<!doctype html>
+<!--
+@license
+Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+-->
+
+<html lang="">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="generator" content="UNICEF eTools - Partners" />
+  <title>UNICEF eTools - Partners</title>
+  <!-- Place favicon.ico in the `app/` directory -->
+
+  <!-- Chrome for Android theme color -->
+  <meta name="theme-color" content="#2E3AA1">
+
+  <!-- build:css /static/partner_portal/styles/main.css -->
+  <link rel="stylesheet" href="styles/main.css">
+  <!-- endbuild-->
+
+  <!-- build:js /static/partner_portal/bower_components/webcomponentsjs/webcomponents-lite.min.js -->
+  <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <!-- endbuild -->
+
+  <!-- will be replaced with /static/partner_portal/elements/elements.vulcanized.html -->
+  <link rel="import" href="elements/elements.html">
+  <!-- endreplace-->
+
+
+  <!-- For shared styles, shared-styles.html import in elements.html -->
+  <style is="custom-style" include="shared-styles"></style>
+  
+  <style>
+    a.flex6child {
+      display: block;
+      margin: auto;
+      min-width: 180px;
+      max-width: 30%;
+    }
+    paper-card.unicefblue {
+      background-color: #0099ff;
+    }
+    paper-material.login{
+        background-color: #0099ff;
+        color: #ffffff;
+    }
+    .container{
+      margin-top: 20px;
+    }
+
+  </style>
+
+
+  {% block extra_head %}
+    {% endblock %}
+  
+</head>
+
+
+
+
+<body class="fullbleed vertical layout">
+  <template is="dom-bind" id="app">
+    <paper-header-panel main class="flex">
+        <paper-toolbar class="medium-tall">
+          <iron-image src="images/unicefetools.svg" style="width:200px; max-width:80%; height:70%;"  preload sizing="contain"></iron-image>
+          <div class="bottom title">Choose your login</div>
+        </paper-toolbar>
+        <section id="container" class="layout wrap center-justified horizontal container">
+
+            <!--main content start-->
+            <!--  {% block content %} -->
+            <a class="flex6child" href="{% url 'account_login' %}">
+            <paper-card  onmouseover="this.elevation=5" onmouseout="this.elevation=1" image="images/partners.svg">
+            </paper-card>
+            </a>
+            <a class="flex6child" href="{% url 'saml2_login' %}">
+            <paper-card animatedShadow="true" onmouseover="this.elevation=5" onmouseout="this.elevation=1" class="flex6child unicefblue" image="images/staff.svg">
+            </paper-card>
+            </a>
+            <!-- <paper-card class="flexchild">
+                <div class="card-content">
+                     <a href="{% url 'account_login' %}"><paper-button raised class="fancy">Partner Login</paper-button></a>
+                </div>
+            </paper-card>
+            <paper-card class="flexchild" heading="UNICEF Staff">
+                <div class="card-content">
+                     <a href="{% url 'saml2_login' %}"><paper-button raised class="fancy">Staff Login</paper-button></a>
+                </div>
+            </paper-card> -->
+
+           <!--  {% endblock content %} -->
+            <!--main content end-->
+
+        </section>
+    </paper-header-panel>     
+  </template>
+    <!-- build:js /static/partner_portal/scripts/app.js -->
+  <script src="scripts/app.js"></script>
+  <script>
+
+      
+  </script>
+  <!-- endbuild-->
+</body>
+
+</html>
