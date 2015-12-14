@@ -357,7 +357,7 @@ class Agreement(TimeStampedModel):
 
         if self.agreement_type == Agreement.PCA:
 
-            if self.partner_manager not in self.authorized_officers.all():
+            if self.partner_manager and self.partner_manager not in self.authorized_officers.all():
                 self.authorized_officers.add(
                     AuthorizedOfficer.objects.create(
                         agreement=self,

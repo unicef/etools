@@ -9,6 +9,7 @@ from django.contrib.gis.db import models
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
+from mptt.models import MPTTModel, TreeForeignKey
 from cartodb import CartoDBAPIKey, CartoDBException
 from smart_selects.db_fields import ChainedForeignKey
 from paintstore.fields import ColorPickerField
@@ -100,15 +101,17 @@ class Locality(models.Model):
         ordering = ['name']
 
 
-class Location(models.Model):
+class Location(MPTTModel):
 
     name = models.CharField(max_length=254L)
     locality = models.ForeignKey(Locality)
-    gateway = models.ForeignKey(GatewayType, verbose_name='Gateway type')
+    gateway = models.ForeignKey(GatewayType, verbose_name='Location Type')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     p_code = models.CharField(max_length=32L, blank=True, null=True)
 
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
+    geom = models.MultiPolygonField(null=True, blank=True)
     point = models.PointField(null=True, blank=True)
     objects = models.GeoManager()
 
@@ -188,7 +191,7 @@ class LinkedLocation(models.Model):
         return desc
 
 
-class CartoDBTable(models.Model):
+class CartoDBTable(MPTTModel):
 
     domain = models.CharField(max_length=254)
     api_key = models.CharField(max_length=254)
@@ -198,6 +201,7 @@ class CartoDBTable(models.Model):
     name_col = models.CharField(max_length=254, default='name')
     pcode_col = models.CharField(max_length=254, default='pcode')
     parent_code_col = models.CharField(max_length=254, null=True, blank=True)
+    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
     color = ColorPickerField(null=True, blank=True, default=get_random_color)
 
     def __unicode__(self):

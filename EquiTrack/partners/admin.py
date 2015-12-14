@@ -404,15 +404,20 @@ class AssessmentAdminInline(admin.TabularInline):
     verbose_name_plural = u'Assessments and Audits records'
 
 
-
-
 class PartnerStaffMemberInlineAdmin(admin.TabularInline):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
 
+
 class PartnerStaffMemberAdmin(admin.ModelAdmin):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
+    list_display = (
+        '__unicode__',
+        'title',
+        'email',
+    )
+
 
 class DocumentInlineAdmin(admin.TabularInline):
     model = PCA
