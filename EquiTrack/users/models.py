@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from djangosaml2.signals import pre_user_save
 
@@ -72,20 +73,34 @@ class UserProfile(models.Model):
 
     @classmethod
     def custom_update_user(cls, sender, attributes, user_modified, **kwargs):
-        adfs_country = attributes.get("countryName")
-        new_country = None
-        if sender.profile.country_override:
-            new_country = sender.profile.country_override
-        elif adfs_country:
+        with transaction.atomic():
             try:
-                new_country = Country.objects.get(name=adfs_country[0])
-            except Country.DoesNotExist:
-                return False
-        if new_country and new_country != sender.profile.country:
-            sender.profile.country = new_country
-            sender.profile.save()
+                g = Group.objects.get(name='UNICEF User')
+                g.user_set.add(sender)
+            except Group.DoesNotExist:
+                #raise Exception('UNICEF User group does not exist')
+                # since exceptions are not raised from inside signals, do nothing
+                pass
+            sender.is_staff = True
+            sender.save()
+
+            adfs_country = attributes.get("countryName")
+            new_country = None
+            if sender.profile.country_override:
+                new_country = sender.profile.country_override
+            elif adfs_country:
+                try:
+                    new_country = Country.objects.get(name=adfs_country[0])
+                except Country.DoesNotExist:
+                    return False
+            if new_country and new_country != sender.profile.country:
+                sender.profile.country = new_country
+                sender.profile.save()
+                return True
+
+
             return True
-        return False
+
 
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
