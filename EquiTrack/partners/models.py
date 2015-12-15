@@ -3,6 +3,7 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 import datetime
+from dateutil.relativedelta import relativedelta
 
 from django.db import connection
 from django.conf import settings
@@ -355,15 +356,11 @@ class Agreement(TimeStampedModel):
 
     def save(self, **kwargs):
 
-        if self.agreement_type == Agreement.PCA:
+        if self.pk and self.agreement_type == Agreement.PCA:
 
             if self.partner_manager and self.partner_manager not in self.authorized_officers.all():
-                self.authorized_officers.add(
-                    AuthorizedOfficer.objects.create(
-                        agreement=self,
-                        officer=self.partner_manager
-                    )
-                )
+                officer = AuthorizedOfficer.objects.create(agreement=self, officer=self.partner_manager)
+                self.authorized_officers.add(officer)
 
             # PCAs last as long as the most recent CPD
             result_structure = ResultStructure.objects.last()
@@ -574,20 +571,20 @@ class PCA(AdminURLMixin, models.Model):
         if not self.submission_date:
             return u'Not Submitted'
         signed_date = self.signed_by_partner_date or datetime.date.today()
-        return (signed_date - self.submission_date).days
+        return relativedelta(signed_date - self.submission_date).days
 
     @property
     def days_from_review_to_signed(self):
         if not self.submission_date or not self.review_date:
             return u'Not Reviewed'
         signed_date = self.signed_by_partner_date or datetime.date.today()
-        return (signed_date - self.review_date).days
+        return relativedelta(signed_date - self.review_date).days
 
     @property
     def duration(self):
         if self.start_date and self.end_date:
             return u'{} Months'.format(
-                (self.end_date - self.start_date).days / 22
+                relativedelta(self.end_date - self.start_date).months
             )
         else:
             return u''
