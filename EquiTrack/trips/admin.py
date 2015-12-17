@@ -12,7 +12,7 @@ from generic_links.admin import GenericLinkStackedInline
 from users.models import UserProfile
 
 from EquiTrack.utils import get_changeform_link
-from EquiTrack.mixins import CountryUsersAdminMixin
+from EquiTrack.mixins import CountryStaffUsersAdminMixin
 from EquiTrack.forms import AutoSizeTextForm
 from .models import (
     Trip,
@@ -27,7 +27,12 @@ from .forms import (
     TravelRoutesForm,
     RequireOneLocationFormSet
 )
-from .filters import TripReportFilter, PartnerFilter
+from .filters import (
+    TripReportFilter,
+    PartnerFilter,
+    SupervisorFilter,
+    OwnerFilter
+)
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -87,7 +92,7 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
-class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
+class TripReportAdmin(CountryStaffUsersAdminMixin, ExportMixin, VersionAdmin):
     resource_class = TripResource
     save_as = True
     form = TripForm
@@ -124,14 +129,14 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'show_driver_trip',
     )
     list_filter = (
-        u'owner',
+        OwnerFilter,
+        SupervisorFilter,
         u'section',
         u'office',
         u'from_date',
         u'to_date',
         u'travel_type',
         u'international_travel',
-        u'supervisor',
         u'budget_owner',
         u'status',
         u'approved_date',
