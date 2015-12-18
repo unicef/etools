@@ -1,0 +1,24 @@
+FROM robertavram/py27nodejs:latest
+
+RUN apt-get update
+
+
+RUN mkdir /code
+
+WORKDIR /code
+
+ADD EquiTrack /code/
+
+RUN pip install -r requirements/production.txt
+
+ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
+
+# run all the build process for deployment
+
+RUN python manage.py collectstatic --noinput
+
+# Start everything
+ENV PORT 8080
+EXPOSE $PORT
+ENV C_FORCE_ROOT true
+CMD honcho start

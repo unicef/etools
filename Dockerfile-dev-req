@@ -1,0 +1,12 @@
+FROM robertavram/py27nodejs:latest
+
+RUN apt-get update
+
+
+RUN mkdir /req
+
+WORKDIR /req
+
+ADD EquiTrack/requirements /req/
+
+RUN pip install -r production.txt
