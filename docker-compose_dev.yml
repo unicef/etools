@@ -1,7 +1,7 @@
 web:
   build: .
   dockerfile: Dockerfile-dev
-  command: python EquiTrack/manage.py runserver "0.0.0.0:8080"
+  command: python manage.py runserver "0.0.0.0:8080"
   volumes:
     - ./EquiTrack:/code
   ports:

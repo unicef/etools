@@ -1,4 +1,4 @@
-FROM robertavram/py27nodejs:latest
+FROM robertavram/etoolsreq:latest
 
 RUN apt-get update
 
@@ -9,7 +9,6 @@ WORKDIR /code
 
 ADD EquiTrack /code/
 
-RUN pip install -r requirements/production.txt
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 
