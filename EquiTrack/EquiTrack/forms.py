@@ -3,6 +3,7 @@ from __future__ import absolute_import
 __author__ = 'unicef-leb-inn'
 
 from django import forms
+from django.db import connection
 from django.contrib.auth.models import Group
 from suit.widgets import AutosizedTextarea
 from django.forms.models import BaseInlineFormSet
@@ -70,4 +71,7 @@ class UserGroupForm(forms.ModelForm):
             group, created = Group.objects.get_or_create(
                 name=self.group_name
             )
-            self.fields[self.user_field].queryset = group.user_set.all()
+            self.fields[self.user_field].queryset = group.user_set.filter(
+                profile__country__schema_name=connection.schema_name,
+                profile__partner_staff_member__isnull=True
+            )

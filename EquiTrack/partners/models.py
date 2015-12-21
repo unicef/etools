@@ -756,28 +756,16 @@ class GwPCALocation(models.Model):
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
     governorate = models.ForeignKey(Governorate)
-    region = ChainedForeignKey(
+    region = models.ForeignKey(
         Region,
-        chained_field="governorate",
-        chained_model_field="governorate",
-        show_all=False,
-        auto_choose=True,
     )
-    locality = ChainedForeignKey(
+    locality = models.ForeignKey(
         Locality,
-        chained_field="region",
-        chained_model_field="region",
-        show_all=False,
-        auto_choose=True,
         null=True,
         blank=True
     )
-    location = ChainedForeignKey(
+    location = models.ForeignKey(
         Location,
-        chained_field="locality",
-        chained_model_field="locality",
-        show_all=False,
-        auto_choose=True,
         null=True,
         blank=True
     )
@@ -901,19 +889,11 @@ class ResultChain(models.Model):
     partnership = models.ForeignKey(PCA, related_name='results')
     code = models.CharField(max_length=50, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
-    result = ChainedForeignKey(
+    result = models.ForeignKey(
         Result,
-        chained_field="result_type",
-        chained_model_field="result_type",
-        show_all=False,
-        auto_choose=False,
     )
-    indicator = ChainedForeignKey(
+    indicator = models.ForeignKey(
         Indicator,
-        chained_field="result",
-        chained_model_field="result",
-        show_all=False,
-        auto_choose=True,
         blank=True, null=True
     )
 
