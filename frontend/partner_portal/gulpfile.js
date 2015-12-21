@@ -37,11 +37,32 @@ var AUTOPREFIXER_BROWSERS = [
   'bb >= 10'
 ];
 
-// replace this with the destination folder for the assets
 var DIST = 'dist';
 
 var dist = function(subpath) {
   return !subpath ? DIST : path.join(DIST, subpath);
+};
+
+var etoolsRoot = '../../EquiTrack';
+var etoolsAssetsPath = path.join(etoolsRoot, 'assets');
+var etoolsImages = path.join(etoolsRoot, 'assets/images');
+var etoolsTemplatesPath = path.join(etoolsRoot, 'templates/frontend');
+
+var etoolsDist = function(subpath) {
+  if (subpath === 'images') {
+    return etoolsImages;
+  } else if (subpath === 'elements') {
+    return path.join(etoolsAssetsPath, 'partner_portal/elements');
+  } else if (subpath === 'index') {
+    return path.join(etoolsTemplatesPath, 'partner_portal');
+  } else if (subpath === 'styles') {
+    return path.join(etoolsAssetsPath, 'partner_portal/styles');
+  } else if (subpath === 'assets') {
+    return etoolsAssetsPath;
+  } else if (subpath === 'templates') {
+    return path.join(etoolsTemplatesPath);
+  }
+  return !subpath ? etoolsAssetsPath : path.join(etoolsAssetsPath, subpath);
 };
 
 var styleTask = function(stylesPath, srcs) {
@@ -71,10 +92,16 @@ var optimizeHtmlTask = function(src, dest) {
     searchPath: ['.tmp', 'app', dist()]
   });
 
+  var replaceImg =  function(imgStr) {
+    return '/static/' + imgStr;
+  };
+
   return gulp.src(src)
     // Replace path for vulcanized assets
     .pipe($.if('*.html', $.replace('elements/elements.html', 
       '/static/partner_portal/elements/elements.vulcanized.html')))
+    // Replace image links
+    .pipe($.if('*.html', $.replace('images/', replaceImg)))
     .pipe(assets)
     // Concatenate and minify JavaScript
     .pipe($.if('*.js', $.uglify({
@@ -325,6 +352,24 @@ gulp.task('deploy-gh-pages', function() {
       silent: true,
       branch: 'gh-pages'
     }), $.ghPages()));
+});
+
+gulp.task('movehtml', function() {
+  var DEST_DIR = dist('templates/frontend/partner_portal');
+
+  return gulp.src('app/*.html')
+    .pipe(gulp.dest(DEST_DIR));
+});
+
+// copy over the distribution files for partner_portal
+gulp.task('etoolsDistFiles', function() {
+  gulp.src('dist/index.html')
+  // .pipe($.rename('index.html'))
+  .pipe(gulp.dest(etoolsDist('index')));
+
+  gulp.src('dist/static/**/*')
+  .pipe(gulp.dest(etoolsDist('assets')));
+
 });
 
 // Load tasks for web-component-tester

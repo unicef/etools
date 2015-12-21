@@ -4,55 +4,44 @@
 {% block extra_head %}
 
 <style>
-    paper-button.fancy {
-      width: 40%;
-        min-width:300px;
-      margin: 0 auto;
-      background: #0099FF;
-      color: #ffffff;
+    a.flex4child {
+      display: block;
+      margin: auto;
+      min-width: 180px;
+      max-width: 30%;
     }
-    .card-content {
-        display: block;
-        margin: 0 auto;
-        text-align: center;
+    paper-card.unicefblue {
+      background-color: #0099ff;
     }
-    .padding{
-        padding: 2%;
+    paper-material.login{
+        background-color: #0099ff;
+        color: #ffffff;
     }
-    paper-card .card-actions {
-        margin-top: 4%;
+    .container{
+      margin-top: 20px;
     }
 
-    paper-card {
-        max-width: 800px;
-        min-width: 410px;
-        width: 90%;
-        margin: 2% auto;
-        display:block;
-        position: relative;
-    }
-</style>
+  </style>
 
 
  {% endblock %}
-
+{% block toolbar %}
+        <paper-toolbar class="medium-tall">
+          <iron-image src="/images/unicefetools.svg" style="width:200px; max-width:80%; height:70%;"  preload sizing="contain"></iron-image>
+          <div class="bottom title">Choose your login</div>
+        </paper-toolbar>
+{% endblock toolbar %}
 
 {% block content %}
-<div class="flex">
+<section id="container" class="layout wrap center-justified horizontal container">
+            <a class="flex4child" href="{% url 'account_login' %}">
+            <paper-card  onmouseover="this.elevation=5" onmouseout="this.elevation=1" image="/images/partners.svg">
+            </paper-card>
+            </a>
 
-<paper-card heading="Partner Portal">
-      <div class="card-content">
-           <a href="{% url 'account_login' %}"><paper-button raised class="fancy">Partner Login</paper-button></a>
-      </div>
-
-</paper-card>
-
-
-<paper-card heading="UNICEF Staff">
-      <div class="card-content">
-           <a href="{% url 'saml2_login' %}"><paper-button raised class="fancy">Staff Login</paper-button></a>
-      </div>
-
-</paper-card>
-</div>
+            <a class="flex4child" href="{% url 'saml2_login' %}">
+            <paper-card animatedShadow="true" onmouseover="this.elevation=5" onmouseout="this.elevation=1" class="flex6child unicefblue" image="/images/staff.svg">
+            </paper-card>
+            </a>
+</section>          
 {% endblock content %}

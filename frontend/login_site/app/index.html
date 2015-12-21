@@ -22,15 +22,15 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <!-- Chrome for Android theme color -->
   <meta name="theme-color" content="#2E3AA1">
 
-  <!-- build:css /static/partner_portal/styles/main.css -->
+  <!-- build:css /static/partner_portal/styles/base_main.css -->
   <link rel="stylesheet" href="styles/main.css">
   <!-- endbuild-->
 
-  <!-- build:js /static/partner_portal/bower_components/webcomponentsjs/webcomponents-lite.min.js -->
+  <!-- build:js /static/partner_portal/bower_components/webcomponentsjs/base_webcomponents-lite.min.js -->
   <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
   <!-- endbuild -->
 
-  <!-- will be replaced with /static/partner_portal/elements/elements.vulcanized.html -->
+  <!-- will be replaced with /static/partner_portal/elements/base_elements.vulcanized.html -->
   <link rel="import" href="elements/elements.html">
   <!-- endreplace-->
 
@@ -38,8 +38,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <!-- For shared styles, shared-styles.html import in elements.html -->
   <style is="custom-style" include="shared-styles"></style>
   
-  <style>
-    a.flex6child {
+
+
+<style>
+    a.flex4child {
       display: block;
       margin: auto;
       min-width: 180px;
@@ -57,11 +59,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     }
 
   </style>
-
-
-  {% block extra_head %}
-    {% endblock %}
-  
 </head>
 
 
@@ -71,45 +68,32 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <template is="dom-bind" id="app">
     <paper-header-panel main class="flex">
         <paper-toolbar class="medium-tall">
-          <iron-image src="images/unicefetools.svg" style="width:200px; max-width:80%; height:70%;"  preload sizing="contain"></iron-image>
+          <iron-image src="/images/unicefetools.svg" style="width:200px; max-width:80%; height:70%;"  preload sizing="contain"></iron-image>
           <div class="bottom title">Choose your login</div>
         </paper-toolbar>
+         
+
         <section id="container" class="layout wrap center-justified horizontal container">
+          <a class="flex4child" href="{% url 'account_login' %}">
+          <paper-card  onmouseover="this.elevation=5" onmouseout="this.elevation=1" image="/images/partners.svg">
+          </paper-card>
+          </a>
 
-            <!--main content start-->
-            <!--  {% block content %} -->
-            <a class="flex6child" href="{% url 'account_login' %}">
-            <paper-card  onmouseover="this.elevation=5" onmouseout="this.elevation=1" image="images/partners.svg">
-            </paper-card>
-            </a>
-            <a class="flex6child" href="{% url 'saml2_login' %}">
-            <paper-card animatedShadow="true" onmouseover="this.elevation=5" onmouseout="this.elevation=1" class="flex6child unicefblue" image="images/staff.svg">
-            </paper-card>
-            </a>
-            <!-- <paper-card class="flexchild">
-                <div class="card-content">
-                     <a href="{% url 'account_login' %}"><paper-button raised class="fancy">Partner Login</paper-button></a>
-                </div>
-            </paper-card>
-            <paper-card class="flexchild" heading="UNICEF Staff">
-                <div class="card-content">
-                     <a href="{% url 'saml2_login' %}"><paper-button raised class="fancy">Staff Login</paper-button></a>
-                </div>
-            </paper-card> -->
+          <a class="flex4child" href="{% url 'saml2_login' %}">
+          <paper-card animatedShadow="true" onmouseover="this.elevation=5" onmouseout="this.elevation=1" class="flex6child unicefblue" image="/images/staff.svg">
+          </paper-card>
+          </a>
+        </section>     
+            
 
-           <!--  {% endblock content %} -->
-            <!--main content end-->
-
-        </section>
+        
     </paper-header-panel>     
   </template>
-    <!-- build:js /static/partner_portal/scripts/app.js -->
-  <script src="scripts/app.js"></script>
+  
   <script>
 
       
   </script>
-  <!-- endbuild-->
 </body>
 
 </html>
