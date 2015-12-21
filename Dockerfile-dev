@@ -5,10 +5,17 @@ RUN apt-get update
 
 RUN mkdir /code
 
-WORKDIR /code
-
 ADD EquiTrack /code/
 
+COPY frontend /frontend/
+
+WORKDIR /frontend/login_site
+
+RUN sh /frontend/login_site/loginsite.sh
+
+
+
+WORKDIR /code
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 

@@ -44,7 +44,7 @@ var dist = function(subpath) {
   return !subpath ? DIST : path.join(DIST, subpath);
 };
 
-var etoolsRoot = '../../EquiTrack';
+var etoolsRoot = '../../code';
 var etoolsAssetsPath = path.join(etoolsRoot, 'assets');
 var etoolsImages = path.join(etoolsRoot, 'assets/images');
 var etoolsTemplatesPath = path.join(etoolsRoot, 'templates/frontend');
@@ -357,8 +357,18 @@ gulp.task('deploy-gh-pages', function() {
     }), $.ghPages()));
 });
 
+gulp.task('buildDist', ['clean'], function(cb) {
+  // Uncomment 'cache-config' if you are going to use service workers.
+  runSequence(
+    ['copy', 'styles'],
+    'elements',
+    ['images', 'fonts', 'html'],
+    'vulcanize', // 'cache-config',
+    cb);
+});
+
 // copy over the distribution files for partner_portal
-gulp.task('etoolsDistFiles', function() {
+gulp.task('frontendBuild', ['buildDist'], function() {
   
   var accountHtmls = gulp.src(['dist/account/*.html'])
     .pipe(gulp.dest(path.join(etoolsTemplatesPath, 'account')));
