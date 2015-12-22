@@ -1,5 +1,5 @@
 FROM robertavram/etoolsreq:latest
-# has py27 nodejs and all requirements (for testing only)
+# has py27 nodejs and all requirements (for deving and testing only)
 
 RUN apt-get update
 
