@@ -361,8 +361,18 @@ gulp.task('movehtml', function() {
     .pipe(gulp.dest(DEST_DIR));
 });
 
+gulp.task('buildDist', ['clean'], function(cb) {
+  // Uncomment 'cache-config' if you are going to use service workers.
+  runSequence(
+    ['copy', 'styles'],
+    'elements',
+    ['images', 'fonts', 'html'],
+    'vulcanize', // 'cache-config',
+    cb);
+});
+
 // copy over the distribution files for partner_portal
-gulp.task('etoolsDistFiles', function() {
+gulp.task('frontendBuild', ['buildDist'], function() {
   gulp.src('dist/index.html')
   // .pipe($.rename('index.html'))
   .pipe(gulp.dest(etoolsDist('index')));
