@@ -5,6 +5,7 @@ from django.contrib.gis import admin
 from import_export import resources
 from import_export.admin import ImportExportMixin
 from leaflet.admin import LeafletGeoAdmin
+from mptt.admin import MPTTModelAdmin
 
 from . import models
 from .forms import CartoDBTableForm
@@ -18,29 +19,38 @@ class LocationResource(resources.ModelResource):
         model = models.Location
 
 
-class LocationAdmin(ImportExportMixin, LeafletGeoAdmin):
+class LocationAdmin(ImportExportMixin, LeafletGeoAdmin, MPTTModelAdmin):
+    save_as = True
     form = AutoSizeTextForm
     resource_class = LocationResource
-    fields = (
+    fields = [
         'name',
         'gateway',
         'p_code',
+        'geom',
         'point',
-        'point_lat_long',
-        'locality',
-    )
+    ]
     list_display = (
         'name',
         'gateway',
         'p_code',
-        'locality',
     )
-    readonly_fields = (
-        'point',
-        'point_lat_long',
+    list_filter = (
+        'gateway',
+        'parent',
     )
     search_fields = ('name', 'p_code',)
-    list_filter = ('gateway', 'locality',)
+
+    # def get_fields(self, request, obj=None):
+    #
+    #     fields = super(LocationAdmin, self).get_fields(request, obj)
+    #     if obj:
+    #         if obj.point:
+    #             fields.append('point')
+    #         if obj.geom:
+    #             fields.append('geom')
+    #
+    #     return fields
 
 
 class GovernorateAdmin(LeafletGeoAdmin):
@@ -93,9 +103,9 @@ class CartoDBTableAdmin(admin.ModelAdmin):
         for table in queryset:
             update_sites_from_cartodb.delay(table)
 
-admin.site.register(models.Governorate, GovernorateAdmin)
-admin.site.register(models.Region, RegionAdmin)
-admin.site.register(models.Locality, LocalityAdmin)
+# admin.site.register(models.Governorate, GovernorateAdmin)
+# admin.site.register(models.Region, RegionAdmin)
+# admin.site.register(models.Locality, LocalityAdmin)
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.GatewayType)
 admin.site.register(models.CartoDBTable, CartoDBTableAdmin)
