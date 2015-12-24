@@ -3,31 +3,42 @@ __author__ = 'unicef-leb-inn'
 from tenant_schemas.test.cases import TenantTestCase
 from tenant_schemas.test.client import TenantClient
 from rest_framework.test import APIRequestFactory, force_authenticate
+from rest_framework import status
 
 from EquiTrack.factories import TripFactory, UserFactory
 from trips.views import TripsApprovedView, TripsListApi, TripsByOfficeView, TripActionView
 
+from trips.mixins import APITenantTestCase
 
-class ViewTest(TenantTestCase):
+class ViewTest(APITenantTestCase):
 
     def setUp(self):
-        self.client = TenantClient(self.tenant)
         self.trip = TripFactory(
             owner__first_name='Fred',
             owner__last_name='Test',
             purpose_of_travel='To test some trips'
         )
+        self.user = UserFactory()
 
+    # def test_view_trips_approved(self):
+    #     factory = APIRequestFactory()
+    #     user = UserFactory()
+    #     view = TripsApprovedView.as_view()
+    #     # Make an authenticated request to the view...
+    #     request = factory.get('/approved/')
+    #     force_authenticate(request, user=user)
+    #     response = view(request)
+    #     response.render()
+    #     self.assertEquals(response.status_code, 200)
     def test_view_trips_approved(self):
-        factory = APIRequestFactory()
-        user = UserFactory()
+
+        self.client.force_authenticate(self.user)
         view = TripsApprovedView.as_view()
-        # Make an authenticated request to the view...
-        request = factory.get('/approved/')
-        force_authenticate(request, user=user)
+        request = self.client.get('/approved/')
+
         response = view(request)
-        response.render()
-        self.assertEquals(response.status_code, 200)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_view_trips_api(self):
         factory = APIRequestFactory()
