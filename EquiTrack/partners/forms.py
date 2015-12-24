@@ -8,6 +8,7 @@ from django.utils.translation import ugettext as _
 from django import forms
 from django.contrib import messages
 from django.db.models import Q
+from django.core.validators import validate_email
 
 from autocomplete_light import forms as auto_forms
 from django.core.exceptions import (
@@ -179,9 +180,8 @@ class PartnerStaffMemberForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super(PartnerStaffMemberForm, self).clean()
-        email = cleaned_data.get('email')
-        # TODO: have an email validation here.
-
+        email = cleaned_data.get('email', "")
+        validate_email(email)
         if not self.instance.id:
             try:
                 existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
