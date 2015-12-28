@@ -9,11 +9,6 @@ User = get_user_model()
 
 
 class ProfileForm(forms.ModelForm):
-    country = forms.ModelChoiceField(
-        Country.objects.all(),
-        empty_label='Country',
-        widget=forms.Select(attrs={'class': 'form-control input-sm'})
-    )
     section = forms.ModelChoiceField(
         Section.objects.all(),
         empty_label='Section',

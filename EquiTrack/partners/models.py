@@ -171,7 +171,7 @@ class PartnerStaffMember(models.Model):
     title = models.CharField(max_length=64L)
     first_name = models.CharField(max_length=64L)
     last_name = models.CharField(max_length=64L)
-    email = models.CharField(max_length=128L, unique=True)
+    email = models.CharField(max_length=128L, unique=True, blank=False)
     phone = models.CharField(max_length=64L, blank=True)
 
 
