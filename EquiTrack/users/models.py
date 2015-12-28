@@ -14,6 +14,8 @@ from tenant_schemas.models import TenantMixin
 User.__unicode__ = lambda user: user.get_full_name()
 User._meta.ordering = ['first_name']
 
+logger = logging.getLogger('users')
+
 
 class Country(TenantMixin):
     name = models.CharField(max_length=100)
@@ -84,23 +86,23 @@ class UserProfile(models.Model):
                 g = Group.objects.get(name='UNICEF User')
                 g.user_set.add(sender)
             except Group.DoesNotExist:
-                #raise Exception('UNICEF User group does not exist')
-                # since exceptions are not raised from inside signals, do nothing
-                pass
+                logger.error('Can not find main group UNICEF User')
+
             sender.is_staff = True
             sender.save()
             mods_made = True
 
-        adfs_country = attributes.get("countryName")
         new_country = None
+        adfs_country = attributes.get("countryName")
         if sender.profile.country_override:
             new_country = sender.profile.country_override
         elif adfs_country:
             try:
                 new_country = Country.objects.get(name=adfs_country[0])
             except Country.DoesNotExist:
-                logging.error("country: {} from ADFS does not match any countries".format(adfs_country[0]))
+                logger.error("country: {} from ADFS does not match any countries".format(adfs_country[0]))
                 return False
+
         if new_country and new_country != sender.profile.country:
             sender.profile.country = new_country
             sender.profile.save()
@@ -109,37 +111,41 @@ class UserProfile(models.Model):
         return mods_made
 
 
-
 post_save.connect(UserProfile.create_user_profile, sender=User)
 
 
-def create_user(sender, instance, created, **kwargs):
+def create_partner_user(sender, instance, created, **kwargs):
+    """
+    Create a user based on the email address of a partner staff member
+
+    :param sender: PartnerStaffMember class
+    :param instance: PartnerStaffMember instance
+    :param created: if the instance is newly created or not
+    :param kwargs:
+    """
     if created:
-        user, ucreated = User.objects.get_or_create(username=instance.email)
-
-        # there should be a check before PartnerStaffMember is saved to insure that no users
-        # with that email address are present in the user model
-        if not ucreated and user.profile.partner_staff_member:
-            instance.delete()
-            raise Exception("Something unexpected happened.")
-
+        
+        user, user_created = User.objects.get_or_create(username=instance.email)
+        if not user_created:
+            logger.info('User already exists for a partner staff member: {}'.format(instance.email))
+            # TODO: check for user not being already associated with another partnership (can be done on the form)
+        
         # TODO: here we have a decision.. either we update the user with the info just received from
         # TODO: or we update the instance with the user we already have. this might have implications on login.
         with transaction.atomic():
             try:
                 country = Country.objects.get(schema_name=connection.schema_name)
+                user.profile.country = country
             except Country.DoesNotExist:
-                raise Exception("no country set")
-            user.email = instance.email
+                logger.error("Couldn't get the current country schema for user: {}".format(user.username))
 
+            user.email = instance.email
             user.first_name = instance.first_name
             user.last_name = instance.last_name
             user.is_active = True
             user.save()
-            user.profile.country = country
             user.profile.partner_staff_member = instance.id
             user.profile.save()
-
 
 
 def delete_partner_relationship(sender, instance, **kwargs):
@@ -154,6 +160,6 @@ def delete_partner_relationship(sender, instance, **kwargs):
         pass
 
 pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
-post_save.connect(create_user, sender='partners.PartnerStaffMember')
+post_save.connect(create_partner_user, sender='partners.PartnerStaffMember')
 
 pre_user_save.connect(UserProfile.custom_update_user)
