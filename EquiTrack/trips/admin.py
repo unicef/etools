@@ -24,6 +24,7 @@ from .models import (
 )
 from .forms import (
     TripForm,
+    TripFundsForm,
     TravelRoutesForm,
     RequireOneLocationFormSet
 )
@@ -43,6 +44,7 @@ class TravelRoutesInlineAdmin(admin.TabularInline):
 
 class TripFundsInlineAdmin(admin.TabularInline):
     model = TripFunds
+    formset = TripFundsForm
     suit_classes = u'suit-tab suit-tab-planning'
     extra = 3
     max_num = 3
