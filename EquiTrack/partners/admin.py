@@ -60,20 +60,22 @@ from .forms import (
     DistributionPlanForm,
     DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
-    PartnerStaffMemberForm
+    PartnerStaffMemberForm,
+    LocationForm
 )
 
 
 class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+    form = LocationForm
     model = GwPCALocation
     verbose_name = 'Location'
     verbose_name_plural = 'Locations'
     suit_classes = u'suit-tab suit-tab-locations'
     fields = (
         'sector',
-        'governorate',
-        'region',
-        'locality',
+        # 'governorate',
+        # 'region',
+        # 'locality',
         'location',
         'tpm_visit',
     )
