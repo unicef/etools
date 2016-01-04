@@ -9,33 +9,37 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 -->
 <link rel="import" href="../../bower_components/polymer/polymer.html">
 
-<dom-module id="my-greeting">
+<dom-module id="options-list">
   <template>
-    <style include="shared-styles"></style>
     <style>
       :host {
         display: block;
       }
     </style>
-    <h2 class="page-title"><span>{{greeting}}</span></h2>
-    <span class="paper-font-body2">Update text to change the greeting.</span>
-    <!-- Listens for "input" event and sets greeting to <input>.value -->
-    <input class="paper-font-body2" value="{{greeting::input}}">
+    <ul>
+      <template is="dom-repeat" items="{{items}}">
+        <li><span class="paper-font-body1">{{item}}</span></li>
+      </template>
+    </ul>
   </template>
 
   <script>
-    (function() {
+  (function() {
       'use strict';
-      
-      Polymer({
-        is: 'my-greeting',
 
+      Polymer({
+        is: 'options-list',
         properties: {
-          greeting: {
-            type: String,
-            value: 'Welcome!',
-            notify: true
+          items: {
+            type: Array,
+            notify: true,
           }
+        },
+        ready: function() {
+          this.items = [
+            'Viewing your information!',
+            'More to come...'
+          ];
         }
       });
     })();
