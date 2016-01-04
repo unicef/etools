@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.db import models
+from django.db import models, connection
 from django.forms import Textarea
 
 from reversion import VersionAdmin
@@ -346,7 +346,10 @@ class TripReportAdmin(CountryStaffUsersAdminMixin, ExportMixin, VersionAdmin):
 
         if db_field.name == u'representative':
             rep_group = Group.objects.get(name=u'Representative Office')
-            kwargs['queryset'] = rep_group.user_set.all()
+            kwargs['queryset'] = rep_group.user_set.filter(profile__country=connection.tenant)
+            return super(CountryStaffUsersAdminMixin, self).formfield_for_foreignkey(
+                db_field, request, **kwargs
+            )
 
         if db_field.name == u'driver':
             rep_group = Group.objects.get(name=u'Driver')
