@@ -43,7 +43,7 @@ var dist = function(subpath) {
   return !subpath ? DIST : path.join(DIST, subpath);
 };
 
-var etoolsRoot = '../../code';
+var etoolsRoot = '../code';
 var etoolsAssetsPath = path.join(etoolsRoot, 'assets');
 var etoolsImages = path.join(etoolsRoot, 'assets/images');
 var etoolsTemplatesPath = path.join(etoolsRoot, 'templates/frontend');
