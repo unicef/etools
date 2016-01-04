@@ -1,66 +1,38 @@
 
-import django
 from django.core.management import call_command
 from django.db import connection
 
-from django.test import RequestFactory, Client
+from django.test import TestCase
 
-from rest_framework.test import APIRequestFactory, APIClient, APITestCase
+from rest_framework.test import APIRequestFactory, APIClient, force_authenticate
 
 from tenant_schemas.utils import get_tenant_model
 from tenant_schemas.utils import get_public_schema_name
 
 
-class TenantRequestFactoryMixin(object):
-
-    def __init__(self, **defaults):
-        super(TenantRequestFactoryMixin, self).__init__(**defaults)
-        # we will deduct the tenant from the db backend, which will be
-        # initialized by the test case class setup method, before the factory
-        # initialization
-        self.tenant = connection.tenant
-
-    def get(self, path, data={}, **extra):
-        if 'HTTP_HOST' not in extra:
-            extra['HTTP_HOST'] = self.tenant.domain_url
-
-        return super(TenantRequestFactoryMixin, self).get(path, data, **extra)
-
-    def post(self, path, data={}, **extra):
-        if 'HTTP_HOST' not in extra:
-            extra['HTTP_HOST'] = self.tenant.domain_url
-
-        return super(TenantRequestFactoryMixin, self).post(path, data, **extra)
-
-    def patch(self, path, data={}, **extra):
-        if 'HTTP_HOST' not in extra:
-            extra['HTTP_HOST'] = self.tenant.domain_url
-
-        return super(TenantRequestFactoryMixin, self).patch(path, data, **extra)
-
-    def put(self, path, data={}, **extra):
-        if 'HTTP_HOST' not in extra:
-            extra['HTTP_HOST'] = self.tenant.domain_url
-
-        return super(TenantRequestFactoryMixin, self).put(path, data, **extra)
-
-    def delete(self, path, data='', content_type='application/octet-stream',
-               **extra):
-        if 'HTTP_HOST' not in extra:
-            extra['HTTP_HOST'] = self.tenant.domain_url
-
-        return super(TenantRequestFactoryMixin, self).delete(path, data, **extra)
 
 
-class TenantTestCaseMixin(object):
+class APITenantTestCase(TestCase):
+    client_class = APIClient
+
+    def forced_auth_req(self, method, url, handler, user=None, data={}):
+        factory = self.factory()
+        view = handler.as_view()
+        req_to_call = getattr(factory, method)
+        request = req_to_call(url, data)
+        user = user if user else self.user
+        force_authenticate(request, user=user)
+        return view(request)
+
     @classmethod
     def setUpClass(cls):
+        cls.factory = APIRequestFactory
         cls.sync_shared()
         tenant_domain = 'tenant.test.com'
-        cls.tenant = get_tenant_model()(domain_url=tenant_domain, schema_name='test')
+        cls.tenant = get_tenant_model()(domain_url=tenant_domain, schema_name='test', name="Test Country")
         cls.tenant.save(verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
-
         connection.set_tenant(cls.tenant)
+
 
     @classmethod
     def tearDownClass(cls):
@@ -72,37 +44,7 @@ class TenantTestCaseMixin(object):
 
     @classmethod
     def sync_shared(cls):
-        if django.VERSION >= (1, 7, 0):
-            call_command('migrate_schemas',
-                         schema_name=get_public_schema_name(),
-                         interactive=False,
-                         verbosity=0)
-        else:
-            call_command('sync_schemas',
-                         schema_name=get_public_schema_name(),
-                         tenant=False,
-                         public=True,
-                         interactive=False,
-                         migrate_all=True,
-                         verbosity=0,
-                         )
-
-
-class TenantRequestFactory(TenantRequestFactoryMixin, RequestFactory):
-    pass
-
-
-class TenantClient(TenantRequestFactoryMixin, Client):
-    pass
-
-
-class APITenantRequestFactory(TenantRequestFactoryMixin, APIRequestFactory):
-    pass
-
-
-class APITenantClient(TenantRequestFactoryMixin, APIClient):
-    pass
-
-
-class APITenantTestCase(TenantTestCaseMixin, APITestCase):
-    client_class = APITenantClient
+        call_command('migrate_schemas',
+                     schema_name=get_public_schema_name(),
+                     interactive=False,
+                     verbosity=0)

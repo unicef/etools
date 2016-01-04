@@ -76,7 +76,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
         connection.set_schema_to_public()
 
         if any(x in request.path for x in [
-            u'api',
+            u'etrips.plist',
             u'login',
             u'saml',
             u'accounts',
