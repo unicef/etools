@@ -22,13 +22,9 @@ RUN pip install -r requirements/production.txt
 
 COPY frontend /frontend/
 
-WORKDIR /frontend/login_site/
+WORKDIR /frontend/
 
-RUN sh /frontend/login_site/loginsite.sh
-
-WORKDIR /frontend/partner_portal/
-
-RUN sh /frontend/partner_portal/partnerportal.sh
+RUN sh /frontend/partnerportal.sh
 
 WORKDIR /code
 
