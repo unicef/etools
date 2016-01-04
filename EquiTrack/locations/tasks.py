@@ -40,7 +40,7 @@ def update_sites_from_cartodb(carto_table):
                 try:
                     parent = carto_table.parent.__class__
                     parent_code = row[carto_table.parent_code_col]
-                    parent_instance = parent.objects.get(p_code=parent_code)
+                    parent_instance = Location.objects.get(p_code=parent_code)
                 except (parent.DoesNotExist, parent.MultipleObjectsReturned) as exp:
                     msg = "{} locations found for parent code: {}".format(
                         'Multiple' if exp is parent.MultipleObjectsReturned else 'No',

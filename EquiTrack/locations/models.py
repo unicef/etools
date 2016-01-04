@@ -104,7 +104,7 @@ class Locality(models.Model):
 class Location(MPTTModel):
 
     name = models.CharField(max_length=254L)
-    locality = models.ForeignKey(Locality)
+    locality = models.ForeignKey(Locality, null=True, blank=True)
     gateway = models.ForeignKey(GatewayType, verbose_name='Location Type')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
