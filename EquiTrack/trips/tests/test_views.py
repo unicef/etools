@@ -11,7 +11,7 @@ from trips.views import (
     TripsByOfficeView,
     TripActionView
 )
-from trips.mixins import APITenantTestCase
+from EquiTrack.tests.mixins import APITenantTestCase
 from trips.models import Trip
 
 

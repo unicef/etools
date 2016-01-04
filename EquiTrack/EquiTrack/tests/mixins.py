@@ -1,4 +1,3 @@
-
 from django.core.management import call_command
 from django.db import connection
 
@@ -8,8 +7,6 @@ from rest_framework.test import APIRequestFactory, APIClient, force_authenticate
 
 from tenant_schemas.utils import get_tenant_model
 from tenant_schemas.utils import get_public_schema_name
-
-
 
 
 class APITenantTestCase(TestCase):
