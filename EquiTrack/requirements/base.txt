@@ -35,7 +35,6 @@ django-post_office==2.0.3
 django-cors-headers==1.1.0
 django-mathfilters==0.3.0
 django-tenant-schemas==1.5.7
-djangosaml2==0.13.0
 django-allauth==0.24.1
 tenant-schemas-celery==0.1.5
 azure-storage==0.20.2
@@ -46,6 +45,7 @@ coverage==4.0
 factory_boy==2.5.2
 django-debug-toolbar==1.3.2
 
+git+https://github.com/robertavram/djangosaml2.git#egg=djangosaml2
 git+https://github.com/robertavram/django-storages.git#egg=django-storages
 git+https://github.com/jamescw/django-paintstore.git
 git+https://github.com/UNICEFLebanonInnovation/ActvityInfoPython.git

@@ -156,6 +156,7 @@ SAML_CONFIG = {
     },
     'valid_for': 24,  # how long is our metadata valid
 }
+SAML_SIGNED_LOGOUT = True
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 ########## JWT AUTH CONFIGURATION
