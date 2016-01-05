@@ -94,7 +94,9 @@ class EToolsTenantMiddleware(TenantMiddleware):
         # the tenant metadata is stored.
         connection.set_schema_to_public()
 
-        if any(x in request.path for x in [
+        if not request.user.is_anonymous() and u'api' in request.path:
+            pass
+        elif any(x in request.path for x in [
             u'api',
             u'login',
             u'saml',
@@ -103,7 +105,8 @@ class EToolsTenantMiddleware(TenantMiddleware):
             return None
         elif request.user.is_anonymous():
             return HttpResponseRedirect(settings.LOGIN_URL)
-        elif request.user.is_superuser and not request.user.profile.country:
+
+        if request.user.is_superuser and not request.user.profile.country:
             return None
 
         try:
