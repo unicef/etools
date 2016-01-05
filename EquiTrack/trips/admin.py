@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.db import models
+from django.db import models, connection
 from django.forms import Textarea
 
 from reversion import VersionAdmin
@@ -12,7 +12,7 @@ from generic_links.admin import GenericLinkStackedInline
 from users.models import UserProfile
 
 from EquiTrack.utils import get_changeform_link
-from EquiTrack.mixins import CountryUsersAdminMixin
+from EquiTrack.mixins import CountryStaffUsersAdminMixin
 from EquiTrack.forms import AutoSizeTextForm
 from .models import (
     Trip,
@@ -24,10 +24,16 @@ from .models import (
 )
 from .forms import (
     TripForm,
+    TripFundsForm,
     TravelRoutesForm,
     RequireOneLocationFormSet
 )
-from .filters import TripReportFilter, PartnerFilter
+from .filters import (
+    TripReportFilter,
+    PartnerFilter,
+    SupervisorFilter,
+    OwnerFilter
+)
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -43,6 +49,7 @@ class TravelRoutesInlineAdmin(admin.TabularInline):
 
 class TripFundsInlineAdmin(admin.TabularInline):
     model = TripFunds
+    formset = TripFundsForm
     suit_classes = u'suit-tab suit-tab-planning'
     extra = 3
     max_num = 3
@@ -87,7 +94,7 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
-class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
+class TripReportAdmin(CountryStaffUsersAdminMixin, ExportMixin, VersionAdmin):
     resource_class = TripResource
     save_as = True
     form = TripForm
@@ -124,14 +131,14 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'show_driver_trip',
     )
     list_filter = (
-        u'owner',
+        OwnerFilter,
+        SupervisorFilter,
         u'section',
         u'office',
         u'from_date',
         u'to_date',
         u'travel_type',
         u'international_travel',
-        u'supervisor',
         u'budget_owner',
         u'status',
         u'approved_date',
@@ -341,7 +348,10 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
 
         if db_field.name == u'representative':
             rep_group = Group.objects.get(name=u'Representative Office')
-            kwargs['queryset'] = rep_group.user_set.all()
+            kwargs['queryset'] = rep_group.user_set.filter(profile__country=connection.tenant)
+            return super(CountryStaffUsersAdminMixin, self).formfield_for_foreignkey(
+                db_field, request, **kwargs
+            )
 
         if db_field.name == u'driver':
             rep_group = Group.objects.get(name=u'Driver')
