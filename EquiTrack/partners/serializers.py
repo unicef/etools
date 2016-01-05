@@ -5,7 +5,7 @@ import json
 from rest_framework import serializers
 
 from locations.models import Location
-from .models import GwPCALocation, PCA, PCASector, IndicatorProgress
+from .models import GwPCALocation, PCA, PCASector, IndicatorProgress, PartnerStaffMember
 
 
 class IndicatorProgressSerializer(serializers.ModelSerializer):
@@ -93,6 +93,13 @@ class GWLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = GwPCALocation
 
+
+class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        # fields = (
+        # )
 
 class RapidProRequest(serializers.Serializer):
 
