@@ -181,6 +181,16 @@ class RequireOneLocationFormSet(BaseInlineFormSet):
             raise ValidationError('At least one Trip location is required. (governorate and region)')
 
 
+class TripFundsForm(BaseInlineFormSet):
+    def clean(self):
+        if any(self.errors):
+            return
+
+        total = sum([f.cleaned_data.get('amount') for f in self.forms if f.cleaned_data])
+        if total != 100:
+            raise ValidationError('The total funds for the trip needs to equal to 100%')
+
+
 class TripFilterByDateForm(Form):
 
     depart = fields.DateField(

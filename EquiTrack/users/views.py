@@ -50,7 +50,8 @@ class UsersView(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return self.model.objects.filter(
-            country=user.profile.country
+            country=user.profile.country,
+            user__is_staff=True
         ).order_by('user__first_name')
 
 

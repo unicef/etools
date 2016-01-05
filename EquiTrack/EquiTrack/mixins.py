@@ -66,6 +66,25 @@ class CountryUsersAdminMixin(object):
         return super(CountryUsersAdminMixin, self).formfield_for_manytomany(db_field, request, **kwargs)
 
 
+class CountryStaffUsersAdminMixin(object):
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+
+        if db_field.rel.to is User:
+            if connection.tenant:
+                kwargs["queryset"] = User.objects.filter(profile__country=connection.tenant,
+                                                         is_staff=True)
+        return super(CountryStaffUsersAdminMixin, self).formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+
+        if db_field.rel.to is User:
+            if connection.tenant:
+                kwargs["queryset"] = User.objects.filter(profile__country=connection.tenant,
+                                                         is_staff=True)
+        return super(CountryStaffUsersAdminMixin, self).formfield_for_manytomany(db_field, request, **kwargs)
+
+
 class EToolsTenantMiddleware(TenantMiddleware):
     """
     Routes user to their correct schema based on country
