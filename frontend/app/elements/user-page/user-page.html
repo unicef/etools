@@ -1,0 +1,123 @@
+
+
+<link rel="import" href="../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+
+<!--
+An element providing a solution to no problem in particular.
+
+Example:
+
+    <my-customel></my-customel>
+
+@group Seed Elements
+@element my-customel
+@demo demo/index.html
+@hero hero.svg
+-->
+<dom-module id="user-page">
+
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <div> This is your current information: </div>
+    <content></content>
+    
+    <iron-ajax
+          auto
+          id="ajax"
+          url="[[url]]"
+          handle-as="json"
+          on-response="handleResponse"
+          #last-response="{{user}}"
+          debounce-duration="300">
+    </iron-ajax>
+
+   <template is="dom-if" if='{{checkMe(user)}}'>
+       <br>
+       <div>
+            <iron-icon icon="mail"></iron-icon>
+            <span> {{user.email}}</span>
+       </div>
+       <br>
+       <div>
+            <iron-icon icon="language"></iron-icon>
+            <span> {{user.profile.country_name}}</span>
+       </div>
+    </div>
+   </template>
+   
+        
+        
+    </template>
+
+
+
+  </template>
+
+</dom-module>
+
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'user-page',
+    properties: {
+      user: {
+        type: Object,
+        notify: true,
+        value: function() {
+          return {
+              'id': null,
+              'profile': {'office': null,
+                          'section': null,
+                          'country_name': 'UAT',
+                          'partner_staff_member': 29,
+                          'job_title': null,
+                          'phone_number': null,
+                          'installation_id': null,
+                          'country': 1,
+                          'country_override': null},
+                'last_login': '2015-12 04T19:24:08.714193Z', 
+                'is_superuser': false, 
+                'username': 'email@example.com', 
+                'first_name': 'No User Logedin',
+                'last_name': '',
+                'email': 'email@example.com',
+                'is_staff': false,
+                'is_active': true,
+                'date_joined': '2015-12-03T16:17:01Z'
+          };
+        }
+      },
+      siteinfo: {
+        type: Object,
+        value: function() {return{'userInfoEp':'http://localhost:8099/users/api'};}
+      },
+      url: {
+        computed: 'computeUrl(siteinfo)'
+      }
+    },
+    computeUrl: function(siteinfo) {
+        return siteinfo.userInfoEp;
+    },
+    handleResponse: function(rsp) {
+      // console.log(rsp.detail.xhr.response, rsp.detail, rsp.response)
+      // console.log(rsp);
+      this.user = rsp.detail.xhr.response;
+    },
+    checkMe: function(user) {
+        return user.id;
+        //return user.first_name !== 'Some Name';
+    }
+    
+  });
+})();
+
+</script>

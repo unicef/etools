@@ -1,13 +1,5 @@
 <html><head><meta charset="UTF-8"><!--
 @license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE
-The complete set of authors may be found at http://polymer.github.io/AUTHORS
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS
---><!--
-@license
 Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
@@ -9415,8 +9407,6 @@ this.fire('dom-change');
 
 
 
-
-
 <script>
 
   Polymer({
@@ -10175,7 +10165,7 @@ this.fire('dom-change');
 
       // Ignore the event if this is coming from a focused light child, since that
       // element will deal with it.
-      if (this.isLightDescendant(target))
+      if (this.isLightDescendant(/** @type {Node} */(target)))
         return;
 
       keyboardEvent.preventDefault();
@@ -10192,7 +10182,7 @@ this.fire('dom-change');
 
       // Ignore the event if this is coming from a focused light child, since that
       // element will deal with it.
-      if (this.isLightDescendant(target))
+      if (this.isLightDescendant(/** @type {Node} */(target)))
         return;
 
       if (this.pressed) {
@@ -10905,6 +10895,10 @@ this.fire('dom-change');
 
 
 
+
+
+
+
 <script>
 
   /**
@@ -11212,12 +11206,1344 @@ this.fire('dom-change');
 </script>
 
 
+<script>
+  /**
+  Polymer.IronFormElementBehavior enables a custom element to be included
+  in an `iron-form`.
 
+  @demo demo/index.html
+  @polymerBehavior
+  */
+  Polymer.IronFormElementBehavior = {
 
+    properties: {
+      /**
+       * Fired when the element is added to an `iron-form`.
+       *
+       * @event iron-form-element-register
+       */
 
+      /**
+       * Fired when the element is removed from an `iron-form`.
+       *
+       * @event iron-form-element-unregister
+       */
 
+      /**
+       * The name of this element.
+       */
+      name: {
+        type: String
+      },
+
+      /**
+       * The value for this element.
+       */
+      value: {
+        notify: true,
+        type: String
+      },
+
+      /**
+       * Set to true to mark the input as required. If used in a form, a
+       * custom element that uses this behavior should also use
+       * Polymer.IronValidatableBehavior and define a custom validation method.
+       * Otherwise, a `required` element will always be considered valid.
+       * It's also strongly recommended to provide a visual style for the element
+       * when its value is invalid.
+       */
+      required: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * The form that the element is registered to.
+       */
+      _parentForm: {
+        type: Object
+      }
+    },
+
+    attached: function() {
+      // Note: the iron-form that this element belongs to will set this
+      // element's _parentForm property when handling this event.
+      this.fire('iron-form-element-register');
+    },
+
+    detached: function() {
+      if (this._parentForm) {
+        this._parentForm.fire('iron-form-element-unregister', {target: this});
+      }
+    }
+
+  };
+
+</script>
+<script>
+
+  /**
+   * `Use Polymer.IronValidatableBehavior` to implement an element that validates user input.
+   * Use the related `Polymer.IronValidatorBehavior` to add custom validation logic to an iron-input.
+   *
+   * By default, an `<iron-form>` element validates its fields when the user presses the submit button.
+   * To validate a form imperatively, call the form's `validate()` method, which in turn will
+   * call `validate()` on all its children. By using `Polymer.IronValidatableBehavior`, your
+   * custom element will get a public `validate()`, which
+   * will return the validity of the element, and a corresponding `invalid` attribute,
+   * which can be used for styling.
+   *
+   * To implement the custom validation logic of your element, you must override
+   * the protected `_getValidity()` method of this behaviour, rather than `validate()`.
+   * See [this](https://github.com/PolymerElements/iron-form/blob/master/demo/simple-element.html)
+   * for an example.
+   *
+   * ### Accessibility
+   *
+   * Changing the `invalid` property, either manually or by calling `validate()` will update the
+   * `aria-invalid` attribute.
+   *
+   * @demo demo/index.html
+   * @polymerBehavior
+   */
+  Polymer.IronValidatableBehavior = {
+
+    properties: {
+
+      /**
+       * Namespace for this validator.
+       */
+      validatorType: {
+        type: String,
+        value: 'validator'
+      },
+
+      /**
+       * Name of the validator to use.
+       */
+      validator: {
+        type: String
+      },
+
+      /**
+       * True if the last call to `validate` is invalid.
+       */
+      invalid: {
+        notify: true,
+        reflectToAttribute: true,
+        type: Boolean,
+        value: false
+      },
+
+      _validatorMeta: {
+        type: Object
+      }
+
+    },
+
+    observers: [
+      '_invalidChanged(invalid)'
+    ],
+
+    get _validator() {
+      return this._validatorMeta && this._validatorMeta.byKey(this.validator);
+    },
+
+    ready: function() {
+      this._validatorMeta = new Polymer.IronMeta({type: this.validatorType});
+    },
+
+    _invalidChanged: function() {
+      if (this.invalid) {
+        this.setAttribute('aria-invalid', 'true');
+      } else {
+        this.removeAttribute('aria-invalid');
+      }
+    },
+
+    /**
+     * @return {boolean} True if the validator `validator` exists.
+     */
+    hasValidator: function() {
+      return this._validator != null;
+    },
+
+    /**
+     * Returns true if the `value` is valid, and updates `invalid`. If you want
+     * your element to have custom validation logic, do not override this method;
+     * override `_getValidity(value)` instead.
+
+     * @param {Object} value The value to be validated. By default, it is passed
+     * to the validator's `validate()` function, if a validator is set.
+     * @return {boolean} True if `value` is valid.
+     */
+    validate: function(value) {
+      this.invalid = !this._getValidity(value);
+      return !this.invalid;
+    },
+
+    /**
+     * Returns true if `value` is valid.  By default, it is passed
+     * to the validator's `validate()` function, if a validator is set. You
+     * should override this method if you want to implement custom validity
+     * logic for your element.
+     *
+     * @param {Object} value The value to be validated.
+     * @return {boolean} True if `value` is valid.
+     */
+
+    _getValidity: function(value) {
+      if (this.hasValidator()) {
+        return this._validator.validate(value);
+      }
+      return true;
+    }
+  };
+
+</script>
+<script>
+
+/*
+`<iron-input>` adds two-way binding and custom validators using `Polymer.IronValidatorBehavior`
+to `<input>`.
+
+### Two-way binding
+
+By default you can only get notified of changes to an `input`'s `value` due to user input:
+
+    <input value="{{myValue::input}}">
+
+`iron-input` adds the `bind-value` property that mirrors the `value` property, and can be used
+for two-way data binding. `bind-value` will notify if it is changed either by user input or by script.
+
+    <input is="iron-input" bind-value="{{myValue}}">
+
+### Custom validators
+
+You can use custom validators that implement `Polymer.IronValidatorBehavior` with `<iron-input>`.
+
+    <input is="iron-input" validator="my-custom-validator">
+
+### Stopping invalid input
+
+It may be desirable to only allow users to enter certain characters. You can use the
+`prevent-invalid-input` and `allowed-pattern` attributes together to accomplish this. This feature
+is separate from validation, and `allowed-pattern` does not affect how the input is validated.
+
+    <!-- only allow characters that match [0-9] -->
+    <input is="iron-input" prevent-invalid-input allowed-pattern="[0-9]">
+
+@hero hero.svg
+@demo demo/index.html
+*/
+
+  Polymer({
+
+    is: 'iron-input',
+
+    extends: 'input',
+
+    behaviors: [
+      Polymer.IronValidatableBehavior
+    ],
+
+    properties: {
+
+      /**
+       * Use this property instead of `value` for two-way data binding.
+       */
+      bindValue: {
+        observer: '_bindValueChanged',
+        type: String
+      },
+
+      /**
+       * Set to true to prevent the user from entering invalid input. The new input characters are
+       * matched with `allowedPattern` if it is set, otherwise it will use the `pattern` attribute if
+       * set, or the `type` attribute (only supported for `type=number`).
+       */
+      preventInvalidInput: {
+        type: Boolean
+      },
+
+      /**
+       * Regular expression to match valid input characters.
+       */
+      allowedPattern: {
+        type: String,
+        observer: "_allowedPatternChanged"
+      },
+
+      _previousValidInput: {
+        type: String,
+        value: ''
+      },
+
+      _patternAlreadyChecked: {
+        type: Boolean,
+        value: false
+      }
+
+    },
+
+    listeners: {
+      'input': '_onInput',
+      'keypress': '_onKeypress'
+    },
+
+    get _patternRegExp() {
+      var pattern;
+      if (this.allowedPattern) {
+        pattern = new RegExp(this.allowedPattern);
+      } else if (this.pattern) {
+        pattern = new RegExp(this.pattern);
+      } else {
+        switch (this.type) {
+          case 'number':
+            pattern = /[0-9.,e-]/;
+            break;
+        }
+      }
+      return pattern;
+    },
+
+    ready: function() {
+      this.bindValue = this.value;
+    },
+
+    /**
+     * @suppress {checkTypes}
+     */
+    _bindValueChanged: function() {
+      if (this.value !== this.bindValue) {
+        this.value = !(this.bindValue || this.bindValue === 0) ? '' : this.bindValue;
+      }
+      // manually notify because we don't want to notify until after setting value
+      this.fire('bind-value-changed', {value: this.bindValue});
+    },
+
+    _allowedPatternChanged: function() {
+      // Force to prevent invalid input when an `allowed-pattern` is set
+      this.preventInvalidInput = this.allowedPattern ? true : false;
+    },
+
+    _onInput: function() {
+      // Need to validate each of the characters pasted if they haven't
+      // been validated inside `_onKeypress` already.
+      if (this.preventInvalidInput && !this._patternAlreadyChecked) {
+        var valid = this._checkPatternValidity();
+        if (!valid) {
+          this.value = this._previousValidInput;
+        }
+      }
+
+      this.bindValue = this.value;
+      this._previousValidInput = this.value;
+      this._patternAlreadyChecked = false;
+    },
+
+    _isPrintable: function(event) {
+      // What a control/printable character is varies wildly based on the browser.
+      // - most control characters (arrows, backspace) do not send a `keypress` event
+      //   in Chrome, but the *do* on Firefox
+      // - in Firefox, when they do send a `keypress` event, control chars have
+      //   a charCode = 0, keyCode = xx (for ex. 40 for down arrow)
+      // - printable characters always send a keypress event.
+      // - in Firefox, printable chars always have a keyCode = 0. In Chrome, the keyCode
+      //   always matches the charCode.
+      // None of this makes any sense.
+
+      // For these keys, ASCII code == browser keycode.
+      var anyNonPrintable =
+        (event.keyCode == 8)   ||  // backspace
+        (event.keyCode == 9)   ||  // tab
+        (event.keyCode == 13)  ||  // enter
+        (event.keyCode == 27);     // escape
+
+      // For these keys, make sure it's a browser keycode and not an ASCII code.
+      var mozNonPrintable =
+        (event.keyCode == 19)  ||  // pause
+        (event.keyCode == 20)  ||  // caps lock
+        (event.keyCode == 45)  ||  // insert
+        (event.keyCode == 46)  ||  // delete
+        (event.keyCode == 144) ||  // num lock
+        (event.keyCode == 145) ||  // scroll lock
+        (event.keyCode > 32 && event.keyCode < 41)   || // page up/down, end, home, arrows
+        (event.keyCode > 111 && event.keyCode < 124); // fn keys
+
+      return !anyNonPrintable && !(event.charCode == 0 && mozNonPrintable);
+    },
+
+    _onKeypress: function(event) {
+      if (!this.preventInvalidInput && this.type !== 'number') {
+        return;
+      }
+      var regexp = this._patternRegExp;
+      if (!regexp) {
+        return;
+      }
+
+      // Handle special keys and backspace
+      if (event.metaKey || event.ctrlKey || event.altKey)
+        return;
+
+      // Check the pattern either here or in `_onInput`, but not in both.
+      this._patternAlreadyChecked = true;
+
+      var thisChar = String.fromCharCode(event.charCode);
+      if (this._isPrintable(event) && !regexp.test(thisChar)) {
+        event.preventDefault();
+      }
+    },
+
+    _checkPatternValidity: function() {
+      var regexp = this._patternRegExp;
+      if (!regexp) {
+        return true;
+      }
+      for (var i = 0; i < this.value.length; i++) {
+        if (!regexp.test(this.value[i])) {
+          return false;
+        }
+      }
+      return true;
+    },
+
+    /**
+     * Returns true if `value` is valid. The validator provided in `validator` will be used first,
+     * then any constraints.
+     * @return {boolean} True if the value is valid.
+     */
+    validate: function() {
+      // Empty, non-required input is valid.
+      if (!this.required && this.value == '') {
+        this.invalid = false;
+        return true;
+      }
+
+      var valid;
+      if (this.hasValidator()) {
+        valid = Polymer.IronValidatableBehavior.validate.call(this, this.value);
+      } else {
+        this.invalid = !this.validity.valid;
+        valid = this.validity.valid;
+      }
+      this.fire('iron-input-validate');
+      return valid;
+    }
+
+  });
+
+  /*
+  The `iron-input-validate` event is fired whenever `validate()` is called.
+  @event iron-input-validate
+  */
+
+</script>
+<script>
+  /**
+   * Use `Polymer.PaperInputBehavior` to implement inputs with `<paper-input-container>`. This
+   * behavior is implemented by `<paper-input>`. It exposes a number of properties from
+   * `<paper-input-container>` and `<input is="iron-input">` and they should be bound in your
+   * template.
+   *
+   * The input element can be accessed by the `inputElement` property if you need to access
+   * properties or methods that are not exposed.
+   * @polymerBehavior Polymer.PaperInputBehavior
+   */
+  Polymer.PaperInputBehaviorImpl = {
+    properties: {
+      /**
+       * Fired when the input changes due to user interaction.
+       *
+       * @event change
+       */
+
+      /**
+       * The label for this input. Bind this to `<label>`'s content and `hidden` property, e.g.
+       * `<label hidden$="[[!label]]">[[label]]</label>` in your `template`
+       */
+      label: {
+        type: String
+      },
+
+      /**
+       * The value for this input. Bind this to the `<input is="iron-input">`'s `bindValue`
+       * property, or the value property of your input that is `notify:true`.
+       */
+      value: {
+        notify: true,
+        type: String
+      },
+
+      /**
+       * Set to true to disable this input. Bind this to both the `<paper-input-container>`'s
+       * and the input's `disabled` property.
+       */
+      disabled: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Returns true if the value is invalid. Bind this to both the `<paper-input-container>`'s
+       * and the input's `invalid` property.
+       */
+      invalid: {
+        type: Boolean,
+        value: false,
+        notify: true
+      },
+
+      /**
+       * Set to true to prevent the user from entering invalid input. Bind this to the
+       * `<input is="iron-input">`'s `preventInvalidInput` property.
+       */
+      preventInvalidInput: {
+        type: Boolean
+      },
+
+      /**
+       * Set this to specify the pattern allowed by `preventInvalidInput`. Bind this to the
+       * `<input is="iron-input">`'s `allowedPattern` property.
+       */
+      allowedPattern: {
+        type: String
+      },
+
+      /**
+       * The type of the input. The supported types are `text`, `number` and `password`. Bind this
+       * to the `<input is="iron-input">`'s `type` property.
+       */
+      type: {
+        type: String
+      },
+
+      /**
+       * The datalist of the input (if any). This should match the id of an existing `<datalist>`. Bind this
+       * to the `<input is="iron-input">`'s `list` property.
+       */
+      list: {
+        type: String
+      },
+
+      /**
+       * A pattern to validate the `input` with. Bind this to the `<input is="iron-input">`'s
+       * `pattern` property.
+       */
+      pattern: {
+        type: String
+      },
+
+      /**
+       * Set to true to mark the input as required. Bind this to the `<input is="iron-input">`'s
+       * `required` property.
+       */
+      required: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * The error message to display when the input is invalid. Bind this to the
+       * `<paper-input-error>`'s content, if using.
+       */
+      errorMessage: {
+        type: String
+      },
+
+      /**
+       * Set to true to show a character counter.
+       */
+      charCounter: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set to true to disable the floating label. Bind this to the `<paper-input-container>`'s
+       * `noLabelFloat` property.
+       */
+      noLabelFloat: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set to true to always float the label. Bind this to the `<paper-input-container>`'s
+       * `alwaysFloatLabel` property.
+       */
+      alwaysFloatLabel: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set to true to auto-validate the input value. Bind this to the `<paper-input-container>`'s
+       * `autoValidate` property.
+       */
+      autoValidate: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Name of the validator to use. Bind this to the `<input is="iron-input">`'s `validator`
+       * property.
+       */
+      validator: {
+        type: String
+      },
+
+      // HTMLInputElement attributes for binding if needed
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `autocomplete` property.
+       */
+      autocomplete: {
+        type: String,
+        value: 'off'
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `autofocus` property.
+       */
+      autofocus: {
+        type: Boolean
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `inputmode` property.
+       */
+      inputmode: {
+        type: String
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `minlength` property.
+       */
+      minlength: {
+        type: Number
+      },
+
+      /**
+       * The maximum length of the input value. Bind this to the `<input is="iron-input">`'s
+       * `maxlength` property.
+       */
+      maxlength: {
+        type: Number
+      },
+
+      /**
+       * The minimum (numeric or date-time) input value.
+       * Bind this to the `<input is="iron-input">`'s `min` property.
+       */
+      min: {
+        type: String
+      },
+
+      /**
+       * The maximum (numeric or date-time) input value.
+       * Can be a String (e.g. `"2000-1-1"`) or a Number (e.g. `2`).
+       * Bind this to the `<input is="iron-input">`'s `max` property.
+       */
+      max: {
+        type: String
+      },
+
+      /**
+       * Limits the numeric or date-time increments.
+       * Bind this to the `<input is="iron-input">`'s `step` property.
+       */
+      step: {
+        type: String
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `name` property.
+       */
+      name: {
+        type: String
+      },
+
+      /**
+       * A placeholder string in addition to the label. If this is set, the label will always float.
+       */
+      placeholder: {
+        type: String,
+        // need to set a default so _computeAlwaysFloatLabel is run
+        value: ''
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `readonly` property.
+       */
+      readonly: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `size` property.
+       */
+      size: {
+        type: Number
+      },
+
+      // Nonstandard attributes for binding if needed
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `autocapitalize` property.
+       */
+      autocapitalize: {
+        type: String,
+        value: 'none'
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `autocorrect` property.
+       */
+      autocorrect: {
+        type: String,
+        value: 'off'
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `autosave` property, used with type=search.
+       */
+      autosave: {
+        type: String
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `results` property, used with type=search.
+       */
+      results: {
+        type: Number
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `accept` property, used with type=file.
+       */
+      accept: {
+        type: String
+      },
+
+      /**
+       * Bind this to the `<input is="iron-input">`'s `multiple` property, used with type=file.
+       */
+      multiple: {
+        type: Boolean
+      },
+
+      _ariaDescribedBy: {
+        type: String,
+        value: ''
+      },
+
+      _ariaLabelledBy: {
+        type: String,
+        value: ''
+      }
+
+    },
+
+    listeners: {
+      'addon-attached': '_onAddonAttached',
+      'focus': '_onFocus'
+    },
+
+    observers: [
+      '_focusedControlStateChanged(focused)'
+    ],
+
+    keyBindings: {
+      'shift+tab:keydown': '_onShiftTabDown'
+    },
+
+    hostAttributes: {
+      tabindex: 0
+    },
+
+    /**
+     * Returns a reference to the input element.
+     */
+    get inputElement() {
+      return this.$.input;
+    },
+
+    /**
+     * Returns a reference to the focusable element.
+     */
+    get _focusableElement() {
+      return this.inputElement;
+    },
+
+    attached: function() {
+      this._updateAriaLabelledBy();
+    },
+
+    _appendStringWithSpace: function(str, more) {
+      if (str) {
+        str = str + ' ' + more;
+      } else {
+        str = more;
+      }
+      return str;
+    },
+
+    _onAddonAttached: function(event) {
+      var target = event.path ? event.path[0] : event.target;
+      if (target.id) {
+        this._ariaDescribedBy = this._appendStringWithSpace(this._ariaDescribedBy, target.id);
+      } else {
+        var id = 'paper-input-add-on-' + Math.floor((Math.random() * 100000));
+        target.id = id;
+        this._ariaDescribedBy = this._appendStringWithSpace(this._ariaDescribedBy, id);
+      }
+    },
+
+    /**
+     * Validates the input element and sets an error style if needed.
+     *
+     * @return {boolean}
+     */
+    validate: function() {
+      return this.inputElement.validate();
+    },
+
+    /**
+     * Forward focus to inputElement
+     */
+    _onFocus: function() {
+      if (!this._shiftTabPressed) {
+        this._focusableElement.focus();
+      }
+    },
+
+    /**
+     * Handler that is called when a shift+tab keypress is detected by the menu.
+     *
+     * @param {CustomEvent} event A key combination event.
+     */
+    _onShiftTabDown: function(event) {
+      var oldTabIndex = this.getAttribute('tabindex');
+      this._shiftTabPressed = true;
+      this.setAttribute('tabindex', '-1');
+      this.async(function() {
+        this.setAttribute('tabindex', oldTabIndex);
+        this._shiftTabPressed = false;
+      }, 1);
+    },
+
+    /**
+     * If `autoValidate` is true, then validates the element.
+     */
+    _handleAutoValidate: function() {
+      if (this.autoValidate)
+        this.validate();
+    },
+
+    /**
+     * Restores the cursor to its original position after updating the value.
+     * @param {string} newValue The value that should be saved.
+     */
+    updateValueAndPreserveCaret: function(newValue) {
+      // Not all elements might have selection, and even if they have the
+      // right properties, accessing them might throw an exception (like for
+      // <input type=number>)
+      try {
+        var start = this.inputElement.selectionStart;
+        this.value = newValue;
+
+        // The cursor automatically jumps to the end after re-setting the value,
+        // so restore it to its original position.
+        this.inputElement.selectionStart = start;
+        this.inputElement.selectionEnd = start;
+      } catch (e) {
+        // Just set the value and give up on the caret.
+        this.value = newValue;
+      }
+    },
+
+    _computeAlwaysFloatLabel: function(alwaysFloatLabel, placeholder) {
+      return placeholder || alwaysFloatLabel;
+    },
+
+    _focusedControlStateChanged: function(focused) {
+      // IronControlState stops the focus and blur events in order to redispatch them on the host
+      // element, but paper-input-container listens to those events. Since there are more
+      // pending work on focus/blur in IronControlState, I'm putting in this hack to get the
+      // input focus state working for now.
+      if (!this.$.container) {
+        this.$.container = Polymer.dom(this.root).querySelector('paper-input-container');
+        if (!this.$.container) {
+          return;
+        }
+      }
+      if (focused) {
+        this.$.container._onFocus();
+      } else {
+        this.$.container._onBlur();
+      }
+    },
+
+    _updateAriaLabelledBy: function() {
+      var label = Polymer.dom(this.root).querySelector('label');
+      if (!label) {
+        this._ariaLabelledBy = '';
+        return;
+      }
+      var labelledBy;
+      if (label.id) {
+        labelledBy = label.id;
+      } else {
+        labelledBy = 'paper-input-label-' + new Date().getUTCMilliseconds();
+        label.id = labelledBy;
+      }
+      this._ariaLabelledBy = labelledBy;
+    },
+
+    _onChange:function(event) {
+      // In the Shadow DOM, the `change` event is not leaked into the
+      // ancestor tree, so we must do this manually.
+      // See https://w3c.github.io/webcomponents/spec/shadow/#events-that-are-not-leaked-into-ancestor-trees.
+      if (this.shadowRoot) {
+        this.fire(event.type, {sourceEvent: event}, {
+          node: this,
+          bubbles: event.bubbles,
+          cancelable: event.cancelable
+        });
+      }
+    }
+  };
+
+  /** @polymerBehavior */
+  Polymer.PaperInputBehavior = [
+    Polymer.IronControlState,
+    Polymer.IronA11yKeysBehavior,
+    Polymer.PaperInputBehaviorImpl
+  ];
+</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,300,300italic,400italic,500,500italic,700,700italic">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400,700">
+<style is="custom-style">
+
+  :root {
+
+    /* Shared Styles */
+
+    /*
+    Unfortunately, we can't use nested rules
+    See https://github.com/Polymer/polymer/issues/1399
+    */
+    --paper-font-common-base: {
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    };
+
+    --paper-font-common-code: {
+      font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
+      -webkit-font-smoothing: antialiased;
+    };
+
+    --paper-font-common-expensive-kerning: {
+      text-rendering: optimizeLegibility;
+    };
+
+    --paper-font-common-nowrap: {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    };
+
+    /* Material Font Styles */
+
+    --paper-font-display4: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+      /* @apply(--paper-font-common-nowrap); */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      font-size: 112px;
+      font-weight: 300;
+      letter-spacing: -.044em;
+      line-height: 120px;
+    };
+
+    --paper-font-display3: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+      /* @apply(--paper-font-common-nowrap); */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      font-size: 56px;
+      font-weight: 400;
+      letter-spacing: -.026em;
+      line-height: 60px;
+    };
+
+    --paper-font-display2: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+
+      font-size: 45px;
+      font-weight: 400;
+      letter-spacing: -.018em;
+      line-height: 48px;
+    };
+
+    --paper-font-display1: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+
+      font-size: 34px;
+      font-weight: 400;
+      letter-spacing: -.01em;
+      line-height: 40px;
+    };
+
+    --paper-font-headline: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: -.012em;
+      line-height: 32px;
+    };
+
+    --paper-font-title: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+      /* @apply(--paper-font-common-nowrap); */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      font-size: 20px;
+      font-weight: 500;
+      line-height: 28px;
+    };
+
+    --paper-font-subhead: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 24px;
+    };
+
+    --paper-font-body2: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 24px;
+    };
+
+    --paper-font-body1: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 20px;
+    };
+
+    --paper-font-caption: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      /* @apply(--paper-font-common-nowrap); */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.011em;
+      line-height: 20px;
+    };
+
+    --paper-font-menu: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+      /* @apply(--paper-font-common-nowrap); */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 24px;
+    };
+
+    --paper-font-button: {
+      /* @apply(--paper-font-common-base) */
+      font-family: 'Roboto', 'Noto', sans-serif;
+      -webkit-font-smoothing: antialiased;
+
+      /* @apply(--paper-font-common-nowrap); */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.018em;
+      line-height: 24px;
+      text-transform: uppercase;
+    };
+
+    --paper-font-code2: {
+      /* @apply(--paper-font-common-code); */
+      font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
+      -webkit-font-smoothing: antialiased;
+
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 20px;
+    };
+
+    --paper-font-code1: {
+      /* @apply(--paper-font-common-code); */
+      font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
+      -webkit-font-smoothing: antialiased;
+
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 20px;
+    };
+
+  }
+
+</style>
+<script>
+
+  /**
+   * Use `Polymer.PaperInputAddonBehavior` to implement an add-on for `<paper-input-container>`. A
+   * add-on appears below the input, and may display information based on the input value and
+   * validity such as a character counter or an error message.
+   * @polymerBehavior
+   */
+  Polymer.PaperInputAddonBehavior = {
+
+    hostAttributes: {
+      'add-on': ''
+    },
+
+    attached: function() {
+      this.fire('addon-attached');
+    },
+
+    /**
+     * The function called by `<paper-input-container>` when the input value or validity changes.
+     * @param {{
+     *   inputElement: (Node|undefined),
+     *   value: (string|undefined),
+     *   invalid: (boolean|undefined)
+     * }} state All properties are optional -
+     *     inputElement: The input element.
+     *     value: The input value.
+     *     invalid: True if the input value is invalid.
+     */
+    update: function(state) {
+    }
+
+  };
+
+</script>
+
+
+
+
+
+
+
+
+<script>
+
+  /**
+   * Use `Polymer.IronCheckedElementBehavior` to implement a custom element
+   * that has a `checked` property, which can be used for validation if the
+   * element is also `required`. Element instances implementing this behavior
+   * will also be registered for use in an `iron-form` element.
+   *
+   * @demo demo/index.html
+   * @polymerBehavior Polymer.IronCheckedElementBehavior
+   */
+  Polymer.IronCheckedElementBehaviorImpl = {
+
+    properties: {
+      /**
+       * Fired when the checked state changes.
+       *
+       * @event iron-change
+       */
+
+      /**
+       * Gets or sets the state, `true` is checked and `false` is unchecked.
+       */
+      checked: {
+        type: Boolean,
+        value: false,
+        reflectToAttribute: true,
+        notify: true,
+        observer: '_checkedChanged'
+      },
+
+      /**
+       * If true, the button toggles the active state with each tap or press
+       * of the spacebar.
+       */
+      toggles: {
+        type: Boolean,
+        value: true,
+        reflectToAttribute: true
+      },
+
+      /* Overriden from Polymer.IronFormElementBehavior */
+      value: {
+        type: String,
+        value: 'on',
+        observer: '_valueChanged'
+      }
+    },
+
+    observers: [
+      '_requiredChanged(required)'
+    ],
+
+    created: function() {
+      // Used by `iron-form` to handle the case that an element with this behavior
+      // doesn't have a role of 'checkbox' or 'radio', but should still only be
+      // included when the form is serialized if `this.checked === true`.
+      this._hasIronCheckedElementBehavior = true;
+    },
+
+    /**
+     * Returns false if the element is required and not checked, and true otherwise.
+     * @return {boolean} true if `required` is false, or if `required` and `checked` are both true.
+     */
+    _getValidity: function(_value) {
+      return this.disabled || !this.required || (this.required && this.checked);
+    },
+
+    /**
+     * Update the aria-required label when `required` is changed.
+     */
+    _requiredChanged: function() {
+      if (this.required) {
+        this.setAttribute('aria-required', 'true');
+      } else {
+        this.removeAttribute('aria-required');
+      }
+    },
+
+    /**
+     * Fire `iron-changed` when the checked state changes.
+     */
+    _checkedChanged: function() {
+      this.active = this.checked;
+      this.fire('iron-change');
+    },
+
+    /**
+     * Reset value to 'on' if it is set to `undefined`.
+     */
+    _valueChanged: function() {
+      if (this.value === undefined || this.value === null) {
+        this.value = 'on';
+      }
+    }
+  };
+
+  /** @polymerBehavior Polymer.IronCheckedElementBehavior */
+  Polymer.IronCheckedElementBehavior = [
+    Polymer.IronFormElementBehavior,
+    Polymer.IronValidatableBehavior,
+    Polymer.IronCheckedElementBehaviorImpl
+  ];
+
+</script>
+<script>
+
+  /**
+   * Use `Polymer.PaperCheckedElementBehavior` to implement a custom element
+   * that has a `checked` property similar to `Polymer.IronCheckedElementBehavior`
+   * and is compatible with having a ripple effect.
+   * @polymerBehavior Polymer.PaperCheckedElementBehavior
+   */
+  Polymer.PaperCheckedElementBehaviorImpl = {
+
+    /**
+     * Synchronizes the element's checked state with its ripple effect.
+     */
+    _checkedChanged: function() {
+      Polymer.IronCheckedElementBehaviorImpl._checkedChanged.call(this);
+      if (this.hasRipple()) {
+        if (this.checked) {
+          this._ripple.setAttribute('checked', '');
+        } else {
+          this._ripple.removeAttribute('checked');
+        }
+      }
+    },
+
+    /**
+     * Synchronizes the element's `active` and `checked` state.
+     */
+    _buttonStateChanged: function() {
+      Polymer.PaperRippleBehavior._buttonStateChanged.call(this);
+      if (this.disabled) {
+        return;
+      }
+      if (this.isAttached) {
+        this.checked = this.active;
+      }
+    }
+
+  };
+
+  /** @polymerBehavior Polymer.PaperCheckedElementBehavior */
+  Polymer.PaperCheckedElementBehavior = [
+    Polymer.PaperInkyFocusBehavior,
+    Polymer.IronCheckedElementBehavior,
+    Polymer.PaperCheckedElementBehaviorImpl
+  ];
+
+</script>
+
+
+
+
+
+
 
 <style>
 
@@ -11887,7 +13213,6 @@ context. You should place this element as a child of `<body>` whenever possible.
     },
 
     listeners: {
-      'tap': '_onClick',
       'iron-resize': '_onIronResize'
     },
 
@@ -11909,6 +13234,10 @@ context. You should place this element as a child of `<body>` whenever possible.
 
     ready: function() {
       this._ensureSetup();
+    },
+
+    attached: function() {
+      // Call _openedChanged here so that position can be computed correctly.
       if (this._callOpenedWhenReady) {
         this._openedChanged();
       }
@@ -12140,20 +13469,10 @@ context. You should place this element as a child of `<body>` whenever possible.
     },
 
     _onCaptureClick: function(event) {
-      // attempt to close asynchronously and prevent the close of a tap event is immediately heard
-      // on target. This is because in shadow dom due to event retargetting event.target is not
-      // useful.
-      if (!this.noCancelOnOutsideClick && (this._manager.currentOverlay() == this)) {
-        this._cancelJob = this.async(function() {
-          this.cancel();
-        }, 10);
-      }
-    },
-
-    _onClick: function(event) {
-      if (this._cancelJob) {
-        this.cancelAsync(this._cancelJob);
-        this._cancelJob = null;
+      if (!this.noCancelOnOutsideClick &&
+          this._manager.currentOverlay() === this &&
+          Polymer.dom(event).path.indexOf(this) === -1) {
+        this.cancel();
       }
     },
 
@@ -12162,6 +13481,7 @@ context. You should place this element as a child of `<body>` whenever possible.
       if (!this.noCancelOnEscKey && (event.keyCode === ESC)) {
         this.cancel();
         event.stopPropagation();
+        event.stopImmediatePropagation();
       }
     },
 
@@ -12198,1386 +13518,16 @@ context. You should place this element as a child of `<body>` whenever possible.
 
 
 </script>
-<style is="custom-style">
 
-  :root {
 
-    /* Shared Styles */
 
-    /*
-    Unfortunately, we can't use nested rules
-    See https://github.com/Polymer/polymer/issues/1399
-    */
-    --paper-font-common-base: {
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-    };
 
-    --paper-font-common-code: {
-      font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
-      -webkit-font-smoothing: antialiased;
-    };
 
-    --paper-font-common-expensive-kerning: {
-      text-rendering: optimizeLegibility;
-    };
 
-    --paper-font-common-nowrap: {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    };
 
-    /* Material Font Styles */
 
-    --paper-font-display4: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
 
-      /* @apply(--paper-font-common-nowrap); */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
 
-      font-size: 112px;
-      font-weight: 300;
-      letter-spacing: -.044em;
-      line-height: 120px;
-    };
-
-    --paper-font-display3: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-      /* @apply(--paper-font-common-nowrap); */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      font-size: 56px;
-      font-weight: 400;
-      letter-spacing: -.026em;
-      line-height: 60px;
-    };
-
-    --paper-font-display2: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-
-      font-size: 45px;
-      font-weight: 400;
-      letter-spacing: -.018em;
-      line-height: 48px;
-    };
-
-    --paper-font-display1: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-
-      font-size: 34px;
-      font-weight: 400;
-      letter-spacing: -.01em;
-      line-height: 40px;
-    };
-
-    --paper-font-headline: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-
-      font-size: 24px;
-      font-weight: 400;
-      letter-spacing: -.012em;
-      line-height: 32px;
-    };
-
-    --paper-font-title: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-      /* @apply(--paper-font-common-nowrap); */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      font-size: 20px;
-      font-weight: 500;
-      line-height: 28px;
-    };
-
-    --paper-font-subhead: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-
-      font-size: 16px;
-      font-weight: 400;
-      line-height: 24px;
-    };
-
-    --paper-font-body2: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 24px;
-    };
-
-    --paper-font-body1: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-      font-size: 14px;
-      font-weight: 400;
-      line-height: 20px;
-    };
-
-    --paper-font-caption: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-      /* @apply(--paper-font-common-nowrap); */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      font-size: 12px;
-      font-weight: 400;
-      letter-spacing: 0.011em;
-      line-height: 20px;
-    };
-
-    --paper-font-menu: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-      /* @apply(--paper-font-common-nowrap); */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      font-size: 13px;
-      font-weight: 500;
-      line-height: 24px;
-    };
-
-    --paper-font-button: {
-      /* @apply(--paper-font-common-base) */
-      font-family: 'Roboto', 'Noto', sans-serif;
-      -webkit-font-smoothing: antialiased;
-
-      /* @apply(--paper-font-common-nowrap); */
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: 0.018em;
-      line-height: 24px;
-      text-transform: uppercase;
-    };
-
-    --paper-font-code2: {
-      /* @apply(--paper-font-common-code); */
-      font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
-      -webkit-font-smoothing: antialiased;
-
-      font-size: 14px;
-      font-weight: 700;
-      line-height: 20px;
-    };
-
-    --paper-font-code1: {
-      /* @apply(--paper-font-common-code); */
-      font-family: 'Roboto Mono', 'Consolas', 'Menlo', monospace;
-      -webkit-font-smoothing: antialiased;
-
-      font-size: 14px;
-      font-weight: 500;
-      line-height: 20px;
-    };
-
-  }
-
-</style>
-
-
-
-
-
-
-
-
-<script>!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.page=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-(function (process){
-  /* globals require, module */
-
-  'use strict';
-
-  /**
-   * Module dependencies.
-   */
-
-  var pathtoRegexp = require('path-to-regexp');
-
-  /**
-   * Module exports.
-   */
-
-  module.exports = page;
-
-  /**
-   * Detect click event
-   */
-  var clickEvent = ('undefined' !== typeof document) && document.ontouchstart ? 'touchstart' : 'click';
-
-  /**
-   * To work properly with the URL
-   * history.location generated polyfill in https://github.com/devote/HTML5-History-API
-   */
-
-  var location = ('undefined' !== typeof window) && (window.history.location || window.location);
-
-  /**
-   * Perform initial dispatch.
-   */
-
-  var dispatch = true;
-
-
-  /**
-   * Decode URL components (query string, pathname, hash).
-   * Accommodates both regular percent encoding and x-www-form-urlencoded format.
-   */
-  var decodeURLComponents = true;
-
-  /**
-   * Base path.
-   */
-
-  var base = '';
-
-  /**
-   * Running flag.
-   */
-
-  var running;
-
-  /**
-   * HashBang option
-   */
-
-  var hashbang = false;
-
-  /**
-   * Previous context, for capturing
-   * page exit events.
-   */
-
-  var prevContext;
-
-  /**
-   * Register `path` with callback `fn()`,
-   * or route `path`, or redirection,
-   * or `page.start()`.
-   *
-   *   page(fn);
-   *   page('*', fn);
-   *   page('/user/:id', load, user);
-   *   page('/user/' + user.id, { some: 'thing' });
-   *   page('/user/' + user.id);
-   *   page('/from', '/to')
-   *   page();
-   *
-   * @param {String|Function} path
-   * @param {Function} fn...
-   * @api public
-   */
-
-  function page(path, fn) {
-    // <callback>
-    if ('function' === typeof path) {
-      return page('*', path);
-    }
-
-    // route <path> to <callback ...>
-    if ('function' === typeof fn) {
-      var route = new Route(path);
-      for (var i = 1; i < arguments.length; ++i) {
-        page.callbacks.push(route.middleware(arguments[i]));
-      }
-      // show <path> with [state]
-    } else if ('string' === typeof path) {
-      page['string' === typeof fn ? 'redirect' : 'show'](path, fn);
-      // start [options]
-    } else {
-      page.start(path);
-    }
-  }
-
-  /**
-   * Callback functions.
-   */
-
-  page.callbacks = [];
-  page.exits = [];
-
-  /**
-   * Current path being processed
-   * @type {String}
-   */
-  page.current = '';
-
-  /**
-   * Number of pages navigated to.
-   * @type {number}
-   *
-   *     page.len == 0;
-   *     page('/login');
-   *     page.len == 1;
-   */
-
-  page.len = 0;
-
-  /**
-   * Get or set basepath to `path`.
-   *
-   * @param {String} path
-   * @api public
-   */
-
-  page.base = function(path) {
-    if (0 === arguments.length) return base;
-    base = path;
-  };
-
-  /**
-   * Bind with the given `options`.
-   *
-   * Options:
-   *
-   *    - `click` bind to click events [true]
-   *    - `popstate` bind to popstate [true]
-   *    - `dispatch` perform initial dispatch [true]
-   *
-   * @param {Object} options
-   * @api public
-   */
-
-  page.start = function(options) {
-    options = options || {};
-    if (running) return;
-    running = true;
-    if (false === options.dispatch) dispatch = false;
-    if (false === options.decodeURLComponents) decodeURLComponents = false;
-    if (false !== options.popstate) window.addEventListener('popstate', onpopstate, false);
-    if (false !== options.click) {
-      document.addEventListener(clickEvent, onclick, false);
-    }
-    if (true === options.hashbang) hashbang = true;
-    if (!dispatch) return;
-    var url = (hashbang && ~location.hash.indexOf('#!')) ? location.hash.substr(2) + location.search : location.pathname + location.search + location.hash;
-    page.replace(url, null, true, dispatch);
-  };
-
-  /**
-   * Unbind click and popstate event handlers.
-   *
-   * @api public
-   */
-
-  page.stop = function() {
-    if (!running) return;
-    page.current = '';
-    page.len = 0;
-    running = false;
-    document.removeEventListener(clickEvent, onclick, false);
-    window.removeEventListener('popstate', onpopstate, false);
-  };
-
-  /**
-   * Show `path` with optional `state` object.
-   *
-   * @param {String} path
-   * @param {Object} state
-   * @param {Boolean} dispatch
-   * @return {Context}
-   * @api public
-   */
-
-  page.show = function(path, state, dispatch, push) {
-    var ctx = new Context(path, state);
-    page.current = ctx.path;
-    if (false !== dispatch) page.dispatch(ctx);
-    if (false !== ctx.handled && false !== push) ctx.pushState();
-    return ctx;
-  };
-
-  /**
-   * Goes back in the history
-   * Back should always let the current route push state and then go back.
-   *
-   * @param {String} path - fallback path to go back if no more history exists, if undefined defaults to page.base
-   * @param {Object} [state]
-   * @api public
-   */
-
-  page.back = function(path, state) {
-    if (page.len > 0) {
-      // this may need more testing to see if all browsers
-      // wait for the next tick to go back in history
-      history.back();
-      page.len--;
-    } else if (path) {
-      setTimeout(function() {
-        page.show(path, state);
-      });
-    }else{
-      setTimeout(function() {
-        page.show(base, state);
-      });
-    }
-  };
-
-
-  /**
-   * Register route to redirect from one path to other
-   * or just redirect to another route
-   *
-   * @param {String} from - if param 'to' is undefined redirects to 'from'
-   * @param {String} [to]
-   * @api public
-   */
-  page.redirect = function(from, to) {
-    // Define route from a path to another
-    if ('string' === typeof from && 'string' === typeof to) {
-      page(from, function(e) {
-        setTimeout(function() {
-          page.replace(to);
-        }, 0);
-      });
-    }
-
-    // Wait for the push state and replace it with another
-    if ('string' === typeof from && 'undefined' === typeof to) {
-      setTimeout(function() {
-        page.replace(from);
-      }, 0);
-    }
-  };
-
-  /**
-   * Replace `path` with optional `state` object.
-   *
-   * @param {String} path
-   * @param {Object} state
-   * @return {Context}
-   * @api public
-   */
-
-
-  page.replace = function(path, state, init, dispatch) {
-    var ctx = new Context(path, state);
-    page.current = ctx.path;
-    ctx.init = init;
-    ctx.save(); // save before dispatching, which may redirect
-    if (false !== dispatch) page.dispatch(ctx);
-    return ctx;
-  };
-
-  /**
-   * Dispatch the given `ctx`.
-   *
-   * @param {Object} ctx
-   * @api private
-   */
-
-  page.dispatch = function(ctx) {
-    var prev = prevContext,
-      i = 0,
-      j = 0;
-
-    prevContext = ctx;
-
-    function nextExit() {
-      var fn = page.exits[j++];
-      if (!fn) return nextEnter();
-      fn(prev, nextExit);
-    }
-
-    function nextEnter() {
-      var fn = page.callbacks[i++];
-
-      if (ctx.path !== page.current) {
-        ctx.handled = false;
-        return;
-      }
-      if (!fn) return unhandled(ctx);
-      fn(ctx, nextEnter);
-    }
-
-    if (prev) {
-      nextExit();
-    } else {
-      nextEnter();
-    }
-  };
-
-  /**
-   * Unhandled `ctx`. When it's not the initial
-   * popstate then redirect. If you wish to handle
-   * 404s on your own use `page('*', callback)`.
-   *
-   * @param {Context} ctx
-   * @api private
-   */
-
-  function unhandled(ctx) {
-    if (ctx.handled) return;
-    var current;
-
-    if (hashbang) {
-      current = base + location.hash.replace('#!', '');
-    } else {
-      current = location.pathname + location.search;
-    }
-
-    if (current === ctx.canonicalPath) return;
-    page.stop();
-    ctx.handled = false;
-    location.href = ctx.canonicalPath;
-  }
-
-  /**
-   * Register an exit route on `path` with
-   * callback `fn()`, which will be called
-   * on the previous context when a new
-   * page is visited.
-   */
-  page.exit = function(path, fn) {
-    if (typeof path === 'function') {
-      return page.exit('*', path);
-    }
-
-    var route = new Route(path);
-    for (var i = 1; i < arguments.length; ++i) {
-      page.exits.push(route.middleware(arguments[i]));
-    }
-  };
-
-  /**
-   * Remove URL encoding from the given `str`.
-   * Accommodates whitespace in both x-www-form-urlencoded
-   * and regular percent-encoded form.
-   *
-   * @param {str} URL component to decode
-   */
-  function decodeURLEncodedURIComponent(val) {
-    if (typeof val !== 'string') { return val; }
-    return decodeURLComponents ? decodeURIComponent(val.replace(/\+/g, ' ')) : val;
-  }
-
-  /**
-   * Initialize a new "request" `Context`
-   * with the given `path` and optional initial `state`.
-   *
-   * @param {String} path
-   * @param {Object} state
-   * @api public
-   */
-
-  function Context(path, state) {
-    if ('/' === path[0] && 0 !== path.indexOf(base)) path = base + (hashbang ? '#!' : '') + path;
-    var i = path.indexOf('?');
-
-    this.canonicalPath = path;
-    this.path = path.replace(base, '') || '/';
-    if (hashbang) this.path = this.path.replace('#!', '') || '/';
-
-    this.title = document.title;
-    this.state = state || {};
-    this.state.path = path;
-    this.querystring = ~i ? decodeURLEncodedURIComponent(path.slice(i + 1)) : '';
-    this.pathname = decodeURLEncodedURIComponent(~i ? path.slice(0, i) : path);
-    this.params = {};
-
-    // fragment
-    this.hash = '';
-    if (!hashbang) {
-      if (!~this.path.indexOf('#')) return;
-      var parts = this.path.split('#');
-      this.path = parts[0];
-      this.hash = decodeURLEncodedURIComponent(parts[1]) || '';
-      this.querystring = this.querystring.split('#')[0];
-    }
-  }
-
-  /**
-   * Expose `Context`.
-   */
-
-  page.Context = Context;
-
-  /**
-   * Push state.
-   *
-   * @api private
-   */
-
-  Context.prototype.pushState = function() {
-    page.len++;
-    history.pushState(this.state, this.title, hashbang && this.path !== '/' ? '#!' + this.path : this.canonicalPath);
-  };
-
-  /**
-   * Save the context state.
-   *
-   * @api public
-   */
-
-  Context.prototype.save = function() {
-    history.replaceState(this.state, this.title, hashbang && this.path !== '/' ? '#!' + this.path : this.canonicalPath);
-  };
-
-  /**
-   * Initialize `Route` with the given HTTP `path`,
-   * and an array of `callbacks` and `options`.
-   *
-   * Options:
-   *
-   *   - `sensitive`    enable case-sensitive routes
-   *   - `strict`       enable strict matching for trailing slashes
-   *
-   * @param {String} path
-   * @param {Object} options.
-   * @api private
-   */
-
-  function Route(path, options) {
-    options = options || {};
-    this.path = (path === '*') ? '(.*)' : path;
-    this.method = 'GET';
-    this.regexp = pathtoRegexp(this.path,
-      this.keys = [],
-      options.sensitive,
-      options.strict);
-  }
-
-  /**
-   * Expose `Route`.
-   */
-
-  page.Route = Route;
-
-  /**
-   * Return route middleware with
-   * the given callback `fn()`.
-   *
-   * @param {Function} fn
-   * @return {Function}
-   * @api public
-   */
-
-  Route.prototype.middleware = function(fn) {
-    var self = this;
-    return function(ctx, next) {
-      if (self.match(ctx.path, ctx.params)) return fn(ctx, next);
-      next();
-    };
-  };
-
-  /**
-   * Check if this route matches `path`, if so
-   * populate `params`.
-   *
-   * @param {String} path
-   * @param {Object} params
-   * @return {Boolean}
-   * @api private
-   */
-
-  Route.prototype.match = function(path, params) {
-    var keys = this.keys,
-      qsIndex = path.indexOf('?'),
-      pathname = ~qsIndex ? path.slice(0, qsIndex) : path,
-      m = this.regexp.exec(decodeURIComponent(pathname));
-
-    if (!m) return false;
-
-    for (var i = 1, len = m.length; i < len; ++i) {
-      var key = keys[i - 1];
-      var val = decodeURLEncodedURIComponent(m[i]);
-      if (val !== undefined || !(hasOwnProperty.call(params, key.name))) {
-        params[key.name] = val;
-      }
-    }
-
-    return true;
-  };
-
-
-  /**
-   * Handle "populate" events.
-   */
-
-  var onpopstate = (function () {
-    var loaded = false;
-    if ('undefined' === typeof window) {
-      return;
-    }
-    if (document.readyState === 'complete') {
-      loaded = true;
-    } else {
-      window.addEventListener('load', function() {
-        setTimeout(function() {
-          loaded = true;
-        }, 0);
-      });
-    }
-    return function onpopstate(e) {
-      if (!loaded) return;
-      if (e.state) {
-        var path = e.state.path;
-        page.replace(path, e.state);
-      } else {
-        page.show(location.pathname + location.hash, undefined, undefined, false);
-      }
-    };
-  })();
-  /**
-   * Handle "click" events.
-   */
-
-  function onclick(e) {
-
-    if (1 !== which(e)) return;
-
-    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
-    if (e.defaultPrevented) return;
-
-
-
-    // ensure link
-    var el = e.target;
-    while (el && 'A' !== el.nodeName) el = el.parentNode;
-    if (!el || 'A' !== el.nodeName) return;
-
-
-
-    // Ignore if tag has
-    // 1. "download" attribute
-    // 2. rel="external" attribute
-    if (el.hasAttribute('download') || el.getAttribute('rel') === 'external') return;
-
-    // ensure non-hash for the same path
-    var link = el.getAttribute('href');
-    if (!hashbang && el.pathname === location.pathname && (el.hash || '#' === link)) return;
-
-
-
-    // Check for mailto: in the href
-    if (link && link.indexOf('mailto:') > -1) return;
-
-    // check target
-    if (el.target) return;
-
-    // x-origin
-    if (!sameOrigin(el.href)) return;
-
-
-
-    // rebuild path
-    var path = el.pathname + el.search + (el.hash || '');
-
-    // strip leading "/[drive letter]:" on NW.js on Windows
-    if (typeof process !== 'undefined' && path.match(/^\/[a-zA-Z]:\//)) {
-      path = path.replace(/^\/[a-zA-Z]:\//, '/');
-    }
-
-    // same page
-    var orig = path;
-
-    if (path.indexOf(base) === 0) {
-      path = path.substr(base.length);
-    }
-
-    if (hashbang) path = path.replace('#!', '');
-
-    if (base && orig === path) return;
-
-    e.preventDefault();
-    page.show(orig);
-  }
-
-  /**
-   * Event button.
-   */
-
-  function which(e) {
-    e = e || window.event;
-    return null === e.which ? e.button : e.which;
-  }
-
-  /**
-   * Check if `href` is the same origin.
-   */
-
-  function sameOrigin(href) {
-    var origin = location.protocol + '//' + location.hostname;
-    if (location.port) origin += ':' + location.port;
-    return (href && (0 === href.indexOf(origin)));
-  }
-
-  page.sameOrigin = sameOrigin;
-
-}).call(this,require('_process'))
-},{"_process":2,"path-to-regexp":3}],2:[function(require,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canMutationObserver = typeof window !== 'undefined'
-    && window.MutationObserver;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
-    }
-
-    var queue = [];
-
-    if (canMutationObserver) {
-        var hiddenDiv = document.createElement("div");
-        var observer = new MutationObserver(function () {
-            var queueList = queue.slice();
-            queue.length = 0;
-            queueList.forEach(function (fn) {
-                fn();
-            });
-        });
-
-        observer.observe(hiddenDiv, { attributes: true });
-
-        return function nextTick(fn) {
-            if (!queue.length) {
-                hiddenDiv.setAttribute('yes', 'no');
-            }
-            queue.push(fn);
-        };
-    }
-
-    if (canPost) {
-        window.addEventListener('message', function (ev) {
-            var source = ev.source;
-            if ((source === window || source === null) && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
-    }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-
-},{}],3:[function(require,module,exports){
-var isarray = require('isarray')
-
-/**
- * Expose `pathToRegexp`.
- */
-module.exports = pathToRegexp
-module.exports.parse = parse
-module.exports.compile = compile
-module.exports.tokensToFunction = tokensToFunction
-module.exports.tokensToRegExp = tokensToRegExp
-
-/**
- * The main path matching regexp utility.
- *
- * @type {RegExp}
- */
-var PATH_REGEXP = new RegExp([
-  // Match escaped characters that would otherwise appear in future matches.
-  // This allows the user to escape special characters that won't transform.
-  '(\\\\.)',
-  // Match Express-style parameters and un-named parameters with a prefix
-  // and optional suffixes. Matches appear as:
-  //
-  // "/:test(\\d+)?" => ["/", "test", "\d+", undefined, "?", undefined]
-  // "/route(\\d+)"  => [undefined, undefined, undefined, "\d+", undefined, undefined]
-  // "/*"            => ["/", undefined, undefined, undefined, undefined, "*"]
-  '([\\/.])?(?:(?:\\:(\\w+)(?:\\(((?:\\\\.|[^()])+)\\))?|\\(((?:\\\\.|[^()])+)\\))([+*?])?|(\\*))'
-].join('|'), 'g')
-
-/**
- * Parse a string for the raw tokens.
- *
- * @param  {String} str
- * @return {Array}
- */
-function parse (str) {
-  var tokens = []
-  var key = 0
-  var index = 0
-  var path = ''
-  var res
-
-  while ((res = PATH_REGEXP.exec(str)) != null) {
-    var m = res[0]
-    var escaped = res[1]
-    var offset = res.index
-    path += str.slice(index, offset)
-    index = offset + m.length
-
-    // Ignore already escaped sequences.
-    if (escaped) {
-      path += escaped[1]
-      continue
-    }
-
-    // Push the current path onto the tokens.
-    if (path) {
-      tokens.push(path)
-      path = ''
-    }
-
-    var prefix = res[2]
-    var name = res[3]
-    var capture = res[4]
-    var group = res[5]
-    var suffix = res[6]
-    var asterisk = res[7]
-
-    var repeat = suffix === '+' || suffix === '*'
-    var optional = suffix === '?' || suffix === '*'
-    var delimiter = prefix || '/'
-    var pattern = capture || group || (asterisk ? '.*' : '[^' + delimiter + ']+?')
-
-    tokens.push({
-      name: name || key++,
-      prefix: prefix || '',
-      delimiter: delimiter,
-      optional: optional,
-      repeat: repeat,
-      pattern: escapeGroup(pattern)
-    })
-  }
-
-  // Match any characters still remaining.
-  if (index < str.length) {
-    path += str.substr(index)
-  }
-
-  // If the path exists, push it onto the end.
-  if (path) {
-    tokens.push(path)
-  }
-
-  return tokens
-}
-
-/**
- * Compile a string to a template function for the path.
- *
- * @param  {String}   str
- * @return {Function}
- */
-function compile (str) {
-  return tokensToFunction(parse(str))
-}
-
-/**
- * Expose a method for transforming tokens into the path function.
- */
-function tokensToFunction (tokens) {
-  // Compile all the tokens into regexps.
-  var matches = new Array(tokens.length)
-
-  // Compile all the patterns before compilation.
-  for (var i = 0; i < tokens.length; i++) {
-    if (typeof tokens[i] === 'object') {
-      matches[i] = new RegExp('^' + tokens[i].pattern + '$')
-    }
-  }
-
-  return function (obj) {
-    var path = ''
-    var data = obj || {}
-
-    for (var i = 0; i < tokens.length; i++) {
-      var token = tokens[i]
-
-      if (typeof token === 'string') {
-        path += token
-
-        continue
-      }
-
-      var value = data[token.name]
-      var segment
-
-      if (value == null) {
-        if (token.optional) {
-          continue
-        } else {
-          throw new TypeError('Expected "' + token.name + '" to be defined')
-        }
-      }
-
-      if (isarray(value)) {
-        if (!token.repeat) {
-          throw new TypeError('Expected "' + token.name + '" to not repeat, but received "' + value + '"')
-        }
-
-        if (value.length === 0) {
-          if (token.optional) {
-            continue
-          } else {
-            throw new TypeError('Expected "' + token.name + '" to not be empty')
-          }
-        }
-
-        for (var j = 0; j < value.length; j++) {
-          segment = encodeURIComponent(value[j])
-
-          if (!matches[i].test(segment)) {
-            throw new TypeError('Expected all "' + token.name + '" to match "' + token.pattern + '", but received "' + segment + '"')
-          }
-
-          path += (j === 0 ? token.prefix : token.delimiter) + segment
-        }
-
-        continue
-      }
-
-      segment = encodeURIComponent(value)
-
-      if (!matches[i].test(segment)) {
-        throw new TypeError('Expected "' + token.name + '" to match "' + token.pattern + '", but received "' + segment + '"')
-      }
-
-      path += token.prefix + segment
-    }
-
-    return path
-  }
-}
-
-/**
- * Escape a regular expression string.
- *
- * @param  {String} str
- * @return {String}
- */
-function escapeString (str) {
-  return str.replace(/([.+*?=^!:${}()[\]|\/])/g, '\\$1')
-}
-
-/**
- * Escape the capturing group by escaping special characters and meaning.
- *
- * @param  {String} group
- * @return {String}
- */
-function escapeGroup (group) {
-  return group.replace(/([=!:$\/()])/g, '\\$1')
-}
-
-/**
- * Attach the keys as a property of the regexp.
- *
- * @param  {RegExp} re
- * @param  {Array}  keys
- * @return {RegExp}
- */
-function attachKeys (re, keys) {
-  re.keys = keys
-  return re
-}
-
-/**
- * Get the flags for a regexp from the options.
- *
- * @param  {Object} options
- * @return {String}
- */
-function flags (options) {
-  return options.sensitive ? '' : 'i'
-}
-
-/**
- * Pull out keys from a regexp.
- *
- * @param  {RegExp} path
- * @param  {Array}  keys
- * @return {RegExp}
- */
-function regexpToRegexp (path, keys) {
-  // Use a negative lookahead to match only capturing groups.
-  var groups = path.source.match(/\((?!\?)/g)
-
-  if (groups) {
-    for (var i = 0; i < groups.length; i++) {
-      keys.push({
-        name: i,
-        prefix: null,
-        delimiter: null,
-        optional: false,
-        repeat: false,
-        pattern: null
-      })
-    }
-  }
-
-  return attachKeys(path, keys)
-}
-
-/**
- * Transform an array into a regexp.
- *
- * @param  {Array}  path
- * @param  {Array}  keys
- * @param  {Object} options
- * @return {RegExp}
- */
-function arrayToRegexp (path, keys, options) {
-  var parts = []
-
-  for (var i = 0; i < path.length; i++) {
-    parts.push(pathToRegexp(path[i], keys, options).source)
-  }
-
-  var regexp = new RegExp('(?:' + parts.join('|') + ')', flags(options))
-
-  return attachKeys(regexp, keys)
-}
-
-/**
- * Create a path regexp from string input.
- *
- * @param  {String} path
- * @param  {Array}  keys
- * @param  {Object} options
- * @return {RegExp}
- */
-function stringToRegexp (path, keys, options) {
-  var tokens = parse(path)
-  var re = tokensToRegExp(tokens, options)
-
-  // Attach keys back to the regexp.
-  for (var i = 0; i < tokens.length; i++) {
-    if (typeof tokens[i] !== 'string') {
-      keys.push(tokens[i])
-    }
-  }
-
-  return attachKeys(re, keys)
-}
-
-/**
- * Expose a function for taking tokens and returning a RegExp.
- *
- * @param  {Array}  tokens
- * @param  {Array}  keys
- * @param  {Object} options
- * @return {RegExp}
- */
-function tokensToRegExp (tokens, options) {
-  options = options || {}
-
-  var strict = options.strict
-  var end = options.end !== false
-  var route = ''
-  var lastToken = tokens[tokens.length - 1]
-  var endsWithSlash = typeof lastToken === 'string' && /\/$/.test(lastToken)
-
-  // Iterate over the tokens and create our regexp string.
-  for (var i = 0; i < tokens.length; i++) {
-    var token = tokens[i]
-
-    if (typeof token === 'string') {
-      route += escapeString(token)
-    } else {
-      var prefix = escapeString(token.prefix)
-      var capture = token.pattern
-
-      if (token.repeat) {
-        capture += '(?:' + prefix + capture + ')*'
-      }
-
-      if (token.optional) {
-        if (prefix) {
-          capture = '(?:' + prefix + '(' + capture + '))?'
-        } else {
-          capture = '(' + capture + ')?'
-        }
-      } else {
-        capture = prefix + '(' + capture + ')'
-      }
-
-      route += capture
-    }
-  }
-
-  // In non-strict mode we allow a slash at the end of match. If the path to
-  // match already ends with a slash, we remove it for consistency. The slash
-  // is valid at the end of a path match, not in the middle. This is important
-  // in non-ending mode, where "/test/" shouldn't match "/test//route".
-  if (!strict) {
-    route = (endsWithSlash ? route.slice(0, -2) : route) + '(?:\\/(?=$))?'
-  }
-
-  if (end) {
-    route += '$'
-  } else {
-    // In non-ending mode, we need the capturing groups to match as much as
-    // possible by using a positive lookahead to the end or next path segment.
-    route += strict && endsWithSlash ? '' : '(?=\\/|$)'
-  }
-
-  return new RegExp('^' + route, flags(options))
-}
-
-/**
- * Normalize the given path string, returning a regular expression.
- *
- * An empty array can be passed in for the keys, which will hold the
- * placeholder key descriptions. For example, using `/user/:id`, `keys` will
- * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
- *
- * @param  {(String|RegExp|Array)} path
- * @param  {Array}                 [keys]
- * @param  {Object}                [options]
- * @return {RegExp}
- */
-function pathToRegexp (path, keys, options) {
-  keys = keys || []
-
-  if (!isarray(keys)) {
-    options = keys
-    keys = []
-  } else if (!options) {
-    options = {}
-  }
-
-  if (path instanceof RegExp) {
-    return regexpToRegexp(path, keys, options)
-  }
-
-  if (isarray(path)) {
-    return arrayToRegexp(path, keys, options)
-  }
-
-  return stringToRegexp(path, keys, options)
-}
-
-},{"isarray":4}],4:[function(require,module,exports){
-module.exports = Array.isArray || function (arr) {
-  return Object.prototype.toString.call(arr) == '[object Array]';
-};
-
-},{}]},{},[1])(1)
-});</script>
-<script>
-  window.addEventListener('WebComponentsReady', function() {
-    // We use Page.js for routing. This is a Micro
-    // client-side router inspired by the Express router
-    // More info: https://visionmedia.github.io/page.js/
-    // Removes end / from app.baseUrl which page.base requires for production
-    if ((window.location.port === '') || (window.location.port === '8099')) {  // if production
-      page.base(app.baseUrl.replace(/\/$/, ''));
-    }
-    // Middleware
-    function scrollToTop(ctx, next) {
-      app.scrollPageToTop();
-      next();
-    }
-    function closeDrawer(ctx, next) {
-      app.closeDrawer();
-      next();
-    }
-    // Routes
-    page('*', scrollToTop, closeDrawer, function(ctx, next) {
-      next();
-    });
-    page('/', function() {
-      app.route = 'home';
-    });
-    page(app.baseUrl, function() {
-      app.route = 'home';
-    });
-    page('/myInfo', function() {
-      app.route = 'myInfo';
-    });
-    page('/accounts/logout', function() {
-      window.location.href = '/accounts/logout';
-    });
-    // 404
-    page('*', function() {
-      app.$.toast.text = 'Can\'t find: ' + window.location.href  + '. Redirected you to Home Page';
-      app.$.toast.show();
-      page.redirect(app.baseUrl);
-    });
-    // add #! before urls
-    page({
-      hashbang: true
-    });
-  });
-</script>
 <style is="custom-style">
   /*
    Polymer includes a shim for CSS Custom Properties that we can use for application theming.
@@ -13745,1019 +13695,7 @@ module.exports = Array.isArray || function (arr) {
   @media all and (min-width: 1281px) and (max-width: 1600px) { }
   /* desktop-xlarge */
   @media all and (min-width: 1601px) and (max-width: 1920px) { }
-</style><script>function MakePromise (asap) {
-  function Promise(fn) {
-		if (typeof this !== 'object' || typeof fn !== 'function') throw new TypeError();
-		this._state = null;
-		this._value = null;
-		this._deferreds = []
-
-		doResolve(fn, resolve.bind(this), reject.bind(this));
-	}
-
-	function handle(deferred) {
-		var me = this;
-		if (this._state === null) {
-			this._deferreds.push(deferred);
-			return
-		}
-		asap(function() {
-			var cb = me._state ? deferred.onFulfilled : deferred.onRejected
-			if (typeof cb !== 'function') {
-				(me._state ? deferred.resolve : deferred.reject)(me._value);
-				return;
-			}
-			var ret;
-			try {
-				ret = cb(me._value);
-			}
-			catch (e) {
-				deferred.reject(e);
-				return;
-			}
-			deferred.resolve(ret);
-		})
-	}
-
-	function resolve(newValue) {
-		try { //Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
-			if (newValue === this) throw new TypeError();
-			if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
-				var then = newValue.then;
-				if (typeof then === 'function') {
-					doResolve(then.bind(newValue), resolve.bind(this), reject.bind(this));
-					return;
-				}
-			}
-			this._state = true;
-			this._value = newValue;
-			finale.call(this);
-		} catch (e) { reject.call(this, e); }
-	}
-
-	function reject(newValue) {
-		this._state = false;
-		this._value = newValue;
-		finale.call(this);
-	}
-
-	function finale() {
-		for (var i = 0, len = this._deferreds.length; i < len; i++) {
-			handle.call(this, this._deferreds[i]);
-		}
-		this._deferreds = null;
-	}
-
-	/**
-	 * Take a potentially misbehaving resolver function and make sure
-	 * onFulfilled and onRejected are only called once.
-	 *
-	 * Makes no guarantees about asynchrony.
-	 */
-	function doResolve(fn, onFulfilled, onRejected) {
-		var done = false;
-		try {
-			fn(function (value) {
-				if (done) return;
-				done = true;
-				onFulfilled(value);
-			}, function (reason) {
-				if (done) return;
-				done = true;
-				onRejected(reason);
-			})
-		} catch (ex) {
-			if (done) return;
-			done = true;
-			onRejected(ex);
-		}
-	}
-
-	Promise.prototype['catch'] = function (onRejected) {
-		return this.then(null, onRejected);
-	};
-
-	Promise.prototype.then = function(onFulfilled, onRejected) {
-		var me = this;
-		return new Promise(function(resolve, reject) {
-      handle.call(me, {
-        onFulfilled: onFulfilled,
-        onRejected: onRejected,
-        resolve: resolve,
-        reject: reject
-      });
-		})
-	};
-
-	Promise.resolve = function (value) {
-		if (value && typeof value === 'object' && value.constructor === Promise) {
-			return value;
-		}
-
-		return new Promise(function (resolve) {
-			resolve(value);
-		});
-	};
-
-	Promise.reject = function (value) {
-		return new Promise(function (resolve, reject) {
-			reject(value);
-		});
-	};
-
-	
-  return Promise;
-}
-
-if (typeof module !== 'undefined') {
-  module.exports = MakePromise;
-}
-
-</script>
-<script>
-if (!window.Promise) {
-  window.Promise = MakePromise(Polymer.Base.async);
-}
-</script>
-
-<script>
-  'use strict'
-
-  Polymer({
-    is: 'iron-request',
-
-    hostAttributes: {
-      hidden: true
-    },
-
-    properties: {
-
-      /**
-       * A reference to the XMLHttpRequest instance used to generate the
-       * network request.
-       *
-       * @type {XMLHttpRequest}
-       */
-      xhr: {
-        type: Object,
-        notify: true,
-        readOnly: true,
-        value: function() {
-          return new XMLHttpRequest();
-        }
-      },
-
-      /**
-       * A reference to the parsed response body, if the `xhr` has completely
-       * resolved.
-       *
-       * @type {*}
-       * @default null
-       */
-      response: {
-        type: Object,
-        notify: true,
-        readOnly: true,
-        value: function() {
-          return null;
-        }
-      },
-
-      /**
-       * A reference to the status code, if the `xhr` has completely resolved.
-       */
-      status: {
-        type: Number,
-        notify: true,
-        readOnly: true,
-        value: 0
-      },
-
-      /**
-       * A reference to the status text, if the `xhr` has completely resolved.
-       */
-      statusText: {
-        type: String,
-        notify: true,
-        readOnly: true,
-        value: ''
-      },
-
-      /**
-       * A promise that resolves when the `xhr` response comes back, or rejects
-       * if there is an error before the `xhr` completes.
-       *
-       * @type {Promise}
-       */
-      completes: {
-        type: Object,
-        readOnly: true,
-        notify: true,
-        value: function() {
-          return new Promise(function (resolve, reject) {
-            this.resolveCompletes = resolve;
-            this.rejectCompletes = reject;
-          }.bind(this));
-        }
-      },
-
-      /**
-       * An object that contains progress information emitted by the XHR if
-       * available.
-       *
-       * @default {}
-       */
-      progress: {
-        type: Object,
-        notify: true,
-        readOnly: true,
-        value: function() {
-          return {};
-        }
-      },
-
-      /**
-       * Aborted will be true if an abort of the request is attempted.
-       */
-      aborted: {
-        type: Boolean,
-        notify: true,
-        readOnly: true,
-        value: false,
-      },
-
-      /**
-       * Errored will be true if the browser fired an error event from the
-       * XHR object (mainly network errors).
-       */
-      errored: {
-        type: Boolean,
-        notify: true,
-        readOnly: true,
-        value: false
-      },
-
-      /**
-       * TimedOut will be true if the XHR threw a timeout event.
-       */
-      timedOut: {
-        type: Boolean,
-        notify: true,
-        readOnly: true,
-        value: false
-      }
-    },
-
-    /**
-     * Succeeded is true if the request succeeded. The request succeeded if it
-     * loaded without error, wasn't aborted, and the status code is ≥ 200, and
-     * < 300, or if the status code is 0.
-     *
-     * The status code 0 is accepted as a success because some schemes - e.g.
-     * file:// - don't provide status codes.
-     *
-     * @return {boolean}
-     */
-    get succeeded() {
-      if (this.errored || this.aborted || this.timedOut) {
-        return false;
-      }
-      var status = this.xhr.status || 0;
-
-      // Note: if we are using the file:// protocol, the status code will be 0
-      // for all outcomes (successful or otherwise).
-      return status === 0 ||
-        (status >= 200 && status < 300);
-    },
-
-    /**
-     * Sends an HTTP request to the server and returns the XHR object.
-     *
-     * @param {{
-     *   url: string,
-     *   method: (string|undefined),
-     *   async: (boolean|undefined),
-     *   body: (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object),
-     *   headers: (Object|undefined),
-     *   handleAs: (string|undefined),
-     *   jsonPrefix: (string|undefined),
-     *   withCredentials: (boolean|undefined)}} options -
-     *     url The url to which the request is sent.
-     *     method The HTTP method to use, default is GET.
-     *     async By default, all requests are sent asynchronously. To send synchronous requests,
-     *         set to true.
-     *     body The content for the request body for POST method.
-     *     headers HTTP request headers.
-     *     handleAs The response type. Default is 'text'.
-     *     withCredentials Whether or not to send credentials on the request. Default is false.
-     *   timeout: (Number|undefined)
-     * @return {Promise}
-     */
-    send: function (options) {
-      var xhr = this.xhr;
-
-      if (xhr.readyState > 0) {
-        return null;
-      }
-
-      xhr.addEventListener('progress', function (progress) {
-        this._setProgress({
-          lengthComputable: progress.lengthComputable,
-          loaded: progress.loaded,
-          total: progress.total
-        });
-      }.bind(this))
-
-      xhr.addEventListener('error', function (error) {
-        this._setErrored(true);
-        this._updateStatus();
-        this.rejectCompletes(error);
-      }.bind(this));
-
-      xhr.addEventListener('timeout', function (error) {
-        this._setTimedOut(true);
-        this._updateStatus();
-        this.rejectCompletes(error);
-      }.bind(this));
-
-      xhr.addEventListener('abort', function () {
-        this._updateStatus();
-        this.rejectCompletes(new Error('Request aborted.'));
-      }.bind(this));
-
-
-      // Called after all of the above.
-      xhr.addEventListener('loadend', function () {
-        this._updateStatus();
-
-        if (!this.succeeded) {
-          this.rejectCompletes(new Error('The request failed with status code: ' + this.xhr.status));
-          return;
-        }
-
-        this._setResponse(this.parseResponse());
-        this.resolveCompletes(this);
-      }.bind(this));
-
-      this.url = options.url;
-      xhr.open(
-        options.method || 'GET',
-        options.url,
-        options.async !== false
-      );
-
-      var acceptType = {
-        'json': 'application/json',
-        'text': 'text/plain',
-        'html': 'text/html',
-        'xml': 'application/xml',
-        'arraybuffer': 'application/octet-stream'
-      }[options.handleAs];
-      var headers = options.headers || Object.create(null);
-      var newHeaders = Object.create(null);
-      for (var key in headers) {
-        newHeaders[key.toLowerCase()] = headers[key];
-      }
-      headers = newHeaders;
-
-      if (acceptType && !headers['accept']) {
-        headers['accept'] = acceptType;
-      }
-      Object.keys(headers).forEach(function (requestHeader) {
-        if (/[A-Z]/.test(requestHeader)) {
-          console.error('Headers must be lower case, got', requestHeader);
-        }
-        xhr.setRequestHeader(
-          requestHeader,
-          headers[requestHeader]
-        );
-      }, this);
-
-      if (options.async !== false) {
-        var handleAs = options.handleAs;
-
-        // If a JSON prefix is present, the responseType must be 'text' or the
-        // browser won’t be able to parse the response.
-        if (!!options.jsonPrefix || !handleAs) {
-          handleAs = 'text';
-        }
-
-        // In IE, `xhr.responseType` is an empty string when the response
-        // returns. Hence, caching it as `xhr._responseType`.
-        xhr.responseType = xhr._responseType = handleAs;
-
-        // Cache the JSON prefix, if it exists.
-        if (!!options.jsonPrefix) {
-          xhr._jsonPrefix = options.jsonPrefix;
-        }
-      }
-
-      xhr.withCredentials = !!options.withCredentials;
-      xhr.timeout = options.timeout;
-
-      var body = this._encodeBodyObject(options.body, headers['content-type']);
-
-      xhr.send(
-        /** @type {ArrayBuffer|ArrayBufferView|Blob|Document|FormData|
-                   null|string|undefined} */
-        (body));
-
-      return this.completes;
-    },
-
-    /**
-     * Attempts to parse the response body of the XHR. If parsing succeeds,
-     * the value returned will be deserialized based on the `responseType`
-     * set on the XHR.
-     *
-     * @return {*} The parsed response,
-     * or undefined if there was an empty response or parsing failed.
-     */
-    parseResponse: function () {
-      var xhr = this.xhr;
-      var responseType = xhr.responseType || xhr._responseType;
-      var preferResponseText = !this.xhr.responseType;
-      var prefixLen = (xhr._jsonPrefix && xhr._jsonPrefix.length) || 0;
-
-      try {
-        switch (responseType) {
-          case 'json':
-            // If the xhr object doesn't have a natural `xhr.responseType`,
-            // we can assume that the browser hasn't parsed the response for us,
-            // and so parsing is our responsibility. Likewise if response is
-            // undefined, as there's no way to encode undefined in JSON.
-            if (preferResponseText || xhr.response === undefined) {
-              // Try to emulate the JSON section of the response body section of
-              // the spec: https://xhr.spec.whatwg.org/#response-body
-              // That is to say, we try to parse as JSON, but if anything goes
-              // wrong return null.
-              try {
-                return JSON.parse(xhr.responseText);
-              } catch (_) {
-                return null;
-              }
-            }
-
-            return xhr.response;
-          case 'xml':
-            return xhr.responseXML;
-          case 'blob':
-          case 'document':
-          case 'arraybuffer':
-            return xhr.response;
-          case 'text':
-          default: {
-            // If `prefixLen` is set, it implies the response should be parsed
-            // as JSON once the prefix of length `prefixLen` is stripped from
-            // it. Emulate the behavior above where null is returned on failure
-            // to parse.
-            if (prefixLen) {
-              try {
-                return JSON.parse(xhr.responseText.substring(prefixLen));
-              } catch (_) {
-                return null;
-              }
-            }
-            return xhr.responseText;
-          }
-        }
-      } catch (e) {
-        this.rejectCompletes(new Error('Could not parse response. ' + e.message));
-      }
-    },
-
-    /**
-     * Aborts the request.
-     */
-    abort: function () {
-      this._setAborted(true);
-      this.xhr.abort();
-    },
-
-    /**
-     * @param {*} body The given body of the request to try and encode.
-     * @param {?string} contentType The given content type, to infer an encoding
-     *     from.
-     * @return {*} Either the encoded body as a string, if successful,
-     *     or the unaltered body object if no encoding could be inferred.
-     */
-    _encodeBodyObject: function(body, contentType) {
-      if (typeof body == 'string') {
-        return body;  // Already encoded.
-      }
-      var bodyObj = /** @type {Object} */ (body);
-      switch(contentType) {
-        case('application/json'):
-          return JSON.stringify(bodyObj);
-        case('application/x-www-form-urlencoded'):
-          return this._wwwFormUrlEncode(bodyObj);
-      }
-      return body;
-    },
-
-    /**
-     * @param {Object} object The object to encode as x-www-form-urlencoded.
-     * @return {string} .
-     */
-    _wwwFormUrlEncode: function(object) {
-      if (!object) {
-        return '';
-      }
-      var pieces = [];
-      Object.keys(object).forEach(function(key) {
-        // TODO(rictic): handle array values here, in a consistent way with
-        //   iron-ajax params.
-        pieces.push(
-            this._wwwFormUrlEncodePiece(key) + '=' +
-            this._wwwFormUrlEncodePiece(object[key]));
-      }, this);
-      return pieces.join('&');
-    },
-
-    /**
-     * @param {*} str A key or value to encode as x-www-form-urlencoded.
-     * @return {string} .
-     */
-    _wwwFormUrlEncodePiece: function(str) {
-      // Spec says to normalize newlines to \r\n and replace %20 spaces with +.
-      // jQuery does this as well, so this is likely to be widely compatible.
-      return encodeURIComponent(str.toString().replace(/\r?\n/g, '\r\n'))
-          .replace(/%20/g, '+');
-    },
-
-    /**
-     * Updates the status code and status text.
-     */
-    _updateStatus: function() {
-      this._setStatus(this.xhr.status);
-      this._setStatusText((this.xhr.statusText === undefined) ? '' : this.xhr.statusText);
-    }
-  });
-</script>
-
-
-
-<script>
-  'use strict';
-
-  Polymer({
-
-    is: 'iron-ajax',
-
-    /**
-     * Fired when a request is sent.
-     *
-     * @event request
-     */
-
-    /**
-     * Fired when a response is received.
-     *
-     * @event response
-     */
-
-    /**
-     * Fired when an error is received.
-     *
-     * @event error
-     */
-
-    hostAttributes: {
-      hidden: true
-    },
-
-    properties: {
-      /**
-       * The URL target of the request.
-       */
-      url: {
-        type: String
-      },
-
-      /**
-       * An object that contains query parameters to be appended to the
-       * specified `url` when generating a request. If you wish to set the body
-       * content when making a POST request, you should use the `body` property
-       * instead.
-       */
-      params: {
-        type: Object,
-        value: function() {
-          return {};
-        }
-      },
-
-      /**
-       * The HTTP method to use such as 'GET', 'POST', 'PUT', or 'DELETE'.
-       * Default is 'GET'.
-       */
-      method: {
-        type: String,
-        value: 'GET'
-      },
-
-      /**
-       * HTTP request headers to send.
-       *
-       * Example:
-       *
-       *     <iron-ajax
-       *         auto
-       *         url="http://somesite.com"
-       *         headers='{"X-Requested-With": "XMLHttpRequest"}'
-       *         handle-as="json"></iron-ajax>
-       *
-       * Note: setting a `Content-Type` header here will override the value
-       * specified by the `contentType` property of this element.
-       */
-      headers: {
-        type: Object,
-        value: function() {
-          return {};
-        }
-      },
-
-      /**
-       * Content type to use when sending data. If the `contentType` property
-       * is set and a `Content-Type` header is specified in the `headers`
-       * property, the `headers` property value will take precedence.
-       */
-      contentType: {
-        type: String,
-        value: null
-      },
-
-      /**
-       * Body content to send with the request, typically used with "POST"
-       * requests.
-       *
-       * If body is a string it will be sent unmodified.
-       *
-       * If Content-Type is set to a value listed below, then
-       * the body will be encoded accordingly.
-       *
-       *    * `content-type="application/json"`
-       *      * body is encoded like `{"foo":"bar baz","x":1}`
-       *    * `content-type="application/x-www-form-urlencoded"`
-       *      * body is encoded like `foo=bar+baz&x=1`
-       *
-       * Otherwise the body will be passed to the browser unmodified, and it
-       * will handle any encoding (e.g. for FormData, Blob, ArrayBuffer).
-       *
-       * @type (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object)
-       */
-      body: {
-        type: Object,
-        value: null
-      },
-
-      /**
-       * Toggle whether XHR is synchronous or asynchronous. Don't change this
-       * to true unless You Know What You Are Doing™.
-       */
-      sync: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Specifies what data to store in the `response` property, and
-       * to deliver as `event.detail.response` in `response` events.
-       *
-       * One of:
-       *
-       *    `text`: uses `XHR.responseText`.
-       *
-       *    `xml`: uses `XHR.responseXML`.
-       *
-       *    `json`: uses `XHR.responseText` parsed as JSON.
-       *
-       *    `arraybuffer`: uses `XHR.response`.
-       *
-       *    `blob`: uses `XHR.response`.
-       *
-       *    `document`: uses `XHR.response`.
-       */
-      handleAs: {
-        type: String,
-        value: 'json'
-      },
-
-      /**
-       * Set the withCredentials flag on the request.
-       */
-      withCredentials: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Set the timeout flag on the request.
-       */
-      timeout: {
-        type: Number,
-        value: 0
-      },
-
-      /**
-       * If true, automatically performs an Ajax request when either `url` or
-       * `params` changes.
-       */
-      auto: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * If true, error messages will automatically be logged to the console.
-       */
-      verbose: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * The most recent request made by this iron-ajax element.
-       */
-      lastRequest: {
-        type: Object,
-        notify: true,
-        readOnly: true
-      },
-
-      /**
-       * True while lastRequest is in flight.
-       */
-      loading: {
-        type: Boolean,
-        notify: true,
-        readOnly: true
-      },
-
-      /**
-       * lastRequest's response.
-       *
-       * Note that lastResponse and lastError are set when lastRequest finishes,
-       * so if loading is true, then lastResponse and lastError will correspond
-       * to the result of the previous request.
-       *
-       * The type of the response is determined by the value of `handleAs` at
-       * the time that the request was generated.
-       *
-       * @type {Object}
-       */
-      lastResponse: {
-        type: Object,
-        notify: true,
-        readOnly: true
-      },
-
-      /**
-       * lastRequest's error, if any.
-       *
-       * @type {Object}
-       */
-      lastError: {
-        type: Object,
-        notify: true,
-        readOnly: true
-      },
-
-      /**
-       * An Array of all in-flight requests originating from this iron-ajax
-       * element.
-       */
-      activeRequests: {
-        type: Array,
-        notify: true,
-        readOnly: true,
-        value: function() {
-          return [];
-        }
-      },
-
-      /**
-       * Length of time in milliseconds to debounce multiple automatically generated requests.
-       */
-      debounceDuration: {
-        type: Number,
-        value: 0,
-        notify: true
-      },
-
-      /**
-       * Prefix to be stripped from a JSON response before parsing it.
-       *
-       * In order to prevent an attack using CSRF with Array responses
-       * (http://haacked.com/archive/2008/11/20/anatomy-of-a-subtle-json-vulnerability.aspx/)
-       * many backends will mitigate this by prefixing all JSON response bodies
-       * with a string that would be nonsensical to a JavaScript parser.
-       *
-       */
-      jsonPrefix: {
-        type: String,
-        value: ''
-      },
-
-      _boundHandleResponse: {
-        type: Function,
-        value: function() {
-          return this._handleResponse.bind(this);
-        }
-      }
-    },
-
-    observers: [
-      '_requestOptionsChanged(url, method, params.*, headers, contentType, ' +
-          'body, sync, handleAs, jsonPrefix, withCredentials, timeout, auto)'
-    ],
-
-    /**
-     * The query string that should be appended to the `url`, serialized from
-     * the current value of `params`.
-     *
-     * @return {string}
-     */
-    get queryString () {
-      var queryParts = [];
-      var param;
-      var value;
-
-      for (param in this.params) {
-        value = this.params[param];
-        param = window.encodeURIComponent(param);
-
-        if (Array.isArray(value)) {
-          for (var i = 0; i < value.length; i++) {
-            queryParts.push(param + '=' + window.encodeURIComponent(value[i]));
-          }
-        } else if (value !== null) {
-          queryParts.push(param + '=' + window.encodeURIComponent(value));
-        } else {
-          queryParts.push(param);
-        }
-      }
-
-      return queryParts.join('&');
-    },
-
-    /**
-     * The `url` with query string (if `params` are specified), suitable for
-     * providing to an `iron-request` instance.
-     *
-     * @return {string}
-     */
-    get requestUrl() {
-      var queryString = this.queryString;
-
-      if (queryString) {
-        var bindingChar = this.url.indexOf('?') >= 0 ? '&' : '?';
-        return this.url + bindingChar + queryString;
-      }
-
-      return this.url;
-    },
-
-    /**
-     * An object that maps header names to header values, first applying the
-     * the value of `Content-Type` and then overlaying the headers specified
-     * in the `headers` property.
-     *
-     * @return {Object}
-     */
-    get requestHeaders() {
-      var headers = {};
-      var contentType = this.contentType;
-      if (contentType == null && (typeof this.body === 'string')) {
-        contentType = 'application/x-www-form-urlencoded';
-      }
-      if (contentType) {
-        headers['content-type'] = contentType;
-      }
-      var header;
-
-      if (this.headers instanceof Object) {
-        for (header in this.headers) {
-          headers[header] = this.headers[header].toString();
-        }
-      }
-
-      return headers;
-    },
-
-    /**
-     * Request options suitable for generating an `iron-request` instance based
-     * on the current state of the `iron-ajax` instance's properties.
-     *
-     * @return {{
-     *   url: string,
-     *   method: (string|undefined),
-     *   async: (boolean|undefined),
-     *   body: (ArrayBuffer|ArrayBufferView|Blob|Document|FormData|null|string|undefined|Object),
-     *   headers: (Object|undefined),
-     *   handleAs: (string|undefined),
-     *   jsonPrefix: (string|undefined),
-     *   withCredentials: (boolean|undefined)}}
-     */
-    toRequestOptions: function() {
-      return {
-        url: this.requestUrl || '',
-        method: this.method,
-        headers: this.requestHeaders,
-        body: this.body,
-        async: !this.sync,
-        handleAs: this.handleAs,
-        jsonPrefix: this.jsonPrefix,
-        withCredentials: this.withCredentials,
-        timeout: this.timeout
-      };
-    },
-
-    /**
-     * Performs an AJAX request to the specified URL.
-     *
-     * @return {!IronRequestElement}
-     */
-    generateRequest: function() {
-      var request = /** @type {!IronRequestElement} */ (document.createElement('iron-request'));
-      var requestOptions = this.toRequestOptions();
-
-      this.activeRequests.push(request);
-
-      request.completes.then(
-        this._boundHandleResponse
-      ).catch(
-        this._handleError.bind(this, request)
-      ).then(
-        this._discardRequest.bind(this, request)
-      );
-
-      request.send(requestOptions);
-
-      this._setLastRequest(request);
-      this._setLoading(true);
-
-      this.fire('request', {
-        request: request,
-        options: requestOptions
-      }, {bubbles: false});
-
-      return request;
-    },
-
-    _handleResponse: function(request) {
-      if (request === this.lastRequest) {
-        this._setLastResponse(request.response);
-        this._setLastError(null);
-        this._setLoading(false);
-      }
-      this.fire('response', request, {bubbles: false});
-    },
-
-    _handleError: function(request, error) {
-      if (this.verbose) {
-        console.error(error);
-      }
-
-      if (request === this.lastRequest) {
-        this._setLastError({
-          request: request,
-          error: error
-        });
-        this._setLastResponse(null);
-        this._setLoading(false);
-      }
-      this.fire('error', {
-        request: request,
-        error: error
-      }, {bubbles: false});
-    },
-
-    _discardRequest: function(request) {
-      var requestIndex = this.activeRequests.indexOf(request);
-
-      if (requestIndex > -1) {
-        this.activeRequests.splice(requestIndex, 1);
-      }
-    },
-
-    _requestOptionsChanged: function() {
-      this.debounce('generate-request', function() {
-        if (this.url == null) {
-          return;
-        }
-
-        if (this.auto) {
-          this.generateRequest();
-        }
-      }, this.debounceDuration);
-    },
-
-  });
-</script>
-
-
-
+</style>
 </head><body><div hidden="" by-vulcanize=""><dom-module id="iron-icon" assetpath="../bower_components/iron-icon/">
 
   <style>
@@ -15191,302 +14129,6 @@ if (!window.Promise) {
 
     _selectedPageChanged: function(selected, old) {
       this.async(this.notifyResize);
-    }
-  });
-
-</script>
-<dom-module id="iron-image" assetpath="../bower_components/iron-image/">
-
-  <style>
-
-    :host {
-      display: inline-block;
-      overflow: hidden;
-      position: relative;
-    }
-
-    #img {
-      display: block;
-      width: var(--iron-image-width, auto);
-      height: var(--iron-image-height, auto);
-    }
-
-    :host([sizing]) #img {
-      display: none;
-    }
-
-    #placeholder {
-      background-color: inherit;
-      opacity: 1;
-      @apply(--layout-fit);
-      @apply(--iron-image-placeholder);
-    }
-
-    #placeholder.faded-out {
-      transition: opacity 0.5s linear;
-      opacity: 0;
-    }
-
-  </style>
-
-  <template>
-
-    <img id="img" role="none" hidden$="[[_computeImageVisibility(sizing)]]">
-    <div id="placeholder" hidden$="[[_computePlaceholderVisibility(fade,loaded,preload)]]" class$="[[_computePlaceholderClassName(fade,loaded,preload)]]"></div>
-    <content></content>
-
-  </template>
-
-</dom-module>
-
-<script>
-
-  Polymer({
-
-    is: 'iron-image',
-
-    properties: {
-      /**
-       * The URL of an image.
-       */
-      src: {
-        observer: '_srcChanged',
-        type: String,
-        value: ''
-      },
-
-      /**
-       * When true, the image is prevented from loading and any placeholder is
-       * shown.  This may be useful when a binding to the src property is known to
-       * be invalid, to prevent 404 requests.
-       */
-      preventLoad: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Sets a sizing option for the image.  Valid values are `contain` (full
-       * aspect ratio of the image is contained within the element and
-       * letterboxed) or `cover` (image is cropped in order to fully cover the
-       * bounds of the element), or `null` (default: image takes natural size).
-       */
-      sizing: {
-        type: String,
-        value: null
-      },
-
-      /**
-       * When a sizing option is used (`cover` or `contain`), this determines
-       * how the image is aligned within the element bounds.
-       */
-      position: {
-        type: String,
-        value: 'center'
-      },
-
-      /**
-       * When `true`, any change to the `src` property will cause the `placeholder`
-       * image to be shown until the new image has loaded.
-       */
-      preload: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * This image will be used as a background/placeholder until the src image has
-       * loaded.  Use of a data-URI for placeholder is encouraged for instant rendering.
-       */
-      placeholder: {
-        type: String,
-        value: null
-      },
-
-      /**
-       * When `preload` is true, setting `fade` to true will cause the image to
-       * fade into place.
-       */
-      fade: {
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Read-only value that is true when the image is loaded.
-       */
-      loaded: {
-        notify: true,
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Read-only value that tracks the loading state of the image when the `preload`
-       * option is used.
-       */
-      loading: {
-        notify: true,
-        type: Boolean,
-        value: false
-      },
-
-      /**
-       * Can be used to set the width of image (e.g. via binding); size may also be
-       * set via CSS.
-       */
-      width: {
-        observer: '_widthChanged',
-        type: Number,
-        value: null
-      },
-
-      /**
-       * Can be used to set the height of image (e.g. via binding); size may also be
-       * set via CSS.
-       *
-       * @attribute height
-       * @type number
-       * @default null
-       */
-      height: {
-        observer: '_heightChanged',
-        type: Number,
-        value: null
-      },
-
-      _placeholderBackgroundUrl: {
-        type: String,
-        computed: '_computePlaceholderBackgroundUrl(preload,placeholder)',
-        observer: '_placeholderBackgroundUrlChanged'
-      },
-
-      requiresPreload: {
-        type: Boolean,
-        computed: '_computeRequiresPreload(preload,loaded)'
-      },
-
-      canLoad: {
-        type: Boolean,
-        computed: '_computeCanLoad(preventLoad, src)'
-      }
-
-    },
-
-    observers: [
-      '_transformChanged(sizing, position)',
-      '_loadBehaviorChanged(canLoad, preload, loaded)',
-      '_loadStateChanged(src, preload, loaded)',
-    ],
-
-    ready: function() {
-      if (!this.hasAttribute('role')) {
-        this.setAttribute('role', 'img');
-      }
-    },
-
-    _computeImageVisibility: function() {
-      return !!this.sizing;
-    },
-
-    _computePlaceholderVisibility: function() {
-      return !this.preload || (this.loaded && !this.fade);
-    },
-
-    _computePlaceholderClassName: function() {
-      if (!this.preload) {
-        return '';
-      }
-
-      if (this.loaded && this.fade) {
-        return 'faded-out';
-      }
-
-      return '';
-    },
-
-    _computePlaceholderBackgroundUrl: function() {
-      if (this.preload && this.placeholder) {
-        return 'url(' + this.placeholder + ')';
-      }
-
-      return null;
-    },
-
-    _computeRequiresPreload: function() {
-      return this.preload && !this.loaded;
-    },
-
-    _computeCanLoad: function() {
-      return Boolean(!this.preventLoad && this.src);
-    },
-
-    _widthChanged: function() {
-      this.style.width = isNaN(this.width) ? this.width : this.width + 'px';
-    },
-
-    _heightChanged: function() {
-      this.style.height = isNaN(this.height) ? this.height : this.height + 'px';
-    },
-
-    _srcChanged: function(newSrc, oldSrc) {
-      if (newSrc !== oldSrc) {
-        this.loaded = false;
-      }
-    },
-
-    _placeholderBackgroundUrlChanged: function() {
-      this.$.placeholder.style.backgroundImage =
-        this._placeholderBackgroundUrl;
-    },
-
-    _transformChanged: function() {
-      var placeholderStyle = this.$.placeholder.style;
-
-      this.style.backgroundSize =
-        placeholderStyle.backgroundSize = this.sizing;
-
-      this.style.backgroundPosition =
-        placeholderStyle.backgroundPosition =
-        this.sizing ? this.position : '';
-
-      this.style.backgroundRepeat =
-        placeholderStyle.backgroundRepeat =
-        this.sizing ? 'no-repeat' : '';
-    },
-
-    _loadBehaviorChanged: function() {
-      var img;
-
-      if (!this.canLoad) {
-        return;
-      }
-
-      if (this.requiresPreload) {
-        img = new Image();
-        img.src = this.src;
-
-        this.loading = true;
-
-        img.onload = function() {
-          this.loading = false;
-          this.loaded = true;
-        }.bind(this);
-      } else {
-        this.loaded = true;
-      }
-    },
-
-    _loadStateChanged: function() {
-      if (this.requiresPreload) {
-        return;
-      }
-
-      if (this.sizing) {
-        this.style.backgroundImage = this.src ? 'url(' + this.src + ')': '';
-      } else {
-        this.$.img.src = this.src || '';
-      }
     }
   });
 
@@ -16830,6 +15472,10 @@ if (!window.Promise) {
         cursor: auto;
         @apply(--paper-icon-button-disabled);
       }
+      
+      :host(:hover) { 
+        @apply(--paper-icon-button-hover);
+      }
 
       iron-icon {
         --iron-icon-width: 100%;
@@ -17105,7 +15751,7 @@ if (!window.Promise) {
 
     _calculateElevation: function() {
       if (!this.raised) {
-        this.elevation = 0;
+        this._setElevation(0);
       } else {
         Polymer.PaperButtonBehaviorImpl._calculateElevation.apply(this);
       }
@@ -17119,6 +15765,463 @@ if (!window.Promise) {
     @event transitionend
     @param {{node: Object}} detail Contains the animated node.
     */
+  });
+</script>
+<dom-module id="iron-image" assetpath="../bower_components/iron-image/">
+
+  <style>
+
+    :host {
+      display: inline-block;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #img {
+      display: block;
+      width: var(--iron-image-width, auto);
+      height: var(--iron-image-height, auto);
+    }
+
+    :host([sizing]) #img {
+      display: none;
+    }
+
+    #placeholder {
+      background-color: inherit;
+      opacity: 1;
+      @apply(--layout-fit);
+      @apply(--iron-image-placeholder);
+    }
+
+    #placeholder.faded-out {
+      transition: opacity 0.5s linear;
+      opacity: 0;
+    }
+
+  </style>
+
+  <template>
+
+    <img id="img" role="none" hidden$="[[_computeImageVisibility(sizing)]]">
+    <div id="placeholder" hidden$="[[_computePlaceholderVisibility(fade,loaded,preload)]]" class$="[[_computePlaceholderClassName(fade,loaded,preload)]]"></div>
+    <content></content>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'iron-image',
+
+    properties: {
+      /**
+       * The URL of an image.
+       */
+      src: {
+        observer: '_srcChanged',
+        type: String,
+        value: ''
+      },
+
+      /**
+       * When true, the image is prevented from loading and any placeholder is
+       * shown.  This may be useful when a binding to the src property is known to
+       * be invalid, to prevent 404 requests.
+       */
+      preventLoad: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Sets a sizing option for the image.  Valid values are `contain` (full
+       * aspect ratio of the image is contained within the element and
+       * letterboxed) or `cover` (image is cropped in order to fully cover the
+       * bounds of the element), or `null` (default: image takes natural size).
+       */
+      sizing: {
+        type: String,
+        value: null
+      },
+
+      /**
+       * When a sizing option is used (`cover` or `contain`), this determines
+       * how the image is aligned within the element bounds.
+       */
+      position: {
+        type: String,
+        value: 'center'
+      },
+
+      /**
+       * When `true`, any change to the `src` property will cause the `placeholder`
+       * image to be shown until the new image has loaded.
+       */
+      preload: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * This image will be used as a background/placeholder until the src image has
+       * loaded.  Use of a data-URI for placeholder is encouraged for instant rendering.
+       */
+      placeholder: {
+        type: String,
+        value: null
+      },
+
+      /**
+       * When `preload` is true, setting `fade` to true will cause the image to
+       * fade into place.
+       */
+      fade: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Read-only value that is true when the image is loaded.
+       */
+      loaded: {
+        notify: true,
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Read-only value that tracks the loading state of the image when the `preload`
+       * option is used.
+       */
+      loading: {
+        notify: true,
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Can be used to set the width of image (e.g. via binding); size may also be
+       * set via CSS.
+       */
+      width: {
+        observer: '_widthChanged',
+        type: Number,
+        value: null
+      },
+
+      /**
+       * Can be used to set the height of image (e.g. via binding); size may also be
+       * set via CSS.
+       *
+       * @attribute height
+       * @type number
+       * @default null
+       */
+      height: {
+        observer: '_heightChanged',
+        type: Number,
+        value: null
+      },
+
+      _placeholderBackgroundUrl: {
+        type: String,
+        computed: '_computePlaceholderBackgroundUrl(preload,placeholder)',
+        observer: '_placeholderBackgroundUrlChanged'
+      },
+
+      requiresPreload: {
+        type: Boolean,
+        computed: '_computeRequiresPreload(preload,loaded)'
+      },
+
+      canLoad: {
+        type: Boolean,
+        computed: '_computeCanLoad(preventLoad, src)'
+      }
+
+    },
+
+    observers: [
+      '_transformChanged(sizing, position)',
+      '_loadBehaviorChanged(canLoad, preload, loaded)',
+      '_loadStateChanged(src, preload, loaded)',
+    ],
+
+    ready: function() {
+      if (!this.hasAttribute('role')) {
+        this.setAttribute('role', 'img');
+      }
+    },
+
+    _computeImageVisibility: function() {
+      return !!this.sizing;
+    },
+
+    _computePlaceholderVisibility: function() {
+      return !this.preload || (this.loaded && !this.fade);
+    },
+
+    _computePlaceholderClassName: function() {
+      if (!this.preload) {
+        return '';
+      }
+
+      if (this.loaded && this.fade) {
+        return 'faded-out';
+      }
+
+      return '';
+    },
+
+    _computePlaceholderBackgroundUrl: function() {
+      if (this.preload && this.placeholder) {
+        return 'url(' + this.placeholder + ')';
+      }
+
+      return null;
+    },
+
+    _computeRequiresPreload: function() {
+      return this.preload && !this.loaded;
+    },
+
+    _computeCanLoad: function() {
+      return Boolean(!this.preventLoad && this.src);
+    },
+
+    _widthChanged: function() {
+      this.style.width = isNaN(this.width) ? this.width : this.width + 'px';
+    },
+
+    _heightChanged: function() {
+      this.style.height = isNaN(this.height) ? this.height : this.height + 'px';
+    },
+
+    _srcChanged: function(newSrc, oldSrc) {
+      if (newSrc !== oldSrc) {
+        this.loaded = false;
+      }
+    },
+
+    _placeholderBackgroundUrlChanged: function() {
+      this.$.placeholder.style.backgroundImage =
+        this._placeholderBackgroundUrl;
+    },
+
+    _transformChanged: function() {
+      var placeholderStyle = this.$.placeholder.style;
+
+      this.style.backgroundSize =
+        placeholderStyle.backgroundSize = this.sizing;
+
+      this.style.backgroundPosition =
+        placeholderStyle.backgroundPosition =
+        this.sizing ? this.position : '';
+
+      this.style.backgroundRepeat =
+        placeholderStyle.backgroundRepeat =
+        this.sizing ? 'no-repeat' : '';
+    },
+
+    _loadBehaviorChanged: function() {
+      var img;
+
+      if (!this.canLoad) {
+        return;
+      }
+
+      if (this.requiresPreload) {
+        img = new Image();
+        img.src = this.src;
+
+        this.loading = true;
+
+        img.onload = function() {
+          this.loading = false;
+          this.loaded = true;
+        }.bind(this);
+      } else {
+        this.loaded = true;
+      }
+    },
+
+    _loadStateChanged: function() {
+      if (this.requiresPreload) {
+        return;
+      }
+
+      if (this.sizing) {
+        this.style.backgroundImage = this.src ? 'url(' + this.src + ')': '';
+      } else {
+        this.$.img.src = this.src || '';
+      }
+    }
+  });
+
+</script>
+<dom-module id="paper-card" assetpath="../bower_components/paper-card/">
+  <template>
+    <style include="paper-material">
+      :host {
+        display: inline-block;
+        position: relative;
+        box-sizing: border-box;
+
+        background: #fff;
+        border-radius: 2px;
+        @apply(--paper-card);
+      }
+
+      /* IE 10 support for HTML5 hidden attr */
+      [hidden] {
+        display: none !important;
+      }
+
+      .header {
+        position: relative;
+        border-top-left-radius: inherit;
+        border-top-right-radius: inherit;
+        overflow: hidden;
+        @apply(--paper-card-header);
+      }
+
+      .header iron-image {
+        width: 100%;
+        --iron-image-width: 100%;
+        pointer-events: none;
+        @apply(--paper-card-header-image);
+      }
+
+      .header .title-text {
+        padding: 16px;
+        font-size: 24px;
+        font-weight: 400;
+        color: var(--paper-card-header-color, #000);
+        @apply(--paper-card-header-text);
+      }
+
+      .header .title-text.over-image {
+        position: absolute;
+        bottom: 0px;
+        @apply(--paper-card-header-image-text);
+      }
+
+      :host ::content .card-content {
+        padding: 16px;
+        position:relative;
+        @apply(--paper-card-content);
+      }
+
+      :host ::content .card-actions {
+        border-top: 1px solid #e8e8e8;
+        padding: 5px 16px;
+        position:relative;
+        @apply(--paper-card-actions);
+      }
+    </style>
+
+    <div class="header">
+      <iron-image hidden$="[[!image]]" src="[[image]]" preload$="[[preloadImage]]" fade$="[[fadeImage]]"></iron-image>
+      <div hidden$="[[!heading]]" class$="[[_computeHeadingClass(image)]]">[[heading]]</div>
+    </div>
+
+    <content></content>
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'paper-card',
+
+    properties: {
+
+      /**
+       * The title of the card.
+       */
+      heading: {
+        type: String,
+        value: '',
+        observer: '_headingChanged'
+      },
+
+      /**
+       * The url of the title image of the card.
+       */
+      image: {
+        type: String,
+        value: ''
+      },
+
+      /**
+       * When `true`, any change to the image url property will cause the
+       * `placeholder` image to be shown until the image is fully rendered.
+       */
+      preloadImage: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * When `preloadImage` is true, setting `fadeImage` to true will cause the
+       * image to fade into place.
+       */
+      fadeImage: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * The z-depth of the card, from 0-5.
+       */
+      elevation: {
+        type: Number,
+        value: 1,
+        reflectToAttribute: true
+      },
+
+      /**
+       * Set this to true to animate the card shadow when setting a new
+       * `z` value.
+       */
+      animatedShadow: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Read-only property used to pass down the `animatedShadow` value to
+       * the underlying paper-material style (since they have different names).
+       */
+      animated: {
+        type: Boolean,
+        reflectToAttribute: true,
+        readOnly: true,
+        computed: '_computeAnimated(animatedShadow)'
+      }
+    },
+
+    _headingChanged: function(heading) {
+      var label = this.getAttribute('aria-label');
+      this.setAttribute('aria-label', heading);
+    },
+
+    _computeHeadingClass: function(image) {
+      var cls = 'title-text';
+      if (image)
+        cls += ' over-image';
+      return cls;
+    },
+
+    _computeAnimated: function(animatedShadow) {
+      return animatedShadow;
+    }
   });
 </script>
 <dom-module id="paper-menu-shared-styles" assetpath="../bower_components/paper-menu/">
@@ -17187,6 +16290,879 @@ if (!window.Promise) {
         ]
       });
     })();
+  </script>
+</dom-module>
+<dom-module id="paper-input-char-counter" assetpath="../bower_components/paper-input/">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+        float: right;
+
+        @apply(--paper-font-caption);
+        @apply(--paper-input-char-counter);
+      }
+
+      :host-context([dir="rtl"]) {
+        float: left;
+      }
+    </style>
+
+    <span>[[_charCounterStr]]</span>
+  </template>
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'paper-input-char-counter',
+
+    behaviors: [
+      Polymer.PaperInputAddonBehavior
+    ],
+
+    properties: {
+      _charCounterStr: {
+        type: String,
+        value: '0'
+      }
+    },
+
+    update: function(state) {
+      if (!state.inputElement) {
+        return;
+      }
+
+      state.value = state.value || '';
+
+      // Account for the textarea's new lines.
+      var str = state.value.replace(/(\r\n|\n|\r)/g, '--').length;
+
+      if (state.inputElement.hasAttribute('maxlength')) {
+        str += '/' + state.inputElement.getAttribute('maxlength');
+      }
+      this._charCounterStr = str;
+    }
+  });
+</script>
+<dom-module id="paper-input-container" assetpath="../bower_components/paper-input/">
+  <template>
+    <style>
+      :host {
+        display: block;
+        padding: 8px 0;
+
+        @apply(--paper-input-container);
+      }
+
+      :host[inline] {
+        display: inline-block;
+      }
+
+      :host([disabled]) {
+        pointer-events: none;
+        opacity: 0.33;
+
+        @apply(--paper-input-container-disabled);
+      }
+
+      .floated-label-placeholder {
+        @apply(--paper-font-caption);
+      }
+
+      .underline {
+        position: relative;
+      }
+
+      .focused-line {
+        @apply(--layout-fit);
+
+        background: var(--paper-input-container-focus-color, --default-primary-color);
+        height: 2px;
+        -webkit-transform-origin: center center;
+        transform-origin: center center;
+        -webkit-transform: scale3d(0,1,1);
+        transform: scale3d(0,1,1);
+
+        @apply(--paper-input-container-underline-focus);
+      }
+
+      .underline.is-highlighted .focused-line {
+        -webkit-transform: none;
+        transform: none;
+        -webkit-transition: -webkit-transform 0.25s;
+        transition: transform 0.25s;
+
+        @apply(--paper-transition-easing);
+      }
+
+      .underline.is-invalid .focused-line {
+        background: var(--paper-input-container-invalid-color, --google-red-500);
+        -webkit-transform: none;
+        transform: none;
+        -webkit-transition: -webkit-transform 0.25s;
+        transition: transform 0.25s;
+
+        @apply(--paper-transition-easing);
+      }
+
+      .unfocused-line {
+        @apply(--layout-fit);
+
+        height: 1px;
+        background: var(--paper-input-container-color, --secondary-text-color);
+
+        @apply(--paper-input-container-underline);
+      }
+
+      :host([disabled]) .unfocused-line {
+        border-bottom: 1px dashed;
+        border-color: var(--paper-input-container-color, --secondary-text-color);
+        background: transparent;
+
+        @apply(--paper-input-container-underline-disabled);
+      }
+
+      .label-and-input-container {
+        @apply(--layout-flex);
+        @apply(--layout-relative);
+      }
+
+      .input-content {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+
+        position: relative;
+      }
+
+      .input-content ::content label,
+      .input-content ::content .paper-input-label {
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        font: inherit;
+        color: var(--paper-input-container-color, --secondary-text-color);
+
+        @apply(--paper-font-common-nowrap);
+        @apply(--paper-font-subhead);
+        @apply(--paper-input-container-label);
+      }
+
+      .input-content.label-is-floating ::content label,
+      .input-content.label-is-floating ::content .paper-input-label {
+        -webkit-transform: translateY(-75%) scale(0.75);
+        transform: translateY(-75%) scale(0.75);
+        -webkit-transition: -webkit-transform 0.25s;
+        transition: transform 0.25s;
+        -webkit-transform-origin: left top;
+        transform-origin: left top;
+
+        /* Since we scale to 75/100 of the size, we actually have 100/75 of the
+        original space now available */
+        width: 133%;
+
+        @apply(--paper-transition-easing);
+        @apply(--paper-input-container-label-floating);
+      }
+
+      :host-context([dir="rtl"]) .input-content.label-is-floating ::content label,
+      :host-context([dir="rtl"]) .input-content.label-is-floating ::content .paper-input-label {
+        /* TODO(noms): Figure out why leaving the width at 133% before the animation
+         * actually makes
+         * it wider on the right side, not left side, as you would expect in RTL */
+        width: 100%;
+        -webkit-transform-origin: right top;
+        transform-origin: right top;
+      }
+
+      .input-content.label-is-highlighted ::content label,
+      .input-content.label-is-highlighted ::content .paper-input-label {
+        color: var(--paper-input-container-focus-color, --default-primary-color);
+
+        @apply(--paper-input-container-label-focus);
+      }
+
+      .input-content.is-invalid ::content label,
+      .input-content.is-invalid ::content .paper-input-label {
+        color: var(--paper-input-container-invalid-color, --google-red-500);
+      }
+
+      .input-content.label-is-hidden ::content label,
+      .input-content.label-is-hidden ::content .paper-input-label {
+        visibility: hidden;
+      }
+
+      .input-content ::content input,
+      .input-content ::content textarea,
+      .input-content ::content iron-autogrow-textarea,
+      .input-content ::content .paper-input-input {
+        position: relative; /* to make a stacking context */
+        outline: none;
+        box-shadow: none;
+        padding: 0;
+        width: 100%;
+        background: transparent;
+        border: none;
+        color: var(--paper-input-container-input-color, --primary-text-color);
+        -webkit-appearance: none;
+        text-align: inherit;
+
+        @apply(--paper-font-subhead);
+        @apply(--paper-input-container-input);
+      }
+
+      ::content [prefix] {
+        @apply(--paper-font-subhead);
+        @apply(--paper-input-prefix);
+      }
+
+      ::content [suffix] {
+        @apply(--paper-font-subhead);
+        @apply(--paper-input-suffix);
+      }
+
+      /* Firefox sets a min-width on the input, which can cause layout issues */
+      .input-content ::content input {
+        min-width: 0;
+      }
+
+      .input-content ::content textarea {
+        resize: none;
+      }
+
+      .add-on-content {
+        position: relative;
+      }
+
+      .add-on-content.is-invalid ::content * {
+        color: var(--paper-input-container-invalid-color, --google-red-500);
+      }
+
+      .add-on-content.is-highlighted ::content * {
+        color: var(--paper-input-container-focus-color, --default-primary-color);
+      }
+    </style>
+
+    <template is="dom-if" if="[[!noLabelFloat]]">
+      <div class="floated-label-placeholder">&nbsp;</div>
+    </template>
+
+    <div class$="[[_computeInputContentClass(noLabelFloat,alwaysFloatLabel,focused,invalid,_inputHasContent)]]">
+      <content select="[prefix]" id="prefix"></content>
+
+      <div class="label-and-input-container" id="labelAndInputContainer">
+        <content select=":not([add-on]):not([prefix]):not([suffix])"></content>
+      </div>
+
+      <content select="[suffix]"></content>
+    </div>
+
+    <div class$="[[_computeUnderlineClass(focused,invalid)]]">
+      <div class="unfocused-line"></div>
+      <div class="focused-line"></div>
+    </div>
+
+    <div class$="[[_computeAddOnContentClass(focused,invalid)]]">
+      <content id="addOnContent" select="[add-on]"></content>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'paper-input-container',
+
+    properties: {
+      /**
+       * Set to true to disable the floating label. The label disappears when the input value is
+       * not null.
+       */
+      noLabelFloat: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * Set to true to always float the floating label.
+       */
+      alwaysFloatLabel: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * The attribute to listen for value changes on.
+       */
+      attrForValue: {
+        type: String,
+        value: 'bind-value'
+      },
+
+      /**
+       * Set to true to auto-validate the input value when it changes.
+       */
+      autoValidate: {
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * True if the input is invalid. This property is set automatically when the input value
+       * changes if auto-validating, or when the `iron-input-validate` event is heard from a child.
+       */
+      invalid: {
+        observer: '_invalidChanged',
+        type: Boolean,
+        value: false
+      },
+
+      /**
+       * True if the input has focus.
+       */
+      focused: {
+        readOnly: true,
+        type: Boolean,
+        value: false,
+        notify: true
+      },
+
+      _addons: {
+        type: Array
+        // do not set a default value here intentionally - it will be initialized lazily when a
+        // distributed child is attached, which may occur before configuration for this element
+        // in polyfill.
+      },
+
+      _inputHasContent: {
+        type: Boolean,
+        value: false
+      },
+
+      _inputSelector: {
+        type: String,
+        value: 'input,textarea,.paper-input-input'
+      },
+
+      _boundOnFocus: {
+        type: Function,
+        value: function() {
+          return this._onFocus.bind(this);
+        }
+      },
+
+      _boundOnBlur: {
+        type: Function,
+        value: function() {
+          return this._onBlur.bind(this);
+        }
+      },
+
+      _boundOnInput: {
+        type: Function,
+        value: function() {
+          return this._onInput.bind(this);
+        }
+      },
+
+      _boundValueChanged: {
+        type: Function,
+        value: function() {
+          return this._onValueChanged.bind(this);
+        }
+      }
+    },
+
+    listeners: {
+      'addon-attached': '_onAddonAttached',
+      'iron-input-validate': '_onIronInputValidate'
+    },
+
+    get _valueChangedEvent() {
+      return this.attrForValue + '-changed';
+    },
+
+    get _propertyForValue() {
+      return Polymer.CaseMap.dashToCamelCase(this.attrForValue);
+    },
+
+    get _inputElement() {
+      return Polymer.dom(this).querySelector(this._inputSelector);
+    },
+
+    get _inputElementValue() {
+      return this._inputElement[this._propertyForValue] || this._inputElement.value;
+    },
+
+    ready: function() {
+      if (!this._addons) {
+        this._addons = [];
+      }
+      this.addEventListener('focus', this._boundOnFocus, true);
+      this.addEventListener('blur', this._boundOnBlur, true);
+      if (this.attrForValue) {
+        this._inputElement.addEventListener(this._valueChangedEvent, this._boundValueChanged);
+      } else {
+        this.addEventListener('input', this._onInput);
+      }
+    },
+
+    attached: function() {
+      // Only validate when attached if the input already has a value.
+      if (this._inputElementValue != '') {
+        this._handleValueAndAutoValidate(this._inputElement);
+      } else {
+        this._handleValue(this._inputElement);
+      }
+    },
+
+    _onAddonAttached: function(event) {
+      if (!this._addons) {
+        this._addons = [];
+      }
+      var target = event.target;
+      if (this._addons.indexOf(target) === -1) {
+        this._addons.push(target);
+        if (this.isAttached) {
+          this._handleValue(this._inputElement);
+        }
+      }
+    },
+
+    _onFocus: function() {
+      this._setFocused(true);
+    },
+
+    _onBlur: function() {
+      this._setFocused(false);
+      this._handleValueAndAutoValidate(this._inputElement);
+    },
+
+    _onInput: function(event) {
+      this._handleValueAndAutoValidate(event.target);
+    },
+
+    _onValueChanged: function(event) {
+      this._handleValueAndAutoValidate(event.target);
+    },
+
+    _handleValue: function(inputElement) {
+      var value = this._inputElementValue;
+
+      // type="number" hack needed because this.value is empty until it's valid
+      if (value || value === 0 || (inputElement.type === 'number' && !inputElement.checkValidity())) {
+        this._inputHasContent = true;
+      } else {
+        this._inputHasContent = false;
+      }
+
+      this.updateAddons({
+        inputElement: inputElement,
+        value: value,
+        invalid: this.invalid
+      });
+    },
+
+    _handleValueAndAutoValidate: function(inputElement) {
+      if (this.autoValidate) {
+        var valid;
+        if (inputElement.validate) {
+          valid = inputElement.validate(this._inputElementValue);
+        } else {
+          valid = inputElement.checkValidity();
+        }
+        this.invalid = !valid;
+      }
+
+      // Call this last to notify the add-ons.
+      this._handleValue(inputElement);
+    },
+
+    _onIronInputValidate: function(event) {
+      this.invalid = this._inputElement.invalid;
+    },
+
+    _invalidChanged: function() {
+      if (this._addons) {
+        this.updateAddons({invalid: this.invalid});
+      }
+    },
+
+    /**
+     * Call this to update the state of add-ons.
+     * @param {Object} state Add-on state.
+     */
+    updateAddons: function(state) {
+      for (var addon, index = 0; addon = this._addons[index]; index++) {
+        addon.update(state);
+      }
+    },
+
+    _computeInputContentClass: function(noLabelFloat, alwaysFloatLabel, focused, invalid, _inputHasContent) {
+      var cls = 'input-content';
+      if (!noLabelFloat) {
+        var label = this.querySelector('label');
+
+        if (alwaysFloatLabel || _inputHasContent) {
+          cls += ' label-is-floating';
+          // If the label is floating, ignore any offsets that may have been
+          // applied from a prefix element.
+          this.$.labelAndInputContainer.style.position = 'static';
+
+          if (invalid) {
+            cls += ' is-invalid';
+          } else if (focused) {
+            cls += " label-is-highlighted";
+          }
+        } else {
+          // When the label is not floating, it should overlap the input element.
+          if (label) {
+            this.$.labelAndInputContainer.style.position = 'relative';
+          }
+        }
+      } else {
+        if (_inputHasContent) {
+          cls += ' label-is-hidden';
+        }
+      }
+      return cls;
+    },
+
+    _computeUnderlineClass: function(focused, invalid) {
+      var cls = 'underline';
+      if (invalid) {
+        cls += ' is-invalid';
+      } else if (focused) {
+        cls += ' is-highlighted'
+      }
+      return cls;
+    },
+
+    _computeAddOnContentClass: function(focused, invalid) {
+      var cls = 'add-on-content';
+      if (invalid) {
+        cls += ' is-invalid';
+      } else if (focused) {
+        cls += ' is-highlighted'
+      }
+      return cls;
+    }
+  });
+</script>
+<dom-module id="paper-input-error" assetpath="../bower_components/paper-input/">
+  <template>
+    <style>
+      :host {
+        display: inline-block;
+        visibility: hidden;
+
+        color: var(--paper-input-container-invalid-color, --google-red-500);
+
+        @apply(--paper-font-caption);
+        @apply(--paper-input-error);
+        position: absolute;
+        left:0;
+        right:0;
+      }
+
+      :host([invalid]) {
+        visibility: visible;
+      };
+    </style>
+
+    <content></content>
+  </template>
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'paper-input-error',
+
+    behaviors: [
+      Polymer.PaperInputAddonBehavior
+    ],
+
+    properties: {
+      /**
+       * True if the error is showing.
+       */
+      invalid: {
+        readOnly: true,
+        reflectToAttribute: true,
+        type: Boolean
+      }
+    },
+
+    update: function(state) {
+      this._setInvalid(state.invalid);
+    }
+  });
+</script>
+<dom-module id="paper-input" assetpath="../bower_components/paper-input/">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+
+      input::-webkit-input-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input:-moz-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input::-moz-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+
+      input:-ms-input-placeholder {
+        color: var(--paper-input-container-color, --secondary-text-color);
+      }
+    </style>
+
+    <paper-input-container no-label-float="[[noLabelFloat]]" always-float-label="[[_computeAlwaysFloatLabel(alwaysFloatLabel,placeholder)]]" auto-validate$="[[autoValidate]]" disabled$="[[disabled]]" invalid="[[invalid]]">
+
+      <content select="[prefix]"></content>
+
+      <label hidden$="[[!label]]">[[label]]</label>
+
+      <input is="iron-input" id="input" aria-labelledby$="[[_ariaLabelledBy]]" aria-describedby$="[[_ariaDescribedBy]]" disabled$="[[disabled]]" bind-value="{{value}}" invalid="{{invalid}}" prevent-invalid-input="[[preventInvalidInput]]" allowed-pattern="[[allowedPattern]]" validator="[[validator]]" type$="[[type]]" pattern$="[[pattern]]" required$="[[required]]" autocomplete$="[[autocomplete]]" autofocus$="[[autofocus]]" inputmode$="[[inputmode]]" minlength$="[[minlength]]" maxlength$="[[maxlength]]" min$="[[min]]" max$="[[max]]" step$="[[step]]" name$="[[name]]" placeholder$="[[placeholder]]" readonly$="[[readonly]]" list$="[[list]]" size$="[[size]]" autocapitalize$="[[autocapitalize]]" autocorrect$="[[autocorrect]]" on-change="_onChange" tabindex$="[[tabindex]]" autosave$="[[autosave]]" results$="[[results]]" accept$="[[accept]]" multiple$="[[multiple]]">
+
+      <content select="[suffix]"></content>
+
+      <template is="dom-if" if="[[errorMessage]]">
+        <paper-input-error>[[errorMessage]]</paper-input-error>
+      </template>
+
+      <template is="dom-if" if="[[charCounter]]">
+        <paper-input-char-counter></paper-input-char-counter>
+      </template>
+
+    </paper-input-container>
+  </template>
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'paper-input',
+
+    behaviors: [
+      Polymer.IronFormElementBehavior,
+      Polymer.PaperInputBehavior
+    ]
+  });
+</script>
+<dom-module id="paper-checkbox" assetpath="../bower_components/paper-checkbox/">
+  <template strip-whitespace="">
+    <style>
+      :host {
+        display: inline-block;
+        white-space: nowrap;
+        cursor: pointer;
+      }
+
+      :host(:focus) {
+        outline: none;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      #checkboxContainer {
+        display: inline-block;
+        position: relative;
+        width: 18px;
+        height: 18px;
+        min-width: 18px;
+        vertical-align: middle;
+        background-color: var(--paper-checkbox-unchecked-background-color, transparent);
+      }
+
+      #ink {
+        position: absolute;
+        top: -15px;
+        left: -15px;
+        width: 48px;
+        height: 48px;
+        color: var(--paper-checkbox-unchecked-ink-color, --primary-text-color);
+        opacity: 0.6;
+        pointer-events: none;
+      }
+
+      :host-context([dir="rtl"]) #ink {
+        right: -15px;
+        left: auto;
+      }
+
+      #ink[checked] {
+        color: var(--paper-checkbox-checked-ink-color, --default-primary-color);
+      }
+
+      #checkbox {
+        position: relative;
+        box-sizing: border-box;
+        height: 100%;
+        border: solid 2px;
+        border-color: var(--paper-checkbox-unchecked-color, --primary-text-color);
+        border-radius: 2px;
+        pointer-events: none;
+        -webkit-transition: background-color 140ms, border-color 140ms;
+        transition: background-color 140ms, border-color 140ms;
+      }
+
+      /* checkbox checked animations */
+      #checkbox.checked #checkmark {
+        -webkit-animation: checkmark-expand 140ms ease-out forwards;
+        animation: checkmark-expand 140ms ease-out forwards;
+      }
+
+      @-webkit-keyframes checkmark-expand {
+        0% {
+          -webkit-transform: scale(0, 0) rotate(45deg);
+        }
+        100% {
+          -webkit-transform: scale(1, 1) rotate(45deg);
+        }
+      }
+
+      @keyframes checkmark-expand {
+        0% {
+          transform: scale(0, 0) rotate(45deg);
+        }
+        100% {
+          transform: scale(1, 1) rotate(45deg);
+        }
+      }
+
+      #checkbox.checked {
+        background-color: var(--paper-checkbox-checked-color, --default-primary-color);
+        border-color: var(--paper-checkbox-checked-color, --default-primary-color);
+      }
+
+      #checkmark {
+        position: absolute;
+        width: 5px;
+        height: 10px;
+        border-style: solid;
+        border-top: none;
+        border-left: none;
+        border-right-width: 2px;
+        border-bottom-width: 2px;
+        border-color: var(--paper-checkbox-checkmark-color, white);
+        transform-origin: 97% 86%;
+        -webkit-transform-origin: 97% 86%;
+      }
+
+      /* label */
+      #checkboxLabel {
+        position: relative;
+        display: inline-block;
+        vertical-align: middle;
+        padding-left: var(--paper-checkbox-label-spacing, 8px);
+        white-space: normal;
+        pointer-events: none;
+        color: var(--paper-checkbox-label-color, --primary-text-color);
+      }
+
+      :host-context([dir="rtl"]) #checkboxLabel {
+        padding-right: var(--paper-checkbox-label-spacing, 8px);
+        padding-left: 0;
+      }
+
+      #checkboxLabel[hidden] {
+        display: none;
+      }
+
+      /* disabled state */
+      :host([disabled]) {
+        pointer-events: none;
+      }
+
+      :host([disabled]) #checkbox {
+        opacity: 0.5;
+        border-color: var(--paper-checkbox-unchecked-color, --primary-text-color);
+      }
+
+      :host([disabled][checked]) #checkbox {
+        background-color: var(--paper-checkbox-unchecked-color, --primary-text-color);
+        opacity: 0.5;
+      }
+
+      :host([disabled]) #checkboxLabel  {
+        opacity: 0.65;
+      }
+
+      /* invalid state */
+      #checkbox.invalid:not(.checked) {
+        border-color: var(--paper-checkbox-error-color, --google-red-500);
+      }
+    </style>
+
+    <div id="checkboxContainer">
+      <div id="checkbox" class$="[[_computeCheckboxClass(checked, invalid)]]">
+        <div id="checkmark" class$="[[_computeCheckmarkClass(checked)]]"></div>
+      </div>
+    </div>
+
+    <div id="checkboxLabel"><content></content></div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'paper-checkbox',
+
+      behaviors: [
+        Polymer.PaperCheckedElementBehavior
+      ],
+
+      hostAttributes: {
+        role: 'checkbox',
+        'aria-checked': false,
+        tabindex: 0
+      },
+
+      properties: {
+        /**
+         * Fired when the checked state changes due to user interaction.
+         *
+         * @event change
+         */
+
+        /**
+         * Fired when the checked state changes.
+         *
+         * @event iron-change
+         */
+        ariaActiveAttribute: {
+          type: String,
+          value: 'aria-checked'
+        }
+      },
+
+      _computeCheckboxClass: function(checked, invalid) {
+        var className = '';
+        if (checked) {
+          className += 'checked ';
+        }
+        if (invalid) {
+          className += 'invalid';
+        }
+        return className;
+      },
+
+      _computeCheckmarkClass: function(checked) {
+        return checked ? '' : 'hidden';
+      },
+
+      // create ripple inside the checkboxContainer
+      _createRipple: function() {
+        this._rippleContainer = this.$.checkboxContainer;
+        return Polymer.PaperInkyFocusBehaviorImpl._createRipple.call(this);
+      }
+
+    });
   </script>
 </dom-module>
 <dom-module id="paper-scroll-header-panel" assetpath="../bower_components/paper-scroll-header-panel/">
@@ -18703,7 +18679,9 @@ if (!window.Promise) {
     });
   </script>
 </dom-module>
-<dom-module id="shared-styles" assetpath="../styles/"><template><style>
+<dom-module id="shared-styles" assetpath="../styles/">
+  <template>
+    <style>
       .page-title {
         @apply(--paper-font-display2);
       }
@@ -18715,273 +18693,19 @@ if (!window.Promise) {
           font-size: 24px!important;
         }
       }
-    </style></template></dom-module><dom-module id="my-greeting" assetpath="my-greeting/">
-  <template>
-    <style include="shared-styles"></style>
-    <style>
-      :host {
-        display: block;
+      .container {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-justified);
+        @apply(--layout-wrap);
+      }
+      .flexchild {
+        @apply(--layout-flex-2);
+      }
+
+      .flex4child {
+        @apply(--layout-flex-4);
       }
     </style>
-    <h2 class="page-title"><span>{{greeting}}</span></h2>
-    <span class="paper-font-body2">Update text to change the greeting.</span>
     
-    <input class="paper-font-body2" value="{{greeting::input}}">
   </template>
-
-  <script>
-    (function() {
-      'use strict';
-      
-      Polymer({
-        is: 'my-greeting',
-
-        properties: {
-          greeting: {
-            type: String,
-            value: 'Welcome!',
-            notify: true
-          }
-        }
-      });
-    })();
-  </script>
-
-</dom-module>
-<dom-module id="my-list" assetpath="my-list/">
-  <template>
-    <style>
-      :host {
-        display: block;
-      }
-    </style>
-    <ul>
-      <template is="dom-repeat" items="{{items}}">
-        <li><span class="paper-font-body1">{{item}}</span></li>
-      </template>
-    </ul>
-  </template>
-
-  <script>
-  (function() {
-      'use strict';
-
-      Polymer({
-        is: 'my-list',
-        properties: {
-          items: {
-            type: Array,
-            notify: true,
-          }
-        },
-        ready: function() {
-          this.items = [
-            'Viewing your information!',
-            'More to come...'
-          ];
-        }
-      });
-    })();
-  </script>
-
-</dom-module>
-<dom-module id="my-ajax" assetpath="my-ajax/">
-
-  <template>
-    <style>
-      :host {
-        display: block;
-      }
-    </style>
-    <div> woohoo </div>
-    <content></content>
-    <iron-ajax auto="" id="ajax" url="{{url}}" params="{{options}}" handle-as="json" on-response="handleResponse" last-response="{{mresponse}}" debounce-duration="300">
-    </iron-ajax>
-
-
-
-  </template>
-
-</dom-module>
-
-<script>
-(function() {
-  'use strict';
-
-  Polymer({
-
-    is: 'my-ajax',
-
-    properties: {
-      mresponse: {
-        type: Array,
-        notify: true
-      },
-      ajaxresponse: {
-        type: Array,
-        notify: true
-      },
-      owner: {
-        value: 'polymer',
-        notify: true
-      },
-      repo: {
-        value: 'polymer',
-        notify: true
-      },
-      url: {
-        computed: 'computeUrl(owner, repo)'
-      },
-      opt: {
-        type: Object,
-        value: {}
-      },
-      options: {
-        computed: 'computeOptions(opt)'
-      },
-    },
-    computeOptions: function(data) {
-      return data;
-    },
-    computeUrl: function(owner, repo) {
-      return ['https://api.github.com/repos', owner, repo, 'issues'].join('/');
-    },
-    handleResponse: function(rsp) {
-      // console.log(rsp.detail.xhr.response, rsp.detail, rsp.response)
-      // console.log(rsp);
-      this.ajaxresponse = rsp.detail.xhr.response;
-    },
-    handleLast: function(lrsp) {
-      console.log(lrsp);
-      this.ajaxresponse = lrsp;
-    },
-  });
-})();
-
-</script><dom-module id="user-page" assetpath="user-page/">
-
-  <template>
-    <style>
-      :host {
-        display: block;
-      }
-    </style>
-    <div> This is your current information: </div>
-    <content></content>
-    
-    <iron-ajax auto="" id="ajax" url="[[url]]" handle-as="json" on-response="handleResponse" #last-response="{{user}}" debounce-duration="300">
-    </iron-ajax>
-
-   <template is="dom-if" if="{{checkMe(user)}}">
-       <br>
-       <div>
-            <iron-icon icon="mail"></iron-icon>
-            <span> {{user.email}}</span>
-       </div>
-       <br>
-       <div>
-            <iron-icon icon="language"></iron-icon>
-            <span> {{user.profile.country_name}}</span>
-       </div>
-    
-   </template>
-   
-        
-        
-    </template>
-
-
-
-  
-
-</dom-module>
-
-
-
-<script>
-(function() {
-    // jscs:disable
-  'use strict';
-  Polymer({
-    is: 'user-page',
-    properties: {
-      user: {
-        type: Object,
-        notify: true,
-        value: function() {
-          return {
-              'id': null,
-              'profile': {'office': null,
-                          'section': null,
-                          'country_name': 'UAT',
-                          'partner_staff_member': 29,
-                          'job_title': null,
-                          'phone_number': null,
-                          'installation_id': null,
-                          'country': 1,
-                          'country_override': null},
-                'last_login': '2015-12 04T19:24:08.714193Z', 
-                'is_superuser': false, 
-                'username': 'email@example.com', 
-                'first_name': 'No User Logedin',
-                'last_name': '',
-                'email': 'email@example.com',
-                'is_staff': false,
-                'is_active': true,
-                'date_joined': '2015-12-03T16:17:01Z'
-          };
-        }
-      },
-      siteinfo: {
-        type: Object,
-        value: function() {return{'userInfoEp':'http://localhost:8099/users/api'};}
-      },
-      url: {
-        computed: 'computeUrl(siteinfo)'
-      }
-    },
-    computeUrl: function(siteinfo) {
-        return siteinfo.userInfoEp;
-    },
-    handleResponse: function(rsp) {
-      // console.log(rsp.detail.xhr.response, rsp.detail, rsp.response)
-      // console.log(rsp);
-      this.user = rsp.detail.xhr.response;
-    },
-    checkMe: function(user) {
-        return user.id;
-        //return user.first_name !== 'Some Name';
-    }
-    
-  });
-})();
-
-</script><dom-module id="global-data" assetpath="global-data/">
-</dom-module>
-
-<script>
-    // jscs:disable
-(function() {
-    
-  'use strict';
-  Polymer({
-    is: 'global-data',
-    properties: {
-        siteinfo: {
-          type: Object,
-          notify: true,
-        }
-    },
-    ready: function() {
-      console.log(this.baseUrl);
-      this.set('siteinfo', {
-        'baseSite': window.location.origin,
-        'userInfoEp': window.location.origin+'/users/api/profile/',
-        'logoutEndpoint': window.location.origin+'/accounts/logout/'
-      });
-    },
-    
-  });
-})();
-
-</script></div></body></html>
+</dom-module></div></body></html>
