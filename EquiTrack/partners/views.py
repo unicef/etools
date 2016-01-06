@@ -130,6 +130,7 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
 
 
         filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        # allow lookup only for PSMs inside the same partnership
         filter['partner'] = current_member.partner
 
         obj = get_object_or_404(queryset, **filter)

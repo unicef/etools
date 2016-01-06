@@ -5,8 +5,16 @@ import json
 from rest_framework import serializers
 
 from locations.models import Location
-from .models import GwPCALocation, PCA, PCASector, IndicatorProgress, PartnerStaffMember
 
+from .models import (
+    GwPCALocation,
+    PCA,
+    PCASector,
+    IndicatorProgress,
+    PartnerStaffMember,
+    PartnerOrganization,
+    Agreement
+)
 
 class IndicatorProgressSerializer(serializers.ModelSerializer):
 
@@ -94,7 +102,25 @@ class GWLocationSerializer(serializers.ModelSerializer):
         model = GwPCALocation
 
 
+class PartnerOrganizationSerializer(serializers.ModelSerializer):
+
+    pca_set = PartnershipSerializer(many=True)
+
+    class Meta:
+        model = PartnerOrganization
+
+
+class AgreementSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Agreement
+
+
+
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
+
+    partner = PartnerOrganizationSerializer()
+    agreement_set = AgreementSerializer(many=True)
 
     class Meta:
         model = PartnerStaffMember
