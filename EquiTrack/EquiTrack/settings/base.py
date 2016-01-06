@@ -100,8 +100,8 @@ REST_FRAMEWORK = {
         'rest_framework_csv.renderers.CSVRenderer',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
         'EquiTrack.mixins.EToolsTenantJWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     )
 }
 

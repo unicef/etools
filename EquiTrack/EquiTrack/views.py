@@ -11,8 +11,10 @@ from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
 from trips.models import Trip, ActionPoint
 
+
 class MainView(TemplateView):
     template_name = 'choose_login.html'
+
 
 class DashboardView(TemplateView):
     """
