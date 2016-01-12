@@ -109,6 +109,7 @@ class PortalDashView(View):
 
 
 class PartnerStaffMemberPropertiesView(RetrieveAPIView):
+
     serializer_class = PartnerStaffMemberPropertiesSerializer
     queryset = PartnerStaffMember.objects.all()
 
@@ -136,6 +137,23 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         obj = get_object_or_404(queryset, **filter)
         self.check_object_permissions(self.request, obj)
         return obj
+
+
+class PartnerInterventionsView(ListAPIView):
+
+    serializer_class = PartnershipSerializer #PartnerInterventionsSerializer
+    model = PCA
+
+    def get_queryset(self):
+        # get the current user staff member
+        try:
+            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
+        except PartnerStaffMember.DoesNotExist:
+            raise Exception('there is no PartnerStaffMember record associated with this user')
+
+        return current_member.partner.pca_set.all()
+
+
 
 class PortalLoginFailedView(TemplateView):
 

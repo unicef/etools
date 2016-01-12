@@ -8,7 +8,8 @@ from .views import (
     LocationView,
     PortalDashView,
     PortalLoginFailedView,
-    PartnerStaffMemberPropertiesView
+    PartnerStaffMemberPropertiesView,
+    PartnerInterventionsView
 )
 
 
@@ -18,6 +19,7 @@ urlpatterns = patterns(
     url(r'^accounts/loginfailed/(?P<email>.+)/$', PortalLoginFailedView.as_view(), name='sociallogin_notamember'),
     url(r'^locations/$', LocationView.as_view(), name='locations'),
     url(r'^staffmember/(?P<pk>\d+)/$', PartnerStaffMemberPropertiesView.as_view()),
+    url(r'^interventions/$', PartnerInterventionsView.as_view()),
 
     # auth and registration for partners
     #url(r'', include('registration.auth_urls')),
