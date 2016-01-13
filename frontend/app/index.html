@@ -62,7 +62,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <body unresolved class="fullbleed layout vertical">
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
-  <global-data siteinfo="{{siteinfo}}"></global-data>
+  <global-data app-data="[[appData]]" user="{{user}}" permissions="{{permissions}}"></global-data>
       
     <paper-drawer-panel id="paperDrawerPanel">
       <!-- Drawer Scroll Header Panel -->
@@ -80,12 +80,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <span>Home</span>
           </a>
             
-          
-          <a data-route="myInfo" href="{{baseUrl}}myInfo">
-            <iron-icon icon="info"></iron-icon>
-            <span>My Information</span>
-          </a>
-          
+          <template is="dom-if" if='{{permissions.loggedInDefault}}'>
+            <a data-route="myInfo" href="{{baseUrl}}myInfo">
+              <iron-icon icon="info"></iron-icon>
+              <span>My Information</span>
+            </a>
+          </template>   
+
+          <template is="dom-if" if='{{permissions.interventionsMenu}}'>
+            <a data-route="myInterventions" href="{{baseUrl}}myInterventions">
+              <iron-icon icon="info"></iron-icon>
+              <span>Interventions</span>
+            </a>
+          </template> 
+
         </paper-menu>
       </paper-scroll-header-panel>
 
@@ -98,8 +106,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <span class="flex"></span>
 
           <!-- Toolbar icons -->
-          <paper-icon-button icon="refresh"></paper-icon-button>
-          <paper-icon-button icon="search"></paper-icon-button>
+          <!-- <paper-icon-button icon="refresh"></paper-icon-button>
+          <paper-icon-button icon="search"></paper-icon-button> -->
           <template is="dom-if" if="{{user.id}}">
             <a href="[[siteinfo.logoutEndpoint]]" style="color:white;"><paper-button>logout</paper-button></a>
           </template>
@@ -118,6 +126,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
         </paper-toolbar>
 
+
         <!-- Main Content -->
         <div class="content">
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
@@ -135,11 +144,33 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
             </section>
             
-            
-            <section data-route="myInfo">
+            <template is="dom-if" if='{{permissions.loggedInDefault}}'>
+              <section data-route="myInfo">
+                <paper-material elevation="1">
+                    <h2 class="page-title">Hi, {{user.first_name}} {{user.last_name}}!</h2>
+                    <user-page siteinfo='[[siteinfo]]' permissions='[[permissions]]' user='{{user}}'></user-page>
+                </paper-material>
+              </section>
+            </template> 
+
+            <template is="dom-if" if='{{permissions.interventionsMenu}}'>
+              <section data-route="myInterventions">
+                
+                    <interventions-page 
+                        app-data="[[appData]]" 
+                        siteinfo='[[siteinfo]]' 
+                        user='{{user}}' 
+                        permissions="[[permissions]]">
+                    </interventions-page>
+
+              </section>
+            </template>
+
+
+            <section data-route="intervention">
               <paper-material elevation="1">
-                  <h2 class="page-title">Hi, {{user.first_name}} {{user.last_name}}!</h2>
-                  <user-page siteinfo='[[siteinfo]]' user='{{user}}'></user-page>
+                <h2 class="page-title">Intervention with id: {{params.intv}} </h2>
+                <div>This is {{params.intv}}'s section</div>
               </paper-material>
             </section>
 
@@ -149,7 +180,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     </paper-drawer-panel>
       
       
-      <paper-toast id="toast">
+      <paper-toast id="toast" duration="0">
       <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
     </paper-toast>
     <!-- Uncomment next block to enable Service Worker support (1/2) -->
