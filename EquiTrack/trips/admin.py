@@ -12,7 +12,7 @@ from generic_links.admin import GenericLinkStackedInline
 from users.models import UserProfile
 
 from EquiTrack.utils import get_changeform_link
-from EquiTrack.mixins import CountryStaffUsersAdminMixin
+from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import AutoSizeTextForm
 from .models import (
     Trip,
@@ -25,6 +25,7 @@ from .models import (
 from .forms import (
     TripForm,
     TripFundsForm,
+    TripLocationForm,
     TravelRoutesForm,
     RequireOneLocationFormSet
 )
@@ -70,10 +71,13 @@ class ActionPointInlineAdmin(admin.StackedInline):
 
 class TripLocationsInlineAdmin(admin.TabularInline):
     model = TripLocation
+    form = TripLocationForm
     formset = RequireOneLocationFormSet
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
-    # extra = 1
+    fields = (
+        'location',
+    )
 
 
 class FileAttachmentInlineAdmin(admin.TabularInline):
@@ -94,7 +98,7 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
-class TripReportAdmin(CountryStaffUsersAdminMixin, ExportMixin, VersionAdmin):
+class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     resource_class = TripResource
     save_as = True
     form = TripForm
@@ -348,14 +352,20 @@ class TripReportAdmin(CountryStaffUsersAdminMixin, ExportMixin, VersionAdmin):
 
         if db_field.name == u'representative':
             rep_group = Group.objects.get(name=u'Representative Office')
-            kwargs['queryset'] = rep_group.user_set.filter(profile__country=connection.tenant)
-            return super(CountryStaffUsersAdminMixin, self).formfield_for_foreignkey(
+            kwargs['queryset'] = rep_group.user_set.filter(
+                profile__country=connection.tenant,
+                is_staff=True,
+            )
+            return super(TripReportAdmin, self).formfield_for_foreignkey(
                 db_field, request, **kwargs
             )
 
         if db_field.name == u'driver':
             rep_group = Group.objects.get(name=u'Driver')
-            kwargs['queryset'] = rep_group.user_set.all()
+            kwargs['queryset'] = rep_group.user_set.filter(
+                profile__country=connection.tenant,
+                is_staff=True,
+            )
 
         return super(TripReportAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
