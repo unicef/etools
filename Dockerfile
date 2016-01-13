@@ -17,12 +17,13 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 
 ADD EquiTrack /code/
-RUN pip install -r requirements/production.txt
+RUN pip install -r /code/requirements/production.txt
 
 COPY frontend /code/frontend/
+WORKDIR /code/frontend/
 RUN sh /code/frontend/build.sh
 
-WORKDIR /code
+WORKDIR /code/
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN python manage.py collectstatic --noinput
 
