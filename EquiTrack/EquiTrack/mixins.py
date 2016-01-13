@@ -27,7 +27,7 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.utils import perform_login
 
-from .utils import set_country
+from EquiTrack.utils import set_country
 
 jwt_decode_handler = api_settings.JWT_DECODE_HANDLER
 logger = logging.getLogger('etools.mixins')
@@ -61,8 +61,8 @@ class CountryUsersAdminMixin(object):
             filters['is_staff'] = True
 
         if filters:
-            # preserve existing filters
-            queryset = kwargs["queryset"]
+            # preserve existing filters if any
+            queryset = kwargs.get("queryset", User.objects)
             kwargs["queryset"] = queryset.filter(**filters)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):

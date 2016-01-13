@@ -5,7 +5,6 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from cartodb import CartoDBAPIKey, CartoDBException
-from autocomplete_light import forms as auto_forms
 
 from .models import CartoDBTable
 

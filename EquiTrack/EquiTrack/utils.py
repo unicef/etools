@@ -17,8 +17,6 @@ from import_export.resources import ModelResource
 from post_office.models import EmailTemplate
 from post_office import mail
 
-from .mixins import AdminURLMixin
-
 
 def send_mail(sender, template, variables, *recipients):
     """
@@ -95,6 +93,8 @@ def get_changeform_link(model, link_name='View', action='change'):
     """
     Returns a html button to view the passed in model in the django admin
     """
+    from .mixins import AdminURLMixin
+
     if model.id:
         url_name = AdminURLMixin.admin_url_name.format(
             app_label=model._meta.app_label,

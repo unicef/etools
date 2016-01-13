@@ -25,6 +25,7 @@ from .models import (
 from .forms import (
     TripForm,
     TripFundsForm,
+    TripLocationForm,
     TravelRoutesForm,
     RequireOneLocationFormSet
 )
@@ -70,10 +71,13 @@ class ActionPointInlineAdmin(admin.StackedInline):
 
 class TripLocationsInlineAdmin(admin.TabularInline):
     model = TripLocation
+    form = TripLocationForm
     formset = RequireOneLocationFormSet
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
-    # extra = 1
+    fields = (
+        'location',
+    )
 
 
 class FileAttachmentInlineAdmin(admin.TabularInline):
