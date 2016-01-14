@@ -13,6 +13,11 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterField(
             model_name='triplocation',
+            name='governorate',
+            field=models.ForeignKey(blank=True, to='locations.Governorate', null=True),
+        ),
+        migrations.AlterField(
+            model_name='triplocation',
             name='locality',
             field=models.ForeignKey(blank=True, to='locations.Locality', null=True),
         ),

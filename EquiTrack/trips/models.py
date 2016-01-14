@@ -457,11 +457,13 @@ class TripFunds(models.Model):
 
 class TripLocation(models.Model):
     trip = models.ForeignKey(Trip)
-    governorate = models.ForeignKey(Governorate)
+    governorate = models.ForeignKey(
+        Governorate,
+        null=True, blank=True
+    )
     region = models.ForeignKey(
         Region,
         null=True, blank=True
-
     )
     locality = models.ForeignKey(
         Locality,
@@ -474,7 +476,7 @@ class TripLocation(models.Model):
 
     def __unicode__(self):
         desc = u'{} -> {} ({})'.format(
-            self.location.parent.name,
+            self.location.parent.name if self.location.parent else u'',
             self.location.name,
             self.location.gateway.name
         )
