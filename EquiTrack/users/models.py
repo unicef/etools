@@ -14,7 +14,7 @@ from tenant_schemas.models import TenantMixin
 User.__unicode__ = lambda user: user.get_full_name()
 User._meta.ordering = ['first_name']
 
-logger = logging.getLogger('users')
+logger = logging.getLogger('users.models')
 
 
 class Country(TenantMixin):

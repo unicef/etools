@@ -457,47 +457,29 @@ class TripFunds(models.Model):
 
 class TripLocation(models.Model):
     trip = models.ForeignKey(Trip)
-    governorate = models.ForeignKey(Governorate)
-    region = ChainedForeignKey(
-        Region,
-        chained_field="governorate",
-        chained_model_field="governorate",
-        show_all=False,
-        auto_choose=True,
-    )
-    locality = ChainedForeignKey(
-        Locality,
-        chained_field="region",
-        chained_model_field="region",
-        show_all=False,
-        auto_choose=True,
+    governorate = models.ForeignKey(
+        Governorate,
         null=True, blank=True
     )
-    location = ChainedForeignKey(
+    region = models.ForeignKey(
+        Region,
+        null=True, blank=True
+    )
+    locality = models.ForeignKey(
+        Locality,
+        null=True, blank=True
+    )
+    location = models.ForeignKey(
         Location,
-        chained_field="locality",
-        chained_model_field="locality",
-        show_all=False,
-        auto_choose=False,
         null=True, blank=True
     )
 
     def __unicode__(self):
-        desc = u'{} -> {}'.format(
-            self.governorate.name,
-            self.region.name,
+        desc = u'{} -> {} ({})'.format(
+            self.location.parent.name if self.location.parent else u'',
+            self.location.name,
+            self.location.gateway.name
         )
-        if self.locality:
-            desc = u'{} -> {}'.format(
-                desc,
-                self.locality.name
-            )
-        if self.location:
-            desc = u'{} -> {} ({})'.format(
-                desc,
-                self.location.name,
-                self.location.gateway.name
-            )
 
         return desc
 

@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-coverage run EquiTrack/manage.py test --keepdb --settings=EquiTrack.settings.test
+coverage run EquiTrack/manage.py test EquiTrack --keepdb --settings=EquiTrack.settings.test

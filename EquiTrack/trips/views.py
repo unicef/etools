@@ -163,7 +163,12 @@ class TripActionView(GenericAPIView):
         current_user = self.request.user
 
         # for now... hardcoding some validation in here.
-        if action not in ["approved", "submitted", "cancelled", "completed"]:
+        if action not in [
+            "approved",
+            "submitted",
+            "cancelled",
+            "completed"
+        ]:
             raise ParseError(detail="action must be a valid action")
 
         trip = self.get_object()

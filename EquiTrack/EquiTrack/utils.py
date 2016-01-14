@@ -6,18 +6,16 @@ __author__ = 'jcranwellward'
 import tablib
 import traceback
 
+from django.db import connection
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
-from django.http.response import HttpResponseRedirect
 from django.utils.datastructures import SortedDict
 from django.contrib.auth.decorators import user_passes_test
 
 from import_export.resources import ModelResource
 from post_office.models import EmailTemplate
 from post_office import mail
-
-from .mixins import AdminURLMixin
 
 
 def send_mail(sender, template, variables, *recipients):
@@ -95,6 +93,8 @@ def get_changeform_link(model, link_name='View', action='change'):
     """
     Returns a html button to view the passed in model in the django admin
     """
+    from .mixins import AdminURLMixin
+
     if model.id:
         url_name = AdminURLMixin.admin_url_name.format(
             app_label=model._meta.app_label,
@@ -181,7 +181,6 @@ class BaseExportResource(ModelResource):
         return data
 
 
-
 def staff_test(u):
     if u.is_authenticated and u.email.endswith("unicef.org"):
         return True
@@ -191,5 +190,12 @@ def staff_test(u):
 def staff_required(function, home_url="/partner", redirect_field_name=None):
     actual_decorator = user_passes_test(staff_test, home_url, redirect_field_name)
     return actual_decorator(function)
+
+
+def set_country(user, request):
+
+    request.tenant = user.profile.country
+    connection.set_tenant(request.tenant)
+
 
 

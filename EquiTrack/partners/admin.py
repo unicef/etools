@@ -73,9 +73,6 @@ class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-locations'
     fields = (
         'sector',
-        # 'governorate',
-        # 'region',
-        # 'locality',
         'location',
         'tpm_visit',
     )
@@ -203,7 +200,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     readonly_fields = [u'delivered', u'sent']
 
 
-class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, VersionAdmin):
+class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     form = PartnershipForm
     resource_class = PCAResource
     # Add custom exports
@@ -326,18 +323,6 @@ class PartnershipAdmin(CountryUsersAdminMixin, ReadOnlyMixin, ExportMixin, Versi
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
     created_date.admin_order_field = '-created_at'
-
-    def create_amendment(self, request, queryset):
-        for pca in queryset:
-            pca.make_amendment(request.user)
-        self.message_user(request, "{} PCA amended.".format(queryset.count()))
-
-    def view_original(self, obj):
-        if obj.amendment:
-            return get_changeform_link(obj.original, link_name='View Original')
-        return ''
-    view_original.allow_tags = True
-    view_original.short_description = 'View Original PCA'
 
     def get_form(self, request, obj=None, **kwargs):
         """

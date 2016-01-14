@@ -16,20 +16,17 @@ ENV C_INCLUDE_PATH /usr/include/gdal
 ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 
-WORKDIR /code
 ADD EquiTrack /code/
-RUN pip install -r requirements/production.txt
+RUN pip install -r /code/requirements/production.txt
 
-COPY frontend /frontend/
+COPY frontend /code/frontend/
+WORKDIR /code/frontend/
+RUN sh /code/frontend/build.sh
 
-WORKDIR /frontend/
-
-RUN sh /frontend/partnerportal.sh
-
-WORKDIR /code
-
+WORKDIR /code/
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN python manage.py collectstatic --noinput
+
 # Start everything
 ENV PORT 8080
 EXPOSE $PORT
