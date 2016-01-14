@@ -1,6 +1,7 @@
 __author__ = 'RobertAvram'
 
 
+from django.db import connection
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -9,6 +10,9 @@ from users.models import (
     Country,
     Section,
     UserProfile
+)
+from trips.models import (
+    Trip,
 )
 
 
@@ -44,3 +48,30 @@ class ActiveUsersSection(APIView):
             country_records[country]['sections'] = section_users
 
         return Response(country_records)
+
+
+class TripsStatisticsView(APIView):
+    model = Trip
+
+    def get(self, request, **kwargs):
+        # get all the countries:
+        country_list = Country.objects.all()
+        trips_by_country = {}
+        for country in country_list:
+            # set tenant for country
+            connection.set_tenant(country)
+            # get count for trips
+            country_planned_count = Trip.objects.filter(
+                status=Trip.PLANNED
+            ).count()
+            country_completed_count = Trip.objects.filter(
+                status=Trip.COMPLETED
+            ).count()
+            country_all_count = Trip.objects.count()
+
+            trips_by_country[country.name] = {
+                'planned': country_planned_count,
+                'completed': country_completed_count,
+                'total': country_all_count
+            }
+        return Response(trips_by_country)
