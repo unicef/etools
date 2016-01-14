@@ -1,21 +1,13 @@
 __author__ = 'unicef-leb-inn'
 
-from django.db import connection
-
 from rest_framework import status
 
 from EquiTrack.factories import TripFactory, UserFactory
-from trips.views import (
-    TripsApprovedView,
-    TripsListApi,
-    TripsByOfficeView,
-    TripActionView
-)
 from EquiTrack.tests.mixins import APITenantTestCase
 from trips.models import Trip
 
 
-class ViewTest(APITenantTestCase):
+class TestTripViews(APITenantTestCase):
 
     def setUp(self):
         self.supervisor = UserFactory()
@@ -32,18 +24,17 @@ class ViewTest(APITenantTestCase):
             username=self.trip.owner.username,
             password='test'
         )
-        tenant = self.trip.owner.profile.country
-        connection.set_tenant(tenant)
 
     def test_view_trips_list(self):
-        response = self.forced_auth_req('get', '/api/list/', TripsListApi)
+
+        response = self.forced_auth_req('get', '/trips/api/list/')
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         # the length of this list should be 1
         self.assertEquals(len(response.data), 1)
 
     def test_view_trips_approved(self):
-        response = self.forced_auth_req('get', '/approved/', TripsApprovedView)
+        response = self.forced_auth_req('get', '/trips/approved/')
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         # the length of this list should be 0 -no trips approved
@@ -52,7 +43,12 @@ class ViewTest(APITenantTestCase):
     def test_view_trips_api_action(self):
         # the trip should be in status planned
         self.assertEquals(self.trip.status, Trip.PLANNED)
-        response = self.client.post('/trips/api/'+str(self.trip.id)+'/submitted/')
+        response = self.forced_auth_req(
+            'post',
+            '/trips/api/{}/submitted/'.format(self.trip.id),
+        )
+        print response.status_code
+        print response.data
         # refresh trip from db
         self.trip.refresh_from_db()
         # trip should now have the status submitted
@@ -60,7 +56,7 @@ class ViewTest(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_view_trip_action(self):
-        response = self.forced_auth_req('get', '/offices/',  TripsByOfficeView)
+        response = self.forced_auth_req('get', '/trips/offices/')
 
         self.assertEquals(response.status_code, 200)
 
