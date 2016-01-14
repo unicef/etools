@@ -1,47 +1,36 @@
-from django.core.management import call_command
-from django.db import connection
 
-from django.test import TestCase
+from django.core.urlresolvers import resolve
 
-from rest_framework.test import APIRequestFactory, APIClient, force_authenticate
+from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
 
-from tenant_schemas.utils import get_tenant_model
-from tenant_schemas.utils import get_public_schema_name
+from tenant_schemas.test.cases import TenantTestCase
 
 
-class APITenantTestCase(TestCase):
+class APITenantTestCase(TenantTestCase):
+    """
+    Base test case for testing APIs
+    """
     client_class = APIClient
 
-    def forced_auth_req(self, method, url, handler, user=None, data={}):
-        factory = self.factory()
-        view = handler.as_view()
+    def forced_auth_req(self, method, url, user=None, data={}):
+        """
+        Function that allows api methods to be called with forced authentication
+
+        :param method: the HTTP method 'get'/'post'
+        :param url: the relative url to the base domain
+        :param user: optional user if not authenticated as the current user
+        :param data: any data that should be passed to the API view
+        :return:
+        """
+        factory = APIRequestFactory()
+        view_info = resolve(url)
+
+        view = view_info.func
         req_to_call = getattr(factory, method)
         request = req_to_call(url, data)
+
         user = user if user else self.user
         force_authenticate(request, user=user)
-        return view(request)
 
-    @classmethod
-    def setUpClass(cls):
-        cls.factory = APIRequestFactory
-        cls.sync_shared()
-        tenant_domain = 'tenant.test.com'
-        cls.tenant = get_tenant_model()(domain_url=tenant_domain, schema_name='test', name="Test Country")
-        cls.tenant.save(verbosity=0)  # todo: is there any way to get the verbosity from the test command here?
-        connection.set_tenant(cls.tenant)
+        return view(request, *view_info.args, **view_info.kwargs)
 
-
-    @classmethod
-    def tearDownClass(cls):
-        connection.set_schema_to_public()
-        cls.tenant.delete()
-
-        cursor = connection.cursor()
-        cursor.execute('DROP SCHEMA test CASCADE')
-
-    @classmethod
-    def sync_shared(cls):
-        call_command('migrate_schemas',
-                     schema_name=get_public_schema_name(),
-                     interactive=False,
-                     verbosity=0)
