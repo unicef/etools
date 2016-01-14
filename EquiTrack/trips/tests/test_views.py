@@ -47,8 +47,7 @@ class TestTripViews(APITenantTestCase):
             'post',
             '/trips/api/{}/submitted/'.format(self.trip.id),
         )
-        print response.status_code
-        print response.data
+
         # refresh trip from db
         self.trip.refresh_from_db()
         # trip should now have the status submitted
