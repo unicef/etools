@@ -23,6 +23,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.baseUrl = '/partner/';
   }
 
+  app.appData = {
+    baseUrl: app.baseUrl,
+    baseSite: window.location.origin,
+    logoutEndpoint: window.location.origin + '/accounts/logout/',
+    userInfoEp: window.location.origin + '/users/api/profile/',
+    userPropertiesEp: window.location.origin + '/partnership/partnerstaffmember/',
+    interventionsEp: [window.location.origin, 'partners', 'api', 'interventions'].join('/') + '/',
+    getEndpoint: {
+      userProperties: function(id) {
+        return [window.location.origin, 'partners', 'api', 'profile', id].join('/') + '/';
+      }
+    },
+    permissions: {
+      partnerOnlyPermissions: ['interventionsMenu', 'userInfoMenu'],
+      defaultPermissions: ['interventionsMenu', 'userInfoMenu'],
+    }
+  };
+
   app.displayInstalledToast = function() {
     // Check to make sure caching is actually enabled—it won't be in the dev environment.
     if (!Polymer.dom(document).querySelector('platinum-sw-cache').disabled) {

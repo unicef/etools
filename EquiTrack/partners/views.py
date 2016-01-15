@@ -7,19 +7,22 @@ from django.views.generic import FormView, TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 from django.http import HttpResponse
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 
 from datetime import datetime
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 from locations.models import Location
-from .serializers import LocationSerializer, PartnershipSerializer
+from .serializers import LocationSerializer, PartnershipSerializer, PartnerStaffMemberPropertiesSerializer
 
-from partners.models import (
+from .models import (
     PCA,
     PCAGrant,
     PCASector,
-    GwPCALocation
+    GwPCALocation,
+    PartnerStaffMember
 )
+
 
 class LocationView(ListAPIView):
 
@@ -103,6 +106,53 @@ class PortalDashView(View):
         with open(settings.SITE_ROOT + '/templates/frontend/partner_portal/index.html', 'r') as my_f:
             result = my_f.read()
         return HttpResponse(result)
+
+
+class PartnerStaffMemberPropertiesView(RetrieveAPIView):
+
+    serializer_class = PartnerStaffMemberPropertiesSerializer
+    queryset = PartnerStaffMember.objects.all()
+
+    def get_object(self):
+        queryset = self.get_queryset()
+        # TODO: see permissions if user is staff allow access to all partners (maybe)
+
+        # Get the current partnerstaffmember
+        try:
+            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
+        except PartnerStaffMember.DoesNotExist:
+            raise Exception('there is no PartnerStaffMember record associated with this user')
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        # If current member is actually looking for themselves return right away.
+        if self.kwargs[lookup_url_kwarg] == str(current_member.id):
+            return current_member
+
+
+        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        # allow lookup only for PSMs inside the same partnership
+        filter['partner'] = current_member.partner
+
+        obj = get_object_or_404(queryset, **filter)
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class PartnerInterventionsView(ListAPIView):
+
+    serializer_class = PartnershipSerializer #PartnerInterventionsSerializer
+    model = PCA
+
+    def get_queryset(self):
+        # get the current user staff member
+        try:
+            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
+        except PartnerStaffMember.DoesNotExist:
+            raise Exception('there is no PartnerStaffMember record associated with this user')
+
+        return current_member.partner.pca_set.all()
+
 
 
 class PortalLoginFailedView(TemplateView):
