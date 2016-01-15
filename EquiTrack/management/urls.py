@@ -5,13 +5,15 @@ from django.conf.urls import patterns, url
 
 from .views import (
     ActiveUsersSection,
-    TripsStatisticsView
+    TripsStatisticsView,
+    AgreementsStatisticsView,
+    InterventionsStatisticsView
 )
 
 urlpatterns = patterns(
     '',
-    url(r'^api/usercounts/$', ActiveUsersSection.as_view()),
-    url(r'^api/tripstatistics/$', TripsStatisticsView.as_view()),
-    url(r'^api/agreementstatistics/$', TripsStatisticsView.as_view()),
-    url(r'^api/interventionstatistics/$', TripsStatisticsView.as_view()),
+    url(r'^api/stats/usercounts/$', ActiveUsersSection.as_view()),
+    url(r'^api/stats/trips/$', TripsStatisticsView.as_view()),
+    url(r'^api/stats/agreements/$', AgreementsStatisticsView.as_view()),
+    url(r'^api/stats/interventions/$', InterventionsStatisticsView.as_view()),
 )
