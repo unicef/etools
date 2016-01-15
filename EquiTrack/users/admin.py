@@ -50,6 +50,16 @@ class ProfileAdmin(admin.ModelAdmin):
         'job_title',
         'phone_number',
     )
+    list_filter = (
+        'country',
+        'office',
+        'user__email'
+    )
+    search_fields = (
+        u'office__name',
+        u'country__name',
+        u'user__email'
+    )
 
 
 # Re-register UserAdmin
