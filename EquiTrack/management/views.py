@@ -30,8 +30,9 @@ class ActiveUsersSection(APIView):
         # get all sections:
         section_list = Section.objects.values_list('name', flat=True)
 
-        country_records = {}
+        results = []
         for country in country_list:
+            country_records = {}
             # create the first filter
             user_qry = UserProfile.objects.filter(
                 user__is_staff=True,
@@ -42,16 +43,22 @@ class ActiveUsersSection(APIView):
                 'total': user_qry.count()
             }
 
-            section_users = {}
+            sections = []
             for section in section_list:
                 section_qry = user_qry.filter(
                     section__name=section,
                 )
-                section_users[section] = section_qry.count()
+                section_users = {
+                    'name': section,
+                    'count': section_qry.count()
+                }
+                sections.append(section_users)
 
-            country_records[country]['sections'] = section_users
+            country_records[country]['sections'] = sections
+            results.append({'countryName': country,
+                            'records': country_records[country]})
 
-        return Response(country_records)
+        return Response(results)
 
 
 class TripsStatisticsView(APIView):
