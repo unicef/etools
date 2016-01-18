@@ -109,7 +109,7 @@
                                     <li>
                                         <a href="{% url 'user_profile' %}"><i class="fa fa-user"></i> Profile</a>
                                     </li>
-                                    {% if user.is_superuser %}
+                                    {% if user.is_staff %}
                                         <li>
                                             <a href="{% url 'admin:index' %}"><i class="fa fa-home"></i> Admin</a>
                                         </li>
