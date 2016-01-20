@@ -105,7 +105,7 @@ class TripsStatisticsView(APIView):
                     section__name=section
                 ).count()
                 section_results.append({
-                    "name":section,
+                    "name": section,
                     "completed": section_completed_count,
                     "approved": section_approved_count,
                     "planned": section_planned_count,
@@ -154,7 +154,6 @@ class InterventionsStatisticsView(APIView):
     model = PCA
 
     def get(self, request, **kwargs):
-        today = date.today()
         # get all the countries:
         country_list = Country.objects.all()
         results = []
@@ -163,13 +162,12 @@ class InterventionsStatisticsView(APIView):
             connection.set_tenant(country)
             # get count for agreements
             country_interventions_count = PCA.objects.filter(
-                start__lt=today,
-                end__gt=today
+                status=PCA.ACTIVE
             ).count()
 
             results.append({
                 "countryName": country.name,
-                "totalInterventions": country_interventions_count
+                "totalActiveInterventions": country_interventions_count
             })
         return Response(results)
 
