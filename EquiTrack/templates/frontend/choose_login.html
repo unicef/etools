@@ -1,24 +1,74 @@
-{% extends "base_polymer.html" %}
+{% extends "login_base.html" %}
 
 
 {% block extra_head %}
 
 <style>
-    a.flex4child {
-      display: block;
-      margin: auto;
-      min-width: 180px;
-      max-width: 30%;
+    body {
+        padding: 0;
+        margin: 0;
     }
-    paper-card.unicefblue {
+    .unicefblue {
       background-color: #0099ff;
     }
-    paper-material.login{
+    .loginStaff{
         background-color: #0099ff;
         color: #ffffff;
     }
+    .loginPartner{
+        background-color: #ffffff;
+        color: #ffffff;
+    }
     .container{
-      margin-top: 20px;
+        position: relative;
+        margin-top: 20px;
+    }
+    .medium-tall{
+        padding: 1%;
+        height: 100px;
+        background-color: #3F51B5;
+        color: #ffffff;
+    }
+    .card {
+        position: relative;
+        display: block;
+        min-width: 180px;
+        max-width: 30%;
+        margin: 2% auto;
+        padding: 1%;
+    }
+    .box {
+        position: relative;
+        width: 50%;
+        float: left;
+    }
+    .partnerImage{
+        display: block;
+        margin: 0 auto;
+        background-position: center;
+        background-image: url("/static/images/partners.svg");
+        min-height: 180px;
+        min-width: 180px;
+        width: 100%;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+    .staffImage{
+        display: block;
+        margin: 0 auto;
+        background-image: url("/static/images/staff.svg");
+        background-position: center;
+        min-height: 180px;
+        min-width: 180px;
+        width: 100%;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+    .card:hover{
+        box-shadow: 3px 3px 24px 0px #007acc;
+    }
+    .bottom{
+        padding-top: 2%;
     }
 
   </style>
@@ -26,22 +76,25 @@
 
  {% endblock %}
 {% block toolbar %}
-        <paper-toolbar class="medium-tall">
-          <iron-image src="/static/images/unicefetools.svg" style="width:200px; max-width:80%; height:70%;"  preload sizing="contain"></iron-image>
+        <div class="medium-tall">
+          <img src="/static/images/unicefetools.svg" style="width:200px; max-width:80%;"></img>
           <div class="bottom title">Choose your login</div>
-        </paper-toolbar>
+        </div>
 {% endblock toolbar %}
 
 {% block content %}
 <section id="container" class="layout wrap center-justified horizontal container">
-            <a class="flex4child" href="{% url 'account_login' %}">
-            <paper-card  onmouseover="this.elevation=5" onmouseout="this.elevation=1" image="/static/images/partners.svg">
-            </paper-card>
-            </a>
+<div class="box">
 
-            <a class="flex4child" href="{% url 'saml2_login' %}">
-            <paper-card animatedShadow="true" onmouseover="this.elevation=5" onmouseout="this.elevation=1" class="flex6child unicefblue" image="/static/images/staff.svg">
-            </paper-card>
-            </a>
+    <a class="flex4child loginPartner card" href="{% url 'account_login' %}">
+        <div class="myimg partnerImage"></div>
+    </a>
+</div>
+
+<div class="box">
+    <a class="flex4child loginStaff card" href="{% url 'saml2_login' %}">
+        <div class="myimg staffImage"></div>
+    </a>
+</div>
 </section>          
 {% endblock content %}
