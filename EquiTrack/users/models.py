@@ -19,6 +19,7 @@ logger = logging.getLogger('users.models')
 
 class Country(TenantMixin):
     name = models.CharField(max_length=100)
+    buisness_area_code = models.IntegerField(default=0)
 
     def __unicode__(self):
         return self.name
