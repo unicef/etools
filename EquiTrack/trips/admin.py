@@ -113,9 +113,11 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     ordering = (u'-created_date',)
     date_hierarchy = u'from_date'
     search_fields = (
-        u'owner',
-        u'section',
-        u'office',
+        u'owner__first_name',
+        u'owner__email',
+        u'owner__last_name',
+        u'section__name',
+        u'office__name',
         u'purpose_of_travel',
     )
     list_display = (
