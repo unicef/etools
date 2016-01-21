@@ -217,5 +217,5 @@ def step_impl(context):
         driver.implicitly_wait(20)
 
     except Exception as ex:
-        util.screenshoterror()
+        util.screenshot_error()
         raise Exception(ex)

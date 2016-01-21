@@ -8,5 +8,5 @@ def step_impl(context):
         context.browser.find_element_by_link_text("Log out").click()
 
     except Exception as ex:
-        context.util.screenshoterror()
+        context.util.screenshot_error()
         raise Exception(ex)

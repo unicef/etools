@@ -9,7 +9,7 @@ def step_impl(context):
         driver.find_element_by_xpath("//div[@id='leftside-navigation']/ul/li[5]/a/span").click()
         driver.find_element_by_xpath("//a[contains(@href, '/admin/trips/trip/add/')]").click()
     except Exception as ex:
-        context.util.screenshoterror()
+        context.util.screenshot_error()
         raise Exception(ex)
 
 
@@ -46,7 +46,7 @@ def step_impl(context):
         driver.find_element_by_css_selector("input.btn.btn-danger").click()
 
     except Exception as ex:
-        context.util.screenshoterror()
+        context.util.screenshot_error()
         raise Exception(ex)
 
 
@@ -70,5 +70,5 @@ def step_impl(context):
         driver.find_element_by_css_selector("input.btn.btn-danger").click()
 
     except Exception as ex:
-        context.util.screenshoterror()
+        context.util.screenshot_error()
         raise Exception(ex)

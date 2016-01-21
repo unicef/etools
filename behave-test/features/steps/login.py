@@ -8,8 +8,8 @@ def step_impl(context):
     try:
         driver = context.browser
         util = context.util
-        username = util.readConfig('username')
-        password = util.readConfig('password')
+        username = util.read_config('username')
+        password = util.read_config('password')
         driver.get(context.base_url + "login/")
         driver.implicitly_wait(15)
         driver.get(context.base_url + "saml2/login/")
@@ -20,6 +20,6 @@ def step_impl(context):
         driver.find_element_by_id("submitButton").click()
 
     except Exception as ex:
-        #context.util.screenshoterror()
+        #context.util.screenshot_error()
         driver.get(context.base_url)
         #raise Exception(ex)
