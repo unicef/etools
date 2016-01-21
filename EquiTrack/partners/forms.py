@@ -70,7 +70,10 @@ class PartnersAdminForm(AutoSizeTextForm):
             raise ValidationError(
                 _(u'You must select a type for this CSO')
             )
-
+        if partner_type and partner_type != u'Civil Society Organisation' and cso_type:
+            raise ValidationError(
+                _(u'"CSO Type" does not apply to non-CSO organizations, please remove type')
+            )
         return cleaned_data
 
 
