@@ -543,6 +543,13 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         AuthorizedOfficersInlineAdmin
     ]
 
+    def get_formsets(self, request, obj=None):
+        # display the inline only if the agreement was saved
+        for inline in self.get_inline_instances(request, obj):
+            if isinstance(inline, AuthorizedOfficersInlineAdmin) and obj is None:
+                continue
+            yield inline.get_formset(request, obj)
+
 
 admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
