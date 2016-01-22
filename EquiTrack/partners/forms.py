@@ -499,6 +499,7 @@ class PartnershipForm(UserGroupForm):
         partner_manager = cleaned_data[u'partner_manager']
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
+        end_date = cleaned_data[u'end_date']
 
         p_codes = cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
@@ -567,6 +568,22 @@ class PartnershipForm(UserGroupForm):
                 u'Please select a sector to assign the locations against'
             )
 
+        if start_date and start_date < agreement.start:
+            err = u'The Intervention must start after the agreement starts on: {}'.format(
+                agreement.start
+            )
+            raise ValidationError({'start_date': err})
+
+        if end_date and end_date > agreement.end:
+            err = u'The Intervention must end before the agreement ends on: {}'.format(
+                agreement.end
+            )
+            raise ValidationError({'end_date': err})
+
+        if start_date and end_date and start_date > end_date:
+            err = u'The end date has to be after the start date'
+            raise ValidationError({'end_date': err})
+        
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
