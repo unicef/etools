@@ -63,7 +63,7 @@ SUIT_CONFIG = {
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
-        {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
+        #{'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 
         #{'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
