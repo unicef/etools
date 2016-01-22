@@ -1,6 +1,7 @@
 from utils import *
 from selenium import webdriver
 
+import config
 
 BEHAVE_DEBUG_ON_ERROR = False
 
@@ -30,12 +31,13 @@ def before_all(context):
     # context.execute_steps(u'''
     #     Given login to eTools
     # ''')
-    context.browser = webdriver.Firefox()
+
+    context.browser = get_driver()
     context.browser.maximize_window()
     # context.browser.set_window_size(1400, 1200)
-    context.util = Utils(context.browser)
     context.browser.implicitly_wait(30)
-    context.base_url = context.util.read_config('baseurl')
+    context.util = Utils(context.browser)
+    context.base_url = config.read_config('baseurl')
     context.verificationErrors = []
     context.accept_next_alert = True
 
@@ -54,3 +56,11 @@ def after_step(context, step):
         # NOTE: Use IPython debugger, same for pdb (basic python debugger).
         import ipdb
         ipdb.post_mortem(step.exc_traceback)
+
+
+def get_driver():
+    driver = config.read_config('driver')
+    if driver == 'firefox':
+        return webdriver.Firefox()
+    elif driver == 'chrome':
+        return webdriver.Chrome(config.read_config('chromedriver_path'))

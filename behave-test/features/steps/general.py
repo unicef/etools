@@ -104,7 +104,8 @@ def step_impl(context):
         driver.implicitly_wait(20)
         util.screenshot('Add an Agreement')
 
-        driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/partnerorganization/')]").click()
+        # driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/partnerorganization/')]").click()
+        driver.find_element_by_xpath("//a[@href='/admin/partners/partnerorganization/']").click()
         driver.implicitly_wait(20)
         util.screenshot('Partners Organizations')
 
@@ -112,13 +113,13 @@ def step_impl(context):
         driver.implicitly_wait(20)
         util.screenshot('Add a Partner')
 
-        driver.find_element_by_link_text("Add another Assessments And Audits Record").click()
-        driver.implicitly_wait(20)
-        util.screenshot('Partners - Add another Assessments And Audits Record')
+        # driver.find_element_by_link_text("Add another Assessments And Audits Record").click()
+        # driver.implicitly_wait(20)
+        # util.screenshot('Partners - Add another Assessments And Audits Record')
 
-        driver.find_element_by_link_text("Add another Partner Staff Member").click()
-        driver.implicitly_wait(20)
-        util.screenshot('Partners - Add another Partner Staff Member')
+        # driver.find_element_by_link_text("Add another Partner Staff Member").click()
+        # driver.implicitly_wait(20)
+        # util.screenshot('Partners - Add another Partner Staff Member')
 
         driver.find_element_by_link_text("Trips").click()
         driver.implicitly_wait(20)

@@ -35,9 +35,10 @@ def create_dirs(args):
         os.chmod(basedir_shots, 0777)
         os.makedirs(screenshot_dir)
 
-    update_config('report_dir', report_dir)
-    update_config('report_dir_errors', report_dir_error)
-    update_config('screenshot_dir', screenshot_dir)
+    set_config('report_dir', report_dir)
+    set_config('report_dir_errors', report_dir_error)
+    set_config('screenshot_dir', screenshot_dir)
+    set_config('driver', args.driver.lower())
 
 
 def run_test(feature):
@@ -60,14 +61,14 @@ def generate_report_pdf():
     report_txt = read_config('report_dir') + '/result.txt'
     report_pdf = read_config('report_dir') + '/result.pdf'
     Popen(['rst2pdf', report_txt, report_pdf])
+    return report_pdf
 
 
-def send_mail(files=None,
-              server="localhost"):
-    send_to = read_config('send_report_to')
-    send_from = read_config('send_report_from')
-    subject = read_config('send_report_subject')
-    text = read_config('send_report_text')
+def send_mail(files=None):
+    send_to = read_config('default_send_report_to')
+    send_from = read_config('default_send_report_from')
+    subject = read_config('default_send_report_subject')
+    text = read_config('default_send_report_text')
 
     msg = MIMEMultipart(
         From=send_from,
@@ -85,21 +86,28 @@ def send_mail(files=None,
                 Name=basename(f)
             ))
 
-    smtp = smtplib.SMTP(server)
+    smtp = smtplib.SMTP('localhost', 25)
+    # smtp = smtplib.SMTP_SSL('outlook.office365.com')
+    # smtp.login('username', 'password')
     smtp.sendmail(send_from, send_to, msg.as_string())
     smtp.close()
 
 
 parser = argparse.ArgumentParser(prog='BEHAVE TEST', description='Run Behave test')
-parser.add_argument('-rt', '--report', default='reports', help='define the report dir')
-parser.add_argument('-sh', '--screenshot', default='screenshots', help='define the screenshot dir')
-parser.add_argument('-ft', '--feature', default='', help='define a specific feature to test')
+parser.add_argument('-rt', '--report', default=read_config('default_report_dir'),
+                    help='define the report dir')
+parser.add_argument('-sh', '--screenshot', default=read_config('default_screenshot_dir'),
+                    help='define the screenshot dir')
+parser.add_argument('-ft', '--feature', default='',
+                    help='define a specific feature to test')
+parser.add_argument('-d', '--driver', default=read_config('default_driver'),
+                    help='define a specific feature to test')
 parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.1')
 args = parser.parse_args()
 
-
+set_config('driver', args.driver.lower())
 create_dirs(args)
 run_test(args.feature)
-generate_report_pdf()
-send_mail()
+# report = generate_report_pdf()
+# send_mail([report])
 

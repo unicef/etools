@@ -41,9 +41,9 @@ def step_impl(context):
         driver.find_element_by_xpath("//input[@id='id_travelroutes_set-1-arrive']").send_keys("20/01/2016 14:40")
         driver.find_element_by_name("_continue").click()
 
-        driver.get(context.browser.current_url)
-        driver.find_element_by_link_text("Delete").click()
-        driver.find_element_by_css_selector("input.btn.btn-danger").click()
+        # driver.get(context.browser.current_url)
+        # driver.find_element_by_link_text("Delete").click()
+        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -65,9 +65,9 @@ def step_impl(context):
         driver.find_element_by_link_text("Today").click()
         driver.find_element_by_name("_continue").click()
 
-        driver.get(context.browser.current_url)
-        driver.find_element_by_link_text("Delete").click()
-        driver.find_element_by_css_selector("input.btn.btn-danger").click()
+        # driver.get(context.browser.current_url)
+        # driver.find_element_by_link_text("Delete").click()
+        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
 
     except Exception as ex:
         context.util.screenshot_error()

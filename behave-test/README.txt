@@ -10,6 +10,7 @@ python run.py
   -sh SCREENSHOT, --screenshot SCREENSHOT   define the screenshot dir
   -ft FEATURE, --feature FEATURE            define a specific feature to test
   -v, --version                             show program's version number and exit
+  -d, --driver                              run test with which driver (firefox, chrome)
 
 
 # Work in progress

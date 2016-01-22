@@ -110,9 +110,10 @@ def step_impl(context):
         driver.find_element_by_id("id_title").send_keys("Test")
         Select(driver.find_element_by_id("id_partnership_type")).select_by_visible_text("Cash Transfers to Government")
         driver.find_element_by_name("_save").click()
-        driver.find_element_by_link_text("TTV12345").click()
-        driver.find_element_by_link_text("Delete").click()
-        driver.find_element_by_css_selector("input.btn.btn-danger").click()
+
+        # driver.find_element_by_link_text("TTV12345").click()
+        # driver.find_element_by_link_text("Delete").click()
+        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)

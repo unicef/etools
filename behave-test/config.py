@@ -18,3 +18,19 @@ def update_config(name, value):
 
     with open('behave.ini', 'wb') as configfile:
         config.write(configfile)
+
+
+def set_config(name, value):
+    config = read_base_config()
+    config.set('etools', name, value)
+
+    with open('behave.ini', 'wb') as configfile:
+        config.write(configfile)
+
+
+def remove_config(name):
+    config = read_base_config()
+    config.remove_option('etools', name)
+
+    with open('behave.ini', 'wb') as configfile:
+        config.write(configfile)
