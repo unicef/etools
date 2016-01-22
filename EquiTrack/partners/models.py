@@ -451,11 +451,11 @@ class PCA(AdminURLMixin, models.Model):
     # dates
     start_date = models.DateField(
         null=True, blank=True,
-        help_text=u'The date the partnership will start'
+        help_text=u'The date the Intervention will start'
     )
     end_date = models.DateField(
         null=True, blank=True,
-        help_text=u'The date the partnership will end'
+        help_text=u'The date the Intervention will end'
     )
     initiation_date = models.DateField(
         verbose_name=u'Submission Date',
