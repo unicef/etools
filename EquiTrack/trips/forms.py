@@ -103,8 +103,8 @@ class TripForm(ModelForm):
         driver = cleaned_data.get(u'driver')
         driver_supervisor = cleaned_data.get(u'driver_supervisor')
 
-        if to_date < from_date:
-            raise ValidationError('The to date must be greater than the from date')
+        if (to_date and from_date) and to_date < from_date:
+            raise ValidationError({'to_date': 'The to date must be greater than the from date'})
 
         if owner == supervisor:
             raise ValidationError('You can\'t supervise your own trips')
