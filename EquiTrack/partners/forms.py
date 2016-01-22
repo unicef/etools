@@ -296,6 +296,12 @@ class AgreementForm(UserGroupForm):
         start = cleaned_data.get(u'start')
         end = cleaned_data.get(u'end')
 
+        if partner and \
+                agreement_type == Agreement.PCA and \
+                Agreement.PCA in partner.agreement_set.values_list('agreement_type', flat=True):
+            err = u'This partnership can only have one {} agreement'.format(agreement_type)
+            raise ValidationError({'agreement_type': err})
+
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
             raise ValidationError(
                 _(u'Please provide the agreement reference for this {}'.format(agreement_type))
