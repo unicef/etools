@@ -43,7 +43,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
 
   <!-- build:css /static/frontend/management/styles/main.css -->
-  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/management/main.css">
   <!-- endbuild-->
 
   <!-- build:js /static/frontend/management/bower_components/webcomponentsjs/webcomponents-lite.min.js -->
@@ -88,9 +88,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           </template>   
 
           <template is="dom-if" if='{{permissions.interventionsMenu}}'>
-            <a data-route="managementPage" href="{{baseUrl}}management">
-              <iron-icon icon="info"></iron-icon>
-              <span>Management</span>
+            <a data-route="statsPage" href="{{baseUrl}}statistics">
+              <iron-icon icon="assessment"></iron-icon>
+              <span>Statistics</span>
             </a>
           </template> 
 
@@ -152,7 +152,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </template> 
 
             <template is="dom-if" if='{{permissions.interventionsMenu}}'>
-              <section data-route="managementPage">
+              <section data-route="statsPage">
                 
                     <management-page 
                         app-data="[[appData]]"

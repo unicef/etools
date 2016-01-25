@@ -41,7 +41,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     },
     permissions: {
       partnerOnlyPermissions: ['interventionsMenu', 'userInfoMenu'],
-      defaultPermissions: ['interventionsMenu', 'userInfoMenu'],
+      defaultPermissions: ['userInfoMenu'],
+      partnerPermissions: ['interventionsMenu']
     }
   };
 
@@ -100,4 +101,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     app.$.paperDrawerPanel.closeDrawer();
   };
 
+  app.closeAndCondense = function() {
+    app.$.headerPanelMain.condense();
+    app.$.paperDrawerPanel.responsiveWidth = '1800px';
+  };
+  
+  app.openAndExpand = function() {
+    app.$.paperDrawerPanel.responsiveWidth = '600px';
+  };
+  
 })(document);
