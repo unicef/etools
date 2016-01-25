@@ -103,7 +103,7 @@ class LocationView(ListAPIView):
 class PortalDashView(View):
 
     def get(self, request):
-        with open(settings.SITE_ROOT + '/templates/frontend/partner_portal/index.html', 'r') as my_f:
+        with open(settings.SITE_ROOT + '/templates/frontend/partner/partner.html', 'r') as my_f:
             result = my_f.read()
         return HttpResponse(result)
 

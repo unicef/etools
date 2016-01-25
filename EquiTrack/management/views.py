@@ -3,7 +3,10 @@ __author__ = 'RobertAvram'
 
 from datetime import date, timedelta
 from django.db import connection
+from django.http import HttpResponse
+from django.conf import settings
 
+from django.views.generic import View
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,6 +23,13 @@ from partners.models import (
     PCA
 )
 
+
+class PortalDashView(View):
+
+    def get(self, request):
+        with open(settings.SITE_ROOT + '/templates/frontend/management/management.html', 'r') as my_f:
+            result = my_f.read()
+        return HttpResponse(result)
 
 class ActiveUsersSection(APIView):
     model = UserProfile
