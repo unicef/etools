@@ -1,0 +1,23 @@
+{
+"id": 1,
+"profile": {
+    "office": null,
+    "section": null,
+    "country_name": "UAT",
+    "partner_staff_member": 1,
+    "job_title": null,
+    "phone_number": null,
+    "installation_id": null,
+    "country": 1,
+    "country_override": null
+    },
+"last_login": "2015-12 04T19:24:08.714193Z", 
+"is_superuser": false, 
+"username": "email@example.com", 
+"first_name": "Anonymous",
+"last_name": "User",
+"email": "email@example.com",
+"is_staff": true,
+"is_active": true,
+"date_joined": "2015-12-03T16:17:01Z"
+}
