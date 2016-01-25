@@ -9,11 +9,12 @@ python run.py
   -rt REPORT, --report REPORT               define the report dir
   -sh SCREENSHOT, --screenshot SCREENSHOT   define the screenshot dir
   -ft FEATURE, --feature FEATURE            define a specific feature to test
+  -t TAGS, --tags TAGS                      define a specific tags to test
+  -sr SENDREPORT, --sendreport SENDREPORT   send test result by email
   -v, --version                             show program's version number and exit
   -d, --driver                              run test with which driver (firefox, chrome)
 
 
 # Work in progress
 
-option to define the email to receive the report result
 merge report result and errors screenshots

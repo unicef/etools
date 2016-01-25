@@ -41,6 +41,16 @@ def step_impl(context):
         driver.find_element_by_xpath("//input[@id='id_travelroutes_set-1-arrive']").send_keys("20/01/2016 14:40")
         driver.find_element_by_name("_continue").click()
 
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+@then('delete the new trip')
+def step_impl(context):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+
         # driver.get(context.browser.current_url)
         # driver.find_element_by_link_text("Delete").click()
         # driver.find_element_by_css_selector("input.btn.btn-danger").click()
@@ -49,8 +59,7 @@ def step_impl(context):
         context.util.screenshot_error()
         raise Exception(ex)
 
-
-@then('add an action point')
+@given('add an action point')
 def step_impl(context):
     try:
         driver = context.browser
@@ -64,6 +73,16 @@ def step_impl(context):
         driver.find_element_by_id("id_actions_taken").send_keys("task action list")
         driver.find_element_by_link_text("Today").click()
         driver.find_element_by_name("_continue").click()
+
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+@then('delete the new action point')
+def step_impl(context):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
 
         # driver.get(context.browser.current_url)
         # driver.find_element_by_link_text("Delete").click()

@@ -29,15 +29,26 @@ def step_impl(context):
         driver.find_element_by_id("id_partnerstaffmember_set-0-email").clear()
         driver.find_element_by_id("id_partnerstaffmember_set-0-email").send_keys("ttvmember@test.test")
         driver.find_element_by_name("_save").click()
-        driver.find_element_by_link_text("TestVision").click()
-        driver.find_element_by_link_text("Delete").click()
-        driver.find_element_by_css_selector("input.btn.btn-danger").click()
+
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('add an agreement')
+@then('delete the new partner organization')
+def set_impl(context):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+        # driver.find_element_by_link_text("TestVision").click()
+        # driver.find_element_by_link_text("Delete").click()
+        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@given('add an agreement')
 def step_impl(context):
     try:
         driver = context.browser
@@ -86,31 +97,55 @@ def step_impl(context):
         driver.switch_to_window(currentPage)
 
         driver.find_element_by_name("_save").click()
-        driver.find_element_by_link_text("TTV00012345").click()
-        driver.find_element_by_link_text("Delete").click()
-        driver.find_element_by_css_selector("input.btn.btn-danger").click()
+
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('add an intervention')
+@then('delete the new agreement')
+def set_impl(context):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+        # driver.find_element_by_link_text("TTV00012345").click()
+        # driver.find_element_by_link_text("Delete").click()
+        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@given('add an intervention')
 def step_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
-        driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/pcs/')]").click()
+        driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/pca/')]").click()
         driver.find_element_by_link_text("Interventions").click()
         driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/pca/add/')]").click()
-        driver.find_element_by_css_selector("i.icon-plus-sign.icon-white").click()
+
         Select(driver.find_element_by_id("id_partner")).select_by_visible_text("TestVision")
+        Select(driver.find_element_by_id("id_agreement")).select_by_visible_text("---------")
+        Select(driver.find_element_by_id("id_agreement")).select_by_visible_text("AWP for TestVision (20-01-2016 - 29-07-2016)")
+        Select(driver.find_element_by_id("id_partnership_type")).select_by_visible_text("Cash Transfers to Government")
         driver.find_element_by_id("id_number").clear()
         driver.find_element_by_id("id_number").send_keys("TTV12345")
         driver.find_element_by_id("id_title").clear()
         driver.find_element_by_id("id_title").send_keys("Test")
-        Select(driver.find_element_by_id("id_partnership_type")).select_by_visible_text("Cash Transfers to Government")
+        driver.find_element_by_link_text("Today").click()
         driver.find_element_by_name("_save").click()
 
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@then('delete the new intervention')
+def set_impl(context):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
         # driver.find_element_by_link_text("TTV12345").click()
         # driver.find_element_by_link_text("Delete").click()
         # driver.find_element_by_css_selector("input.btn.btn-danger").click()

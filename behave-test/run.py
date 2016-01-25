@@ -41,18 +41,18 @@ def create_dirs(args):
     set_config('driver', args.driver.lower())
 
 
-def run_test(feature):
+def run_test(feature, tags):
 
     report_txt = read_config('report_dir') + '/result.txt'
     if not feature:
-        print 'all features'
-        # Popen(['behave', '--outfile', report_txt])
-        returncode = subprocess.call(['behave', '--outfile', report_txt])
+        print 'all features, tags: ' + tags
+        # Popen(['behave', '--outfile', report_txt, '--tags', tags])
+        returncode = subprocess.call(['behave', '--outfile', report_txt, '--tags', tags])
     else:
         feature = 'features/' + feature + '.feature'
-        print feature
-        #Popen(['behave', '--outfile', report_txt, feature])
-        returncode = subprocess.call(['behave', '--outfile', report_txt, feature])
+        print feature + ', tags: ' + tags
+        #Popen(['behave', '--outfile', report_txt, feature, '--tags', tags])
+        returncode = subprocess.call(['behave', '--outfile', report_txt, feature, '--tags', tags])
 
     return returncode
 
@@ -63,12 +63,13 @@ def generate_report_pdf():
     Popen(['rst2pdf', report_txt, report_pdf])
     return report_pdf
 
-
 def send_mail(files=None):
     send_to = read_config('default_send_report_to')
     send_from = read_config('default_send_report_from')
     subject = read_config('default_send_report_subject')
     text = read_config('default_send_report_text')
+
+    print 'send test result to: ' + send_to
 
     msg = MIMEMultipart(
         From=send_from,
@@ -87,8 +88,6 @@ def send_mail(files=None):
             ))
 
     smtp = smtplib.SMTP('localhost', 25)
-    # smtp = smtplib.SMTP_SSL('outlook.office365.com')
-    # smtp.login('username', 'password')
     smtp.sendmail(send_from, send_to, msg.as_string())
     smtp.close()
 
@@ -100,14 +99,24 @@ parser.add_argument('-sh', '--screenshot', default=read_config('default_screensh
                     help='define the screenshot dir')
 parser.add_argument('-ft', '--feature', default='',
                     help='define a specific feature to test')
+parser.add_argument('-t', '--tags', default=read_config('default_tags'),
+                    help='define a specific tags to test')
 parser.add_argument('-d', '--driver', default=read_config('default_driver'),
                     help='define a specific feature to test')
+parser.add_argument('-sr', '--sendreport', default=read_config('default_send_report'),
+                    help='send test result by email')
 parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.1')
 args = parser.parse_args()
 
-set_config('driver', args.driver.lower())
 create_dirs(args)
-run_test(args.feature)
-# report = generate_report_pdf()
-# send_mail([report])
+run_test(args.feature, args.tags)
+
+if args.sendreport == '1':
+    report = generate_report_pdf()
+    send_mail([report])
+
+remove_config('report_dir')
+remove_config('report_dir_errors')
+remove_config('screenshot_dir')
+remove_config('driver')
 

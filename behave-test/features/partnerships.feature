@@ -1,6 +1,18 @@
+@dev
+@staging
 Feature: testing partnerships features
 
-  Scenario: visit eTools and test partnerships
+  @partner
+  Scenario: visit eTools and test adding partner organization
      Given add a partner organization
-      Then add an agreement
-      Then add an intervention
+      Then delete the new partner organization
+
+  @argeement
+  Scenario: visit eTools and test adding agreement
+     Given add an agreement
+      Then delete the new agreement
+
+  @intervention
+  Scenario: visit eTools and test adding intervention
+     Given add an intervention
+      Then delete the new intervention
