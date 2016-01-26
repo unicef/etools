@@ -3,6 +3,7 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 import pandas
+from datetime import date
 
 from django.utils.translation import ugettext as _
 from django import forms
@@ -28,6 +29,9 @@ from EquiTrack.forms import (
 
 from django.contrib.auth.models import User
 
+from reports.models import (
+    ResultStructure,
+)
 from locations.models import Location
 from reports.models import Sector, Result, ResultType, Indicator
 from .models import (
@@ -142,31 +146,32 @@ class AmendmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         """
         Only display the amendments related to this partnership
-        """
+        # """
         if 'parent_object' in kwargs:
             self.parent_partnership = kwargs.pop('parent_object')
 
         super(AmendmentForm, self).__init__(*args, **kwargs)
 
-        self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
-            if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
+        if self.fields.get('ammendment'):
+            self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
+                if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
 
-        self.fields['amendment'].empty_label = u'Original'
+            self.fields['amendment'].empty_label = u'Original'
 
 
-class AuthorizedOfficesFormset(RequireOneFormSet):
+class AuthorizedOfficersFormset(RequireOneFormSet):
 
     def __init__(
             self, data=None, files=None, instance=None,
             save_as_new=False, prefix=None, queryset=None, **kwargs):
-        super(AuthorizedOfficesFormset, self).__init__(
+        super(AuthorizedOfficersFormset, self).__init__(
             data=data, files=files, instance=instance,
             save_as_new=save_as_new, prefix=prefix,
             queryset=queryset, **kwargs)
         self.required = False
 
     def _construct_form(self, i, **kwargs):
-        form = super(AuthorizedOfficesFormset, self)._construct_form(i, **kwargs)
+        form = super(AuthorizedOfficersFormset, self)._construct_form(i, **kwargs)
         if self.instance.signed_by_partner_date:
             self.required = True
         return form
@@ -296,11 +301,20 @@ class AgreementForm(UserGroupForm):
         start = cleaned_data.get(u'start')
         end = cleaned_data.get(u'end')
 
-        if partner and \
-                agreement_type == Agreement.PCA and \
-                Agreement.PCA in partner.agreement_set.values_list('agreement_type', flat=True):
-            err = u'This partnership can only have one {} agreement'.format(agreement_type)
-            raise ValidationError({'agreement_type': err})
+        if not self.instance.id and \
+                partner and \
+                agreement_type == Agreement.PCA:
+
+            if Agreement.PCA in partner.agreement_set.values_list('agreement_type', flat=True):
+                err = u'This partnership can only have one {} agreement'.format(agreement_type)
+                raise ValidationError({'agreement_type': err})
+
+            result_structure = ResultStructure.objects.last()
+            if result_structure and end > result_structure.to_date:
+                err = u'This agreement cannot last longer than \
+                    the Program Document'.format(result_structure.to_date)
+
+                raise ValidationError({'end': err})
 
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
             raise ValidationError(
@@ -317,6 +331,10 @@ class AgreementForm(UserGroupForm):
                 raise ValidationError(
                     _(u'SSFA can not be more than a year')
                 )
+
+        # PCAs last as long as the most recent CPD
+
+
 
         # TODO: prevent more than one agreement being crated for the current period
         # agreements = Agreement.objects.filter(
@@ -616,7 +634,9 @@ class PartnershipBudgetAdminForm(AmendmentForm):
     def __init__(self, *args, **kwargs):
         super(PartnershipBudgetAdminForm, self).__init__(*args, **kwargs)
 
-        years = None
+        # by default add the previous 2 years and the next 2 years
+        cy = date.today().year
+        years = range(cy-2, cy+2)
         if hasattr(self, 'parent_partnership') and self.parent_partnership.start_date and self.parent_partnership.end_date:
 
             years = range(self.parent_partnership.start_date.year, self.parent_partnership.end_date.year+1)

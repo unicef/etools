@@ -47,6 +47,7 @@ from supplies.tasks import (
 from . import emails
 
 
+
 HIGH = u'high'
 SIGNIFICANT = u'significant'
 MODERATE = u'moderate'
@@ -356,16 +357,11 @@ class Agreement(TimeStampedModel):
 
     def save(self, **kwargs):
 
-        if self.pk and self.agreement_type == Agreement.PCA:
-
-            if self.partner_manager and self.partner_manager not in self.authorized_officers.all():
-                officer = AuthorizedOfficer.objects.create(agreement=self, officer=self.partner_manager)
-                self.authorized_officers.add(officer)
-
-            # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.objects.last()
-            if result_structure:
-                self.end = result_structure.to_date
+        # if self.partner_manager and \
+        #         self.partner_manager.id not in \
+        #         self.authorized_officers.values_list('officer', flat=True):
+        #     officer = AuthorizedOfficer.objects.create(agreement=self, officer=self.partner_manager)
+        #     self.authorized_officers.add(officer)
 
         super(Agreement, self).save(**kwargs)
 
@@ -381,6 +377,21 @@ class AuthorizedOfficer(models.Model):
 
     def __unicode__(self):
         return self.officer.__unicode__()
+
+    @classmethod
+    def create_officer(cls, sender, instance, created, **kwargs):
+        """
+        Signal handler to create authorized_officers automatically
+        """
+        if instance.partner_manager and \
+                instance.partner_manager.id not in \
+                instance.authorized_officers.values_list('officer', flat=True):
+
+            cls.objects.create(agreement=instance,
+                               officer=instance.partner_manager)
+
+
+post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 
 class PCA(AdminURLMixin, models.Model):
