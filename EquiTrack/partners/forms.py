@@ -146,7 +146,7 @@ class AmendmentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         """
         Only display the amendments related to this partnership
-        # """
+        """
         if 'parent_object' in kwargs:
             self.parent_partnership = kwargs.pop('parent_object')
 
@@ -309,7 +309,6 @@ class AgreementForm(UserGroupForm):
             if result_structure and end > result_structure.to_date:
                 err = u'This agreement cannot last longer than \
                     the Program Document'.format(result_structure.to_date)
-
                 raise ValidationError({'end': err})
 
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
