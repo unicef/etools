@@ -152,11 +152,9 @@ class AmendmentForm(forms.ModelForm):
 
         super(AmendmentForm, self).__init__(*args, **kwargs)
 
-        if self.fields.get('ammendment'):
-            self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
-                if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
-
-            self.fields['amendment'].empty_label = u'Original'
+        self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
+            if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
+        self.fields['amendment'].empty_label = u'Original'
 
 
 class AuthorizedOfficersFormset(RequireOneFormSet):
@@ -637,9 +635,11 @@ class PartnershipBudgetAdminForm(AmendmentForm):
         # by default add the previous 2 years and the next 2 years
         cy = date.today().year
         years = range(cy-2, cy+2)
-        if hasattr(self, 'parent_partnership') and self.parent_partnership.start_date and self.parent_partnership.end_date:
-
-            years = range(self.parent_partnership.start_date.year, self.parent_partnership.end_date.year+1)
+        if (hasattr(self, 'parent_partnership')) and \
+                self.parent_partnership.start_date and \
+                self.parent_partnership.end_date:
+            years = range(self.parent_partnership.start_date.year,
+                          self.parent_partnership.end_date.year+1)
 
         self.fields['year'] = forms.ChoiceField(
             choices=[(year, year) for year in years] if years else []
