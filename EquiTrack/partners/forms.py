@@ -157,7 +157,7 @@ class AmendmentForm(forms.ModelForm):
         self.fields['amendment'].empty_label = u'Original'
 
 
-class AuthorizedOfficersFormset(RequireOneFormSet):
+class AuthorizedOfficersFormset(ParentInlineAdminFormSet):
 
     def __init__(
             self, data=None, files=None, instance=None,
@@ -166,13 +166,9 @@ class AuthorizedOfficersFormset(RequireOneFormSet):
             data=data, files=files, instance=instance,
             save_as_new=save_as_new, prefix=prefix,
             queryset=queryset, **kwargs)
-        self.required = False
+        # since signed by partner automatically gets placed in the authorized officers
+        # there is no need to add requiredOne
 
-    def _construct_form(self, i, **kwargs):
-        form = super(AuthorizedOfficersFormset, self)._construct_form(i, **kwargs)
-        if self.instance.signed_by_partner_date:
-            self.required = True
-        return form
 
 
 class PartnerStaffMemberForm(forms.ModelForm):
@@ -307,6 +303,7 @@ class AgreementForm(UserGroupForm):
                 err = u'This partnership can only have one {} agreement'.format(agreement_type)
                 raise ValidationError({'agreement_type': err})
 
+            # PCAs last as long as the most recent CPD
             result_structure = ResultStructure.objects.last()
             if result_structure and end > result_structure.to_date:
                 err = u'This agreement cannot last longer than \
@@ -329,10 +326,6 @@ class AgreementForm(UserGroupForm):
                 raise ValidationError(
                     _(u'SSFA can not be more than a year')
                 )
-
-        # PCAs last as long as the most recent CPD
-
-
 
         # TODO: prevent more than one agreement being crated for the current period
         # agreements = Agreement.objects.filter(
