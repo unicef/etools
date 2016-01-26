@@ -40,9 +40,11 @@ def set_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
-        # driver.find_element_by_link_text("TestVision").click()
+        driver.find_element_by_link_text("TestVision").click()
         # driver.find_element_by_link_text("Delete").click()
         # driver.find_element_by_css_selector("input.btn.btn-danger").click()
+        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
+        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -108,9 +110,12 @@ def set_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
-        # driver.find_element_by_link_text("TTV00012345").click()
+        driver.find_element_by_link_text("TTV00012345").click()
         # driver.find_element_by_link_text("Delete").click()
         # driver.find_element_by_css_selector("input.btn.btn-danger").click()
+        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
+        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
+
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -146,9 +151,11 @@ def set_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
-        # driver.find_element_by_link_text("TTV12345").click()
+        driver.find_element_by_link_text("TTV12345").click()
         # driver.find_element_by_link_text("Delete").click()
         # driver.find_element_by_css_selector("input.btn.btn-danger").click()
+        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
+        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
