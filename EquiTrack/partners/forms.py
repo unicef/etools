@@ -166,8 +166,9 @@ class AuthorizedOfficersFormset(ParentInlineAdminFormSet):
             data=data, files=files, instance=instance,
             save_as_new=save_as_new, prefix=prefix,
             queryset=queryset, **kwargs)
+        # removable comments:
         # since signed by partner automatically gets placed in the authorized officers
-        # there is no need to add requiredOne
+        # there is no need to add requiredOne anymore
 
 
 
