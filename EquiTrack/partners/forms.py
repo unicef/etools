@@ -296,11 +296,11 @@ class AgreementForm(UserGroupForm):
         start = cleaned_data.get(u'start')
         end = cleaned_data.get(u'end')
 
-        if not self.instance.id and \
-                partner and \
-                agreement_type == Agreement.PCA:
-
-            if Agreement.PCA in partner.agreement_set.values_list('agreement_type', flat=True):
+        if partner and agreement_type == Agreement.PCA:
+            # Partnership can only have one PCA
+            pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
+            if (not self.instance.id and pca_ids) or \
+                    (self.instance.id and pca_ids and self.instance.id not in pca_ids):
                 err = u'This partnership can only have one {} agreement'.format(agreement_type)
                 raise ValidationError({'agreement_type': err})
 
