@@ -1,0 +1,114 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<style>
+  .td-right {
+    text-align:right;
+  }
+</style>
+<dom-module id="interventions-stats">
+  <template>
+    
+
+    <etools-ajax
+          autos
+          id="ajax"
+          url="[[interventionsStatsUrl]]"
+          handle-as="json"
+          on-response="hInterventionsStatsResponse"
+          debounce-duration="300">
+    </etools-ajax>
+
+    <section class="no-border">
+      <paper-dropdown-menu class="center" label="Choose Country" no-animations>
+        <paper-menu class="dropdown-content" selected="{{countryChoice}}" on-iron-select="_setCountry">
+          <template is="dom-repeat" items="[[elStats]]" as="country" >
+            <paper-item>{{country.countryName}}</paper-item>
+          </template>
+        </paper-menu>
+      </paper-dropdown-menu>
+      <paper-dropdown-menu class="center" label="Choose Chart" no-animations>
+        <paper-menu class="dropdown-content" selected="{{chartChoice}}">
+          <paper-item>Column Chart</paper-item>
+          <paper-item>Table Chart</paper-item>
+        </paper-menu>
+      </paper-dropdown-menu>
+    </section>
+
+    <iron-pages selected="{{chartChoice}}">
+      <section>
+        <google-chart id="resizingChart"
+          hidden$="[[chartHidden]]"
+          type='column'
+          options='{"title": "Interventions Statistics Chart"}'
+          cols='[{"label": "Data", "type": "string"},{"label": "Active Interventions", "type": "number"}]'
+          rows='[[columnChartRows]]'>
+        </google-chart>
+      </section>  
+
+      <section>
+        <google-chart 
+          type="table"
+          options='{"title": "Interventions Statistics"}'
+          cols='[{"label": "Country", "type": "string"},{"label": "Active Interventions", "type": "number"}]'
+          rows='[[tableChartRows]]'>
+        </google-chart>
+      </section>
+    </iron-pages>
+  </template>
+</dom-module>
+
+<script>
+    // jscs:disable
+(function() {
+    
+  'use strict';
+  Polymer({
+    is: 'interventions-stats',
+    behaviors: [mngBv.one, Polymer.IronResizableBehavior],
+    properties: {
+      appData: {
+        type: Object,
+        // appData is received from the parent
+        value: {}
+      },
+      elStats: {
+        type: Array,
+        value: []
+      },
+      interventionsStatsUrl: {
+        type: String,
+        value: null
+      },
+    },
+    ready: function() {
+      // console.log(this.appData);
+      this.interventionsStatsUrl = this.appData.interventionsStatsEp;
+    },
+    _processStatsData: function(srcData, countryIndex) {
+      //
+      var columnRows = [];
+      var tableRows = [];
+
+      var e = srcData[countryIndex];
+      columnRows.push(['Active Interventions', e.totalActiveInterventions]);
+      tableRows.push([e.countryName, e.totalActiveInterventions]);
+      
+
+      this.tableChartRows = tableRows;
+      this.columnChartRows = columnRows;
+
+      // show chart and re-draw it
+      if (this.chartHidden) {
+        this.chartHidden = false;
+        this._redrawChart();
+      }
+    },
+    hInterventionsStatsResponse: function(rsp) {
+      this.elStats = rsp.detail.xhr.response;
+      this._getCountries(rsp.detail.xhr.response);
+      this._processStatsData(rsp.detail.xhr.response, 0);
+    },
+  });
+})();
+
+</script>

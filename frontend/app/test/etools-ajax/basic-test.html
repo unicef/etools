@@ -14,11 +14,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
 
-    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="../../web-component-tester/browser.js"></script>
+    <script src="../../../bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <script src="../../../bower_components/web-component-tester/browser.js"></script>
+    <script src="../../../bower_components/test-fixture/test-fixture-mocha.js"></script>
+    <link rel="import" href="../../../bower_components/test-fixture/test-fixture.html">
 
     <!-- Step 1: import the element to test -->
-    <link rel="import" href="../etools-ajax.html">
+    <link rel="import" href="../../elements/common/etools-ajax/etools-ajax.html">
   </head>
   <body>
 
@@ -37,7 +39,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           myEl = fixture('etools-ajax-fixture');
         });
         test('checks the auth token', function() {
-          assert.equal(myEl.authToken, 'myauthtoken');
+          assert.equal(myEl.authToken, '');
         });
         // test('says hello', function() {
         //   assert.equal(myEl.sayHello(), 'seed-element says, Hello World!');

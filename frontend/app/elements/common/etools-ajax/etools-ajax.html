@@ -1,0 +1,77 @@
+
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-ajax/iron-ajax.html">
+
+<!--
+An element providing a solution to no problem in particular.
+
+Example:
+
+    <my-customel></my-customel>
+
+@group Seed Elements
+@element my-customel
+@demo demo/index.html
+@hero hero.svg
+-->
+<dom-module id="etools-ajax">
+
+  <template>
+    <iron-ajax
+          auto
+          url="[[url]]"
+          handle-as="json"
+          on-response="handleResponse"
+          on-error="handleError"
+          debounce-duration="300">
+    </iron-ajax>
+  </template>
+
+</dom-module>
+
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'etools-ajax',
+    properties: {
+      authToken: {
+        type: String,
+        value: ''
+      },
+    },
+
+    handleError: function(request, error){
+      console.log('handling the error from etools-ajax');
+      console.log('add error checking and validation here');
+      // TODO: alert with needed errors.
+      console.error([error.error, 'while loading', request.srcElement.url].join(': '));
+      this.fire('error', {
+        request: request,
+        error: error.error
+      }, {bubbles: false});
+    },
+
+    handleResponse: function(rsp) {
+      //console.log('handling the response from etools-ajax')
+      //console.log(rsp.detail.xhr.response, rsp.detail.xhr)
+      //console.log(rsp.detail.xhr.responseURL);
+      //console.log(rsp.srcElement.url);
+      // TODO: move this logic into default behaviours
+      if (rsp.detail.xhr.responseURL !== rsp.srcElement.url){
+        console.error('expected link did not work, got redirected');
+        // TODO: if we get redirected to login.. trigger a global redirect mechanism
+        // this._handleUnexpectedResponse();
+        return;
+      }
+      this.fire('response', rsp.detail, {bubbles: false});
+    }
+    
+  });
+})();
+
+</script>
