@@ -308,7 +308,7 @@ class AgreementForm(UserGroupForm):
             result_structure = ResultStructure.objects.order_by('to_date').last()
             if result_structure and end > result_structure.to_date:
                 err = u'This agreement cannot last longer than \
-                    the Program Document'.format(result_structure.to_date)
+                    the Result Structure on {}'.format(result_structure.to_date)
                 raise ValidationError({'end': err})
 
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
