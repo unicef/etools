@@ -55,7 +55,7 @@ class TestTripForm(TenantTestCase):
         trip_dict['from_date'] = trip_dict['from_date'] + timedelta(days=3)
         form = TripForm(data=trip_dict)
         self.assertFalse(form.is_valid())
-        self.assertEqual(form.non_field_errors()[0], 'The to date must be greater than the from date')
+        self.assertEqual(form.errors['to_date'], [u'The to date must be greater than the from date'])
 
     def test_form_validation_for_past_trip(self):
         trip_dict = to_dict(self.trip)

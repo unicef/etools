@@ -3,6 +3,7 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 import pandas
+from datetime import date
 
 from django.utils.translation import ugettext as _
 from django import forms
@@ -28,6 +29,9 @@ from EquiTrack.forms import (
 
 from django.contrib.auth.models import User
 
+from reports.models import (
+    ResultStructure,
+)
 from locations.models import Location
 from reports.models import Sector, Result, ResultType, Indicator
 from .models import (
@@ -70,7 +74,10 @@ class PartnersAdminForm(AutoSizeTextForm):
             raise ValidationError(
                 _(u'You must select a type for this CSO')
             )
-
+        if partner_type and partner_type != u'Civil Society Organisation' and cso_type:
+            raise ValidationError(
+                _(u'"CSO Type" does not apply to non-CSO organizations, please remove type')
+            )
         return cleaned_data
 
 
@@ -147,26 +154,22 @@ class AmendmentForm(forms.ModelForm):
 
         self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
-
         self.fields['amendment'].empty_label = u'Original'
 
 
-class AuthorizedOfficesFormset(RequireOneFormSet):
+class AuthorizedOfficersFormset(ParentInlineAdminFormSet):
 
     def __init__(
             self, data=None, files=None, instance=None,
             save_as_new=False, prefix=None, queryset=None, **kwargs):
-        super(AuthorizedOfficesFormset, self).__init__(
+        super(AuthorizedOfficersFormset, self).__init__(
             data=data, files=files, instance=instance,
             save_as_new=save_as_new, prefix=prefix,
             queryset=queryset, **kwargs)
-        self.required = False
+        # removable comments:
+        # since signed by partner automatically gets placed in the authorized officers
+        # there is no need to add requiredOne anymore
 
-    def _construct_form(self, i, **kwargs):
-        form = super(AuthorizedOfficesFormset, self)._construct_form(i, **kwargs)
-        if self.instance.signed_by_partner_date:
-            self.required = True
-        return form
 
 
 class PartnerStaffMemberForm(forms.ModelForm):
@@ -292,6 +295,21 @@ class AgreementForm(UserGroupForm):
         agreement_number = cleaned_data.get(u'agreement_number')
         start = cleaned_data.get(u'start')
         end = cleaned_data.get(u'end')
+
+        if partner and agreement_type == Agreement.PCA:
+            # Partnership can only have one PCA
+            pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
+            if (not self.instance.id and pca_ids) or \
+                    (self.instance.id and pca_ids and self.instance.id not in pca_ids):
+                err = u'This partnership can only have one {} agreement'.format(agreement_type)
+                raise ValidationError({'agreement_type': err})
+
+            # PCAs last as long as the most recent CPD
+            result_structure = ResultStructure.objects.order_by('to_date').last()
+            if result_structure and end > result_structure.to_date:
+                err = u'This agreement cannot last longer than \
+                    the Result Structure on {}'.format(result_structure.to_date)
+                raise ValidationError({'end': err})
 
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
             raise ValidationError(
@@ -499,6 +517,7 @@ class PartnershipForm(UserGroupForm):
         partner_manager = cleaned_data[u'partner_manager']
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
+        end_date = cleaned_data[u'end_date']
 
         p_codes = cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
@@ -567,6 +586,22 @@ class PartnershipForm(UserGroupForm):
                 u'Please select a sector to assign the locations against'
             )
 
+        if start_date and start_date < agreement.start:
+            err = u'The Intervention must start after the agreement starts on: {}'.format(
+                agreement.start
+            )
+            raise ValidationError({'start_date': err})
+
+        if end_date and end_date > agreement.end:
+            err = u'The Intervention must end before the agreement ends on: {}'.format(
+                agreement.end
+            )
+            raise ValidationError({'end_date': err})
+
+        if start_date and end_date and start_date > end_date:
+            err = u'The end date has to be after the start date'
+            raise ValidationError({'end_date': err})
+        
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
@@ -590,10 +625,14 @@ class PartnershipBudgetAdminForm(AmendmentForm):
     def __init__(self, *args, **kwargs):
         super(PartnershipBudgetAdminForm, self).__init__(*args, **kwargs)
 
-        years = None
-        if hasattr(self, 'parent_partnership') and self.parent_partnership.start_date and self.parent_partnership.end_date:
-
-            years = range(self.parent_partnership.start_date.year, self.parent_partnership.end_date.year+1)
+        # by default add the previous 2 years and the next 2 years
+        cy = date.today().year
+        years = range(cy-2, cy+2)
+        if (hasattr(self, 'parent_partnership')) and \
+                self.parent_partnership.start_date and \
+                self.parent_partnership.end_date:
+            years = range(self.parent_partnership.start_date.year,
+                          self.parent_partnership.end_date.year+1)
 
         self.fields['year'] = forms.ChoiceField(
             choices=[(year, year) for year in years] if years else []

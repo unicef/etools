@@ -56,7 +56,7 @@ from .forms import (
     AmendmentForm,
     AgreementForm,
     AuthorizedOfficersForm,
-    AuthorizedOfficesFormset,
+    AuthorizedOfficersFormset,
     DistributionPlanForm,
     DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
@@ -338,20 +338,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
             form.base_fields['location_sector'].queryset = obj.sector_children
             form.base_fields['work_plan_sector'].queryset = obj.sector_children
 
-        if obj and obj.agreement:
-            # if linked to a agreement auto fill some details from that
-
-            obj.number = obj.agreement.agreement_number
-
-            obj.unicef_manager = obj.agreement.signed_by
-            obj.signed_by_unicef_date = obj.agreement.signed_by_unicef_date
-
-            obj.partner_manager = obj.agreement.partner_manager
-            obj.signed_by_partner_date = obj.agreement.signed_by_partner_date
-
-            obj.start_date = obj.agreement.start
-            obj.end_date = obj.agreement.end
-
         return form
 
     def save_formset(self, request, form, formset, change):
@@ -529,7 +515,7 @@ class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
 class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     model = AuthorizedOfficer
     form = AuthorizedOfficersForm
-    formset = AuthorizedOfficesFormset
+    formset = AuthorizedOfficersFormset
     verbose_name = "Partner Authorized Officer"
     verbose_name_plural = "Partner Authorized Officers"
     extra = 1
@@ -556,6 +542,13 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
+
+    def get_formsets(self, request, obj=None):
+        # display the inline only if the agreement was saved
+        for inline in self.get_inline_instances(request, obj):
+            if isinstance(inline, AuthorizedOfficersInlineAdmin) and obj is None:
+                continue
+            yield inline.get_formset(request, obj)
 
 
 admin.site.register(SupplyItem)

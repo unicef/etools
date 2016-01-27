@@ -103,8 +103,8 @@ class TripForm(ModelForm):
         driver = cleaned_data.get(u'driver')
         driver_supervisor = cleaned_data.get(u'driver_supervisor')
 
-        if to_date < from_date:
-            raise ValidationError('The to date must be greater than the from date')
+        if (to_date and from_date) and to_date < from_date:
+            raise ValidationError({'to_date': 'The to date must be greater than the from date'})
 
         if owner == supervisor:
             raise ValidationError('You can\'t supervise your own trips')
@@ -187,7 +187,11 @@ class RequireOneLocationFormSet(BaseInlineFormSet):
 
         form_count = len([f for f in self.forms if f.cleaned_data])
         if form_count < 1 and self.instance.international_travel is False and self.instance.status != Trip.CANCELLED:
-            raise ValidationError('At least one Trip location is required. (governorate and region)')
+            if self.instance.travel_type in [
+                Trip.PROGRAMME_MONITORING,
+                Trip.SPOT_CHECK
+            ]:
+                raise ValidationError('At least one location is required for this trip type. (Admin Level 1 or below)')
 
 
 class TripFundsForm(BaseInlineFormSet):
