@@ -305,7 +305,7 @@ class AgreementForm(UserGroupForm):
                 raise ValidationError({'agreement_type': err})
 
             # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.objects.last()
+            result_structure = ResultStructure.objects.order_by('to_date').last()
             if result_structure and end > result_structure.to_date:
                 err = u'This agreement cannot last longer than \
                     the Program Document'.format(result_structure.to_date)
