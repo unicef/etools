@@ -327,6 +327,8 @@ class Trip(AdminURLMixin, models.Model):
                 remarks=route.remarks
             )
 
+
+        # TODO: I have a feeling the follwoing will break with the new locations, can someone confirm this?
         for location in self.triplocation_set.all():
             TripLocation.objects.create(
                 trip=trip,
