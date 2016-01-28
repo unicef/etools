@@ -11,9 +11,17 @@ from django.shortcuts import get_object_or_404
 
 from datetime import datetime
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.permissions import IsAdminUser
+
+from .mixins import InterventionDetailsPermission
 
 from locations.models import Location
-from .serializers import LocationSerializer, PartnershipSerializer, PartnerStaffMemberPropertiesSerializer
+from .serializers import (
+    LocationSerializer,
+    PartnershipSerializer,
+    PartnerStaffMemberPropertiesSerializer,
+    InterventionSerializer
+)
 
 from .models import (
     PCA,
@@ -141,7 +149,7 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
 
 class PartnerInterventionsView(ListAPIView):
 
-    serializer_class = PartnershipSerializer #PartnerInterventionsSerializer
+    serializer_class = PartnershipSerializer
     model = PCA
 
     def get_queryset(self):
@@ -154,7 +162,6 @@ class PartnerInterventionsView(ListAPIView):
         return current_member.partner.pca_set.all()
 
 
-
 class PortalLoginFailedView(TemplateView):
 
     template_name = "partner_portal/loginfailed.html"
@@ -163,3 +170,23 @@ class PortalLoginFailedView(TemplateView):
         context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
         context['email'] = urlsafe_base64_decode(context['email'])
         return context
+
+
+class InterventionDetailView(RetrieveAPIView):
+    serializer_class = InterventionSerializer
+    model = PCA
+    permission_classes = (InterventionDetailsPermission,)
+    queryset = PCA.objects.all()
+
+    def get_object(self):
+        queryset = self.get_queryset()
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+
+        obj = get_object_or_404(queryset, **filter)
+
+        self.check_object_permissions(self.request, obj)
+        return obj
+

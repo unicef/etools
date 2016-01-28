@@ -4,6 +4,7 @@ import json
 
 from rest_framework import serializers
 
+from reports.serializers import IndicatorSerializer
 from locations.models import Location
 
 from .models import (
@@ -13,7 +14,8 @@ from .models import (
     IndicatorProgress,
     PartnerStaffMember,
     PartnerOrganization,
-    Agreement
+    Agreement,
+    ResultChain
 )
 
 class IndicatorProgressSerializer(serializers.ModelSerializer):
@@ -42,9 +44,7 @@ class PCASectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = PCASector
 
-
 class PartnershipSerializer(serializers.ModelSerializer):
-
     pca_title = serializers.CharField(source='title')
     pca_number = serializers.CharField(source='number')
     pca_id = serializers.CharField(source='id')
@@ -60,6 +60,29 @@ class PartnershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
+
+
+class ResultChainSerializer(serializers.ModelSerializer):
+    indicator = IndicatorSerializer()
+    class Meta:
+        model = ResultChain
+
+# TODO: once we know that serializng in this fashion does not break any other frontend, replace PartnershipSerializer with InterventionSerializer
+class InterventionSerializer(serializers.ModelSerializer):
+
+    pca_title = serializers.CharField(source='title')
+    pca_number = serializers.CharField(source='number')
+    pca_id = serializers.CharField(source='id')
+    partner_name = serializers.CharField(source='partner.name')
+    partner_id = serializers.CharField(source='partner.id')
+    pcasector_set = PCASectorSerializer(many=True),
+    results = ResultChainSerializer(many=True)
+
+    class Meta:
+        model = PCA
+
+
+
 
 
 class LocationSerializer(serializers.Serializer):
