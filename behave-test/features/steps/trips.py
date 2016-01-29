@@ -53,8 +53,6 @@ def step_impl(context):
         driver.implicitly_wait(10)
 
         driver.get(context.browser.current_url)
-        # driver.find_element_by_link_text("Delete").click()
-        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
         driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
         driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
 
@@ -90,8 +88,6 @@ def step_impl(context):
         driver.implicitly_wait(10)
 
         driver.get(context.browser.current_url)
-        # driver.find_element_by_link_text("Delete").click()
-        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
         driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
         driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
 

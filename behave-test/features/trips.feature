@@ -1,5 +1,6 @@
 @dev
 @staging
+@trips
 Feature: testing trips features
 
   @trip

@@ -41,8 +41,6 @@ def set_impl(context):
         driver = context.browser
         driver.implicitly_wait(10)
         driver.find_element_by_link_text("TestVision").click()
-        # driver.find_element_by_link_text("Delete").click()
-        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
         driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
         driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
     except Exception as ex:
@@ -59,9 +57,7 @@ def step_impl(context):
         driver.find_element_by_link_text("Agreements").click()
         driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/agreement/add/')]").click()
         Select(driver.find_element_by_id("id_partner")).select_by_visible_text("TestVision")
-        Select(driver.find_element_by_id("id_partner")).select_by_visible_text("Test Partner One")
-        Select(driver.find_element_by_id("id_partner")).select_by_visible_text("Albir Society")
-        Select(driver.find_element_by_id("id_partner")).select_by_visible_text("TestVision")
+        driver.implicitly_wait(10)
         Select(driver.find_element_by_id("id_agreement_type")).select_by_visible_text("Work Plan")
         driver.find_element_by_id("id_agreement_number").clear()
         driver.find_element_by_id("id_agreement_number").send_keys("TTV00012345")
@@ -78,7 +74,7 @@ def step_impl(context):
         Select(driver.find_element_by_id("id_partner_manager")).select_by_visible_text("name name2 (TestVision)")
 
         currentPage = driver.current_window_handle
-        driver.find_element_by_id("add_id_authorized_officers-0-officer").click()
+        driver.find_element_by_id("add_id_partner_manager").click()
 
         windows = driver.window_handles
         for window in windows:
@@ -111,8 +107,6 @@ def set_impl(context):
         driver = context.browser
         driver.implicitly_wait(10)
         driver.find_element_by_link_text("TTV00012345").click()
-        # driver.find_element_by_link_text("Delete").click()
-        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
         driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
         driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
 
@@ -152,8 +146,6 @@ def set_impl(context):
         driver = context.browser
         driver.implicitly_wait(10)
         driver.find_element_by_link_text("TTV12345").click()
-        # driver.find_element_by_link_text("Delete").click()
-        # driver.find_element_by_css_selector("input.btn.btn-danger").click()
         driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
         driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
     except Exception as ex:

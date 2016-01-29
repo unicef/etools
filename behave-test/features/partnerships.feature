@@ -1,5 +1,6 @@
 @dev
 @staging
+@partnerships
 Feature: testing partnerships features
 
   @partner
@@ -7,7 +8,7 @@ Feature: testing partnerships features
      Given add a partner organization
       Then delete the new partner organization
 
-  @argeement
+  @agreement
   Scenario: visit eTools and test adding agreement
      Given add an agreement
       Then delete the new agreement

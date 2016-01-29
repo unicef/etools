@@ -100,9 +100,9 @@ parser.add_argument('-sh', '--screenshot', default=read_config('default_screensh
 parser.add_argument('-ft', '--feature', default='',
                     help='define a specific feature to test')
 parser.add_argument('-t', '--tags', default=read_config('default_tags'),
-                    help='define a specific tags to test')
+                    help='define a specific tags to test (@tag1 @tag2)')
 parser.add_argument('-d', '--driver', default=read_config('default_driver'),
-                    help='define a specific feature to test')
+                    help='define a specific feature to test (firefox chrome)')
 parser.add_argument('-sr', '--sendreport', default=read_config('default_send_report'),
                     help='send test result by email')
 parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.1')
