@@ -38,6 +38,7 @@ urlpatterns = patterns(
 
     #url(r'partner/', include('partner_portal.urls')),
     url(r'^locations/', include('locations.urls')),
+    url(r'^management/', include('management.urls')),
     url(r'^partners/', include('partners.urls')),
     url(r'^partner/', include('partners.urls')),
     url(r'^trips/', include('trips.urls')),
