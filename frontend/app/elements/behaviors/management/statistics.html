@@ -1,0 +1,55 @@
+<!--
+Global behavior definition
+-->
+<script>
+var mngBv = mngBv || {};
+
+mngBv.one = {
+  properties: {
+    countries: {
+      type: Object,
+      value: {}
+    },
+    countryChoice: {
+      type: String,
+      value: ''
+    },
+    chartHidden: {
+      type: Boolean,
+      value: true
+    },
+    columnChartRows: {
+      type: Array,
+      value: []
+    },
+    chartChoice: {
+      type: Number,
+      value: 0
+    }
+  },
+  created: function() {
+    console.log('an object with global variables initialized is alive!');
+  },
+  _setCountry: function() {
+    if (this.countryChoice !== '') {
+      this._processStatsData(this.elStats, this.countryChoice);
+    }
+    
+  },
+  _getCountries: function(srcData) {
+    var countries = {};
+    for (var i in srcData) {
+      countries[i] = srcData[i].countryName;
+    }
+    this.countries = countries;
+  },
+  _redrawChart: function() {
+    if (!this.chartHidden) {
+      this.$.resizingChart.drawChart();
+    }
+  },
+  listeners: {
+    'iron-resize': '_redrawChart'
+  },
+};
+</script>
