@@ -4,6 +4,7 @@ import json
 
 from rest_framework import serializers
 
+from rest_framework_hstore.fields import HStoreField
 from reports.serializers import IndicatorSerializer
 from locations.models import Location
 
@@ -62,8 +63,11 @@ class PartnershipSerializer(serializers.ModelSerializer):
         model = PCA
 
 
+
 class ResultChainSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
+    disaggregation = HStoreField()
+
     class Meta:
         model = ResultChain
 
