@@ -77,7 +77,7 @@ class TripsStatisticsView(APIView):
 
     def get(self, request, **kwargs):
         # get all the countries:
-        country_list = Country.objects.filter(buisness_area_code__gt=0).all()
+        country_list = Country.objects.exclude(schema_name='public').all()
         results = []
         for country in country_list:
             # set tenant for country
@@ -141,7 +141,7 @@ class AgreementsStatisticsView(APIView):
     def get(self, request, **kwargs):
         today = date.today()
         # get all the countries:
-        country_list = Country.objects.filter(buisness_area_code__gt=0).all()
+        country_list = Country.objects.exclude(schema_name='public').all()
         results = []
         for country in country_list:
             # set tenant for country
@@ -164,7 +164,7 @@ class InterventionsStatisticsView(APIView):
 
     def get(self, request, **kwargs):
         # get all the countries:
-        country_list = Country.objects.filter(buisness_area_code__gt=0).all()
+        country_list = Country.objects.exclude(schema_name='public').all()
         results = []
         for country in country_list:
             # set tenant for country
