@@ -395,9 +395,6 @@ class PartnershipForm(UserGroupForm):
                 )
                 loc, new = GwPCALocation.objects.get_or_create(
                     sector=sector,
-                    governorate=location.locality.region.governorate,
-                    region=location.locality.region,
-                    locality=location.locality,
                     location=location,
                     pca=self.obj
                 )

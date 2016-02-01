@@ -766,9 +766,15 @@ class GwPCALocation(models.Model):
     """
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
-    governorate = models.ForeignKey(Governorate)
+    governorate = models.ForeignKey(
+        Governorate,
+        null=True,
+        blank=True
+    )
     region = models.ForeignKey(
         Region,
+        null=True,
+        blank=True
     )
     locality = models.ForeignKey(
         Locality,
@@ -787,8 +793,8 @@ class GwPCALocation(models.Model):
 
     def __unicode__(self):
         return u'{} -> {}{}{}'.format(
-            self.governorate.name,
-            self.region.name,
+            self.governorate.name if self.governorate else u'',
+            self.region.name if self.region else u'',
             u'-> {}'.format(self.locality.name) if self.locality else u'',
             self.location.__unicode__() if self.location else u'',
         )
