@@ -13,14 +13,15 @@ from partners.models import (
 
 register = template.Library()
 
+
 @register.simple_tag
 def show_work_plan(value):
 
     if not value:
         return ''
 
-    pca = PCA.objects.get(id=int(value))
-    results = pca.results.all()
+    intervention = PCA.objects.get(id=int(value))
+    results = intervention.results.all()
     data = tablib.Dataset()
     work_plan = SortedDict()
 

@@ -145,13 +145,9 @@ class ResultAdmin(MPTTModelAdmin):
         'wbs',
     )
 
-
-class IntermediateResultAdmin(ImportExportModelAdmin):
-    form = AutoSizeTextForm
-
-
-class WBSAdmin(ImportExportModelAdmin):
-    form = AutoSizeTextForm
+    def get_queryset(self, request):
+        queryset = super(ResultAdmin, self).get_queryset(request)
+        return queryset.filter(hidden=False)
 
 
 admin.site.register(Result, ResultAdmin)
