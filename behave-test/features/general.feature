@@ -1,3 +1,4 @@
+@web
 @dev
 @staging
 Feature: testing all eTools pages

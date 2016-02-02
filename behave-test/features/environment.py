@@ -64,3 +64,8 @@ def get_driver():
         return webdriver.Firefox()
     elif driver == 'chrome':
         return webdriver.Chrome(config.read_config('chromedriver_path'))
+    elif driver == 'android':
+        desired_capabilities = {'aut': config.read_config('android_app_id')}
+        return webdriver.Remote(
+            desired_capabilities=desired_capabilities
+        )
