@@ -116,6 +116,16 @@ class TripForm(ModelForm):
                 raise ValidationError({'approved_by_supervisor':
                                       'As a traveller you cannot approve your own trips'})
 
+
+        # Error if Trip was approved by suppervisor and certain fields change
+        # If trip has been previously approved and approved tick has not been removed
+        if self.instance.approved_by_supervisor and approved_by_supervisor:
+            # cannot change the following fields: (if other fields are rigid add them in the list)
+            unchangable_fields = ['to_date', 'from_date']
+            for u_field in unchangable_fields:
+                if eval(u_field) != getattr(self.instance, u_field):
+                    raise ValidationError({u_field: "This field cannot be changed after approval"})
+
         if not pcas and travel_type == Trip.PROGRAMME_MONITORING:
             raise ValidationError(
                 'You must select the interventions related to this trip'
@@ -192,7 +202,14 @@ class RequireOneLocationFormSet(BaseInlineFormSet):
         if any(self.errors):
             return
 
-        form_count = len([f for f in self.forms if f.cleaned_data])
+        # Locations cannot be changed if trip was approved by supervisor
+        new_locations = sorted([f.instance for f in self.forms if f.cleaned_data])
+        if self.instance.approved_by_supervisor:
+            old_locations = sorted([i for i in self.instance.triplocation_set.all()])
+            if new_locations != old_locations:
+                raise ValidationError('You cannot modify the location after the trip has been approved')
+
+        form_count = len(new_locations)
         if form_count < 1 and self.instance.international_travel is False and self.instance.status != Trip.CANCELLED:
             if self.instance.travel_type in [
                 Trip.PROGRAMME_MONITORING,
