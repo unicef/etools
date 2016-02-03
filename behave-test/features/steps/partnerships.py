@@ -1,3 +1,4 @@
+import datetime
 from behave import *
 from selenium.webdriver.support.select import Select
 
@@ -7,8 +8,8 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
-        driver.find_element_by_xpath("//div[@id='leftside-navigation']/ul/li[4]/a/span").click()
-        driver.find_element_by_css_selector("li.active > ul > li > a").click()
+        driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/pca/')]").click()
+        driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/partnerorganization/')]").click()
         driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/partnerorganization/add/')]").click()
         driver.find_element_by_id("id_name").clear()
         driver.find_element_by_id("id_name").send_keys("TestVision")
@@ -53,24 +54,22 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
+        date = datetime.now().strftime('%Y-%m-%d')
+
         driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/pca/')]").click()
-        driver.find_element_by_link_text("Agreements").click()
+        driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/agreement/')]").click()
         driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/agreement/add/')]").click()
         Select(driver.find_element_by_id("id_partner")).select_by_visible_text("TestVision")
         driver.implicitly_wait(10)
         Select(driver.find_element_by_id("id_agreement_type")).select_by_visible_text("Work Plan")
         driver.find_element_by_id("id_agreement_number").clear()
         driver.find_element_by_id("id_agreement_number").send_keys("TTV00012345")
-        driver.find_element_by_link_text("Today").click()
-        driver.find_element_by_id("calendarlink1").click()
-        driver.find_element_by_css_selector("#calendarbox1 > div > a.calendarnav-next").click()
-        driver.find_element_by_css_selector("#calendarbox1 > div > a.calendarnav-next").click()
-        driver.find_element_by_css_selector("#calendarbox1 > div > a.calendarnav-next").click()
-        driver.find_element_by_css_selector("#calendarbox1 > div > a.calendarnav-next").click()
-        driver.find_element_by_css_selector("#calendarbox1 > div > a.calendarnav-next").click()
-        driver.find_element_by_css_selector("#calendarbox1 > div > a.calendarnav-next").click()
-        driver.find_element_by_xpath("(//a[contains(text(),'29')])[2]").click()
-        driver.find_element_by_css_selector("div.controls > span.datetimeshortcuts > a").click()
+
+        driver.find_element_by_id("id_start").send_keys(date)
+        driver.find_element_by_id("id_end").send_keys(date)
+        driver.find_element_by_id("id_signed_by_partner_date").send_keys(date)
+        driver.find_element_by_id("id_signed_by_unicef_date").send_keys(date)
+
         Select(driver.find_element_by_id("id_partner_manager")).select_by_visible_text("name name2 (TestVision)")
 
         currentPage = driver.current_window_handle
@@ -120,6 +119,8 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
+        date = datetime.now().strftime('%Y-%m-%d')
+
         driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/pca/')]").click()
         driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/pca/add/')]").click()
 
@@ -131,7 +132,7 @@ def step_impl(context):
         driver.find_element_by_id("id_number").send_keys("TTV12345")
         driver.find_element_by_id("id_title").clear()
         driver.find_element_by_id("id_title").send_keys("Test")
-        driver.find_element_by_link_text("Today").click()
+        driver.find_element_by_id("id_initiation_date").send_keys(date)
         driver.find_element_by_name("_save").click()
 
     except Exception as ex:
@@ -202,6 +203,7 @@ def set_impl(context):
         Select(driver.find_element_by_id("id_agreement")).select_by_visible_text("PCA for Test Partner One (04-01-2016 - 04-01-2016)")
 
         context.util.highlight(driver.find_element_by_id("id_number"))
+        driver.find_element_by_id("id_number").clear()
         driver.find_element_by_id("id_number").send_keys("AAAA 0001")
 
     except Exception as ex:
@@ -228,12 +230,13 @@ def set_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
+        date = datetime.now().strftime('%Y-%m-%d')
 
         context.util.highlight(driver.find_element_by_id("id_title"))
         driver.find_element_by_id("id_title").send_keys("Distribution of hygiene kits in Kabul")
 
-        context.util.highlight(driver.find_element_by_link_text("Today"))
-        driver.find_element_by_link_text("Today").click()
+        context.util.highlight(driver.find_element_by_id("id_initiation_date"))
+        driver.find_element_by_id("id_initiation_date").send_keys(date)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -287,7 +290,7 @@ def set_impl(context):
         driver.find_element_by_id("id_supply_plans-2-quantity").clear()
         driver.find_element_by_id("id_supply_plans-2-quantity").send_keys("10000")
 
-        # driver.find_element_by_name("_continue").click()
+        driver.find_element_by_name("_continue").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -300,6 +303,8 @@ def set_impl(context):
         driver = context.browser
         driver.implicitly_wait(10)
 
+        driver.find_element_by_link_text("Supplies").click()
+        Select(driver.find_element_by_id("id_distribution_plans-0-item")).select_by_visible_text("Water purification tablet")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -311,11 +316,11 @@ def set_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
+        Select(driver.find_element_by_id("id_distribution_plans-0-location")).select_by_visible_text("ACHHAM")
 
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
-
 
 
 @then('enter in the quantities for this distribution location. Select "Send to partner" to send the distribution to the UniSuppy app')
@@ -323,6 +328,10 @@ def set_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
+
+        driver.find_element_by_id("id_distribution_plans-0-quantity").clear()
+        driver.find_element_by_id("id_distribution_plans-0-quantity").send_keys("2000")
+        driver.find_element_by_id("id_distribution_plans-0-send").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -335,6 +344,22 @@ def set_impl(context):
         driver = context.browser
         driver.implicitly_wait(10)
 
+        Select(driver.find_element_by_id("id_distribution_plans-1-item")).select_by_visible_text("Water purification tablet")
+        Select(driver.find_element_by_id("id_distribution_plans-1-location")).select_by_visible_text("SAPTARI")
+        driver.find_element_by_id("id_distribution_plans-1-quantity").clear()
+        driver.find_element_by_id("id_distribution_plans-1-quantity").send_keys("1000")
+        driver.find_element_by_id("id_distribution_plans-1-send").click()
+
+        # driver.find_element_by_name("_continue").click()
+
+        Select(driver.find_element_by_id("id_distribution_plans-2-item")).select_by_visible_text("Water purification tablet")
+        Select(driver.find_element_by_id("id_distribution_plans-2-location")).select_by_visible_text("BHAKTAPUR")
+        driver.find_element_by_id("id_distribution_plans-2-quantity").clear()
+        driver.find_element_by_id("id_distribution_plans-2-quantity").send_keys("500")
+        driver.find_element_by_id("id_distribution_plans-2-send").click()
+
+        driver.find_element_by_name("_continue").click()
+
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -346,6 +371,8 @@ def set_impl(context):
         driver = context.browser
         driver.implicitly_wait(10)
 
+        context.util.highlight(driver.find_element_by_id("id_distribution_plans-2-quantity"))
+
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -356,6 +383,8 @@ def set_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
+
+        driver.find_element_by_name("_continue").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -378,6 +407,8 @@ def set_impl(context):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
+
+        context.util.highlight(driver.find_element_by_xpath('//*[@id="distribution_plans-2"]/td[5]/p'))
 
     except Exception as ex:
         context.util.screenshot_error()
