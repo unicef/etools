@@ -25,6 +25,9 @@ class UserResource(resources.ModelResource):
 class UserAdminPlus(ImportExportMixin, UserAdmin):
     resource_class = UserResource
 
+    def has_add_permission(self, request):
+        return False
+    
     def get_queryset(self, request):
         queryset = super(UserAdminPlus, self).get_queryset(request)
         if not request.user.is_superuser:
