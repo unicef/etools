@@ -42,7 +42,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     permissions: {
       partnerOnlyPermissions: ['interventionsMenu', 'userInfoMenu'],
       defaultPermissions: ['userInfoMenu'],
-      partnerPermissions: ['interventionsMenu']
+      partnerPermissions: ['interventionsMenu'],
+      managementPermissions: ['statsMenu']
     }
   };
 
