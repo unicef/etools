@@ -56,7 +56,6 @@ from .forms import (
     AmendmentForm,
     AgreementForm,
     AuthorizedOfficersForm,
-    AuthorizedOfficersFormset,
     DistributionPlanForm,
     DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
@@ -515,7 +514,6 @@ class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
 class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     model = AuthorizedOfficer
     form = AuthorizedOfficersForm
-    formset = AuthorizedOfficersFormset
     verbose_name = "Partner Authorized Officer"
     verbose_name_plural = "Partner Authorized Officers"
     extra = 1
