@@ -54,8 +54,6 @@ class TestTripForm(TenantTestCase):
         return form
 
     def test_form_validation_for_programme_monitoring(self):
-        # trip_dict = to_dict(self.trip)
-        # #form = TripForm(data=trip_dict)
         form = self.create_form()
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0],
