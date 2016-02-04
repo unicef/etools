@@ -161,6 +161,7 @@ VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 VISION_URL = 'https://devapis.unicef.org/BIService/BIWebService.svc/'
 
+USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # ########## MANAGER CONFIGURATION
 # # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
 # ADMINS = (
@@ -387,7 +388,7 @@ SHARED_APPS = (
     #'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.google',
     #'allauth.socialaccount.providers.twitter',
-
+    'analytical',
     'mptt',
     'vision',
 
