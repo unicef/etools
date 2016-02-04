@@ -56,7 +56,7 @@ class TripFundsInlineAdmin(admin.TabularInline):
     max_num = 3
 
 
-class ActionPointInlineAdmin(admin.StackedInline):
+class ActionPointInlineAdmin(CountryUsersAdminMixin, admin.StackedInline):
     model = ActionPoint
     form = AutoSizeTextForm
     suit_classes = u'suit-tab suit-tab-reporting'
@@ -374,7 +374,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         )
 
 
-class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
+class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
     resource_class = ActionPointResource
     exclude = [u'persons_responsible']
     date_hierarchy = u'due_date'
