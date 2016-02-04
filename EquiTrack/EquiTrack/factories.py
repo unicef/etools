@@ -97,7 +97,7 @@ class TripFactory(factory.django.DjangoModelFactory):
 
     owner = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
-    from_date = datetime.today()
+    from_date = datetime.today().date()
     to_date = from_date + timedelta(days=1)
 
 

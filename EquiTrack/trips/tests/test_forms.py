@@ -37,7 +37,9 @@ class TestTripForm(TenantTestCase):
             owner__last_name='Test',
             supervisor__first_name='SupervisorJohn',
             supervisor__last_name='SupervisorDoe',
-            purpose_of_travel='To test some trips'
+            purpose_of_travel='To test some trips',
+            # to_date=datetime.now().date()+timedelta(days=1),
+            # from_date=datetime.now().date()
         )
 
     def create_form(self, data=None, instance=None, user=None):
@@ -129,14 +131,19 @@ class TestTripForm(TenantTestCase):
         self.assertEqual(form.non_field_errors()[0], 'Please put the date the budget owner approved this Trip')
 
     def test_form_validation_for_ta_drafted_vision(self):
-        self.trip.status = Trip.APPROVED
+        self.trip.status = Trip.SUBMITTED
+        self.trip.travel_type = u'advocacy'
+        self.trip.ta_drafted = True
         self.trip.approved_by_supervisor = True
-        self.trip.approved_date = datetime.today()
-        self.trip.date_supervisor_approved = datetime.today()
-        trip_dict = to_dict(self.trip)
-        trip_dict['travel_type'] = u'advocacy'
-        trip_dict['ta_drafted'] = True
-        form = self.create_form(data=trip_dict)
+        self.trip.approved_date = datetime.today().date()
+        self.trip.date_supervisor_approved = datetime.today().date()
+        self.trip.save()
+
+        trip_updates = {
+            'status': Trip.APPROVED
+        }
+        form = self.create_form(data=trip_updates)
+
         self.assertFalse(form.is_valid())
         self.assertEqual(form.non_field_errors()[0], 'For TA Drafted trip you must select a Vision Approver')
 
