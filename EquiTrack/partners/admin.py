@@ -12,7 +12,7 @@ from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from EquiTrack.utils import get_changeform_link
+from EquiTrack.utils import get_changeform_link, get_staticfile_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
@@ -243,6 +243,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
         'duration',
+        'work_plan_template',
     )
     filter_horizontal = (
         'unicef_managers',
@@ -278,7 +279,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         }),
         (_('Import work plan'), {
             u'classes': (u'suit-tab suit-tab-results',),
-            'fields': ('work_plan_sector', 'work_plan',),
+            'fields': ('work_plan_sector', 'work_plan', 'work_plan_template'),
         }),
     )
     remove_fields_if_read_only = (
@@ -312,9 +313,16 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
     suit_form_includes = (
         ('admin/partners/work_plan.html', 'middle', 'results'),
-        ('admin/partners/work_plan-template.html', 'top', 'results'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
+
+    def work_plan_template(self, obj):
+        return u'<a class="btn btn-primary default" ' \
+               u'href="{}" >Download Template</a>'.format(
+                get_staticfile_link('partner/templates/workplan_template.xlsx')
+        )
+    work_plan_template.allow_tags = True
+    work_plan_template.short_description = 'Template'
 
     def get_queryset(self, request):
         queryset = super(PartnershipAdmin, self).get_queryset(request)
