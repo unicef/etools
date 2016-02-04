@@ -312,6 +312,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
     suit_form_includes = (
         ('admin/partners/work_plan.html', 'middle', 'results'),
+        ('admin/partners/work_plan-template.html', 'top', 'results'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 
