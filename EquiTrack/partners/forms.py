@@ -23,7 +23,6 @@ from suit.widgets import AutosizedTextarea, SuitDateWidget
 from EquiTrack.forms import (
     AutoSizeTextForm,
     ParentInlineAdminFormSet,
-    RequireOneFormSet,
     UserGroupForm,
 )
 
@@ -155,21 +154,6 @@ class AmendmentForm(forms.ModelForm):
         self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
         self.fields['amendment'].empty_label = u'Original'
-
-
-class AuthorizedOfficersFormset(ParentInlineAdminFormSet):
-
-    def __init__(
-            self, data=None, files=None, instance=None,
-            save_as_new=False, prefix=None, queryset=None, **kwargs):
-        super(AuthorizedOfficersFormset, self).__init__(
-            data=data, files=files, instance=instance,
-            save_as_new=save_as_new, prefix=prefix,
-            queryset=queryset, **kwargs)
-        # removable comments:
-        # since signed by partner automatically gets placed in the authorized officers
-        # there is no need to add requiredOne anymore
-
 
 
 class PartnerStaffMemberForm(forms.ModelForm):
@@ -349,7 +333,7 @@ def check_and_return_value(column, row):
 
     value = 0
     if column in row:
-        if not pandas.isnull(row[column]):
+        if not pandas.isnull(row[column]) and row[column]:
             value = row[column]
         row.pop(column)
     return value
@@ -422,11 +406,13 @@ class PartnershipForm(UserGroupForm):
 
         data.fillna('', inplace=True)
         current_output = None
-        imported = found = not_found = 0
+        result_structure = self.obj.result_structure or ResultStructure.objects.last()
+        imported = found = not_found = row_num = 0
         for label, series in data.iterrows():
             create_args = dict(
                 partnership=self.obj
             )
+            row_num += 1
             row = series.to_dict()
             try:
                 type = label.split()[0].strip()
@@ -438,19 +424,22 @@ class PartnershipForm(UserGroupForm):
                     )
                 except ResultType.DoesNotExist as exp:
                     # we can interpret the type we are dealing with by its label
-                    if 'indicator' in label and current_output:
+                    if 'indicator' in type and current_output:
                         pass
                     else:
-                        raise exp
+                        raise ValidationError(
+                            _(u"The value of the first column must be one of: Output, Indicator or Activity."
+                              u"The value received for row {} was: {}".format(row_num, type)))
                 else:
                     # we are dealing with a result statement
                     # now we try to look up the result based on the statement
                     result, created = Result.objects.get_or_create(
-                        result_structure=self.obj.result_structure,
+                        result_structure=result_structure,
                         result_type=result_type,
                         sector=sector,
                         name=statement,
                         code=label,
+                        hidden=True,
                     )
                     if result_type.name == 'Output':
                         current_output = result
@@ -460,10 +449,10 @@ class PartnershipForm(UserGroupForm):
 
                 create_args['result'] = result
                 create_args['result_type'] = result.result_type
-                create_args['target'] = check_and_return_value('Targets', row)
                 create_args['partner_contribution'] = check_and_return_value('CSO', row)
                 create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row)
                 create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row)
+                target = check_and_return_value('Targets', row)
                 check_and_return_value('Total', row)
 
                 if 'indicator' in label:
@@ -474,6 +463,7 @@ class PartnershipForm(UserGroupForm):
                         name=statement
                     )
                     create_args['indicator'] = indicator
+                    create_args['target'] = target
 
                 result_chain, new = ResultChain.objects.get_or_create(**create_args)
 

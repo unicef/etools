@@ -88,12 +88,7 @@ class ActionPointResource(BaseExportResource):
         if UserProfile.objects.filter(user_id=action.person_responsible.id).exists():
             self.insert_column(row, 'Responsible Section', action.person_responsible.profile.section)
             self.insert_column(row, 'Responsible Office', action.person_responsible.profile.office)
-        self.insert_column(
-            row,
-            'Originally Responsible',
-            ', '.join([person.get_full_name()
-                       for person in action.persons_responsible.all()])
-        )
+        
         self.insert_column(row, 'Actions Taken', action.actions_taken)
         self.insert_column(
             row,

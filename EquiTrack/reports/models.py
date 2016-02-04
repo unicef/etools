@@ -84,14 +84,14 @@ class Result(MPTTModel):
     activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
     activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
 
+    hidden = models.BooleanField(default=False)
+
     class Meta:
         ordering = ['name']
 
     def __unicode__(self):
         return u'{} {}: {}'.format(
-            #self.result_structure.name,
             self.code if self.code else u'',
-            #self.sector.name,
             self.result_type.name,
             self.name
         )
