@@ -43,7 +43,7 @@ def step_impl(context):
     try:
         driver = context.browser
         context.util.screenshot("Preference settings name")
-        driver.find_element_by_id("editTextDialogUserInput").send_keys("DEMO 1")
+        driver.find_element_by_id("editTextDialogUserInput").send_keys("DEMO1")
         driver.find_element_by_id('button1').click()
 
         driver.implicitly_wait(15)
@@ -85,6 +85,7 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.find_element_by_id("switchWidget").click()
+        driver.implicitly_wait(10)
         context.util.screenshot("Switch Environment")
 
     except Exception as ex:
