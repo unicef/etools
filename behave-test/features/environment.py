@@ -59,11 +59,7 @@ def after_step(context, step):
 
 def get_driver():
     driver = config.read_config('driver')
-    if driver == 'firefox':
-        browser = webdriver.Firefox()
-        browser.maximize_window()
-        browser.implicitly_wait(30)
-    elif driver == 'chrome':
+    if driver == 'chrome':
         browser = webdriver.Chrome(config.read_config('chromedriver_path'))
         browser.maximize_window()
         browser.implicitly_wait(30)
@@ -72,3 +68,8 @@ def get_driver():
         return webdriver.Remote(
             desired_capabilities=desired_capabilities
         )
+    else:
+        browser = webdriver.Firefox()
+        browser.maximize_window()
+        browser.implicitly_wait(30)
+    return browser

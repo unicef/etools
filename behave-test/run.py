@@ -13,27 +13,24 @@ import smtplib
 import subprocess
 
 
+def make_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+        os.chmod(path, 0777)
+
+
 def create_dirs(args):
     basedir = args.report + '/'
     basedir_shots = args.screenshot + '/'
 
     current = datetime.now().strftime('%Y-%m-%d')
-    report_dir = basedir + current
-    report_dir_error = report_dir + '/errors'
+    report_dir = os.path.join(basedir, current)
+    report_dir_error = os.path.join(report_dir, 'errors')
+    screenshot_dir = os.path.join(report_dir, basedir_shots)
 
-    if not os.path.exists(report_dir):
-        os.chmod(basedir, 0777)
-        os.makedirs(report_dir)
-        os.chmod(report_dir, 0777)
-
-    if not os.path.exists(report_dir_error):
-        os.makedirs(report_dir_error)
-
-    screenshot_dir = basedir_shots + current
-
-    if not os.path.exists(screenshot_dir):
-        os.chmod(basedir_shots, 0777)
-        os.makedirs(screenshot_dir)
+    make_dir(report_dir)
+    make_dir(report_dir_error)
+    make_dir(screenshot_dir)
 
     set_config('report_dir', report_dir)
     set_config('report_dir_errors', report_dir_error)

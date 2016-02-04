@@ -26,12 +26,12 @@ PyHamcrest >= 1.8
 selenium==2.48.0
 
 # -- BUILD-SUPPORT:
-tox >= 1.6.1
+#tox >= 1.6.1
 
 # -- DOCUMENTATION: Tutorials with examples.
-Sphinx >= 1.1
-sphinxcontrib-ansi >= 0.6
-sphinxcontrib-programoutput >= 0.8
+#Sphinx >= 1.1
+#sphinxcontrib-ansi >= 0.6
+#sphinxcontrib-programoutput >= 0.8
 
 # -- OPTIONAL DOCUMENTATION: If PDF docs are needed.
-rst2pdf
+#rst2pdf
