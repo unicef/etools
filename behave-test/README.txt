@@ -15,7 +15,7 @@ $ python run.py
   -sh SCREENSHOT, --screenshot SCREENSHOT   define the screenshot dir
   -ft FEATURE, --feature FEATURE            define a specific feature to test
   -t TAGS, --tags TAGS                      define a specific tags to test (@tag1,@tag2)
-  -d DRIVER, --driver DRIVER                define a specific feature to test (firefox chrome)
+  -d DRIVER, --driver DRIVER                define a specific feature to test (firefox chrome android)
   -sr SENDREPORT, --sendreport SENDREPORT   send test result by email
   -v, --version                             show program's version number and exit
 
@@ -40,6 +40,12 @@ $ python run.py --tags=@unisupply,@screenshot
 
 # How to run a test for all feature without UniSupply
 $ python run.py --tags=@web,~@unisupply
+
+
+# run an android test for UniSupply feature
+$ java -jar selendroid-standalone-0.17.0-with-dependencies.jar -app unisupply-nepal.apk
+$ python run.py --tags=@appunisupply --driver=android
+
 
 # How to create a scenario:
 1. Download Selenium IDE on your Firefox (http://docs.seleniumhq.org/projects/ide/)

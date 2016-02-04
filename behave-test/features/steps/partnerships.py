@@ -373,6 +373,24 @@ def set_impl(context):
 
         context.util.highlight(driver.find_element_by_id("id_distribution_plans-2-quantity"))
 
+        Select(driver.find_element_by_id("id_distribution_plans-2-item")).select_by_visible_text("Family hygiene kit")
+        Select(driver.find_element_by_id("id_distribution_plans-2-location")).select_by_visible_text("BHOJPUR")
+        driver.find_element_by_id("id_distribution_plans-2-quantity").clear()
+        driver.find_element_by_id("id_distribution_plans-2-quantity").send_keys("3000")
+        driver.find_element_by_id("id_distribution_plans-2-send").click()
+
+        Select(driver.find_element_by_id("id_distribution_plans-3-item")).select_by_visible_text("Family hygiene kit")
+        Select(driver.find_element_by_id("id_distribution_plans-3-location")).select_by_visible_text("SALYAN")
+        driver.find_element_by_id("id_distribution_plans-3-quantity").send_keys("1000")
+        driver.find_element_by_id("id_distribution_plans-3-quantity").clear()
+        driver.find_element_by_id("id_distribution_plans-3-send").click()
+
+        Select(driver.find_element_by_id("id_distribution_plans-4-item")).select_by_visible_text("Tarpaulin")
+        Select(driver.find_element_by_id("id_distribution_plans-4-location")).select_by_visible_text("KATHMANDU")
+        driver.find_element_by_id("id_distribution_plans-4-quantity").clear()
+        driver.find_element_by_id("id_distribution_plans-4-quantity").send_keys("8000")
+        driver.find_element_by_id("id_distribution_plans-4-send").click()
+
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
