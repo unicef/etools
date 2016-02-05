@@ -111,11 +111,10 @@ class TripForm(ModelForm):
 
         # In the absence of FSM until implemented:
         if self.request.user != self.instance.supervisor:
-            # owner cannot supervisor approve he's own trip
+            # owner cannot approve he's own trip
             if not self.instance.approved_by_supervisor and approved_by_supervisor:
                 raise ValidationError({'approved_by_supervisor':
                                       'As a traveller you cannot approve your own trips'})
-
 
         # Error if Trip was approved by suppervisor and certain fields change
         # If trip has been previously approved and approved tick has not been removed
