@@ -12,7 +12,7 @@ Feature: Supply and distribution monitoring in eTools using the UniSupply mobile
       Then you should now see your preference name in the list
       Then tap "UniSupply" to return to login screen
 
-#    @appunisupply
+    @appunisupply
     Scenario: recording distributions in UniSupply (for partners)
       Given login into UniSupply with the credentials provided by your UNICEF focal point
        Then you will see a list of all distributions by district and supply type
