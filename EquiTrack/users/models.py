@@ -95,14 +95,14 @@ class UserProfile(models.Model):
             mods_made = True
 
         new_country = None
-        adfs_country = attributes.get("countryName")
+        adfs_country = attributes.get("businessAreaCode")
         if sender.profile.country_override:
             new_country = sender.profile.country_override
         elif adfs_country:
             try:
-                new_country = Country.objects.get(name=adfs_country[0])
+                new_country = Country.objects.get(buisness_area_code=adfs_country[0])
             except Country.DoesNotExist:
-                logger.error("country: {} from ADFS does not match any countries".format(adfs_country[0]))
+                logger.error("Login - Business Area: {} not found for user {}".format(adfs_country[0], sender.email))
                 return False
 
         if new_country and new_country != sender.profile.country:
