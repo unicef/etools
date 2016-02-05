@@ -20,13 +20,12 @@ def make_dir(path):
 
 
 def create_dirs(args):
-    basedir = args.report + '/'
-    basedir_shots = args.screenshot + '/'
+    basedir = args.report
 
     current = datetime.now().strftime('%Y-%m-%d')
     report_dir = os.path.join(basedir, current)
     report_dir_error = os.path.join(report_dir, 'errors')
-    screenshot_dir = os.path.join(report_dir, basedir_shots)
+    screenshot_dir = os.path.join(report_dir, 'screenshots')
 
     make_dir(report_dir)
     make_dir(report_dir_error)
@@ -43,12 +42,10 @@ def run_test(feature, tags):
     report_txt = read_config('report_dir') + '/result.txt'
     if not feature:
         print 'all features, tags: ' + tags
-        # Popen(['behave', '--outfile', report_txt, '--tags', tags])
         returncode = subprocess.call(['behave', '--outfile', report_txt, '--tags', tags])
     else:
         feature = 'features/' + feature + '.feature'
         print feature + ', tags: ' + tags
-        #Popen(['behave', '--outfile', report_txt, feature, '--tags', tags])
         returncode = subprocess.call(['behave', '--outfile', report_txt, feature, '--tags', tags])
 
     return returncode
@@ -59,6 +56,7 @@ def generate_report_pdf():
     report_pdf = read_config('report_dir') + '/result.pdf'
     Popen(['rst2pdf', report_txt, report_pdf])
     return report_pdf
+
 
 def send_mail(files=None):
     send_to = read_config('default_send_report_to')
@@ -92,8 +90,6 @@ def send_mail(files=None):
 parser = argparse.ArgumentParser(prog='BEHAVE TEST', description='Run Behave test')
 parser.add_argument('-rt', '--report', default=read_config('default_report_dir'),
                     help='define the report dir')
-parser.add_argument('-sh', '--screenshot', default=read_config('default_screenshot_dir'),
-                    help='define the screenshot dir')
 parser.add_argument('-ft', '--feature', default='',
                     help='define a specific feature to test')
 parser.add_argument('-t', '--tags', default=read_config('default_tags'),

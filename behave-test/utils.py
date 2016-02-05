@@ -31,4 +31,4 @@ class Utils:
         self.screenshot(name)
         time.sleep(.3)
         self.browser.execute_script("arguments[0].setAttribute('style', arguments[1]);",
-                                  element, original_style)
+                                    element, original_style)
