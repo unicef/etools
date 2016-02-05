@@ -457,10 +457,22 @@ gulp.task('buildFront:partner', function(cb) {
   setGlobals();
   runSequence('frontendBuild', cb);
 });
+
 gulp.task('buildFront:management', function(cb) {
   targetApp = 'management';
   setGlobals();
   runSequence('frontendBuild', cb);
+});
+
+gulp.task('serve:management', function(cb) {
+  targetApp = 'management';
+  setGlobals();
+  runSequence('serve', cb);
+});
+gulp.task('serve:partner', function(cb) {
+  targetApp = 'partner';
+  setGlobals();
+  runSequence('serve', cb);
 });
 
 // Load tasks for web-component-tester
