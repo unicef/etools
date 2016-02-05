@@ -62,6 +62,7 @@ from .forms import (
     PartnerStaffMemberForm,
     LocationForm
 )
+from trips.models import Trip
 
 
 class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -312,6 +313,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
     suit_form_includes = (
         ('admin/partners/work_plan.html', 'middle', 'results'),
+        ('admin/partners/trip_summary.html', 'top', 'trips'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 
