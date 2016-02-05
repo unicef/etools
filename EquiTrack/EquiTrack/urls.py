@@ -36,7 +36,6 @@ urlpatterns = patterns(
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
 
-    #url(r'partner/', include('partner_portal.urls')),
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),
     url(r'^partners/', include('partners.urls')),
@@ -59,8 +58,6 @@ urlpatterns = patterns(
     url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 )
-
-#from allauth import urls
 
 
 if settings.DEBUG:

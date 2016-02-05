@@ -126,28 +126,36 @@ def create_partner_user(sender, instance, created, **kwargs):
     :param kwargs:
     """
     if created:
-        
-        user, user_created = User.objects.get_or_create(username=instance.email)
-        if not user_created:
-            logger.info('User already exists for a partner staff member: {}'.format(instance.email))
-            # TODO: check for user not being already associated with another partnership (can be done on the form)
-        
-        # TODO: here we have a decision.. either we update the user with the info just received from
-        # TODO: or we update the instance with the user we already have. this might have implications on login.
-        with transaction.atomic():
-            try:
-                country = Country.objects.get(schema_name=connection.schema_name)
-                user.profile.country = country
-            except Country.DoesNotExist:
-                logger.error("Couldn't get the current country schema for user: {}".format(user.username))
 
-            user.email = instance.email
-            user.first_name = instance.first_name
-            user.last_name = instance.last_name
-            user.is_active = True
-            user.save()
-            user.profile.partner_staff_member = instance.id
-            user.profile.save()
+        try:
+            user, user_created = User.objects.get_or_create(
+                # the built in username field is 30 chars, we can't set this to the email address which is likely longer
+                username=instance.email[:30],
+                email=instance.email
+            )
+            if not user_created:
+                logger.info('User already exists for a partner staff member: {}'.format(instance.email))
+                # TODO: check for user not being already associated with another partnership (can be done on the form)
+        except Exception as exp:
+            # we dont need do anything special except log the error, we have enough information to create the user later
+            logger.exception('Exception occurred whilst creating partner user: {}'.format(exp.message))
+        else:
+            # TODO: here we have a decision.. either we update the user with the info just received from
+            # TODO: or we update the instance with the user we already have. this might have implications on login.
+            with transaction.atomic():
+                try:
+                    country = Country.objects.get(schema_name=connection.schema_name)
+                    user.profile.country = country
+                except Country.DoesNotExist:
+                    logger.error("Couldn't get the current country schema for user: {}".format(user.username))
+
+                user.email = instance.email
+                user.first_name = instance.first_name
+                user.last_name = instance.last_name
+                user.is_active = True
+                user.save()
+                user.profile.partner_staff_member = instance.id
+                user.profile.save()
 
 
 def delete_partner_relationship(sender, instance, **kwargs):
@@ -158,10 +166,9 @@ def delete_partner_relationship(sender, instance, **kwargs):
             profile.save()
             profile.user.is_active = False
             profile.user.save()
-    except:
-        pass
+    except Exception as exp:
+        logger.exception('Exception occurred whilst de-linking partner user: {}'.format(exp.message))
 
 pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
 post_save.connect(create_partner_user, sender='partners.PartnerStaffMember')
-
 pre_user_save.connect(UserProfile.custom_update_user)
