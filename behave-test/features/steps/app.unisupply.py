@@ -20,7 +20,7 @@ def step_impl(context):
         driver = context.browser
 
         driver.find_element_by_id("button_settings").click()
-        context.util.screenshot("First Time users")
+        # context.util.screenshot("First Time users")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -31,6 +31,7 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
+        context.util.screenshot("First Time users")
         driver.find_element_by_id("addButton").click()
 
     except Exception as ex:
@@ -47,7 +48,7 @@ def step_impl(context):
         driver.find_element_by_id('button1').click()
 
         driver.implicitly_wait(15)
-        context.util.screenshot("Preference settings list")
+        # context.util.screenshot("Preference settings list")
 
         driver.implicitly_wait(15)
     except Exception as ex:
@@ -62,7 +63,15 @@ def step_impl(context):
         driver.implicitly_wait(15)
 
         driver.find_element_by_link_text("Server Base URL:").click()
-        driver.find_element_by_id("edit").send_keys("http://cb.uniceflebanon.org:4984/test-nepal")
+        driver.find_element_by_id("edit").send_keys("cb.uniceflebanon.org")
+        driver.find_element_by_id("button1").click()
+
+        driver.find_element_by_link_text("Server Port:").click()
+        driver.find_element_by_id("edit").send_keys("4984")
+        driver.find_element_by_id("button1").click()
+
+        driver.find_element_by_link_text("Database Instance Name:").click()
+        driver.find_element_by_id("edit").send_keys("test-nepal")
         driver.find_element_by_id("button1").click()
 
         driver.find_element_by_link_text("Server Username:").click()
@@ -85,9 +94,11 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.find_element_by_id("switchWidget").click()
-        driver.implicitly_wait(10)
+        driver.implicitly_wait(30)
         context.util.screenshot("Switch Environment")
+        driver.implicitly_wait(30)
 
+        driver.find_element_by_link_text("Initialise Database for DEMO1").click()
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -97,7 +108,9 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
+        driver.implicitly_wait(10)
         context.util.screenshot("preference name in the list")
+        driver.find_element_by_id("action_bar_title").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -109,6 +122,7 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.find_element_by_id("action_bar_title").click()
+        context.util.screenshot("return to login screen")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -122,10 +136,15 @@ def step_impl(context):
 
         driver.find_element_by_id("editText_username").click()
         driver.find_element_by_id("editText_username").clear()
-        driver.find_element_by_id("editText_username").send_keys("demo")
+        driver.find_element_by_id("editText_username").send_keys("ali-test")
         driver.find_element_by_id("editText_password").click()
         driver.find_element_by_id("editText_password").clear()
-        driver.find_element_by_id("editText_password").send_keys("password")
+        driver.find_element_by_id("editText_password").send_keys("ali-test")
+
+        chain = ActionChains(driver)
+        """ Send search key"""
+        chain.send_keys(u'\uE007').perform()
+
         context.util.screenshot("login into UniSupply")
         driver.find_element_by_id("button_login").click()
 
@@ -138,7 +157,7 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.implicitly_wait(30)
         context.util.screenshot("all distributions by district and supply type")
 
 
