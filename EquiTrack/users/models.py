@@ -130,7 +130,7 @@ def create_partner_user(sender, instance, created, **kwargs):
         try:
             user, user_created = User.objects.get_or_create(
                 # the built in username field is 30 chars, we can't set this to the email address which is likely longer
-                username=instance.email.split(u'@')[0][:30],
+                username=instance.email[:30],
                 email=instance.email
             )
             if not user_created:
