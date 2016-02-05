@@ -112,6 +112,9 @@ def get_changeform_link(model, link_name='View', action='change'):
 def get_staticfile_link(file_path):
     """
     Returns the full URL to a file in static files
+
+    :param file_path: path to file relative to static files root
+    :return: fully qualified URL to file
     """
     return static(file_path)
 
