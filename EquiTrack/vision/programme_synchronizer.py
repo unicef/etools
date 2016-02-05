@@ -26,7 +26,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
 
         super(ProgrammeSynchronizer, self).__init__(
             country,
-            ProgrammeSynchronizer.PROGRAMME_URL + str(country.buisness_area_code)
+            ProgrammeSynchronizer.PROGRAMME_URL + country.buisness_area_code
         )
 
     def _get_json(self, data):
