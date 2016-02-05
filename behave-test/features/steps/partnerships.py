@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from behave import *
 from selenium.webdriver.support.select import Select
 
@@ -186,7 +186,7 @@ def set_impl(context):
         driver.implicitly_wait(10)
 
         context.util.highlight(driver.find_element_by_id("id_partner"))
-        Select(driver.find_element_by_id("id_partner")).select_by_visible_text("Test Partner One")
+        Select(driver.find_element_by_id("id_partner")).select_by_visible_text("AAA Demo Partner")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -200,11 +200,11 @@ def set_impl(context):
         driver.implicitly_wait(10)
 
         context.util.highlight(driver.find_element_by_id("id_agreement"))
-        Select(driver.find_element_by_id("id_agreement")).select_by_visible_text("PCA for Test Partner One (04-01-2016 - 04-01-2016)")
+        Select(driver.find_element_by_id("id_agreement")).select_by_visible_text("PCA for AAA Demo Partner (16-12-2015 - 16-12-2015)")
 
         context.util.highlight(driver.find_element_by_id("id_number"))
         driver.find_element_by_id("id_number").clear()
-        driver.find_element_by_id("id_number").send_keys("AAAA 0001")
+        driver.find_element_by_id("id_number").send_keys("AAA 00002")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -350,7 +350,7 @@ def set_impl(context):
         driver.find_element_by_id("id_distribution_plans-1-quantity").send_keys("1000")
         driver.find_element_by_id("id_distribution_plans-1-send").click()
 
-        # driver.find_element_by_name("_continue").click()
+        driver.find_element_by_name("_continue").click()
 
         Select(driver.find_element_by_id("id_distribution_plans-2-item")).select_by_visible_text("Water purification tablet")
         Select(driver.find_element_by_id("id_distribution_plans-2-location")).select_by_visible_text("BHAKTAPUR")
@@ -381,8 +381,8 @@ def set_impl(context):
 
         Select(driver.find_element_by_id("id_distribution_plans-3-item")).select_by_visible_text("Family hygiene kit")
         Select(driver.find_element_by_id("id_distribution_plans-3-location")).select_by_visible_text("SALYAN")
-        driver.find_element_by_id("id_distribution_plans-3-quantity").send_keys("1000")
         driver.find_element_by_id("id_distribution_plans-3-quantity").clear()
+        driver.find_element_by_id("id_distribution_plans-3-quantity").send_keys("1000")
         driver.find_element_by_id("id_distribution_plans-3-send").click()
 
         Select(driver.find_element_by_id("id_distribution_plans-4-item")).select_by_visible_text("Tarpaulin")
