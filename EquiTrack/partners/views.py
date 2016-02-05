@@ -157,7 +157,7 @@ class PartnerInterventionsView(ListAPIView):
 
 class PortalLoginFailedView(TemplateView):
 
-    template_name = "partner_portal/loginfailed.html"
+    template_name = "partner_loginfailed.html"
 
     def get_context_data(self, **kwargs):
         context = super(PortalLoginFailedView, self).get_context_data(**kwargs)

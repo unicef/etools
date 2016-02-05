@@ -18,7 +18,7 @@ logger = get_task_logger(__name__)
 @periodic_task(run_every=crontab(minute=0, hour=0))
 def sync():
     processed = []
-    for country in Country.objects.filter(buisness_area_code__gt=0):
+    for country in Country.objects.filter(buisness_area_code__isnull=False):
         for handler in SYNC_HANDLERS:
             try:
                 logger.info('Starting vision sync handler {} for country {}'.format(

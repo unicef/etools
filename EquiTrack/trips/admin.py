@@ -325,16 +325,9 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         rep_group, created = Group.objects.get_or_create(
             name=u'Representative Office'
         )
-
-        driver_group, created = Group.objects.get_or_create(
-            name=u'Driver')
-
         if trip and rep_group in request.user.groups.all():
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
-
-        if trip and request.user.is_superuser:
-            return []
 
         return fields
 

@@ -83,11 +83,11 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <template is="dom-if" if='{{permissions.loggedInDefault}}'>
             <a data-route="myInfo" href="{{baseUrl}}myInfo">
               <iron-icon icon="info"></iron-icon>
-              <span>My Information</span>
+              <span>My Information </span>
             </a>
           </template>   
 
-          <template is="dom-if" if='{{permissions.interventionsMenu}}'>
+          <template is="dom-if" if='{{permissions.statsMenu}}'>
             <a data-route="statsPage" href="{{baseUrl}}statistics">
               <iron-icon icon="assessment"></iron-icon>
               <span>Statistics</span>
@@ -151,7 +151,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </section>
             </template> 
 
-            <template is="dom-if" if='{{permissions.interventionsMenu}}'>
+            <template is="dom-if" if='{{permissions.statsMenu}}'>
               <section data-route="statsPage">
                 
                     <management-page 
