@@ -71,7 +71,14 @@ class Result(MPTTModel):
     sector = models.ForeignKey(Sector, null=True, blank=True)
     name = models.TextField()
     code = models.CharField(max_length=50, null=True, blank=True)
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
+    from_date = models.DateField(null=True, blank=True)
+    to_date = models.DateField(null=True, blank=True)
+    parent = TreeForeignKey(
+        'self',
+        null=True, blank=True,
+        related_name='children',
+        db_index=True
+    )
 
     # activity level attributes
     humanitarian_tag = models.BooleanField(default=False)

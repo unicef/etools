@@ -154,7 +154,6 @@ class PartnerInterventionsView(ListAPIView):
         return current_member.partner.pca_set.all()
 
 
-
 class PortalLoginFailedView(TemplateView):
 
     template_name = "partner_loginfailed.html"

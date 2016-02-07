@@ -61,7 +61,10 @@ def show_trips(value):
 
     for trip in trips:
         row = SortedDict()
-        row['Ref'] = '<a href="{}">{}</a>'.format(trip.get_admin_url(), trip.reference())
+        row['Ref'] = '<a href="{}">{}</a>'.format(
+            trip.get_admin_url(),
+            trip.reference()
+        )
         row['Status'] = trip.status
         row['Traveller'] = trip.owner
         row['Trip Type'] = trip.travel_type
