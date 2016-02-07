@@ -1,4 +1,5 @@
 import json
+import datetime
 
 from django.conf import settings
 
@@ -14,12 +15,33 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         'COUNTRY_PROGRAMME_NAME',
         'CP_START_DATE',
         'CP_END_DATE',
+        "OUTCOME_AREA_CODE",
+        "OUTCOME_AREA_NAME",
+        "OUTCOME_AREA_NAME_LONG",
         'OUTCOME_WBS',
         'OUTCOME_DESCRIPTION',
-        'OUTPUT_WBS',
-        'OUTPUT_DESCRIPTION',
-        'ACTIVITY_WBS',
-        'ACTIVITY_DESCRIPTION'
+        "OUTCOME_START_DATE",
+        "OUTCOME_END_DATE",
+        "OUTPUT_DESCRIPTION",
+        "OUTPUT_START_DATE",
+        "OUTPUT_END_DATE",
+        "ACTIVITY_WBS",
+        "ACTIVITY_DESCRIPTION",
+        "ACTIVITY_START_DATE",
+        "ACTIVITY_END_DATE",
+        "SIC_CODE",
+        "SIC_NAME",
+        "GIC_CODE",
+        "GIC_NAME",
+        "ACTIVITY_FOCUS_CODE",
+        "ACTIVITY_FOCUS_NAME",
+        "GENDER_MARKER_CODE",
+        "GENDER_MARKER_NAME",
+        "HUMANITARIAN_TAG",
+        "HUMANITARIAN_MARKER_CODE",
+        "HUMANITARIAN_MARKER_NAME",
+        "PROGRAMME_AREA_CODE",
+        "PROGRAMME_AREA_NAME",
     )
 
     def __init__(self, country):
@@ -34,6 +56,21 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
 
     def _convert_records(self, records):
         return json.loads(records.get('GetProgrammeStructureList_JSONResult', []))
+
+    def _filter_records(self, records):
+        records = super(ProgrammeSynchronizer, self)._filter_records(records)
+        this_year = datetime.datetime.today().year
+        last_year = this_year - 1
+
+        def in_time_range(record):
+            start = wcf_json_date_as_datetime(record['OUTCOME_START_DATE']).year
+            end = wcf_json_date_as_datetime(record['OUTCOME_END_DATE']).year
+            current_years = [start, end]
+            if this_year in current_years or last_year in current_years:
+                return True
+            return False
+
+        return filter(in_time_range, records)
 
     def _save_records(self, records):
 
@@ -70,10 +107,10 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
             activity.name = result['ACTIVITY_DESCRIPTION']
             activity.parent = output
 
-            # activity.sic_code = result['SIC_CODE']
-            # activity.sic_name = result['SIC_NAME']
-            # activity.gic_code = result['GIC_CODE']
-            # activity.gic_name = result['GIC_NAME']
-            # activity.activity_focus_code = result['ACTIVITY_FOCUS_CODE']
-            # activity.activity_focus_name = result['ACTIVITY_FOCUS_NAME']
+            activity.sic_code = result['SIC_CODE']
+            activity.sic_name = result['SIC_NAME']
+            activity.gic_code = result['GIC_CODE']
+            activity.gic_name = result['GIC_NAME']
+            activity.activity_focus_code = result['ACTIVITY_FOCUS_CODE']
+            activity.activity_focus_name = result['ACTIVITY_FOCUS_NAME']
             activity.save()
