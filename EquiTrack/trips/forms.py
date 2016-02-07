@@ -148,7 +148,7 @@ class TripForm(ModelForm):
         if driver and driver_supervisor is None:
             raise ValidationError({'driver_supervisor': self.ERROR_MESSAGES['no_driver_supervisor']})
 
-        if self.request.user != self.instance.supervisor:
+        if self.instance.supervisor_id is not None and self.request.user != self.instance.supervisor:
             # only the supervisor can approve the trip
             if not self.instance.approved_by_supervisor and approved_by_supervisor:
                 raise ValidationError({'approved_by_supervisor': self.ERROR_MESSAGES['not_approved_by_supervisor']})
@@ -204,7 +204,7 @@ class TripFundsForm(BaseInlineFormSet):
             return
 
         total = sum([f.cleaned_data.get('amount') for f in self.forms if f.cleaned_data])
-        if total != 100:
+        if total and total != 100:
             raise ValidationError('The total funds for the trip needs to equal to 100%')
 
 
