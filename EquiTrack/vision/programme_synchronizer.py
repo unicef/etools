@@ -60,14 +60,12 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
 
     def _filter_records(self, records):
         records = super(ProgrammeSynchronizer, self)._filter_records(records)
-        this_year = datetime.datetime.today().year
-        last_year = this_year - 1
+        today = datetime.datetime.today()
+        last_year = datetime.datetime(today.year-1, 1, 1)
 
         def in_time_range(record):
-            start = wcf_json_date_as_datetime(record['OUTCOME_START_DATE']).year
-            end = wcf_json_date_as_datetime(record['OUTCOME_END_DATE']).year
-            current_years = [start, end]
-            if this_year in current_years or last_year in current_years:
+            end = wcf_json_date_as_datetime(record['OUTCOME_END_DATE'])
+            if end >= last_year:
                 return True
             return False
 

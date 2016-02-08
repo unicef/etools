@@ -142,6 +142,8 @@ class ResultAdmin(MPTTModelAdmin):
     )
     list_display = (
         '__unicode__',
+        'from_date',
+        'to_date',
         'wbs',
     )
 
