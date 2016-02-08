@@ -199,6 +199,18 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     extra = 3
     readonly_fields = [u'delivered', u'sent']
 
+    def get_max_num(self, request, obj=None, **kwargs):
+        """
+        Only show these inlines if we have supply plans
+        :param request:
+        :param obj: Intervention object
+        :param kwargs:
+        :return:
+        """
+        if obj and obj.supply_plans.count():
+            return self.max_num
+        return 0
+
 
 class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     form = PartnershipForm

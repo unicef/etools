@@ -612,9 +612,9 @@ class PartnershipBudgetAdminForm(AmendmentForm):
     def __init__(self, *args, **kwargs):
         super(PartnershipBudgetAdminForm, self).__init__(*args, **kwargs)
 
-        # by default add the previous 2 years and the next 2 years
-        cy = date.today().year
-        years = range(cy-2, cy+2)
+        # by default add the previous 1 years and the next 2 years
+        current_year = date.today().year
+        years = range(current_year-1, current_year+2)
         if (hasattr(self, 'parent_partnership')) and \
                 self.parent_partnership.start_date and \
                 self.parent_partnership.end_date:
