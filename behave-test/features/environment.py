@@ -35,9 +35,6 @@ def before_all(context):
     setup_debug_on_error(context.config.userdata)
 
     context.browser = get_driver()
-    # context.browser.maximize_window()
-    # context.browser.set_window_size(1400, 1200)
-    # context.browser.implicitly_wait(30)
     context.util = Utils(context.browser)
     context.base_url = config.read_config('baseurl')
     context.verificationErrors = []

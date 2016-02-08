@@ -44,7 +44,7 @@ def step_impl(context):
     try:
         driver = context.browser
         context.util.screenshot("Preference settings name")
-        driver.find_element_by_id("editTextDialogUserInput").send_keys("DEMO1")
+        driver.find_element_by_id("editTextDialogUserInput").send_keys("DEMO")
         driver.find_element_by_id('button1').click()
 
         driver.implicitly_wait(15)
@@ -98,7 +98,7 @@ def step_impl(context):
         context.util.screenshot("Switch Environment")
         driver.implicitly_wait(30)
 
-        driver.find_element_by_link_text("Initialise Database for DEMO1").click()
+        driver.find_element_by_link_text("Initialise Database for DEMO").click()
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -136,10 +136,10 @@ def step_impl(context):
 
         driver.find_element_by_id("editText_username").click()
         driver.find_element_by_id("editText_username").clear()
-        driver.find_element_by_id("editText_username").send_keys("ali-test")
+        driver.find_element_by_id("editText_username").send_keys("aaademo")
         driver.find_element_by_id("editText_password").click()
         driver.find_element_by_id("editText_password").clear()
-        driver.find_element_by_id("editText_password").send_keys("ali-test")
+        driver.find_element_by_id("editText_password").send_keys("aaademo")
 
         chain = ActionChains(driver)
         """ Send search key"""
@@ -157,9 +157,10 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        driver.implicitly_wait(30)
+        driver.implicitly_wait(50)
         context.util.screenshot("all distributions by district and supply type")
-
+        # driver.find_element_by_id("doc_name").click()
+        driver.find_element_by_link_text("Kathmandu")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -170,7 +171,7 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        driver.find_element_by_id("line1").click()
+        driver.implicitly_wait(50)
         context.util.screenshot("distribution details")
 
     except Exception as ex:
@@ -182,8 +183,8 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        driver.find_element_by_id("item_list").click()
-        context.util.screenshot("quantities distributed in this location")
+        driver.find_element_by_id("doc_name").click()
+        # context.util.screenshot("quantities distributed in this location")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -194,7 +195,9 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        # context.util.screenshot("")
+        driver.find_element_by_id("numberpicker_input").send_keys(8)
+        driver.implicitly_wait(10)
+        context.util.screenshot("scroll up through the numbers")
 
 
     except Exception as ex:
@@ -206,7 +209,11 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.find_element_by_id("numberpicker_input").send_keys(2500)
+        driver.implicitly_wait(10)
+        context.util.screenshot("select total number")
+        driver.implicitly_wait(10)
+        driver.find_element_by_id("Done").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -217,7 +224,11 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        # driver.find_element_by_id("completeall").click()
+        # driver.implicitly_wait(10)
+        # context.util.screenshot("Complete all")
+        # driver.implicitly_wait(10)
+        # driver.find_element_by_id("Done").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -228,7 +239,9 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.implicitly_wait(10)
+        # driver.find_element_by_id("button_done").click()
+        context.util.screenshot("record a partial distribution")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -239,7 +252,7 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.find_element_by_id("button_done").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -361,6 +374,43 @@ def step_impl(context):
     try:
         driver = context.browser
 
+
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+@then('sign out from UniSupply')
+def step_impl(context):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(50)
+
+        driver.find_element_by_xpath("//ActionMenuView").click()
+        # driver.find_element_by_id("action_bar").click()
+        driver.find_element_by_id("action_signout")
+
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+@then('login into UniSupply')
+def step_impl(context):
+    try:
+        driver = context.browser
+
+        driver.find_element_by_id("editText_username").click()
+        driver.find_element_by_id("editText_username").clear()
+        driver.find_element_by_id("editText_username").send_keys("aaademo")
+        driver.find_element_by_id("editText_password").click()
+        driver.find_element_by_id("editText_password").clear()
+        driver.find_element_by_id("editText_password").send_keys("aaademo")
+
+        chain = ActionChains(driver)
+        """ Send search key"""
+        chain.send_keys(u'\uE007').perform()
+
+        context.util.screenshot("login into UniSupply")
+        driver.find_element_by_id("button_login").click()
 
     except Exception as ex:
         context.util.screenshot_error()
