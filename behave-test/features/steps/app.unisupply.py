@@ -1,5 +1,4 @@
 from behave import *
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 
 
@@ -60,26 +59,27 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
+        util = context.util
         driver.implicitly_wait(15)
 
         driver.find_element_by_link_text("Server Base URL:").click()
-        driver.find_element_by_id("edit").send_keys("cb.uniceflebanon.org")
+        driver.find_element_by_id("edit").send_keys(util.read_config("app_server_baseurl"))
         driver.find_element_by_id("button1").click()
 
         driver.find_element_by_link_text("Server Port:").click()
-        driver.find_element_by_id("edit").send_keys("4984")
+        driver.find_element_by_id("edit").send_keys(util.read_config("app_server_port"))
         driver.find_element_by_id("button1").click()
 
         driver.find_element_by_link_text("Database Instance Name:").click()
-        driver.find_element_by_id("edit").send_keys("test-nepal")
+        driver.find_element_by_id("edit").send_keys(util.read_config("app_database_name"))
         driver.find_element_by_id("button1").click()
 
         driver.find_element_by_link_text("Server Username:").click()
-        driver.find_element_by_id("edit").send_keys("unisupply-gateway")
+        driver.find_element_by_id("edit").send_keys(util.read_config("app_server_username"))
         driver.find_element_by_id("button1").click()
 
         driver.find_element_by_link_text("Server Password:").click()
-        driver.find_element_by_id("edit").send_keys("nepal-pass!")
+        driver.find_element_by_id("edit").send_keys(util.read_config("app_server_password"))
         driver.find_element_by_id("button1").click()
 
         context.util.screenshot("Preference settings details")
