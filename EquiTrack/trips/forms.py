@@ -160,7 +160,7 @@ class TripForm(ModelForm):
             raise ValidationError({'date_budget_owner_approved': self.ERROR_MESSAGES['no_date_budget_owner_approve']})
 
         # If trip has been previously approved and approved tick has not been removed
-        if self.instance.approved_by_supervisor and approved_by_supervisor:
+        if self.instance.approved_by_supervisor:
             # Error if Trip was approved by supervisor and certain fields change
             for u_field in self.PROTECTED_FIELDS:
                 if cleaned_data.get(u_field) != getattr(self.instance, u_field):
