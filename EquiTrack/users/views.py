@@ -41,16 +41,27 @@ class UserAuthAPIView(RetrieveAPIView):
 class ChangeUserCountryView(APIView):
     permission_classes = (permissions.IsAdminUser,)
 
-    def post(self, request, format=None):
+    ERROR_MESSAGES = {
+        'country_does_not_exist': 'The Country that you are attempting to switch to does not exist',
+        'access_to_country_denied': 'You do not have access to the country you are trying to switch to'
+    }
 
+    def post(self, request, format=None):
         try:
             country = Country.objects.get(id=request.data.get('country'))
         except Country.DoesNotExist:
-            return Response('not good', status=status.HTTP_400_BAD_REQUEST)
+            return Response(self.ERROR_MESSAGES['country_does_not_exist'],
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if country not in request.user.profile.countries_available.all():
+            return Response(self.ERROR_MESSAGES['access_to_country_denied'],
+                            status=status.HTTP_403_FORBIDDEN)
+
         else:
             request.user.profile.country = country
             request.user.profile.country_override = country
             request.user.profile.save()
+            print request.user.profile.countries_available.all()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
