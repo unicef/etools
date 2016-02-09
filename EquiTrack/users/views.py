@@ -4,14 +4,18 @@ import string
 
 from django.views.generic import FormView
 
+from rest_framework.views import APIView
 from rest_framework.generics import RetrieveAPIView, ListAPIView
+from rest_framework import permissions
+from rest_framework.response import Response
+from rest_framework import status
 from rest_framework_csv import renderers as r
 
 
 from users.models import Office
 from reports.models import Sector
 from .forms import ProfileForm
-from .models import User, UserProfile
+from .models import User, UserProfile, Country
 from .serializers import (
     UserSerializer,
     SimpleProfileSerializer,
@@ -32,6 +36,23 @@ class UserAuthAPIView(RetrieveAPIView):
             profile.installation_id = string.replace(q, "_", "-")
             profile.save()
         return user
+
+
+class ChangeUserCountryView(APIView):
+    permission_classes = (permissions.IsAdminUser,)
+
+    def post(self, request, format=None):
+
+        try:
+            country = Country.objects.get(id=request.data.get('country'))
+        except Country.DoesNotExist:
+            return Response('not good', status=status.HTTP_400_BAD_REQUEST)
+        else:
+            request.user.profile.country = country
+            request.user.profile.country_override = country
+            request.user.profile.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
 
 class CountryOverridenUsersCSV(ListAPIView):
 

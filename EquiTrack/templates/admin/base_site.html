@@ -156,10 +156,10 @@
         $( "#country_selection" ).change(function(ev) {
           // send post request
             var my_data = {'country': ev.target.value};
-            $.post('/users/api/changecountry', my_data, function() {
+            $.post('/users/api/changecountry/', my_data, function() {
                 // success here
                 window.alert('yay')
-            }).fail(window.alert('country change failed'))
+            }).fail(function(){window.alert('country change failed')})
         });
 
 
