@@ -34,3 +34,10 @@ def remove_config(name):
 
     with open('behave.ini', 'wb') as configfile:
         config.write(configfile)
+
+
+def is_config(name, value):
+    if read_config(name) == value:
+        return True
+
+    return False
