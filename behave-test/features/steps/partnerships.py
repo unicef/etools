@@ -1,6 +1,9 @@
 from datetime import datetime
 from behave import *
 from selenium.webdriver.support.select import Select
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
+from selenium.webdriver.support import expected_conditions as EC # available since 2.26.0
 
 
 @given('go to "Partners" from the partnership section')
@@ -26,38 +29,38 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('enter partner\'s "Full name" and "Short name"')
-def step_impl(context):
+@then('enter partner\'s Full name "{fullname}" and Short name "{shortname}"')
+def step_impl(context, fullname, shortname):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
         driver.find_element_by_id("id_name").clear()
-        driver.find_element_by_id("id_name").send_keys("Test Vision")
+        driver.find_element_by_id("id_name").send_keys(fullname)
         driver.find_element_by_id("id_short_name").clear()
-        driver.find_element_by_id("id_short_name").send_keys("TTV")
+        driver.find_element_by_id("id_short_name").send_keys(shortname)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('select an exiting "Partner type" from the drop-down list')
-def step_impl(context):
+@then('select an exiting Partner type "{partnertype}" and CSO type "{csotype}" from the drop-down list')
+def step_impl(context, partnertype, csotype):
     try:
         driver = context.browser
-        Select(driver.find_element_by_id("id_partner_type")).select_by_visible_text("Civil Society Organisation")
-        Select(driver.find_element_by_id("id_type")).select_by_visible_text("National NGO")
+        Select(driver.find_element_by_id("id_partner_type")).select_by_visible_text(partnertype)
+        Select(driver.find_element_by_id("id_type")).select_by_visible_text(csotype)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('enter the partner\'s Alternate name')
-def step_impl(context):
+@then('enter the partner\'s Alternate name "{alternatename}"')
+def step_impl(context, alternatename):
     try:
         driver = context.browser
         driver.find_element_by_id("fieldsetcollapser0").click()
         driver.find_element_by_id("id_alternate_name").clear()
-        driver.find_element_by_id("id_alternate_name").send_keys("testvision")
+        driver.find_element_by_id("id_alternate_name").send_keys(alternatename)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -108,33 +111,33 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('select a partner from the drop-down list')
-def step_impl(context):
+@then('select a partner "{partner}" from the drop-down list')
+def step_impl(context, partner):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
-        Select(driver.find_element_by_id("id_partner")).select_by_visible_text("TestVision")
+        Select(driver.find_element_by_id("id_partner")).select_by_visible_text(partner)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('select an "Agreement type"')
-def step_impl(context):
+@then('select an Agreement type "{type}"')
+def step_impl(context, type):
     try:
         driver = context.browser
-        Select(driver.find_element_by_id("id_agreement_type")).select_by_visible_text("Work Plan")
+        Select(driver.find_element_by_id("id_agreement_type")).select_by_visible_text(type)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('enter the "Reference Number"')
-def step_impl(context):
+@then('enter the Reference Number "{reference}"')
+def step_impl(context, reference):
     try:
         driver = context.browser
         driver.find_element_by_id("id_agreement_number").clear()
-        driver.find_element_by_id("id_agreement_number").send_keys("TTV00012345")
+        driver.find_element_by_id("id_agreement_number").send_keys(reference)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -247,61 +250,61 @@ def set_impl(context):
         raise Exception(ex)
 
 
-@then('select an existing partner from the drop-down partner')
-def set_impl(context):
+@then('select an existing partner "{partner}" from the drop-down partner')
+def set_impl(context, partner):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
 
         context.util.highlight(driver.find_element_by_id("id_partner"))
-        Select(driver.find_element_by_id("id_partner")).select_by_visible_text("AAA Demo Partner")
+        Select(driver.find_element_by_id("id_partner")).select_by_visible_text(partner)
 
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('select an existing agreement for that partner and enter a reference number for this agreement')
-def set_impl(context):
+@then('select an existing agreement "{agreement}" for that partner and enter a reference number for this agreement "{reference}"')
+def set_impl(context, agreement, reference):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
 
         context.util.highlight(driver.find_element_by_id("id_agreement"))
-        Select(driver.find_element_by_id("id_agreement")).select_by_visible_text("PCA for AAA Demo Partner (16-12-2015 - 16-12-2015)")
+        Select(driver.find_element_by_id("id_agreement")).select_by_visible_text(agreement)
 
         context.util.highlight(driver.find_element_by_id("id_number"))
         driver.find_element_by_id("id_number").clear()
-        driver.find_element_by_id("id_number").send_keys("AAA 00002")
+        driver.find_element_by_id("id_number").send_keys(reference)
 
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('select the appropriate Document Type for this intervention')
-def set_impl(context):
+@then('select the appropriate Document Type "{type}" for this intervention')
+def set_impl(context, type):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
 
         context.util.highlight(driver.find_element_by_id("id_partnership_type"))
-        Select(driver.find_element_by_id("id_partnership_type")).select_by_visible_text("Programme Document")
+        Select(driver.find_element_by_id("id_partnership_type")).select_by_visible_text(type)
 
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('add a Title for this intervention')
-def set_impl(context):
+@then('add a Title for this intervention "{title}"')
+def set_impl(context, title):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
         date = datetime.now().strftime('%Y-%m-%d')
 
         context.util.highlight(driver.find_element_by_id("id_title"))
-        driver.find_element_by_id("id_title").send_keys("Distribution of hygiene kits in Kabul")
+        driver.find_element_by_id("id_title").send_keys(title)
 
         context.util.highlight(driver.find_element_by_id("id_initiation_date"))
         driver.find_element_by_id("id_initiation_date").send_keys(date)
@@ -338,26 +341,43 @@ def set_impl(context):
         raise Exception(ex)
 
 
-@then('continue adding supplies and quantities. Click "Save and continue editing" to save the supply plan')
+@then('continue adding supplies and quantities')
 def set_impl(context):
     try:
-
         driver = context.browser
         driver.implicitly_wait(10)
 
-        Select(driver.find_element_by_id("id_supply_plans-0-item")).select_by_visible_text("Family hygiene kit")
-        driver.find_element_by_id("id_supply_plans-0-quantity").clear()
-        driver.find_element_by_id("id_supply_plans-0-quantity").send_keys("6000")
-        driver.find_element_by_link_text("Add another Supply Plan").click()
-        Select(driver.find_element_by_id("id_supply_plans-1-item")).select_by_visible_text("Family hygiene kit")
-        Select(driver.find_element_by_id("id_supply_plans-1-item")).select_by_visible_text("Water purification tablet")
-        driver.find_element_by_id("id_supply_plans-1-quantity").clear()
-        driver.find_element_by_id("id_supply_plans-1-quantity").send_keys("3000")
-        driver.find_element_by_link_text("Add another Supply Plan").click()
-        Select(driver.find_element_by_id("id_supply_plans-2-item")).select_by_visible_text("Tarpaulin")
-        driver.find_element_by_id("id_supply_plans-2-quantity").clear()
-        driver.find_element_by_id("id_supply_plans-2-quantity").send_keys("10000")
+        for i, row in enumerate(context.table):
+            Select(driver.find_element_by_id("id_supply_plans-"+str(i)+"-item")).select_by_visible_text(row['item'])
+            driver.find_element_by_id("id_supply_plans-"+str(i)+"-quantity").clear()
+            driver.find_element_by_id("id_supply_plans-"+str(i)+"-quantity").send_keys(row['quantity'])
+            driver.find_element_by_link_text("Add another Supply Plan").click()
 
+        # Select(driver.find_element_by_id("id_supply_plans-0-item")).select_by_visible_text("Family hygiene kit")
+        # driver.find_element_by_id("id_supply_plans-0-quantity").clear()
+        # driver.find_element_by_id("id_supply_plans-0-quantity").send_keys("6000")
+        #
+        # driver.find_element_by_link_text("Add another Supply Plan").click()
+        #
+        # Select(driver.find_element_by_id("id_supply_plans-1-item")).select_by_visible_text("Water purification tablet")
+        # driver.find_element_by_id("id_supply_plans-1-quantity").clear()
+        # driver.find_element_by_id("id_supply_plans-1-quantity").send_keys("3000")
+        #
+        # driver.find_element_by_link_text("Add another Supply Plan").click()
+        #
+        # Select(driver.find_element_by_id("id_supply_plans-2-item")).select_by_visible_text("Tarpaulin")
+        # driver.find_element_by_id("id_supply_plans-2-quantity").clear()
+        # driver.find_element_by_id("id_supply_plans-2-quantity").send_keys("10000")
+
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@then('press "Save and continue editing" to save the supply plan')
+def set_impl(context):
+    try:
+        driver = context.browser
         driver.find_element_by_name("_continue").click()
 
     except Exception as ex:
@@ -365,40 +385,55 @@ def set_impl(context):
         raise Exception(ex)
 
 
-@given('add an item from the supply plan to the distribution plan')
-def set_impl(context):
+@given('add an item from the supply plan to the distribution plan "{item}"')
+def set_impl(context, item):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
 
         driver.find_element_by_link_text("Supplies").click()
-        Select(driver.find_element_by_id("id_distribution_plans-0-item")).select_by_visible_text("Water purification tablet")
+        Select(driver.find_element_by_id("id_distribution_plans-0-item")).select_by_visible_text(item)
 
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('select a location where the item will be distributed from the pre-defined list of districts for your country')
-def set_impl(context):
+@then('select a location where the item will be distributed from the pre-defined list of districts for your country "{location}"')
+def set_impl(context, location):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
-        Select(driver.find_element_by_id("id_distribution_plans-0-location")).select_by_visible_text("ACHHAM")
+        Select(driver.find_element_by_id("id_distribution_plans-0-location")).select_by_visible_text(location)
 
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('enter in the quantities for this distribution location. Select "Send to partner" to send the distribution to the UniSuppy app')
-def set_impl(context):
+@then('enter in the quantities "{quantity}" for this distribution location')
+def set_impl(context, quantity):
     try:
         driver = context.browser
         driver.implicitly_wait(10)
 
         driver.find_element_by_id("id_distribution_plans-0-quantity").clear()
-        driver.find_element_by_id("id_distribution_plans-0-quantity").send_keys("2000")
+        driver.find_element_by_id("id_distribution_plans-0-quantity").send_keys(quantity)
+        context.util.highlight(driver.find_element_by_id("id_distribution_plans-0-quantity"))
+
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@then('select "Send to partner" to send the distribution to the UniSuppy app')
+def set_impl(context):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+
+        driver.find_element_by_id("id_distribution_plans-0-send").click()
+        context.util.highlight(driver.find_element_by_id("id_distribution_plans-0-send"))
         driver.find_element_by_id("id_distribution_plans-0-send").click()
 
     except Exception as ex:
@@ -412,19 +447,13 @@ def set_impl(context):
         driver = context.browser
         driver.implicitly_wait(10)
 
-        Select(driver.find_element_by_id("id_distribution_plans-1-item")).select_by_visible_text("Water purification tablet")
-        Select(driver.find_element_by_id("id_distribution_plans-1-location")).select_by_visible_text("SAPTARI")
-        driver.find_element_by_id("id_distribution_plans-1-quantity").clear()
-        driver.find_element_by_id("id_distribution_plans-1-quantity").send_keys("1000")
-        driver.find_element_by_id("id_distribution_plans-1-send").click()
-
-        driver.find_element_by_name("_continue").click()
-
-        Select(driver.find_element_by_id("id_distribution_plans-2-item")).select_by_visible_text("Water purification tablet")
-        Select(driver.find_element_by_id("id_distribution_plans-2-location")).select_by_visible_text("BHAKTAPUR")
-        driver.find_element_by_id("id_distribution_plans-2-quantity").clear()
-        driver.find_element_by_id("id_distribution_plans-2-quantity").send_keys("500")
-        driver.find_element_by_id("id_distribution_plans-2-send").click()
+        for i, row in enumerate(context.table):
+            Select(driver.find_element_by_id("id_distribution_plans-"+str(i)+"-item")).select_by_visible_text(row['item'])
+            Select(driver.find_element_by_id("id_distribution_plans-"+str(i)+"-location")).select_by_visible_text(row['location'])
+            driver.find_element_by_id("id_distribution_plans-"+str(i)+"-quantity").clear()
+            driver.find_element_by_id("id_distribution_plans-"+str(i)+"-quantity").send_keys(row['quantity'])
+            driver.find_element_by_id("id_distribution_plans-"+str(i)+"-send").click()
+            driver.find_element_by_link_text("Add another Distribution Plan").click()
 
         driver.find_element_by_name("_continue").click()
 
@@ -439,25 +468,18 @@ def set_impl(context):
         driver = context.browser
         driver.implicitly_wait(10)
 
-        context.util.highlight(driver.find_element_by_id("id_distribution_plans-2-quantity"))
+        for i, row in enumerate(context.table):
+            Select(driver.find_element_by_id("id_distribution_plans-"+str(i+3)+"-item")).select_by_visible_text(row['item'])
+            Select(driver.find_element_by_id("id_distribution_plans-"+str(i+3)+"-location")).select_by_visible_text(row['location'])
+            driver.find_element_by_id("id_distribution_plans-"+str(i+3)+"-quantity").clear()
+            driver.find_element_by_id("id_distribution_plans-"+str(i+3)+"-quantity").send_keys(row['quantity'])
+            driver.find_element_by_id("id_distribution_plans-"+str(i+3)+"-send").click()
 
-        Select(driver.find_element_by_id("id_distribution_plans-2-item")).select_by_visible_text("Family hygiene kit")
-        Select(driver.find_element_by_id("id_distribution_plans-2-location")).select_by_visible_text("BHOJPUR")
-        driver.find_element_by_id("id_distribution_plans-2-quantity").clear()
-        driver.find_element_by_id("id_distribution_plans-2-quantity").send_keys("3000")
-        driver.find_element_by_id("id_distribution_plans-2-send").click()
+        driver.find_element_by_name("_continue").click()
 
-        Select(driver.find_element_by_id("id_distribution_plans-3-item")).select_by_visible_text("Family hygiene kit")
-        Select(driver.find_element_by_id("id_distribution_plans-3-location")).select_by_visible_text("SALYAN")
-        driver.find_element_by_id("id_distribution_plans-3-quantity").clear()
-        driver.find_element_by_id("id_distribution_plans-3-quantity").send_keys("1000")
-        driver.find_element_by_id("id_distribution_plans-3-send").click()
-
-        Select(driver.find_element_by_id("id_distribution_plans-4-item")).select_by_visible_text("Tarpaulin")
-        Select(driver.find_element_by_id("id_distribution_plans-4-location")).select_by_visible_text("KATHMANDU")
-        driver.find_element_by_id("id_distribution_plans-4-quantity").clear()
-        driver.find_element_by_id("id_distribution_plans-4-quantity").send_keys("8000")
-        driver.find_element_by_id("id_distribution_plans-4-send").click()
+        # WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "(//a[contains(text(),'Remove')])[5]")))
+        # context.util.highlight(driver.find_element_by_id("id_distribution_plans-5-quantity"))
+        # driver.find_element_by_xpath("(//a[contains(text(),'Remove')])[5]").click()
 
     except Exception as ex:
         context.util.screenshot_error()

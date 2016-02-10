@@ -9,12 +9,12 @@ Feature: testing trips features
      Given go to "Trips" from the trips section
       Then click "Add trip"
       Then you will find your name selected by default as a traveller
-      Then select your supervisor from the drop-down list
-       And select your section and office location
+      Then select the supervisor "Tarek Moubarak" from the drop-down list
+       And select the section "SPPME" and office location "Beirut"
        And enter the From date and To date of trip
-       And add a Purpose of travel
-      Then select the Travel type and Travel focal point
-      Then enter the Travel Itinerary
+       And add a Purpose of travel "Testing behave selenium"
+      Then select the Travel type "TECHNICAL SUPPORT" and Travel focal point "Tarek Moubarak"
+      Then enter the Travel Itinerary "Beirut" to/from "Saida"
       Then press "Save"
 
 
@@ -22,6 +22,6 @@ Feature: testing trips features
   Scenario: visit eTools and test add action point
      Given go to "Action points" from trips section
       Then click "Add action point"
-      Then enter action point information
+      Then enter action point information "task action list"
       Then press "Save" to save the new action point
 

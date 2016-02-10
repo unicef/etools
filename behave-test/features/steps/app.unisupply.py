@@ -45,7 +45,7 @@ def step_impl(context):
     try:
         driver = context.browser
         context.util.screenshot("Preference settings name")
-        driver.find_element_by_id("editTextDialogUserInput").send_keys("DEMO")
+        driver.find_element_by_id("editTextDialogUserInput").send_keys("DEMO 1")
         driver.find_element_by_id('button1').click()
 
         driver.implicitly_wait(15)
@@ -100,7 +100,7 @@ def step_impl(context):
         context.util.screenshot("Switch Environment")
         driver.implicitly_wait(30)
 
-        driver.find_element_by_link_text("Initialise Database for DEMO").click()
+        driver.find_element_by_link_text("Initialise Database for DEMO_1").click()
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)

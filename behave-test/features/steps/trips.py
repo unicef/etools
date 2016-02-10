@@ -33,33 +33,33 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('select your supervisor from the drop-down list')
-def step_impl(context):
+@then('select the supervisor "{supervisor}" from the drop-down list')
+def step_impl(context, supervisor):
     try:
         driver = context.browser
-        Select(driver.find_element_by_id("id_supervisor")).select_by_visible_text("Tarek Moubarak")
+        Select(driver.find_element_by_id("id_supervisor")).select_by_visible_text(supervisor)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('select your section and office location')
-def step_impl(context):
+@then('select the section "{section}" and office location "{office}"')
+def step_impl(context, section, office):
     try:
         driver = context.browser
-        Select(driver.find_element_by_id("id_section")).select_by_visible_text("SPPME")
-        Select(driver.find_element_by_id("id_office")).select_by_visible_text("Beirut")
+        Select(driver.find_element_by_id("id_section")).select_by_visible_text(section)
+        Select(driver.find_element_by_id("id_office")).select_by_visible_text(office)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)\
 
 
-@then('add a Purpose of travel')
-def step_impl(context):
+@then('add a Purpose of travel "{title}"')
+def step_impl(context, title):
     try:
         driver = context.browser
         driver.find_element_by_id("id_purpose_of_travel").clear()
-        driver.find_element_by_id("id_purpose_of_travel").send_keys("Testing behave selenium")
+        driver.find_element_by_id("id_purpose_of_travel").send_keys(title)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -78,30 +78,30 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('select the Travel type and Travel focal point')
-def step_impl(context):
+@then('select the Travel type "{type}" and Travel focal point "{focal}"')
+def step_impl(context, type, focal):
     try:
         driver = context.browser
-        Select(driver.find_element_by_id("id_travel_type")).select_by_visible_text("TECHNICAL SUPPORT")
-        Select(driver.find_element_by_id("id_travel_assistant")).select_by_visible_text("Tarek Moubarak")
+        Select(driver.find_element_by_id("id_travel_type")).select_by_visible_text(type)
+        Select(driver.find_element_by_id("id_travel_assistant")).select_by_visible_text(focal)
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('enter the Travel Itinerary')
-def step_impl(context):
+@then('enter the Travel Itinerary "{origin}" to/from "{destination}"')
+def step_impl(context, origin, destination):
     try:
         driver = context.browser
         date = datetime.now().strftime('%d/%m/%Y')
 
-        driver.find_element_by_xpath("//input[@id='id_travelroutes_set-0-origin']").send_keys("Beirut")
-        driver.find_element_by_xpath("//input[@id='id_travelroutes_set-0-destination']").send_keys("Saida")
+        driver.find_element_by_xpath("//input[@id='id_travelroutes_set-0-origin']").send_keys(origin)
+        driver.find_element_by_xpath("//input[@id='id_travelroutes_set-0-destination']").send_keys(destination)
         driver.find_element_by_xpath("//input[@id='id_travelroutes_set-0-depart']").send_keys(date+" 08:10")
         driver.find_element_by_xpath("//input[@id='id_travelroutes_set-0-arrive']").send_keys(date+" 08:40")
 
-        driver.find_element_by_xpath("//input[@id='id_travelroutes_set-1-origin']").send_keys("Beirut")
-        driver.find_element_by_xpath("//input[@id='id_travelroutes_set-1-destination']").send_keys("Saida")
+        driver.find_element_by_xpath("//input[@id='id_travelroutes_set-1-origin']").send_keys(destination)
+        driver.find_element_by_xpath("//input[@id='id_travelroutes_set-1-destination']").send_keys(origin)
         driver.find_element_by_xpath("//input[@id='id_travelroutes_set-1-depart']").send_keys(date+" 14:10")
         driver.find_element_by_xpath("//input[@id='id_travelroutes_set-1-arrive']").send_keys(date+" 14:40")
     except Exception as ex:
@@ -170,17 +170,15 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('enter action point information')
-def step_impl(context):
+@then('enter action point information "{actions}"')
+def step_impl(context, actions):
     try:
         driver = context.browser
         date = datetime.now().strftime('%Y-%m-%d')
 
         driver.implicitly_wait(10)
         driver.find_element_by_id("id_actions_taken").clear()
-        driver.find_element_by_id("id_actions_taken").send_keys("Taken")
-        driver.find_element_by_id("id_actions_taken").clear()
-        driver.find_element_by_id("id_actions_taken").send_keys("task action list")
+        driver.find_element_by_id("id_actions_taken").send_keys(actions)
         driver.find_element_by_id("id_completed_date").send_keys(date)
     except Exception as ex:
         context.util.screenshot_error()
