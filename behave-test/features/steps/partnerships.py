@@ -54,6 +54,22 @@ def step_impl(context, partnertype, csotype):
         raise Exception(ex)
 
 
+@then('enter the partners main address "{address}", main phone number "{phone}" and main email "{email}"')
+def step_impl(context, address, phone, email):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+        driver.find_element_by_id("id_address").clear()
+        driver.find_element_by_id("id_address").send_keys(address)
+        driver.find_element_by_id("id_phone_number").clear()
+        driver.find_element_by_id("id_phone_number").send_keys(phone)
+        driver.find_element_by_id("id_email").clear()
+        driver.find_element_by_id("id_email").send_keys(email)
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
 @then('enter the partner\'s Alternate name "{alternatename}"')
 def step_impl(context, alternatename):
     try:

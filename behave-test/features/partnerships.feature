@@ -11,6 +11,7 @@ Feature: testing partnerships features
       Then enter partner's Full name "Test Vesion" and Short name "testv"
        And select an exiting Partner type "Civil Society Organisation" and CSO type "National NGO" from the drop-down list
        And enter the partner's Alternate name "testvision"
+       And enter the partners main address "31 Test Way", main phone number "123456789" and main email "someone@ngo.org"
        And press "Save" to add this new partner
 
   @agreement
