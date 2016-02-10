@@ -39,6 +39,9 @@ def create_dirs(args):
 
 def run_test(feature, tags):
 
+    if(read_config("driver") == "android"):
+        tags = "@android"
+
     report_txt = read_config('report_dir') + '/result.txt'
     if not feature:
         print 'all features, tags: ' + tags

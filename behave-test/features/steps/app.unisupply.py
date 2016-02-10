@@ -1,6 +1,8 @@
 from behave import *
 from selenium.webdriver.common.action_chains import ActionChains
-
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
+from selenium.webdriver.support import expected_conditions as EC # available since 2.26.0
 
 @given('launch UniSupply app')
 def step_impl(context):
@@ -43,7 +45,7 @@ def step_impl(context):
     try:
         driver = context.browser
         context.util.screenshot("Preference settings name")
-        driver.find_element_by_id("editTextDialogUserInput").send_keys("DEMO")
+        driver.find_element_by_id("editTextDialogUserInput").send_keys("DEMO 1")
         driver.find_element_by_id('button1').click()
 
         driver.implicitly_wait(15)
@@ -98,7 +100,7 @@ def step_impl(context):
         context.util.screenshot("Switch Environment")
         driver.implicitly_wait(30)
 
-        driver.find_element_by_link_text("Initialise Database for DEMO").click()
+        driver.find_element_by_link_text("Initialise Database for DEMO_1").click()
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
@@ -157,10 +159,11 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        driver.implicitly_wait(50)
+        # driver.implicitly_wait(100)
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
         context.util.screenshot("all distributions by district and supply type")
-        # driver.find_element_by_id("doc_name").click()
-        driver.find_element_by_link_text("Kathmandu")
+        driver.find_element_by_id("doc_name").click()
+        # driver.find_element_by_link_text("KATHMANDU")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -184,7 +187,7 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.find_element_by_id("doc_name").click()
-        # context.util.screenshot("quantities distributed in this location")
+        context.util.screenshot("quantities distributed in this location")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -212,8 +215,8 @@ def step_impl(context):
         driver.find_element_by_id("numberpicker_input").send_keys(2500)
         driver.implicitly_wait(10)
         context.util.screenshot("select total number")
-        driver.implicitly_wait(10)
-        driver.find_element_by_id("Done").click()
+        # driver.implicitly_wait(10)
+        # driver.find_element_by_id("Done").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -224,6 +227,9 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
+        driver.implicitly_wait(10)
+        # driver.find_element_by_id("doc_name").click()
+        # element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "completeall")))
         # driver.find_element_by_id("completeall").click()
         # driver.implicitly_wait(10)
         # context.util.screenshot("Complete all")
@@ -235,24 +241,12 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('record a partial distribution of 500 items')
-def step_impl(context):
-    try:
-        driver = context.browser
-        driver.implicitly_wait(10)
-        # driver.find_element_by_id("button_done").click()
-        context.util.screenshot("record a partial distribution")
-
-    except Exception as ex:
-        context.util.screenshot_error()
-        raise Exception(ex)
-
-
 @then('press "done" to return to the district details screen')
 def step_impl(context):
     try:
         driver = context.browser
-        driver.find_element_by_id("button_done").click()
+        element = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "Done")))
+        driver.find_element_by_id("Done").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -263,7 +257,8 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        element = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "button_done")))
+        context.util.screenshot("back to updated district details")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -274,18 +269,25 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.find_element_by_id("button_done").click()
 
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('the overview and reports screens will also reflect the partial delivery')
+@then('the overview and reports screens will also reflect delivery status')
 def step_impl(context):
     try:
         driver = context.browser
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        context.util.screenshot("back to main screen")
 
+        driver.find_element_by_link_text("Reports").click()
+
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        driver.find_element_by_id("doc_name").click()
+        context.util.screenshot("reports screens reflect the partial delivery")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -307,7 +309,9 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.find_element_by_link_text("Finished").click()
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        context.util.screenshot("finished items")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -318,7 +322,9 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.find_element_by_link_text("Started").click()
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        driver.find_element_by_id("doc_name").click()
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -340,29 +346,27 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "button_forceComplete")))
+        driver.find_element_by_id("button_forceComplete").click()
+        driver.find_element_by_id("button_done").click()
 
-
-    except Exception as ex:
-        context.util.screenshot_error()
-        raise Exception(ex)
-
-
-@then('to ensure that distributions are synced with the eTools system')
-def step_impl(context):
-    try:
-        driver = context.browser
-
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        driver.find_element_by_link_text("Finished").click()
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        context.util.screenshot("manually moved to finished")
 
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)
 
 
-@then('go to the "Sync" tab')
+@then('to ensure that distributions are synced with the eTools system.Go to the "Sync" tab')
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.find_element_by_link_text("Sync").click()
+        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "button_forceSync")))
+        context.util.screenshot("Force Sync")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -373,7 +377,8 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-
+        driver.find_element_by_id("button_forceSync").click()
+        context.util.screenshot("Sync forced")
 
     except Exception as ex:
         context.util.screenshot_error()

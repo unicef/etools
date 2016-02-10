@@ -21,16 +21,14 @@ Feature: Supply and distribution monitoring in eTools using the UniSupply mobile
        Then you can scroll up through the numbers
         And you type a number into the number field
         And you can click on "Complete All" to record all quantities distributed
-       Then record a partial distribution of 500 items
         And press "done" to return to the district details screen
         And you will see that the district details have updated to reflect 500 items delivered and 7500 items remaining
        Then press "done" to return to the main screen
-        And the overview and reports screens will also reflect the partial delivery
+        And the overview and reports screens will also reflect delivery status
         And continue updating deliveries as necessary
        When all items for one district have been completed
        Then the item will be moved from the "started" tab into the "finished" tab
         And to move a distribution to the "finished" tab manually
        Then tap the "Force Completion" button on a distribution
-        And to ensure that distributions are synced with the eTools system
-       Then go to the "Sync" tab
+        And to ensure that distributions are synced with the eTools system.Go to the "Sync" tab
         And tap "Force Sync"
