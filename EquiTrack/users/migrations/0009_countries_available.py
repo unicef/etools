@@ -9,12 +9,19 @@ def updateCountriesAvailable(apps, schema_editor):
     """
 
     UserProfile = apps.get_model("users", "UserProfile")
+    Country = apps.get_model("users", "Country")
+    countries = Country.objects.all()
+
     for profile in UserProfile.objects.all():
-        if profile.user.is_staff and \
+        if profile.user.is_superuser:
+            # for superusers add all countries
+            profile.countries_available = [c for c in countries]
+
+        elif profile.user.is_staff and \
                 profile.country:
             profile.countries_available.add(profile.country)
-            profile.save()
 
+        profile.save()
 
 
 def revert(apps, schema_editor):
