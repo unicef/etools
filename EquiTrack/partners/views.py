@@ -103,7 +103,7 @@ class LocationView(ListAPIView):
 class PortalDashView(View):
 
     def get(self, request):
-        with open(settings.SITE_ROOT + '/templates/frontend/partner_portal/index.html', 'r') as my_f:
+        with open(settings.SITE_ROOT + '/templates/frontend/partner/partner.html', 'r') as my_f:
             result = my_f.read()
         return HttpResponse(result)
 
@@ -154,10 +154,9 @@ class PartnerInterventionsView(ListAPIView):
         return current_member.partner.pca_set.all()
 
 
-
 class PortalLoginFailedView(TemplateView):
 
-    template_name = "partner_portal/loginfailed.html"
+    template_name = "partner_loginfailed.html"
 
     def get_context_data(self, **kwargs):
         context = super(PortalLoginFailedView, self).get_context_data(**kwargs)

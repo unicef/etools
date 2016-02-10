@@ -61,8 +61,26 @@ class TripLocationForm(auto_forms.ModelForm):
 
 class TripForm(ModelForm):
 
-    def __init__(self, *args, **kwargs):
-        super(TripForm, self).__init__(*args, **kwargs)
+    # cannot change the following fields: (if other fields are rigid add them in the list)
+    PROTECTED_FIELDS = ['to_date', 'from_date']
+
+    ERROR_MESSAGES = {
+        'to_date_less_than_from': 'The to date must be greater than the from date',
+        'owner_is_supervisor': 'You can\'t supervise your own trips',
+        'not_approved_by_supervisor': 'As a traveller you cannot approve your own trips',
+        'protected_field_changed': 'This field cannot be changed after approval',
+        'trip_submitted_in_past': 'This trip\'s dates happened in the past and therefore cannot be submitted',
+        'no_linked_interventions': 'You must select the interventions related to this trip or change the Travel Type',
+        'no_assistant_for_TA': 'This trip needs a programme assistant to create a Travel Authorisation (TA)',
+        'no_rep_for_int_travel': 'You must select the Representative for international travel trips',
+        'no_date_supervisor_approve': 'Please put the date the supervisor approved this Trip',
+        'no_date_budget_owner_approve': 'Please put the date the budget owner approved this Trip',
+        'no_vision_user_for_TA': 'For TA Drafted trip you must select a Vision Approver',
+        'no_driver_supervisor': 'You must enter a supervisor for the selected driver',
+        'no_trip_report': 'You must provide a narrative report before the trip can be completed',
+        'ta_needs_amending': 'Due to trip having a pending amendment to the TA, '
+                             'only the travel focal point can complete the trip'
+    }
 
     class Meta:
         model = Trip
@@ -103,81 +121,60 @@ class TripForm(ModelForm):
         driver = cleaned_data.get(u'driver')
         driver_supervisor = cleaned_data.get(u'driver_supervisor')
 
-        if to_date < from_date:
-            raise ValidationError('The to date must be greater than the from date')
+        # PLANNING
+        if (to_date and from_date) and to_date < from_date:
+            raise ValidationError({'to_date': self.ERROR_MESSAGES['to_date_less_than_from']})
 
         if owner == supervisor:
-            raise ValidationError('You can\'t supervise your own trips')
+            raise ValidationError({'owner': self.ERROR_MESSAGES['owner_is_supervisor']})
 
         if not pcas and travel_type == Trip.PROGRAMME_MONITORING:
-            raise ValidationError(
-                'You must select the interventions related to this trip'
-                ' or change the Travel Type'
-            )
+            raise ValidationError({'pcas': self.ERROR_MESSAGES['no_linked_interventions']})
 
         if ta_required and not programme_assistant:
-            raise ValidationError(
-                'This trip needs a programme assistant '
-                'to create a Travel Authorisation (TA)'
-            )
+            raise ValidationError({'programme_assistant': self.ERROR_MESSAGES['no_assistant_for_TA']})
 
         if international_travel and not representative:
-            raise ValidationError('You must select the Representative for international travel trips')
+            raise ValidationError({'representative': self.ERROR_MESSAGES['no_rep_for_int_travel']})
 
-        if approved_by_supervisor and not date_supervisor_approved:
-            raise ValidationError(
-                'Please put the date the supervisor approved this Trip'
-            )
-
-        if approved_by_budget_owner and not date_budget_owner_approved:
-            raise ValidationError(
-                'Please put the date the budget owner approved this Trip'
-            )
-
+        # SUBMISSION
         if status == Trip.SUBMITTED and to_date < datetime.date(datetime.now()):
-            raise ValidationError(
-                'This trip\'s dates happened in the past and therefore cannot be submitted'
-            )
+            raise ValidationError({'to_date': self.ERROR_MESSAGES['trip_submitted_in_past']})
 
-        if status == Trip.APPROVED and ta_drafted:
-            if not vision_approver:
-                raise ValidationError(
-                    'For TA Drafted trip you must select a Vision Approver'
-                )
-            if not programme_assistant:
-                raise ValidationError(
-                    'For TA Drafted trip you must select a Staff Responsible for TA'
-                )
-
-        if status == Trip.APPROVED and not self.instance.approved_by_supervisor:
-            raise ValidationError(
-                'Only the supervisor can approve this trip'
-            )
+        # APPROVAL
+        if status == Trip.APPROVED and ta_drafted and not vision_approver:
+            raise ValidationError({'vision_approver': self.ERROR_MESSAGES['no_vision_user_for_TA']})
 
         if driver and driver_supervisor is None:
-                raise ValidationError('You must enter a supervisor for the selected driver')
+            raise ValidationError({'driver_supervisor': self.ERROR_MESSAGES['no_driver_supervisor']})
 
+        if self.instance.supervisor_id is not None and self.request.user != self.instance.supervisor:
+            # only the supervisor can approve the trip
+            if not self.instance.approved_by_supervisor and approved_by_supervisor:
+                raise ValidationError({'approved_by_supervisor': self.ERROR_MESSAGES['not_approved_by_supervisor']})
+
+        if approved_by_supervisor and not date_supervisor_approved:
+            raise ValidationError({'date_supervisor_approved': self.ERROR_MESSAGES['no_date_supervisor_approve']})
+
+        if approved_by_budget_owner and not date_budget_owner_approved:
+            raise ValidationError({'date_budget_owner_approved': self.ERROR_MESSAGES['no_date_budget_owner_approve']})
+
+        # If trip has been previously approved and approved tick has not been removed
+        if self.instance.approved_by_supervisor:
+            # Error if Trip was approved by supervisor and certain fields change
+            for u_field in self.PROTECTED_FIELDS:
+                if cleaned_data.get(u_field) != getattr(self.instance, u_field):
+                    raise ValidationError({u_field: self.ERROR_MESSAGES['protected_field_changed']})
+
+        # COMPLETION
         if status == Trip.COMPLETED:
             if not trip_report and travel_type != Trip.STAFF_ENTITLEMENT:
-                raise ValidationError(
-                    'You must provide a narrative report before the trip can be completed'
-                )
+                raise ValidationError(self.ERROR_MESSAGES['no_trip_report'])
 
             if ta_required and pending_ta_amendment is True \
                     and self.request.user != programme_assistant \
                     and self.request.user != travel_assistant:
-                raise ValidationError(
-                    'Due to trip having a pending amendment to the TA, '
-                    ' only the travel focal point can complete the trip'
-                )
-
-            # if not approved_by_human_resources and travel_type == Trip.STAFF_DEVELOPMENT:
-            #     raise ValidationError(
-            #         'STAFF DEVELOPMENT trip must be certified by Human Resources before it can be completed'
-            #     )
-
-        #TODO: this can be removed once we upgrade to 1.7
-        return cleaned_data
+                raise ValidationError(self.ERROR_MESSAGES['ta_needs_amending'])
 
 
 class RequireOneLocationFormSet(BaseInlineFormSet):
@@ -185,7 +182,14 @@ class RequireOneLocationFormSet(BaseInlineFormSet):
         if any(self.errors):
             return
 
-        form_count = len([f for f in self.forms if f.cleaned_data])
+        # Locations cannot be changed if trip was approved by supervisor
+        new_locations = sorted([f.instance for f in self.forms if f.cleaned_data])
+        if self.instance.approved_by_supervisor:
+            old_locations = sorted([i for i in self.instance.triplocation_set.all()])
+            if new_locations != old_locations:
+                raise ValidationError('You cannot modify the location after the trip has been approved')
+
+        form_count = len(new_locations)
         if form_count < 1 and self.instance.international_travel is False and self.instance.status != Trip.CANCELLED:
             if self.instance.travel_type in [
                 Trip.PROGRAMME_MONITORING,
@@ -200,7 +204,7 @@ class TripFundsForm(BaseInlineFormSet):
             return
 
         total = sum([f.cleaned_data.get('amount') for f in self.forms if f.cleaned_data])
-        if total != 100:
+        if total and total != 100:
             raise ValidationError('The total funds for the trip needs to equal to 100%')
 
 

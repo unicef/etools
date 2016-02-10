@@ -26,14 +26,14 @@ class DashboardView(TemplateView):
 
         sectors = {}
         now = datetime.datetime.now()
-        structure = self.request.GET.get('structure')
-        if structure is None and ResultStructure.objects.count():
-            structure = ResultStructure.objects.filter(
+        structure_id = self.request.GET.get('structure')
+        if structure_id is None and ResultStructure.objects.count():
+            structure_id = ResultStructure.objects.filter(
                 from_date__lte=now,
                 to_date__gte=now
-            )[0].id
+            ).values_list('id',  flat=True).first()
         try:
-            current_structure = ResultStructure.objects.get(id=structure)
+            current_structure = ResultStructure.objects.get(id=structure_id)
         except ResultStructure.DoesNotExist:
             current_structure = None
         for sector in Sector.objects.all():

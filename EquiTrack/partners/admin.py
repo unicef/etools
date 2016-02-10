@@ -12,7 +12,7 @@ from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from EquiTrack.utils import get_changeform_link
+from EquiTrack.utils import get_changeform_link, get_staticfile_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
@@ -56,13 +56,13 @@ from .forms import (
     AmendmentForm,
     AgreementForm,
     AuthorizedOfficersForm,
-    AuthorizedOfficesFormset,
     DistributionPlanForm,
     DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
     LocationForm
 )
+from trips.models import Trip
 
 
 class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -199,6 +199,18 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     extra = 3
     readonly_fields = [u'delivered', u'sent']
 
+    def get_max_num(self, request, obj=None, **kwargs):
+        """
+        Only show these inlines if we have supply plans
+        :param request:
+        :param obj: Intervention object
+        :param kwargs:
+        :return:
+        """
+        if obj and obj.supply_plans.count():
+            return self.max_num
+        return 0
+
 
 class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     form = PartnershipForm
@@ -244,6 +256,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
         'duration',
+        'work_plan_template',
     )
     filter_horizontal = (
         'unicef_managers',
@@ -279,7 +292,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         }),
         (_('Import work plan'), {
             u'classes': (u'suit-tab suit-tab-results',),
-            'fields': ('work_plan_sector', 'work_plan',),
+            'fields': ('work_plan_sector', 'work_plan', 'work_plan_template'),
         }),
     )
     remove_fields_if_read_only = (
@@ -313,8 +326,17 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
     suit_form_includes = (
         ('admin/partners/work_plan.html', 'middle', 'results'),
+        ('admin/partners/trip_summary.html', 'top', 'trips'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
+
+    def work_plan_template(self, obj):
+        return u'<a class="btn btn-primary default" ' \
+               u'href="{}" >Download Template</a>'.format(
+                get_staticfile_link('partner/templates/workplan_template.xlsx')
+        )
+    work_plan_template.allow_tags = True
+    work_plan_template.short_description = 'Template'
 
     def get_queryset(self, request):
         queryset = super(PartnershipAdmin, self).get_queryset(request)
@@ -337,20 +359,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         if obj and obj.sector_children:
             form.base_fields['location_sector'].queryset = obj.sector_children
             form.base_fields['work_plan_sector'].queryset = obj.sector_children
-
-        if obj and obj.agreement:
-            # if linked to a agreement auto fill some details from that
-
-            obj.number = obj.agreement.agreement_number
-
-            obj.unicef_manager = obj.agreement.signed_by
-            obj.signed_by_unicef_date = obj.agreement.signed_by_unicef_date
-
-            obj.partner_manager = obj.agreement.partner_manager
-            obj.signed_by_partner_date = obj.agreement.signed_by_partner_date
-
-            obj.start_date = obj.agreement.start
-            obj.end_date = obj.agreement.end
 
         return form
 
@@ -529,7 +537,7 @@ class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
 class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     model = AuthorizedOfficer
     form = AuthorizedOfficersForm
-    formset = AuthorizedOfficesFormset
+    formset = ParentInlineAdminFormSet
     verbose_name = "Partner Authorized Officer"
     verbose_name_plural = "Partner Authorized Officers"
     extra = 1
@@ -556,6 +564,13 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
+
+    def get_formsets(self, request, obj=None):
+        # display the inline only if the agreement was saved
+        for inline in self.get_inline_instances(request, obj):
+            if isinstance(inline, AuthorizedOfficersInlineAdmin) and obj is None:
+                continue
+            yield inline.get_formset(request, obj)
 
 
 admin.site.register(SupplyItem)

@@ -37,32 +37,65 @@ var AUTOPREFIXER_BROWSERS = [
   'bb >= 10'
 ];
 
+var targetApp = '';
+
 var DIST = 'dist';
 
 var dist = function(subpath) {
-  return !subpath ? DIST : path.join(DIST, subpath);
+  switch (subpath) {
+    case 'styles/' + targetApp:
+      return path.join(DIST, 'static/frontend/', targetApp,'/styles');
+    
+    default:
+      return !subpath ? DIST : path.join(DIST, subpath);
+  }
+};
+var etoolsRoot = '..';
+var etoolsAssets;
+var etoolsAssetsPath;
+var etoolsImages; 
+var etoolsImagesPath;
+var etoolsTemplatesPath;
+
+var setGlobals = function() {
+  // etoolsRoot = '../code';
+  etoolsAssets = path.join(etoolsRoot, 'assets/frontend', targetApp);
+  etoolsAssetsPath = path.join('static/frontend', targetApp);
+  etoolsImages = path.join(etoolsRoot, 'assets/images');
+  etoolsImagesPath = path.join(etoolsRoot, 'static/images');
+  etoolsTemplatesPath = path.join(etoolsRoot, 'templates/frontend', targetApp);
 };
 
-var etoolsRoot = '..';
-var etoolsAssetsPath = path.join(etoolsRoot, 'assets');
-var etoolsImages = path.join(etoolsRoot, 'assets/images');
-var etoolsTemplatesPath = path.join(etoolsRoot, 'templates/frontend');
-
-var etoolsDist = function(subpath) {
-  if (subpath === 'images') {
-    return etoolsImages;
-  } else if (subpath === 'elements') {
-    return path.join(etoolsAssetsPath, 'partner_portal/elements');
-  } else if (subpath === 'index') {
-    return path.join(etoolsTemplatesPath, 'partner_portal');
-  } else if (subpath === 'styles') {
-    return path.join(etoolsAssetsPath, 'partner_portal/styles');
-  } else if (subpath === 'assets') {
-    return etoolsAssetsPath;
-  } else if (subpath === 'templates') {
-    return path.join(etoolsTemplatesPath);
+// distribution folder structure
+var etoolsDist = function(subpath, output) {
+  switch (subpath) {
+    case 'images':
+      return etoolsImages;
+    case 'elements':
+      return !output ? path.join(etoolsAssets, 'elements') :
+       path.join(etoolsAssetsPath, 'elements');
+    case 'index':
+      return etoolsTemplatesPath;
+    case 'styles':
+      return path.join(etoolsAssets, 'styles');
+    case 'assets':
+      return !output ? etoolsAssets : etoolsAssetsPath;
+    case 'templates':
+      return etoolsTemplatesPath;
+    default:
+      return !subpath ? etoolsAssets : path.join(etoolsAssets, subpath);
   }
-  return !subpath ? etoolsAssetsPath : path.join(etoolsAssetsPath, subpath);
+};
+
+// distribution path structure
+var appPaths = function(path, output) {
+  switch (path) {
+    case 'elements':
+      return !output ? 'elements/' + targetApp + '_elements.html' :
+       '/' + etoolsDist('elements', true) + '/' + targetApp + '_elements.vulcanized.html';
+    case 'images':
+      return output ? etoolsImagesPath : etoolsImages;
+  }
 };
 
 var styleTask = function(stylesPath, srcs) {
@@ -88,18 +121,19 @@ var imageOptimizeTask = function(src, dest) {
 };
 
 var optimizeHtmlTask = function(src, dest) {
+  
   var assets = $.useref.assets({
     searchPath: ['.tmp', 'app', dist()]
   });
 
+  // images are all common (indipendent of the app)
   var replaceImg =  function(imgStr) {
     return '/static/' + imgStr;
   };
 
   return gulp.src(src)
     // Replace path for vulcanized assets
-    .pipe($.if('*.html', $.replace('elements/elements.html', 
-      '/static/partner_portal/elements/elements.vulcanized.html')))
+    .pipe($.if('*.html', $.replace(appPaths('elements'), appPaths('elements', true))))
     // Replace image links
     .pipe($.if('*.html', $.replace('images/', replaceImg)))
     .pipe(assets)
@@ -127,7 +161,7 @@ var optimizeHtmlTask = function(src, dest) {
 
 // Compile and automatically prefix stylesheets
 gulp.task('styles', function() {
-  return styleTask('styles', ['**/*.css']);
+  return styleTask('styles/' + targetApp, ['**/*.css']);
 });
 
 gulp.task('elements', function() {
@@ -187,8 +221,8 @@ gulp.task('copy', function() {
   var swToolbox = gulp.src(['bower_components/sw-toolbox/*.js'])
     .pipe(gulp.dest(dist('sw-toolbox')));
 
-  var vulcanized = gulp.src(['app/elements/elements.html'])
-    .pipe($.rename('elements.vulcanized.html'))
+  var vulcanized = gulp.src(['app/elements/' + targetApp + '_elements.html'])
+    .pipe($.rename(targetApp + '_elements.vulcanized.html'))
     .pipe(gulp.dest(dist('elements')));
 
   return merge(app, bower, elements, vulcanized, swBootstrap, swToolbox)
@@ -215,8 +249,8 @@ gulp.task('html', function() {
 
 // Vulcanize granular configuration
 gulp.task('vulcanize', function() {
-  var DEST_DIR = dist('static/partner_portal/elements');
-  return gulp.src(dist('elements/elements.vulcanized.html'))
+  var DEST_DIR = dist(etoolsDist('elements', true));
+  return gulp.src(dist('elements/' + targetApp + '_elements.vulcanized.html'))
     .pipe($.vulcanize({
       stripComments: true,
       inlineCss: true,
@@ -241,7 +275,7 @@ gulp.task('cache-config', function(callback) {
   };
 
   glob([
-    'index.html',
+    targetApp + '.html',
     './',
     'bower_components/webcomponentsjs/webcomponents-lite.min.js',
     '{elements,scripts,styles}/**/*.*'],
@@ -267,7 +301,42 @@ gulp.task('clean', function() {
 });
 
 // Watch files for changes & reload
-gulp.task('serve', ['lint', 'styles', 'elements', 'images'], function() {
+gulp.task('serve', ['styles', 'elements', 'images'], function() {
+
+  //TODO:  set the target app at this point
+
+  var dataMiddleware = function(req, res, next) {
+    switch (req.url){
+      // common resources
+      case '/index.html':
+        req.url = '/' + targetApp + '.html';
+        break;      
+      case '/users/api/profile/':
+        req.url = '/data/users/profile.json';
+        break;
+
+      // management app
+      case '/management/api/stats/usercounts/':
+        req.url = '/data/users/usercounts.json';
+        break;
+      case '/management/api/stats/trips/':
+        req.url = '/data/management/tripsstats.json';
+        break;
+      case '/management/api/stats/agreements/':
+        req.url = '/data/management/agreementsstats.json';
+        break;
+      case '/management/api/stats/interventions/':
+        req.url = '/data/management/interventionsstats.json';
+        break;
+
+      // partner app
+      case '/partners/api/interventions/':
+        req.url = '/data/partner/interventions.json';
+        break;
+    }
+    return next();
+  };
+
   browserSync({
     port: 5000,
     notify: false,
@@ -286,9 +355,10 @@ gulp.task('serve', ['lint', 'styles', 'elements', 'images'], function() {
     // https: true,
     server: {
       baseDir: ['.tmp', 'app'],
-      middleware: [historyApiFallback()],
+      middleware: [historyApiFallback(), dataMiddleware],
       routes: {
-        '/bower_components': 'bower_components'
+        '/bower_components': 'bower_components',
+        '/data': 'data'
       }
     }
   });
@@ -355,7 +425,7 @@ gulp.task('deploy-gh-pages', function() {
 });
 
 gulp.task('movehtml', function() {
-  var DEST_DIR = dist('templates/frontend/partner_portal');
+  var DEST_DIR = dist('templates/frontend/' + targetApp);
 
   return gulp.src('app/*.html')
     .pipe(gulp.dest(DEST_DIR));
@@ -366,20 +436,43 @@ gulp.task('buildDist', ['clean'], function(cb) {
   runSequence(
     ['copy', 'styles'],
     'elements',
-    ['images', 'fonts', 'html'],
+    ['lint', 'images', 'fonts', 'html'],
     'vulcanize', // 'cache-config',
     cb);
 });
 
-// copy over the distribution files for partner_portal
+// copy over the distribution files for app
 gulp.task('frontendBuild', ['buildDist'], function() {
-  gulp.src('dist/index.html')
+  gulp.src('dist/' + targetApp + '.html')
   // .pipe($.rename('index.html'))
   .pipe(gulp.dest(etoolsDist('index')));
 
   gulp.src('dist/static/**/*')
-  .pipe(gulp.dest(etoolsDist('assets')));
+  .pipe(gulp.dest(path.join(etoolsRoot, 'assets')));
 
+});
+
+gulp.task('buildFront:partner', function(cb) {
+  targetApp = 'partner';
+  setGlobals();
+  runSequence('frontendBuild', cb);
+});
+
+gulp.task('buildFront:management', function(cb) {
+  targetApp = 'management';
+  setGlobals();
+  runSequence('frontendBuild', cb);
+});
+
+gulp.task('serve:management', function(cb) {
+  targetApp = 'management';
+  setGlobals();
+  runSequence('serve', cb);
+});
+gulp.task('serve:partner', function(cb) {
+  targetApp = 'partner';
+  setGlobals();
+  runSequence('serve', cb);
 });
 
 // Load tasks for web-component-tester

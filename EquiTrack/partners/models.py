@@ -47,6 +47,7 @@ from supplies.tasks import (
 from . import emails
 
 
+
 HIGH = u'high'
 SIGNIFICANT = u'significant'
 MODERATE = u'moderate'
@@ -173,7 +174,6 @@ class PartnerStaffMember(models.Model):
     last_name = models.CharField(max_length=64L)
     email = models.CharField(max_length=128L, unique=True, blank=False)
     phone = models.CharField(max_length=64L, blank=True)
-
 
     def __unicode__(self):
         return u'{} {} ({})'.format(
@@ -356,16 +356,11 @@ class Agreement(TimeStampedModel):
 
     def save(self, **kwargs):
 
-        if self.pk and self.agreement_type == Agreement.PCA:
-
-            if self.partner_manager and self.partner_manager not in self.authorized_officers.all():
-                officer = AuthorizedOfficer.objects.create(agreement=self, officer=self.partner_manager)
-                self.authorized_officers.add(officer)
-
-            # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.objects.last()
-            if result_structure:
-                self.end = result_structure.to_date
+        # if self.partner_manager and \
+        #         self.partner_manager.id not in \
+        #         self.authorized_officers.values_list('officer', flat=True):
+        #     officer = AuthorizedOfficer.objects.create(agreement=self, officer=self.partner_manager)
+        #     self.authorized_officers.add(officer)
 
         super(Agreement, self).save(**kwargs)
 
@@ -381,6 +376,21 @@ class AuthorizedOfficer(models.Model):
 
     def __unicode__(self):
         return self.officer.__unicode__()
+
+    @classmethod
+    def create_officer(cls, sender, instance, created, **kwargs):
+        """
+        Signal handler to create authorized_officers automatically
+        """
+        if instance.partner_manager and \
+                instance.partner_manager.id not in \
+                instance.authorized_officers.values_list('officer', flat=True):
+
+            cls.objects.create(agreement=instance,
+                               officer=instance.partner_manager)
+
+
+post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 
 class PCA(AdminURLMixin, models.Model):
@@ -451,11 +461,11 @@ class PCA(AdminURLMixin, models.Model):
     # dates
     start_date = models.DateField(
         null=True, blank=True,
-        help_text=u'The date the partnership will start'
+        help_text=u'The date the Intervention will start'
     )
     end_date = models.DateField(
         null=True, blank=True,
-        help_text=u'The date the partnership will end'
+        help_text=u'The date the Intervention will end'
     )
     initiation_date = models.DateField(
         verbose_name=u'Submission Date',
@@ -755,9 +765,15 @@ class GwPCALocation(models.Model):
     """
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
-    governorate = models.ForeignKey(Governorate)
+    governorate = models.ForeignKey(
+        Governorate,
+        null=True,
+        blank=True
+    )
     region = models.ForeignKey(
         Region,
+        null=True,
+        blank=True
     )
     locality = models.ForeignKey(
         Locality,
@@ -776,8 +792,8 @@ class GwPCALocation(models.Model):
 
     def __unicode__(self):
         return u'{} -> {}{}{}'.format(
-            self.governorate.name,
-            self.region.name,
+            self.governorate.name if self.governorate else u'',
+            self.region.name if self.region else u'',
             u'-> {}'.format(self.locality.name) if self.locality else u'',
             self.location.__unicode__() if self.location else u'',
         )

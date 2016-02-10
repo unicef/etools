@@ -101,6 +101,9 @@ class EToolsTenantMiddleware(TenantMiddleware):
             else:
                 return HttpResponseRedirect(settings.LOGIN_URL)
 
+        if request.user.is_superuser and not request.user.profile.country:
+            return None
+
         try:
             set_country(request.user, request)
 

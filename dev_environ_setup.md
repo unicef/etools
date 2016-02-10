@@ -98,7 +98,7 @@
   <p>While inside the virtual environment (after making sure the app can run ./manage.py runserver 8080) tackle the migrations:</p>
   
   <blockquote>
-    <p>$<code>python manage.py migrate_schemas</code></p>
+    <p>$<code>python manage.py migrate_schemas --fake-initial</code></p>
   </blockquote>
 </blockquote>
 

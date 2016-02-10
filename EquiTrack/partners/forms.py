@@ -3,6 +3,7 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 import pandas
+from datetime import date
 
 from django.utils.translation import ugettext as _
 from django import forms
@@ -22,12 +23,14 @@ from suit.widgets import AutosizedTextarea, SuitDateWidget
 from EquiTrack.forms import (
     AutoSizeTextForm,
     ParentInlineAdminFormSet,
-    RequireOneFormSet,
     UserGroupForm,
 )
 
 from django.contrib.auth.models import User
 
+from reports.models import (
+    ResultStructure,
+)
 from locations.models import Location
 from reports.models import Sector, Result, ResultType, Indicator
 from .models import (
@@ -70,7 +73,10 @@ class PartnersAdminForm(AutoSizeTextForm):
             raise ValidationError(
                 _(u'You must select a type for this CSO')
             )
-
+        if partner_type and partner_type != u'Civil Society Organisation' and cso_type:
+            raise ValidationError(
+                _(u'"CSO Type" does not apply to non-CSO organizations, please remove type')
+            )
         return cleaned_data
 
 
@@ -147,26 +153,7 @@ class AmendmentForm(forms.ModelForm):
 
         self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
-
         self.fields['amendment'].empty_label = u'Original'
-
-
-class AuthorizedOfficesFormset(RequireOneFormSet):
-
-    def __init__(
-            self, data=None, files=None, instance=None,
-            save_as_new=False, prefix=None, queryset=None, **kwargs):
-        super(AuthorizedOfficesFormset, self).__init__(
-            data=data, files=files, instance=instance,
-            save_as_new=save_as_new, prefix=prefix,
-            queryset=queryset, **kwargs)
-        self.required = False
-
-    def _construct_form(self, i, **kwargs):
-        form = super(AuthorizedOfficesFormset, self)._construct_form(i, **kwargs)
-        if self.instance.signed_by_partner_date:
-            self.required = True
-        return form
 
 
 class PartnerStaffMemberForm(forms.ModelForm):
@@ -293,6 +280,21 @@ class AgreementForm(UserGroupForm):
         start = cleaned_data.get(u'start')
         end = cleaned_data.get(u'end')
 
+        if partner and agreement_type == Agreement.PCA:
+            # Partnership can only have one PCA
+            pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
+            if (not self.instance.id and pca_ids) or \
+                    (self.instance.id and pca_ids and self.instance.id not in pca_ids):
+                err = u'This partnership can only have one {} agreement'.format(agreement_type)
+                raise ValidationError({'agreement_type': err})
+
+            # PCAs last as long as the most recent CPD
+            result_structure = ResultStructure.objects.order_by('to_date').last()
+            if result_structure and end > result_structure.to_date:
+                err = u'This agreement cannot last longer than \
+                    the Result Structure on {}'.format(result_structure.to_date)
+                raise ValidationError({'end': err})
+
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
             raise ValidationError(
                 _(u'Please provide the agreement reference for this {}'.format(agreement_type))
@@ -331,7 +333,7 @@ def check_and_return_value(column, row):
 
     value = 0
     if column in row:
-        if not pandas.isnull(row[column]):
+        if not pandas.isnull(row[column]) and row[column]:
             value = row[column]
         row.pop(column)
     return value
@@ -377,9 +379,6 @@ class PartnershipForm(UserGroupForm):
                 )
                 loc, new = GwPCALocation.objects.get_or_create(
                     sector=sector,
-                    governorate=location.locality.region.governorate,
-                    region=location.locality.region,
-                    locality=location.locality,
                     location=location,
                     pca=self.obj
                 )
@@ -407,11 +406,13 @@ class PartnershipForm(UserGroupForm):
 
         data.fillna('', inplace=True)
         current_output = None
-        imported = found = not_found = 0
+        result_structure = self.obj.result_structure or ResultStructure.objects.last()
+        imported = found = not_found = row_num = 0
         for label, series in data.iterrows():
             create_args = dict(
                 partnership=self.obj
             )
+            row_num += 1
             row = series.to_dict()
             try:
                 type = label.split()[0].strip()
@@ -423,19 +424,22 @@ class PartnershipForm(UserGroupForm):
                     )
                 except ResultType.DoesNotExist as exp:
                     # we can interpret the type we are dealing with by its label
-                    if 'indicator' in label and current_output:
+                    if 'indicator' in type and current_output:
                         pass
                     else:
-                        raise exp
+                        raise ValidationError(
+                            _(u"The value of the first column must be one of: Output, Indicator or Activity."
+                              u"The value received for row {} was: {}".format(row_num, type)))
                 else:
                     # we are dealing with a result statement
                     # now we try to look up the result based on the statement
                     result, created = Result.objects.get_or_create(
-                        result_structure=self.obj.result_structure,
+                        result_structure=result_structure,
                         result_type=result_type,
                         sector=sector,
                         name=statement,
                         code=label,
+                        hidden=True,
                     )
                     if result_type.name == 'Output':
                         current_output = result
@@ -445,10 +449,10 @@ class PartnershipForm(UserGroupForm):
 
                 create_args['result'] = result
                 create_args['result_type'] = result.result_type
-                create_args['target'] = check_and_return_value('Targets', row)
                 create_args['partner_contribution'] = check_and_return_value('CSO', row)
                 create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row)
                 create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row)
+                target = check_and_return_value('Targets', row)
                 check_and_return_value('Total', row)
 
                 if 'indicator' in label:
@@ -459,6 +463,7 @@ class PartnershipForm(UserGroupForm):
                         name=statement
                     )
                     create_args['indicator'] = indicator
+                    create_args['target'] = target
 
                 result_chain, new = ResultChain.objects.get_or_create(**create_args)
 
@@ -499,6 +504,7 @@ class PartnershipForm(UserGroupForm):
         partner_manager = cleaned_data[u'partner_manager']
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
+        end_date = cleaned_data[u'end_date']
 
         p_codes = cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
@@ -567,6 +573,22 @@ class PartnershipForm(UserGroupForm):
                 u'Please select a sector to assign the locations against'
             )
 
+        if start_date and start_date < agreement.start:
+            err = u'The Intervention must start after the agreement starts on: {}'.format(
+                agreement.start
+            )
+            raise ValidationError({'start_date': err})
+
+        if end_date and end_date > agreement.end:
+            err = u'The Intervention must end before the agreement ends on: {}'.format(
+                agreement.end
+            )
+            raise ValidationError({'end_date': err})
+
+        if start_date and end_date and start_date > end_date:
+            err = u'The end date has to be after the start date'
+            raise ValidationError({'end_date': err})
+        
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
@@ -590,10 +612,14 @@ class PartnershipBudgetAdminForm(AmendmentForm):
     def __init__(self, *args, **kwargs):
         super(PartnershipBudgetAdminForm, self).__init__(*args, **kwargs)
 
-        years = None
-        if hasattr(self, 'parent_partnership') and self.parent_partnership.start_date and self.parent_partnership.end_date:
-
-            years = range(self.parent_partnership.start_date.year, self.parent_partnership.end_date.year+1)
+        # by default add the previous 1 years and the next 2 years
+        current_year = date.today().year
+        years = range(current_year-1, current_year+2)
+        if (hasattr(self, 'parent_partnership')) and \
+                self.parent_partnership.start_date and \
+                self.parent_partnership.end_date:
+            years = range(self.parent_partnership.start_date.year,
+                          self.parent_partnership.end_date.year+1)
 
         self.fields['year'] = forms.ChoiceField(
             choices=[(year, year) for year in years] if years else []

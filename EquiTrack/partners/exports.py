@@ -109,10 +109,9 @@ class DonorsFormat(SHPFormat):
                             'y': loc.location.point.y
                         }
                     )
-            data = tablib.Dataset(headers=locs[0].keys())
-        else:
-            "create empty data set"
-            data = tablib.Dataset(headers=['Donors', 'Gateway Type', 'Locality', 'PCode', 'y', 'x', 'Cad Code'])
+
+        data = tablib.Dataset(headers=locs[0].keys()) if locs \
+            else tablib.Dataset(headers=['Donors', 'Gateway Type', 'Locality', 'PCode', 'y', 'x', 'Cad Code'])
 
         for loc in {v['PCode']: v for v in locs}.values():
             data.append(loc.values())
