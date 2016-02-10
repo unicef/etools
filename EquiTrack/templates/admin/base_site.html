@@ -157,10 +157,6 @@
 {% block nav-global %}
  <div id="country-select">
     {% show_country_select user.profile %}
-     <form id="country-select-form" action="" method="post">
-         {% csrf_token %}
-
-     </form>
  </div>
 
 {% endblock %}
