@@ -1,13 +1,5 @@
-__author__ = 'Robi'
-
-
-import tablib
-
 from django import template
 
-from users.models import (
-    Country
-)
 
 register = template.Library()
 
