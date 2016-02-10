@@ -253,7 +253,9 @@ RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN')
 ########## SITE CONFIGURATION
 # Hosts/domain names that are valid for this site
 # See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    os.environ.get('DJANGO_ALLOWED_HOST', '127.0.0.1'),
+]
 ########## END SITE CONFIGURATION
 
 

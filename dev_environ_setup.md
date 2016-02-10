@@ -1,164 +1,135 @@
-<h2 id="getting-your-development-environment-working">Getting your development environment working:</h2>
+Development Environment Setup Instructions (OSX)
+================================================
 
+Setup Server
+------------
 
+1. Install Postgres with brew, create Postgres database, and run the Postgres upon startup
 
-<h4 id="setting-up-the-server">Setting up the server:</h4>
+```bash
+$ brew install postgresql
+$ initdb /usr/local/var/postgres
+$ mkdir -p ~/Library/LaunchAgents 
+$ ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents 
+$ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
+```
 
-<p>Step 1: </p>
+2. Install PostGIS and connect to database:
 
-<blockquote>
-  <p>Install Postgresql with brew:</p>
-  
-  <blockquote>
-    <p>$<code>brew install postgresql</code></p>
-  </blockquote>
-  
-  <p>Create your database:</p>
-  
-  <blockquote>
-    <p>$<code>initdb /usr/local/var/postgres</code></p>
-  </blockquote>
-  
-  <p>Make it run on startup</p>
-  
-  <blockquote>
-    <p>$<code>mkdir -p ~/Library/LaunchAgents</code> <br>
-    $<code>ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents</code> <br>
-    $<code>launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist</code></p>
-  </blockquote>
-</blockquote>
+```bash
+$ brew install postgis
+$ psql postgres
+```
 
-<p>Step 2:</p>
+3. Create Postgres user and PostGIS required extensions:
 
-<blockquote>
-  <p>Install Postgis:</p>
-  
-  <blockquote>
-    <p>$<code>brew install postgis</code></p>
-  </blockquote>
-  
-  <p>Connect to db:</p>
-  
-  <blockquote>
-    <p>$<code>psql postgres</code></p>
-  </blockquote>
-  
-  <p>Create user postgres:</p>
-  
-  <blockquote>
-    <p>#<code>CREATE ROLE postgres WITH superuser login;</code></p>
-  </blockquote>
-  
-  <p>Create postgis necessary extensions:</p>
-  
-  <blockquote>
-    <p>#<code>CREATE EXTENSION postgis;</code> <br>
-    #<code>CREATE EXTENSION postgis_topology;</code> <br>
-    #<code>CREATE EXTENSION fuzzystrmatch;</code> <br>
-    #<code>\q</code> -&gt; to exit</p>
-  </blockquote>
-</blockquote>
+```bash
+# CREATE ROLE postgres WITH superuser login;
+# CREATE EXTENSION postgis; 
+# CREATE EXTENSION postgis_topology; 
+# CREATE EXTENSION fuzzystrmatch; 
+# \q
+```
 
-<p>Step 3:</p>
+4. Install Redis:
 
-<blockquote>
-  <p>Install Redis:</p>
-  
-  <blockquote>
-    <p>$<code>brew install redis</code></p>
-  </blockquote>
-</blockquote>
+```bash
+$ brew install redis
+```
 
-<p>Step 4:</p>
+5. Clone EquiTrack repository
 
-<blockquote>
-  <p>Install <a href="https://virtualenv.pypa.io/en/latest/">VirtualEnv</a> and <a href="http://virtualenvwrapper.readthedocs.org/en/latest/">VirtualEnvWrapper</a> <br>
-  Once inside the virtual environment install the requirements found at <code>EquiTrack/requirements/base.txt</code></p>
-  
-  <blockquote>
-    <p>$<code>pip install -f [path_to_file]/base.txt</code></p>
-  </blockquote>
-</blockquote>
+```bash
+$ git clone https://github.com/UNICEFLebanonInnovation/EquiTrack.git . 
+$ git checkout etools
+```
 
-<p>Step 5:</p>
+6. Install VirtualEnv and VirtualEnvWrapper, create Virtual Environment and load Python packages
 
-<blockquote>
-  <p>Set up the following environment variables:</p>
-  
-  <blockquote>
-    <p>$<code>export REDIS_URL=redis://localhost:6379/0</code> <br>
-    $<code>export DATABASE_URL=postgis://postgres:password@localhost:5432/postgres</code> <br>
-    $<code>export DJANGO_DEBUG=true</code></p>
-  </blockquote>
-</blockquote>
+```bash
+$ pip install virtualenv
+$ pip install virtualenvwrapper
+$ export WORKON_HOME=~/Envs
+$ mkdir -p $WORKON_HOME
+$ source /usr/local/bin/virtualenvwrapper.sh
+$ mkvirtualenv env1
+$ pip install -r EquiTrack/requirements/base.txt
+```
+ 
+7. Set environment variables:
 
-<p>Step 6:</p>
+```bash
+$ export REDIS_URL=redis://localhost:6379/0 
+$ export DATABASE_URL=postgis://postgres:password@localhost:5432/postgres
+```
 
-<blockquote>
-  <p>While inside the virtual environment (after making sure the app can run ./manage.py runserver 8080) tackle the migrations:</p>
-  
-  <blockquote>
-    <p>$<code>python manage.py migrate_schemas --fake-initial</code></p>
-  </blockquote>
-</blockquote>
+8. Migrate database schemas and create database superuser
 
-<p>Step 7:</p>
+```bash
+$ python manage.py migrate_schemas --fake-initial
+$ python manage.py createsuperuser
+```
 
-<blockquote>
-  <p>Time to create a superuser:</p>
-  
-  <blockquote>
-    <p><code>python manage.py createsuperuser</code></p>
-  </blockquote>
-</blockquote>
+Run Server
+----------
 
-<h4 id="setting-up-the-debugger-with-pycharm">Setting up the debugger with PyCharm</h4>
+```bash
+$ source ~/.virtualenvs/env1/bin/activate
+$ python EquiTrack/manage.py runserver 8080
+```
 
-<p>Step 1:</p>
+Load Default Data
+-----------------
 
-<blockquote>
-  <p>Once the project is loaded in PyCharm go to menu -&gt; <code>PyCharm - &gt; Preferences -&gt; Project</code> <br>
-  Make sure your project is chosen <br>
-  Select the python interpreter present inside of the virtualenvironment</p>
-</blockquote>
+1. Login to the Admin Portal using the super user account:
 
-<p>Step 2:</p>
+```bash
+http://127.0.0.1:8080/admin/login/
+```
 
-<blockquote>
-  <p>Go to menu -&gt; <code>PyCharm - &gt; Preferences -&gt; Languages &amp; Frameworks -&gt; Django</code> <br>
-  Select your project and: <br>
-   * enable Django Support <br>
-    * Set Django Project root <br>
-    * choose base.py as the settings file <br>
-    * add all of the previously mentioned environment vars</p>
-</blockquote>
+2. In the Admin Portal, add a country (required for availability of other database tables)
 
-<p>Step 3:</p>
+```bash
+http://127.0.0.1:8080/admin/users/country/add/
+```
 
-<blockquote>
-  <p>Go to menu -&gt; <code>Run -&gt; Edit Configurations</code> <br>
-  Add Django Server and name it. <br>
-  In the Configuration make sure to add the environment variables again <br>
-  Choose the python interpreter (The interpreter inside of the virtual environment) <br>
-  Choose a working Directory</p>
-</blockquote>
+3. Create a user profile with the previously created country:
 
-<p>Step 4:</p>
+```bash
+http://127.0.0.1:8080/admin/users/userprofile/add/
+```
 
-<blockquote>
-  <p>Quit Pycharm and restart it… Voila!</p>
-</blockquote>
+Setup Debugger (PyCharm)
+------------------------
 
-<h4 id="resources">Resources:</h4>
+Step 1:
+* Once the project is loaded in PyCharm go to menu -&gt; <code>PyCharm - &gt; Preferences -&gt; Project</code>
+* Make sure your project is chosen 
+* Select the python interpreter present inside of the virtualenvironment
 
-<p><a href="http://www.gotealeaf.com/blog/how-to-install-postgresql-on-a-mac">http://www.gotealeaf.com/blog/how-to-install-postgresql-on-a-mac</a></p>
+Step 2:
+* Go to menu -&gt; <code>PyCharm - &gt; Preferences -&gt; Languages &amp; Frameworks -&gt; Django</code>
+* Select your project and:
+    * enable Django Support
+    * Set Django Project root
+    * choose base.py as the settings file
+    * add all of the previously mentioned environment vars
 
-<p><a href="http://jasdeep.ca/2012/05/installing-redis-on-mac-os-x/">http://jasdeep.ca/2012/05/installing-redis-on-mac-os-x/</a></p>
+Step 3:
+* Go to menu -&gt; <code>Run -&gt; Edit Configurations</code> 
+* Add Django Server and name it.
+* In the Configuration make sure to add the environment variables again 
+* Choose the python interpreter (The interpreter inside of the virtual environment) 
+* Choose a working Directory
 
-<p><a href="https://virtualenv.pypa.io/en/latest/userguide.html">https://virtualenv.pypa.io/en/latest/userguide.html</a></p>
+Step 4:
+* Quit Pycharm and restart it
 
-<p><a href="https://www.jetbrains.com/pycharm/help/run-debug-configuration.html">https://www.jetbrains.com/pycharm/help/run-debug-configuration.html</a></p>
-
-<p><a href="http://postgis.net/install">http://postgis.net/install</a></p>
-
-<p><a href="http://virtualenvwrapper.readthedocs.org/en/latest/index.html">http://virtualenvwrapper.readthedocs.org/en/latest/index.html</a></p>
+Resources
+---------
+http://www.gotealeaf.com/blog/how-to-install-postgresql-on-a-mac
+http://jasdeep.ca/2012/05/installing-redis-on-mac-os-x/
+https://virtualenv.pypa.io/en/latest/userguide.html
+https://www.jetbrains.com/pycharm/help/run-debug-configuration.html
+http://postgis.net/install
+http://virtualenvwrapper.readthedocs.org/en/latest/index.html
