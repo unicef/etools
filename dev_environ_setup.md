@@ -75,6 +75,7 @@ Run Server
 
 ```bash
 $ source ~/.virtualenvs/env1/bin/activate
+$ export DATABASE_URL=postgis://postgres:password@localhost:5432/postgres
 $ python EquiTrack/manage.py runserver 8080
 ```
 
