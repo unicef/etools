@@ -250,13 +250,6 @@ SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"
 
 RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN')
 
-########## SITE CONFIGURATION
-# Hosts/domain names that are valid for this site
-# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
-########## END SITE CONFIGURATION
-
-
 ########## FIXTURE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-FIXTURE_DIRS
 FIXTURE_DIRS = (
