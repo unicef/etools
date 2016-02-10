@@ -58,7 +58,7 @@
         font-weight: 300;
     }
 
-    .header #user-tools {
+    .header #user-tools, #country-select {
         padding: 15px 20px 0 0;
         float: right;
     }
@@ -92,39 +92,8 @@
         max-width: 400px;
     }
     </style>
-{% endblock %}
-
-{% block title %}{{ title }} | eTools{% endblock %}
-
-{% block branding %}
-    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools</span></a></div>
-{% endblock %}
-{% block usertools %}
-        {% if has_permission %}
-            <div id="user-tools">
-                {% block welcome-msg %}
-                    {% trans 'Welcome,' %}
-                    <strong>{% firstof user.get_short_name user.get_username %}</strong>.
-                {% endblock %}
-                {% block userlinks %}
-                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
-                {% endblock %}
-            </div>
-
-        {% endif %}
-{% endblock %}
-
-{% block nav-global %}
- <div id="country-select">
-    {% show_country_select user.profile.country.name %}
-     <form id="country-select-form" action="" method="post">
-         {% csrf_token %}
-
-     </form>
     <script>
     $( document ).ready(function() {
-
-
         function getCookie(name) {
             var cookieValue = null;
             if (document.cookie && document.cookie != '') {
@@ -158,16 +127,40 @@
             var my_data = {'country': ev.target.value};
             $.post('/users/api/changecountry/', my_data, function() {
                 // success here
-                window.alert('yay')
-            }).fail(function(){window.alert('country change failed')})
+                location.reload();
+            }).fail(function(){window.alert('Country change failed')})
         });
-
-
-
-
-
     });
     </script>
+{% endblock %}
+
+{% block title %}{{ title }} | eTools{% endblock %}
+
+{% block branding %}
+    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools</span></a></div>
+{% endblock %}
+{% block usertools %}
+        {% if has_permission %}
+            <div id="user-tools">
+                {% block welcome-msg %}
+                    {% trans 'Welcome,' %}
+                    <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+                {% endblock %}
+                {% block userlinks %}
+                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+                {% endblock %}
+            </div>
+
+        {% endif %}
+{% endblock %}
+
+{% block nav-global %}
+ <div id="country-select">
+    {% show_country_select user.profile %}
+     <form id="country-select-form" action="" method="post">
+         {% csrf_token %}
+
+     </form>
  </div>
 
 {% endblock %}

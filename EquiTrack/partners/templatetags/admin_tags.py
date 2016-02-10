@@ -13,16 +13,17 @@ register = template.Library()
 
 
 @register.simple_tag
-def show_country_select(value):
+def show_country_select(profile):
 
-    if not value:
+    if not profile:
         return ''
 
-    countries = Country.objects.all()
+
+    countries = profile.countries_available.all() #Country.objects.all()
 
     html = ''
     for country in countries:
-        if country.name == value:
+        if country == profile.country:
             html += '<option value="'+str(country.id)+'" selected>'+country.name+'</option>'
         else:
             html += '<option value="'+str(country.id)+'">'+country.name+'</option>'
