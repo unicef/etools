@@ -4,7 +4,7 @@ Development Environment Setup Instructions (OSX)
 Setup Server
 ------------
 
-1. Install Postgres with brew, create Postgres database, and run the Postgres upon startup
+Step 1. Install Postgres with brew, create Postgres database, and run the Postgres upon startup
 
 ```bash
 $ brew install postgresql
@@ -14,14 +14,14 @@ $ ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
 $ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
 ```
 
-2. Install PostGIS and connect to database:
+Step 2. Install PostGIS and connect to database:
 
 ```bash
 $ brew install postgis
 $ psql postgres
 ```
 
-3. Create Postgres user and PostGIS required extensions:
+Step 3. Create Postgres user and PostGIS required extensions:
 
 ```bash
 # CREATE ROLE postgres WITH superuser login;
@@ -31,20 +31,20 @@ $ psql postgres
 # \q
 ```
 
-4. Install Redis:
+Step 4. Install Redis:
 
 ```bash
 $ brew install redis
 ```
 
-5. Clone EquiTrack repository
+Step 5. Clone EquiTrack repository
 
 ```bash
 $ git clone https://github.com/UNICEFLebanonInnovation/EquiTrack.git . 
 $ git checkout etools
 ```
 
-6. Install VirtualEnv and VirtualEnvWrapper, create Virtual Environment and load Python packages
+Step 6. Install VirtualEnv and VirtualEnvWrapper, create Virtual Environment and load Python packages
 
 ```bash
 $ pip install virtualenv
@@ -56,14 +56,14 @@ $ mkvirtualenv env1
 $ pip install -r EquiTrack/requirements/base.txt
 ```
  
-7. Set environment variables:
+Step 7. Set environment variables:
 
 ```bash
 $ export REDIS_URL=redis://localhost:6379/0 
 $ export DATABASE_URL=postgis://postgres:password@localhost:5432/postgres
 ```
 
-8. Migrate database schemas and create database superuser
+Step 8. Migrate database schemas and create database superuser
 
 ```bash
 $ python manage.py migrate_schemas --fake-initial
@@ -82,19 +82,19 @@ $ python EquiTrack/manage.py runserver 8080
 Load Default Data
 -----------------
 
-1. Login to the Admin Portal using the super user account:
+Step 1. Login to the Admin Portal using the super user account:
 
 ```bash
 http://127.0.0.1:8080/admin/login/
 ```
 
-2. In the Admin Portal, add a country (required for availability of other database tables)
+Step 2. In the Admin Portal, add a country (required for availability of other database tables)
 
 ```bash
 http://127.0.0.1:8080/admin/users/country/add/
 ```
 
-3. Create a user profile with the previously created country:
+Step 3. Create a user profile with the previously created country:
 
 ```bash
 http://127.0.0.1:8080/admin/users/userprofile/add/
@@ -128,9 +128,14 @@ Step 4:
 
 Resources
 ---------
-http://www.gotealeaf.com/blog/how-to-install-postgresql-on-a-mac
+http://www.gotealeaf.com/blog/how-to-install-postgresql-on-a-mac 
+
 http://jasdeep.ca/2012/05/installing-redis-on-mac-os-x/
+
 https://virtualenv.pypa.io/en/latest/userguide.html
+
 https://www.jetbrains.com/pycharm/help/run-debug-configuration.html
+
 http://postgis.net/install
+
 http://virtualenvwrapper.readthedocs.org/en/latest/index.html
