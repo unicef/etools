@@ -76,7 +76,7 @@
   Once inside the virtual environment install the requirements found at <code>EquiTrack/requirements/base.txt</code></p>
   
   <blockquote>
-    <p>$<code>pip install -f [path_to_file]/base.txt</code></p>
+    <p>$<code>pip install -r [path_to_file]/base.txt</code></p>
   </blockquote>
 </blockquote>
 
