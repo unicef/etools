@@ -266,11 +266,14 @@ class Trip(AdminURLMixin, models.Model):
             return False
         if not self.approved_by_supervisor:
             return False
-        if self.requires_hr_approval\
-        and not self.approved_by_human_resources:
+        if self.requires_hr_approval \
+                and not self.approved_by_human_resources:
             return False
-        if self.requires_rep_approval\
-        and not self.representative_approval:
+        if self.requires_rep_approval \
+                and not self.representative_approval:
+            return False
+        if self.ta_drafted \
+                and not self.vision_approver:
             return False
         return True
 

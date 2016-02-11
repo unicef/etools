@@ -77,10 +77,9 @@ class TripsStatisticsView(APIView):
 
     def get(self, request, **kwargs):
         # get all the countries:
-        country_list = Country.objects.all()
+        country_list = Country.objects.exclude(schema_name='public').all()
         results = []
         for country in country_list:
-            trips_by_country = {}
             # set tenant for country
             connection.set_tenant(country)
             # get count for trips
@@ -142,7 +141,7 @@ class AgreementsStatisticsView(APIView):
     def get(self, request, **kwargs):
         today = date.today()
         # get all the countries:
-        country_list = Country.objects.all()
+        country_list = Country.objects.exclude(schema_name='public').all()
         results = []
         for country in country_list:
             # set tenant for country
@@ -165,7 +164,7 @@ class InterventionsStatisticsView(APIView):
 
     def get(self, request, **kwargs):
         # get all the countries:
-        country_list = Country.objects.all()
+        country_list = Country.objects.exclude(schema_name='public').all()
         results = []
         for country in country_list:
             # set tenant for country

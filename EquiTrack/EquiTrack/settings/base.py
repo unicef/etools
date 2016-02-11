@@ -161,6 +161,7 @@ VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 VISION_URL = 'https://devapis.unicef.org/BIService/BIWebService.svc/'
 
+USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # ########## MANAGER CONFIGURATION
 # # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
 # ADMINS = (
@@ -218,30 +219,6 @@ ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
 ########## MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
 MEDIA_ROOT = normpath(join(SITE_ROOT, 'media'))
-
-FILER_ALLOW_REGULAR_USERS_TO_ADD_ROOT_FOLDERS = True
-FILER_STORAGES = {
-    'public': {
-        'main': {
-            'ENGINE': 'filer.storage.PublicFileSystemStorage',
-            'OPTIONS': {
-                'location': MEDIA_ROOT,
-                'base_url': '/media/filer/',
-            },
-            'UPLOAD_TO': 'partners.utils.by_pca'
-        },
-    },
-    'private': {
-        'main': {
-            'ENGINE': 'filer.storage.PrivateFileSystemStorage',
-            'OPTIONS': {
-                'location': MEDIA_ROOT,
-                'base_url': '/media/filer/',
-            },
-            'UPLOAD_TO': 'partners.utils.by_pca'
-        },
-    },
-}
 
 MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
@@ -387,7 +364,7 @@ SHARED_APPS = (
     #'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.google',
     #'allauth.socialaccount.providers.twitter',
-
+    'analytical',
     'mptt',
     'vision',
 
@@ -448,6 +425,10 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'level': 'INFO'
         },
+    },
+    'django.security.DisallowedHost': {
+        'handlers': ['null'],
+        'propagate': False,
     },
     'root': {
         'handlers': ['console', ],

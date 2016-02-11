@@ -142,6 +142,10 @@ Example:
         for (var perm in partnerOnlyPermissions) {
           myPermisions[partnerOnlyPermissions[perm]] = true;
         }
+      } else {
+        this.appData.permissions.managementPermissions.forEach(function(perm){
+          myPermisions[perm] = true;
+        });
       }
       if (user.profile.partner_staff_member){
         this.appData.permissions.partnerPermissions.forEach(function(perm){

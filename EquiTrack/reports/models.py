@@ -71,7 +71,14 @@ class Result(MPTTModel):
     sector = models.ForeignKey(Sector, null=True, blank=True)
     name = models.TextField()
     code = models.CharField(max_length=50, null=True, blank=True)
-    parent = TreeForeignKey('self', null=True, blank=True, related_name='children', db_index=True)
+    from_date = models.DateField(null=True, blank=True)
+    to_date = models.DateField(null=True, blank=True)
+    parent = TreeForeignKey(
+        'self',
+        null=True, blank=True,
+        related_name='children',
+        db_index=True
+    )
 
     # activity level attributes
     humanitarian_tag = models.BooleanField(default=False)
@@ -84,14 +91,14 @@ class Result(MPTTModel):
     activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
     activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
 
+    hidden = models.BooleanField(default=False)
+
     class Meta:
         ordering = ['name']
 
     def __unicode__(self):
         return u'{} {}: {}'.format(
-            #self.result_structure.name,
             self.code if self.code else u'',
-            #self.sector.name,
             self.result_type.name,
             self.name
         )

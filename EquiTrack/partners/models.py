@@ -175,7 +175,6 @@ class PartnerStaffMember(models.Model):
     email = models.CharField(max_length=128L, unique=True, blank=False)
     phone = models.CharField(max_length=64L, blank=True)
 
-
     def __unicode__(self):
         return u'{} {} ({})'.format(
             self.first_name,

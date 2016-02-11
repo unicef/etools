@@ -56,7 +56,7 @@ class TripFundsInlineAdmin(admin.TabularInline):
     max_num = 3
 
 
-class ActionPointInlineAdmin(admin.StackedInline):
+class ActionPointInlineAdmin(CountryUsersAdminMixin, admin.StackedInline):
     model = ActionPoint
     form = AutoSizeTextForm
     suit_classes = u'suit-tab suit-tab-reporting'
@@ -325,16 +325,9 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         rep_group, created = Group.objects.get_or_create(
             name=u'Representative Office'
         )
-
-        driver_group, created = Group.objects.get_or_create(
-            name=u'Driver')
-
         if trip and rep_group in request.user.groups.all():
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
-
-        if trip and request.user.is_superuser:
-            return []
 
         return fields
 
@@ -374,7 +367,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         )
 
 
-class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
+class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
     resource_class = ActionPointResource
     exclude = [u'persons_responsible']
     date_hierarchy = u'due_date'

@@ -5,13 +5,12 @@ import tablib
 from django import template
 from django.utils.datastructures import SortedDict
 
-from partners.models import (
-    PCA,
-    ResultChain,
-    Indicator
-)
+from partners.models import PCA
+from trips.models import Trip
+
 
 register = template.Library()
+
 
 @register.simple_tag
 def show_work_plan(value):
@@ -19,8 +18,8 @@ def show_work_plan(value):
     if not value:
         return ''
 
-    pca = PCA.objects.get(id=int(value))
-    results = pca.results.all()
+    intervention = PCA.objects.get(id=int(value))
+    results = intervention.results.all()
     data = tablib.Dataset()
     work_plan = SortedDict()
 
@@ -47,3 +46,39 @@ def show_work_plan(value):
         return data.html
 
     return '<p>No results</p>'
+
+
+@register.simple_tag
+def show_trips(value):
+
+    if not value:
+        return ''
+
+    intervention = PCA.objects.get(id=int(value))
+    trips = Trip.objects.filter(pcas__in=[intervention])
+    data = tablib.Dataset()
+    trip_summary = []
+
+    for trip in trips:
+        row = SortedDict()
+        row['Ref'] = '<a href="{}">{}</a>'.format(
+            trip.get_admin_url(),
+            trip.reference()
+        )
+        row['Status'] = trip.status
+        row['Traveller'] = trip.owner
+        row['Trip Type'] = trip.travel_type
+        row['Purpose'] = trip.purpose_of_travel
+        row['From'] = trip.from_date
+        row['To'] = trip.to_date
+
+        trip_summary.append(row)
+
+    if trip_summary:
+        data.headers = trip_summary[0].keys()
+        for row in trip_summary:
+            data.append(row.values())
+
+        return data.html
+
+    return '<p>No trips</p>'
