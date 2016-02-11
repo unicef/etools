@@ -54,3 +54,23 @@ $ python run.py --tags=@appunisupply --driver=android
 4. Keep the IDE's popup open and switch to your browser
 5. Browse some pages
 6. Switch to your IDE, go to File -> Export test as ... -> Python 2 / unittest / WebDriver
+
+# How to install Selendroid
+http://selendroid.io/quickStart.html
+http://selendroid.io/setup.html#systemRequirements
+http://spring.io/guides/gs/android/
+http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+http://developer.android.com/sdk/index.html
+
+http://developer.android.com/sdk/installing/index.html?pkg=tools
+
+export ANDROID_HOME=/<installation location>/android-sdk-macosx
+export ANDROID_HOME=android.sdk/
+
+export PATH=${PATH}:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+
+android
+
+https://software.intel.com/en-us/android/articles/installation-instructions-for-intel-hardware-accelerated-execution-manager-windows
+
+java -jar selendroid-standalone-0.17.0-with-dependencies.jar -app selendroid-test-app-0.17.0.apk

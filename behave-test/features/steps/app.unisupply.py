@@ -131,17 +131,17 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@given('login into UniSupply with the credentials provided by your UNICEF focal point')
-def step_impl(context):
+@given('login into UniSupply with the credentials provided by your UNICEF focal point "{username}" and "{password}"')
+def step_impl(context, username, password):
     try:
         driver = context.browser
 
         driver.find_element_by_id("editText_username").click()
         driver.find_element_by_id("editText_username").clear()
-        driver.find_element_by_id("editText_username").send_keys("aaademo")
+        driver.find_element_by_id("editText_username").send_keys(username)
         driver.find_element_by_id("editText_password").click()
         driver.find_element_by_id("editText_password").clear()
-        driver.find_element_by_id("editText_password").send_keys("aaademo")
+        driver.find_element_by_id("editText_password").send_keys(password)
 
         chain = ActionChains(driver)
         """ Send search key"""
@@ -160,10 +160,9 @@ def step_impl(context):
     try:
         driver = context.browser
         # driver.implicitly_wait(100)
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
         context.util.screenshot("all distributions by district and supply type")
         driver.find_element_by_id("doc_name").click()
-        # driver.find_element_by_link_text("KATHMANDU")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -245,7 +244,7 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        element = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "Done")))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "Done")))
         driver.find_element_by_id("Done").click()
 
     except Exception as ex:
@@ -253,11 +252,11 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('you will see that the district details have updated to reflect 500 items delivered and 7500 items remaining')
+@then('you will see that the district details have updated')
 def step_impl(context):
     try:
         driver = context.browser
-        element = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "button_done")))
+        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "button_done")))
         context.util.screenshot("back to updated district details")
 
     except Exception as ex:
@@ -280,12 +279,12 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
         context.util.screenshot("back to main screen")
 
         driver.find_element_by_link_text("Reports").click()
 
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
         driver.find_element_by_id("doc_name").click()
         context.util.screenshot("reports screens reflect the partial delivery")
 
@@ -310,7 +309,7 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.find_element_by_link_text("Finished").click()
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
         context.util.screenshot("finished items")
 
     except Exception as ex:
@@ -323,7 +322,7 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.find_element_by_link_text("Started").click()
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
         driver.find_element_by_id("doc_name").click()
 
     except Exception as ex:
@@ -346,13 +345,13 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "button_forceComplete")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "button_forceComplete")))
         driver.find_element_by_id("button_forceComplete").click()
         driver.find_element_by_id("button_done").click()
 
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
         driver.find_element_by_link_text("Finished").click()
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "doc_name")))
         context.util.screenshot("manually moved to finished")
 
     except Exception as ex:
@@ -365,7 +364,7 @@ def step_impl(context):
     try:
         driver = context.browser
         driver.find_element_by_link_text("Sync").click()
-        element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "button_forceSync")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "button_forceSync")))
         context.util.screenshot("Force Sync")
 
     except Exception as ex:
@@ -398,17 +397,17 @@ def step_impl(context):
         context.util.screenshot_error()
         raise Exception(ex)
 
-@then('login into UniSupply')
-def step_impl(context):
+@then('login into UniSupply "{username}" and "{password}"')
+def step_impl(context, username, password):
     try:
         driver = context.browser
 
         driver.find_element_by_id("editText_username").click()
         driver.find_element_by_id("editText_username").clear()
-        driver.find_element_by_id("editText_username").send_keys("aaademo")
+        driver.find_element_by_id("editText_username").send_keys(username)
         driver.find_element_by_id("editText_password").click()
         driver.find_element_by_id("editText_password").clear()
-        driver.find_element_by_id("editText_password").send_keys("aaademo")
+        driver.find_element_by_id("editText_password").send_keys(password)
 
         chain = ActionChains(driver)
         """ Send search key"""

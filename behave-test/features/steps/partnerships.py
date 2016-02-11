@@ -6,7 +6,16 @@ from selenium.webdriver.support.ui import WebDriverWait # available since 2.4.0
 from selenium.webdriver.support import expected_conditions as EC # available since 2.26.0
 
 
-@given('go to "Partners" from the partnership section')
+@given('we test partnerships features')
+def step_impl(context):
+    try :
+        pass
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@then('go to "Partners" from the partnership section')
 def step_impl(context):
     try:
         driver = context.browser
@@ -92,20 +101,7 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('delete a partner organization')
-def set_impl(context):
-    try:
-        driver = context.browser
-        driver.implicitly_wait(10)
-        driver.find_element_by_link_text("TestVision").click()
-        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
-        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
-    except Exception as ex:
-        context.util.screenshot_error()
-        raise Exception(ex)
-
-
-@given('go to "Agreements" from the partnership section')
+@then('go to "Agreements" from the partnership section')
 def step_impl(context):
     try:
         driver = context.browser
@@ -213,34 +209,7 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('delete the new agreement')
-def set_impl(context):
-    try:
-        driver = context.browser
-        driver.implicitly_wait(10)
-        driver.find_element_by_link_text("TTV00012345").click()
-        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
-        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
-
-    except Exception as ex:
-        context.util.screenshot_error()
-        raise Exception(ex)
-
-
-@then('delete an intervention')
-def set_impl(context):
-    try:
-        driver = context.browser
-        driver.implicitly_wait(10)
-        driver.find_element_by_link_text("TTV12345").click()
-        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
-        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
-    except Exception as ex:
-        context.util.screenshot_error()
-        raise Exception(ex)
-
-
-@given('go to "Interventions" from the partnership section')
+@then('go to "Interventions" from the partnership section')
 def set_impl(context):
     try:
         driver = context.browser
@@ -368,22 +337,6 @@ def set_impl(context):
             driver.find_element_by_id("id_supply_plans-"+str(i)+"-quantity").clear()
             driver.find_element_by_id("id_supply_plans-"+str(i)+"-quantity").send_keys(row['quantity'])
             driver.find_element_by_link_text("Add another Supply Plan").click()
-
-        # Select(driver.find_element_by_id("id_supply_plans-0-item")).select_by_visible_text("Family hygiene kit")
-        # driver.find_element_by_id("id_supply_plans-0-quantity").clear()
-        # driver.find_element_by_id("id_supply_plans-0-quantity").send_keys("6000")
-        #
-        # driver.find_element_by_link_text("Add another Supply Plan").click()
-        #
-        # Select(driver.find_element_by_id("id_supply_plans-1-item")).select_by_visible_text("Water purification tablet")
-        # driver.find_element_by_id("id_supply_plans-1-quantity").clear()
-        # driver.find_element_by_id("id_supply_plans-1-quantity").send_keys("3000")
-        #
-        # driver.find_element_by_link_text("Add another Supply Plan").click()
-        #
-        # Select(driver.find_element_by_id("id_supply_plans-2-item")).select_by_visible_text("Tarpaulin")
-        # driver.find_element_by_id("id_supply_plans-2-quantity").clear()
-        # driver.find_element_by_id("id_supply_plans-2-quantity").send_keys("10000")
 
     except Exception as ex:
         context.util.screenshot_error()
@@ -533,6 +486,55 @@ def set_impl(context):
         driver.implicitly_wait(10)
 
         context.util.highlight(driver.find_element_by_xpath('//*[@id="distribution_plans-2"]/td[5]/p'))
+
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@then('delete the partner organization number "{number}"')
+def set_impl(context, number):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+
+        driver.find_element_by_xpath("//a[contains(@href, '?all=')]").click()
+        driver.find_element_by_link_text(number).click()
+        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
+        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@then('delete the agreement number "{number}"')
+def set_impl(context, number):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+
+        driver.find_element_by_xpath("//a[contains(@href, '?all=')]").click()
+        driver.find_element_by_link_text(number).click()
+        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
+        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
+
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@then('delete the intervention number "{number}"')
+def set_impl(context, number):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+
+        driver.find_element_by_id("searchbar").clear()
+        driver.find_element_by_id("searchbar").send_keys(number)
+        driver.find_element_by_xpath("//input[@value='Search']").click()
+        driver.find_element_by_link_text(number).click()
+        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
+        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
 
     except Exception as ex:
         context.util.screenshot_error()

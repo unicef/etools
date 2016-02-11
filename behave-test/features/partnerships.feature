@@ -6,7 +6,8 @@ Feature: testing partnerships features
 
   @partner
   Scenario: visit eTools and test adding partner organization
-     Given go to "Partners" from the partnership section
+     Given we test partnerships features
+      Then go to "Partners" from the partnership section
       Then click "Add partner organization"
       Then enter partner's Full name "Test Vesion" and Short name "testv"
        And select an exiting Partner type "Civil Society Organisation" and CSO type "National NGO" from the drop-down list
@@ -16,7 +17,8 @@ Feature: testing partnerships features
 
   @agreement
   Scenario: visit eTools and test adding agreement
-     Given go to "Agreements" from the partnership section
+     Given we test partnerships features
+      Then go to "Agreements" from the partnership section
       Then click "Add agreement"
       Then select a partner "TestVision" from the drop-down list
        And select an Agreement type "Work Plan"
@@ -28,10 +30,11 @@ Feature: testing partnerships features
   @supplyplan
   @unisupply
   Scenario: creating a supply plan in eTools
-     Given go to "Interventions" from the partnership section
+     Given we test partnerships features
+      Then go to "Interventions" from the partnership section
       Then click "add intervention"
       Then select an existing partner "AAA Demo Partner" from the drop-down partner
-      Then select an existing agreement "PCA for AAA Demo Partner (16-12-2015 - 16-12-2015)" for that partner and enter a reference number for this agreement "AAA 00003"
+      Then select an existing agreement "PCA for AAA Demo Partner (16-12-2015 - 16-12-2015)" for that partner and enter a reference number for this agreement "AAA00003"
       Then select the appropriate Document Type "Programme Document" for this intervention
       Then add a Title for this intervention "Distribution of hygiene kits in Kabul"
       Then go to the "Supplies" tab in the intervention to insert supplies
@@ -64,3 +67,14 @@ Feature: testing partnerships features
      Then press "Save and continue editing" to save the plans and sync with the app
      When the partners begin to distribute supplies via UniSupply
      Then you will be able to the status of the deliveries in this section
+
+    @unisupply
+    Scenario: rollback added partnership informations
+      Given we test partnerships features
+       Then go to "Interventions" from the partnership section
+        And delete the intervention number "AAA00003"
+       Then go to "Agreements" from the partnership section
+        And delete the agreement number "TTV00012345"
+       Then go to "Partners" from the partnership section
+        And delete the partner organization number "TestVision"
+       

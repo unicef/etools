@@ -14,7 +14,7 @@ Feature: Supply and distribution monitoring in eTools using the UniSupply mobile
 
     @appunisupply
     Scenario: recording distributions in UniSupply (for partners)
-      Given login into UniSupply with the credentials provided by your UNICEF focal point
+      Given login into UniSupply with the credentials provided by your UNICEF focal point "aaademo" and "aaademo"
        Then you will see a list of all distributions by district and supply type
        Then tap on any district name to see the distribution details
        When you tap on the item name to record the quantities distributed in this location
@@ -22,7 +22,7 @@ Feature: Supply and distribution monitoring in eTools using the UniSupply mobile
         And you type a number into the number field
         And you can click on "Complete All" to record all quantities distributed
         And press "done" to return to the district details screen
-        And you will see that the district details have updated to reflect 500 items delivered and 7500 items remaining
+        And you will see that the district details have updated
        Then press "done" to return to the main screen
         And the overview and reports screens will also reflect delivery status
         And continue updating deliveries as necessary
