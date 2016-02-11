@@ -5,7 +5,8 @@ from rest_framework import serializers
 from .models import (
     Sector,
     Goal,
-    Indicator
+    Indicator,
+    Result
 )
 
 
@@ -36,3 +37,9 @@ class IndicatorSerializer(serializers.ModelSerializer):
         model = Indicator
         fields = ('id', 'name', 'unit', 'total', 'current', 'sector_total', 'sector_current')
 
+
+class OutputSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Result
+        fields = ('id', 'name', 'sector', 'humanitarian_tag')

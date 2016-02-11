@@ -5,7 +5,7 @@ import json
 from rest_framework import serializers
 
 from rest_framework_hstore.fields import HStoreField
-from reports.serializers import IndicatorSerializer
+from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
 from .models import (
@@ -45,6 +45,7 @@ class PCASectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = PCASector
 
+
 class PartnershipSerializer(serializers.ModelSerializer):
     pca_title = serializers.CharField(source='title')
     pca_number = serializers.CharField(source='number')
@@ -63,13 +64,14 @@ class PartnershipSerializer(serializers.ModelSerializer):
         model = PCA
 
 
-
 class ResultChainSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
     disaggregation = HStoreField()
+    result = OutputSerializer()
 
     class Meta:
         model = ResultChain
+
 
 # TODO: once we know that serializng in this fashion does not break any other frontend, replace PartnershipSerializer with InterventionSerializer
 class InterventionSerializer(serializers.ModelSerializer):
@@ -84,9 +86,6 @@ class InterventionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
-
-
-
 
 
 class LocationSerializer(serializers.Serializer):
