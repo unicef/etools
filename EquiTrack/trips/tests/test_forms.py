@@ -152,7 +152,7 @@ class TestTripForm(TenantTestCase):
             TripForm.ERROR_MESSAGES['no_date_budget_owner_approve']
         )
 
-    def test_form_validation_for_ta_drafted_vision(self):
+    def test_form_validation_for_manual_approval(self):
         self.trip.status = Trip.SUBMITTED
         self.trip.travel_type = Trip.ADVOCACY
         self.trip.ta_drafted = True
