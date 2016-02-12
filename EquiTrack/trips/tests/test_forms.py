@@ -168,8 +168,8 @@ class TestTripForm(TenantTestCase):
 
         self.assertFalse(form.is_valid())
         self.assertEqual(
-            form.errors['vision_approver'][0],
-            TripForm.ERROR_MESSAGES['no_vision_user_for_TA']
+            form.errors['status'][0],
+            TripForm.ERROR_MESSAGES['cant_manually_approve']
         )
 
     def test_form_validation_for_completed_no_report(self):
