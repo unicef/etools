@@ -105,7 +105,6 @@ def step_impl(context):
 def step_impl(context):
     try:
         driver = context.browser
-        driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/pca/')]").click()
         driver.find_element_by_xpath("//a[contains(@href, '/admin/partners/agreement/')]").click()
     except Exception as ex:
         context.util.screenshot_error()
@@ -256,7 +255,7 @@ def set_impl(context, agreement, reference):
         driver.implicitly_wait(10)
 
         context.util.highlight(driver.find_element_by_id("id_agreement"))
-        Select(driver.find_element_by_id("id_agreement")).select_by_visible_text(agreement)
+        # Select(driver.find_element_by_id("id_agreement")).select_by_visible_text(agreement)
 
         context.util.highlight(driver.find_element_by_id("id_number"))
         driver.find_element_by_id("id_number").clear()

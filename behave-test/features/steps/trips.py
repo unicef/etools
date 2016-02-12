@@ -129,21 +129,6 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('delete the new trip')
-def step_impl(context):
-    try:
-        driver = context.browser
-        driver.implicitly_wait(10)
-
-        driver.get(context.browser.current_url)
-        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
-        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
-
-    except Exception as ex:
-        context.util.screenshot_error()
-        raise Exception(ex)
-
-
 @given('go to "Action points" from trips section')
 def step_impl(context):
     try:
@@ -195,8 +180,23 @@ def step_impl(context):
         raise Exception(ex)
 
 
-@then('delete the new action point')
-def step_impl(context):
+@then('delete the trip number "{number}"')
+def step_impl(context, number):
+    try:
+        driver = context.browser
+        driver.implicitly_wait(10)
+
+        driver.get(context.browser.current_url)
+        driver.find_element_by_xpath("//a[contains(@href, 'delete/')]").click()
+        driver.find_element_by_xpath("//input[@value=\"Yes, I'm sure\"]").click()
+
+    except Exception as ex:
+        context.util.screenshot_error()
+        raise Exception(ex)
+
+
+@then('delete the action point name "{name}"')
+def step_impl(context, name):
     try:
         driver = context.browser
         driver.implicitly_wait(10)

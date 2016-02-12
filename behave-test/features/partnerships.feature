@@ -9,9 +9,9 @@ Feature: testing partnerships features
      Given we test partnerships features
       Then go to "Partners" from the partnership section
       Then click "Add partner organization"
-      Then enter partner's Full name "Test Vesion" and Short name "testv"
+      Then enter partner's Full name "AAA Demo3" and Short name "aaademo3"
        And select an exiting Partner type "Civil Society Organisation" and CSO type "National NGO" from the drop-down list
-       And enter the partner's Alternate name "testvision"
+       And enter the partner's Alternate name "aaademo3"
        And enter the partners main address "31 Test Way", main phone number "123456789" and main email "someone@ngo.org"
        And press "Save" to add this new partner
 
@@ -20,9 +20,9 @@ Feature: testing partnerships features
      Given we test partnerships features
       Then go to "Agreements" from the partnership section
       Then click "Add agreement"
-      Then select a partner "TestVision" from the drop-down list
-       And select an Agreement type "Work Plan"
-       And enter the Reference Number "TTV00012345"
+      Then select a partner "AAA Demo3" from the drop-down list
+       And select an Agreement type "Programme Cooperation Agreement"
+       And enter the Reference Number "AAA00003"
        And enter the Start and End date of this agreement
       Then press "Save" to save the new agreement
 
@@ -33,8 +33,8 @@ Feature: testing partnerships features
      Given we test partnerships features
       Then go to "Interventions" from the partnership section
       Then click "add intervention"
-      Then select an existing partner "AAA Demo Partner" from the drop-down partner
-      Then select an existing agreement "PCA for AAA Demo Partner (16-12-2015 - 16-12-2015)" for that partner and enter a reference number for this agreement "AAA00003"
+      Then select an existing partner "AAA Demo3" from the drop-down partner
+      Then select an existing agreement "AAA Demo3" for that partner and enter a reference number for this agreement "AAA00003"
       Then select the appropriate Document Type "Programme Document" for this intervention
       Then add a Title for this intervention "Distribution of hygiene kits in Kabul"
       Then go to the "Supplies" tab in the intervention to insert supplies
@@ -68,13 +68,23 @@ Feature: testing partnerships features
      When the partners begin to distribute supplies via UniSupply
      Then you will be able to the status of the deliveries in this section
 
+    @intervention
     @unisupply
-    Scenario: rollback added partnership informations
+    Scenario: rollback added Intervention information
       Given we test partnerships features
        Then go to "Interventions" from the partnership section
         And delete the intervention number "AAA00003"
+
+    @agreement
+    @unisupply
+    Scenario: rollback added Agreement information
+      Given we test partnerships features
        Then go to "Agreements" from the partnership section
-        And delete the agreement number "TTV00012345"
+        And delete the agreement number "AAA00003"
+
+    @partner
+    @unisupply
+    Scenario: rollback added partnership information
+      Given we test partnerships features
        Then go to "Partners" from the partnership section
-        And delete the partner organization number "TestVision"
-       
+        And delete the partner organization number "AAA Demo3"
