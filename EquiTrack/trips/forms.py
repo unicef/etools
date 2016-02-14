@@ -78,6 +78,7 @@ class TripForm(ModelForm):
         'no_vision_user_for_TA': 'For TA Drafted trip you must select a Vision Approver',
         'no_driver_supervisor': 'You must enter a supervisor for the selected driver',
         'no_trip_report': 'You must provide a narrative report before the trip can be completed',
+        'cant_manually_approve': 'Approved Status is automatically set, can\'t be manually set',
         'ta_needs_amending': 'Due to trip having a pending amendment to the TA, '
                              'only the travel focal point can complete the trip'
     }
@@ -127,6 +128,10 @@ class TripForm(ModelForm):
 
         if owner == supervisor:
             raise ValidationError({'owner': self.ERROR_MESSAGES['owner_is_supervisor']})
+
+        if status == Trip.APPROVED and \
+                not self.instance.status == Trip.APPROVED:
+            raise ValidationError({'status': self.ERROR_MESSAGES['cant_manually_approve']})
 
         if not pcas and travel_type == Trip.PROGRAMME_MONITORING:
             raise ValidationError({'pcas': self.ERROR_MESSAGES['no_linked_interventions']})
