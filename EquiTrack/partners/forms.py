@@ -498,6 +498,7 @@ class PartnershipForm(UserGroupForm):
         cleaned_data = super(PartnershipForm, self).clean()
 
         partnership_type = cleaned_data[u'partnership_type']
+        result_structure = cleaned_data.get(u'result_structure')
         agreement = cleaned_data[u'agreement']
         unicef_manager = cleaned_data[u'unicef_manager']
         signed_by_unicef_date = cleaned_data[u'signed_by_unicef_date']
@@ -598,6 +599,10 @@ class PartnershipForm(UserGroupForm):
             )
 
         if work_plan and work_plan_sector:
+            if result_structure is None:
+                raise ValidationError(
+                    u'Please select a result structure from the man info tab to import results against'
+                )
             self.import_results_from_work_plan(work_plan, work_plan_sector)
 
         return cleaned_data

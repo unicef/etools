@@ -81,11 +81,14 @@ ACCOUNT_ACTIVATION_DAYS = 7
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
-    'DEFAULT_PRIORITY': 'now'
+    'DEFAULT_PRIORITY': 'now',
+    'BACKENDS': {
+        # Will ensure email is sent async
+        'default': 'djcelery_email.backends.CeleryEmailBackend'
+    }
 }
 EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-POST_OFFICE_BACKEND = 'djrill.mail.backends.djrill.DjrillBackend'  # Will ensure email is sent async
-#CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
+CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
 MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
 ########## END EMAIL CONFIGURATION
 
