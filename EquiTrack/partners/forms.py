@@ -3,12 +3,14 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 import pandas
+import logging
 from datetime import date
 
 from django.utils.translation import ugettext as _
 from django import forms
 from django.contrib import messages
 from django.db.models import Q
+from django.db import connection
 from django.core.validators import validate_email
 
 from autocomplete_light import forms as auto_forms
@@ -47,6 +49,8 @@ from .models import (
     DistributionPlan,
     PartnershipBudget
 )
+
+logger = logging.getLogger('partners.forms')
 
 
 class LocationForm(auto_forms.ModelForm):
@@ -157,6 +161,11 @@ class AmendmentForm(forms.ModelForm):
 
 
 class PartnerStaffMemberForm(forms.ModelForm):
+    ERROR_MESSAGES = {
+        'active_by_default': 'New Staff Member needs to be active at the moment of creation',
+        'user_unavailable': 'The Partner Staff member you are trying to activate is associated with'
+                            'a different partnership'
+    }
 
     def __init__(self, *args, **kwargs):
         super(PartnerStaffMemberForm, self).__init__(*args, **kwargs)
@@ -168,18 +177,37 @@ class PartnerStaffMemberForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super(PartnerStaffMemberForm, self).clean()
         email = cleaned_data.get('email', "")
+        active = cleaned_data.get('active')
         validate_email(email)
+        existing_user = None
         if not self.instance.id:
+            # user should be active first time it's created
+            if not active:
+                raise ValidationError({'active': self.ERROR_MESSAGES['active_by_default']})
             try:
                 existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
                 if existing_user.profile.partner_staff_member:
                     raise ValidationError("This user already exists under a different partnership: {}".format(email))
             except User.DoesNotExist:
                 pass
+
         else:
             # make sure email addresses are not editable after creation.. user must be removed and re-added
             if email != self.instance.email:
                 raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
+
+            # when removing the active tag
+            if self.instance.active and not active:
+                pass
+
+            # when adding the active tag to a previously untagged user
+            if active and not self.instance.active:
+                # make sure this user has not already been associated with another partnership.
+                if existing_user:
+                    if existing_user.partner_staff_member and \
+                            existing_user.partner_staff_member != self.instance.pk:
+                        raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
+
         return cleaned_data
 
 

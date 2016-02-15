@@ -403,6 +403,9 @@ class PartnerStaffMemberInlineAdmin(admin.TabularInline):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
 
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 class PartnerStaffMemberAdmin(admin.ModelAdmin):
     model = PartnerStaffMember
