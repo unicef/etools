@@ -31,10 +31,7 @@ class DashboardView(TemplateView):
         now = datetime.datetime.now()
         structure = self.request.GET.get('structure')
         if structure is None and ResultStructure.objects.count():
-            structure = ResultStructure.objects.filter(
-                from_date__lte=now,
-                to_date__gte=now
-            )[0].id
+            structure = ResultStructure.objects.last().id
         try:
             current_structure = ResultStructure.objects.get(id=structure)
         except ResultStructure.DoesNotExist:
@@ -111,8 +108,10 @@ class PartnershipsView(DashboardView):
         active_this_year = active_partnerships.filter(
             start_date__year=today.year
         )
+        last_years = datetime.date(today.year-1, 12, 31)
+
         active_last_year = active_partnerships.filter(
-            start_date__year=today.year-1
+            start_date__lte=last_years
         )
         expire_in_two_months = active_partnerships.filter(
             end_date__range=[today, today + datetime.timedelta(days=60)]
