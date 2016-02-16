@@ -5,9 +5,13 @@ machine:
     - redis
 
 dependencies:
+  cache_directories:
+    - "~/docker"
+
   override:
-    - docker info
-    - docker build -t unicef/equitrack:$CIRCLE_SHA1 .
+    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+    - docker build -t unicef/equitrack:etools .
+    - mkdir -p ~/docker; docker save unicef/equitrack:etools > ~/docker/image.tar
 
 test:
   pre: # bootstrap postgres to accept connections from our container
@@ -18,19 +22,12 @@ test:
     - sudo /etc/init.d/postgresql restart
   override:
     - export HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`;
-      docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/equitrack:$CIRCLE_SHA1
+      docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/equitrack:etools
       coverage run manage.py test --keepdb --settings=EquiTrack.settings.test
 
 deployment:
   hub:
-    branch: develop
-    commands:
-      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker tag unicef/equitrack:$CIRCLE_SHA1 unicef/equitrack:develop
-      - docker push unicef/equitrack:develop
-
     branch: etools
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker tag unicef/equitrack:$CIRCLE_SHA1 unicef/equitrack:etools
       - docker push unicef/equitrack:etools

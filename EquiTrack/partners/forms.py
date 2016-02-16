@@ -290,10 +290,12 @@ class AgreementForm(UserGroupForm):
 
             # PCAs last as long as the most recent CPD
             result_structure = ResultStructure.objects.order_by('to_date').last()
-            if result_structure and end > result_structure.to_date:
-                err = u'This agreement cannot last longer than \
-                    the Result Structure on {}'.format(result_structure.to_date)
-                raise ValidationError({'end': err})
+            if result_structure and end and end > result_structure.to_date:
+                raise ValidationError(
+                    {'end': u'This agreement cannot last longer than the current {} which ends on {}'.format(
+                        result_structure.name, result_structure.to_date
+                    )}
+                )
 
         if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
             raise ValidationError(
