@@ -3,30 +3,30 @@ machine:
     - docker
     - postgresql
     - redis
-  environment:
-    CPLUS_INCLUDE_PATH: /usr/include/gdal
-    C_INCLUDE_PATH: /usr/include/gdal
 
 dependencies:
-  pre:
-    - sudo apt-get update && sudo apt-get -y install python-gdal gdal-bin libgdal-dev libgdal1-dev
-      libxml2-dev libxslt-dev python-dev xmlsec1
+  cache_directories:
+    - "~/docker"
+
+  override:
+    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+    - docker build -t unicef/equitrack:etools .
+    - mkdir -p ~/docker; docker save unicef/equitrack:etools > ~/docker/image.tar
 
 test:
+  pre: # bootstrap postgres to accept connections from our container
+    - sudo bash -c "echo \"listen_addresses = '*'\" >>
+      /etc/postgresql/9.4/main/postgresql.conf"
+    - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
+      /etc/postgresql/9.4/main/pg_hba.conf"
+    - sudo /etc/init.d/postgresql restart
   override:
-    - coverage run ./EquiTrack/manage.py test EquiTrack --keepdb --settings=EquiTrack.settings.test
-  post:
-    - coverage html -d $CIRCLE_ARTIFACTS
-
+    - export HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`;
+      docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/equitrack:etools
+      coverage run manage.py test --keepdb --settings=EquiTrack.settings.test
 
 deployment:
   hub:
-    branch: develop
-    commands:
-      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker tag unicef/equitrack:$CIRCLE_SHA1 unicef/equitrack:develop
-      - docker push unicef/equitrack:develop
-
     branch: etools
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
