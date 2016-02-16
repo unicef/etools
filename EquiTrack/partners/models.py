@@ -5,11 +5,12 @@ __author__ = 'jcranwellward'
 import datetime
 from dateutil.relativedelta import relativedelta
 
-from django.db import connection
+
 from django.conf import settings
-from django.db import models
+from django.db import models, connection
 from django.contrib.auth.models import Group
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
+
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 
@@ -174,6 +175,9 @@ class PartnerStaffMember(models.Model):
     last_name = models.CharField(max_length=64L)
     email = models.CharField(max_length=128L, unique=True, blank=False)
     phone = models.CharField(max_length=64L, blank=True)
+    active = models.BooleanField(
+        default=True
+    )
 
     def __unicode__(self):
         return u'{} {} ({})'.format(
@@ -181,6 +185,26 @@ class PartnerStaffMember(models.Model):
             self.last_name,
             self.partner.name
         )
+
+    def reactivate_signal(self):
+        # sends a signal to activate the user
+        post_save.send(PartnerStaffMember, instance=self, created=True)
+
+    def deactivate_signal(self):
+        # sends a signal to deactivate user and remove partnerstaffmember link
+        pre_delete.send(PartnerStaffMember, instance=self)
+
+    def save(self, **kwargs):
+        # if the instance exists and active was changed, re-associate user
+        if self.pk:
+            # get the instance that exists in the db to compare active states
+            existing_instance = PartnerStaffMember.objects.get(pk=self.pk)
+            if existing_instance.active and not self.active:
+                self.deactivate_signal()
+            elif not existing_instance.active and self.active:
+                self.reactivate_signal()
+
+        return super(PartnerStaffMember, self).save(**kwargs)
 
 
 class Assessment(models.Model):
