@@ -105,7 +105,10 @@ class MapView(TemplateView):
             'region_list': Region.objects.all(),
             'partner_list': PartnerOrganization.objects.all(),
             'indicator_list': Indicator.objects.all(),
-            'donor_list': Donor.objects.all()
+            'donor_list': Donor.objects.all(),
+            'lat': self.request.user.profile.country.latitude,
+            'lng': self.request.user.profile.country.longitude,
+            'zoom': self.request.user.profile.country.initial_zoom,
         }
 
 

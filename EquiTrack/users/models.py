@@ -20,7 +20,18 @@ logger = logging.getLogger('users.models')
 class Country(TenantMixin):
     name = models.CharField(max_length=100)
     business_area_code = models.CharField(
-       max_length=10, null=True, blank=True)
+        max_length=10,
+        null=True, blank=True
+    )
+    latitude = models.DecimalField(
+        null=True, blank=True,
+        max_digits=8, decimal_places=6
+    )
+    longitude = models.DecimalField(
+        null=True, blank=True,
+        max_digits=8, decimal_places=6
+    )
+    initial_zoom = models.IntegerField(default=8)
 
     def __unicode__(self):
         return self.name
@@ -55,6 +66,7 @@ class UserProfile(models.Model):
     )
     country = models.ForeignKey(Country, null=True, blank=True)
     country_override = models.ForeignKey(Country, null=True, blank=True, related_name="country_override")
+    countries_available = models.ManyToManyField(Country, blank=True,  related_name="accessible_by")
     section = models.ForeignKey(Section, null=True, blank=True)
     office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)

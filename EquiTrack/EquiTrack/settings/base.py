@@ -81,10 +81,13 @@ ACCOUNT_ACTIVATION_DAYS = 7
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
-    'DEFAULT_PRIORITY': 'now'
+    'DEFAULT_PRIORITY': 'now',
+    'BACKENDS': {
+        # Will ensure email is sent async
+        'default': 'djcelery_email.backends.CeleryEmailBackend'
+    }
 }
 EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'  # Will ensure email is sent async
 CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
 MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
 ########## END EMAIL CONFIGURATION
@@ -249,13 +252,6 @@ SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"
 ########## END SECRET CONFIGURATION
 
 RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN')
-
-########## SITE CONFIGURATION
-# Hosts/domain names that are valid for this site
-# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
-########## END SITE CONFIGURATION
-
 
 ########## FIXTURE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-FIXTURE_DIRS

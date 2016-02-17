@@ -394,6 +394,9 @@ class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
     def trip(self, obj):
         return unicode(obj.trip)
 
+    def has_add_permission(self, request):
+        return False
+
     def get_readonly_fields(self, request, obj=None):
 
         readonly_fields = [

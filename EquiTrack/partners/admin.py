@@ -211,6 +211,14 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
             return self.max_num
         return 0
 
+    def get_readonly_fields(self, request, obj=None):
+
+        fields = super(DistributionPlanInlineAdmin, self).get_readonly_fields(request, obj)
+        if obj is None or obj.sent:
+            fields.append(u'send')
+
+        return fields
+
 
 class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     form = PartnershipForm
@@ -402,6 +410,9 @@ class AssessmentAdminInline(admin.TabularInline):
 class PartnerStaffMemberInlineAdmin(admin.TabularInline):
     model = PartnerStaffMember
     form = PartnerStaffMemberForm
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 class PartnerStaffMemberAdmin(admin.ModelAdmin):

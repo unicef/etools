@@ -5,7 +5,6 @@ from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 
 from import_export import resources
-from import_export.admin import ImportExportMixin
 
 from .models import UserProfile, Country, Office, Section
 
@@ -22,10 +21,13 @@ class UserResource(resources.ModelResource):
         model = User
 
 
-class UserAdminPlus(ImportExportMixin, UserAdmin):
+class UserAdminPlus(UserAdmin):
     resource_class = UserResource
 
     def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
         return False
     
     def get_queryset(self, request):
@@ -63,6 +65,12 @@ class ProfileAdmin(admin.ModelAdmin):
         u'country__name',
         u'user__email'
     )
+
+    def get_queryset(self, request):
+        queryset = super(ProfileAdmin, self).get_queryset(request)
+        if not request.user.is_superuser:
+            queryset = queryset.filter(profile__country=request.tenant)
+        return queryset
 
 
 # Re-register UserAdmin
