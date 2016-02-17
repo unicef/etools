@@ -433,6 +433,10 @@
 
         function main(map, options) {
             map1=map;
+            {% if lat and lng %}
+                map.setZoom({{ zoom }});
+                map.panTo(new L.LatLng({{ lat }}, {{ lng }}));
+            {% endif %}
             layer_control = L.control.layers().addTo(map);
             //get all cartodb tables from etools and pull data from CartoDB
             $.getJSON("{% url 'cartodbtables' %}", function (data) {
