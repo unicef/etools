@@ -546,7 +546,11 @@ class ActionPoint(models.Model):
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
 
-        recipients = [instance.person_responsible.email, instance.trip.supervisor.email]
+        recipients = [
+            instance.trip.owner.email,
+            instance.person_responsible.email,
+            instance.trip.supervisor.email
+        ]
 
         if created:
             emails.TripActionPointCreated(instance).send(
