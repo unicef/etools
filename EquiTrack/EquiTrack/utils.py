@@ -10,7 +10,7 @@ from django.db import connection
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib.sites.models import Site
-from django.utils.datastructures import SortedDict
+from collections import OrderedDict as SortedDict
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
