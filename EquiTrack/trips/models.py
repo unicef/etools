@@ -8,9 +8,7 @@ from django.db.models import Q
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from smart_selects.db_fields import ChainedForeignKey
-from django.contrib.contenttypes.fields import (
-    GenericForeignKey, GenericRelation
-)
+
 from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
 
@@ -157,8 +155,6 @@ class Trip(AdminURLMixin, models.Model):
     driver_supervisor = models.ForeignKey(User, verbose_name='Supervisor for Driver',
                                           related_name='driver_supervised_trips', null=True, blank=True)
     driver_trip = models.ForeignKey('self', null=True, blank=True, related_name='drivers_trip')
-
-    locations = GenericRelation('locations.LinkedLocation')
 
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, verbose_name='Traveller', related_name='trips')
     section = models.ForeignKey(Section, blank=True, null=True)
@@ -598,7 +594,6 @@ class FileAttachment(models.Model):
 
     content_type = models.ForeignKey(ContentType, null=True, blank=True)
     object_id = models.PositiveIntegerField(null=True, blank=True)
-    content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
         return u'{}: {}'.format(
