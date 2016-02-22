@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from smart_selects.db_fields import ChainedForeignKey
-from django.contrib.contenttypes.generic import (
+from django.contrib.contenttypes.fields import (
     GenericForeignKey, GenericRelation
 )
 from django.db.models.signals import post_save

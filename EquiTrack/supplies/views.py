@@ -6,7 +6,7 @@ import datetime
 
 from django.db.models import F, Sum
 from django.views.generic import TemplateView
-from django.core.servers.basehttp import FileWrapper
+from wsgiref.util import FileWrapper
 
 #from django_datatables_view.base_datatable_view import BaseDatatableView
 

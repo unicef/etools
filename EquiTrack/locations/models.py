@@ -6,7 +6,7 @@ import logging
 
 from django.db import IntegrityError
 from django.contrib.gis.db import models
-from django.contrib.contenttypes.generic import GenericForeignKey
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 from mptt.models import MPTTModel, TreeForeignKey

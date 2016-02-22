@@ -1,7 +1,7 @@
 
 __author__ = 'jcranwellward'
 
-import autocomplete_light
+from autocomplete_light import shortcuts as autocomplete_light
 
 from reports.models import Goal, Indicator
 
