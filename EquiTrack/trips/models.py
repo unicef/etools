@@ -15,7 +15,7 @@ from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
 
 from filer.fields.file import FilerFileField
-import reversion
+from reversion.revisions import get_for_object
 
 from EquiTrack.mixins import AdminURLMixin
 from reports.models import Result, Sector
@@ -242,7 +242,7 @@ class Trip(AdminURLMixin, models.Model):
 
     @property
     def trip_revision(self):
-        return reversion.get_for_object(self).count()
+        return get_for_object(self).count()
 
     @property
     def trip_overdue(self):
