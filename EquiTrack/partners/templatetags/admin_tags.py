@@ -1,5 +1,5 @@
 from django import template
-
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -10,7 +10,6 @@ def show_country_select(profile):
     if not profile:
         return ''
 
-
     countries = profile.countries_available.all() #Country.objects.all()
 
     html = ''
@@ -20,4 +19,4 @@ def show_country_select(profile):
         else:
             html += '<option value="'+str(country.id)+'">'+country.name+'</option>'
 
-    return '<select id="country_selection">' + html + '</select>'
+    return mark_safe('<select id="country_selection">' + html + '</select>')

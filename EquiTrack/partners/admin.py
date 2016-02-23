@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
-from reversion import VersionAdmin
+from reversion.admin import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
