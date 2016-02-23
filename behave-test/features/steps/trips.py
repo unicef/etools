@@ -113,7 +113,8 @@ def step_impl(context, origin, destination):
 def step_impl(context):
     try:
         driver = context.browser
-        driver.find_element_by_name("_save")
+        driver.find_element_by_name("_continue")
+        # driver.find_element_by_name("_save")
     except Exception as ex:
         context.util.screenshot_error()
         raise Exception(ex)

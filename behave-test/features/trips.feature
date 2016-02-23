@@ -16,6 +16,7 @@ Feature: testing trips features
       Then select the Travel type "TECHNICAL SUPPORT" and Travel focal point "Tarek Moubarak"
       Then enter the Travel Itinerary "Beirut" to/from "Saida"
       Then press "Save"
+      Then delete the trip number "00000"
 
 
   @actpoint

@@ -215,3 +215,25 @@ def step_impl(context):
     except Exception as ex:
         util.screenshot_error()
         raise Exception(ex)
+
+
+@given('add a partner organization')
+def step_impt(context):
+    try:
+        driver = context.browser
+        util = context.util
+
+        context.execute_steps(u'''
+         Given we test partnerships features
+          Then go to "Partners" from the partnership section
+          Then click "Add partner organization"
+          Then enter partner's Full name "AAA Demo3" and Short name "aaademo3"
+           And select an exiting Partner type "Civil Society Organisation" and CSO type "National NGO" from the drop-down list
+           And enter the partner's Alternate name "aaademo3"
+           And enter the partners main address "31 Test Way", main phone number "123456789" and main email "someone@ngo.org"
+           And press "Save" to add this new partner
+        ''')
+
+    except Exception as ex:
+        util.screenshot_error()
+        raise Exception(ex)
