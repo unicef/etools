@@ -973,7 +973,7 @@ class IndicatorReport(TimeStampedModel):
     # WHAT
     #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
     indicator = models.ForeignKey(Indicator, related_name='reports')  # this should always be computed from result_chain
-    total = models.IntegerField()
+    total = models.PositiveIntegerField()
     disaggregated = models.BooleanField(default=False)
     disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
 
