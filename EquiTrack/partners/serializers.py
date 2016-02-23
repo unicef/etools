@@ -16,7 +16,8 @@ from .models import (
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
-    ResultChain
+    ResultChain,
+    IndicatorReport
 )
 
 class IndicatorProgressSerializer(serializers.ModelSerializer):
@@ -68,6 +69,23 @@ class ResultChainSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
     disaggregation = HStoreField()
     result = OutputSerializer()
+
+    class Meta:
+        model = ResultChain
+
+
+class IndicatorReportSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = IndicatorReport
+
+
+class ResultChainDetailsSerializer(serializers.ModelSerializer):
+    indicator = IndicatorSerializer()
+    disaggregation = HStoreField()
+    result = OutputSerializer()
+
+
 
     class Meta:
         model = ResultChain

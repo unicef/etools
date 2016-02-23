@@ -13,14 +13,15 @@ from datetime import datetime
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
 
-from .mixins import InterventionDetailsPermission
+from .mixins import InterventionDetailsPermission, ResultChainPermission
 
 from locations.models import Location
 from .serializers import (
     LocationSerializer,
     PartnershipSerializer,
     PartnerStaffMemberPropertiesSerializer,
-    InterventionSerializer
+    InterventionSerializer,
+    ResultChainDetailsSerializer
 )
 
 from .models import (
@@ -28,7 +29,8 @@ from .models import (
     PCAGrant,
     PCASector,
     GwPCALocation,
-    PartnerStaffMember
+    PartnerStaffMember,
+    ResultChain
 )
 
 
@@ -177,6 +179,25 @@ class InterventionDetailView(RetrieveAPIView):
     model = PCA
     permission_classes = (InterventionDetailsPermission,)
     queryset = PCA.objects.all()
+
+    def get_object(self):
+        queryset = self.get_queryset()
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+
+        obj = get_object_or_404(queryset, **filter)
+
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
+class ResultChainDetailView(RetrieveAPIView):
+    serializer_class = ResultChainDetailsSerializer
+    model = ResultChain
+    permission_classes = (ResultChainPermission,)
+    queryset = ResultChain.objects.all()
 
     def get_object(self):
         queryset = self.get_queryset()
