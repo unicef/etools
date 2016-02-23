@@ -112,9 +112,9 @@ Example:
         <template>
             <div class="item" class$="[[getClassForItem(item, item.expanded)]]" on-tap="_goToIntervention" tabindex="0">
                 <div class="pad">
-                  <a hresf$="{{appData.baseUrl}}intervention/1">
-                    <div class="primary">[[item.title]]</div>
-                  </a>
+                  
+                  <div class="primary">[[item.title]]</div>
+                  
                   
                   <div class="shortText">Intervention Details</div>
                   <div class="longText"></div>
@@ -166,11 +166,7 @@ Example:
     },
 
     _goToIntervention: function(e){
-      console.log(e.model.item);
-      console.log(this.appData.baseUrl+'intervention/' + e.model.item.id+'/');
-      
-      page(this.appData.baseUrl+'intervention/' + e.model.item.id);
-
+      page(this.appData.baseUrl+'intervention/' + e.model.item.id+'/');
     },
     _collapseExpand: function(e) {
       var list = this.$.list;

@@ -1,0 +1,110 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../../bower_components/iron-list/iron-list.html">
+
+
+<dom-module id="rc-report">
+
+  <template>
+    <etools-ajax
+          auto
+          id="ajax"
+          url="[[url]]"
+          handle-as="json"
+          on-response="handleResponse"
+          debounce-duration="300">
+    </etools-ajax>
+    <etools-ajax
+          auto
+          id="ajaxPost">
+    </etools-ajax>
+   
+  <h2>rcReport</h2>
+  <div>{{rcId}}</div>
+  <div>
+      <p>Current Progress = {{rc.current_progress}}</p>
+      <p>Target = {{rc.target}}</p>
+      <p>Indicator = {{rc.indicator.name}}</p>
+  </div>
+  <div>
+    <input type="number" id="reportTotal">
+    <button on-tap='_submitReport'>Submit Report</button>
+  </div>
+  
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'rc-report',
+    properties: {
+      appData: {
+        type: Object,
+        // appData is received from the parent
+        value: {}
+      },
+      rcId: {
+        type: Number,
+        value: null,
+        observer: 'changeUrl'
+      },
+      rc: {
+        type: Object,
+        value: null,
+        observer: 'update_view'
+      },
+      url: {
+        type: String,
+        value: null
+      }
+    },
+    ready: function() {
+      //
+    },
+    changeUrl: function(){
+      
+      if (this.rcId){
+        this.rc = null;
+        this.url = this.appData.getEndpoint.resultChainDetails(this.rcId);
+      } else {
+        this.url = null;
+      }
+    },
+    handleResponse: function(rsp) {
+      //
+      this.rc = rsp.detail.xhr.response;
+    },
+    _submitReport: function() {
+      var myReq = this.$.ajaxPost;
+      myReq.body = {
+        'total': this.$.reportTotal.value
+      };
+      myReq.method = 'POST';
+      myReq.url = this.appData.getEndpoint.resultChainReport(this.rcId);
+    },
+    update_view: function() {
+      var params = this.params;
+      var interventions = this.interventions;
+      if (!interventions || !params) { return; }
+
+      var intervention = _.find(interventions, function(item) {
+        console.log('item:', item);
+        return item.id.toString() === params.rcIntvId;
+      });
+      console.log(intervention);
+
+      // assuuming we have params otherwise we would not get to this view
+
+    }
+  });
+})();
+
+</script>

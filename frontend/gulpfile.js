@@ -333,6 +333,12 @@ gulp.task('serve', ['styles', 'elements', 'images'], function() {
       case '/partners/api/interventions/':
         req.url = '/data/partner/interventions.json';
         break;
+      case '/partners/api/interventions/7/':
+        req.url = '/data/partner/intervention_details.json';
+        break;
+      case '/partners/api/resultchain/1/':
+        req.url = '/data/partner/resultchain_details.json';
+        break;
     }
     return next();
   };

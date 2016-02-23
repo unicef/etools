@@ -1,0 +1,33 @@
+{
+  "id": 1,
+  "indicator": {
+    "id": 1,
+    "name": "# of children with access to water",
+    "unit": 1,
+    "total": 1000,
+    "current": 0,
+    "sector_total": 100,
+    "sector_current": 0
+  },
+  "disaggregation": {
+    "age": "[0-4, 4-10]",
+    "sex": "[M, F, U]"
+  },
+  "result": {
+    "id": 1,
+    "name": "Result 1",
+    "sector": 1,
+    "humanitarian_tag": false
+  },
+  "indicator_reports": [
+    
+  ],
+  "code": "123",
+  "target": 80,
+  "current_progress": 0,
+  "partner_contribution": 0,
+  "unicef_cash": 0,
+  "in_kind_amount": 0,
+  "partnership": 1,
+  "result_type": 1
+}

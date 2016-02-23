@@ -1,0 +1,130 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../../bower_components/iron-list/iron-list.html">
+
+
+<dom-module id="intervention-details">
+
+  <template>
+    <etools-ajax
+          auto
+          id="ajax"
+          url="[[url]]"
+          handle-as="json"
+          on-response="handleResponse"
+          debounce-duration="300">
+    </etools-ajax>
+   
+  <h2>{{intervention.title}}</h2>
+
+  <template is="dom-repeat" items="[[indicators]]" as="rc">
+    <div on-tap="_goToReport" rc-id="{{rc.id}}">
+      <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
+      <div>Partner Target Total: {{rc.partner_contribution}}</div>
+      <div>Partner Current Total: {{rc.partner_current_contribution}}</div>
+      <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
+        <div>
+          <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
+              <span>{{item.name}}, </span>
+          </template>
+        </div>
+      </div>
+    </div>  
+    <br>
+  </template>
+
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'intervention-details',
+    properties: {
+      appData: {
+        type: Object,
+        // appData is received from the parent
+        value: {}
+      },
+      interventionId: {
+        type: Number,
+        value: null,
+        observer: 'changeUrl'
+      },
+      intervention: {
+        type: Object,
+        value: null,
+        observer: '_process_intervention'
+      },
+      indicators: {
+        type: Array,
+        value: null,
+      },
+      url: {
+        type: String,
+        value: null
+      }
+    },
+    changeUrl: function(){
+      
+      if (this.interventionId){
+        this.intervention = null;
+        this.indicators = null;
+        this.url = this.appData.getEndpoint.interventionDetails(this.interventionId);
+      } else {
+        this.url = null;
+      }
+    },
+    _process_intervention: function(intervention) {
+        if (!intervention){
+          return;
+        }
+        // need to get a dict of indicators filtered by output;
+        var res = {};
+        intervention.results.forEach(function(el) {
+          // el is the result_chain object
+          if (res[el.id]){
+            res[el.id].push(el);
+          } else {
+            res[el.id] = el;
+          }
+        });
+        console.log(res);
+        
+        var inds = [];
+        _.each(res, function(value) {
+            inds.push(value);
+        });
+        this.indicators = inds;
+    },
+    _goToReport: function(ev){
+      page(this.appData.baseUrl+'rcReport/'+ ev.currentTarget.rcId + '/');
+
+    },
+
+    handleResponse: function(rsp) {
+      this.intervention = rsp.detail.xhr.response;
+    },
+
+    _emptyObject: function(obj) {
+      return (typeof(obj) === 'object') ? Object.keys(obj).length : false;
+    },
+    _toArray: function(obj) {
+            return Object.keys(obj).map(function(key) {
+                return {
+                    name: key,
+                    value: obj[key]
+                };
+            });
+        }
+  });
+})();
+
+</script>

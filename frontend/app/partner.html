@@ -41,13 +41,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- Tile icon for Win8 (144x144) -->
   <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
-
   <!-- build:css /static/frontend/partner/styles/main.css -->
-  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/partner/main.css">
   <!-- endbuild-->
 
   <!-- build:js /static/frontend/partner/bower_components/webcomponentsjs/webcomponents-lite.min.js -->
   <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="bower_components/underscore/underscore-min.js">
+</script>
   <!-- endbuild -->
 
   <!-- will be replaced with /static/frontend/partner/elements/partner_elements.vulcanized.html -->
@@ -158,17 +159,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <template is="dom-if" if='{{permissions.interventionsMenu}}'>
               <section data-route="myInterventions">
                   <interventions-page 
-                      app-data="[[appData]]">
+                      app-data="[[appData]]" interventions={{interventions}}>
                   </interventions-page>
               </section>
             </template>
 
-
             <section data-route="intervention">
-              <paper-material elevation="1">
-                <h2 class="page-title">Intervention with id: {{params.intv}} </h2>
-                <div>This is {{params.intv}}'s section</div>
-              </paper-material>
+                <intervention-details app-data="{{appData}}" intervention-id="[[params.intv]]"></intervention-details> 
+            </section>
+
+            <section data-route="rcReport">
+                <rc-report app-data="[[appData]]" interventions="{{interventions}}" rc-id="[[params.rcId]]"></rc-report> 
             </section>
 
           </iron-pages>

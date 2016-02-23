@@ -22,6 +22,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     // set app.baseURL to '/your-pathname/' if running from folder in production
     app.baseUrl = '/partner/';
   }
+  // console.log(typeof(_));
 
   app.appData = {
     baseUrl: app.baseUrl,
@@ -33,6 +34,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     getEndpoint: {
       userProperties: function(id) {
         return [window.location.origin, 'partners', 'api', 'profile', id].join('/') + '/';
+      },
+      interventionDetails: function(id) {
+        return [window.location.origin, 'partners', 'api', 'interventions', id].join('/') + '/';
+      },
+      resultChainDetails: function(id) {
+        return [window.location.origin, 'partners', 'api', 'resultchain', id].join('/') + '/';
       }
     },
     permissions: {

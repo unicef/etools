@@ -11,7 +11,8 @@
     "polymer": "Polymer/polymer#^1.2.0",
     "paper-menu": "PolymerElements/paper-menu#~1.2.1",
     "google-chart": "GoogleWebComponents/google-chart#~1.0.4",
-    "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#~1.1.2"
+    "paper-dropdown-menu": "PolymerElements/paper-dropdown-menu#~1.1.2",
+    "underscore": "~1.8.3"
   },
   "devDependencies": {
     "web-component-tester": "*"

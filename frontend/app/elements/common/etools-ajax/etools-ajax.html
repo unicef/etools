@@ -19,11 +19,13 @@ Example:
 
   <template>
     <iron-ajax
+          id="customAjax"
           auto
-          url="[[url]]"
           handle-as="json"
           on-response="handleResponse"
           on-error="handleError"
+          method="[[method]]"
+          params="[[params]]"
           debounce-duration="300">
     </iron-ajax>
   </template>
@@ -43,6 +45,23 @@ Example:
         type: String,
         value: ''
       },
+      method: {
+        type: String,
+        method: 'GET'
+      },
+      params: {
+        type: Object,
+        value: null
+      },
+      body: {
+        type: Object,
+        value: null
+      },
+      url: {
+        type: String,
+        value: null,
+        observer: '_prepareRequest'
+      }
     },
 
     handleError: function(request, error){
@@ -69,7 +88,41 @@ Example:
         return;
       }
       this.fire('response', rsp.detail, {bubbles: false});
+    },
+    _getCSRFCookie: function() {
+      var name = 'csrftoken';
+      var cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+      }
+      return cookieValue;
+    },
+    _csrfSafeMethod: function(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    },
+
+    _prepareRequest: function(newUrl){
+      if ((this.method !== undefined) && (!this._csrfSafeMethod(this.method))) {
+        console.log('unsafe method', this.method);
+        var csrfToken = this._getCSRFCookie();
+        this.$.customAjax.body = this.body;
+        this.$.customAjax.contentType = 'application/json';
+        this.$.customAjax.headers = {
+          'X-CSRFToken': csrfToken
+        };
+      }
+      this.$.customAjax.url = newUrl;
     }
+
     
   });
 })();
