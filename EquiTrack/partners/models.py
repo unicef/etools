@@ -11,7 +11,7 @@ from django.db import models, connection
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 
-from django.contrib.postgres.fields import HStoreField
+from django.contrib.postgres.fields import HStoreField, JSONField
 from django.contrib.auth.models import User
 
 from filer.fields.file import FilerFileField
@@ -959,6 +959,40 @@ class ResultChain(models.Model):
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
+
+
+class IndicatorReport(TimeStampedModel):
+
+    # WHO
+    #  -  Implementing Partner
+    partner_staff_member = models.ForeignKey(PartnerStaffMember)
+
+    # WHAT
+    #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
+    indicator = models.ForeignKey(Indicator)  # this should always be computed from result_chain
+    total = models.IntegerField()
+    disaggregated = models.BooleanField(default=False)
+    disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
+
+    # WHEN
+    #  -  Timestamp / From  / To
+    from_date = models.DateTimeField()
+    to_date = models.DateTimeField()
+
+
+    # FOR WHOM / Beneficiary
+    #  -  ResultChain
+    result_chain = models.ForeignKey(ResultChain)
+
+    # WHERE
+    #  -  Location
+    location = models.ForeignKey(Location, blank=True, null=True)
+
+
+    # Metadata
+    #  - Remarks
+    remarks = models.TextField(blank=True, null=True)
+
 
 
 class SupplyPlan(models.Model):
