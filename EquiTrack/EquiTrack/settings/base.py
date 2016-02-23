@@ -364,8 +364,9 @@ SHARED_APPS = (
     #'allauth.socialaccount.providers.twitter',
     'analytical',
     'mptt',
-    'vision',
+    'easy_pdf',
 
+    'vision',
     # you must list the app where your tenant model resides in
     'users',
     'management',

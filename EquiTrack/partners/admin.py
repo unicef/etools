@@ -4,7 +4,7 @@ __author__ = 'jcranwellward'
 
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
-from django.utils.html import mark_safe
+from django.core.urlresolvers import reverse
 
 import autocomplete_light
 from reversion.admin import VersionAdmin
@@ -485,7 +485,7 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
                  u'core_values_assessment_date',
                  u'core_values_assessment',)
         }),
-        (_('Meta Data'), {
+        (_('Alternate Name'), {
             u'classes': (u'collapse',),
             'fields':
                 ((u'alternate_id', u'alternate_name',),)
@@ -596,9 +596,12 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     ]
 
     def download_url(self, obj):
-        return mark_safe('<a class="btn btn-primary default" href="{}/pdf/" >Download</a>'.format(
-            str(obj.id).encode())
-        )
+        if obj:
+            return u'<a class="btn btn-primary default" ' \
+                   u'href="{}" >Download</a>'.format(
+                    reverse('pca_pdf', args=(obj.id,))
+                    )
+        return ''
 
     download_url.allow_tags = True
     download_url.short_description = 'PDF Agreement'

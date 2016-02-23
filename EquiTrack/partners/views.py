@@ -51,6 +51,7 @@ class PcaPDFView(PDFTemplateView):
             title="Partnership",
             agreement=agreement,
             auth_officers=officers_list,
+            country=self.request.tenant.name,
             **kwargs
         )
 
