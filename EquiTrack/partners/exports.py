@@ -12,7 +12,7 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-from collections import OrderedDict as SortedDict
+from django.utils.datastructures import OrderedDict as SortedDict
 
 from import_export import resources
 # from import_export.formats.base_formats import Format

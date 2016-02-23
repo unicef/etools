@@ -3,7 +3,7 @@ __author__ = 'unicef-leb-inn'
 import tablib
 
 from django import template
-from django.utils.datastructures import SortedDict
+from django.utils.datastructures import OrderedDict as SortedDict
 
 from partners.models import PCA
 from trips.models import Trip

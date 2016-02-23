@@ -7,7 +7,7 @@ from django.conf.urls import patterns, include, url
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import REDIRECT_FIELD_NAME
 
-import autocomplete_light
+from autocomplete_light import shortcuts as autocomplete_light
 # import every app/autocomplete_light_registry.py
 autocomplete_light.autodiscover()
 
