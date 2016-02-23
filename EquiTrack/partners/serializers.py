@@ -75,9 +75,20 @@ class ResultChainSerializer(serializers.ModelSerializer):
 
 
 class IndicatorReportSerializer(serializers.ModelSerializer):
+    disaggregated = serializers.BooleanField(read_only=True)
+    disaggregation = serializers.JSONField()
 
     class Meta:
         model = IndicatorReport
+
+    def create(self, validated_data):
+        # TODO: update value on resultchain (atomic)
+
+
+        pass
+
+    def update(self, instance, validated_data):
+        pass
 
 
 class ResultChainDetailsSerializer(serializers.ModelSerializer):
