@@ -125,8 +125,6 @@ if isinstance(DEBUG, str):
     else:
         DEBUG = False
 
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-debug
-TEMPLATE_DEBUG = DEBUG
 ########## END DEBUG CONFIGURATION
 
 ########## DATABASE CONFIGURATION #########
@@ -268,6 +266,7 @@ TEMPLATES = [
         'DIRS': [normpath(join(SITE_ROOT, 'templates')), normpath(join(SITE_ROOT, 'templates', 'frontend'))],
         'APP_DIRS': True,
         'OPTIONS': {
+            'debug': True,  # TEMPLATE_DEBUG was deprecated
             'context_processors': [
                 # Already defined Django-related contexts here
 
