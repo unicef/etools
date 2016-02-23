@@ -63,7 +63,6 @@ from .forms import (
     PartnerStaffMemberForm,
     LocationForm
 )
-from trips.models import Trip
 
 
 class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -561,6 +560,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         u'agreement_number',
         u'partner',
         u'agreement_type',
+        u'download_url'
     )
     fieldsets = (
         (u'Agreement Details', {
@@ -575,6 +575,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                     u'partner_manager',
                     u'signed_by_unicef_date',
                     u'signed_by',
+                    u'download_url'
                 )
         }),
         (u'Bank Details', {
@@ -589,17 +590,18 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                 )
         })
     )
+    readonly_fields = (u'download_url',)
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
-    list_display = ['partner', 'download_url']
 
     def download_url(self, obj):
-        return mark_safe('<a class="btn btn-primary default" href="pdf/' + str(obj.id).encode() + '" >Download</a>')
+        return mark_safe('<a class="btn btn-primary default" href="{}/pdf/" >Download</a>'.format(
+            str(obj.id).encode())
+        )
 
     download_url.allow_tags = True
     download_url.short_description = 'PDF Agreement'
-
 
     def get_formsets(self, request, obj=None):
         # display the inline only if the agreement was saved
