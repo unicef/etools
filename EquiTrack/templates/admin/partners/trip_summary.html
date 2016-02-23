@@ -1,0 +1,15 @@
+{% load i18n admin_static admin_modify %}
+{% load intervention_tags %}
+
+    <div id="trips">
+      {% autoescape off %} {% show_trips object_id %}{% endautoescape %}
+    </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#trips table').addClass("table table-striped table-hover");
+        $('#trips table thead th').each( function(){
+            $(this).attr("data-sortable", "true");
+        });
+    });
+</script>

@@ -37,11 +37,16 @@ class TripFundsSerializer(serializers.ModelSerializer):
 
 class ActionPointSerializer(serializers.ModelSerializer):
 
+
+    person_responsible_name = serializers.CharField(source="person_responsible",
+                                                    read_only=True)
+
     class Meta:
         model = ActionPoint
         fields = (
             'id',
             'person_responsible',
+            'person_responsible_name',
             'status',
             'description',
             'due_date',
@@ -54,6 +59,11 @@ class FileAttachmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileAttachment
+        fields = (
+            "id",
+            "report",
+            "type"
+        )
 
 
 class TripSerializer(serializers.ModelSerializer):
@@ -66,20 +76,17 @@ class TripSerializer(serializers.ModelSerializer):
     # related_to_pca = serializers.CharField(source='no_pca')
     url = serializers.URLField(source='get_admin_url')
     travel_assistant = serializers.CharField()
-    security_clearance_required = serializers.CharField()
-    ta_required = serializers.CharField()
     budget_owner = serializers.CharField()
     staff_responsible_ta = serializers.CharField(source='programme_assistant')
-    international_travel = serializers.CharField()
     representative = serializers.CharField()
     human_resources = serializers.CharField()
-    approved_by_human_resources = serializers.CharField()
     vision_approver = serializers.CharField()
     partners = serializers.SerializerMethodField()
     travel_routes = serializers.SerializerMethodField()
     actionpoint_set = ActionPointSerializer(many=True)
     all_files = FileAttachmentSerializer(many=True)
     trip_funds = serializers.SerializerMethodField()
+    partnerships = serializers.SerializerMethodField()
     office = serializers.CharField(source='office.name')
 
     def get_travel_routes(self, trip):
@@ -94,6 +101,9 @@ class TripSerializer(serializers.ModelSerializer):
             many=True
         ).data
 
+    def get_partnerships(self, trip):
+        return [pca.__unicode__() for pca in trip.pcas.all()]
+
     def transform_traveller(self, obj):
         return obj.owner.get_full_name()
 
@@ -101,14 +111,7 @@ class TripSerializer(serializers.ModelSerializer):
         return obj.supervisor.get_full_name()
 
     def get_partners(self, obj):
-        return ', '.join([
-            partner.name for partner in obj.partners.all()
-        ])
-
-    def transform_pcas(self, obj):
-        return ', '.join([
-            pca.__unicode__() for pca in obj.pcas.all()
-        ])
+        return [partner.name for partner in obj.partners.all()]
 
     def transform_url(self, obj):
         return 'http://{}{}'.format(
@@ -124,6 +127,7 @@ class TripSerializer(serializers.ModelSerializer):
         :param validated_data:
         :return:
         """
+
         try:
             aps_data = validated_data.pop('actionpoint_set')
         except KeyError:
@@ -137,12 +141,14 @@ class TripSerializer(serializers.ModelSerializer):
         if aps_data:
             existing_ap_ids = [obj.id for obj in instance.actionpoint_set.all()]
             for ap_data in aps_data:
-                #logging.info(ap_data)
+
                 if ap_data.get('id') and ap_data['id'] in existing_ap_ids:
-                    # remove the id from the field
+                    ap_id = ap_data["id"]
+                    # remove the id from the field to avoid errors
                     del ap_data["id"]
                     # update current action point with ap_data
-                    ActionPoint.objects.update(**ap_data)
+                    ActionPoint.objects.filter(pk=ap_id).update(**ap_data)
+
                 else:
                     #create a new action_point
                     ActionPoint.objects.create(trip=instance, **ap_data)
@@ -163,6 +169,9 @@ class TripSerializer(serializers.ModelSerializer):
             'purpose_of_travel',
             'office',
             'main_observations',
+            'constraints',
+            'lessons_learned',
+            'opportunities',
             'travel_type',
             'from_date',
             'to_date',
@@ -192,7 +201,7 @@ class TripSerializer(serializers.ModelSerializer):
             'ta_reference',
             'vision_approver',
             'partners',
-            'pcas',
+            'partnerships',
             'travel_routes',
             'actionpoint_set',
             'trip_funds',

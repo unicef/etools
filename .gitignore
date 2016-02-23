@@ -1,3 +1,4 @@
+/behave-test/reports
 # Python bytecode:
 *.py[co]
 
@@ -20,6 +21,7 @@ build
 
 *idea*
 
+EquiTrack/static/*
 static/*
 media
 
@@ -66,6 +68,4 @@ htmlcov
 *.dir
 
 config.json
-
-*.key
 

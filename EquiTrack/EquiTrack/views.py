@@ -1,21 +1,19 @@
 __author__ = 'jcranwellward'
 import datetime
-import json
-import platform
-import subprocess
-
-from dealer.git import git
 
 from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
-from django.http.response import HttpResponse
 
-from partners.models import PCA, PartnerOrganization, PCASectorOutput
+from partners.models import PCA, PartnerOrganization
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
 from trips.models import Trip, ActionPoint
+
+
+class MainView(TemplateView):
+    template_name = 'choose_login.html'
 
 
 class DashboardView(TemplateView):
@@ -28,14 +26,14 @@ class DashboardView(TemplateView):
 
         sectors = {}
         now = datetime.datetime.now()
-        structure = self.request.GET.get('structure')
-        if structure is None and ResultStructure.objects.count():
-            structure = ResultStructure.objects.filter(
+        structure_id = self.request.GET.get('structure')
+        if structure_id is None and ResultStructure.objects.count():
+            structure_id = ResultStructure.objects.filter(
                 from_date__lte=now,
                 to_date__gte=now
-            )[0].id
+            ).values_list('id',  flat=True).first()
         try:
-            current_structure = ResultStructure.objects.get(id=structure)
+            current_structure = ResultStructure.objects.get(id=structure_id)
         except ResultStructure.DoesNotExist:
             current_structure = None
         for sector in Sector.objects.all():
@@ -107,8 +105,10 @@ class MapView(TemplateView):
             'region_list': Region.objects.all(),
             'partner_list': PartnerOrganization.objects.all(),
             'indicator_list': Indicator.objects.all(),
-            'output_list': PCASectorOutput.objects.all(),
-            'donor_list': Donor.objects.all()
+            'donor_list': Donor.objects.all(),
+            'lat': self.request.user.profile.country.latitude,
+            'lng': self.request.user.profile.country.longitude,
+            'zoom': self.request.user.profile.country.initial_zoom,
         }
 
 
@@ -134,32 +134,11 @@ class UserDashboardView(TemplateView):
                 Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)),
             'log': LogEntry.objects.select_related().filter(
                 user=self.request.user).order_by("-id")[:10],
-            'pcas': PCA.objects.filter(
-                unicef_managers=user, status=PCA.ACTIVE
+            'pcas': PCA.objects.filter(unicef_managers=user).filter(
+                Q(status=PCA.ACTIVE) | Q(status=PCA.IN_PROCESS)
             ).order_by("number", "-amendment_number")[:10],
             'action_points': ActionPoint.objects.filter(
                 Q(status='open') | Q(status='ongoing'),
                 person_responsible=user).order_by("-due_date")[:10]
         }
 
-
-def magic_info(request):
-    """
-    Return JSON string with some basic state information about this server.
-
-    You must be logged in as a staff user to access this URL.
-    """
-    if not request.user.is_staff:
-        return HttpResponse("You must be logged in as a superuser to "
-                            "perform this operation!", status=403)
-
-    info = {'commit_id': git.revision,
-            'os': platform.system(),
-            'arch': platform.machine(),
-            'hostname': platform.node(),
-            'python': platform.python_version(),
-            'server': request.META['SERVER_NAME'],
-            'server_port': request.META['SERVER_PORT'],
-            }
-
-    return HttpResponse(json.dumps(info), content_type="text/json")

@@ -1,9 +1,9 @@
 __author__ = 'jcranwellward'
 
-from django.test import TestCase
+from tenant_schemas.test.cases import TenantTestCase
 
 
-class TestKMLExport(TestCase):
+class TestKMLExport(TenantTestCase):
 
     def test_kml_generation(self):
 

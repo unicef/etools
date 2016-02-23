@@ -14,10 +14,9 @@ from partners.models import (
     PCAGrant,
     GwPCALocation,
     IndicatorProgress,
-    PCASectorOutput
 )
 from reports.admin import SectorListFilter
-from reports.models import Sector, Indicator, Rrp5Output
+from reports.models import Sector, Indicator
 
 
 class PCASectorFilter(SectorListFilter):
@@ -25,8 +24,7 @@ class PCASectorFilter(SectorListFilter):
     def queryset(self, request, queryset):
 
         if self.value():
-            sector = Sector.objects.get(pk=self.value())
-            return queryset.filter(sectors__icontains=sector.name)
+            return queryset.filter(pcasector__id__contains=self.value())
         return queryset
 
 

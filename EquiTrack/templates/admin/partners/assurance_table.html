@@ -1,0 +1,103 @@
+{% load i18n admin_static admin_modify %}
+
+    <h3>HACT assurance plan overview</h3>
+    <div id="assurance_table">
+        <table class="table">
+            <thead>
+            <tr>
+                <th colspan="2">Cash transfers</th>
+                <th>Risk</th>
+                <th>Programmatic monitoring visits</th>
+                <th>Spot-Checks</th>
+                <th>Audit</th>
+            </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <u>$ cash transferred (current year)</u>
+                        <br/>$ planned cash transfers (current year)
+                    </td>
+                    <td>Total cash transfers (current CP cycle)</td>
+                    <td>
+                        <u>Risk rating</u>
+                        <br/>Type of assessment
+                    </td>
+                    <td>
+                        <u>Done</u>
+                        <br/>Minimum Requirements
+                    </td>
+                    <td>
+                        <u>Done</u>
+                        <br/>Minimum Requirements
+                    </td>
+                    <td>
+                        <u>Done</u>
+                        <br/>Required
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <u>310,000</u>
+                        <br/>420,000
+                    </td>
+                    <td>550,000</td>
+                    <td>
+                        <u>Medium</u>
+                        <br/>Micro assessment
+                    </td>
+                    <td>
+                        <u>1</u>
+                        <br/>2
+                    </td>
+                    <td>
+                        <u>0</u>
+                        <br/>1
+                    </td>
+                    <td>
+                        <u>No</u>
+                        <br/>Yes
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+                <table class="table">
+            <thead>
+            <tr>
+                <th colspan="2">Cash transfers</th>
+                <th></th>
+                <th></th>
+                <th>Programmatic monitoring visits</th>
+                <th>Spot-Checks</th>
+            </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Programme Document</td>
+                    <td>
+                        <u>45,000</u>
+                        <br/>70,000
+                    </td>
+                    <td>
+                        120,000
+                    </td>
+                    <td>
+                    </td>
+                    <td>
+                        0
+                    </td>
+                    <td>
+                        1
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#assurance_table table').addClass("table table-striped table-hover");
+    });
+</script>

@@ -5,15 +5,23 @@ import json
 from rest_framework import serializers
 
 from locations.models import Location
-from .models import GwPCALocation, PCA, PCASector, IndicatorProgress
 
+from .models import (
+    GwPCALocation,
+    PCA,
+    PCASector,
+    IndicatorProgress,
+    PartnerStaffMember,
+    PartnerOrganization,
+    Agreement
+)
 
 class IndicatorProgressSerializer(serializers.ModelSerializer):
 
     indicator = serializers.CharField(source='indicator.name')
-    programmed = serializers.IntegerField(source='programmed')
-    current = serializers.IntegerField(source='current')
-    unit = serializers.CharField(source='unit')
+    programmed = serializers.IntegerField()
+    current = serializers.IntegerField()
+    unit = serializers.CharField()
 
     class Meta:
         model = IndicatorProgress
@@ -23,7 +31,7 @@ class PCASectorSerializer(serializers.ModelSerializer):
 
     sector_name = serializers.CharField(source='sector.name')
     sector_id = serializers.CharField(source='sector.id')
-    indicators = serializers.SerializerMethodField('get_indicators')
+    indicators = serializers.SerializerMethodField()
 
     def get_indicators(self, pca_sector):
         return IndicatorProgressSerializer(
@@ -42,7 +50,7 @@ class PartnershipSerializer(serializers.ModelSerializer):
     pca_id = serializers.CharField(source='id')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    sectors = serializers.SerializerMethodField('get_sectors')
+    sectors = serializers.SerializerMethodField()
 
     def get_sectors(self, pca):
         return PCASectorSerializer(
@@ -61,7 +69,7 @@ class LocationSerializer(serializers.Serializer):
     location_name = serializers.CharField(source='name')
     location_type = serializers.CharField(source='gateway.name')
     gateway_id = serializers.CharField(source='gateway.id')
-    p_code = serializers.CharField(source='p_code')
+    p_code = serializers.CharField()
     parterships = serializers.SerializerMethodField('get_pcas')
 
     def get_pcas(self, location):
@@ -93,6 +101,31 @@ class GWLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = GwPCALocation
 
+
+class PartnerOrganizationSerializer(serializers.ModelSerializer):
+
+    pca_set = PartnershipSerializer(many=True)
+
+    class Meta:
+        model = PartnerOrganization
+
+
+class AgreementSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Agreement
+
+
+
+class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
+
+    partner = PartnerOrganizationSerializer()
+    agreement_set = AgreementSerializer(many=True)
+
+    class Meta:
+        model = PartnerStaffMember
+        # fields = (
+        # )
 
 class RapidProRequest(serializers.Serializer):
 

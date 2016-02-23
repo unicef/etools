@@ -2,7 +2,11 @@
 
 {% block content %}
     <section class="main-content-wrapper">
+
         <section id="main-content">
+        <div class="clearfix">
+            <button type="button" class="btn btn-primary pull-right" onclick="window.open('{{ request.build_absolute_uri }}apps/', '_blank', 'location=no, toolbar=no')">eTrips App</button>
+        </div>
 
             <!--tiles start-->
             <div class="row">
@@ -71,6 +75,7 @@
                 </div>
             </div>
             <!--tiles end-->
+
 
             <div class="row">
                 <div class="col-md-4">
@@ -151,7 +156,6 @@
                                     <th>Total Actions</th>
                                     <th>Closed Actions</th>
                                     <th>Percentage</th>
-                                    <th>Color</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -163,7 +167,6 @@
                                             <td>{{ section.actions }}</td>
                                             <td>{{ section.closed_actions }}</td>
                                             <td>{% widthratio section.closed_actions section.actions 100 %}%</td>
-                                            <td style="background-color: {{ section.color }};"></td>
                                         </tr>
                                     {% endfor %}
                                 </tbody>
@@ -172,7 +175,7 @@
                         </div>
                     </div>
                 </div>
-
+            </div>
         </section>
     </section>
 {% endblock %}

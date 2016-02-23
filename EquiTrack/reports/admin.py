@@ -3,20 +3,16 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 
 from import_export.admin import ImportExportModelAdmin
+from mptt.admin import MPTTModelAdmin
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
 from partners.models import IndicatorProgress
 from reports.models import (
     Sector,
-    WBS,
     Goal,
     Unit,
-    Activity,
     Indicator,
-    Rrp5Output,
-    RRPObjective,
-    IntermediateResult,
     ResultStructure,
     ResultType,
     Result
@@ -117,55 +113,48 @@ class IndicatorAdmin(ImportExportModelAdmin):
     form = IndicatorAdminForm
     search_fields = ('name',)
     list_editable = (
-        'in_activity_info',
         'view_on_dashboard',
     )
     list_filter = (
         SectorListFilter,
         'result_structure',
+        'result__result_type'
     )
     list_display = (
         'name',
         'sector',
         'result_structure',
         'result',
-        'in_activity_info',
         'view_on_dashboard',
-    )
-    filter_horizontal = (
-        'activity_info_indicators',
     )
     inlines = [
         IndicatorProgressInlineAdmin,
     ]
 
 
-class ResultAdmin(ImportExportModelAdmin):
+class ResultAdmin(MPTTModelAdmin):
     form = AutoSizeTextForm
+    mptt_indent_field = '__unicode__'
     list_filter = (
         'result_structure',
         'sector',
         'result_type'
     )
+    list_display = (
+        '__unicode__',
+        'from_date',
+        'to_date',
+        'wbs',
+    )
 
-
-class IntermediateResultAdmin(ImportExportModelAdmin):
-    form = AutoSizeTextForm
-
-
-class WBSAdmin(ImportExportModelAdmin):
-    form = AutoSizeTextForm
+    def get_queryset(self, request):
+        queryset = super(ResultAdmin, self).get_queryset(request)
+        return queryset.filter(hidden=False)
 
 
 admin.site.register(Result, ResultAdmin)
-admin.site.register(ResultType)
-admin.site.register(RRPObjective, ImportExportModelAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
 admin.site.register(Sector, SectorAdmin)
-admin.site.register(Activity, ImportExportModelAdmin)
-admin.site.register(IntermediateResult, IntermediateResultAdmin)
-admin.site.register(Rrp5Output, ResultStructureAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-admin.site.register(WBS, WBSAdmin)

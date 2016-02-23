@@ -1,0 +1,108 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../../bower_components/paper-tabs/paper-tabs.html">
+
+<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<link rel="import" href="../user-stats/user-stats.html">
+<link rel="import" href="../trips-stats/trips-stats.html">
+<link rel="import" href="../agreements-stats/agreements-stats.html">
+<link rel="import" href="../interventions-stats/interventions-stats.html">
+
+<style>
+    paper-material {
+      padding: 1%;
+    } 
+</style>
+<style is="custom-style">
+    
+:root {
+    --paper-tab-ink: var(--default-primary-color);
+
+    /* custom CSS property */
+    --paper-tabs-selection-bar-color: blue;
+
+    /* custom CSS mixin */
+    --paper-tabs: {
+        color: var(--default-primary-color); /* variable defined in default-theme.html */
+    }
+}
+</style>
+<dom-module id="management-page">
+  <template>
+    <paper-tabs selected="{{selectedTab}}">
+
+        <paper-tab>Users</paper-tab>
+        <paper-tab>Trips</paper-tab>
+        <paper-tab>Agreements</paper-tab>
+        <paper-tab>Interventions</paper-tab>
+
+    </paper-tabs>
+    <iron-pages selected="{{selectedTab}}">
+
+
+      <section>
+        <paper-material elevation="1">
+          <user-stats 
+            app-data="[[appData]]">
+          </user-stats>
+        </paper-material>
+      </section>
+
+      <section>
+        <paper-material  elevation="1">
+          <trip-stats 
+            app-data="[[appData]]">
+          </trip-stats>
+        </paper-material>
+      </section>
+
+      <section>
+        <paper-material  elevation="1">  
+          <agreements-stats 
+            app-data="[[appData]]">
+          </agreements-stats>
+        </paper-material>
+      </section>
+
+      <section>
+        <paper-material elevation="1">  
+          <interventions-stats 
+            app-data="[[appData]]">
+          </interventions-stats>
+        </paper-material>
+      </section>
+
+    </iron-pages>
+    
+
+  </template>
+</dom-module>
+
+<script>
+    // jscs:disable
+(function() {
+    
+  'use strict';
+  Polymer({
+    is: 'management-page',
+    properties: {
+      statChoice: {
+        type: String,
+        value: 'users'
+      },
+      selectedTab: {
+        type: Number,
+        value: 0
+      }
+    },
+    _changeChoice: function(choice) {
+      this.statChoice = choice;
+    },
+    _choice: function(choice, statChoice) {
+      return choice !== statChoice;
+    },
+    
+  });
+})();
+
+</script>

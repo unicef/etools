@@ -9,6 +9,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     office = serializers.CharField(source='office.name')
     section = serializers.CharField(source='section.name')
+    country_name = serializers.CharField(source='country.name')
 
     class Meta:
         model = UserProfile
@@ -16,6 +17,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id',
             'user',
         )
+
 
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
@@ -32,6 +34,19 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
             'full_name'
         )
 
+
+class UserCountryCSVSerializer(serializers.ModelSerializer):
+
+    country = serializers.CharField(source="profile.country_override")
+
+    class Meta:
+        model = User
+        fields = (
+            'email',
+            'country'
+        )
+
+
 class UserSerializer(serializers.ModelSerializer):
 
     # profile = serializers.SerializerMethodField('get_profile')
@@ -40,12 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
 
     def get_profile(self, user):
-        try:
-            return UserProfileSerializer(
-                user.get_profile()
-            ).data
-        except Exception:
-            return None
+        return UserProfileSerializer(user.profile).data
 
     class Meta:
         model = User

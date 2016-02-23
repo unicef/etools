@@ -6,7 +6,6 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.db.models import Q
-from django.db.models.signals import post_save
 
 from EquiTrack.celery import app
 from trips.models import Trip

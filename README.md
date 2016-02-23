@@ -79,8 +79,7 @@ Map - a web-based public map with bubbles, representing PCAs, which are clustere
 > \#`exit`
 
 8. Make the apporpriate migrations 
-> docker exec -it [LOC_FOLDER]_web_1 python equitrack/manage.py syncdb --migrate
-> docker exec -it [LOC_FOLDER]_web_1 python equitrack/manage.py migrate
+> docker exec -it [LOC_FOLDER]_web_1 python equitrack/manage.py migrate_schemas --fake-initial
 
 9. Find out the running docker machine’s ip address and navigate to it on port 8080
 > $`docker-machine ip eq`

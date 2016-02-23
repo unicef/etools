@@ -5,6 +5,12 @@ import os
 from os.path import abspath, basename, dirname, join, normpath
 from sys import path
 import datetime
+from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.backends import default_backend
+
+import dj_database_url
+import saml2
+from saml2 import saml
 
 ########## PATH CONFIGURATION
 # Absolute filesystem path to the Django project directory:
@@ -15,6 +21,9 @@ SITE_ROOT = dirname(DJANGO_ROOT)
 
 # for Django 1.6
 BASE_DIR = dirname(SITE_ROOT)
+
+HOST = os.environ.get('DJANGO_ALLOWED_HOST', 'localhost:8000')
+ENVIRONMENT = os.environ.get('ENVIRONMENT', '')
 
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
@@ -38,7 +47,6 @@ SUIT_CONFIG = {
         {'app': 'trips', 'icon': 'icon-road', 'models': [
             {'model': 'trips.trip'},
             {'model': 'trips.actionpoint'},
-            {'model': 'trips.office'},
         ]},
 
         {'app': 'funds', 'icon': 'icon-briefcase'},
@@ -49,17 +57,15 @@ SUIT_CONFIG = {
             {'model': 'reports.result'},
             {'model': 'reports.indicator'},
             {'model': 'reports.goal'},
-            {'model': 'reports.intermediateresult'},
-            {'model': 'reports.wbs'},
         ]},
 
-        {'app': 'activityinfo', 'label': 'ActivityInfo'},
+        #{'app': 'activityinfo', 'label': 'ActivityInfo'},
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
-        {'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
+        #{'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 
-        {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
+        #{'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
 
@@ -75,10 +81,13 @@ ACCOUNT_ACTIVATION_DAYS = 7
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 DEFAULT_FROM_EMAIL = "no-reply@unicef.org"
 POST_OFFICE = {
-    'DEFAULT_PRIORITY': 'now'
+    'DEFAULT_PRIORITY': 'now',
+    'BACKENDS': {
+        # Will ensure email is sent async
+        'default': 'djcelery_email.backends.CeleryEmailBackend'
+    }
 }
 EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-POST_OFFICE_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'  # Will ensure email is sent async
 CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
 MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
 ########## END EMAIL CONFIGURATION
@@ -95,8 +104,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
+        'EquiTrack.mixins.EToolsTenantJWTAuthentication',
     )
 }
 
@@ -117,36 +125,53 @@ if isinstance(DEBUG, str):
     else:
         DEBUG = False
 
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-debug
-TEMPLATE_DEBUG = DEBUG
 ########## END DEBUG CONFIGURATION
 
 ########## DATABASE CONFIGURATION #########
 POSTGIS_VERSION = (2, 1)
-import dj_database_url
+db_config = dj_database_url.config(
+    env="DATABASE_URL",
+    default='postgis:///etools'
+)
+ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
+db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
 DATABASES = {
-    'default': dj_database_url.config(
-        env="DATABASE_URL",
-        default='postgis:///equitrack'
-    )
+    'default': db_config
 }
+DATABASE_ROUTERS = (
+    'tenant_schemas.routers.TenantSyncRouter',
+)
 
 import djcelery
 djcelery.setup_loader()
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+SLACK_URL = os.environ.get('SLACK_URL')
+
+COUCHBASE_URL = os.environ.get('COUCHBASE_URL')
+COUCHBASE_USER = os.environ.get('COUCHBASE_USER')
+COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
+
+MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')
+MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
 ########## END DATABASE CONFIGURATION
 
-########## MANAGER CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
-ADMINS = (
-    ('James Cranwell-Ward', 'jcranwellward@unicef.org'),
-)
+VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
+VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
+VISION_URL = 'https://devapis.unicef.org/BIService/BIWebService.svc/'
 
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
-MANAGERS = ADMINS
-########## END MANAGER CONFIGURATION
+USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
+# ########## MANAGER CONFIGURATION
+# # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
+# ADMINS = (
+#     ('James Cranwell-Ward', 'jcranwellward@unicef.org'),
+# )
+#
+# # See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
+# MANAGERS = ADMINS
+# ########## END MANAGER CONFIGURATION
 
 
 ########## GENERAL CONFIGURATION
@@ -170,33 +195,31 @@ USE_TZ = True
 ########## END GENERAL CONFIGURATION
 
 
+########## ALLAUTH CONFIGURATION
+SOCIALACCOUNT_PROVIDERS = \
+    { 'google':
+        { 'SCOPE': ['profile', 'email'],
+          'AUTH_PARAMS': { 'access_type': 'online' } }}
+
+SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
+ACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomAccountAdapter'
+
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_UNIQUE_EMAIL = True
+# ACCOUNT_USERNAME_REQUIRED = False
+
+SOCIALACCOUNT_STORE_TOKENS = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+ACCOUNT_LOGOUT_REDIRECT_URL = "/login"
+ACCOUNT_LOGOUT_ON_GET = True
+
+ACCOUNT_EMAIL_VERIFICATION = "none"  # "optional", "mandatory" or "none"
+########## END ALLAUTH CONFIGURATION
+
 ########## MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = normpath(join(BASE_DIR, 'media'))
-
-FILER_ALLOW_REGULAR_USERS_TO_ADD_ROOT_FOLDERS = True
-FILER_STORAGES = {
-    'public': {
-        'main': {
-            'ENGINE': 'filer.storage.PublicFileSystemStorage',
-            'OPTIONS': {
-                'location': MEDIA_ROOT,
-                'base_url': '/media/filer/',
-            },
-            'UPLOAD_TO': 'partners.utils.by_pca'
-        },
-    },
-    'private': {
-        'main': {
-            'ENGINE': 'filer.storage.PrivateFileSystemStorage',
-            'OPTIONS': {
-                'location': MEDIA_ROOT,
-                'base_url': '/media/filer/',
-            },
-            'UPLOAD_TO': 'partners.utils.by_pca'
-        },
-    },
-}
+MEDIA_ROOT = normpath(join(SITE_ROOT, 'media'))
 
 MEDIA_URL = '/media/'
 STATIC_URL = '/static/'
@@ -205,7 +228,7 @@ STATIC_URL = '/static/'
 
 ########## STATIC FILE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
-STATIC_ROOT = normpath(join(BASE_DIR, 'static'))
+STATIC_ROOT = normpath(join(SITE_ROOT, 'static'))
 
 # See: https://docs.djangoproject.com/en/dev/ref/contrib/staticfiles/#std:setting-STATICFILES_DIRS
 STATICFILES_DIRS = (
@@ -228,13 +251,6 @@ SECRET_KEY = r"j8%#f%3t@9)el9jh4f0ug4*mm346+wwwti#6(^@_ksf@&k^ob1"
 
 RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN')
 
-########## SITE CONFIGURATION
-# Hosts/domain names that are valid for this site
-# See https://docs.djangoproject.com/en/1.5/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = []
-########## END SITE CONFIGURATION
-
-
 ########## FIXTURE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-FIXTURE_DIRS
 FIXTURE_DIRS = (
@@ -244,28 +260,29 @@ FIXTURE_DIRS = (
 
 
 ########## TEMPLATE CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-context-processors
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.contrib.auth.context_processors.auth',
-    'django.core.context_processors.debug',
-    'django.core.context_processors.i18n',
-    'django.core.context_processors.media',
-    'django.core.context_processors.static',
-    'django.core.context_processors.tz',
-    'django.contrib.messages.context_processors.messages',
-    'django.core.context_processors.request',
-)
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [normpath(join(SITE_ROOT, 'templates')), normpath(join(SITE_ROOT, 'templates', 'frontend'))],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'debug': True,  # TEMPLATE_DEBUG was deprecated
+            'context_processors': [
+                # Already defined Django-related contexts here
 
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-loaders
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
-
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-dirs
-TEMPLATE_DIRS = (
-    normpath(join(SITE_ROOT, 'templates')),
-)
+                # `allauth` needs this from django
+                'django.contrib.auth.context_processors.auth',
+                'django.core.context_processors.request',
+                'django.core.context_processors.debug',
+                'django.core.context_processors.i18n',
+                'django.core.context_processors.media',
+                'django.core.context_processors.static',
+                'django.core.context_processors.tz',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
 ########## END TEMPLATE CONFIGURATION
 
 
@@ -273,13 +290,14 @@ TEMPLATE_DIRS = (
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#middleware-classes
 MIDDLEWARE_CLASSES = (
     # Default Django middleware.
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'EquiTrack.mixins.EToolsTenantMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
@@ -291,7 +309,7 @@ ROOT_URLCONF = '%s.urls' % SITE_NAME
 
 
 ########## APP CONFIGURATION
-DJANGO_APPS = (
+SHARED_APPS = (
     # Default Django apps:
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -300,6 +318,7 @@ DJANGO_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.gis',
+    'django.contrib.postgres',
     # Useful template tags:
     # 'django.contrib.humanize',
 
@@ -309,12 +328,8 @@ DJANGO_APPS = (
     'django.contrib.admin',
     # 'django.contrib.admindocs',
     'django.contrib.humanize',
-    'mathfilters'
-)
+    'mathfilters',
 
-THIRD_PARTY_APPS = (
-    # Database migration helpers:
-    'south',
     'easy_thumbnails',
     'filer',
     'storages',
@@ -334,38 +349,50 @@ THIRD_PARTY_APPS = (
     'leaflet',
     'djgeojson',
     'paintstore',
-    'messages_extends',
     'corsheaders',
-    'easy_pdf'
+    'djangosaml2',
+    #allauth
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    # allauth providers you want to enable:
+    #'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.google',
+    #'allauth.socialaccount.providers.twitter',
+    'analytical',
+    'mptt',
+    'vision',
+
+    # you must list the app where your tenant model resides in
+    'users',
+    'management',
 )
 
+MPTT_ADMIN_LEVEL_INDENT = 20
+
 # Apps specific for this project go here.
-LOCAL_APPS = (
+TENANT_APPS = (
     'funds',
     'locations',
     'activityinfo',
     'reports',
     'partners',
     'trips',
-    'users',
-    'registration',
     'tpm',
     'supplies',
 )
 
-MESSAGE_STORAGE = 'messages_extends.storages.FallbackStorage'
 
 LEAFLET_CONFIG = {
     'TILES':  'http://otile1.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg',
     'ATTRIBUTION_PREFIX': 'Tiles Courtesy of <a href="http://www.mapquest.com/" target="_blank">MapQuest</a> <img src="http://developer.mapquest.com/content/osm/mq_logo.png">',
-    'DEFAULT_CENTER': (os.environ.get('MAP_LAT', 33.9), os.environ.get('MAP_LONG', 36)),
-    'DEFAULT_ZOOM': int(os.environ.get('MAP_ZOOM', 9)),
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
-INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
+TENANT_MODEL = "users.Country"  # app.Model
 ########## END APP CONFIGURATION
 
 
@@ -384,39 +411,6 @@ CACHES = {
 WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 ########## END WSGI CONFIGURATION
 
-########## JWT AUTH CONFIGURATION
-JWT_AUTH = {
-    'JWT_ENCODE_HANDLER':
-    'rest_framework_jwt.utils.jwt_encode_handler',
-
-    'JWT_DECODE_HANDLER':
-    'rest_framework_jwt.utils.jwt_decode_handler',
-
-    'JWT_PAYLOAD_HANDLER':
-    'rest_framework_jwt.utils.jwt_payload_handler',
-
-    'JWT_PAYLOAD_GET_USER_ID_HANDLER':
-    'rest_framework_jwt.utils.jwt_get_user_id_from_payload_handler',
-
-    'JWT_RESPONSE_PAYLOAD_HANDLER':
-    'rest_framework_jwt.utils.jwt_response_payload_handler',
-
-    # this is temporary secret key
-    'JWT_SECRET_KEY': "secretkey123",
-    'JWT_ALGORITHM': 'HS256',
-    'JWT_VERIFY': True,
-    'JWT_VERIFY_EXPIRATION': True,
-    'JWT_LEEWAY': 0,
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
-    'JWT_AUDIENCE': None,
-    'JWT_ISSUER': None,
-
-    'JWT_ALLOW_REFRESH': False,
-    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=7),
-
-    'JWT_AUTH_HEADER_PREFIX': 'JWT',
-}
-######## END JWT AUTH CONFIGURATION
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': True,
@@ -426,6 +420,10 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'level': 'INFO'
         },
+    },
+    'django.security.DisallowedHost': {
+        'handlers': ['null'],
+        'propagate': False,
     },
     'root': {
         'handlers': ['console', ],
