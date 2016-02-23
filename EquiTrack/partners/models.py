@@ -941,6 +941,9 @@ class ResultChain(models.Model):
     target = models.PositiveIntegerField(
         blank=True, null=True
     )
+    current_progress = models.PositiveIntegerField(
+        default=0
+    )
     partner_contribution = models.IntegerField(default=0)
     unicef_cash = models.IntegerField(default=0)
     in_kind_amount = models.IntegerField(default=0)
