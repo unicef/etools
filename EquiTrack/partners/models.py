@@ -965,11 +965,11 @@ class IndicatorReport(TimeStampedModel):
 
     # WHO
     #  -  Implementing Partner
-    partner_staff_member = models.ForeignKey(PartnerStaffMember)
+    partner_staff_member = models.ForeignKey(PartnerStaffMember, related_name='indicator_reports')
 
     # WHAT
     #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
-    indicator = models.ForeignKey(Indicator)  # this should always be computed from result_chain
+    indicator = models.ForeignKey(Indicator, related_name='reports')  # this should always be computed from result_chain
     total = models.IntegerField()
     disaggregated = models.BooleanField(default=False)
     disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
@@ -979,15 +979,13 @@ class IndicatorReport(TimeStampedModel):
     from_date = models.DateTimeField()
     to_date = models.DateTimeField()
 
-
     # FOR WHOM / Beneficiary
     #  -  ResultChain
-    result_chain = models.ForeignKey(ResultChain)
+    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
 
     # WHERE
     #  -  Location
     location = models.ForeignKey(Location, blank=True, null=True)
-
 
     # Metadata
     #  - Remarks

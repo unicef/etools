@@ -84,8 +84,7 @@ class ResultChainDetailsSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
     disaggregation = HStoreField()
     result = OutputSerializer()
-
-
+    indicator_reports = IndicatorReportSerializer(many=True)
 
     class Meta:
         model = ResultChain
