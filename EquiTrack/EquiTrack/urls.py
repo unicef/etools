@@ -2,14 +2,14 @@ from __future__ import absolute_import
 
 from django.conf import settings
 from django.conf.urls import patterns, include, url
-
-
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import REDIRECT_FIELD_NAME
 
 from autocomplete_light import shortcuts as autocomplete_light
 # import every app/autocomplete_light_registry.py
 autocomplete_light.autodiscover()
+
+from rest_framework import routers
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -23,8 +23,11 @@ from .views import (
     UserDashboardView,
     CmtDashboardView,
 )
+from trips.views import TripsViewSet
 
 
+api = routers.SimpleRouter()
+api.register(r'trips', TripsViewSet, base_name='trip')
 
 
 urlpatterns = patterns(
@@ -43,6 +46,7 @@ urlpatterns = patterns(
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
 
+    url(r'^api/', include(api.urls)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
     # Uncomment the admin/doc line below to enable admin documentation:
     #url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
@@ -56,7 +60,6 @@ urlpatterns = patterns(
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
-    url(r'^api/auth/', include('rest_framework.urls', namespace='rest_framework')),
 )
 
 

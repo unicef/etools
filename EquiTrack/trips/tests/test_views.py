@@ -27,25 +27,18 @@ class TestTripViews(APITenantTestCase):
 
     def test_view_trips_list(self):
 
-        response = self.forced_auth_req('get', '/trips/api/')
+        response = self.forced_auth_req('get', '/api/trips')
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         # the length of this list should be 1
         self.assertEquals(len(response.data), 1)
-
-    def test_view_trips_approved(self):
-        response = self.forced_auth_req('get', '/trips/api/approved/')
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # the length of this list should be 0 -no trips approved
-        self.assertEquals(len(response.data), 0)
 
     def test_view_trips_api_action(self):
         # the trip should be in status planned
         self.assertEquals(self.trip.status, Trip.PLANNED)
         response = self.forced_auth_req(
             'post',
-            '/trips/api/{}/submitted/'.format(self.trip.id),
+            '/api/trips/{}/submitted/'.format(self.trip.id),
         )
 
         # refresh trip from db
