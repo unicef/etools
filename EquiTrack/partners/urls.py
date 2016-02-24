@@ -11,7 +11,8 @@ from .views import (
     PartnerStaffMemberPropertiesView,
     PartnerInterventionsView,
     InterventionDetailView,
-    ResultChainDetailView
+    ResultChainDetailView,
+    NewIndicatorReportView,
 )
 
 
@@ -24,6 +25,7 @@ urlpatterns = patterns(
     url(r'^api/interventions/$', PartnerInterventionsView.as_view()),
     url(r'^api/interventions/(?P<pk>\d+)/$', InterventionDetailView.as_view()),
     url(r'^api/resultchain/(?P<pk>\d+)/$', ResultChainDetailView.as_view()),
+    url(r'^api/indicatorreport/new/$', NewIndicatorReportView.as_view()),
 
     # auth and registration for partners
     #url(r'', include('registration.auth_urls')),

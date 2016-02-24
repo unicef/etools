@@ -10,7 +10,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 from datetime import datetime
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
 from rest_framework.permissions import IsAdminUser
 
 from .mixins import InterventionDetailsPermission, ResultChainPermission
@@ -21,7 +21,8 @@ from .serializers import (
     PartnershipSerializer,
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
-    ResultChainDetailsSerializer
+    ResultChainDetailsSerializer,
+    IndicatorReportSerializer
 )
 
 from .models import (
@@ -30,7 +31,8 @@ from .models import (
     PCASector,
     GwPCALocation,
     PartnerStaffMember,
-    ResultChain
+    ResultChain,
+    IndicatorReport
 )
 
 
@@ -211,3 +213,8 @@ class ResultChainDetailView(RetrieveAPIView):
         self.check_object_permissions(self.request, obj)
         return obj
 
+class NewIndicatorReportView(CreateAPIView):
+    serializer_class = IndicatorReportSerializer
+    model = IndicatorReport
+    # permission_classes = (IndicatorReportPermission,)
+    queryset = IndicatorReport.objects.all()

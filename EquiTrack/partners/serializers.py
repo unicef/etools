@@ -76,6 +76,8 @@ class ResultChainSerializer(serializers.ModelSerializer):
 
 class IndicatorReportSerializer(serializers.ModelSerializer):
     disaggregated = serializers.BooleanField(read_only=True)
+    partner_staff_member = serializers.IntegerField(read_only=True)
+    indicator = serializers.IntegerField(read_only=True)
     disaggregation = serializers.JSONField()
 
     class Meta:

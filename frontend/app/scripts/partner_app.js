@@ -31,6 +31,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     userInfoEp: window.location.origin + '/users/api/profile/',
     userPropertiesEp: window.location.origin + '/partnership/partnerstaffmember/',
     interventionsEp: [window.location.origin, 'partners', 'api', 'interventions'].join('/') + '/',
+    newIndicatorReportEp: window.location.origin + '/partners/api/indicatorreport/new/',
     getEndpoint: {
       userProperties: function(id) {
         return [window.location.origin, 'partners', 'api', 'profile', id].join('/') + '/';
