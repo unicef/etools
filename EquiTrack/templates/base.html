@@ -1,5 +1,5 @@
 {% load uservoice %}
-
+{% load admin_tags %}
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
@@ -70,8 +70,13 @@
                     </button>
                 </div>
                 <div class="user-nav">
+
                     <ul>
+                        <li id="country-select">
+                            {% show_country_select user.profile %}
+                        </li>
                         {% if messages %}
+
                             <li class="dropdown messages">
                                 <span class="badge badge-danager animated bounceIn" id="new-messages">{{ messages|length }}</span>
                                 <button type="button" class="btn btn-default dropdown-toggle options" id="toggle-mail"
@@ -251,6 +256,46 @@
   ga('send', 'pageview');
 
 </script>
+<script>
+    $( document ).ready(function() {
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        var csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+        $( "#country_selection" ).change(function(ev) {
+          // send post request
+            var my_data = {'country': ev.target.value};
+            $.post('/users/api/changecountry/', my_data, function() {
+                // success here
+                location.reload();
+            }).fail(function(){window.alert('Country change failed')})
+        });
+    });
+    </script>
 {% block extra_js %}
 {% endblock %}
 
