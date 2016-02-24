@@ -7,7 +7,6 @@ from django.db import models
 from django.db.models import Q
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
-from smart_selects.db_fields import ChainedForeignKey
 
 from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
@@ -326,14 +325,9 @@ class Trip(AdminURLMixin, models.Model):
                 remarks=route.remarks
             )
 
-
-        # TODO: I have a feeling the follwoing will break with the new locations, can someone confirm this?
         for location in self.triplocation_set.all():
             TripLocation.objects.create(
                 trip=trip,
-                governorate=location.governorate,
-                region=location.region,
-                locality=location.locality,
                 location=location.location
             )
 
@@ -344,7 +338,7 @@ class Trip(AdminURLMixin, models.Model):
         return FileAttachment.objects.filter(object_id=self.id)
 
     @classmethod
-    def get_all_trips(cls, user):
+    def get_current_trips(cls, user):
         super_trips = user.supervised_trips.filter(
             Q(status=Trip.APPROVED) | Q(status=Trip.SUBMITTED)
         )

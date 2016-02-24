@@ -3,18 +3,13 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 
-from django.views.generic import FormView, TemplateView, View
+from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 from django.http import HttpResponse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from datetime import datetime
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser
-
-from .mixins import InterventionDetailsPermission
-
 from locations.models import Location
 from .serializers import (
     LocationSerializer,
@@ -22,6 +17,7 @@ from .serializers import (
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer
 )
+from .permissions import InterventionDetailsPermission
 
 from .models import (
     PCA,
@@ -32,8 +28,10 @@ from .models import (
 )
 
 
-class LocationView(ListAPIView):
-
+class InterventionLocationView(ListAPIView):
+    """
+    Gets a list of Intervention locations based on passed query params
+    """
     model = GwPCALocation
     serializer_class = LocationSerializer
 
@@ -111,13 +109,16 @@ class LocationView(ListAPIView):
 class PortalDashView(View):
 
     def get(self, request):
+        # TODO: Rob please rename the referenced file to portal.html
         with open(settings.SITE_ROOT + '/templates/frontend/partner/partner.html', 'r') as my_f:
             result = my_f.read()
         return HttpResponse(result)
 
 
 class PartnerStaffMemberPropertiesView(RetrieveAPIView):
-
+    """
+    Gets the details of Staff Member belonging to a partner
+    """
     serializer_class = PartnerStaffMemberPropertiesSerializer
     queryset = PartnerStaffMember.objects.all()
 
@@ -137,7 +138,6 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         if self.kwargs[lookup_url_kwarg] == str(current_member.id):
             return current_member
 
-
         filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
         # allow lookup only for PSMs inside the same partnership
         filter['partner'] = current_member.partner
@@ -147,19 +147,29 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         return obj
 
 
-class PartnerInterventionsView(ListAPIView):
-
+class InterventionsView(ListAPIView):
+    """
+    Gets the list of Interventions in a country for the authenticated user
+    """
     serializer_class = PartnershipSerializer
     model = PCA
 
     def get_queryset(self):
-        # get the current user staff member
-        try:
-            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
-        except PartnerStaffMember.DoesNotExist:
-            raise Exception('there is no PartnerStaffMember record associated with this user')
-
-        return current_member.partner.pca_set.all()
+        queryset = super(InterventionsView, self).get_queryset()
+        if not self.request.user.is_staff:
+            # This must be a partner
+            try:
+                # TODO: Promote this to a permissions class
+                current_member = PartnerStaffMember.objects.get(
+                    id=self.request.user.profile.partner_staff_member
+                )
+            except PartnerStaffMember.DoesNotExist:
+                # This is an authenticated user with no access to interventions
+                return queryset.none()
+            else:
+                # Return all interventions this partner has
+                return queryset.filter(partner=current_member.partner)
+        return queryset
 
 
 class PortalLoginFailedView(TemplateView):
@@ -173,6 +183,9 @@ class PortalLoginFailedView(TemplateView):
 
 
 class InterventionDetailView(RetrieveAPIView):
+    """
+    Gets the details of the Intervention referenced by ID
+    """
     serializer_class = InterventionSerializer
     model = PCA
     permission_classes = (InterventionDetailsPermission,)

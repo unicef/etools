@@ -70,7 +70,7 @@ class AppsIOSPlistView(View):
 
 
 class TripsApprovedView(ListAPIView):
-
+    # TODO: Potentially remove or make generic
     model = Trip
     serializer_class = TripSerializer
 
@@ -81,6 +81,9 @@ class TripsApprovedView(ListAPIView):
 
 
 class TripUploadPictureView(APIView):
+    """
+    Uploads a picture against a trip
+    """
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, **kwargs):
@@ -133,17 +136,23 @@ class TripUploadPictureView(APIView):
 
 
 class TripsListApi(ListAPIView):
-
+    """
+    Get a list of current (Planned/Submitted/Approved)
+    trips for the currently authenticated user
+    """
     model = Trip
     serializer_class = TripSerializer
 
     def get_queryset(self):
         user = self.request.user
-        trips = Trip.get_all_trips(user)
+        trips = Trip.get_current_trips(user)
         return trips
 
 
 class TripDetailsView(RetrieveUpdateDestroyAPIView):
+    """
+    Get the details of a single trip by its ID
+    """
     model = Trip
     serializer_class = TripSerializer
     lookup_url_kwarg = 'trip'
@@ -151,7 +160,9 @@ class TripDetailsView(RetrieveUpdateDestroyAPIView):
 
 
 class TripActionView(GenericAPIView):
-
+    """
+    Perform an action on a trip
+    """
     model = Trip
     serializer_class = TripSerializer
 
@@ -224,7 +235,9 @@ class TripActionView(GenericAPIView):
 
 
 class TripsByOfficeView(APIView):
-
+    """
+    Returns an object used for the chart library on the trips dashboard
+    """
     def get(self, request):
 
         months = get_trip_months()
@@ -234,9 +247,11 @@ class TripsByOfficeView(APIView):
 
         by_office = []
         section_ids = Trip.objects.all().values_list(
-        	'section', flat=True)
+            'section', flat=True
+        )
         office_ids = Trip.objects.all().values_list(
-        	'office', flat=True)
+            'office', flat=True
+        )
         sections = Section.objects.filter(id__in=section_ids)
         for office in Office.objects.filter(id__in=office_ids):
             trips = office.trip_set.filter(

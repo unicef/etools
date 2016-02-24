@@ -39,11 +39,11 @@ urlpatterns = patterns(
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),
     url(r'^partners/', include('partners.urls')),
-    url(r'^partner/', include('partners.urls')),
     url(r'^trips/', include('trips.urls')),
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
 
+    url(r'^api/docs/', include('rest_framework_swagger.urls')),
     # Uncomment the admin/doc line below to enable admin documentation:
     #url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
@@ -55,8 +55,8 @@ urlpatterns = patterns(
     url(r'^saml2/', include('djangosaml2.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
-    url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
+    url(r'^api/auth/', include('rest_framework.urls', namespace='rest_framework')),
 )
 
 
