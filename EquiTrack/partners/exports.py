@@ -1,10 +1,10 @@
 __author__ = 'jcranwellward'
 
-import tablib
-import tempfile
-import zipfile
-import datetime
-from pytz import timezone
+# import tablib
+# import tempfile
+# import zipfile
+# import datetime
+# from pytz import timezone
 # from lxml import etree
 
 try:
@@ -15,14 +15,14 @@ except ImportError:
 from django.utils.datastructures import OrderedDict as SortedDict
 
 from import_export import resources
-from import_export.formats.base_formats import Format
+# from import_export.formats.base_formats import Format
 
-import fiona
-from shapely.geometry import Point, mapping
+# import fiona
+# from shapely.geometry import Point, mapping
 # from pykml.factory import KML_ElementMaker as KML
 
 from EquiTrack.utils import BaseExportResource
-from locations.models import Location
+# from locations.models import Location
 from .models import (
     PCA,
     GwPCALocation,
@@ -31,93 +31,94 @@ from .models import (
     AmendmentLog
 )
 
+# TODO: Following export has been disabled until formats content is reviewed
+# class SHPFormat(Format):
+#
+#     def get_title(self):
+#         return 'shp'
+#
+#     def prepare_shapefile(self, dataset):
+#
+#         tmp = tempfile.NamedTemporaryFile(suffix='.shp', mode='w')
+#         # we must close the file for GDAL to be able to open and write to it
+#         tmp.close()
+#
+#         attributes = {}
+#         for key in dataset.headers:
+#             attributes[key] = 'str'
+#
+#         schema = {'geometry': 'Point', 'properties': attributes}
+#         with fiona.open(tmp.name, 'w', 'ESRI Shapefile', schema) as output:
+#
+#             for data in dataset.dict:
+#
+#                 point = Point(data['x'], data['y'])
+#                 output.write({'properties': data, 'geometry': mapping(point)})
+#
+#         return tmp.name
+#
+#     def zip_response(self, shapefile_path, file_name, readme=None):
+#
+#         buffer = StringIO()
+#         zip = zipfile.ZipFile(buffer, 'a', zipfile.ZIP_DEFLATED)
+#         files = ['shp', 'shx', 'dbf']
+#         for item in files:
+#             filename = '{}.{}'.format(shapefile_path.replace('.shp', ''), item)
+#             zip.write(filename, arcname='{}.{}'.format(file_name.replace('.shp', ''), item))
+#         if readme:
+#             zip.writestr('README.txt', readme)
+#         zip.close()
+#
+#         buffer.seek(0)
+#         return buffer.read()
+#
+#     def get_extension(self):
+#         """
+#         Returns extension for this format files.
+#         """
+#         return "zip"
+#
+#     def can_export(self):
+#         return True
+#
 
-class SHPFormat(Format):
-
-    def get_title(self):
-        return 'shp'
-
-    def prepare_shapefile(self, dataset):
-
-        tmp = tempfile.NamedTemporaryFile(suffix='.shp', mode='w')
-        # we must close the file for GDAL to be able to open and write to it
-        tmp.close()
-
-        attributes = {}
-        for key in dataset.headers:
-            attributes[key] = 'str'
-
-        schema = {'geometry': 'Point', 'properties': attributes}
-        with fiona.open(tmp.name, 'w', 'ESRI Shapefile', schema) as output:
-
-            for data in dataset.dict:
-
-                point = Point(data['x'], data['y'])
-                output.write({'properties': data, 'geometry': mapping(point)})
-
-        return tmp.name
-
-    def zip_response(self, shapefile_path, file_name, readme=None):
-
-        buffer = StringIO()
-        zip = zipfile.ZipFile(buffer, 'a', zipfile.ZIP_DEFLATED)
-        files = ['shp', 'shx', 'dbf']
-        for item in files:
-            filename = '{}.{}'.format(shapefile_path.replace('.shp', ''), item)
-            zip.write(filename, arcname='{}.{}'.format(file_name.replace('.shp', ''), item))
-        if readme:
-            zip.writestr('README.txt', readme)
-        zip.close()
-
-        buffer.seek(0)
-        return buffer.read()
-
-    def get_extension(self):
-        """
-        Returns extension for this format files.
-        """
-        return "zip"
-
-    def can_export(self):
-        return True
-
-
-class DonorsFormat(SHPFormat):
-
-    def get_title(self):
-        return 'by donors'
-
-    def export_data(self, dataset):
-
-        locs = []
-
-        if dataset.csv != '':
-            pcas = PCA.objects.filter(
-                id__in=dataset['ID']
-            )
-            for pca in pcas:
-                donors = set(pca.pcagrant_set.all().values_list('grant__donor__name', flat=True))
-                for loc in pca.locations.filter(location__point__isnull=False):
-                    locs.append(
-                        {
-                            'Donors': ', '.join([d for d in donors]),
-                            'Gateway Type': loc.location.gateway.name,
-                            'PCode': loc.location.p_code,
-                            'Locality': loc.locality.name,
-                            'Cad Code': loc.locality.cad_code,
-                            'x': loc.location.point.x,
-                            'y': loc.location.point.y
-                        }
-                    )
-
-        data = tablib.Dataset(headers=locs[0].keys()) if locs \
-            else tablib.Dataset(headers=['Donors', 'Gateway Type', 'Locality', 'PCode', 'y', 'x', 'Cad Code'])
-
-        for loc in {v['PCode']: v for v in locs}.values():
-            data.append(loc.values())
-
-        shpfile = self.prepare_shapefile(data)
-        return self.zip_response(shpfile, 'Donors')
+# TODO: Following export has been disabled until formats content is reviewed
+# class DonorsFormat(SHPFormat):
+#
+#     def get_title(self):
+#         return 'by donors'
+#
+#     def export_data(self, dataset):
+#
+#         locs = []
+#
+#         if dataset.csv != '':
+#             pcas = PCA.objects.filter(
+#                 id__in=dataset['ID']
+#             )
+#             for pca in pcas:
+#                 donors = set(pca.pcagrant_set.all().values_list('grant__donor__name', flat=True))
+#                 for loc in pca.locations.filter(location__point__isnull=False):
+#                     locs.append(
+#                         {
+#                             'Donors': ', '.join([d for d in donors]),
+#                             'Gateway Type': loc.location.gateway.name,
+#                             'PCode': loc.location.p_code,
+#                             'Locality': loc.locality.name,
+#                             'Cad Code': loc.locality.cad_code,
+#                             'x': loc.location.point.x,
+#                             'y': loc.location.point.y
+#                         }
+#                     )
+#
+#         data = tablib.Dataset(headers=locs[0].keys()) if locs \
+#             else tablib.Dataset(headers=['Donors', 'Gateway Type', 'Locality', 'PCode', 'y', 'x', 'Cad Code'])
+#
+#         for loc in {v['PCode']: v for v in locs}.values():
+#             data.append(loc.values())
+#
+#         shpfile = self.prepare_shapefile(data)
+#         return self.zip_response(shpfile, 'Donors')
 
 
 class PartnerResource(resources.ModelResource):
@@ -305,7 +306,7 @@ class PCAResource(BaseExportResource):
 
         self.fill_pca_row(row, pca)
         self.fill_budget(row,pca)
-        self.fill_pca_grants(row, pca)
+        # self.fill_pca_grants(row, pca)
 
         # for sector in sorted(pca.pcasector_set.all()):
         #

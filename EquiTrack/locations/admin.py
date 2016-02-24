@@ -2,8 +2,6 @@ __author__ = 'jcranwellward'
 
 from django.contrib.gis import admin
 
-from import_export import resources
-from import_export.admin import ImportExportMixin
 from leaflet.admin import LeafletGeoAdmin
 from mptt.admin import MPTTModelAdmin
 
@@ -13,16 +11,9 @@ from .tasks import update_sites_from_cartodb
 from EquiTrack.forms import AutoSizeTextForm
 
 
-class LocationResource(resources.ModelResource):
-
-    class Meta:
-        model = models.Location
-
-
-class LocationAdmin(ImportExportMixin, LeafletGeoAdmin, MPTTModelAdmin):
+class LocationAdmin(LeafletGeoAdmin, MPTTModelAdmin):
     save_as = True
     form = AutoSizeTextForm
-    resource_class = LocationResource
     fields = [
         'name',
         'gateway',
@@ -103,9 +94,6 @@ class CartoDBTableAdmin(admin.ModelAdmin):
         for table in queryset:
             update_sites_from_cartodb.delay(table)
 
-# admin.site.register(models.Governorate, GovernorateAdmin)
-# admin.site.register(models.Region, RegionAdmin)
-# admin.site.register(models.Locality, LocalityAdmin)
 admin.site.register(models.Location, LocationAdmin)
 admin.site.register(models.GatewayType)
 admin.site.register(models.CartoDBTable, CartoDBTableAdmin)
