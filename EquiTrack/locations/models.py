@@ -6,7 +6,6 @@ import logging
 
 from django.db import IntegrityError
 from django.contrib.gis.db import models
-from django.contrib.contenttypes.generic import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 from mptt.models import MPTTModel, TreeForeignKey
@@ -169,7 +168,6 @@ class LinkedLocation(models.Model):
 
     content_type = models.ForeignKey(ContentType)
     object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
 
     def __unicode__(self):
         desc = u'{} -> {}'.format(

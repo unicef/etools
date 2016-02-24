@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from django.db import models, connection
 from django.forms import Textarea
 
-from reversion import VersionAdmin
+from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
 from users.models import UserProfile

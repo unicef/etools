@@ -1,0 +1,37 @@
+# ============================================================================
+# PYTHON PACKAGE REQUIREMENTS:
+# ============================================================================
+# REQUIRES: Python >= 2.6
+# DESCRIPTION:
+#    pip install -r <THIS_FILE>
+#
+# SPECIFIC DEPENDENCIES:
+#   behave  -- BDD test framework, cucumber-clone for Python.
+#   paver   -- Development and build support (optional)
+#   pyhamcrest -- As assertations matcher library.
+#
+# MAYBE:
+#   nose:       for assertations: eq_(x, y)
+#   pytest:     for assertations
+# ============================================================================
+
+behave >= 1.2.5
+parse >= 1.6.3
+parse_type >= 0.3.4
+
+argparse
+PyHamcrest >= 1.8
+
+# Selenium Webdriver
+selenium==2.48.0
+
+# -- BUILD-SUPPORT:
+#tox >= 1.6.1
+
+# -- DOCUMENTATION: Tutorials with examples.
+#Sphinx >= 1.1
+#sphinxcontrib-ansi >= 0.6
+#sphinxcontrib-programoutput >= 0.8
+
+# -- OPTIONAL DOCUMENTATION: If PDF docs are needed.
+#rst2pdf

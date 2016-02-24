@@ -6,7 +6,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 
 import autocomplete_light
-from reversion import VersionAdmin
+from reversion.admin import VersionAdmin
 from import_export.admin import ImportExportMixin, ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
@@ -211,13 +211,13 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
             return self.max_num
         return 0
 
-    # def get_readonly_fields(self, request, obj=None):
-    #
-    #     fields = super(DistributionPlanInlineAdmin, self).get_readonly_fields(request, obj)
-    #     if obj is None or obj.sent:
-    #         fields.append(u'send')
-    #
-    #     return fields
+    def get_readonly_fields(self, request, obj=None):
+
+        fields = super(DistributionPlanInlineAdmin, self).get_readonly_fields(request, obj)
+        if obj is None:
+            fields.append(u'send')
+
+        return fields
 
 
 class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):

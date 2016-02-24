@@ -1,9 +1,9 @@
 __author__ = 'jcranwellward'
 
 from django.contrib import admin
-from django.contrib.contenttypes.generic import GenericTabularInline
+from django.contrib.contenttypes.admin import GenericTabularInline
 
-from reversion import VersionAdmin
+from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin
 
 from trips.models import FileAttachment
