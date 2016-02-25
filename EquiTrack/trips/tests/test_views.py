@@ -9,8 +9,6 @@ from trips.models import Trip
 
 class TestTripViews(APITenantTestCase):
 
-
-
     def setUp(self):
         self.supervisor = UserFactory()
         self.trip = TripFactory(

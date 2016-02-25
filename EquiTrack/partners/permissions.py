@@ -18,5 +18,3 @@ class InterventionDetailsPermission(permissions.BasePermission):
         else:
             # Check permissions for write request
             return self._has_access_permissions(request.user, obj)
-
-        return False

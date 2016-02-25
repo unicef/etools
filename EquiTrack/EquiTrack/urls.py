@@ -24,10 +24,12 @@ from .views import (
     CmtDashboardView,
 )
 from trips.views import TripsViewSet
+from partners.views import InterventionsViewSet
 
 
 api = routers.SimpleRouter()
 api.register(r'trips', TripsViewSet, base_name='trip')
+api.register(r'interventions', InterventionsViewSet, base_name='intervention')
 
 
 urlpatterns = patterns(
@@ -48,11 +50,11 @@ urlpatterns = patterns(
 
     url(r'^api/', include(api.urls)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
-    # Uncomment the admin/doc line below to enable admin documentation:
-    #url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
+    # Uncomment the admin/doc line below to enable admin documentation:
+    # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # helper urls
     url(r'^accounts/', include('allauth.urls')),

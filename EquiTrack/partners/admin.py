@@ -231,7 +231,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     )
     date_hierarchy = 'start_date'
     list_display = (
-        'number',
+        'reference_number',
         'partnership_type',
         'status',
         'created_date',
@@ -260,6 +260,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         'title',
     )
     readonly_fields = (
+        'reference_number',
         'total_cash',
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
@@ -275,7 +276,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
             'fields':
                 ('partner',
                  'agreement',
-                 'number',
+                 'reference_number',
                  'partnership_type',
                  'result_structure',
                  'title',
@@ -564,7 +565,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     fields = (
         u'partner',
         u'agreement_type',
-        u'agreement_number',
+        u'reference_number',
         u'attached_agreement',
         (u'start', u'end',),
         u'signed_by_partner_date',
@@ -572,6 +573,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         u'signed_by_unicef_date',
         u'signed_by',
     )
+    readonly_fields = (u'reference_number',)
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]

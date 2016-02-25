@@ -10,10 +10,12 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.decorators import detail_route, list_route
+from rest_framework import viewsets, mixins
+
 from locations.models import Location
 from .serializers import (
     LocationSerializer,
-    PartnershipSerializer,
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer
 )
@@ -115,6 +117,16 @@ class PortalDashView(View):
         return HttpResponse(result)
 
 
+class PortalLoginFailedView(TemplateView):
+
+    template_name = "partner_loginfailed.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
+        context['email'] = urlsafe_base64_decode(context['email'])
+        return context
+
+
 class PartnerStaffMemberPropertiesView(RetrieveAPIView):
     """
     Gets the details of Staff Member belonging to a partner
@@ -147,15 +159,16 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         return obj
 
 
-class InterventionsView(ListAPIView):
-    """
-    Gets the list of Interventions in a country for the authenticated user
-    """
-    serializer_class = PartnershipSerializer
-    model = PCA
+class InterventionsViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    serializer_class = InterventionSerializer
+    permission_classes = (InterventionDetailsPermission,)
 
     def get_queryset(self):
-        queryset = super(InterventionsView, self).get_queryset()
+        queryset = super(InterventionsViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
             try:
@@ -171,35 +184,4 @@ class InterventionsView(ListAPIView):
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
-
-class PortalLoginFailedView(TemplateView):
-
-    template_name = "partner_loginfailed.html"
-
-    def get_context_data(self, **kwargs):
-        context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
-        context['email'] = urlsafe_base64_decode(context['email'])
-        return context
-
-
-class InterventionDetailView(RetrieveAPIView):
-    """
-    Gets the details of the Intervention referenced by ID
-    """
-    serializer_class = InterventionSerializer
-    model = PCA
-    permission_classes = (InterventionDetailsPermission,)
-    queryset = PCA.objects.all()
-
-    def get_object(self):
-        queryset = self.get_queryset()
-
-        # Perform the lookup filtering.
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-
-        obj = get_object_or_404(queryset, **filter)
-
-        self.check_object_permissions(self.request, obj)
-        return obj
 
