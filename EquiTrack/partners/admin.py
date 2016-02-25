@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 
 import autocomplete_light
 from reversion.admin import VersionAdmin
-from import_export.admin import ImportExportMixin, ExportMixin, base_formats
+from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.mixins import CountryUsersAdminMixin
@@ -454,7 +454,7 @@ class DocumentInlineAdmin(admin.TabularInline):
     changeform_link.short_description = 'View Intervention Details'
 
 
-class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
+class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
     resource_class = PartnerResource
     list_display = (
