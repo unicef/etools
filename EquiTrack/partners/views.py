@@ -3,25 +3,57 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 
-from django.views.generic import FormView, TemplateView, View
+from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 from django.http import HttpResponse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from datetime import datetime
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
-from .serializers import LocationSerializer, PartnershipSerializer, PartnerStaffMemberPropertiesSerializer
+from .serializers import (
+    LocationSerializer,
+    PartnershipSerializer,
+    PartnerStaffMemberPropertiesSerializer,
+)
 
 from .models import (
+    Agreement,
+    AuthorizedOfficer,
     PCA,
     PCAGrant,
     PCASector,
     GwPCALocation,
     PartnerStaffMember
 )
+
+
+class PcaPDFView(PDFTemplateView):
+    template_name = "partners/pca_pdf.html"
+
+    def get_context_data(self, **kwargs):
+        agr_id = self.kwargs.get('agr')
+        agreement = Agreement.objects.get(id=agr_id)
+        officers = agreement.authorized_officers.all().values_list('officer', flat=True)
+        officers_list = []
+        for id in officers:
+            officer = AuthorizedOfficer.objects.get(id=id)
+            officers_list.append(
+                {'first_name': officer.officer.first_name,
+                 'last_name': officer.officer.last_name,
+                 'title': officer.officer.title}
+            )
+
+        return super(PcaPDFView, self).get_context_data(
+            pagesize="Letter",
+            title="Partnership",
+            agreement=agreement,
+            auth_officers=officers_list,
+            country=self.request.tenant.name,
+            **kwargs
+        )
 
 
 class LocationView(ListAPIView):

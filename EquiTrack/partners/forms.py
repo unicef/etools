@@ -613,7 +613,7 @@ class PartnershipForm(UserGroupForm):
         if start_date and end_date and start_date > end_date:
             err = u'The end date has to be after the start date'
             raise ValidationError({'end_date': err})
-        
+
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
