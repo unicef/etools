@@ -1,5 +1,21 @@
 <html><head><!--
 @license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+--><!--
+@license
+Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
+This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
+The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
+The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
+Code distributed by Google as part of the polymer project is also
+subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
+--><!--
+@license
 Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
 This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
 The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
@@ -17124,14 +17140,14 @@ CSS properties               | Action
      * the memoized data.
      */
     resetFit: function() {
-      if (!this._fitInfo || !this._fitInfo.sizedBy.height) {
-        this.sizingTarget.style.maxHeight = '';
-        this.style.top = this._fitInfo ? this._fitInfo.inlineStyle.top : '';
-      }
       if (!this._fitInfo || !this._fitInfo.sizedBy.width) {
         this.sizingTarget.style.maxWidth = '';
-        this.style.left = this._fitInfo ? this._fitInfo.inlineStyle.left : '';
       }
+      if (!this._fitInfo || !this._fitInfo.sizedBy.height) {
+        this.sizingTarget.style.maxHeight = '';
+      }
+      this.style.top = this._fitInfo ? this._fitInfo.inlineStyle.top : '';
+      this.style.left = this._fitInfo ? this._fitInfo.inlineStyle.left : '';
       if (this._fitInfo) {
         this.style.position = this._fitInfo.positionedBy.css;
       }
@@ -17192,18 +17208,30 @@ CSS properties               | Action
      * `position:fixed`.
      */
     center: function() {
-      if (!this._fitInfo.positionedBy.vertically || !this._fitInfo.positionedBy.horizontally) {
-        // need position:fixed to center
-        this.style.position = 'fixed';
+      var positionedBy = this._fitInfo.positionedBy;
+      if (positionedBy.vertically && positionedBy.horizontally) {
+        // Already positioned.
+        return;
       }
-      if (!this._fitInfo.positionedBy.vertically) {
-        var top = (this._fitHeight - this.offsetHeight) / 2 + this._fitTop;
-        top -= this._fitInfo.margin.top;
+      // Need position:fixed to center
+      this.style.position = 'fixed';
+      // Take into account the offset caused by parents that create stacking
+      // contexts (e.g. with transform: translate3d). Translate to 0,0 and
+      // measure the bounding rect.
+      if (!positionedBy.vertically) {
+        this.style.top = '0px';
+      }
+      if (!positionedBy.horizontally) {
+        this.style.left = '0px';
+      }
+      // It will take in consideration margins and transforms
+      var rect = this.getBoundingClientRect();
+      if (!positionedBy.vertically) {
+        var top = this._fitTop - rect.top + (this._fitHeight - rect.height) / 2;
         this.style.top = top + 'px';
       }
-      if (!this._fitInfo.positionedBy.horizontally) {
-        var left = (this._fitWidth - this.offsetWidth) / 2 + this._fitLeft;
-        left -= this._fitInfo.margin.left;
+      if (!positionedBy.horizontally) {
+        var left = this._fitLeft - rect.left + (this._fitWidth - rect.width) / 2;
         this.style.left = left + 'px';
       }
     }
@@ -17219,6 +17247,9 @@ CSS properties               | Action
    */
   Polymer.IronOverlayManagerClass = function() {
     this._overlays = [];
+    // Used to keep track of the last focused node before an overlay gets opened.
+    this._lastFocusedNodes = [];
+
     /**
      * iframes have a default z-index of 100, so this default should be at least
      * that.
@@ -17237,7 +17268,42 @@ CSS properties               | Action
         return this._backdropElement;
       }.bind(this)
     });
-  }
+
+    /**
+     * The deepest active element.
+     * returns {?Node} element the active element
+     */
+    this.deepActiveElement = null;
+    Object.defineProperty(this, 'deepActiveElement', {
+      get: function() {
+        var active = document.activeElement;
+        // document.activeElement can be null
+        // https://developer.mozilla.org/en-US/docs/Web/API/Document/activeElement
+        while (active && active.root && Polymer.dom(active.root).activeElement) {
+          active = Polymer.dom(active.root).activeElement;
+        }
+        return active;
+      }.bind(this)
+    });
+  };
+
+  /**
+   * If a node is contained in an overlay.
+   * @private
+   * @param {Node} node
+   * @returns {Boolean}
+   */
+  Polymer.IronOverlayManagerClass.prototype._isChildOfOverlay = function(node) {
+    while (node && node !== document.body) {
+      // Use logical parentNode, or native ShadowRoot host.
+      node = Polymer.dom(node).parentNode || node.host;
+      // Check if it is an overlay.
+      if (node && node.behaviors && node.behaviors.indexOf(Polymer.IronOverlayBehaviorImpl) !== -1) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   Polymer.IronOverlayManagerClass.prototype._applyOverlayZ = function(overlay, aboveZ) {
     this._setZ(overlay, aboveZ + 2);
@@ -17257,6 +17323,12 @@ CSS properties               | Action
     if (newZ <= minimumZ) {
       this._applyOverlayZ(overlay, minimumZ);
     }
+    var element = this.deepActiveElement;
+    // If already in other overlay, don't reset focus there.
+    if (this._isChildOfOverlay(element)) {
+      element = null;
+    }
+    this._lastFocusedNodes.push(element);
   };
 
   Polymer.IronOverlayManagerClass.prototype.removeOverlay = function(overlay) {
@@ -17264,6 +17336,13 @@ CSS properties               | Action
     if (i >= 0) {
       this._overlays.splice(i, 1);
       this._setZ(overlay, '');
+
+      var node = this._lastFocusedNodes[i];
+      // Focus only if still contained in document.body
+      if (overlay.restoreFocusOnClose && node && Polymer.dom(document.body).deepContains(node)) {
+        node.focus();
+      }
+      this._lastFocusedNodes.splice(i, 1);
     }
   };
 
@@ -17597,6 +17676,14 @@ context. You should place this element as a child of `<body>` whenever possible.
         value: document
       },
 
+      /**
+       * Set to true to enable restoring of focus when overlay is closed.
+       */
+      restoreFocusOnClose: {
+        type: Boolean,
+        value: false
+      },
+
       _manager: {
         type: Object,
         value: Polymer.IronOverlayManager
@@ -17704,7 +17791,7 @@ context. You should place this element as a child of `<body>` whenever possible.
     },
 
     ready: function() {
-      // with-backdrop need tabindex to be set in order to trap the focus.
+      // with-backdrop needs tabindex to be set in order to trap the focus.
       // If it is not set, IronOverlayBehavior will set it, and remove it if with-backdrop = false.
       this.__shouldRemoveTabIndex = false;
       // Used for wrapping the focus on TAB / Shift+TAB.
@@ -17714,7 +17801,7 @@ context. You should place this element as a child of `<body>` whenever possible.
 
     attached: function() {
       // Call _openedChanged here so that position can be computed correctly.
-      if (this._callOpenedWhenReady) {
+      if (this.opened) {
         this._openedChanged();
       }
       this._observer = Polymer.dom(this).observeNodes(this._onNodesChange);
@@ -17784,7 +17871,6 @@ context. You should place this element as a child of `<body>` whenever possible.
 
       // wait to call after ready only if we're initially open
       if (!this._overlaySetup) {
-        this._callOpenedWhenReady = this.opened;
         return;
       }
 
@@ -21573,7 +21659,7 @@ window.addEventListener('WebComponentsReady', function() {
 <dom-module id="etools-ajax" assetpath="common/etools-ajax/">
 
   <template>
-    <iron-ajax id="customAjax" auto="" handle-as="json" on-response="handleResponse" on-error="handleError" method="[[method]]" params="[[params]]" debounce-duration="300">
+    <iron-ajax id="customAjax" handle-as="json" on-response="handleResponse" on-error="handleError" method="[[method]]" params="[[params]]" debounce-duration="300">
     </iron-ajax>
   </template>
 
@@ -21629,7 +21715,7 @@ window.addEventListener('WebComponentsReady', function() {
       //console.log(rsp.srcElement.url);
       // TODO: move this logic into default behaviours
       if (rsp.detail.xhr.responseURL !== rsp.srcElement.url){
-        console.error('expected link did not work, got redirected');
+        console.error('expected link did not work, got redirected',rsp.detail.xhr.responseURL, rsp.srcElement.url);
         // TODO: if we get redirected to login.. trigger a global redirect mechanism
         // this._handleUnexpectedResponse();
         return;
@@ -21668,6 +21754,7 @@ window.addEventListener('WebComponentsReady', function() {
         };
       }
       this.$.customAjax.url = newUrl;
+      //this.$.customAjax.generateRequest();
     }
 
     
@@ -22392,7 +22479,8 @@ window.addEventListener('WebComponentsReady', function() {
         'total': this.$.reportTotal.value
       };
       myReq.method = 'POST';
-      myReq.url = this.appData.getEndpoint.resultChainReport(this.rcId);
+      myReq.url = this.appData.newIndicatorReportEp;
+      console.log('something');
     },
     update_view: function() {
       var params = this.params;

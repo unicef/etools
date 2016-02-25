@@ -39,7 +39,7 @@ urlpatterns = patterns(
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),
     url(r'^partners/', include('partners.urls')),
-    url(r'^partner/', include('partners.urls')),
+    #url(r'^partner/', include('partners.urls')),
     url(r'^trips/', include('trips.urls')),
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
