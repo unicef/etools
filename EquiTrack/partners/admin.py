@@ -4,6 +4,7 @@ __author__ = 'jcranwellward'
 
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from django.core.urlresolvers import reverse
 
 import autocomplete_light
 from reversion.admin import VersionAdmin
@@ -17,7 +18,7 @@ from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
 from .exports import (
-    DonorsFormat,
+    # DonorsFormat,
     PCAResource,
     PartnerResource,
 )
@@ -62,7 +63,6 @@ from .forms import (
     PartnerStaffMemberForm,
     LocationForm
 )
-from trips.models import Trip
 
 
 class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -226,7 +226,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     # Add custom exports
     formats = (
         base_formats.CSV,
-        DonorsFormat,
+        # DonorsFormat,
         # KMLFormat,
     )
     date_hierarchy = 'start_date'
@@ -485,7 +485,7 @@ class PartnerAdmin(ImportExportMixin, admin.ModelAdmin):
                  u'core_values_assessment_date',
                  u'core_values_assessment',)
         }),
-        (_('Meta Data'), {
+        (_('Alternate Name'), {
             u'classes': (u'collapse',),
             'fields':
                 ((u'alternate_id', u'alternate_name',),)
@@ -560,21 +560,51 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         u'agreement_number',
         u'partner',
         u'agreement_type',
+        u'download_url'
     )
-    fields = (
-        u'partner',
-        u'agreement_type',
-        u'agreement_number',
-        u'attached_agreement',
-        (u'start', u'end',),
-        u'signed_by_partner_date',
-        u'partner_manager',
-        u'signed_by_unicef_date',
-        u'signed_by',
+    fieldsets = (
+        (u'Agreement Details', {
+            u'fields':
+                (
+                    u'partner',
+                    u'agreement_type',
+                    u'agreement_number',
+                    u'attached_agreement',
+                    (u'start', u'end',),
+                    u'signed_by_partner_date',
+                    u'partner_manager',
+                    u'signed_by_unicef_date',
+                    u'signed_by',
+                    u'download_url'
+                )
+        }),
+        (u'Bank Details', {
+            u'fields':
+                (
+                    u'bank_name',
+                    u'bank_address',
+                    u'account_title',
+                    u'account_number',
+                    u'routing_details',
+                    u'bank_contact_person'
+                )
+        })
     )
+    readonly_fields = (u'download_url',)
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
+
+    def download_url(self, obj):
+        if obj:
+            return u'<a class="btn btn-primary default" ' \
+                   u'href="{}" >Download</a>'.format(
+                    reverse('pca_pdf', args=(obj.id,))
+                    )
+        return ''
+
+    download_url.allow_tags = True
+    download_url.short_description = 'PDF Agreement'
 
     def get_formsets(self, request, obj=None):
         # display the inline only if the agreement was saved
