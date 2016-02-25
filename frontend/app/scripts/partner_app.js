@@ -20,7 +20,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   if ((window.location.port === '') || (window.location.port === '8099')) {  // if production
     // Uncomment app.baseURL below and
     // set app.baseURL to '/your-pathname/' if running from folder in production
-    app.baseUrl = '/partner/';
+    app.baseUrl = '/partners/';
   }
   // console.log(typeof(_));
 
