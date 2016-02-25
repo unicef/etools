@@ -164,6 +164,7 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
 
+    queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = (InterventionDetailsPermission,)
 

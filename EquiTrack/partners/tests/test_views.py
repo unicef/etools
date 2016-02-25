@@ -11,7 +11,7 @@ from partners.models import PCA
 class TestPartnershipViews(APITenantTestCase):
 
     def setUp(self):
-        self.unicef_staff = UserFactory()
+        self.unicef_staff = UserFactory(is_staff=True)
         self.intervention = PartnershipFactory()
 
         # self.client.login(

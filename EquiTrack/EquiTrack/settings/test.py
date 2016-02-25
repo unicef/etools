@@ -17,4 +17,6 @@ class DisableMigrations(object):
     def __getitem__(self, item):
         return "notmigrations"
 
-MIGRATION_MODULES = {'partners': 'partners.test.test_migrations'}
+MIGRATION_MODULES = DisableMigrations()
+
+TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'

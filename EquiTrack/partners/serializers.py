@@ -63,7 +63,7 @@ class InterventionSerializer(serializers.ModelSerializer):
     pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    sectors = serializers.SerializerMethodField()
+    pcasector_set = PCASectorSerializer(many=True)
     results = ResultChainSerializer(many=True)
 
     class Meta:
