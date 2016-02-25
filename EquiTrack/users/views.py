@@ -65,7 +65,6 @@ class ChangeUserCountryView(APIView):
             request.user.profile.country = country
             request.user.profile.country_override = country
             request.user.profile.save()
-            print request.user.profile.countries_available.all()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 

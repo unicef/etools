@@ -11,6 +11,7 @@ from .views import (
     PartnerStaffMemberPropertiesView,
     # InterventionsView,
     # InterventionDetailView
+    PcaPDFView,
 )
 
 
@@ -20,6 +21,8 @@ urlpatterns = patterns(
     url(r'^accounts/loginfailed/(?P<email>.+)/$', PortalLoginFailedView.as_view(), name='sociallogin_notamember'),
     url(r'^locations/$', InterventionLocationView.as_view(), name='locations'),
     url(r'^staffmember/(?P<pk>\d+)/$', PartnerStaffMemberPropertiesView.as_view()),
+    url(r'^agreement/(?P<agr>\d+)/pdf', PcaPDFView.as_view(), name='pca_pdf'),
+
     # url(r'^api/interventions/$', InterventionsView.as_view()),
     # url(r'^api/interventions/(?P<pk>\d+)/$', InterventionDetailView.as_view()),
 

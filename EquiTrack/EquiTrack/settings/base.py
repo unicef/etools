@@ -268,10 +268,13 @@ FIXTURE_DIRS = (
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [normpath(join(SITE_ROOT, 'templates')), normpath(join(SITE_ROOT, 'templates', 'frontend'))],
+        'DIRS': [
+            normpath(join(SITE_ROOT, 'templates')),
+            normpath(join(SITE_ROOT, 'templates', 'frontend'))
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
-            'debug': True,  # TEMPLATE_DEBUG was deprecated
+            'debug': DEBUG,  # TEMPLATE_DEBUG was deprecated
             'context_processors': [
                 # Already defined Django-related contexts here
 
@@ -367,8 +370,9 @@ SHARED_APPS = (
     #'allauth.socialaccount.providers.twitter',
     'analytical',
     'mptt',
-    'vision',
+    'easy_pdf',
 
+    'vision',
     # you must list the app where your tenant model resides in
     'users',
     'management',

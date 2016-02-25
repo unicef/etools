@@ -45,6 +45,9 @@ requests==2.8.1
 django-analytical==2.0.0
 xlrd==0.9.3
 dj-static==0.0.6
+django-easy-pdf
+xhtml2pdf
+reportlab
 
 # testing libs
 coverage==4.0
