@@ -69,3 +69,13 @@ htmlcov
 
 config.json
 
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/bower_components
+.tmp
+.editorconfig
+Icon
+*.sublime-project
+*.sublime-workspace
+
