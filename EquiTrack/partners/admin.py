@@ -18,7 +18,7 @@ from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
 from .exports import (
-    DonorsFormat,
+    # DonorsFormat,
     PCAResource,
     PartnerResource,
 )
@@ -226,7 +226,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     # Add custom exports
     formats = (
         base_formats.CSV,
-        DonorsFormat,
+        # DonorsFormat,
         # KMLFormat,
     )
     date_hierarchy = 'start_date'
