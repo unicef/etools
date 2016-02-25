@@ -3,15 +3,15 @@ from __future__ import absolute_import
 __author__ = 'jcranwellward'
 
 
-from django.views.generic import FormView, TemplateView, View
+from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 from django.http import HttpResponse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from datetime import datetime
+
 from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
-from rest_framework.permissions import IsAdminUser
+from easy_pdf.views import PDFTemplateView
 
 from .mixins import InterventionDetailsPermission, ResultChainPermission
 
