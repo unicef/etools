@@ -19,8 +19,8 @@ Example:
 
   <template>
     <iron-ajax
-          id="customAjax"
           auto
+          id="customAjax"
           handle-as="json"
           on-response="handleResponse"
           on-error="handleError"
@@ -82,7 +82,7 @@ Example:
       //console.log(rsp.srcElement.url);
       // TODO: move this logic into default behaviours
       if (rsp.detail.xhr.responseURL !== rsp.srcElement.url){
-        console.error('expected link did not work, got redirected');
+        console.error('expected link did not work, got redirected',rsp.detail.xhr.responseURL, rsp.srcElement.url);
         // TODO: if we get redirected to login.. trigger a global redirect mechanism
         // this._handleUnexpectedResponse();
         return;
