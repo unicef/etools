@@ -611,16 +611,10 @@ class PartnershipForm(UserGroupForm):
             )
             raise ValidationError({'start_date': err})
 
-        if end_date and end_date > agreement.end:
-            err = u'The Intervention must end before the agreement ends on: {}'.format(
-                agreement.end
-            )
-            raise ValidationError({'end_date': err})
-
         if start_date and end_date and start_date > end_date:
             err = u'The end date has to be after the start date'
             raise ValidationError({'end_date': err})
-        
+
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 

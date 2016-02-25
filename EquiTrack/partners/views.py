@@ -26,6 +26,8 @@ from .serializers import (
 )
 
 from .models import (
+    Agreement,
+    AuthorizedOfficer,
     PCA,
     PCAGrant,
     PCASector,
@@ -34,6 +36,32 @@ from .models import (
     ResultChain,
     IndicatorReport
 )
+
+
+class PcaPDFView(PDFTemplateView):
+    template_name = "partners/pca_pdf.html"
+
+    def get_context_data(self, **kwargs):
+        agr_id = self.kwargs.get('agr')
+        agreement = Agreement.objects.get(id=agr_id)
+        officers = agreement.authorized_officers.all().values_list('officer', flat=True)
+        officers_list = []
+        for id in officers:
+            officer = AuthorizedOfficer.objects.get(id=id)
+            officers_list.append(
+                {'first_name': officer.officer.first_name,
+                 'last_name': officer.officer.last_name,
+                 'title': officer.officer.title}
+            )
+
+        return super(PcaPDFView, self).get_context_data(
+            pagesize="Letter",
+            title="Partnership",
+            agreement=agreement,
+            auth_officers=officers_list,
+            country=self.request.tenant.name,
+            **kwargs
+        )
 
 
 class LocationView(ListAPIView):
