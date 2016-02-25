@@ -306,7 +306,7 @@ class PCAResource(BaseExportResource):
 
         self.fill_pca_row(row, pca)
         self.fill_budget(row,pca)
-        self.fill_pca_grants(row, pca)
+        # self.fill_pca_grants(row, pca)
 
         # for sector in sorted(pca.pcasector_set.all()):
         #
