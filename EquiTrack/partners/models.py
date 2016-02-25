@@ -370,6 +370,21 @@ class Agreement(TimeStampedModel):
         blank=True, null=True,
     )
 
+    #bank information
+    bank_name = models.CharField(max_length=255, null=True, blank=True)
+    bank_address = models.CharField(
+        max_length=256L,
+        blank=True)
+    account_title = models.CharField(max_length=255, null=True, blank=True)
+    account_number = models.CharField(max_length=50, null=True, blank=True)
+    routing_details = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
+    )
+    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
     def __unicode__(self):
         return u'{} for {} ({} - {})'.format(
             self.agreement_type,
@@ -377,16 +392,6 @@ class Agreement(TimeStampedModel):
             self.start.strftime('%d-%m-%Y') if self.start else '',
             self.end.strftime('%d-%m-%Y') if self.end else ''
         )
-
-    def save(self, **kwargs):
-
-        # if self.partner_manager and \
-        #         self.partner_manager.id not in \
-        #         self.authorized_officers.values_list('officer', flat=True):
-        #     officer = AuthorizedOfficer.objects.create(agreement=self, officer=self.partner_manager)
-        #     self.authorized_officers.add(officer)
-
-        super(Agreement, self).save(**kwargs)
 
 
 class AuthorizedOfficer(models.Model):
@@ -646,13 +651,6 @@ class PCA(AdminURLMixin, models.Model):
             total += budget.partner_contribution
         return total
 
-    def save(self, **kwargs):
-        """
-        Calculate total cash on save
-        """
-
-        super(PCA, self).save(**kwargs)
-
     @classmethod
     def get_active_partnerships(cls):
         return cls.objects.filter(current=True, status=cls.ACTIVE)
@@ -729,9 +727,13 @@ class PartnershipBudget(TimeStampedModel):
     partner_contribution = models.IntegerField(default=0)
     unicef_cash = models.IntegerField(default=0)
     in_kind_amount = models.IntegerField(
-        default=0, verbose_name='UNICEF Supplies')
+        default=0,
+        verbose_name='UNICEF Supplies'
+    )
     year = models.CharField(
-        max_length=5, blank=True, null=True)
+        max_length=5,
+        blank=True, null=True
+    )
     total = models.IntegerField(default=0)
     amendment = models.ForeignKey(
         AmendmentLog,

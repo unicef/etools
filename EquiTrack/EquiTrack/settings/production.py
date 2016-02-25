@@ -19,9 +19,10 @@ INSTALLED_APPS = INSTALLED_APPS + (
     'raven.contrib.django.raven_compat',
 )
 
-MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
-    'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
-)
+# MIDDLEWARE_CLASSES = MIDDLEWARE_CLASSES + (
+#     'raven.contrib.django.raven_compat.middleware.Sentry404CatchMiddleware',
+# )
+
 SOCIALACCOUNT_PROVIDERS = \
     { 'google':
         { 'SCOPE': ['profile', 'email'],
@@ -29,7 +30,6 @@ SOCIALACCOUNT_PROVIDERS = \
 
 SOCIALACCOUNT_ADAPTER = 'EquiTrack.mixins.CustomSocialAccountAdapter'
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
-
 
 
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME', None)

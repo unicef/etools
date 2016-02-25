@@ -31,10 +31,27 @@ class UserAdminPlus(UserAdmin):
         return False
     
     def get_queryset(self, request):
+        """
+        You should only be able to manage users in your country
+        :param request:
+        :return:
+        """
         queryset = super(UserAdminPlus, self).get_queryset(request)
         if not request.user.is_superuser:
             queryset = queryset.filter(profile__country=request.tenant)
         return queryset
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        You shouldnt be able grant superuser access if you are not a superuser
+        :param request:
+        :param obj:
+        :return:
+        """
+        fields = super(UserAdminPlus, self).get_readonly_fields(request, obj)
+        if not request.user.is_superuser:
+            fields.append(u'is_superuser')
+        return fields
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -67,9 +84,14 @@ class ProfileAdmin(admin.ModelAdmin):
     )
 
     def get_queryset(self, request):
+        """
+        You should only be able to manage users in your country
+        :param request:
+        :return:
+        """
         queryset = super(ProfileAdmin, self).get_queryset(request)
         if not request.user.is_superuser:
-            queryset = queryset.filter(profile__country=request.tenant)
+            queryset = queryset.filter(country=request.tenant)
         return queryset
 
 
