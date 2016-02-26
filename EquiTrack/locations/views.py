@@ -7,5 +7,8 @@ from .serializers import CartoDBTableSerializer
 
 
 class CartoDBTablesView(ListAPIView):
+    """
+    Gets a list of CartoDB tables for the mapping system
+    """
     queryset = CartoDBTable.objects.all()
     serializer_class = CartoDBTableSerializer
