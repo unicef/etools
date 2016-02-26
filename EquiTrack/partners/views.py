@@ -238,8 +238,21 @@ class ResultChainDetailView(RetrieveAPIView):
         self.check_object_permissions(self.request, obj)
         return obj
 
-class NewIndicatorReportView(CreateAPIView):
+
+
+
+class IndicatorReportViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
     serializer_class = IndicatorReportSerializer
     model = IndicatorReport
     # permission_classes = (IndicatorReportPermission,)
     queryset = IndicatorReport.objects.all()
+
+    def perform_create(self, serializer):
+        # add the user to the arguments
+        serializer.save(owner=self.request.user)
+
+

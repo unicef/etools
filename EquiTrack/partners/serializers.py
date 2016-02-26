@@ -58,19 +58,24 @@ class ResultChainSerializer(serializers.ModelSerializer):
 
 class IndicatorReportSerializer(serializers.ModelSerializer):
     disaggregated = serializers.BooleanField(read_only=True)
+    partner_staff_member = serializers.IntegerField(read_only=True)
+    indicator = serializers.IntegerField(read_only=True)
     disaggregation = serializers.JSONField()
 
     class Meta:
         model = IndicatorReport
 
+    def validate(self, data):
+        # TODO: handle validation
+        return data
+
     def create(self, validated_data):
         # TODO: update value on resultchain (atomic)
-
-
-        pass
+        raise serializers.ValidationError({'result_chain': "Creation halted for now"})
 
     def update(self, instance, validated_data):
-        pass
+        # TODO: update value on resultchain (atomic)
+        raise serializers.ValidationError({'result_chain': "Creation halted for now"})
 
 
 class ResultChainDetailsSerializer(serializers.ModelSerializer):

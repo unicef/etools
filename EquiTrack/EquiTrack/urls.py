@@ -24,12 +24,13 @@ from .views import (
     CmtDashboardView,
 )
 from trips.views import TripsViewSet
-from partners.views import InterventionsViewSet
+from partners.views import InterventionsViewSet, IndicatorReportViewSet
 
 
 api = routers.SimpleRouter()
 api.register(r'trips', TripsViewSet, base_name='trip')
 api.register(r'interventions', InterventionsViewSet, base_name='intervention')
+api.register(r'reports/indicators', IndicatorReportViewSet, base_name='indicator_report')
 
 
 urlpatterns = patterns(
