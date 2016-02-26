@@ -12,7 +12,6 @@ from .views import (
     # InterventionsView,
     # InterventionDetailView,
     ResultChainDetailView,
-    NewIndicatorReportView,
     PcaPDFView,
 )
 
@@ -28,7 +27,6 @@ urlpatterns = patterns(
     # url(r'^api/interventions/$', InterventionsView.as_view()),
     # url(r'^api/interventions/(?P<pk>\d+)/$', InterventionDetailView.as_view()),
     url(r'^api/resultchain/(?P<pk>\d+)/$', ResultChainDetailView.as_view()),
-    url(r'^api/indicatorreport/new/$', NewIndicatorReportView.as_view()),
 
     # auth and registration for partners
     #url(r'', include('registration.auth_urls')),
