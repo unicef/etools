@@ -393,6 +393,23 @@ class Agreement(TimeStampedModel):
             self.end.strftime('%d-%m-%Y') if self.end else ''
         )
 
+    @property
+    def reference_number(self):
+        year = self.signed_by_unicef_date.year \
+            if self.signed_by_unicef_date else datetime.date.today().year
+        objects = list(Agreement.objects.filter(
+            signed_by_unicef_date__year=year
+        ).order_by('-created').values_list('id', flat=True))
+        sequence = objects.index(self.id) if self.id and objects else len(objects) + 1
+        number = u'{code}/{type}{year}{seq}{version}'.format(
+            code='LEBA',
+            type=self.agreement_type,
+            year=year,
+            seq=sequence,
+            version=u''  # TODO: Change once agreement amendments are active
+        )
+        return number
+
 
 class AuthorizedOfficer(models.Model):
     agreement = models.ForeignKey(
@@ -580,15 +597,10 @@ class PCA(AdminURLMixin, models.Model):
         ordering = ['-number', 'amendment']
 
     def __unicode__(self):
-        title = u'{}: {}'.format(
+        return u'{}: {}'.format(
             self.partner.name,
-            self.number
+            self.reference_number
         )
-        if self.amendment:
-            title = u'{} (Amendment: {})'.format(
-                title, self.amendment_number
-            )
-        return title
 
     @property
     def sector_children(self):
@@ -629,7 +641,7 @@ class PCA(AdminURLMixin, models.Model):
             return u''
 
     @property
-    def amendments(self):
+    def amendment_num(self):
         return self.amendments_log.all().count()
 
     @property
@@ -650,6 +662,23 @@ class PCA(AdminURLMixin, models.Model):
             total += budget.in_kind_amount
             total += budget.partner_contribution
         return total
+
+    @property
+    def reference_number(self):
+        year = self.signed_by_unicef_date.year \
+            if self.signed_by_unicef_date else datetime.date.today().year
+        objects = list(PCA.objects.filter(
+            signed_by_unicef_date__year=year
+        ).order_by('-created_at').values_list('id', flat=True))
+        sequence = objects.index(self.id) if self.id and objects else len(objects) + 1
+        number = u'{agreement}/{type}{year}{seq}{version}'.format(
+            agreement=self.agreement.reference_number if self.id else '',
+            type=self.partnership_type,
+            year=year,
+            seq=sequence,
+            version=u'-{}'.format(self.amendment_num) if self.amendment_num else ''
+        )
+        return number
 
     @classmethod
     def get_active_partnerships(cls):
