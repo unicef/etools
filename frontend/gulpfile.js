@@ -50,8 +50,8 @@ var dist = function(subpath) {
       return !subpath ? DIST : path.join(DIST, subpath);
   }
 };
-//var etoolsRoot = '../EquiTrack';
-var etoolsRoot = '..';
+var etoolsRoot = '../EquiTrack';
+//var etoolsRoot = '..';
 var etoolsAssets;
 var etoolsAssetsPath;
 var etoolsImages; 

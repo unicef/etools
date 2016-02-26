@@ -23,8 +23,8 @@
   <template is="dom-repeat" items="[[indicators]]" as="rc">
     <div on-tap="_goToReport" rc-id="{{rc.id}}">
       <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
-      <div>Partner Target Total: {{rc.partner_contribution}}</div>
-      <div>Partner Current Total: {{rc.partner_current_contribution}}</div>
+      <div>Partner Target Total: {{rc.target}}</div>
+      <div>Partner Current Total: {{rc.current_progress}}</div>
       <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
         <div>
           <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
