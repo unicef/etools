@@ -20,34 +20,6 @@ from reports.models import (
 from .forms import IndicatorAdminForm
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#TODO: remove resultchain before commiting
-
-
-
-
-
-
-
-
-
-
-
-
 class SectorListFilter(admin.SimpleListFilter):
 
     title = 'Sector'
@@ -186,4 +158,4 @@ admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-admin.site.register(ResultChain)
+#admin.site.register(ResultChain)
