@@ -21,6 +21,7 @@
     "page": true,
     "app": true,
     "mngBv": true,
-    "_": true
+    "_": true,
+    "moment":true
   }
 }

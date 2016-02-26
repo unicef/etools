@@ -1,13 +1,23 @@
 
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
+
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../common/etools-ajax/etools-ajax.html">
 <link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../../bower_components/iron-list/iron-list.html">
 
+<link rel="import" href="../../../bower_components/paper-date-picker/paper-date-picker.html">
+<link rel="import" href="../../../bower_components/paper-date-picker/paper-date-picker-dialog-style.html">
+<link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/moment-element/moment-with-locales-import.html">
+
+  
+
 
 <dom-module id="rc-report">
-
+  <style is="custom-style" include="paper-date-picker-dialog-style">
+  </style>
   <template>
     <etools-ajax
           auto
@@ -19,7 +29,9 @@
     </etools-ajax>
     <etools-ajax
           auto
-          id="ajaxPost">
+          id="ajaxPost"
+          on-response="handleSubmitResponse"
+          on-error="handleSubmitError">
     </etools-ajax>
    
   <h2>rcReport</h2>
@@ -30,8 +42,28 @@
       <p>Indicator = {{rc.indicator.name}}</p>
   </div>
   <div>
+  <paper-button class="btn" on-tap="showNewReportDialog" raised>Add Report</paper-button>
+  <paper-dialog id="newReportDialog">
     <input type="number" id="reportTotal">
+      <div class="buttons">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm>OK</paper-button>
+      </div>
+     <section>
+      <p>From: {{dateFormat(date, 'LL')}}</p>
+      <input id="fromDate" type="hidden" value="{{dateFormat(date, '')}}">
+      <paper-button class="btn" on-tap="showDialog" raised>Change</paper-button>
+      <paper-dialog id="dialog" class="paper-date-picker-dialog" modal on-iron-overlay-closed="dismissDialog">
+        <paper-date-picker id="picker" date="[[date]]"></paper-date-picker>
+        <div class="buttons">
+          <paper-button dialog-dismiss>Cancel</paper-button>
+          <paper-button dialog-confirm>OK</paper-button>
+        </div>
+      </paper-dialog>
+    </section>
+    
     <button on-tap='_submitReport'>Submit Report</button>
+    </paper-dialog>
   </div>
   
   </template>
@@ -67,7 +99,7 @@
       }
     },
     ready: function() {
-      //
+      this.date = new Date();
     },
     changeUrl: function(){
       
@@ -81,15 +113,40 @@
     handleResponse: function(rsp) {
       //
       this.rc = rsp.detail.xhr.response;
+
     },
-    _submitReport: function() {
+    dateFormat: function(date, format) {
+      return moment(date).format(format);
+    },
+    handleSubmitResponse: function(rsp){
+      this.disabledButton.disabled = false;
+      console.log(rsp.detail.xhr.response);
+    },
+    handleSubmitError: function(rsp){
+      console.log(rsp.detail.error);
+      this.disabledButton.disabled = false;
+    },
+    _submitReport: function(ev) {
+      this.disabledButton = ev.currentTarget;
+      this.disabledButton.disabled = true;
       var myReq = this.$.ajaxPost;
       myReq.body = {
         'total': this.$.reportTotal.value
       };
       myReq.method = 'POST';
       myReq.url = this.appData.newIndicatorReportEp;
-      console.log('something');
+      myReq.sendPostRequest();
+    },
+    showDialog: function() {
+      this.$.dialog.toggle();
+    },
+    showNewReportDialog: function() {
+      this.$.newReportDialog.toggle();
+    },
+    dismissDialog: function(event) {
+      if (event.detail.confirmed) {
+        this.date = this.$.picker.date;
+      }
     },
     update_view: function() {
       var params = this.params;

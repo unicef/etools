@@ -112,16 +112,24 @@ Example:
 
     _prepareRequest: function(newUrl){
       if ((this.method !== undefined) && (!this._csrfSafeMethod(this.method))) {
-        console.log('unsafe method', this.method);
-        var csrfToken = this._getCSRFCookie();
-        this.$.customAjax.body = this.body;
-        this.$.customAjax.contentType = 'application/json';
-        this.$.customAjax.headers = {
-          'X-CSRFToken': csrfToken
-        };
+        // unsafe (post, put, delete) requests should be triggered manually
+        return;
       }
       this.$.customAjax.url = newUrl;
-    }
+    },
+    sendPostRequest: function(){
+      console.log('unsafe method', this.method);
+      var csrfToken = this._getCSRFCookie();
+      this.$.customAjax.auto=false;
+      this.$.customAjax.body = this.body;
+      this.$.customAjax.contentType = 'application/json';
+      this.$.customAjax.headers = {
+        'X-CSRFToken': csrfToken
+      };
+      this.$.customAjax.url = this.url;
+      this.$.customAjax.generateRequest();
+      return;
+    },
 
     
   });

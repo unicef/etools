@@ -331,10 +331,10 @@ gulp.task('serve', ['styles', 'elements', 'images'], function() {
         break;
 
       // partner app
-      case '/partners/api/interventions/':
+      case '/api/interventions/':
         req.url = '/data/partner/interventions.json';
         break;
-      case '/partners/api/interventions/7/':
+      case '/api/interventions/7/':
         req.url = '/data/partner/intervention_details.json';
         break;
       case '/partners/api/resultchain/1/':
