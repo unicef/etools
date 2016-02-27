@@ -48,7 +48,6 @@ from supplies.tasks import (
 from . import emails
 
 
-
 HIGH = u'high'
 SIGNIFICANT = u'significant'
 MODERATE = u'moderate'
@@ -63,37 +62,25 @@ RISK_RATINGS = (
 
 class PartnerOrganization(models.Model):
 
-    NATIONAL = u'national'
-    INTERNATIONAL = u'international'
-    CBO = u'cbo'
-    ACADEMIC = u'academic',
-    PARTNER_TYPES = (
-        (INTERNATIONAL, u"International NGO"),
-        {NATIONAL, u"National NGO"},
-        (CBO, u"CBO"),
-        (ACADEMIC, u"Academic Institution"),
-    )
-
-    type = models.CharField(
+    partner_type = models.CharField(
         max_length=50,
         choices=Choices(
-            u'International NGO',
-            u'National NGO',
-            u'CBO',
+            u'Bilateral / Multilateral',
+            u'Civil Society Organization',
+            u'Government',
+            u'UN Agency',
+        )
+    )
+    cso_type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            u'International',
+            u'National',
+            u'Community Based Organisation',
             u'Academic Institution',
         ),
         verbose_name=u'CSO Type',
         blank=True, null=True
-    )
-    partner_type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            u'Government',
-            u'Civil Society Organisation',
-            u'UN Agency',
-            u'Inter-governmental Organisation',
-            u'Bi-Lateral Organisation'
-        )
     )
     name = models.CharField(
         max_length=255,
@@ -149,6 +136,7 @@ class PartnerOrganization(models.Model):
         upload_to='partners/core_values/',
         help_text=u'Only required for CSO partners'
     )
+    vision_synced = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['name']
@@ -594,7 +582,7 @@ class PCA(AdminURLMixin, models.Model):
     class Meta:
         verbose_name = 'Intervention'
         verbose_name_plural = 'Interventions'
-        ordering = ['-number', 'amendment']
+        ordering = ['-created_at']
 
     def __unicode__(self):
         return u'{}: {}'.format(
@@ -1040,3 +1028,27 @@ class DistributionPlan(models.Model):
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
+class FundingCommitment(models.Model):
+
+    grant = models.ForeignKey(Grant)
+    intervention = models.ForeignKey(PCA, null=True)
+    fr_number = models.CharField(max_length=50)
+    wbs = models.CharField(max_length=50)
+    fc_type = models.CharField(max_length=50)
+    fc_ref = models.CharField(max_length=50)
+    fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    agreement_amount = models.DecimalField(decimal_places=2, max_digits=10)
+    commitment_amount = models.DecimalField(decimal_places=2, max_digits=10)
+    expenditure_amount = models.DecimalField(decimal_places=2, max_digits=10)
+
+
+class DirectCashTransfer(models.Model):
+
+    fc_ref = models.CharField(max_length=50)
+    amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)

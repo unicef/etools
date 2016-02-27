@@ -83,8 +83,8 @@ class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = PCASector
     form = AmendmentForm
     formset = ParentInlineAdminFormSet
-    verbose_name = 'Sector'
-    verbose_name_plural = 'Sectors'
+    verbose_name = 'Programme/Sector/Section'
+    verbose_name_plural = 'Programmes/Sectors/Sections'
     suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
@@ -313,9 +313,9 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
     inlines = (
         AmendmentLogInlineAdmin,
+        PcaSectorInlineAdmin,
         PartnershipBudgetInlineAdmin,
         PcaGrantInlineAdmin,
-        PcaSectorInlineAdmin,
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
@@ -334,6 +334,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     )
 
     suit_form_includes = (
+        ('admin/partners/funding_summary.html', 'bottom', 'info'),
         ('admin/partners/work_plan.html', 'middle', 'results'),
         ('admin/partners/trip_summary.html', 'top', 'trips'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
@@ -461,7 +462,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     list_display = (
         u'name',
         u'vendor_number',
-        u'type',
+        u'partner_type',
         u'email',
         u'phone_number',
         u'alternate_id',
@@ -477,7 +478,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
             'fields':
                 (u'name',
                  u'short_name',
-                 (u'partner_type', u'type',),
+                 (u'partner_type', u'cso_type',),
                  u'vendor_number',
                  u'rating',
                  u'address',
@@ -602,8 +603,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                    u'href="{}" >Download</a>'.format(
                     reverse('pca_pdf', args=(obj.id,))
                     )
-        return ''
-
+        return u''
     download_url.allow_tags = True
     download_url.short_description = 'PDF Agreement'
 

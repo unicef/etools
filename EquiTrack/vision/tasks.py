@@ -1,14 +1,20 @@
-from celery.schedules import crontab
-from celery.task import periodic_task
 from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app
 from users.models import Country
-from .vision_data_synchronizer import VisionException
-from .programme_synchronizer import ProgrammeSynchronizer
+from vision_data_synchronizer import VisionException
+from vision.adapters.programme import ProgrammeSynchronizer
+from vision.adapters.partner import PartnerSynchronizer
+from vision.adapters.funding import (
+    FundingSynchronizer,
+    DirectCashTransfer,
+)
 
 SYNC_HANDLERS = [
-    ProgrammeSynchronizer
+    ProgrammeSynchronizer,
+    PartnerSynchronizer,
+    FundingSynchronizer,
+    DirectCashTransfer
 ]
 
 
@@ -33,5 +39,5 @@ def sync():
                 ))
         processed.append(country)
     logger.info('Processed the following countries during sync: {}'.format(
-        ', '.join([country.name for country in processed]))
+        ',\n '.join([country.name for country in processed]))
     )

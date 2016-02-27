@@ -35,18 +35,6 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         )
 
 
-class UserCountryCSVSerializer(serializers.ModelSerializer):
-
-    country = serializers.CharField(source="profile.country_override")
-
-    class Meta:
-        model = User
-        fields = (
-            'email',
-            'country'
-        )
-
-
 class UserSerializer(serializers.ModelSerializer):
 
     # profile = serializers.SerializerMethodField('get_profile')
