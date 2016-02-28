@@ -7,14 +7,14 @@ from vision.adapters.programme import ProgrammeSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.funding import (
     FundingSynchronizer,
-    DirectCashTransfer,
+    DCTSynchronizer,
 )
 
 SYNC_HANDLERS = [
     ProgrammeSynchronizer,
     PartnerSynchronizer,
     FundingSynchronizer,
-    DirectCashTransfer
+    DCTSynchronizer
 ]
 
 
