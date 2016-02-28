@@ -559,7 +559,7 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
     list_display = (
-        u'agreement_number',
+        u'reference_number',
         u'partner',
         u'agreement_type',
         u'download_url'
@@ -570,7 +570,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                 (
                     u'partner',
                     u'agreement_type',
-                    u'agreement_number',
+                    u'reference_number',
                     u'attached_agreement',
                     (u'start', u'end',),
                     u'signed_by_partner_date',
