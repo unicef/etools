@@ -4,6 +4,8 @@ import json
 
 from rest_framework import serializers
 
+from rest_framework_hstore.fields import HStoreField
+from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
 from .models import (
@@ -13,8 +15,10 @@ from .models import (
     IndicatorProgress,
     PartnerStaffMember,
     PartnerOrganization,
-    Agreement
+    Agreement,
+    ResultChain
 )
+
 
 class IndicatorProgressSerializer(serializers.ModelSerializer):
 
@@ -43,20 +47,24 @@ class PCASectorSerializer(serializers.ModelSerializer):
         model = PCASector
 
 
-class PartnershipSerializer(serializers.ModelSerializer):
+class ResultChainSerializer(serializers.ModelSerializer):
+    indicator = IndicatorSerializer()
+    disaggregation = HStoreField()
+    result = OutputSerializer()
 
-    pca_title = serializers.CharField(source='title')
-    pca_number = serializers.CharField(source='number')
+    class Meta:
+        model = ResultChain
+
+
+class InterventionSerializer(serializers.ModelSerializer):
+
     pca_id = serializers.CharField(source='id')
+    pca_title = serializers.CharField(source='title')
+    pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    sectors = serializers.SerializerMethodField()
-
-    def get_sectors(self, pca):
-        return PCASectorSerializer(
-            pca.pcasector_set.all(),
-            many=True
-        ).data
+    pcasector_set = PCASectorSerializer(many=True)
+    results = ResultChainSerializer(many=True)
 
     class Meta:
         model = PCA
@@ -77,7 +85,7 @@ class LocationSerializer(serializers.Serializer):
             loc.pca for loc in
             location.gwpcalocation_set.all()
         ])
-        return PartnershipSerializer(pcas, many=True).data
+        return InterventionSerializer(pcas, many=True).data
 
     class Meta:
         model = Location
@@ -104,7 +112,7 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
-    pca_set = PartnershipSerializer(many=True)
+    pca_set = InterventionSerializer(many=True)
 
     class Meta:
         model = PartnerOrganization
@@ -126,6 +134,7 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
         model = PartnerStaffMember
         # fields = (
         # )
+
 
 class RapidProRequest(serializers.Serializer):
 

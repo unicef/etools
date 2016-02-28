@@ -9,15 +9,19 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
+from datetime import datetime
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.decorators import detail_route, list_route
+from rest_framework import viewsets, mixins
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
 from .serializers import (
     LocationSerializer,
-    PartnershipSerializer,
     PartnerStaffMemberPropertiesSerializer,
+    InterventionSerializer
 )
+from .permissions import InterventionDetailsPermission
 
 from .models import (
     Agreement,
@@ -56,8 +60,10 @@ class PcaPDFView(PDFTemplateView):
         )
 
 
-class LocationView(ListAPIView):
-
+class InterventionLocationView(ListAPIView):
+    """
+    Gets a list of Intervention locations based on passed query params
+    """
     model = GwPCALocation
     serializer_class = LocationSerializer
 
@@ -135,13 +141,26 @@ class LocationView(ListAPIView):
 class PortalDashView(View):
 
     def get(self, request):
+        # TODO: Rob please rename the referenced file to portal.html
         with open(settings.SITE_ROOT + '/templates/frontend/partner/partner.html', 'r') as my_f:
             result = my_f.read()
         return HttpResponse(result)
 
 
-class PartnerStaffMemberPropertiesView(RetrieveAPIView):
+class PortalLoginFailedView(TemplateView):
 
+    template_name = "partner_loginfailed.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
+        context['email'] = urlsafe_base64_decode(context['email'])
+        return context
+
+
+class PartnerStaffMemberPropertiesView(RetrieveAPIView):
+    """
+    Gets the details of Staff Member belonging to a partner
+    """
     serializer_class = PartnerStaffMemberPropertiesSerializer
     queryset = PartnerStaffMember.objects.all()
 
@@ -161,7 +180,6 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         if self.kwargs[lookup_url_kwarg] == str(current_member.id):
             return current_member
 
-
         filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
         # allow lookup only for PSMs inside the same partnership
         filter['partner'] = current_member.partner
@@ -171,26 +189,30 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         return obj
 
 
-class PartnerInterventionsView(ListAPIView):
+class InterventionsViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
 
-    serializer_class = PartnershipSerializer #PartnerInterventionsSerializer
-    model = PCA
+    queryset = PCA.objects.all()
+    serializer_class = InterventionSerializer
+    permission_classes = (InterventionDetailsPermission,)
 
     def get_queryset(self):
-        # get the current user staff member
-        try:
-            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
-        except PartnerStaffMember.DoesNotExist:
-            raise Exception('there is no PartnerStaffMember record associated with this user')
+        queryset = super(InterventionsViewSet, self).get_queryset()
+        if not self.request.user.is_staff:
+            # This must be a partner
+            try:
+                # TODO: Promote this to a permissions class
+                current_member = PartnerStaffMember.objects.get(
+                    id=self.request.user.profile.partner_staff_member
+                )
+            except PartnerStaffMember.DoesNotExist:
+                # This is an authenticated user with no access to interventions
+                return queryset.none()
+            else:
+                # Return all interventions this partner has
+                return queryset.filter(partner=current_member.partner)
+        return queryset
 
-        return current_member.partner.pca_set.all()
 
-
-class PortalLoginFailedView(TemplateView):
-
-    template_name = "partner_loginfailed.html"
-
-    def get_context_data(self, **kwargs):
-        context = super(PortalLoginFailedView, self).get_context_data(**kwargs)
-        context['email'] = urlsafe_base64_decode(context['email'])
-        return context

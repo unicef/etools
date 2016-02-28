@@ -31,7 +31,11 @@ class PortalDashView(View):
             result = my_f.read()
         return HttpResponse(result)
 
+
 class ActiveUsersSection(APIView):
+    """
+    Gets the list of active Users in all countries
+    """
     model = UserProfile
 
     def get(self, request, **kwargs):
@@ -73,6 +77,9 @@ class ActiveUsersSection(APIView):
 
 
 class TripsStatisticsView(APIView):
+    """
+    Get the list of all Trips in all countries
+    """
     model = Trip
 
     def get(self, request, **kwargs):
@@ -136,6 +143,9 @@ class TripsStatisticsView(APIView):
 
 
 class AgreementsStatisticsView(APIView):
+    """
+    Gets the list of all Agreements in all countries
+    """
     model = Agreement
 
     def get(self, request, **kwargs):
@@ -160,6 +170,9 @@ class AgreementsStatisticsView(APIView):
 
 
 class InterventionsStatisticsView(APIView):
+    """
+    Gets the list of all Interventions in all countries
+    """
     model = PCA
 
     def get(self, request, **kwargs):

@@ -110,17 +110,39 @@ class LinkedLocationFactory(factory.django.DjangoModelFactory):
     region = factory.SubFactory(RegionFactory)
 
 
+class PartnerStaffFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PartnerStaffMember
+
+    title = 'Jedi Master'
+    first_name = 'Mace'
+    last_name = 'Windu'
+    email = factory.Sequence(lambda n: "mace{}@theforce.org".format(n))
+
+
 class PartnerFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PartnerOrganization
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
 
+    staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+
+
+class AgreementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Agreement
+
+    partner = factory.SubFactory(PartnerFactory)
+    agreement_type = u'PCA'
+
 
 class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PCA
 
-    title = factory.Sequence(lambda n: 'PCA {}'.format(n))
-    initiation_date = datetime.today()
     partner = factory.SubFactory(PartnerFactory)
+    agreement = factory.SubFactory(AgreementFactory)
+    partnership_type = u'PD'
+    title = u'To save the galaxy from the Empire'
+    initiation_date = datetime.today()

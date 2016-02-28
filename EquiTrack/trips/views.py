@@ -8,14 +8,10 @@ from django.contrib.auth import get_user_model
 from django.views.generic import FormView, TemplateView, View
 from django.http import HttpResponse
 from django.conf import settings
-from django.db import connection
 
+from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
-from rest_framework.generics import (
-    GenericAPIView,
-    ListAPIView,
-    RetrieveUpdateDestroyAPIView
-)
+from rest_framework.decorators import detail_route
 from rest_framework.response import Response
 from rest_framework.exceptions import (
     PermissionDenied,
@@ -69,21 +65,22 @@ class AppsIOSPlistView(View):
         return HttpResponse(result, content_type="application/octet-stream")
 
 
-class TripsApprovedView(ListAPIView):
+class TripsViewSet(mixins.RetrieveModelMixin,
+                   mixins.ListModelMixin,
+                   viewsets.GenericViewSet):
 
     model = Trip
+    lookup_url_kwarg = 'trip'
     serializer_class = TripSerializer
-
-    def get_queryset(self):
-        return self.model.objects.filter(
-            status=self.model.APPROVED,
-        )
-
-
-class TripUploadPictureView(APIView):
     parser_classes = (MultiPartParser, FormParser)
 
-    def post(self, request, **kwargs):
+    def get_queryset(self):
+        user = self.request.user
+        trips = Trip.get_current_trips(user)
+        return trips
+
+    @detail_route(methods=['post'])
+    def upload(self, request, **kwargs):
 
         # get the file object
         file_obj = request.data.get('file')
@@ -95,8 +92,7 @@ class TripUploadPictureView(APIView):
         logging.info("Caption received :{}".format(caption))
 
         # get the trip id from the url
-        trip_id = kwargs.get("trip")
-        trip = Trip.objects.filter(pk=trip_id).get()
+        trip = self.get_object()
 
         # the file field automatically adds incremental numbers
         mime_types = {"image/jpeg": "jpeg",
@@ -131,34 +127,8 @@ class TripUploadPictureView(APIView):
         # TODO: return a more meaningful response
         return Response(status=204)
 
-
-class TripsListApi(ListAPIView):
-
-    model = Trip
-    serializer_class = TripSerializer
-
-    def get_queryset(self):
-        user = self.request.user
-        trips = Trip.get_all_trips(user)
-        return trips
-
-
-class TripDetailsView(RetrieveUpdateDestroyAPIView):
-    model = Trip
-    serializer_class = TripSerializer
-    lookup_url_kwarg = 'trip'
-    queryset = Trip.objects.all()
-
-
-class TripActionView(GenericAPIView):
-
-    model = Trip
-    serializer_class = TripSerializer
-
-    lookup_url_kwarg = 'trip'
-    queryset = Trip.objects.all()
-
-    def post(self, request, *args, **kwargs):
+    @detail_route(methods=['post'], url_path='(?P<action>\D+)')
+    def action(self, request, *args, **kwargs):
         action = kwargs.get('action', False)
         current_user = self.request.user
 
@@ -224,7 +194,9 @@ class TripActionView(GenericAPIView):
 
 
 class TripsByOfficeView(APIView):
-
+    """
+    Returns an object used for the chart library on the trips dashboard
+    """
     def get(self, request):
 
         months = get_trip_months()
@@ -234,9 +206,11 @@ class TripsByOfficeView(APIView):
 
         by_office = []
         section_ids = Trip.objects.all().values_list(
-        	'section', flat=True)
+            'section', flat=True
+        )
         office_ids = Trip.objects.all().values_list(
-        	'office', flat=True)
+            'office', flat=True
+        )
         sections = Section.objects.filter(id__in=section_ids)
         for office in Office.objects.filter(id__in=office_ids):
             trips = office.trip_set.filter(

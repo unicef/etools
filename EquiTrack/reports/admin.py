@@ -7,7 +7,7 @@ from mptt.admin import MPTTModelAdmin
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
-from partners.models import IndicatorProgress
+from partners.models import IndicatorProgress, ResultChain
 from reports.models import (
     Sector,
     Goal,
@@ -15,9 +15,37 @@ from reports.models import (
     Indicator,
     ResultStructure,
     ResultType,
-    Result
+    Result,
 )
 from .forms import IndicatorAdminForm
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#TODO: remove resultchain before commiting
+
+
+
+
+
+
+
+
+
+
 
 
 class SectorListFilter(admin.SimpleListFilter):
@@ -158,3 +186,4 @@ admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
+admin.site.register(ResultChain)

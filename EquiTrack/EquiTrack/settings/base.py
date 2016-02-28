@@ -108,6 +108,11 @@ REST_FRAMEWORK = {
     )
 }
 
+SWAGGER_SETTINGS = {
+    'is_authenticated': True,
+    'is_superuser': True,
+}
+
 CORS_ORIGIN_ALLOW_ALL = True
 
 # Add our project to our pythonpath, this way we don't need to type our project
@@ -338,6 +343,7 @@ SHARED_APPS = (
     'storages',
     'reversion',
     'rest_framework',
+    'rest_framework_swagger',
     'import_export',
     'smart_selects',
     'suit_ckeditor',

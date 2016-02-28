@@ -436,6 +436,7 @@ class PartnershipForm(UserGroupForm):
 
         data.fillna('', inplace=True)
         current_output = None
+        # TODO: filter resultStructure before getting last
         result_structure = self.obj.result_structure or ResultStructure.objects.last()
         imported = found = not_found = row_num = 0
         for label, series in data.iterrows():

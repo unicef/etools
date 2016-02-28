@@ -24,7 +24,7 @@ from .serializers import (
 
 
 class UserAuthAPIView(RetrieveAPIView):
-
+    # TODO: Consider removing now use JWT
     model = User
     serializer_class = UserSerializer
 
@@ -39,6 +39,10 @@ class UserAuthAPIView(RetrieveAPIView):
 
 
 class ChangeUserCountryView(APIView):
+    """
+    Allows a user to switch country context if they have access to more than one
+    """
+    # TODO: We need allow any staff user that has access to more then one country
     permission_classes = (permissions.IsAdminUser,)
 
     ERROR_MESSAGES = {
@@ -65,16 +69,24 @@ class ChangeUserCountryView(APIView):
 
 
 class CountryOverridenUsersCSV(ListAPIView):
-
-    renderer_classes = (r.CSVRenderer, )
+    """
+    Provides a country override list to Unicef ADFS
+    """
     model = User
+    renderer_classes = (r.CSVRenderer, )
     serializer_class = UserCountryCSVSerializer
 
     def get_queryset(self):
-        return self.model.objects.exclude(profile__country_override=None).only("email", "profile__country_override")
+        return self.model.objects.exclude(
+            profile__country_override=None
+        ).only("email", "profile__country_override")
 
 
 class UsersView(ListAPIView):
+    """
+    Gets a list of Unicef Staff users in the current country.
+    Country is determined by the currently logged in user.
+    """
     model = UserProfile
     serializer_class = SimpleProfileSerializer
 
