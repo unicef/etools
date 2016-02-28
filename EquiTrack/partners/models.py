@@ -48,7 +48,6 @@ from supplies.tasks import (
 from . import emails
 
 
-
 HIGH = u'high'
 SIGNIFICANT = u'significant'
 MODERATE = u'moderate'
@@ -400,7 +399,9 @@ class Agreement(TimeStampedModel):
         objects = list(Agreement.objects.filter(
             signed_by_unicef_date__year=year
         ).order_by('-created').values_list('id', flat=True))
-        sequence = objects.index(self.id) if self.id and objects else len(objects) + 1
+        if self.id and self.id not in objects:
+            objects.append(self.id)
+        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id and objects else len(objects) + 1)
         number = u'{code}/{type}{year}{seq}{version}'.format(
             code='LEBA',
             type=self.agreement_type,
@@ -594,7 +595,7 @@ class PCA(AdminURLMixin, models.Model):
     class Meta:
         verbose_name = 'Intervention'
         verbose_name_plural = 'Interventions'
-        ordering = ['-number', 'amendment']
+        ordering = ['-created_at']
 
     def __unicode__(self):
         return u'{}: {}'.format(
@@ -670,7 +671,9 @@ class PCA(AdminURLMixin, models.Model):
         objects = list(PCA.objects.filter(
             signed_by_unicef_date__year=year
         ).order_by('-created_at').values_list('id', flat=True))
-        sequence = objects.index(self.id) if self.id and objects else len(objects) + 1
+        if self.id and self.id not in objects:
+            objects.append(self.id)
+        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id and objects else len(objects) + 1)
         number = u'{agreement}/{type}{year}{seq}{version}'.format(
             agreement=self.agreement.reference_number if self.id else '',
             type=self.partnership_type,

@@ -83,8 +83,8 @@ class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = PCASector
     form = AmendmentForm
     formset = ParentInlineAdminFormSet
-    verbose_name = 'Sector'
-    verbose_name_plural = 'Sectors'
+    verbose_name = 'Programme/Sector/Section'
+    verbose_name_plural = 'Programmes/Sectors/Sections'
     suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
@@ -313,9 +313,9 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
     inlines = (
         AmendmentLogInlineAdmin,
+        PcaSectorInlineAdmin,
         PartnershipBudgetInlineAdmin,
         PcaGrantInlineAdmin,
-        PcaSectorInlineAdmin,
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
@@ -558,7 +558,7 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
     list_display = (
-        u'agreement_number',
+        u'reference_number',
         u'partner',
         u'agreement_type',
         u'download_url'
@@ -569,7 +569,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                 (
                     u'partner',
                     u'agreement_type',
-                    u'agreement_number',
+                    u'reference_number',
                     u'attached_agreement',
                     (u'start', u'end',),
                     u'signed_by_partner_date',
@@ -602,8 +602,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                    u'href="{}" >Download</a>'.format(
                     reverse('pca_pdf', args=(obj.id,))
                     )
-        return ''
-
+        return u''
     download_url.allow_tags = True
     download_url.short_description = 'PDF Agreement'
 
