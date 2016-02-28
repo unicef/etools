@@ -469,6 +469,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'alternate_name',
     )
     readonly_fields = (
+        u'vision_synced',
         u'vendor_number',
         u'rating',
         u'core_values_assessment_date',
@@ -476,7 +477,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     fieldsets = (
         (_('Partner Details'), {
             'fields':
-                (u'name',
+                ((u'name', u'vision_synced',),
                  u'short_name',
                  (u'partner_type', u'cso_type',),
                  u'vendor_number',
@@ -558,10 +559,15 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
 
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
+    list_filter = (
+        u'partner',
+        u'agreement_type',
+    )
     list_display = (
         u'reference_number',
         u'partner',
         u'agreement_type',
+        u'signed_by_unicef_date',
         u'download_url'
     )
     fieldsets = (
