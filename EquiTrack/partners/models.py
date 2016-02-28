@@ -5,7 +5,6 @@ __author__ = 'jcranwellward'
 import datetime
 from dateutil.relativedelta import relativedelta
 
-
 from django.conf import settings
 from django.db import models, connection
 from django.contrib.auth.models import Group
@@ -393,15 +392,20 @@ class Agreement(TimeStampedModel):
         )
 
     @property
+    def year(self):
+        if self.id:
+            if self.signed_by_unicef_date is not None:
+                return self.signed_by_unicef_date.year
+            else:
+                return self.created.year
+        else:
+            return datetime.date.today().year
+
+    @property
     def reference_number(self):
-        year = self.signed_by_unicef_date.year \
-            if self.signed_by_unicef_date else datetime.date.today().year
-        objects = list(Agreement.objects.filter(
-            signed_by_unicef_date__year=year
-        ).order_by('-created').values_list('id', flat=True))
-        if self.id and self.id not in objects:
-            objects.append(self.id)
-        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id and objects else len(objects) + 1)
+        year = self.year
+        objects = list(Agreement.objects.filter(created__year=year).order_by('created').values_list('id', flat=True))
+        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{code}/{type}{year}{seq}{version}'.format(
             code='LEBA',
             type=self.agreement_type,
@@ -665,17 +669,22 @@ class PCA(AdminURLMixin, models.Model):
         return total
 
     @property
+    def year(self):
+        if self.id:
+            if self.signed_by_unicef_date is not None:
+                return self.signed_by_unicef_date.year
+            else:
+                return self.created_at.year
+        else:
+            return datetime.date.today().year
+
+    @property
     def reference_number(self):
-        year = self.signed_by_unicef_date.year \
-            if self.signed_by_unicef_date else datetime.date.today().year
-        objects = list(PCA.objects.filter(
-            signed_by_unicef_date__year=year
-        ).order_by('-created_at').values_list('id', flat=True))
-        if self.id and self.id not in objects:
-            objects.append(self.id)
-        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id and objects else len(objects) + 1)
+        year = self.year
+        objects = list(PCA.objects.filter(created_at__year=year).order_by('created_at').values_list('id', flat=True))
+        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{agreement}/{type}{year}{seq}{version}'.format(
-            agreement=self.agreement.reference_number if self.id else '',
+            agreement=self.agreement.reference_number if self.id and self.agreement else '',
             type=self.partnership_type,
             year=year,
             seq=sequence,

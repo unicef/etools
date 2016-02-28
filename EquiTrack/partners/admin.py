@@ -557,10 +557,15 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
 
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
+    list_filter = (
+        u'partner',
+        u'agreement_type',
+    )
     list_display = (
         u'reference_number',
         u'partner',
         u'agreement_type',
+        u'signed_by_unicef_date',
         u'download_url'
     )
     fieldsets = (
