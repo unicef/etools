@@ -573,6 +573,7 @@ class PCA(AdminURLMixin, models.Model):
     in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
     cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
     total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
+    fr_number = models.CharField(max_length=50, null=True, blank=True)
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)

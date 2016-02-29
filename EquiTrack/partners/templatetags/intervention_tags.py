@@ -5,7 +5,7 @@ import tablib
 from django import template
 from django.utils.datastructures import OrderedDict as SortedDict
 
-from partners.models import PCA
+from partners.models import PCA, FundingCommitment, DirectCashTransfer
 from trips.models import Trip
 
 
@@ -91,21 +91,22 @@ def show_fr_fc(value):
         return ''
 
     intervention = PCA.objects.get(id=int(value))
-    # fr_number = intervention.fr_number
+    fr_number = intervention.fr_number
+    commitments = FundingCommitment.objects.filter(fr_number=fr_number)
     data = tablib.Dataset()
     fr_fc_summary = []
 
-    row = SortedDict()
-    row['Grant'] = ''
-    row['Donor'] = ''
-    row['FR Number'] = ''
-    row['WBS'] = ''
-    row['FC Type'] = ''
-    row['FC Ref'] = ''
-    row['Agreement Amount'] = ''
-    row['Commitment Amount'] = ''
-    row['Expenditure Amount'] = ''
-    fr_fc_summary.append(row)
+    for commit in commitments:
+        row = SortedDict()
+        row['Grant'] = commit.grant.__unicode__()
+        row['FR Number'] = commit.fr_number
+        row['WBS'] = commit.wbs
+        row['FC Type'] = commit.fc_type
+        row['FC Ref'] = commit.fc_ref
+        row['Agreement Amount'] = commit.agreement_amount
+        row['Commitment Amount'] = commit.commitment_amount
+        row['Expenditure Amount'] = commit.expenditure_amount
+        fr_fc_summary.append(row)
 
     if fr_fc_summary:
         data.headers = fr_fc_summary[0].keys()

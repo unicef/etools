@@ -286,7 +286,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         (_('Dates and Signatures'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
-                ('submission_date',
+                (('submission_date', 'fr_number',),
                  'review_date',
                  ('partner_manager', 'signed_by_partner_date',),
                  ('unicef_manager', 'signed_by_unicef_date',),
