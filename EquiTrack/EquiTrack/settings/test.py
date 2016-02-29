@@ -17,6 +17,10 @@ class DisableMigrations(object):
     def __getitem__(self, item):
         return "notmigrations"
 
-MIGRATION_MODULES = DisableMigrations()
+# enable migrations.
+# MIGRATION_MODULES = DisableMigrations()
+
+# MIGRATION_MODULES = dict((app, '%s.fake_migrations' % app) for app in INSTALLED_APPS)
+
 
 TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'
