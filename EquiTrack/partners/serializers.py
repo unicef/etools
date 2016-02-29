@@ -66,10 +66,10 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         model = IndicatorReport
 
     def get_indicator(self, obj):
-        return obj.id
+        return obj.indicator.id
 
     def get_partner_staff_member(self, obj):
-        return obj.id
+        return obj.partner_staff_member.id
 
     def validate(self, data):
         # TODO: handle validation
