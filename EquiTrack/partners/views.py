@@ -253,6 +253,11 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
 
     def perform_create(self, serializer):
         # add the user to the arguments
-        serializer.save(owner=self.request.user)
+        try:
+            partner_staff_member = PartnerStaffMember.objects.get(pk=self.request.user.profile.partner_staff_member)
+        except PartnerStaffMember.DoesNotExist:
+            raise Exception('Hell')
+
+        serializer.save(partner_staff_member=partner_staff_member)
 
 

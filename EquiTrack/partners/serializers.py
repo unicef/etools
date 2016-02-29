@@ -1,7 +1,7 @@
 __author__ = 'jcranwellward'
 
 import json
-
+from django.db import transaction
 from rest_framework import serializers
 
 from rest_framework_hstore.fields import HStoreField
@@ -58,20 +58,39 @@ class ResultChainSerializer(serializers.ModelSerializer):
 
 class IndicatorReportSerializer(serializers.ModelSerializer):
     disaggregated = serializers.BooleanField(read_only=True)
-    partner_staff_member = serializers.IntegerField(read_only=True)
-    indicator = serializers.IntegerField(read_only=True)
+    partner_staff_member = serializers.SerializerMethodField(read_only=True)
+    indicator = serializers.SerializerMethodField(read_only=True)
     disaggregation = serializers.JSONField()
 
     class Meta:
         model = IndicatorReport
+
+    def get_indicator(self, obj):
+        return obj.id
+
+    def get_partner_staff_member(self, obj):
+        return obj.id
 
     def validate(self, data):
         # TODO: handle validation
         return data
 
     def create(self, validated_data):
-        # TODO: update value on resultchain (atomic)
-        raise serializers.ValidationError({'result_chain': "Creation halted for now"})
+        result_chain = validated_data.get('result_chain')
+        validated_data['indicator'] = result_chain.indicator
+
+        try:
+            with transaction.atomic():
+                indicator_report = IndicatorReport.objects.create(**validated_data)
+                result_chain.current_progress += validated_data.get('total')
+                result_chain.save()
+        except:
+            raise serializers.ValidationError({'result_chain': "Creation halted for now"})
+
+        return indicator_report
+
+
+        # raise serializers.ValidationError({'result_chain': "Creation halted for now"})
 
     def update(self, instance, validated_data):
         # TODO: update value on resultchain (atomic)
