@@ -26,6 +26,7 @@ class GatewayType(models.Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Location Type'
 
     def __unicode__(self):
         return self.name

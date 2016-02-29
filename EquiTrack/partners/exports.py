@@ -238,7 +238,7 @@ class PCAResource(BaseExportResource):
             num += 1
 
             self.insert_column(row, 'Locality {}'.format(num), location.locality.name)
-            self.insert_column(row, 'Gateway Type {}'.format(num), location.gateway.name)
+            self.insert_column(row, 'Location Type {}'.format(num), location.gateway.name)
             self.insert_column(row, 'Location Name {}'.format(num), location.location.name)
 
         return row
@@ -274,7 +274,7 @@ class PCAResource(BaseExportResource):
             amendment = None
 
         self.insert_column(row, 'ID', pca.id)
-        self.insert_column(row, 'Number', pca.number)
+        self.insert_column(row, 'Number', pca.reference_number)
         self.insert_column(row, 'Partner Organisation', pca.partner.name)
         self.insert_column(row, 'Title', pca.title)
         self.insert_column(row, 'Sectors', pca.sector_names)

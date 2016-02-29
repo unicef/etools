@@ -23,7 +23,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
         "WBS_ELEMENT_EX",               # VARCHAR2	IR WBS
         "COMMITMENT_SUBTYPE_CODE",  # VARCHAR2	Commitment Doc Type
         "COMMITMENT_SUBTYPE_DESC",
-        "COMMITMENT_REF",       # VARCHAR2	Commitment Reference
+        #"COMMITMENT_REF",       # VARCHAR2	Commitment Reference
         "FR_ITEM_AMT",          # Number    Fr Item Amount
         "AGREEMENT_AMT",        # NUMBER	Agreement Amount
         "COMMITMENT_AMT",       # NUMBER	Commitment Amount
