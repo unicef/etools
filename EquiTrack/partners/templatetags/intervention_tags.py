@@ -5,7 +5,7 @@ import tablib
 from django import template
 from django.utils.datastructures import OrderedDict as SortedDict
 
-from partners.models import PCA
+from partners.models import PCA, FundingCommitment, DirectCashTransfer
 from trips.models import Trip
 
 
@@ -82,3 +82,71 @@ def show_trips(value):
         return data.html
 
     return '<p>No trips</p>'
+
+
+@register.simple_tag
+def show_fr_fc(value):
+
+    if not value:
+        return ''
+
+    intervention = PCA.objects.get(id=int(value))
+    fr_number = intervention.fr_number
+    commitments = FundingCommitment.objects.filter(fr_number=fr_number)
+    data = tablib.Dataset()
+    fr_fc_summary = []
+
+    for commit in commitments:
+        row = SortedDict()
+        row['Grant'] = commit.grant.__unicode__()
+        row['FR Number'] = commit.fr_number
+        row['WBS'] = commit.wbs
+        row['FC Type'] = commit.fc_type
+        row['FC Ref'] = commit.fc_ref
+        row['Agreement Amount'] = commit.agreement_amount
+        row['Commitment Amount'] = commit.commitment_amount
+        row['Expenditure Amount'] = commit.expenditure_amount
+        fr_fc_summary.append(row)
+
+    if fr_fc_summary:
+        data.headers = fr_fc_summary[0].keys()
+        for row in fr_fc_summary:
+            data.append(row.values())
+
+        return data.html
+
+    return '<p>No FR Set</p>'
+
+
+@register.simple_tag
+def show_dct(value):
+
+    if not value:
+        return ''
+
+    intervention = PCA.objects.get(id=int(value))
+    # fr_number = intervention.fr_number
+    data = tablib.Dataset()
+    dct_summary = []
+
+    row = SortedDict()
+
+    row['FC Ref'] = ''
+    row['Amount'] = ''
+    row['Liquidation Amount'] = ''
+    row['Outstanding Amount'] = ''
+    row['Amount Less than 3 Months'] = ''
+    row['Amount 3 to 6 Months'] = ''
+    row['Amount 6 to 9 Months'] = ''
+    row['Amount More than 9 Months'] = ''
+
+    dct_summary.append(row)
+
+    if dct_summary:
+        data.headers = dct_summary[0].keys()
+        for row in dct_summary:
+            data.append(row.values())
+
+        return data.html
+
+    return '<p>No FR Set</p>'

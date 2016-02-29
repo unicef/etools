@@ -5,12 +5,12 @@ from django.conf import settings
 
 from reports.models import ResultStructure, ResultType, Result
 from vision.utils import wcf_json_date_as_datetime
-from .vision_data_synchronizer import VisionDataSynchronizer
+from vision.vision_data_synchronizer import VisionDataSynchronizer
 
 
 class ProgrammeSynchronizer(VisionDataSynchronizer):
 
-    PROGRAMME_URL = settings.VISION_URL + 'GetProgrammeStructureList_JSON/'
+    ENDPOINT = 'GetProgrammeStructureList_JSON'
     REQUIRED_KEYS = (
         "COUNTRY_PROGRAMME_NAME",
         "CP_START_DATE",
@@ -44,13 +44,6 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         "PROGRAMME_AREA_CODE",
         "PROGRAMME_AREA_NAME",
     )
-
-    def __init__(self, country):
-
-        super(ProgrammeSynchronizer, self).__init__(
-            country,
-            ProgrammeSynchronizer.PROGRAMME_URL + country.business_area_code
-        )
 
     def _get_json(self, data):
         return [] if data == self.NO_DATA_MESSAGE else data
