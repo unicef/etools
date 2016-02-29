@@ -40,6 +40,7 @@ from .models import (
     AmendmentLog,
     SupplyPlan,
     DistributionPlan,
+    FundingCommitment,
 )
 
 from .filters import (
@@ -628,3 +629,4 @@ admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
+admin.site.register(FundingCommitment)

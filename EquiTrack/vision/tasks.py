@@ -14,7 +14,7 @@ SYNC_HANDLERS = [
     ProgrammeSynchronizer,
     PartnerSynchronizer,
     FundingSynchronizer,
-    DCTSynchronizer
+    #DCTSynchronizer
 ]
 
 

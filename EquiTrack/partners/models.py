@@ -1049,7 +1049,7 @@ class FundingCommitment(models.Model):
     fr_number = models.CharField(max_length=50)
     wbs = models.CharField(max_length=50)
     fc_type = models.CharField(max_length=50)
-    fc_ref = models.CharField(max_length=50)
+    fc_ref = models.CharField(max_length=50, blank=True, null=True)
     fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
     agreement_amount = models.DecimalField(decimal_places=2, max_digits=10)
     commitment_amount = models.DecimalField(decimal_places=2, max_digits=10)

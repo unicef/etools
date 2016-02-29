@@ -12,19 +12,18 @@ class FundingSynchronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetPCA_SSFAInfo_JSON'
     REQUIRED_KEYS = (
         "GRANT_REF",            # VARCHAR2	Grant Ref
-        "AGREEMENT_TYPE",       # NUMBER	Agreement Type
-        "PARTNER_NAME",         # VARCHAR2	Partner Name
-        "FR_DOC_NUMBER",        # VARCHAR2	FR Doc Number
-        "FR_DESC",	            # VARCHAR2  FR Desc
-        "FR_START_DATE",        # DATE	    FR Start Date
-        "FR_END_DATE",	        # DATE	    FR End Date
+        "VENDOR_NAME",         # VARCHAR2	Partner Name
+        "DOC_NUMBER",        # VARCHAR2	FR Doc Number
+        "HDR_DESC",	            # VARCHAR2  FR Desc
+        "START_DATE",        # DATE	    FR Start Date
+        "END_DATE",	        # DATE	    FR End Date
         "FR_LINE_ITEM",         # VARCHAR2	FR Line Item
         "FR_ITEM_DESC",         # VARCHAR2	FR Item Description
-        "FR_DUE_DT",            # DATE	    FR Due Dt
-        "IR_WBS",               # VARCHAR2	IR WBS
-        "COMMITMENT_DOC_TYPE",  # VARCHAR2	Commitment Doc Type
+        "DUE_DATE",            # DATE	    FR Due Dt
+        "WBS_ELEMENT_EX",               # VARCHAR2	IR WBS
+        "COMMITMENT_SUBTYPE_CODE",  # VARCHAR2	Commitment Doc Type
+        "COMMITMENT_SUBTYPE_DESC",
         "COMMITMENT_REF",       # VARCHAR2	Commitment Reference
-        "COMMITMENT_DESC",      # VARCHAR2	Commitment Description
         "FR_ITEM_AMT",          # Number    Fr Item Amount
         "AGREEMENT_AMT",        # NUMBER	Agreement Amount
         "COMMITMENT_AMT",       # NUMBER	Commitment Amount
@@ -50,10 +49,9 @@ class FundingSynchronizer(VisionDataSynchronizer):
             else:
                 funding_commitment, created = FundingCommitment.objects.get_or_create(
                     grant=grant,
-                    fr_number=fc_line["FR_DOC_NUMBER"],
-                    wbs=fc_line["IR_WBS"],
-                    fc_type=fc_line["COMMITMENT_DOC_TYPE"],
-                    fc_ref=fc_line["COMMITMENT_REF"],
+                    fr_number=fc_line["DOC_NUMBER"],
+                    wbs=fc_line["WBS_ELEMENT_EX"],
+                    fc_type=fc_line["COMMITMENT_SUBTYPE_DESC"],
                 )
                 funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
                 funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
@@ -64,7 +62,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
 
 class DCTSynchronizer(VisionDataSynchronizer):
 
-    ENDPOINT = 'GetPCA_SSFAInfo_JSON'
+    ENDPOINT = 'GetDCTInfo_JSON'
     REQUIRED_KEYS = (
         "VENDOR_NAME",              # VARCHAR2	Vendor Name
         "VENDOR_CODE",              # VARCHAR2	Vendor Code

@@ -48,9 +48,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_type=u'Civil Society Organization',
                 cso_type=partner["CSO_TYPE_NAME"],
                 vendor_number=partner["VENDOR_CODE"],
-                name=partner["VENDOR_CODE"]
+                name=partner["VENDOR_NAME"]
             )
-            partner.vision_synced = True
+            partner_org.vision_synced = True
             partner_org.rating = partner["RISK_RATING_NAME"]
             partner_org.save()
 
