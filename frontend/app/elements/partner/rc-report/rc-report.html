@@ -142,6 +142,8 @@
     _submitReport: function() {
       var myReq = this.$.ajaxPost;
       myReq.body = {
+        'result_chain': this.rcId,
+        'disaggregation': {},
         'total': this.$.reportTotal.value,
         'from_date': this.$.fromDate.value,
         'to_date': this.$.toDate.value
