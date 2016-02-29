@@ -605,7 +605,7 @@ class PartnershipForm(UserGroupForm):
                 u'Please select a sector to assign the locations against'
             )
 
-        if start_date and start_date < agreement.start:
+        if start_date and agreement.start and start_date < agreement.start:
             err = u'The Intervention must start after the agreement starts on: {}'.format(
                 agreement.start
             )

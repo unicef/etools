@@ -9,7 +9,6 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework_csv import renderers as r
 
 
 from users.models import Office
@@ -19,7 +18,6 @@ from .models import User, UserProfile, Country
 from .serializers import (
     UserSerializer,
     SimpleProfileSerializer,
-    UserCountryCSVSerializer,
 )
 
 

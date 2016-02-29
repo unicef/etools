@@ -5,7 +5,6 @@ __author__ = 'jcranwellward'
 import datetime
 from dateutil.relativedelta import relativedelta
 
-
 from django.conf import settings
 from django.db import models, connection
 from django.contrib.auth.models import Group
@@ -48,7 +47,6 @@ from supplies.tasks import (
 from . import emails
 
 
-
 HIGH = u'high'
 SIGNIFICANT = u'significant'
 MODERATE = u'moderate'
@@ -63,37 +61,25 @@ RISK_RATINGS = (
 
 class PartnerOrganization(models.Model):
 
-    NATIONAL = u'national'
-    INTERNATIONAL = u'international'
-    CBO = u'cbo'
-    ACADEMIC = u'academic',
-    PARTNER_TYPES = (
-        (INTERNATIONAL, u"International NGO"),
-        {NATIONAL, u"National NGO"},
-        (CBO, u"CBO"),
-        (ACADEMIC, u"Academic Institution"),
-    )
-
-    type = models.CharField(
+    partner_type = models.CharField(
         max_length=50,
         choices=Choices(
-            u'International NGO',
-            u'National NGO',
-            u'CBO',
+            u'Bilateral / Multilateral',
+            u'Civil Society Organization',
+            u'Government',
+            u'UN Agency',
+        )
+    )
+    cso_type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            u'International',
+            u'National',
+            u'Community Based Organisation',
             u'Academic Institution',
         ),
         verbose_name=u'CSO Type',
         blank=True, null=True
-    )
-    partner_type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            u'Government',
-            u'Civil Society Organisation',
-            u'UN Agency',
-            u'Inter-governmental Organisation',
-            u'Bi-Lateral Organisation'
-        )
     )
     name = models.CharField(
         max_length=255,
@@ -149,6 +135,7 @@ class PartnerOrganization(models.Model):
         upload_to='partners/core_values/',
         help_text=u'Only required for CSO partners'
     )
+    vision_synced = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['name']
@@ -394,13 +381,20 @@ class Agreement(TimeStampedModel):
         )
 
     @property
+    def year(self):
+        if self.id:
+            if self.signed_by_unicef_date is not None:
+                return self.signed_by_unicef_date.year
+            else:
+                return self.created.year
+        else:
+            return datetime.date.today().year
+
+    @property
     def reference_number(self):
-        year = self.signed_by_unicef_date.year \
-            if self.signed_by_unicef_date else datetime.date.today().year
-        objects = list(Agreement.objects.filter(
-            signed_by_unicef_date__year=year
-        ).order_by('-created').values_list('id', flat=True))
-        sequence = objects.index(self.id) if self.id and objects else len(objects) + 1
+        year = self.year
+        objects = list(Agreement.objects.filter(created__year=year).order_by('created').values_list('id', flat=True))
+        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{code}/{type}{year}{seq}{version}'.format(
             code='LEBA',
             type=self.agreement_type,
@@ -579,6 +573,7 @@ class PCA(AdminURLMixin, models.Model):
     in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
     cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
     total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
+    fr_number = models.CharField(max_length=50, null=True, blank=True)
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
@@ -594,7 +589,7 @@ class PCA(AdminURLMixin, models.Model):
     class Meta:
         verbose_name = 'Intervention'
         verbose_name_plural = 'Interventions'
-        ordering = ['-number', 'amendment']
+        ordering = ['-created_at']
 
     def __unicode__(self):
         return u'{}: {}'.format(
@@ -664,15 +659,22 @@ class PCA(AdminURLMixin, models.Model):
         return total
 
     @property
+    def year(self):
+        if self.id:
+            if self.signed_by_unicef_date is not None:
+                return self.signed_by_unicef_date.year
+            else:
+                return self.created_at.year
+        else:
+            return datetime.date.today().year
+
+    @property
     def reference_number(self):
-        year = self.signed_by_unicef_date.year \
-            if self.signed_by_unicef_date else datetime.date.today().year
-        objects = list(PCA.objects.filter(
-            signed_by_unicef_date__year=year
-        ).order_by('-created_at').values_list('id', flat=True))
-        sequence = objects.index(self.id) if self.id and objects else len(objects) + 1
+        year = self.year
+        objects = list(PCA.objects.filter(created_at__year=year).order_by('created_at').values_list('id', flat=True))
+        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{agreement}/{type}{year}{seq}{version}'.format(
-            agreement=self.agreement.reference_number if self.id else '',
+            agreement=self.agreement.reference_number if self.id and self.agreement else '',
             type=self.partnership_type,
             year=year,
             seq=sequence,
@@ -1075,3 +1077,27 @@ class DistributionPlan(models.Model):
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
+class FundingCommitment(models.Model):
+
+    grant = models.ForeignKey(Grant)
+    intervention = models.ForeignKey(PCA, null=True)
+    fr_number = models.CharField(max_length=50)
+    wbs = models.CharField(max_length=50)
+    fc_type = models.CharField(max_length=50)
+    fc_ref = models.CharField(max_length=50, blank=True, null=True)
+    fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    agreement_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    commitment_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    expenditure_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+
+
+class DirectCashTransfer(models.Model):
+
+    fc_ref = models.CharField(max_length=50)
+    amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)

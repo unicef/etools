@@ -48,7 +48,7 @@ class UserAdminPlus(UserAdmin):
         :param obj:
         :return:
         """
-        fields = super(UserAdminPlus, self).get_readonly_fields(request, obj)
+        fields = list(super(UserAdminPlus, self).get_readonly_fields(request, obj))
         if not request.user.is_superuser:
             fields.append(u'is_superuser')
         return fields

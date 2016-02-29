@@ -40,6 +40,7 @@ from .models import (
     AmendmentLog,
     SupplyPlan,
     DistributionPlan,
+    FundingCommitment,
 )
 
 from .filters import (
@@ -83,8 +84,8 @@ class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     model = PCASector
     form = AmendmentForm
     formset = ParentInlineAdminFormSet
-    verbose_name = 'Sector'
-    verbose_name_plural = 'Sectors'
+    verbose_name = 'Programme/Sector/Section'
+    verbose_name_plural = 'Programmes/Sectors/Sections'
     suit_classes = u'suit-tab suit-tab-info'
     extra = 0
     fields = (
@@ -286,7 +287,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         (_('Dates and Signatures'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
-                ('submission_date',
+                (('submission_date', 'fr_number',),
                  'review_date',
                  ('partner_manager', 'signed_by_partner_date',),
                  ('unicef_manager', 'signed_by_unicef_date',),
@@ -313,9 +314,9 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
     inlines = (
         AmendmentLogInlineAdmin,
+        PcaSectorInlineAdmin,
         PartnershipBudgetInlineAdmin,
         PcaGrantInlineAdmin,
-        PcaSectorInlineAdmin,
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
@@ -334,6 +335,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     )
 
     suit_form_includes = (
+        ('admin/partners/funding_summary.html', 'bottom', 'info'),
         ('admin/partners/work_plan.html', 'middle', 'results'),
         ('admin/partners/trip_summary.html', 'top', 'trips'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
@@ -461,13 +463,14 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     list_display = (
         u'name',
         u'vendor_number',
-        u'type',
+        u'partner_type',
         u'email',
         u'phone_number',
         u'alternate_id',
         u'alternate_name',
     )
     readonly_fields = (
+        u'vision_synced',
         u'vendor_number',
         u'rating',
         u'core_values_assessment_date',
@@ -475,9 +478,9 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     fieldsets = (
         (_('Partner Details'), {
             'fields':
-                (u'name',
+                ((u'name', u'vision_synced',),
                  u'short_name',
-                 (u'partner_type', u'type',),
+                 (u'partner_type', u'cso_type',),
                  u'vendor_number',
                  u'rating',
                  u'address',
@@ -557,10 +560,15 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
 
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
-    list_display = (
-        u'agreement_number',
+    list_filter = (
         u'partner',
         u'agreement_type',
+    )
+    list_display = (
+        u'reference_number',
+        u'partner',
+        u'agreement_type',
+        u'signed_by_unicef_date',
         u'download_url'
     )
     fieldsets = (
@@ -569,7 +577,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                 (
                     u'partner',
                     u'agreement_type',
-                    u'agreement_number',
+                    u'reference_number',
                     u'attached_agreement',
                     (u'start', u'end',),
                     u'signed_by_partner_date',
@@ -602,8 +610,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                    u'href="{}" >Download</a>'.format(
                     reverse('pca_pdf', args=(obj.id,))
                     )
-        return ''
-
+        return u''
     download_url.allow_tags = True
     download_url.short_description = 'PDF Agreement'
 
@@ -622,3 +629,4 @@ admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
+admin.site.register(FundingCommitment)

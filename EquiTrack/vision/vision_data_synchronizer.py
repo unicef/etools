@@ -19,17 +19,23 @@ class VisionDataSynchronizer:
 
     __metaclass__ = ABCMeta
 
+    ENDPOINT = None
+    URL = settings.VISION_URL
     NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS = {}
 
-    def __init__(self, country=None, url=None):
+    def __init__(self, country=None):
         if not country:
             raise VisionException(message='Country is required')
-        if not url:
-            raise VisionException(message='Url is required')
+        if self.ENDPOINT is None:
+            raise VisionException(message='You must the ENDPOINT')
 
         self.county = country
-        self.url = url
+        self.url = '{}/{}/{}'.format(
+            self.URL,
+            self.ENDPOINT,
+            country.business_area_code
+        )
         logger.info("Vision sync url:%s" % self.url)
         connection.set_tenant(country)
         logger.info('Country is {}'.format(country.name))

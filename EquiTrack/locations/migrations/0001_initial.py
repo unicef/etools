@@ -99,7 +99,7 @@ class Migration(migrations.Migration):
                 ('longitude', models.FloatField(null=True, blank=True)),
                 ('p_code', models.CharField(max_length=32L, null=True, blank=True)),
                 ('point', django.contrib.gis.db.models.fields.PointField(srid=4326, null=True, blank=True)),
-                ('gateway', models.ForeignKey(verbose_name=b'Gateway type', to='locations.GatewayType')),
+                ('gateway', models.ForeignKey(verbose_name=b'Location Type', to='locations.GatewayType')),
                 ('locality', models.ForeignKey(to='locations.Locality')),
             ],
             options={
