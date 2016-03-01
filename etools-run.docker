@@ -4,7 +4,7 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 
 ADD EquiTrack /code/
-ADD ~/wheelhouse /wheelhouse
+ADD wheelhouse /wheelhouse
 RUN pip install --no-index -f /wheelhouse -r /code/requirements/production.txt
 
 COPY frontend /code/frontend/

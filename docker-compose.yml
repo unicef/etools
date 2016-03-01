@@ -13,7 +13,7 @@ web:
     - DJANGO_DEBUG=true
 
 db:
-  image: mdillon/postgis
+  image: mdillon/postgis:9.4
   environment:
     - POSTGRES_HOST=db
     - POSTGRES_PORT=5432
