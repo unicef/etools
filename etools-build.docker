@@ -9,4 +9,4 @@ ENV PIP_FIND_LINKS=/wheelhouse
 VOLUME /wheelhouse
 VOLUME /application
 
-ENTRYPOINT pip wheel -r /application/requirements/production.txt
+ENTRYPOINT cd /application; pip wheel -r requirements.txt
