@@ -90,6 +90,10 @@
         var res = {};
         intervention.results.forEach(function(el) {
           // el is the result_chain object
+          // Make sure it's an indicator result
+          if (!el.indicator.id){
+            return;
+          }
           if (res[el.id]){
             res[el.id].push(el);
           } else {

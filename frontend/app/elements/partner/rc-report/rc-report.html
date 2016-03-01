@@ -12,6 +12,8 @@
 <link rel="import" href="../../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../../bower_components/paper-input/paper-input.html">
 
+<link rel="import" href="../../../bower_components/moment-element/moment-with-locales-import.html">
+
   
 
 
@@ -45,9 +47,18 @@
       <p>Target = {{rc.target}}</p>
       <p>Indicator = {{rc.indicator.name}}</p>
   </div>
+
   <div>
     <paper-button class="btn" on-tap="showNewReportDialog" raised>Add Report</paper-button>
-
+    <template is="dom-repeat" items="{{rc.indicator_reports}}" as="report">
+        <div>
+          <p>
+            Reported on: {{dateFormat(report.modified, 'LL')}}, 
+            Location: {{report.location}},
+            Reported: {{report.total}}
+          </p>
+        </div>
+    </template>
     <!--  -->
 
     <paper-dialog class="custom" id="newReportDialog" modal on-iron-overlay-closed="dismissDialog">
@@ -116,6 +127,9 @@
     ready: function() {
       //
     },
+    dateFormat: function(date, format) {
+      return moment(date).format(format);
+    },
     changeUrl: function(){
       
       if (this.rcId){
@@ -128,10 +142,8 @@
     handleResponse: function(rsp) {
       //
       this.rc = rsp.detail.xhr.response;
+      console.log(this.rc);
 
-    },
-    dateFormat: function(date, format) {
-      return moment(date).format(format);
     },
     handleSubmitResponse: function(rsp){
       console.log(rsp.detail.xhr.response);
