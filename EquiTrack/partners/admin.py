@@ -572,8 +572,8 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         u'download_url'
     )
     fieldsets = (
-        (u'Agreement Details', {
-            u'fields':
+        (_('Agreement Details'), {
+            'fields':
                 (
                     u'partner',
                     u'agreement_type',
@@ -584,18 +584,18 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                     u'partner_manager',
                     u'signed_by_unicef_date',
                     u'signed_by',
-                    u'download_url'
+                    u'download_url',
                 )
         }),
-        (u'Bank Details', {
-            u'fields':
+        (_('Bank Details'), {
+            'fields':
                 (
                     u'bank_name',
                     u'bank_address',
                     u'account_title',
                     u'account_number',
                     u'routing_details',
-                    u'bank_contact_person'
+                    u'bank_contact_person',
                 )
         })
     )
