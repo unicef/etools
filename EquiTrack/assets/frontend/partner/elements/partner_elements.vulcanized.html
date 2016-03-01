@@ -37307,6 +37307,10 @@ window.addEventListener('WebComponentsReady', function() {
         var res = {};
         intervention.results.forEach(function(el) {
           // el is the result_chain object
+          // Make sure it's an indicator result
+          if (!el.indicator.id){
+            return;
+          }
           if (res[el.id]){
             res[el.id].push(el);
           } else {
@@ -37357,16 +37361,25 @@ window.addEventListener('WebComponentsReady', function() {
     <etools-ajax auto="" id="ajaxPost" on-response="handleSubmitResponse" on-error="handleSubmitError">
     </etools-ajax>
    
-  <h2>rcReport</h2>
-  <div>{{rcId}}</div>
+  <h2>Report on: {{rc.indicator.name}}</h2>
+  
   <div>
       <p>Current Progress = {{rc.current_progress}}</p>
       <p>Target = {{rc.target}}</p>
       <p>Indicator = {{rc.indicator.name}}</p>
   </div>
+
   <div>
     <paper-button class="btn" on-tap="showNewReportDialog" raised="">Add Report</paper-button>
-
+    <template is="dom-repeat" items="{{rc.indicator_reports}}" as="report">
+        <div>
+          <p>
+            Reported on: {{dateFormat(report.modified, 'LL')}}, 
+            Location: {{report.location}},
+            Reported: {{report.total}}
+          </p>
+        </div>
+    </template>
     
 
     <paper-dialog class="custom" id="newReportDialog" modal="" on-iron-overlay-closed="dismissDialog">
@@ -37435,6 +37448,9 @@ window.addEventListener('WebComponentsReady', function() {
     ready: function() {
       //
     },
+    dateFormat: function(date, format) {
+      return moment(date).format(format);
+    },
     changeUrl: function(){
       
       if (this.rcId){
@@ -37449,9 +37465,6 @@ window.addEventListener('WebComponentsReady', function() {
       this.rc = rsp.detail.xhr.response;
       console.log(this.rc);
 
-    },
-    dateFormat: function(date, format) {
-      return moment(date).format(format);
     },
     handleSubmitResponse: function(rsp){
       console.log(rsp.detail.xhr.response);
