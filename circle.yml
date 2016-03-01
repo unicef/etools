@@ -7,11 +7,15 @@ machine:
 dependencies:
   cache_directories:
     - "~/docker"
+    - "~/wheelhouse"
 
   override:
-    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
-    - docker build -t unicef/equitrack:etools .
-    - mkdir -p ~/docker; docker save unicef/equitrack:etools > ~/docker/image.tar
+    - if [[ -e ~/docker/build_image.tar ]]; then docker load -i ~/docker/build_imageimage.tar; fi
+    - docker build -t unicef/equitrack:etools-base -f etools-base.docker .
+    - mkdir -p ~/docker; docker save unicef/equitrack:etools-base > ~/docker/base_image.tar
+    - docker build -t unicef/equitrack:etools-builder -f etools-build.docker .
+    - docker run --rm -v EquiTrack:/application -v wheelhouse:/wheelhouse unicef/etools-builder
+    - docker build -t unicef/equitrack:etools -f etools-run.docker .
 
 test:
   pre: # bootstrap postgres to accept connections from our container
