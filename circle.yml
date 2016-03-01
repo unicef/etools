@@ -8,6 +8,7 @@ dependencies:
   cache_directories:
     - "~/docker"
     - "wheelhouse"
+    - "frontend/node_modules"
 
   override:
     - if [[ -e ~/docker/base_image.tar ]]; then docker load -i ~/docker/base_image.tar; fi
