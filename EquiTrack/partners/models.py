@@ -10,9 +10,10 @@ from django.db import models, connection
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 
-from django.contrib.postgres.fields import HStoreField, JSONField
+from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 
+from jsonfield import JSONField
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
@@ -31,7 +32,8 @@ from reports.models import (
     Sector,
     Goal,
     ResultType,
-    Result)
+    Result,
+)
 from locations.models import (
     Governorate,
     Locality,
