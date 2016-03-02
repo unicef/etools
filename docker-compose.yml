@@ -12,6 +12,16 @@ web:
     - DJANGO_SETTINGS_MODULE=EquiTrack.settings.base
     - DJANGO_DEBUG=true
 
+beater:
+  build: .
+  command: python manage.py celery worker -B -E --loglevel=info
+  links:
+    - db
+    - redis
+  environment:
+    - REDIS_URL=redis://redis:6379/0
+    - DATABASE_URL=postgis://postgres:password@db:5432/postgres
+
 db:
   image: mdillon/postgis:9.4
   environment:
