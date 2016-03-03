@@ -20,6 +20,7 @@ from .models import (
     IndicatorReport
 )
 
+
 class IndicatorProgressSerializer(serializers.ModelSerializer):
 
     indicator = serializers.CharField(source='indicator.name')

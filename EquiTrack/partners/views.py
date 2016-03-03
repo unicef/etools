@@ -23,7 +23,7 @@ from .serializers import (
     ResultChainDetailsSerializer,
     IndicatorReportSerializer
 )
-from .permissions import InterventionDetailsPermission, ResultChainPermission
+from .permissions import PartnerPermission, ResultChainPermission
 
 from .models import (
     Agreement,
@@ -192,6 +192,15 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         return obj
 
 
+class AgreementViewSet(mixins.RetrieveModelMixin,
+                       mixins.ListModelMixin,
+                       mixins.CreateModelMixin,
+                       viewsets.GenericViewSet):
+
+    queryset = PCA.objects.all()
+    permission_classes = (PartnerPermission,)
+
+
 class InterventionsViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
@@ -199,7 +208,7 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
 
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
-    permission_classes = (InterventionDetailsPermission,)
+    permission_classes = (PartnerPermission,)
 
     def get_queryset(self):
         queryset = super(InterventionsViewSet, self).get_queryset()

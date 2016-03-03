@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0024_pca_fr_number'),
+        ('partners', '0024_indicatorreport'),
     ]
 
     operations = [
