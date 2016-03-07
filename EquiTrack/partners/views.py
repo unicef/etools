@@ -21,7 +21,10 @@ from .serializers import (
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
     ResultChainDetailsSerializer,
-    IndicatorReportSerializer
+    IndicatorReportSerializer,
+    PartnerOrganizationSerializer,
+    PartnerStaffMemberSerializer,
+    AgreementSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
 
@@ -29,6 +32,8 @@ from .models import (
     Agreement,
     AuthorizedOfficer,
     PCA,
+    PartnerOrganization,
+    Agreement,
     PCAGrant,
     PCASector,
     GwPCALocation,
@@ -197,8 +202,26 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
                        mixins.CreateModelMixin,
                        viewsets.GenericViewSet):
 
-    queryset = PCA.objects.all()
+    queryset = Agreement.objects.all()
+    serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
+
+    def get_queryset(self):
+        queryset = super(AgreementViewSet, self).get_queryset()
+        if not self.request.user.is_staff:
+            # This must be a partner
+            try:
+                # TODO: Promote this to a permissions class
+                current_member = PartnerStaffMember.objects.get(
+                    id=self.request.user.profile.partner_staff_member
+                )
+            except PartnerStaffMember.DoesNotExist:
+                # This is an authenticated user with no access to interventions
+                return queryset.none()
+            else:
+                # Return all interventions this partner has
+                return queryset.filter(partner=current_member.partner)
+        return queryset
 
 
 class InterventionsViewSet(mixins.RetrieveModelMixin,
@@ -270,3 +293,55 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
         serializer.save(partner_staff_member=partner_staff_member)
 
 
+class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = PartnerOrganization.objects.all()
+    serializer_class = PartnerOrganizationSerializer
+    permission_classes = (PartnerPermission,)
+
+    def get_queryset(self):
+        queryset = super(PartnerOrganizationsViewSet, self).get_queryset()
+        if not self.request.user.is_staff:
+            # This must be a partner
+            try:
+                # TODO: Promote this to a permissions class
+                current_member = PartnerStaffMember.objects.get(
+                    id=self.request.user.profile.partner_staff_member
+                )
+            except PartnerStaffMember.DoesNotExist:
+                # This is an authenticated user with no access to interventions
+                return queryset.none()
+            else:
+                # Return all interventions this partner has
+                return queryset.filter(partner=current_member.partner)
+        return queryset
+
+
+class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = PartnerStaffMember.objects.all()
+    serializer_class = PartnerStaffMemberSerializer
+    permission_classes = (PartnerPermission,)
+
+    def get_queryset(self):
+        queryset = super(PartnerStaffMembersViewSet, self).get_queryset()
+        if not self.request.user.is_staff:
+            # This must be a partner
+            try:
+                # TODO: Promote this to a permissions class
+                current_member = PartnerStaffMember.objects.get(
+                    id=self.request.user.profile.partner_staff_member
+                )
+            except PartnerStaffMember.DoesNotExist:
+                # This is an authenticated user with no access to interventions
+                return queryset.none()
+            else:
+                # Return all interventions this partner has
+                return queryset.filter(partner=current_member.partner)
+        return queryset

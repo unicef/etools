@@ -25,12 +25,16 @@ from .views import (
 )
 from trips.views import TripsViewSet
 from partners.views import InterventionsViewSet, IndicatorReportViewSet
+from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet
 
 
 api = routers.SimpleRouter()
 api.register(r'trips', TripsViewSet, base_name='trip')
 api.register(r'interventions', InterventionsViewSet, base_name='intervention')
 api.register(r'reports/indicators', IndicatorReportViewSet, base_name='indicator_report')
+api.register(r'partnerorganizations', PartnerOrganizationsViewSet, base_name='partnerorganizations')
+api.register(r'partnerstaffmemebers', PartnerStaffMembersViewSet, base_name='partnerstaffmemebers')
+api.register(r'agreements', AgreementViewSet, base_name='agreements')
 
 
 urlpatterns = patterns(
