@@ -13,6 +13,7 @@ from django.db.models.signals import post_save, pre_delete
 from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 
+from jsonfield import JSONField
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
@@ -31,7 +32,8 @@ from reports.models import (
     Sector,
     Goal,
     ResultType,
-    Result)
+    Result,
+)
 from locations.models import (
     Governorate,
     Locality,
@@ -329,7 +331,7 @@ class Agreement(TimeStampedModel):
     )
     agreement_number = models.CharField(
         max_length=45L,
-        unique=True, blank=True,
+        blank=True,
         help_text=u'Reference Number'
     )
     attached_agreement = models.FileField(
@@ -895,29 +897,6 @@ class PCASectorGoal(models.Model):
         verbose_name_plural = 'CCCs'
 
 
-class IndicatorProgress(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    indicator = models.ForeignKey(Indicator)
-    programmed = models.PositiveIntegerField()
-    current = models.IntegerField(blank=True, null=True, default=0)
-
-    def __unicode__(self):
-        return self.indicator.name
-
-    @property
-    def pca(self):
-        return self.pca_sector.pca
-
-    def shortfall(self):
-        return self.programmed - self.current if self.id and self.current else 0
-    shortfall.short_description = 'Shortfall'
-
-    def unit(self):
-        return self.indicator.unit.type if self.id else ''
-    unit.short_description = 'Unit'
-
-
 class FileType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
 
@@ -974,6 +953,9 @@ class ResultChain(models.Model):
     target = models.PositiveIntegerField(
         blank=True, null=True
     )
+    current_progress = models.PositiveIntegerField(
+        default=0
+    )
     partner_contribution = models.IntegerField(default=0)
     unicef_cash = models.IntegerField(default=0)
     in_kind_amount = models.IntegerField(default=0)
@@ -992,6 +974,32 @@ class ResultChain(models.Model):
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
+
+
+class IndicatorReport(TimeStampedModel, TimeFramedModel):
+
+    # FOR WHOM / Beneficiary
+    #  -  ResultChain
+    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
+
+    # WHO
+    #  -  Implementing Partner
+    partner_staff_member = models.ForeignKey(PartnerStaffMember, related_name='indicator_reports')
+
+    # WHAT
+    #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
+    indicator = models.ForeignKey(Indicator, related_name='reports')  # this should always be computed from result_chain
+    total = models.PositiveIntegerField()
+    disaggregated = models.BooleanField(default=False)
+    disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
+
+    # WHERE
+    #  -  Location
+    location = models.ForeignKey(Location, blank=True, null=True)
+
+    # Metadata
+    #  - Remarks
+    remarks = models.TextField(blank=True, null=True)
 
 
 class SupplyPlan(models.Model):

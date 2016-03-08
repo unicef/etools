@@ -13,7 +13,7 @@ from partners.models import (
     PCA,
     PCAGrant,
     GwPCALocation,
-    IndicatorProgress,
+    #IndicatorProgress,
 )
 from reports.admin import SectorListFilter
 from reports.models import Sector, Indicator

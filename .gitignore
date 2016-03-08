@@ -69,13 +69,17 @@ htmlcov
 
 config.json
 
+wheelhouse
+
 # Frontend
-frontend/node_modules
+frontend/node_modules/
 frontend/dist
-frontend/bower_components
+frontend/bower_components/
 .tmp
 .editorconfig
 Icon
 *.sublime-project
 *.sublime-workspace
 
+assets/frontend/
+templates/frontend/

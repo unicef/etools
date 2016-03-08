@@ -9,7 +9,7 @@ from autocomplete_light import shortcuts as autocomplete_light
 # import every app/autocomplete_light_registry.py
 autocomplete_light.autodiscover()
 
-from rest_framework import routers
+from rest_framework_nested import routers
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -24,12 +24,16 @@ from .views import (
     CmtDashboardView,
 )
 from trips.views import TripsViewSet
-from partners.views import InterventionsViewSet
+from partners.views import InterventionsViewSet, IndicatorReportViewSet
+from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet
 
+from partners.urls import interventions_api, results_api, reports_api
 
 api = routers.SimpleRouter()
 api.register(r'trips', TripsViewSet, base_name='trip')
-api.register(r'interventions', InterventionsViewSet, base_name='intervention')
+api.register(r'partnerorganizations', PartnerOrganizationsViewSet, base_name='partnerorganizations')
+api.register(r'partnerstaffmemebers', PartnerStaffMembersViewSet, base_name='partnerstaffmemebers')
+api.register(r'agreements', AgreementViewSet, base_name='agreements')
 
 
 urlpatterns = patterns(
@@ -49,6 +53,9 @@ urlpatterns = patterns(
     url(r'^supplies/', include('supplies.urls')),
 
     url(r'^api/', include(api.urls)),
+    url(r'^api/', include(interventions_api.urls)),
+    url(r'^api/', include(results_api.urls)),
+    url(r'^api/', include(reports_api.urls)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
 
     # Uncomment the next line to enable the admin:
@@ -62,6 +69,7 @@ urlpatterns = patterns(
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
+    url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),  # TODO: remove this when eTrips is deployed needed
 )
 
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-npm install
+npm prune && npm install --production
 
 bower install --allow-root --config.interactive=false
 

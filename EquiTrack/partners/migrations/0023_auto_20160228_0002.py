@@ -69,4 +69,9 @@ class Migration(migrations.Migration):
             name='intervention',
             field=models.ForeignKey(to='partners.PCA', null=True),
         ),
+        migrations.AddField(
+            model_name='pca',
+            name='fr_number',
+            field=models.CharField(max_length=50, null=True, blank=True),
+        ),
     ]
