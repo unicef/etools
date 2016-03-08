@@ -34,6 +34,9 @@ class ResultChainSerializer(serializers.ModelSerializer):
     disaggregation = HStoreField()
     result = OutputSerializer()
 
+    def create(self, validated_data):
+        return validated_data
+
     class Meta:
         model = ResultChain
 
@@ -93,8 +96,26 @@ class InterventionSerializer(serializers.ModelSerializer):
     pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    pcasector_set = PCASectorSerializer(many=True)
-    results = ResultChainSerializer(many=True)
+    # pcasector_set = PCASectorSerializer(many=True)
+    # results = ResultChainSerializer(many=True)
+
+    def create(self, validated_data):
+        # print validated_data
+        # intervention, created = PCA.objects.get_or_create(**validated_data)
+        # results = validated_data.get('results')
+        # validated_data['indicator'] = results.indicator
+
+        try:
+            with transaction.atomic():
+                intervention = PCA.objects.create(**validated_data)
+                # pcasector_set = PCASectorSerializer(many=True)
+                # results = ResultChainSerializer(many=True)
+                # results.create(validated_data)
+                # pcasector_set.create(validated_data)
+        except Exception as ex:
+            raise serializers.ValidationError({'pcasector': ex.message})
+
+        return intervention
 
     class Meta:
         model = PCA
@@ -142,6 +163,25 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
+    # pca_set = InterventionSerializer(many=True)
+
+    # def __init__(self, *args, **kwargs):
+    #     staff_members = kwargs.get('staff_members', None)
+    #
+    #     super(PartnerOrganizationSerializer, self).__init__(*args, **kwargs)
+
+    # def create(self, validated_data):
+    #
+    #     staff_members = validated_data.pop('staff_members')
+    #     raise serializers.ValidationError({'staff_members': staff_members})
+    #
+    #     partner = PartnerOrganization.objects.create(**validated_data)
+    #
+    #     if staff_members:
+    #         for mem in staff_members:
+    #             PartnerStaffMember.objects.create(partner=partner, **mem)
+    #
+    #     return partner
     pca_set = InterventionSerializer(many=True, read_only=True)
 
     class Meta:
@@ -153,6 +193,11 @@ class AgreementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agreement
 
+
+class PartnerStaffMemberSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):

@@ -24,14 +24,16 @@ from .views import (
     CmtDashboardView,
 )
 from trips.views import TripsViewSet
-from partners.views import (
-    AgreementViewSet,
-)
+from partners.views import InterventionsViewSet, IndicatorReportViewSet
+from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet
+
 from partners.urls import interventions_api, results_api, reports_api
 
 api = routers.SimpleRouter()
 api.register(r'trips', TripsViewSet, base_name='trip')
-api.register(r'agreements', AgreementViewSet, base_name='agreement')
+api.register(r'partnerorganizations', PartnerOrganizationsViewSet, base_name='partnerorganizations')
+api.register(r'partnerstaffmemebers', PartnerStaffMembersViewSet, base_name='partnerstaffmemebers')
+api.register(r'agreements', AgreementViewSet, base_name='agreements')
 
 
 urlpatterns = patterns(
