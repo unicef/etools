@@ -163,25 +163,6 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
-    # pca_set = InterventionSerializer(many=True)
-
-    # def __init__(self, *args, **kwargs):
-    #     staff_members = kwargs.get('staff_members', None)
-    #
-    #     super(PartnerOrganizationSerializer, self).__init__(*args, **kwargs)
-
-    # def create(self, validated_data):
-    #
-    #     staff_members = validated_data.pop('staff_members')
-    #     raise serializers.ValidationError({'staff_members': staff_members})
-    #
-    #     partner = PartnerOrganization.objects.create(**validated_data)
-    #
-    #     if staff_members:
-    #         for mem in staff_members:
-    #             PartnerStaffMember.objects.create(partner=partner, **mem)
-    #
-    #     return partner
     pca_set = InterventionSerializer(many=True, read_only=True)
 
     class Meta:
