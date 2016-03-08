@@ -331,7 +331,7 @@ class Agreement(TimeStampedModel):
     )
     agreement_number = models.CharField(
         max_length=45L,
-        unique=True, blank=True,
+        blank=True,
         help_text=u'Reference Number'
     )
     attached_agreement = models.FileField(
@@ -897,29 +897,6 @@ class PCASectorGoal(models.Model):
         verbose_name_plural = 'CCCs'
 
 
-class IndicatorProgress(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    indicator = models.ForeignKey(Indicator)
-    programmed = models.PositiveIntegerField()
-    current = models.IntegerField(blank=True, null=True, default=0)
-
-    def __unicode__(self):
-        return self.indicator.name
-
-    @property
-    def pca(self):
-        return self.pca_sector.pca
-
-    def shortfall(self):
-        return self.programmed - self.current if self.id and self.current else 0
-    shortfall.short_description = 'Shortfall'
-
-    def unit(self):
-        return self.indicator.unit.type if self.id else ''
-    unit.short_description = 'Unit'
-
-
 class FileType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
 
@@ -999,7 +976,11 @@ class ResultChain(models.Model):
         )
 
 
-class IndicatorReport(TimeStampedModel):
+class IndicatorReport(TimeStampedModel, TimeFramedModel):
+
+    # FOR WHOM / Beneficiary
+    #  -  ResultChain
+    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
 
     # WHO
     #  -  Implementing Partner
@@ -1012,15 +993,6 @@ class IndicatorReport(TimeStampedModel):
     disaggregated = models.BooleanField(default=False)
     disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
 
-    # WHEN
-    #  -  Timestamp / From  / To
-    from_date = models.DateTimeField()
-    to_date = models.DateTimeField()
-
-    # FOR WHOM / Beneficiary
-    #  -  ResultChain
-    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
-
     # WHERE
     #  -  Location
     location = models.ForeignKey(Location, blank=True, null=True)
@@ -1028,7 +1000,6 @@ class IndicatorReport(TimeStampedModel):
     # Metadata
     #  - Remarks
     remarks = models.TextField(blank=True, null=True)
-
 
 
 class SupplyPlan(models.Model):

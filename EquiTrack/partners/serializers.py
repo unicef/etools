@@ -12,7 +12,6 @@ from .models import (
     GwPCALocation,
     PCA,
     PCASector,
-    IndicatorProgress,
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
@@ -21,28 +20,10 @@ from .models import (
 )
 
 
-class IndicatorProgressSerializer(serializers.ModelSerializer):
-
-    indicator = serializers.CharField(source='indicator.name')
-    programmed = serializers.IntegerField()
-    current = serializers.IntegerField()
-    unit = serializers.CharField()
-
-    class Meta:
-        model = IndicatorProgress
-
-
 class PCASectorSerializer(serializers.ModelSerializer):
 
     sector_name = serializers.CharField(source='sector.name')
     sector_id = serializers.CharField(source='sector.id')
-    indicators = serializers.SerializerMethodField()
-
-    def get_indicators(self, pca_sector):
-        return IndicatorProgressSerializer(
-            pca_sector.indicatorprogress_set.all(),
-            many=True
-        ).data
 
     class Meta:
         model = PCASector
@@ -89,9 +70,6 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'result_chain': "Creation halted for now"})
 
         return indicator_report
-
-
-        # raise serializers.ValidationError({'result_chain': "Creation halted for now"})
 
     def update(self, instance, validated_data):
         # TODO: update value on resultchain (atomic)
@@ -164,7 +142,7 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
-    pca_set = InterventionSerializer(many=True)
+    pca_set = InterventionSerializer(many=True, read_only=True)
 
     class Meta:
         model = PartnerOrganization

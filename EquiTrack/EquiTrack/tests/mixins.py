@@ -27,7 +27,7 @@ class APITenantTestCase(TenantTestCase):
 
         view = view_info.func
         req_to_call = getattr(factory, method)
-        request = req_to_call(url, data)
+        request = req_to_call(url, data, format='json')
 
         user = user if user else self.user
         force_authenticate(request, user=user)

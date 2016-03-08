@@ -215,7 +215,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     def get_readonly_fields(self, request, obj=None):
 
         fields = super(DistributionPlanInlineAdmin, self).get_readonly_fields(request, obj)
-        if obj is None:
+        if obj is None and u'send' not in fields:
             fields.append(u'send')
 
         return fields

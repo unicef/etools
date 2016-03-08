@@ -36,6 +36,7 @@ from .models import (
     ResultChain,
     IndicatorReport
 )
+from .serializers import AgreementSerializer
 
 
 class PcaPDFView(PDFTemplateView):
@@ -197,7 +198,8 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
                        mixins.CreateModelMixin,
                        viewsets.GenericViewSet):
 
-    queryset = PCA.objects.all()
+    queryset = Agreement.objects.all()
+    serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
 
 
@@ -228,26 +230,19 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
         return queryset
 
 
+class ResultChainViewSet(mixins.RetrieveModelMixin,
+                         mixins.ListModelMixin,
+                         viewsets.GenericViewSet):
 
-class ResultChainDetailView(RetrieveAPIView):
-    serializer_class = ResultChainDetailsSerializer
     model = ResultChain
-    permission_classes = (ResultChainPermission,)
     queryset = ResultChain.objects.all()
+    serializer_class = ResultChainDetailsSerializer
+    permission_classes = (ResultChainPermission,)
 
-    def get_object(self):
-        queryset = self.get_queryset()
-
-        # Perform the lookup filtering.
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-
-        obj = get_object_or_404(queryset, **filter)
-
-        self.check_object_permissions(self.request, obj)
-        return obj
-
-
+    def get_queryset(self):
+        queryset = super(ResultChainViewSet, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(partnership_id=intervention_id)
 
 
 class IndicatorReportViewSet(mixins.RetrieveModelMixin,
@@ -255,15 +250,17 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
 
-    serializer_class = IndicatorReportSerializer
     model = IndicatorReport
-    # permission_classes = (IndicatorReportPermission,)
     queryset = IndicatorReport.objects.all()
+    serializer_class = IndicatorReportSerializer
+    # permission_classes = (IndicatorReportPermission,)
 
     def perform_create(self, serializer):
         # add the user to the arguments
         try:
-            partner_staff_member = PartnerStaffMember.objects.get(pk=self.request.user.profile.partner_staff_member)
+            partner_staff_member = PartnerStaffMember.objects.get(
+                pk=self.request.user.profile.partner_staff_member
+            )
         except PartnerStaffMember.DoesNotExist:
             raise Exception('Hell')
 
