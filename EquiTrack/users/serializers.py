@@ -31,7 +31,9 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = (
             'user_id',
-            'full_name'
+            'full_name',
+            'username',
+            'email'
         )
 
 

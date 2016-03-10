@@ -22,14 +22,19 @@ from .serializers import (
     InterventionSerializer,
     ResultChainDetailsSerializer,
     IndicatorReportSerializer,
+    PCASectorSerializer,
+    PCAGrantSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
-    AgreementSerializer
+    AgreementSerializer,
+    PartnershipBudgetSerializer,
+    PCAFileSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
 
 from .models import (
-    Agreement,
+    PartnershipBudget,
+    PCAFile,
     AuthorizedOfficer,
     PCA,
     PartnerOrganization,
@@ -41,8 +46,8 @@ from .models import (
     ResultChain,
     IndicatorReport
 )
-from .serializers import AgreementSerializer
-
+# from .serializers import AgreementSerializer
+# from rest_framework.response import Response
 
 class PcaPDFView(PDFTemplateView):
     template_name = "partners/pca_pdf.html"
@@ -251,6 +256,16 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
+    # @detail_route(["POST"])
+    # def grants(self, request, *args, **kwargs):
+    #     instance = self.get_object()
+    #     serializer = PCAGrantSerializer(instance=PCAGrant, data=request.data)
+    #     if serializer.is_valid():
+    #         result  = serializer.save()
+    #         return Response(request.data)
+    #
+    #     return Response({'result':'KO'})
+
 
 class ResultChainViewSet(mixins.RetrieveModelMixin,
                          mixins.ListModelMixin,
@@ -287,6 +302,70 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
             raise Exception('Hell')
 
         serializer.save(partner_staff_member=partner_staff_member)
+
+
+class PCASectorViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
+    model = PCASector
+    queryset = PCASector.objects.all()
+    serializer_class = PCASectorSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def get_queryset(self):
+        queryset = super(PCASectorSerializer, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(pca=intervention_id)
+
+
+class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
+    model = PartnershipBudget
+    queryset = PartnershipBudget.objects.all()
+    serializer_class = PartnershipBudgetSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def get_queryset(self):
+        queryset = super(PartnershipBudgetSerializer, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(partnership_id=intervention_id)
+
+
+class PCAFileViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
+    model = PCAFile
+    queryset = PCAFile.objects.all()
+    serializer_class = PCAFileSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def get_queryset(self):
+        queryset = super(PCAFileSerializer, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(pca=intervention_id)
+
+
+class PCAGrantViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
+    model = PCAGrant
+    queryset = PCAGrant.objects.all()
+    serializer_class = PCAGrantSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def get_queryset(self):
+        queryset = super(PCAGrantSerializer, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(partnership_id=intervention_id)
 
 
 class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,

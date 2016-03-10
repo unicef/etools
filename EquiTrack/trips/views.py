@@ -70,6 +70,15 @@ class AppsIOSPlistView(View):
         return HttpResponse(result, content_type="application/octet-stream")
 
 
+class Trips2ViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Trip.objects.all()
+    serializer_class = TripSerializer
+
+
 class TripsViewSet(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
                    viewsets.GenericViewSet):

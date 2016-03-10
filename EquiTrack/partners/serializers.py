@@ -12,6 +12,9 @@ from .models import (
     GwPCALocation,
     PCA,
     PCASector,
+    PCAFile,
+    PCAGrant,
+    PartnershipBudget,
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
@@ -27,6 +30,24 @@ class PCASectorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCASector
+
+
+class PCAFileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PCAFile
+
+
+class PCAGrantSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PCAGrant
+
+
+class PartnershipBudgetSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnershipBudget
 
 
 class ResultChainSerializer(serializers.ModelSerializer):
@@ -99,23 +120,16 @@ class InterventionSerializer(serializers.ModelSerializer):
     # pcasector_set = PCASectorSerializer(many=True)
     # results = ResultChainSerializer(many=True)
 
-    def create(self, validated_data):
-        # print validated_data
-        # intervention, created = PCA.objects.get_or_create(**validated_data)
-        # results = validated_data.get('results')
-        # validated_data['indicator'] = results.indicator
-
-        try:
-            with transaction.atomic():
-                intervention = PCA.objects.create(**validated_data)
-                # pcasector_set = PCASectorSerializer(many=True)
-                # results = ResultChainSerializer(many=True)
-                # results.create(validated_data)
-                # pcasector_set.create(validated_data)
-        except Exception as ex:
-            raise serializers.ValidationError({'pcasector': ex.message})
-
-        return intervention
+    # def create(self, validated_data):
+    #     attachments = validated_data.pop('attachments')
+    #     raise serializers.ValidationError({'attachments': attachments})
+    #     try:
+    #         with transaction.atomic():
+    #             intervention = PCA.objects.create(**validated_data)
+    #     except Exception as ex:
+    #         raise serializers.ValidationError({'intervention': ex.message})
+    #
+    #     return intervention
 
     class Meta:
         model = PCA
