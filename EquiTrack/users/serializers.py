@@ -22,6 +22,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
     user_id = serializers.CharField(source="user.id")
+    email = serializers.CharField(source="user.email")
     full_name = serializers.SerializerMethodField()
 
     def get_full_name(self, obj):
