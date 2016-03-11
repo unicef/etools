@@ -55,7 +55,7 @@ class VisionDataSynchronizer:
     def _filter_records(self, records):
         def is_valid_record(record):
             for key in self.REQUIRED_KEYS:
-                if not record[key]:
+                if key not in record:
                     return False
             return True
 
@@ -70,7 +70,9 @@ class VisionDataSynchronizer:
         )
 
         if response.status_code != 200:
-            raise VisionException(message=('Load data failed! Http code:%s' % response.status_code))
+            raise VisionException(
+                message=('Load data failed! Http code: {}'.format(response.status_code))
+            )
 
         return self._get_json(response.json())
 
@@ -78,7 +80,8 @@ class VisionDataSynchronizer:
         try:
             original_records = self._load_records()
             converted_records = self._convert_records(original_records)
+            logger.info('Processing {} records'.format(len(original_records)))
             self._save_records(converted_records)
-        except Exception, e:
+        except Exception as e:
             raise VisionException(message=e.message)
 

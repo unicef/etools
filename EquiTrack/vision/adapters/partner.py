@@ -19,11 +19,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         "GRANT_REF",
         "DONOR_NAME",
         "EXPIRY_DATE",
-        "WBS_ELEMENT_EX",
-        "NO_OF_AGREEMENTS",
-        "AGREEMENT_AMT",
-        "COMMITMENT_AMT",
-        "EXPENDITURE_AMT",
     )
 
     def _get_json(self, data):
@@ -38,19 +33,21 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         for partner in filtered_records:
             # Populate grants during import
             donor = Donor.objects.get_or_create(name=partner["DONOR_NAME"])[0]
-            Grant.objects.get_or_create(
+            grant = Grant.objects.get_or_create(
                 donor=donor,
-                name=partner["GRANT_REF"],
-                expiry=wcf_json_date_as_datetime(partner["EXPIRY_DATE"])
-            )
+                name=partner["GRANT_REF"]
+            )[0]
+            if partner["EXPIRY_DATE"] is not None:
+                grant.expiry = wcf_json_date_as_datetime(partner["EXPIRY_DATE"])
+            grant.save()
 
             partner_org, created = PartnerOrganization.objects.get_or_create(
-                partner_type=u'Civil Society Organization',
-                cso_type=partner["CSO_TYPE_NAME"],
-                vendor_number=partner["VENDOR_CODE"],
                 name=partner["VENDOR_NAME"]
             )
-            partner_org.vision_synced = True
+            partner_org.partner_type = u'Civil Society Organization'
+            partner_org.cso_type = partner["CSO_TYPE_NAME"]
+            partner_org.vendor_number = partner["VENDOR_CODE"]
             partner_org.rating = partner["RISK_RATING_NAME"]
+            partner_org.vision_synced = True
             partner_org.save()
 

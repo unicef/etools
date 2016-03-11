@@ -9,4 +9,4 @@ ENV PIP_FIND_LINKS=/wheelhouse
 VOLUME /wheelhouse
 VOLUME /application
 
-ENTRYPOINT cd /application; pip wheel -r requirements.txt; cd frontend; npm prune && npm install
+ENTRYPOINT cd /application; pip wheel -r requirements.txt; cd frontend; ./build.sh

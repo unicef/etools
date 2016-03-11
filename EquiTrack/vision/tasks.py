@@ -33,7 +33,7 @@ def sync():
                 handler(country).sync()
                 logger.info("{} sync successfully".format(handler.__name__))
 
-            except VisionException, e:
+            except VisionException as e:
                 logger.error("{} sync failed, Reason: {}".format(
                     handler.__name__, e.message
                 ))

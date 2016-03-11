@@ -83,3 +83,4 @@ Icon
 
 assets/frontend/
 templates/frontend/
+/env_prod
