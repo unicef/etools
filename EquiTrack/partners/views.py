@@ -256,16 +256,6 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
-    # @detail_route(["POST"])
-    # def grants(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = PCAGrantSerializer(instance=PCAGrant, data=request.data)
-    #     if serializer.is_valid():
-    #         result  = serializer.save()
-    #         return Response(request.data)
-    #
-    #     return Response({'result':'KO'})
-
 
 class ResultChainViewSet(mixins.RetrieveModelMixin,
                          mixins.ListModelMixin,

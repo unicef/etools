@@ -349,87 +349,88 @@ class Trip(AdminURLMixin, models.Model):
 
     @classmethod
     def send_trip_request(cls, sender, instance, created, **kwargs):
-        """
-        Trip emails alerts are sent at various stages...
-        """
-        # default list of recipients
-        recipients = [
-            instance.owner.email,
-            instance.supervisor.email]
-
-        #TODO: Make this work now that offices are moved into the global schema
-        # get zonal chiefs emails if travelling in their respective zones
-        # locations = instance.locations.all().values_list('governorate__id', flat=True)
-        # offices = Office.objects.filter(location_id__in=locations)
-        # zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
-
-        if instance.budget_owner:
-            if instance.budget_owner.email not in recipients:
-                recipients.append(instance.budget_owner.email)
-
-        if instance.status == Trip.SUBMITTED:
-            if instance.submitted_email_sent is False:
-                emails.TripCreatedEmail(instance).send(
-                    instance.owner.email,
-                    *recipients
-                )
-                instance.submitted_email_sent = True
-                instance.save()
-
-            if instance.international_travel and instance.approved_by_supervisor:
-                recipients.append(instance.representative.email)
-                emails.TripRepresentativeEmail(instance).send(
-                    instance.owner.email,
-                    *recipients
-                )
-
-        elif instance.status == Trip.CANCELLED:
-            # send an email to everyone if the trip is cancelled
-            if instance.travel_assistant:
-                recipients.append(instance.travel_assistant.email)
-
-            #recipients.extend(zonal_chiefs)
-            emails.TripCancelledEmail(instance).send(
-                instance.owner.email,
-                *recipients
-            )
-
-        elif instance.status == Trip.APPROVED:
-            if instance.travel_assistant and not instance.transport_booked:
-                emails.TripTravelAssistantEmail(instance).send(
-                    instance.owner.email,
-                    instance.travel_assistant.email
-                )
-
-            if instance.ta_required and instance.programme_assistant and not instance.ta_drafted:
-                emails.TripTAEmail(instance).send(
-                    instance.owner.email,
-                    instance.programme_assistant.email
-                )
-
-            if instance.ta_drafted and instance.vision_approver:
-                emails.TripTADraftedEmail(instance).send(
-                    instance.programme_assistant.email,
-                    instance.vision_approver.email
-                )
-
-            if not instance.approved_email_sent:
-                if instance.international_travel:
-                    recipients.append(instance.representative.email)
-
-                #recipients.extend(zonal_chiefs)
-                emails.TripApprovedEmail(instance).send(
-                    instance.owner.email,
-                    *recipients
-                )
-                instance.approved_email_sent = True
-                instance.save()
-
-        elif instance.status == Trip.COMPLETED:
-            emails.TripCompletedEmail(instance).send(
-                instance.owner.email,
-                *recipients
-            )
+        pass
+    #     """
+    #     Trip emails alerts are sent at various stages...
+    #     """
+    #     # default list of recipients
+    #     recipients = [
+    #         instance.owner.email,
+    #         instance.supervisor.email]
+    #
+    #     #TODO: Make this work now that offices are moved into the global schema
+    #     # get zonal chiefs emails if travelling in their respective zones
+    #     # locations = instance.locations.all().values_list('governorate__id', flat=True)
+    #     # offices = Office.objects.filter(location_id__in=locations)
+    #     # zonal_chiefs = [office.zonal_chief.email for office in offices if office.zonal_chief]
+    #
+    #     if instance.budget_owner:
+    #         if instance.budget_owner.email not in recipients:
+    #             recipients.append(instance.budget_owner.email)
+    #
+    #     if instance.status == Trip.SUBMITTED:
+    #         if instance.submitted_email_sent is False:
+    #             emails.TripCreatedEmail(instance).send(
+    #                 instance.owner.email,
+    #                 *recipients
+    #             )
+    #             instance.submitted_email_sent = True
+    #             instance.save()
+    #
+    #         if instance.international_travel and instance.approved_by_supervisor:
+    #             recipients.append(instance.representative.email)
+    #             emails.TripRepresentativeEmail(instance).send(
+    #                 instance.owner.email,
+    #                 *recipients
+    #             )
+    #
+    #     elif instance.status == Trip.CANCELLED:
+    #         # send an email to everyone if the trip is cancelled
+    #         if instance.travel_assistant:
+    #             recipients.append(instance.travel_assistant.email)
+    #
+    #         #recipients.extend(zonal_chiefs)
+    #         emails.TripCancelledEmail(instance).send(
+    #             instance.owner.email,
+    #             *recipients
+    #         )
+    #
+    #     elif instance.status == Trip.APPROVED:
+    #         if instance.travel_assistant and not instance.transport_booked:
+    #             emails.TripTravelAssistantEmail(instance).send(
+    #                 instance.owner.email,
+    #                 instance.travel_assistant.email
+    #             )
+    #
+    #         if instance.ta_required and instance.programme_assistant and not instance.ta_drafted:
+    #             emails.TripTAEmail(instance).send(
+    #                 instance.owner.email,
+    #                 instance.programme_assistant.email
+    #             )
+    #
+    #         if instance.ta_drafted and instance.vision_approver:
+    #             emails.TripTADraftedEmail(instance).send(
+    #                 instance.programme_assistant.email,
+    #                 instance.vision_approver.email
+    #             )
+    #
+    #         if not instance.approved_email_sent:
+    #             if instance.international_travel:
+    #                 recipients.append(instance.representative.email)
+    #
+    #             #recipients.extend(zonal_chiefs)
+    #             emails.TripApprovedEmail(instance).send(
+    #                 instance.owner.email,
+    #                 *recipients
+    #             )
+    #             instance.approved_email_sent = True
+    #             instance.save()
+    #
+    #     elif instance.status == Trip.COMPLETED:
+    #         emails.TripCompletedEmail(instance).send(
+    #             instance.owner.email,
+    #             *recipients
+    #         )
 
 post_save.connect(Trip.send_trip_request, sender=Trip)
 
@@ -535,28 +536,29 @@ class ActionPoint(models.Model):
 
     @classmethod
     def send_action(cls, sender, instance, created, **kwargs):
-
-        recipients = [
-            instance.trip.owner.email,
-            instance.person_responsible.email,
-            instance.trip.supervisor.email
-        ]
-
-        if created:
-            emails.TripActionPointCreated(instance).send(
-                instance.trip.owner.email,
-                *recipients
-            )
-        elif instance.status == 'closed':
-            emails.TripActionPointClosed(instance).send(
-                instance.trip.owner.email,
-                *recipients
-            )
-        else:
-            emails.TripActionPointUpdated(instance).send(
-                instance.trip.owner.email,
-                *recipients
-            )
+        pass
+    #
+    #     recipients = [
+    #         instance.trip.owner.email,
+    #         instance.person_responsible.email,
+    #         instance.trip.supervisor.email
+    #     ]
+    #
+    #     if created:
+    #         emails.TripActionPointCreated(instance).send(
+    #             instance.trip.owner.email,
+    #             *recipients
+    #         )
+    #     elif instance.status == 'closed':
+    #         emails.TripActionPointClosed(instance).send(
+    #             instance.trip.owner.email,
+    #             *recipients
+    #         )
+    #     else:
+    #         emails.TripActionPointUpdated(instance).send(
+    #             instance.trip.owner.email,
+    #             *recipients
+    #         )
 
 
 post_save.connect(ActionPoint.send_action, sender=ActionPoint)

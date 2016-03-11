@@ -121,15 +121,21 @@ class InterventionSerializer(serializers.ModelSerializer):
     # results = ResultChainSerializer(many=True)
 
     # def create(self, validated_data):
-    #     attachments = validated_data.pop('attachments')
-    #     raise serializers.ValidationError({'attachments': attachments})
     #     try:
-    #         with transaction.atomic():
-    #             intervention = PCA.objects.create(**validated_data)
-    #     except Exception as ex:
-    #         raise serializers.ValidationError({'intervention': ex.message})
+    #         results = validated_data.pop('results')
+    #     except KeyError:
+    #         results = []
     #
-    #     return intervention
+    #     try:
+    #         instance = PCA.objects.create(**validated_data)
+    #
+    #         for result in results:
+    #             ResultChain.objects.create(partnership=instance.id, **result)
+    #
+    #     except Exception as ex:
+    #         raise serializers.ValidationError({'instance': ex.message})
+    #
+    #     return instance
 
     class Meta:
         model = PCA
