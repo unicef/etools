@@ -124,7 +124,7 @@ class PartnerOrganization(models.Model):
     )
     rating = models.CharField(
         max_length=50,
-        default=u'High',
+        default=u'High', null=True,
         verbose_name=u'Risk Rating'
     )
     core_values_assessment_date = models.DateField(
@@ -488,8 +488,17 @@ class PCA(AdminURLMixin, models.Model):
         help_text=u'Document Reference Number'
     )
     title = models.CharField(max_length=256L)
+    type = models.CharField(
+        max_length=20,
+        blank=True,
+        choices=Choices(
+            u'N/A',
+            u'Bulk Procurement',
+            u'Construction Project',
+        )
+    ),
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True,
         choices=PCA_STATUS,
         default=u'in_process',

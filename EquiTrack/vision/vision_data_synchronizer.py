@@ -28,7 +28,7 @@ class VisionDataSynchronizer:
         if not country:
             raise VisionException(message='Country is required')
         if self.ENDPOINT is None:
-            raise VisionException(message='You must the ENDPOINT')
+            raise VisionException(message='You must set the ENDPOINT name')
 
         self.county = country
         self.url = '{}/{}/{}'.format(

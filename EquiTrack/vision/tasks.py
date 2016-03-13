@@ -24,7 +24,7 @@ logger = get_task_logger(__name__)
 @app.task
 def sync():
     processed = []
-    for country in Country.objects.filter(business_area_code__isnull=False):
+    for country in Country.objects.filter(vision_sync_enabled=True):
         for handler in SYNC_HANDLERS:
             try:
                 logger.info('Starting vision sync handler {} for country {}'.format(
