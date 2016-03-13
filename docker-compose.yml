@@ -8,11 +8,13 @@ web:
   links:
     - db
     - redis
+    - sync-gateway
   environment:
     - REDIS_URL=redis://redis:6379/0
     - DATABASE_URL=postgis://postgres:password@db:5432/postgres
     - DJANGO_SETTINGS_MODULE=EquiTrack.settings.base
     - DJANGO_DEBUG=true
+    - COUCHBASE_URL=http://sync-gateway:4984/default
   env_file:
     - env_prod
 
@@ -39,3 +41,27 @@ db:
 
 redis:
   image: redis
+
+couchbase:
+  image: couchbase/server:community-4.0.0
+  ports:
+    - 8091:8091
+    - 8092:8092
+    - 8093:8093
+    - 18091:18091
+  restart: always
+
+
+sync-gateway:
+  image: couchbase/sync-gateway:1.2.0
+  entrypoint: /bin/bash
+  command: -c "sleep 30 && /usr/local/bin/sync_gateway sync-gateway.json"
+  volumes:
+    - ./sync-gateway.json:/sync-gateway.json
+  links:
+    - couchbase:couchbase
+  ports:
+    - 4984:4984
+    - 4985:4985
+  restart: always
+

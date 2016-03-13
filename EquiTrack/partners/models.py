@@ -124,7 +124,7 @@ class PartnerOrganization(models.Model):
     )
     rating = models.CharField(
         max_length=50,
-        default=u'High', null=True,
+        null=True,
         verbose_name=u'Risk Rating'
     )
     core_values_assessment_date = models.DateField(

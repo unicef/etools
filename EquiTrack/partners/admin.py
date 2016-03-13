@@ -261,7 +261,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         'title',
     )
     readonly_fields = (
-        'reference_number',
+        'number',
         'total_cash',
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
@@ -277,7 +277,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
             'fields':
                 ('partner',
                  'agreement',
-                 'reference_number',
+                 'number',
                  'partnership_type',
                  'result_structure',
                  ('title', 'project_type',),
@@ -586,7 +586,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                 (
                     u'partner',
                     u'agreement_type',
-                    u'reference_number',
+                    u'agreement_number',
                     u'attached_agreement',
                     (u'start', u'end',),
                     u'signed_by_partner_date',
@@ -609,7 +609,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         })
     )
     readonly_fields = (
-        u'reference_number',
+        u'agreement_number',
         u'download_url',
     )
     inlines = [
