@@ -103,6 +103,16 @@ class Result(MPTTModel):
             self.name
         )
 
+    def save(self, *args, **kwargs):
+
+        nodes = self.get_descendants()
+        for node in nodes:
+            if node.hidden is not self.hidden:
+                node.hidden = self.hidden
+                node.save()
+
+        super(Result, self).save(*args, **kwargs)
+
 
 class Goal(models.Model):
 

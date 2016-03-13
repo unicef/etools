@@ -397,7 +397,7 @@ class Agreement(TimeStampedModel):
         objects = list(Agreement.objects.filter(created__year=year).order_by('created').values_list('id', flat=True))
         sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{code}/{type}{year}{seq}{version}'.format(
-            code='LEBA',
+            code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
             year=year,
             seq=sequence,
@@ -488,15 +488,14 @@ class PCA(AdminURLMixin, models.Model):
         help_text=u'Document Reference Number'
     )
     title = models.CharField(max_length=256L)
-    type = models.CharField(
+    project_type = models.CharField(
         max_length=20,
-        blank=True,
+        blank=True, null=True,
         choices=Choices(
-            u'N/A',
             u'Bulk Procurement',
             u'Construction Project',
         )
-    ),
+    )
     status = models.CharField(
         max_length=32,
         blank=True,

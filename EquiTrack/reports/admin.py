@@ -147,10 +147,17 @@ class ResultAdmin(MPTTModelAdmin):
         'wbs',
     )
 
+    actions = ('hide_results',)
+
     def get_queryset(self, request):
         queryset = super(ResultAdmin, self).get_queryset(request)
         return queryset.filter(hidden=False)
 
+    def hide_results(self, request, queryset):
+
+        for result in queryset:
+            result.hidden = True
+            result.save()
 
 admin.site.register(Result, ResultAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)

@@ -280,7 +280,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
                  'reference_number',
                  'partnership_type',
                  'result_structure',
-                 'title',
+                 ('title', 'project_type',),
                  'status',
                  'initiation_date',)
         }),
@@ -505,48 +505,48 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     )
 
 
-class RecommendationsInlineAdmin(admin.TabularInline):
-    model = Recommendation
-    extra = 0
+# class RecommendationsInlineAdmin(admin.TabularInline):
+#     model = Recommendation
+#     extra = 0
 
 
-class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
-    inlines = [RecommendationsInlineAdmin]
-    readonly_fields = (
-        u'requested_date',
-        u'requesting_officer',
-        u'approving_officer',
-        u'current',
-    )
-    fieldsets = (
-        (_('Assessment Details'), {
-            'fields':
-                (u'partner',
-                 u'type',
-                 u'names_of_other_agencies',
-                 u'expected_budget',
-                 u'notes',
-                 u'requesting_officer',
-                 u'approving_officer',)
-        }),
-        (_('Report Details'), {
-            'fields':
-                (u'planned_date',
-                 u'completed_date',
-                 u'rating',
-                 u'report',
-                 u'current',)
-        }),
-    )
-
-    def save_model(self, request, obj, form, change):
-
-        if not change:
-            obj.requesting_officer = request.user
-
-        super(AssessmentAdmin, self).save_model(
-            request, obj, form, change
-        )
+# class AssessmentAdmin(VersionAdmin, admin.ModelAdmin):
+#     inlines = [RecommendationsInlineAdmin]
+#     readonly_fields = (
+#         u'requested_date',
+#         u'requesting_officer',
+#         u'approving_officer',
+#         u'current',
+#     )
+#     fieldsets = (
+#         (_('Assessment Details'), {
+#             'fields':
+#                 (u'partner',
+#                  u'type',
+#                  u'names_of_other_agencies',
+#                  u'expected_budget',
+#                  u'notes',
+#                  u'requesting_officer',
+#                  u'approving_officer',)
+#         }),
+#         (_('Report Details'), {
+#             'fields':
+#                 (u'planned_date',
+#                  u'completed_date',
+#                  u'rating',
+#                  u'report',
+#                  u'current',)
+#         }),
+#     )
+#
+#     def save_model(self, request, obj, form, change):
+#
+#         if not change:
+#             obj.requesting_officer = request.user
+#
+#         super(AssessmentAdmin, self).save_model(
+#             request, obj, form, change
+#         )
 
 
 class AuthorizedOfficersInlineAdmin(admin.TabularInline):
@@ -556,6 +556,15 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     verbose_name = "Partner Authorized Officer"
     verbose_name_plural = "Partner Authorized Officers"
     extra = 1
+
+    def get_max_num(self, request, obj=None, **kwargs):
+        """
+        Overriding here to disable adding offices to new agreements
+        """
+        if obj:
+            return self.max_num
+
+        return 0
 
 
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
@@ -584,10 +593,10 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                     u'partner_manager',
                     u'signed_by_unicef_date',
                     u'signed_by',
-                    u'download_url',
                 )
         }),
         (_('Bank Details'), {
+            u'classes': (u'collapse',),
             'fields':
                 (
                     u'bank_name',
@@ -599,13 +608,16 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                 )
         })
     )
-    readonly_fields = (u'reference_number', u'download_url',)
+    readonly_fields = (
+        u'reference_number',
+        u'download_url',
+    )
     inlines = [
         AuthorizedOfficersInlineAdmin
     ]
 
     def download_url(self, obj):
-        if obj:
+        if obj and obj.agreement_type == Agreement.PCA:
             return u'<a class="btn btn-primary default" ' \
                    u'href="{}" >Download</a>'.format(
                     reverse('pca_pdf', args=(obj.id,))
@@ -627,6 +639,6 @@ admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
-admin.site.register(Assessment, AssessmentAdmin)
+#admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment)

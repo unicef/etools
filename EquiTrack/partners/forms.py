@@ -296,9 +296,6 @@ class AgreementForm(UserGroupForm):
             'end': SuitDateWidget,
         }
 
-    def __init__(self, *args, **kwargs):
-        super(AgreementForm, self).__init__(*args, **kwargs)
-
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()
 
@@ -341,7 +338,7 @@ class AgreementForm(UserGroupForm):
                     _(u'SSFA can not be more than a year')
                 )
 
-        # TODO: prevent more than one agreement being crated for the current period
+        # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
         #     partner=partner,
         #     start__lte=start,
