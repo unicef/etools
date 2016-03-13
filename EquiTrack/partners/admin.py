@@ -232,7 +232,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     )
     date_hierarchy = 'start_date'
     list_display = (
-        'reference_number',
+        'number',
         'partnership_type',
         'status',
         'created_date',
@@ -574,7 +574,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         u'agreement_type',
     )
     list_display = (
-        u'reference_number',
+        u'agreement_number',
         u'partner',
         u'agreement_type',
         u'signed_by_unicef_date',
