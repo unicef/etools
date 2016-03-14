@@ -3,7 +3,7 @@ from celery.utils.log import get_task_logger
 from EquiTrack.celery import app
 from users.models import Country
 from vision_data_synchronizer import VisionException
-from vision.adapters.programme import ProgrammeSynchronizer
+from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.funding import (
     FundingSynchronizer,
@@ -12,6 +12,7 @@ from vision.adapters.funding import (
 
 SYNC_HANDLERS = [
     ProgrammeSynchronizer,
+    RAMSynchronizer,
     PartnerSynchronizer,
     FundingSynchronizer,
     #DCTSynchronizer

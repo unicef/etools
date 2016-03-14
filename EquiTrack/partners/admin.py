@@ -17,6 +17,7 @@ from EquiTrack.utils import get_changeform_link, get_staticfile_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
+from reports.models import Result, Indicator
 from .exports import (
     # DonorsFormat,
     PCAResource,
@@ -32,7 +33,7 @@ from .models import (
     PartnerOrganization,
     Assessment,
     Agreement,
-    Recommendation,
+    RAMIndicator,
     ResultChain,
     PartnerStaffMember,
     PartnershipBudget,
@@ -66,7 +67,7 @@ from .forms import (
 )
 
 
-class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+class PcaLocationInlineAdmin(admin.TabularInline):
     form = LocationForm
     model = GwPCALocation
     verbose_name = 'Location'
@@ -80,7 +81,7 @@ class PcaLocationInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     extra = 5
 
 
-class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+class PcaSectorInlineAdmin(admin.TabularInline):
     model = PCASector
     form = AmendmentForm
     formset = ParentInlineAdminFormSet
@@ -94,7 +95,7 @@ class PcaSectorInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     )
 
 
-class PCAFileInline(ReadOnlyMixin, admin.TabularInline):
+class PCAFileInline(admin.TabularInline):
     model = PCAFile
     verbose_name = 'File'
     verbose_name_plural = 'Files'
@@ -110,7 +111,7 @@ class PCAFileInline(ReadOnlyMixin, admin.TabularInline):
     )
 
 
-class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+class AmendmentLogInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
     verbose_name = u'Revision'
     model = AmendmentLog
@@ -135,7 +136,7 @@ class AmendmentLogInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         return 0
 
 
-class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+class PartnershipBudgetInlineAdmin(admin.TabularInline):
     model = PartnershipBudget
     form = PartnershipBudgetAdminForm
     formset = ParentInlineAdminFormSet
@@ -156,7 +157,7 @@ class PartnershipBudgetInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     )
 
 
-class PcaGrantInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+class PcaGrantInlineAdmin(admin.TabularInline):
     form = autocomplete_light.modelform_factory(
         Grant, fields=['name', 'donor']
     )
@@ -173,17 +174,36 @@ class PcaGrantInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     ordering = ['amendment']
 
 
-class LinksInlineAdmin(ReadOnlyMixin, GenericLinkStackedInline):
+class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
 
 
-class ResultsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+class ResultsInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
     model = ResultChain
     form = ResultChainAdminForm
     formset = ParentInlineAdminFormSet
     extra = 3
+
+
+class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-results'
+    model = RAMIndicator
+    extra = 1
+    readonly_fields = (
+        u'baseline',
+        u'target'
+    )
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+
+        if db_field.name == u'result':
+            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output', ram=True)
+
+        return super(IndicatorsInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
 
 class SupplyPlanInlineAdmin(admin.TabularInline):
@@ -317,6 +337,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         PcaSectorInlineAdmin,
         PartnershipBudgetInlineAdmin,
         PcaGrantInlineAdmin,
+        IndicatorsInlineAdmin,
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
@@ -335,8 +356,8 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     )
 
     suit_form_includes = (
-        ('admin/partners/funding_summary.html', 'bottom', 'info'),
-        ('admin/partners/work_plan.html', 'middle', 'results'),
+        ('admin/partners/funding_summary.html', 'middle', 'info'),
+        ('admin/partners/work_plan.html', 'bottom', 'results'),
         ('admin/partners/trip_summary.html', 'top', 'trips'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
@@ -609,7 +630,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         })
     )
     readonly_fields = (
-        u'agreement_number',
+        #u'agreement_number',
         u'download_url',
     )
     inlines = [

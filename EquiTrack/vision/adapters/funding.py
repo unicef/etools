@@ -29,9 +29,6 @@ class FundingSynchronizer(VisionDataSynchronizer):
         "EXPENDITURE_AMT",      # NUMBER	Commitment Amount
     )
 
-    def _get_json(self, data):
-        return [] if data == self.NO_DATA_MESSAGE else data
-
     def _convert_records(self, records):
         return json.loads(records)
 

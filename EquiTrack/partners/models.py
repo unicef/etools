@@ -943,6 +943,28 @@ class PCAFile(models.Model):
     download_url.short_description = 'Download Files'
 
 
+class RAMIndicator(models.Model):
+
+    intervention = models.ForeignKey(PCA, related_name='indicators')
+    result = models.ForeignKey(Result)
+    indicator = ChainedForeignKey(
+        Indicator,
+        chained_field="result",
+        chained_model_field="result",
+        show_all=False,
+        auto_choose=True,
+    )
+    target = models.CharField(max_length=255, null=True, blank=True)
+    baseline = models.CharField(max_length=255, null=True, blank=True)
+
+    # def save(self, **kwargs):
+    #
+    #     self.target = self.indicator.target
+    #     self.baseline = self.indicator.basline
+    #
+    #     super(RAMIndicator. self).save(**kwargs)
+
+
 class ResultChain(models.Model):
 
     partnership = models.ForeignKey(PCA, related_name='results')
