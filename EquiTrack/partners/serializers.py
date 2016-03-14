@@ -117,25 +117,8 @@ class InterventionSerializer(serializers.ModelSerializer):
     pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    # pcasector_set = PCASectorSerializer(many=True)
-    # results = ResultChainSerializer(many=True)
-
-    # def create(self, validated_data):
-    #     try:
-    #         results = validated_data.pop('results')
-    #     except KeyError:
-    #         results = []
-    #
-    #     try:
-    #         instance = PCA.objects.create(**validated_data)
-    #
-    #         for result in results:
-    #             ResultChain.objects.create(partnership=instance.id, **result)
-    #
-    #     except Exception as ex:
-    #         raise serializers.ValidationError({'instance': ex.message})
-    #
-    #     return instance
+    pcasector_set = PCASectorSerializer(many=True, read_only=True)
+    results = ResultChainSerializer(many=True, read_only=True)
 
     class Meta:
         model = PCA

@@ -31,6 +31,8 @@ from .models import Trip, FileAttachment
 from .serializers import TripSerializer, Trip2Serializer
 from .forms import TripFilterByDateForm
 from rest_framework import status
+from django.db import connection
+from users.models import Country
 
 User = get_user_model()
 
@@ -80,6 +82,14 @@ class Trips2ViewSet(mixins.RetrieveModelMixin,
     serializer_class = Trip2Serializer
 
     def create(self, request, *args, **kwargs):
+
+        try:
+            country_id = request.data['country']
+        except KeyError:
+            country_id = 1
+
+        country = Country.objects.get(id=country_id)
+        connection.set_tenant(country)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
