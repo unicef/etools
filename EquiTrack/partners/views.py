@@ -306,7 +306,7 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
     model = IndicatorReport
     queryset = IndicatorReport.objects.all()
     serializer_class = IndicatorReportSerializer
-    permission_classes = (IndicatorReportPermission,)
+    # permission_classes = (IndicatorReportPermission,)
 
     def perform_create(self, serializer):
         # add the user to the arguments
