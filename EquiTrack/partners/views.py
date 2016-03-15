@@ -9,9 +9,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from datetime import datetime
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import viewsets, mixins
 from easy_pdf.views import PDFTemplateView
 
@@ -46,10 +44,9 @@ from .models import (
     ResultChain,
     IndicatorReport
 )
-from django.db import connection
-from users.models import Country
 from rest_framework import status
 from rest_framework.response import Response
+
 
 class PcaPDFView(PDFTemplateView):
     template_name = "partners/pca_pdf.html"
@@ -215,7 +212,6 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
-        set_tenant_country(request.data)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -223,11 +219,14 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
         serializer.instance = serializer.save()
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     def get_queryset(self):
-        set_tenant_country(self.request.query_params)
+
         queryset = super(AgreementViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
@@ -255,7 +254,6 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
-        set_tenant_country(request.data)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -267,7 +265,7 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
                         headers=headers)
 
     def get_queryset(self):
-        set_tenant_country(self.request.query_params)
+
         queryset = super(InterventionsViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
@@ -308,7 +306,7 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
     model = IndicatorReport
     queryset = IndicatorReport.objects.all()
     serializer_class = IndicatorReportSerializer
-    # permission_classes = (IndicatorReportPermission,)
+    permission_classes = (IndicatorReportPermission,)
 
     def perform_create(self, serializer):
         # add the user to the arguments
@@ -333,7 +331,6 @@ class PCASectorViewSet(mixins.RetrieveModelMixin,
     permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
-        set_tenant_country(request.data)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -345,8 +342,8 @@ class PCASectorViewSet(mixins.RetrieveModelMixin,
                         headers=headers)
 
     def get_queryset(self):
-        set_tenant_country(self.request.query_params)
-        queryset = super(PCASectorSerializer, self).get_queryset()
+
+        queryset = super(PCASectorViewSet, self).get_queryset()
         intervention_id = self.kwargs.get('intervention_id')
         return queryset.filter(pca=intervention_id)
 
@@ -362,7 +359,6 @@ class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
     permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
-        set_tenant_country(request.data)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -370,12 +366,15 @@ class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
         serializer.instance = serializer.save()
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     def get_queryset(self):
-        set_tenant_country(self.request.query_params)
-        queryset = super(PartnershipBudgetSerializer, self).get_queryset()
+
+        queryset = super(PartnershipBudgetViewSet, self).get_queryset()
         intervention_id = self.kwargs.get('intervention_id')
         return queryset.filter(partnership_id=intervention_id)
 
@@ -391,7 +390,6 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
     permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
-        set_tenant_country(request.data)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -399,12 +397,15 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
         serializer.instance = serializer.save()
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     def get_queryset(self):
-        set_tenant_country(self.request.query_params)
-        queryset = super(PCAFileSerializer, self).get_queryset()
+
+        queryset = super(PCAFileViewSet, self).get_queryset()
         intervention_id = self.kwargs.get('intervention_id')
         return queryset.filter(pca=intervention_id)
 
@@ -420,7 +421,6 @@ class PCAGrantViewSet(mixins.RetrieveModelMixin,
     permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
-        set_tenant_country(request.data)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -428,12 +428,15 @@ class PCAGrantViewSet(mixins.RetrieveModelMixin,
         serializer.instance = serializer.save()
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     def get_queryset(self):
-        set_tenant_country(self.request.query_params)
-        queryset = super(PCAGrantSerializer, self).get_queryset()
+
+        queryset = super(PCAGrantViewSet, self).get_queryset()
         intervention_id = self.kwargs.get('intervention_id')
         return queryset.filter(partnership_id=intervention_id)
 
@@ -448,18 +451,21 @@ class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
-        set_tenant_country(request.data)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         serializer.instance = serializer.save()
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     def get_queryset(self):
-        set_tenant_country(self.request.query_params)
+
         queryset = super(PartnerOrganizationsViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
@@ -488,19 +494,20 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
 
     def create(self, request, *args, **kwargs):
 
-        set_tenant_country(request.data)
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         serializer.instance = serializer.save()
 
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     def get_queryset(self):
-        set_tenant_country(self.request.query_params)
+
         queryset = super(PartnerStaffMembersViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
@@ -517,12 +524,3 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
-
-def set_tenant_country(request):
-    try:
-        country_id = request['country']
-    except KeyError:
-        country_id = 1
-
-    country = Country.objects.get(id=country_id)
-    connection.set_tenant(country)
