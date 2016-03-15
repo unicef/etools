@@ -48,9 +48,8 @@ class VisionDataSynchronizer:
     def _save_records(self, records):
         pass
 
-    @abstractmethod
     def _get_json(self, data):
-        return []
+        return [] if data == self.NO_DATA_MESSAGE else data
 
     def _filter_records(self, records):
         def is_valid_record(record):

@@ -120,7 +120,10 @@ class ProfileAdmin(admin.ModelAdmin):
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
         if db_field.name == u'countries_available':
-            kwargs['queryset'] = request.user.profile.countries_available.all()
+            if request and request.user.is_superuser:
+                kwargs['queryset'] = Country.objects.all()
+            else:
+                kwargs['queryset'] = request.user.profile.countries_available.all()
 
         return super(ProfileAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs
