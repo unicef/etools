@@ -46,6 +46,9 @@
   Polymer({
     is: 'etools-datepicker',
     properties: {
+      currentDate: {
+        type: Date
+      },
       chosenDate: {
         type: Object,
         value: null
@@ -66,14 +69,20 @@
       }
     },
     ready: function() {
-      this.date = new Date();
+      console.log('ready called');
+      this.currentDate = new Date();
       this.updateDate();
     },
     updateDate: function(){
+      console.log('updating Date');
+      if (!this.currentDate){
+        return;
+      }
       this.prettyDate = this.dateFormat(this.date, 'LL');
       this.jsonDate = this.dateFormat(this.date, '');
     },
     dateFormat: function(date, format) {
+      console.log('formatting Date');
       return moment(date).format(format);
     },
     showDialog: function() {

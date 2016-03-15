@@ -40,7 +40,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return [window.location.origin, 'api', 'interventions', id].join('/') + '/';
       },
       resultChainDetails: function(id) {
-        return [window.location.origin, 'partners', 'api', 'resultchain', id].join('/') + '/';
+        return [window.location.origin, 'api', 'results', id].join('/') + '/';
       }
     },
     permissions: {
