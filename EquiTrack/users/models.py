@@ -81,6 +81,15 @@ class UserProfile(models.Model):
     def username(self):
         return self.user.username
 
+    def email(self):
+        return self.user.email
+
+    def first_name(self):
+        return self.user.first_name
+
+    def last_name(self):
+        return self.user.last_name
+
     def __unicode__(self):
         return u'User profile for {}'.format(
             self.user.get_full_name()

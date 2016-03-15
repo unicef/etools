@@ -24,14 +24,23 @@ from .views import (
     UserDashboardView,
     CmtDashboardView,
 )
-from trips.views import TripsViewSet
+from trips.views import TripsViewSet, Trips2ViewSet
 from partners.views import InterventionsViewSet, IndicatorReportViewSet
 from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet
 
-from partners.urls import interventions_api, results_api, reports_api
+from partners.urls import (
+    interventions_api,
+    results_api,
+    reports_api,
+    pcasectors_api,
+    pcabudgets_api,
+    pcafiles_api,
+    pcagrants_api
+)
 
 api = routers.SimpleRouter()
 api.register(r'trips', TripsViewSet, base_name='trip')
+api.register(r'trips2', Trips2ViewSet, base_name='trip2')
 api.register(r'partnerorganizations', PartnerOrganizationsViewSet, base_name='partnerorganizations')
 api.register(r'partnerstaffmemebers', PartnerStaffMembersViewSet, base_name='partnerstaffmemebers')
 api.register(r'agreements', AgreementViewSet, base_name='agreements')
@@ -57,6 +66,10 @@ urlpatterns = patterns(
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(interventions_api.urls)),
     url(r'^api/', include(results_api.urls)),
+    url(r'^api/', include(pcasectors_api.urls)),
+    url(r'^api/', include(pcabudgets_api.urls)),
+    url(r'^api/', include(pcafiles_api.urls)),
+    url(r'^api/', include(pcagrants_api.urls)),
     url(r'^api/', include(reports_api.urls)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
 

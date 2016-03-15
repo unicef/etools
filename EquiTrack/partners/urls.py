@@ -12,6 +12,10 @@ from .views import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     InterventionsViewSet,
+    PartnershipBudgetViewSet,
+    PCASectorViewSet,
+    PCAFileViewSet,
+    PCAGrantViewSet,
     ResultChainViewSet,
     IndicatorReportViewSet,
     PcaPDFView,
@@ -19,6 +23,18 @@ from .views import (
 
 interventions_api = routers.SimpleRouter()
 interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')
+
+pcasectors_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
+pcasectors_api.register(r'pcasector', PCASectorViewSet, base_name='intervention-pcasector')
+
+pcabudgets_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
+pcabudgets_api.register(r'pcabudgets', PartnershipBudgetViewSet, base_name='intervention-pcabudgets')
+
+pcafiles_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
+pcafiles_api.register(r'pcafiles', PCAFileViewSet, base_name='intervention-pcafiles')
+
+pcagrants_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
+pcagrants_api.register(r'pcagrants', PCAGrantViewSet, base_name='intervention-pcagrants')
 
 results_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
 results_api.register(r'results', ResultChainViewSet, base_name='intervention-results')
