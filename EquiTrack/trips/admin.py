@@ -351,9 +351,6 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                 profile__country=connection.tenant,
                 is_staff=True,
             )
-            return super(TripReportAdmin, self).formfield_for_foreignkey(
-                db_field, request, **kwargs
-            )
 
         if db_field.name == u'driver':
             rep_group = Group.objects.get(name=u'Driver')

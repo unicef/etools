@@ -1,9 +1,7 @@
 import json
 import datetime
 
-from django.conf import settings
-
-from reports.models import ResultStructure, ResultType, Result
+from reports.models import ResultStructure, ResultType, Result, Indicator
 from vision.utils import wcf_json_date_as_datetime
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
@@ -112,3 +110,45 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
             activity.activity_focus_code = result['ACTIVITY_FOCUS_CODE']
             activity.activity_focus_name = result['ACTIVITY_FOCUS_NAME']
             activity.save()
+
+
+class RAMSynchronizer(VisionDataSynchronizer):
+
+    ENDPOINT = 'GetRAMInfo_JSON'
+    REQUIRED_KEYS = (
+        "INDICATOR_DESCRIPTION",
+        "INDICATOR_CODE",
+        "WBS_ELEMENT_CODE",
+        "BASELINE",
+        "TARGET",
+    )
+
+    def _convert_records(self, records):
+        return json.loads(records)
+
+    def _save_records(self, records):
+
+        results = Result.objects.filter(result_type__name='Output')
+        lookup = {}
+        for result in results:
+            lookup[result.wbs.replace('/', '')+'000'] = result
+
+        filtered_records = self._filter_records(records)
+        for ram_indicator in filtered_records:
+            try:
+                result = lookup[ram_indicator['WBS_ELEMENT_CODE']]
+            except KeyError:
+                print 'No result found for WBS: {}'.format(ram_indicator['WBS_ELEMENT_CODE'])
+            else:
+                indicator, created = Indicator.objects.get_or_create(
+                    code=ram_indicator['INDICATOR_CODE'],
+                    result=result,
+                    ram_indicator=True,
+                )
+                indicator.name = ram_indicator['INDICATOR_DESCRIPTION']
+                indicator.baseline = ram_indicator['BASELINE']
+                indicator.target = ram_indicator['TARGET']
+                indicator.save()
+
+                result.ram = True
+                result.save()

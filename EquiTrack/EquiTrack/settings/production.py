@@ -187,7 +187,7 @@ JWT_AUTH = {
     'JWT_VERIFY_EXPIRATION': True,
     'JWT_LEEWAY': 0,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
-    'JWT_AUDIENCE': 'https://etools-staging.unicef.org/API',
+    'JWT_AUDIENCE': 'https://{}/API'.format(HOST),
     'JWT_ISSUER': None,
 
     'JWT_ALLOW_REFRESH': False,

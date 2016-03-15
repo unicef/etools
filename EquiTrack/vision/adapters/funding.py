@@ -12,7 +12,6 @@ class FundingSynchronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetPCA_SSFAInfo_JSON'
     REQUIRED_KEYS = (
         "GRANT_REF",            # VARCHAR2	Grant Ref
-        "VENDOR_NAME",         # VARCHAR2	Partner Name
         "DOC_NUMBER",        # VARCHAR2	FR Doc Number
         "HDR_DESC",	            # VARCHAR2  FR Desc
         "START_DATE",        # DATE	    FR Start Date
@@ -29,9 +28,6 @@ class FundingSynchronizer(VisionDataSynchronizer):
         "COMMITMENT_AMT",       # NUMBER	Commitment Amount
         "EXPENDITURE_AMT",      # NUMBER	Commitment Amount
     )
-
-    def _get_json(self, data):
-        return [] if data == self.NO_DATA_MESSAGE else data
 
     def _convert_records(self, records):
         return json.loads(records)
@@ -50,9 +46,9 @@ class FundingSynchronizer(VisionDataSynchronizer):
                 funding_commitment, created = FundingCommitment.objects.get_or_create(
                     grant=grant,
                     fr_number=fc_line["DOC_NUMBER"],
-                    wbs=fc_line["WBS_ELEMENT_EX"],
-                    fc_type=fc_line["COMMITMENT_SUBTYPE_DESC"],
                 )
+                funding_commitment.wbs = fc_line["WBS_ELEMENT_EX"]
+                funding_commitment.fc_type = fc_line["COMMITMENT_SUBTYPE_DESC"]
                 funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
                 funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
                 funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]

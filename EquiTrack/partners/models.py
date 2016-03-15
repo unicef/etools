@@ -10,9 +10,10 @@ from django.db import models, connection
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 
-from django.contrib.postgres.fields import HStoreField, JSONField
+from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 
+from jsonfield import JSONField
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
@@ -31,7 +32,8 @@ from reports.models import (
     Sector,
     Goal,
     ResultType,
-    Result)
+    Result,
+)
 from locations.models import (
     Governorate,
     Locality,
@@ -122,8 +124,7 @@ class PartnerOrganization(models.Model):
     )
     rating = models.CharField(
         max_length=50,
-        choices=RISK_RATINGS,
-        default=HIGH,
+        null=True,
         verbose_name=u'Risk Rating'
     )
     core_values_assessment_date = models.DateField(
@@ -329,7 +330,7 @@ class Agreement(TimeStampedModel):
     )
     agreement_number = models.CharField(
         max_length=45L,
-        unique=True, blank=True,
+        blank=True,
         help_text=u'Reference Number'
     )
     attached_agreement = models.FileField(
@@ -396,7 +397,7 @@ class Agreement(TimeStampedModel):
         objects = list(Agreement.objects.filter(created__year=year).order_by('created').values_list('id', flat=True))
         sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{code}/{type}{year}{seq}{version}'.format(
-            code='LEBA',
+            code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
             year=year,
             seq=sequence,
@@ -487,8 +488,16 @@ class PCA(AdminURLMixin, models.Model):
         help_text=u'Document Reference Number'
     )
     title = models.CharField(max_length=256L)
+    project_type = models.CharField(
+        max_length=20,
+        blank=True, null=True,
+        choices=Choices(
+            u'Bulk Procurement',
+            u'Construction Project',
+        )
+    )
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True,
         choices=PCA_STATUS,
         default=u'in_process',
@@ -895,29 +904,6 @@ class PCASectorGoal(models.Model):
         verbose_name_plural = 'CCCs'
 
 
-class IndicatorProgress(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    indicator = models.ForeignKey(Indicator)
-    programmed = models.PositiveIntegerField()
-    current = models.IntegerField(blank=True, null=True, default=0)
-
-    def __unicode__(self):
-        return self.indicator.name
-
-    @property
-    def pca(self):
-        return self.pca_sector.pca
-
-    def shortfall(self):
-        return self.programmed - self.current if self.id and self.current else 0
-    shortfall.short_description = 'Shortfall'
-
-    def unit(self):
-        return self.indicator.unit.type if self.id else ''
-    unit.short_description = 'Unit'
-
-
 class FileType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
 
@@ -955,6 +941,28 @@ class PCAFile(models.Model):
         return u''
     download_url.allow_tags = True
     download_url.short_description = 'Download Files'
+
+
+class RAMIndicator(models.Model):
+
+    intervention = models.ForeignKey(PCA, related_name='indicators')
+    result = models.ForeignKey(Result)
+    indicator = ChainedForeignKey(
+        Indicator,
+        chained_field="result",
+        chained_model_field="result",
+        show_all=False,
+        auto_choose=True,
+    )
+    target = models.CharField(max_length=255, null=True, blank=True)
+    baseline = models.CharField(max_length=255, null=True, blank=True)
+
+    # def save(self, **kwargs):
+    #
+    #     self.target = self.indicator.target
+    #     self.baseline = self.indicator.basline
+    #
+    #     super(RAMIndicator. self).save(**kwargs)
 
 
 class ResultChain(models.Model):
@@ -997,7 +1005,11 @@ class ResultChain(models.Model):
         )
 
 
-class IndicatorReport(TimeStampedModel):
+class IndicatorReport(TimeStampedModel, TimeFramedModel):
+
+    # FOR WHOM / Beneficiary
+    #  -  ResultChain
+    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
 
     # WHO
     #  -  Implementing Partner
@@ -1010,15 +1022,6 @@ class IndicatorReport(TimeStampedModel):
     disaggregated = models.BooleanField(default=False)
     disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
 
-    # WHEN
-    #  -  Timestamp / From  / To
-    from_date = models.DateTimeField()
-    to_date = models.DateTimeField()
-
-    # FOR WHOM / Beneficiary
-    #  -  ResultChain
-    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
-
     # WHERE
     #  -  Location
     location = models.ForeignKey(Location, blank=True, null=True)
@@ -1026,7 +1029,6 @@ class IndicatorReport(TimeStampedModel):
     # Metadata
     #  - Remarks
     remarks = models.TextField(blank=True, null=True)
-
 
 
 class SupplyPlan(models.Model):

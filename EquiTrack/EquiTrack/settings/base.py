@@ -104,6 +104,7 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
         'EquiTrack.mixins.EToolsTenantJWTAuthentication',
     )
 }
@@ -344,6 +345,7 @@ SHARED_APPS = (
     'reversion',
     'rest_framework',
     'rest_framework_swagger',
+    'rest_framework.authtoken',
     'import_export',
     'smart_selects',
     'suit_ckeditor',

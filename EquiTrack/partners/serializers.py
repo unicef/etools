@@ -12,7 +12,6 @@ from .models import (
     GwPCALocation,
     PCA,
     PCASector,
-    IndicatorProgress,
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
@@ -20,28 +19,11 @@ from .models import (
     IndicatorReport
 )
 
-class IndicatorProgressSerializer(serializers.ModelSerializer):
-
-    indicator = serializers.CharField(source='indicator.name')
-    programmed = serializers.IntegerField()
-    current = serializers.IntegerField()
-    unit = serializers.CharField()
-
-    class Meta:
-        model = IndicatorProgress
-
 
 class PCASectorSerializer(serializers.ModelSerializer):
 
     sector_name = serializers.CharField(source='sector.name')
     sector_id = serializers.CharField(source='sector.id')
-    indicators = serializers.SerializerMethodField()
-
-    def get_indicators(self, pca_sector):
-        return IndicatorProgressSerializer(
-            pca_sector.indicatorprogress_set.all(),
-            many=True
-        ).data
 
     class Meta:
         model = PCASector
@@ -51,6 +33,9 @@ class ResultChainSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
     disaggregation = HStoreField()
     result = OutputSerializer()
+
+    def create(self, validated_data):
+        return validated_data
 
     class Meta:
         model = ResultChain
@@ -89,9 +74,6 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
 
         return indicator_report
 
-
-        # raise serializers.ValidationError({'result_chain': "Creation halted for now"})
-
     def update(self, instance, validated_data):
         # TODO: update value on resultchain (atomic)
         raise serializers.ValidationError({'result_chain': "Creation halted for now"})
@@ -114,8 +96,26 @@ class InterventionSerializer(serializers.ModelSerializer):
     pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    pcasector_set = PCASectorSerializer(many=True)
-    results = ResultChainSerializer(many=True)
+    # pcasector_set = PCASectorSerializer(many=True)
+    # results = ResultChainSerializer(many=True)
+
+    def create(self, validated_data):
+        # print validated_data
+        # intervention, created = PCA.objects.get_or_create(**validated_data)
+        # results = validated_data.get('results')
+        # validated_data['indicator'] = results.indicator
+
+        try:
+            with transaction.atomic():
+                intervention = PCA.objects.create(**validated_data)
+                # pcasector_set = PCASectorSerializer(many=True)
+                # results = ResultChainSerializer(many=True)
+                # results.create(validated_data)
+                # pcasector_set.create(validated_data)
+        except Exception as ex:
+            raise serializers.ValidationError({'pcasector': ex.message})
+
+        return intervention
 
     class Meta:
         model = PCA
@@ -163,7 +163,7 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
-    pca_set = InterventionSerializer(many=True)
+    pca_set = InterventionSerializer(many=True, read_only=True)
 
     class Meta:
         model = PartnerOrganization
@@ -174,6 +174,11 @@ class AgreementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Agreement
 
+
+class PartnerStaffMemberSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):

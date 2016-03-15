@@ -4,16 +4,27 @@ __author__ = 'jcranwellward'
 
 from django.conf.urls import patterns, url, include
 
+from rest_framework_nested import routers
+
 from .views import (
     InterventionLocationView,
     PortalDashView,
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
-    # InterventionsView,
-    # InterventionDetailView,
-    ResultChainDetailView,
+    InterventionsViewSet,
+    ResultChainViewSet,
+    IndicatorReportViewSet,
     PcaPDFView,
 )
+
+interventions_api = routers.SimpleRouter()
+interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')
+
+results_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
+results_api.register(r'results', ResultChainViewSet, base_name='intervention-results')
+
+reports_api = routers.NestedSimpleRouter(results_api, r'results', lookup='result')
+reports_api.register(r'reports', IndicatorReportViewSet, base_name='intervention-reports')
 
 
 urlpatterns = patterns(
@@ -24,10 +35,4 @@ urlpatterns = patterns(
     url(r'^agreement/(?P<agr>\d+)/pdf', PcaPDFView.as_view(), name='pca_pdf'),
 
     url(r'^staffmember/(?P<pk>\d+)/$', PartnerStaffMemberPropertiesView.as_view()),
-    # url(r'^api/interventions/$', InterventionsView.as_view()),
-    # url(r'^api/interventions/(?P<pk>\d+)/$', InterventionDetailView.as_view()),
-    url(r'^api/resultchain/(?P<pk>\d+)/$', ResultChainDetailView.as_view()),
-
-    # auth and registration for partners
-    #url(r'', include('registration.auth_urls')),
 )
