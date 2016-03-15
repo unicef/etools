@@ -1,0 +1,16 @@
+FROM python:2.7
+
+RUN apt-get update
+
+RUN apt-get install -qyy \
+    -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
+    python-gdal gdal-bin libgdal-dev libgdal1h libgdal1-dev libxml2-dev libxslt-dev python-dev xmlsec1
+
+RUN \
+  cd /tmp && \
+  curl -sL https://deb.nodesource.com/setup_5.x | bash - && \
+  apt-get install --yes nodejs
+
+RUN \
+  npm install -g gulp && \
+  npm install -g bower

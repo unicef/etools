@@ -9,6 +9,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     office = serializers.CharField(source='office.name')
     section = serializers.CharField(source='section.name')
+    country_name = serializers.CharField(source='country.name')
 
     class Meta:
         model = UserProfile
@@ -17,9 +18,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'user',
         )
 
+
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
     user_id = serializers.CharField(source="user.id")
+    email = serializers.CharField(source="user.email")
     full_name = serializers.SerializerMethodField()
 
     def get_full_name(self, obj):
@@ -29,8 +32,10 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = (
             'user_id',
-            'full_name'
+            'email',
+            'full_name',
         )
+
 
 class UserSerializer(serializers.ModelSerializer):
 
@@ -40,12 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
 
     def get_profile(self, user):
-        try:
-            return UserProfileSerializer(
-                user.get_profile()
-            ).data
-        except Exception:
-            return None
+        return UserProfileSerializer(user.profile).data
 
     class Meta:
         model = User

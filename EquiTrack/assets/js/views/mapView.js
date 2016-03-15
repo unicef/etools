@@ -39,7 +39,7 @@ define([
               <td style="vertical-align:top;">'+location.pca_title+'</td>\
             </tr>\
             <tr>\
-              <td style="vertical-align:top; white-space:nowrap;">Gateway:</td>\
+              <td style="vertical-align:top; white-space:nowrap;">Location:</td>\
               <td style="vertical-align:top;">'+location.gateway_name+'</td>\
             </tr>\
             <tr>\

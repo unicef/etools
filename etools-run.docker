@@ -1,0 +1,26 @@
+FROM unicef/equitrack:etools-base
+
+ENV PYTHONUNBUFFERED 1
+RUN mkdir /code
+
+ADD EquiTrack /code/
+ADD wheelhouse /wheelhouse
+RUN pip install --no-index -f /wheelhouse -r /code/requirements/production.txt
+
+COPY frontend /code/frontend/
+WORKDIR /code/frontend/
+
+RUN npm install --production
+RUN bower install --allow-root --config.interactive=false
+RUN gulp buildFront:partner
+RUN gulp buildFront:management
+
+WORKDIR /code/
+ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
+RUN python manage.py collectstatic --noinput
+
+# Start everything
+ENV PORT 8080
+EXPOSE $PORT
+ENV C_FORCE_ROOT true
+CMD honcho start

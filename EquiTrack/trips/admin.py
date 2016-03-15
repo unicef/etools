@@ -1,38 +1,40 @@
 __author__ = 'jcranwellward'
 
-from django.db.models import Q
 from django.contrib import admin
-from django.contrib import messages
-from django.contrib.sites.models import Site
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.contrib.contenttypes.generic import GenericTabularInline
+from django.db import models, connection
+from django.forms import Textarea
 
-from reversion import VersionAdmin
+from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin
 from generic_links.admin import GenericLinkStackedInline
-from messages_extends import constants as constants_messages
 from users.models import UserProfile
 
 from EquiTrack.utils import get_changeform_link
+from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import AutoSizeTextForm
-from locations.models import LinkedLocation
 from .models import (
     Trip,
-    Office,
     TripFunds,
     ActionPoint,
     TravelRoutes,
     FileAttachment,
     TripLocation,
-
 )
 from .forms import (
     TripForm,
+    TripFundsForm,
+    TripLocationForm,
     TravelRoutesForm,
     RequireOneLocationFormSet
 )
-
+from .filters import (
+    TripReportFilter,
+    PartnerFilter,
+    SupervisorFilter,
+    OwnerFilter
+)
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -48,16 +50,16 @@ class TravelRoutesInlineAdmin(admin.TabularInline):
 
 class TripFundsInlineAdmin(admin.TabularInline):
     model = TripFunds
+    formset = TripFundsForm
     suit_classes = u'suit-tab suit-tab-planning'
     extra = 3
     max_num = 3
 
 
-class ActionPointInlineAdmin(admin.StackedInline):
+class ActionPointInlineAdmin(CountryUsersAdminMixin, admin.StackedInline):
     model = ActionPoint
     form = AutoSizeTextForm
     suit_classes = u'suit-tab suit-tab-reporting'
-    filter_horizontal = (u'persons_responsible',)
     extra = 1
     fields = (
         (u'description', u'due_date',),
@@ -69,16 +71,26 @@ class ActionPointInlineAdmin(admin.StackedInline):
 
 class TripLocationsInlineAdmin(admin.TabularInline):
     model = TripLocation
+    form = TripLocationForm
     formset = RequireOneLocationFormSet
     suit_classes = u'suit-tab suit-tab-planning'
     verbose_name = u'Sites to visit'
-    # extra = 1
+    fields = (
+        'location',
+    )
 
 
 class FileAttachmentInlineAdmin(admin.TabularInline):
     model = FileAttachment
     suit_classes = u'suit-tab suit-tab-attachments'
-    fields = (u'type', u'report')
+    # make the textarea a little smaller by default. they can be extended if needed
+    formfield_overrides = {
+        models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':40})},
+    }
+    fields = (u'type', u'caption', u'report')
+    # get the number of extra fields (it looks to bulky with 3
+    # if more are needed the "add another fileAttachment" appears
+    extra = 1
 
 
 class LinksInlineAdmin(GenericLinkStackedInline):
@@ -86,27 +98,7 @@ class LinksInlineAdmin(GenericLinkStackedInline):
     extra = 1
 
 
-class TripReportFilter(admin.SimpleListFilter):
-
-    title = 'Report'
-    parameter_name = 'report'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            ('Yes', 'Completed'),
-            ('No', 'Not-Completed'),
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            is_null = Q(main_observations='')
-            return queryset.filter(is_null if self.value() == 'No' else ~is_null)
-        return queryset
-
-
-class TripReportAdmin(ExportMixin, VersionAdmin):
+class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     resource_class = TripResource
     save_as = True
     form = TripForm
@@ -121,9 +113,11 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     ordering = (u'-created_date',)
     date_hierarchy = u'from_date'
     search_fields = (
-        u'owner',
-        u'section',
-        u'office',
+        u'owner__first_name',
+        u'owner__email',
+        u'owner__last_name',
+        u'section__name',
+        u'office__name',
         u'purpose_of_travel',
     )
     list_display = (
@@ -143,20 +137,21 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         u'show_driver_trip',
     )
     list_filter = (
-        u'owner',
+        OwnerFilter,
+        SupervisorFilter,
         u'section',
         u'office',
         u'from_date',
         u'to_date',
         u'travel_type',
         u'international_travel',
-        u'supervisor',
         u'budget_owner',
         u'status',
         u'approved_date',
         u'partners',
         u'pending_ta_amendment',
         TripReportFilter,
+        PartnerFilter,
     )
     filter_vertical = (
         u'pcas',
@@ -185,7 +180,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
                  u'approved_by_human_resources',)
         }),
         (u'Partnership Details', {
-            u'classes': (u'suit-tab suit-tab-planning',),
+            u'classes': (u'suit-tab suit-tab-planning', u'collapse',),
             u'fields':
                 (u'pcas',
                  u'partners',),
@@ -203,20 +198,29 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
                 (
-                (u'driver', u'driver_supervisor'),
-                # u'show_driver_trip',
-                u'transport_booked',
-                u'security_granted',
-                u'ta_drafted',
-                u'ta_reference',
-                u'ta_drafted_date',
-                u'vision_approver',),
+                 (u'driver', u'driver_supervisor'),
+                 u'transport_booked',
+                 u'security_granted',
+                 u'ta_drafted',
+                 u'ta_reference',
+                 u'ta_drafted_date',
+                 u'vision_approver'),
         }),
 
         (u'Report', {
             u'classes': (u'suit-tab suit-tab-reporting', u'full-width',),
             u'fields': (
-                u'main_observations',),
+                u'main_observations',
+            ),
+        }),
+
+        (u'Constraints/Challenges/Opportunities', {
+            u'classes': (u'suit-tab suit-tab-reporting',),
+            u'fields': (
+                u'constraints',
+                u'lessons_learned',
+                u'opportunities',
+            ),
         }),
 
         (u'Travel Closure', {
@@ -231,15 +235,21 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
     suit_form_tabs = (
         (u'planning', u'Planning'),
         (u'reporting', u'Reporting'),
-        (u'attachments', u'Attachments')
+        (u'attachments', u'Attachments'),
+        (u'checklists', u'Checklists'),
+
+    )
+
+    suit_form_includes = (
+        ('admin/trips/checklists-tab.html', 'top', 'checklists'),
     )
 
     def show_driver_trip(self, obj):
         if obj.driver_trip:
-            return get_changeform_link(obj.driver_trip, link_name='View Driver')
+            return get_changeform_link(obj.driver_trip, link_name='View Driver Trip')
         return ''
     show_driver_trip.allow_tags = True
-    show_driver_trip.short_description = 'Trip for Driver'
+    show_driver_trip.short_description = 'Driver Trip'
 
     def save_formset(self, request, form, formset, change):
         """
@@ -313,17 +323,11 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
             fields.remove(u'date_human_resources_approved')
 
         rep_group, created = Group.objects.get_or_create(
-            name=u'Representative Office')
-
-        driver_group, created = Group.objects.get_or_create(
-            name=u'Driver')
-
+            name=u'Representative Office'
+        )
         if trip and rep_group in request.user.groups.all():
             fields.remove(u'representative_approval')
             fields.remove(u'date_representative_approved')
-
-        if trip and request.user.is_superuser:
-            return []
 
         return fields
 
@@ -331,7 +335,7 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
         form = super(TripReportAdmin, self).get_form(request, obj, **kwargs)
         form.request = request
         try:
-            user_profile = request.user.get_profile()
+            user_profile = request.user.profile
             form.base_fields['owner'].initial = request.user
             form.base_fields['office'].initial = user_profile.office
             form.base_fields['section'].initial = user_profile.section
@@ -343,18 +347,24 @@ class TripReportAdmin(ExportMixin, VersionAdmin):
 
         if db_field.name == u'representative':
             rep_group = Group.objects.get(name=u'Representative Office')
-            kwargs['queryset'] = rep_group.user_set.all()
+            kwargs['queryset'] = rep_group.user_set.filter(
+                profile__country=connection.tenant,
+                is_staff=True,
+            )
 
         if db_field.name == u'driver':
             rep_group = Group.objects.get(name=u'Driver')
-            kwargs['queryset'] = rep_group.user_set.all()
+            kwargs['queryset'] = rep_group.user_set.filter(
+                profile__country=connection.tenant,
+                is_staff=True,
+            )
 
         return super(TripReportAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
 
 
-class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
+class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
     resource_class = ActionPointResource
     exclude = [u'persons_responsible']
     date_hierarchy = u'due_date'
@@ -363,7 +373,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         u'description',
         u'due_date',
         u'person_responsible',
-        u'originally_responsible',
         u'actions_taken',
         u'comments',
         u'status'
@@ -382,14 +391,8 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
     def trip(self, obj):
         return unicode(obj.trip)
 
-    def originally_responsible(self, obj):
-        return ', '.join(
-            [
-                user.get_full_name()
-                for user in
-                obj.persons_responsible.all()
-            ]
-        )
+    def has_add_permission(self, request):
+        return False
 
     def get_readonly_fields(self, request, obj=None):
 
@@ -398,7 +401,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
             u'description',
             u'due_date',
             u'person_responsible',
-            u'persons_responsible',
             u'comments',
             u'status',
         ]
@@ -410,7 +412,6 @@ class ActionPointsAdmin(ExportMixin, admin.ModelAdmin):
         return readonly_fields
 
 
-admin.site.register(Office)
 admin.site.register(Trip, TripReportAdmin)
 admin.site.register(ActionPoint, ActionPointsAdmin)
 admin.site.register(TripLocation)

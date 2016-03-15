@@ -1,16 +1,19 @@
-from __future__ import absolute_import, division
+from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
 import datetime
-from dateutil import relativedelta
+from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
-from django.db import models
+from django.db import models, connection
 from django.contrib.auth.models import Group
-from django.contrib.auth import get_user_model
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete
 
+from django.contrib.postgres.fields import HStoreField
+from django.contrib.auth.models import User
+
+from jsonfield import JSONField
 from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
@@ -21,18 +24,16 @@ from model_utils import Choices
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
+
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
-    IntermediateResult,
-    Rrp5Output,
     Indicator,
-    Activity,
     Sector,
     Goal,
-    WBS,
     ResultType,
-    Result)
+    Result,
+)
 from locations.models import (
     Governorate,
     Locality,
@@ -40,10 +41,13 @@ from locations.models import (
     Region,
 )
 from supplies.models import SupplyItem
-from supplies.tasks import set_unisupply_distribution
+from supplies.tasks import (
+    set_unisupply_distribution,
+    set_unisupply_user
+)
+
 from . import emails
 
-User = get_user_model()
 
 HIGH = u'high'
 SIGNIFICANT = u'significant'
@@ -59,35 +63,25 @@ RISK_RATINGS = (
 
 class PartnerOrganization(models.Model):
 
-    NATIONAL = u'national'
-    INTERNATIONAL = u'international'
-    UNAGENCY = u'un-agency'
-    CBO = u'cbo'
-    ACADEMIC = u'academic',
-    FOUNDATION = u'foundation',
-    PARTNER_TYPES = (
-        (INTERNATIONAL, u"International"),
-        (NATIONAL, u"CSO"),
-        (CBO, u"CBO"),
-        (ACADEMIC, u"Academic Inst."),
-        (FOUNDATION, u"Foundation")
-    )
-
-    type = models.CharField(
-        max_length=50,
-        choices=PARTNER_TYPES,
-        default=NATIONAL,
-        verbose_name=u'CSO Type'
-    )
     partner_type = models.CharField(
         max_length=50,
         choices=Choices(
+            u'Bilateral / Multilateral',
+            u'Civil Society Organization',
             u'Government',
-            u'Civil Society Organisation',
             u'UN Agency',
-            u'Inter-governmental Organisation',
-            u'Bi-Lateral Organisation'
-        ), blank=True, null=True
+        )
+    )
+    cso_type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            u'International',
+            u'National',
+            u'Community Based Organisation',
+            u'Academic Institution',
+        ),
+        verbose_name=u'CSO Type',
+        blank=True, null=True
     )
     name = models.CharField(
         max_length=255,
@@ -130,20 +124,35 @@ class PartnerOrganization(models.Model):
     )
     rating = models.CharField(
         max_length=50,
-        choices=RISK_RATINGS,
-        default=HIGH,
+        null=True,
         verbose_name=u'Risk Rating'
     )
-    # core_values_assessment_date = models.DateField(
-    #     blank=True, null=True,
-    #     verbose_name=u'Date positively assessed against core values'
-    # )
+    core_values_assessment_date = models.DateField(
+        blank=True, null=True,
+        verbose_name=u'Date positively assessed against core values'
+    )
+    core_values_assessment = models.FileField(
+        blank=True, null=True,
+        upload_to='partners/core_values/',
+        help_text=u'Only required for CSO partners'
+    )
+    vision_synced = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['name']
 
     def __unicode__(self):
         return self.name
+
+    @classmethod
+    def create_user(cls, sender, instance, created, **kwargs):
+
+        set_unisupply_user.delay(
+            instance.short_name,
+            instance.alternate_name
+        )
+
+post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 
 
 class PartnerStaffMember(models.Model):
@@ -152,8 +161,11 @@ class PartnerStaffMember(models.Model):
     title = models.CharField(max_length=64L)
     first_name = models.CharField(max_length=64L)
     last_name = models.CharField(max_length=64L)
-    email = models.CharField(max_length=128L)
+    email = models.CharField(max_length=128L, unique=True, blank=False)
     phone = models.CharField(max_length=64L, blank=True)
+    active = models.BooleanField(
+        default=True
+    )
 
     def __unicode__(self):
         return u'{} {} ({})'.format(
@@ -162,11 +174,32 @@ class PartnerStaffMember(models.Model):
             self.partner.name
         )
 
+    def reactivate_signal(self):
+        # sends a signal to activate the user
+        post_save.send(PartnerStaffMember, instance=self, created=True)
+
+    def deactivate_signal(self):
+        # sends a signal to deactivate user and remove partnerstaffmember link
+        pre_delete.send(PartnerStaffMember, instance=self)
+
+    def save(self, **kwargs):
+        # if the instance exists and active was changed, re-associate user
+        if self.pk:
+            # get the instance that exists in the db to compare active states
+            existing_instance = PartnerStaffMember.objects.get(pk=self.pk)
+            if existing_instance.active and not self.active:
+                self.deactivate_signal()
+            elif not existing_instance.active and self.active:
+                self.reactivate_signal()
+
+        return super(PartnerStaffMember, self).save(**kwargs)
+
 
 class Assessment(models.Model):
 
     partner = models.ForeignKey(
-        PartnerOrganization
+        PartnerOrganization,
+        related_name='assessments'
     )
     type = models.CharField(
         max_length=50,
@@ -185,7 +218,8 @@ class Assessment(models.Model):
                   u'agencies they have worked with'
     )
     expected_budget = models.IntegerField(
-        verbose_name=u'Planned amount'
+        verbose_name=u'Planned amount',
+        blank=True, null=True,
     )
     notes = models.CharField(
         max_length=255,
@@ -198,11 +232,12 @@ class Assessment(models.Model):
         auto_now_add=True
     )
     requesting_officer = models.ForeignKey(
-        'auth.User',
-        related_name='requested_assessments'
+        settings.AUTH_USER_MODEL,
+        related_name='requested_assessments',
+        blank=True, null=True
     )
     approving_officer = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         blank=True, null=True
     )
     planned_date = models.DateField(
@@ -221,7 +256,7 @@ class Assessment(models.Model):
         upload_to='assessments'
     )
     current = models.BooleanField(
-        default=True,
+        default=False,
         verbose_name=u'Basis for risk rating'
     )
 
@@ -273,19 +308,19 @@ class Recommendation(models.Model):
         verbose_name_plural = 'Key recommendations'
 
 
-class Agreement(TimeFramedModel, TimeStampedModel):
+class Agreement(TimeStampedModel):
 
     PCA = u'PCA'
     MOU = u'MOU'
     SSFA = u'SSFA'
-    IC = u'ic'
+    IC = u'IC'
     AWP = u'AWP'
     AGREEMENT_TYPES = (
-        (PCA, u"Partner Cooperation Agreement"),
+        (PCA, u"Programme Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
         (IC, u'Institutional Contract'),
-        (AWP, u"Annual Work Plan"),
+        (AWP, u"Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -295,18 +330,19 @@ class Agreement(TimeFramedModel, TimeStampedModel):
     )
     agreement_number = models.CharField(
         max_length=45L,
-        unique=True,
-        help_text=u'PCA Reference Number'
+        blank=True,
+        help_text=u'Reference Number'
     )
-
     attached_agreement = models.FileField(
         upload_to=u'agreements',
         blank=True,
     )
+    start = models.DateField(null=True, blank=True)
+    end = models.DateField(null=True, blank=True)
 
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by = models.ForeignKey(
-        User,
+        settings.AUTH_USER_MODEL,
         related_name='signed_pcas',
         null=True, blank=True
     )
@@ -322,6 +358,21 @@ class Agreement(TimeFramedModel, TimeStampedModel):
         blank=True, null=True,
     )
 
+    #bank information
+    bank_name = models.CharField(max_length=255, null=True, blank=True)
+    bank_address = models.CharField(
+        max_length=256L,
+        blank=True)
+    account_title = models.CharField(max_length=255, null=True, blank=True)
+    account_number = models.CharField(max_length=50, null=True, blank=True)
+    routing_details = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
+    )
+    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
     def __unicode__(self):
         return u'{} for {} ({} - {})'.format(
             self.agreement_type,
@@ -329,6 +380,30 @@ class Agreement(TimeFramedModel, TimeStampedModel):
             self.start.strftime('%d-%m-%Y') if self.start else '',
             self.end.strftime('%d-%m-%Y') if self.end else ''
         )
+
+    @property
+    def year(self):
+        if self.id:
+            if self.signed_by_unicef_date is not None:
+                return self.signed_by_unicef_date.year
+            else:
+                return self.created.year
+        else:
+            return datetime.date.today().year
+
+    @property
+    def reference_number(self):
+        year = self.year
+        objects = list(Agreement.objects.filter(created__year=year).order_by('created').values_list('id', flat=True))
+        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+        number = u'{code}/{type}{year}{seq}{version}'.format(
+            code=connection.tenant.country_short_code or '',
+            type=self.agreement_type,
+            year=year,
+            seq=sequence,
+            version=u''  # TODO: Change once agreement amendments are active
+        )
+        return number
 
 
 class AuthorizedOfficer(models.Model):
@@ -343,6 +418,21 @@ class AuthorizedOfficer(models.Model):
     def __unicode__(self):
         return self.officer.__unicode__()
 
+    @classmethod
+    def create_officer(cls, sender, instance, created, **kwargs):
+        """
+        Signal handler to create authorized_officers automatically
+        """
+        if instance.partner_manager and \
+                instance.partner_manager.id not in \
+                instance.authorized_officers.values_list('officer', flat=True):
+
+            cls.objects.create(agreement=instance,
+                               officer=instance.partner_manager)
+
+
+post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
+
 
 class PCA(AdminURLMixin, models.Model):
 
@@ -356,15 +446,15 @@ class PCA(AdminURLMixin, models.Model):
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
     )
-    PD = u'pd'
-    SHPD = u'shpd'
-    DCT = u'dct'
-    SSFA = u'ssfa'
-    IC = u'ic'
+    PD = u'PD'
+    SHPD = u'SHPD'
+    AWP = u'AWP'
+    SSFA = u'SSFA'
+    IC = u'IC'
     PARTNERSHIP_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (DCT, u'DCT to Government'),
+        (AWP, u'Cash Transfers to Government'),
         (SSFA, u'SSFA TOR'),
         (IC, u'IC TOR'),
     )
@@ -372,6 +462,7 @@ class PCA(AdminURLMixin, models.Model):
     partner = models.ForeignKey(PartnerOrganization)
     agreement = ChainedForeignKey(
         Agreement,
+        related_name='interventions',
         chained_field="partner",
         chained_model_field="partner",
         show_all=False,
@@ -394,11 +485,19 @@ class PCA(AdminURLMixin, models.Model):
         max_length=45L,
         blank=True,
         default=u'UNASSIGNED',
-        help_text=u'PRC Reference Number'
+        help_text=u'Document Reference Number'
     )
     title = models.CharField(max_length=256L)
+    project_type = models.CharField(
+        max_length=20,
+        blank=True, null=True,
+        choices=Choices(
+            u'Bulk Procurement',
+            u'Construction Project',
+        )
+    )
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True,
         choices=PCA_STATUS,
         default=u'in_process',
@@ -411,11 +510,11 @@ class PCA(AdminURLMixin, models.Model):
     # dates
     start_date = models.DateField(
         null=True, blank=True,
-        help_text=u'The date the partnership will start'
+        help_text=u'The date the Intervention will start'
     )
     end_date = models.DateField(
         null=True, blank=True,
-        help_text=u'The date the partnership will end'
+        help_text=u'The date the Intervention will end'
     )
     initiation_date = models.DateField(
         verbose_name=u'Submission Date',
@@ -440,13 +539,13 @@ class PCA(AdminURLMixin, models.Model):
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
 
     unicef_manager = models.ForeignKey(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         related_name='approved_partnerships',
         verbose_name=u'Signed by',
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
-        'auth.User',
+        settings.AUTH_USER_MODEL,
         verbose_name='Unicef focal points',
         blank=True
     )
@@ -483,6 +582,7 @@ class PCA(AdminURLMixin, models.Model):
     in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
     cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
     total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
+    fr_number = models.CharField(max_length=50, null=True, blank=True)
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
@@ -498,18 +598,13 @@ class PCA(AdminURLMixin, models.Model):
     class Meta:
         verbose_name = 'Intervention'
         verbose_name_plural = 'Interventions'
-        ordering = ['-number', 'amendment']
+        ordering = ['-created_at']
 
     def __unicode__(self):
-        title = u'{}: {}'.format(
+        return u'{}: {}'.format(
             self.partner.name,
-            self.number
+            self.reference_number
         )
-        if self.amendment:
-            title = u'{} (Amendment: {})'.format(
-                title, self.amendment_number
-            )
-        return title
 
     @property
     def sector_children(self):
@@ -531,28 +626,26 @@ class PCA(AdminURLMixin, models.Model):
         if not self.submission_date:
             return u'Not Submitted'
         signed_date = self.signed_by_partner_date or datetime.date.today()
-        return (signed_date - self.submission_date).days
+        return relativedelta(signed_date - self.submission_date).days
 
     @property
     def days_from_review_to_signed(self):
         if not self.submission_date or not self.review_date:
             return u'Not Reviewed'
         signed_date = self.signed_by_partner_date or datetime.date.today()
-        return (signed_date - self.review_date).days
+        return relativedelta(signed_date - self.review_date).days
 
     @property
     def duration(self):
         if self.start_date and self.end_date:
             return u'{} Months'.format(
-                relativedelta.relativedelta(
-                    self.end_date, self.start_date
-                ).months
+                relativedelta(self.end_date - self.start_date).months
             )
         else:
             return u''
 
     @property
-    def amendments(self):
+    def amendment_num(self):
         return self.amendments_log.all().count()
 
     @property
@@ -574,26 +667,29 @@ class PCA(AdminURLMixin, models.Model):
             total += budget.partner_contribution
         return total
 
-    def calculate_budget_for_year(self, year):
+    @property
+    def year(self):
+        if self.id:
+            if self.signed_by_unicef_date is not None:
+                return self.signed_by_unicef_date.year
+            else:
+                return self.created_at.year
+        else:
+            return datetime.date.today().year
 
-        if self.start_date and self.end_date:
-            year_start = datetime.date(year, 1, 1)
-            year_end = datetime.date(year, 12, 31)
-            start_date = self.start_date if self.start_date > year_start else year_start
-            end_date = self.end_date if self.end_date < year_end else year_end
-            total_days = (self.end_date - self.start_date).days
-            days_in_year = (end_date - start_date).days
-            percent = days_in_year / total_days
-            budget = percent * self.total_budget
-            return budget
-        return 0
-
-    def save(self, **kwargs):
-        """
-        Calculate total cash on save
-        """
-
-        super(PCA, self).save(**kwargs)
+    @property
+    def reference_number(self):
+        year = self.year
+        objects = list(PCA.objects.filter(created_at__year=year).order_by('created_at').values_list('id', flat=True))
+        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+        number = u'{agreement}/{type}{year}{seq}{version}'.format(
+            agreement=self.agreement.reference_number if self.id and self.agreement else '',
+            type=self.partnership_type,
+            year=year,
+            seq=sequence,
+            version=u'-{}'.format(self.amendment_num) if self.amendment_num else ''
+        )
+        return number
 
     @classmethod
     def get_active_partnerships(cls):
@@ -605,7 +701,7 @@ class PCA(AdminURLMixin, models.Model):
         manager, created = Group.objects.get_or_create(
             name=u'Partnership Manager'
         )
-        managers = manager.user_set.all()  # | instance.unicef_managers.all()
+        managers = manager.user_set.filter(profile__country=connection.tenant) | instance.unicef_managers.all()
         recipients = [user.email for user in managers]
 
         if created:  # new partnership
@@ -670,7 +766,14 @@ class PartnershipBudget(TimeStampedModel):
     partnership = models.ForeignKey(PCA, related_name='budget_log')
     partner_contribution = models.IntegerField(default=0)
     unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(default=0)
+    in_kind_amount = models.IntegerField(
+        default=0,
+        verbose_name='UNICEF Supplies'
+    )
+    year = models.CharField(
+        max_length=5,
+        blank=True, null=True
+    )
     total = models.IntegerField(default=0)
     amendment = models.ForeignKey(
         AmendmentLog,
@@ -728,29 +831,23 @@ class GwPCALocation(models.Model):
     """
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
-    governorate = models.ForeignKey(Governorate)
-    region = ChainedForeignKey(
-        Region,
-        chained_field="governorate",
-        chained_model_field="governorate",
-        show_all=False,
-        auto_choose=True,
-    )
-    locality = ChainedForeignKey(
-        Locality,
-        chained_field="region",
-        chained_model_field="region",
-        show_all=False,
-        auto_choose=True,
+    governorate = models.ForeignKey(
+        Governorate,
         null=True,
         blank=True
     )
-    location = ChainedForeignKey(
+    region = models.ForeignKey(
+        Region,
+        null=True,
+        blank=True
+    )
+    locality = models.ForeignKey(
+        Locality,
+        null=True,
+        blank=True
+    )
+    location = models.ForeignKey(
         Location,
-        chained_field="locality",
-        chained_model_field="locality",
-        show_all=False,
-        auto_choose=True,
         null=True,
         blank=True
     )
@@ -761,8 +858,8 @@ class GwPCALocation(models.Model):
 
     def __unicode__(self):
         return u'{} -> {}{}{}'.format(
-            self.governorate.name,
-            self.region.name,
+            self.governorate.name if self.governorate else u'',
+            self.region.name if self.region else u'',
             u'-> {}'.format(self.locality.name) if self.locality else u'',
             self.location.__unicode__() if self.location else u'',
         )
@@ -797,20 +894,6 @@ class PCASector(TimeStampedModel):
         )
 
 
-class PCASectorOutput(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    output = models.ForeignKey(Rrp5Output)
-
-    class Meta:
-        verbose_name = 'Output'
-        verbose_name_plural = 'Outputs'
-
-    @property
-    def pca(self):
-        return self.pca_sector.pca
-
-
 class PCASectorGoal(models.Model):
 
     pca_sector = models.ForeignKey(PCASector)
@@ -821,59 +904,21 @@ class PCASectorGoal(models.Model):
         verbose_name_plural = 'CCCs'
 
 
-class PCASectorActivity(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    activity = models.ForeignKey(Activity)
-
-    class Meta:
-        verbose_name = 'Activity'
-        verbose_name_plural = 'Activities'
-
-
-class PCASectorImmediateResult(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    Intermediate_result = models.ForeignKey(IntermediateResult)
-
-    wbs_activities = models.ManyToManyField(WBS)
-
-    class Meta:
-        verbose_name = 'Intermediate Result'
-        verbose_name_plural = 'Intermediate Results'
-
-    def __unicode__(self):
-        return self.Intermediate_result.name
-
-
-class IndicatorProgress(models.Model):
-
-    pca_sector = models.ForeignKey(PCASector)
-    indicator = models.ForeignKey(Indicator)
-    programmed = models.PositiveIntegerField()
-    current = models.IntegerField(blank=True, null=True, default=0)
-
-    def __unicode__(self):
-        return self.indicator.name
-
-    @property
-    def pca(self):
-        return self.pca_sector.pca
-
-    def shortfall(self):
-        return self.programmed - self.current if self.id and self.current else 0
-    shortfall.short_description = 'Shortfall'
-
-    def unit(self):
-        return self.indicator.unit.type if self.id else ''
-    unit.short_description = 'Unit'
-
-
 class FileType(models.Model):
     name = models.CharField(max_length=64L, unique=True)
 
     def __unicode__(self):
         return self.name
+
+
+def get_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'interventions',
+         str(instance.pca.id),
+         filename]
+    )
 
 
 class PCAFile(models.Model):
@@ -883,7 +928,7 @@ class PCAFile(models.Model):
     file = FilerFileField(blank=True, null=True)
     attachment = models.FileField(
         max_length=255,
-        upload_to=lambda instance, filename: '/'.join(['file_attachments', str(instance.pca.id), filename])
+        upload_to=get_file_path
     )
 
     def __unicode__(self):
@@ -901,36 +946,67 @@ class PCAFile(models.Model):
 class ResultChain(models.Model):
 
     partnership = models.ForeignKey(PCA, related_name='results')
+    code = models.CharField(max_length=50, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
-    result = ChainedForeignKey(
+    result = models.ForeignKey(
         Result,
-        chained_field="result_type",
-        chained_model_field="result_type",
-        show_all=False,
-        auto_choose=False,
     )
-    indicator = ChainedForeignKey(
+    indicator = models.ForeignKey(
         Indicator,
-        chained_field="result",
-        chained_model_field="result",
-        show_all=False,
-        auto_choose=True,
         blank=True, null=True
     )
-    governorate = models.ForeignKey(
-        Governorate,
-        blank=True, null=True
-    )
+
+    # fixed columns
     target = models.PositiveIntegerField(
         blank=True, null=True
     )
+    current_progress = models.PositiveIntegerField(
+        default=0
+    )
+    partner_contribution = models.IntegerField(default=0)
+    unicef_cash = models.IntegerField(default=0)
+    in_kind_amount = models.IntegerField(default=0)
+
+    # variable disaggregation's that may be present in the work plan
+    disaggregation = HStoreField(null=True)
+
+    @property
+    def total(self):
+
+        return self.unicef_cash + self.in_kind_amount + self.partner_contribution
 
     def __unicode__(self):
         return u'{} -> {} -> {}'.format(
             self.result.result_structure.name,
-            self.result.sector.name,
+            self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
+
+
+class IndicatorReport(TimeStampedModel, TimeFramedModel):
+
+    # FOR WHOM / Beneficiary
+    #  -  ResultChain
+    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
+
+    # WHO
+    #  -  Implementing Partner
+    partner_staff_member = models.ForeignKey(PartnerStaffMember, related_name='indicator_reports')
+
+    # WHAT
+    #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
+    indicator = models.ForeignKey(Indicator, related_name='reports')  # this should always be computed from result_chain
+    total = models.PositiveIntegerField()
+    disaggregated = models.BooleanField(default=False)
+    disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
+
+    # WHERE
+    #  -  Location
+    location = models.ForeignKey(Location, blank=True, null=True)
+
+    # Metadata
+    #  - Remarks
+    remarks = models.TextField(blank=True, null=True)
 
 
 class SupplyPlan(models.Model):
@@ -981,3 +1057,27 @@ class DistributionPlan(models.Model):
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
+class FundingCommitment(models.Model):
+
+    grant = models.ForeignKey(Grant)
+    intervention = models.ForeignKey(PCA, null=True)
+    fr_number = models.CharField(max_length=50)
+    wbs = models.CharField(max_length=50)
+    fc_type = models.CharField(max_length=50)
+    fc_ref = models.CharField(max_length=50, blank=True, null=True)
+    fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    agreement_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    commitment_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    expenditure_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+
+
+class DirectCashTransfer(models.Model):
+
+    fc_ref = models.CharField(max_length=50)
+    amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)

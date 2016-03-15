@@ -276,16 +276,11 @@
             <div class="panel-body" style="max-height: 400px; min-height: 400px; overflow-y: scroll;">
                 <div class="list-group">
                     {% for pca in pcas %}
-                         {% ifchanged pca.number %}
-                            <a href="{% url 'admin:partners_pca_change' pca.id %}" class="list-group-item">
-                                {{ pca.number }} - {{ pca.title }}
-                                <span class="pull-right text-muted medium"><span class="label label-success">${{ pca.total_cash|intcomma }}</span>
-                                </span>
-                            </a>
-                         {% else %}
-                                <a href="{% url 'admin:partners_pca_change' pca.id %}" class="list-group-item">
-                                {{ pca.number }} - {{ pca.title }} {% if pca.amendment_number == 0 %} Original {% else %} Amendment {{ pca.amendment_number }} {% endif %}
-                         {% endifchanged %}
+                        <a href="{% url 'admin:partners_pca_change' pca.id %}" class="list-group-item">
+                            {{ pca.reference_number }} - {{ pca.title }}
+                            <span class="pull-right text-muted medium"><span class="label label-success">${{ pca.total_budget|intcomma }}</span>
+                            </span>
+                        </a>
                     {% endfor %}
                 </div>
                 <!-- /.list-group -->

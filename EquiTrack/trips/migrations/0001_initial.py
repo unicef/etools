@@ -1,182 +1,137 @@
 # -*- coding: utf-8 -*-
-import datetime
-from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from __future__ import unicode_literals
+
+from django.db import models, migrations
+import smart_selects.db_fields
+import trips.models
+import EquiTrack.mixins
+from django.conf import settings
 
 
-class Migration(SchemaMigration):
+class Migration(migrations.Migration):
 
-    def forwards(self, orm):
-        # Adding model 'TripReport'
-        db.create_table(u'trips_tripreport', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('purpose_of_travel', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('activities_to_undertake', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('supervisor', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('status', self.gf('django.db.models.fields.CharField')(default=u'planned', max_length=32L)),
-            ('approved_date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-            ('main_observations', self.gf('django.db.models.fields.TextField')(null=True, blank=True)),
-        ))
-        db.send_create_signal(u'trips', ['TripReport'])
+    dependencies = [
+        ('reports', '0001_initial'),
+        ('locations', '0001_initial'),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('funds', '0001_initial'),
+    ]
 
-        # Adding M2M table for field related_pcas on 'TripReport'
-        m2m_table_name = db.shorten_name(u'trips_tripreport_related_pcas')
-        db.create_table(m2m_table_name, (
-            ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('tripreport', models.ForeignKey(orm[u'trips.tripreport'], null=False)),
-            ('pca', models.ForeignKey(orm[u'partners.pca'], null=False))
-        ))
-        db.create_unique(m2m_table_name, ['tripreport_id', 'pca_id'])
-
-        # Adding model 'ActionPoint'
-        db.create_table(u'trips_actionpoint', (
-            (u'id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('trip_report', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['trips.TripReport'])),
-            ('description', self.gf('django.db.models.fields.CharField')(max_length=254)),
-            ('due_date', self.gf('django.db.models.fields.DateField')()),
-            ('person_responsible', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
-            ('completed_date', self.gf('django.db.models.fields.DateField')(null=True, blank=True)),
-        ))
-        db.send_create_signal(u'trips', ['ActionPoint'])
-
-
-    def backwards(self, orm):
-        # Deleting model 'TripReport'
-        db.delete_table(u'trips_tripreport')
-
-        # Removing M2M table for field related_pcas on 'TripReport'
-        db.delete_table(db.shorten_name(u'trips_tripreport_related_pcas'))
-
-        # Deleting model 'ActionPoint'
-        db.delete_table(u'trips_actionpoint')
-
-
-    models = {
-        u'activityinfo.database': {
-            'Meta': {'object_name': 'Database'},
-            'ai_country_id': ('django.db.models.fields.PositiveIntegerField', [], {'null': 'True'}),
-            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
-            'country_name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'password': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'username': ('django.db.models.fields.CharField', [], {'max_length': '254'})
-        },
-        u'activityinfo.partner': {
-            'Meta': {'ordering': "['name']", 'object_name': 'Partner'},
-            'ai_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
-            'database': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Database']"}),
-            'full_name': ('django.db.models.fields.CharField', [], {'max_length': '254', 'null': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '254'})
-        },
-        u'auth.group': {
-            'Meta': {'object_name': 'Group'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '80'}),
-            'permissions': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.Permission']", 'symmetrical': 'False', 'blank': 'True'})
-        },
-        u'auth.permission': {
-            'Meta': {'ordering': "(u'content_type__app_label', u'content_type__model', u'codename')", 'unique_together': "((u'content_type', u'codename'),)", 'object_name': 'Permission'},
-            'codename': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['contenttypes.ContentType']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
-        },
-        u'auth.user': {
-            'Meta': {'object_name': 'User'},
-            'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
-            'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'groups': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Group']"}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'is_active': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'is_staff': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'is_superuser': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'last_login': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
-            'last_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
-            'password': ('django.db.models.fields.CharField', [], {'max_length': '128'}),
-            'user_permissions': ('django.db.models.fields.related.ManyToManyField', [], {'symmetrical': 'False', 'related_name': "u'user_set'", 'blank': 'True', 'to': u"orm['auth.Permission']"}),
-            'username': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '30'})
-        },
-        u'contenttypes.contenttype': {
-            'Meta': {'ordering': "('name',)", 'unique_together': "(('app_label', 'model'),)", 'object_name': 'ContentType', 'db_table': "'django_content_type'"},
-            'app_label': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
-        },
-        u'partners.partnerorganization': {
-            'Meta': {'ordering': "['name']", 'object_name': 'PartnerOrganization'},
-            'activity_info_partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['activityinfo.Partner']", 'null': 'True', 'blank': 'True'}),
-            'contact_person': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '256L', 'blank': 'True'}),
-            'email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '45L'}),
-            'phone_number': ('django.db.models.fields.CharField', [], {'max_length': '32L', 'blank': 'True'})
-        },
-        u'partners.pca': {
-            'Meta': {'ordering': "['-number', 'amendment']", 'object_name': 'PCA'},
-            'amended_at': ('django.db.models.fields.DateTimeField', [], {'null': 'True'}),
-            'amendment': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'amendment_number': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
-            'cash_for_supply_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'created_at': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
-            'current': ('django.db.models.fields.BooleanField', [], {'default': 'True'}),
-            'end_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'in_kind_amount_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'initiation_date': ('django.db.models.fields.DateField', [], {}),
-            'number': ('django.db.models.fields.CharField', [], {'max_length': '45L', 'blank': 'True'}),
-            'original': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PCA']", 'null': 'True'}),
-            'partner': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['partners.PartnerOrganization']"}),
-            'partner_contribution_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'partner_mng_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
-            'partner_mng_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'partner_mng_last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'result_structure': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['reports.ResultStructure']", 'null': 'True', 'blank': 'True'}),
-            'sectors': ('django.db.models.fields.CharField', [], {'max_length': '255', 'null': 'True', 'blank': 'True'}),
-            'signed_by_partner_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'signed_by_unicef_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'start_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'status': ('django.db.models.fields.CharField', [], {'default': "u'in_process'", 'max_length': '32L', 'blank': 'True'}),
-            'title': ('django.db.models.fields.CharField', [], {'max_length': '256L'}),
-            'total_cash': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'unicef_cash_budget': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'}),
-            'unicef_managers': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['auth.User']", 'symmetrical': 'False'}),
-            'unicef_mng_email': ('django.db.models.fields.CharField', [], {'max_length': '128L', 'blank': 'True'}),
-            'unicef_mng_first_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'unicef_mng_last_name': ('django.db.models.fields.CharField', [], {'max_length': '64L', 'blank': 'True'}),
-            'updated_at': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
-        },
-        u'reports.resultstructure': {
-            'Meta': {'ordering': "['name']", 'object_name': 'ResultStructure'},
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '150'})
-        },
-        u'trips.actionpoint': {
-            'Meta': {'object_name': 'ActionPoint'},
-            'completed_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            'description': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'due_date': ('django.db.models.fields.DateField', [], {}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'person_responsible': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"}),
-            'trip_report': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['trips.TripReport']"})
-        },
-        u'trips.tripreport': {
-            'Meta': {'object_name': 'TripReport'},
-            'activities_to_undertake': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'approved_date': ('django.db.models.fields.DateField', [], {'null': 'True', 'blank': 'True'}),
-            u'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'main_observations': ('django.db.models.fields.TextField', [], {'null': 'True', 'blank': 'True'}),
-            'purpose_of_travel': ('django.db.models.fields.CharField', [], {'max_length': '254'}),
-            'related_pcas': ('django.db.models.fields.related.ManyToManyField', [], {'to': u"orm['partners.PCA']", 'symmetrical': 'False'}),
-            'status': ('django.db.models.fields.CharField', [], {'default': "u'planned'", 'max_length': '32L'}),
-            'supervisor': ('django.db.models.fields.related.ForeignKey', [], {'to': u"orm['auth.User']"})
-        }
-    }
-
-    complete_apps = ['trips']
+    operations = [
+        migrations.CreateModel(
+            name='ActionPoint',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('description', models.CharField(max_length=254)),
+                ('due_date', models.DateField()),
+                ('actions_taken', models.TextField(null=True, blank=True)),
+                ('completed_date', models.DateField(null=True, blank=True)),
+                ('comments', models.TextField(null=True, blank=True)),
+                ('status', models.CharField(max_length=254, null=True, verbose_name=b'Status', choices=[(b'closed', b'Closed'), (b'ongoing', b'On-going'), (b'open', b'Open'), (b'cancelled', b'Cancelled')])),
+                ('created_date', models.DateTimeField(auto_now_add=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='FileAttachment',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('report', models.FileField(upload_to=trips.models.get_report_filename)),
+                ('object_id', models.PositiveIntegerField(null=True, blank=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='TravelRoutes',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('origin', models.CharField(max_length=254)),
+                ('destination', models.CharField(max_length=254)),
+                ('depart', models.DateTimeField()),
+                ('arrive', models.DateTimeField()),
+                ('remarks', models.CharField(max_length=254, null=True, blank=True)),
+            ],
+            options={
+                'verbose_name': 'Travel Itinerary',
+                'verbose_name_plural': 'Travel Itinerary',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Trip',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('status', models.CharField(default='planned', max_length=32L, choices=[('planned', 'Planned'), ('submitted', 'Submitted'), ('approved', 'Approved'), ('completed', 'Completed'), ('cancelled', 'Cancelled')])),
+                ('cancelled_reason', models.CharField(help_text=b'Please provide a reason if the mission is cancelled', max_length=254, null=True, blank=True)),
+                ('purpose_of_travel', models.CharField(max_length=254)),
+                ('travel_type', models.CharField(default='programme_monitoring', max_length=32L, choices=[('programme_monitoring', 'PROGRAMMATIC VISIT'), ('spot_check', 'SPOT CHECK'), ('advocacy', 'ADVOCACY'), ('technical_support', 'TECHNICAL SUPPORT'), ('meeting', 'MEETING'), ('staff_development', 'STAFF DEVELOPMENT'), ('staff_entitlement', 'STAFF ENTITLEMENT')])),
+                ('security_clearance_required', models.BooleanField(default=False, help_text=b'Do you need security clarance for this trip?')),
+                ('international_travel', models.BooleanField(default=False, help_text=b'International travel will require approval from the representative')),
+                ('from_date', models.DateField()),
+                ('to_date', models.DateField()),
+                ('main_observations', models.TextField(null=True, blank=True)),
+                ('constraints', models.TextField(null=True, blank=True)),
+                ('lessons_learned', models.TextField(null=True, blank=True)),
+                ('opportunities', models.TextField(null=True, blank=True)),
+                ('ta_required', models.BooleanField(default=False, help_text=b'Is a Travel Authorisation (TA) is required?')),
+                ('ta_drafted', models.BooleanField(default=False, help_text=b'Has the TA been drafted in vision if applicable?')),
+                ('ta_drafted_date', models.DateField(null=True, blank=True)),
+                ('ta_reference', models.CharField(max_length=254, null=True, blank=True)),
+                ('transport_booked', models.BooleanField(default=False)),
+                ('security_granted', models.BooleanField(default=False)),
+                ('approved_by_supervisor', models.BooleanField(default=False)),
+                ('date_supervisor_approved', models.DateField(null=True, blank=True)),
+                ('approved_by_budget_owner', models.BooleanField(default=False)),
+                ('date_budget_owner_approved', models.DateField(null=True, blank=True)),
+                ('approved_by_human_resources', models.NullBooleanField(default=None, choices=[(None, b'N/A'), (True, b'Yes'), (False, b'No')], help_text=b'HR must approve all trips relating to training and staff development', verbose_name=b'Certified by human resources')),
+                ('date_human_resources_approved', models.DateField(null=True, blank=True)),
+                ('representative_approval', models.NullBooleanField(default=None, choices=[(None, b'N/A'), (True, b'Yes'), (False, b'No')])),
+                ('date_representative_approved', models.DateField(null=True, blank=True)),
+                ('approved_date', models.DateField(null=True, blank=True)),
+                ('created_date', models.DateTimeField(auto_now_add=True)),
+                ('approved_email_sent', models.BooleanField(default=False)),
+                ('ta_trip_took_place_as_planned', models.BooleanField(default=False, help_text=b'I certify that the travel took place exactly as per the attached Travel Authorization and that there were no changes to the itinerary', verbose_name=b'Ta trip took place as attached')),
+                ('ta_trip_repay_travel_allowance', models.BooleanField(default=False, help_text=b'I certify that I will repay any travel allowance to which I am not entitled')),
+                ('ta_trip_final_claim', models.BooleanField(default=False, help_text=b'I authorize UNICEF to treat this as the FINAL Claim')),
+                ('budget_owner', models.ForeignKey(related_name='budgeted_trips', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+                ('human_resources', models.ForeignKey(related_name='certified_trips', blank=True, to=settings.AUTH_USER_MODEL, null=True)),
+            ],
+            options={
+                'ordering': ['-created_date'],
+            },
+            bases=(EquiTrack.mixins.AdminURLMixin, models.Model),
+        ),
+        migrations.CreateModel(
+            name='TripFunds',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('amount', models.PositiveIntegerField(verbose_name=b'Percentage (%)')),
+                ('grant', models.ForeignKey(to='funds.Grant')),
+                ('trip', models.ForeignKey(to='trips.Trip')),
+                ('wbs', models.ForeignKey(to='reports.WBS')),
+            ],
+            options={
+                'verbose_name': 'Funding',
+                'verbose_name_plural': 'Funding',
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='TripLocation',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('governorate', models.ForeignKey(to='locations.Governorate')),
+                ('locality', smart_selects.db_fields.ChainedForeignKey(chained_model_field=b'region', chained_field=b'region', blank=True, auto_choose=True, to='locations.Locality', null=True)),
+                ('location', smart_selects.db_fields.ChainedForeignKey(chained_model_field=b'locality', chained_field=b'locality', blank=True, to='locations.Location', null=True)),
+                ('region', smart_selects.db_fields.ChainedForeignKey(chained_model_field=b'governorate', chained_field=b'governorate', auto_choose=True, to='locations.Region')),
+                ('trip', models.ForeignKey(to='trips.Trip')),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+    ]

@@ -32,25 +32,35 @@ class RegionFactory(factory.django.DjangoModelFactory):
 
 class OfficeFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = trip_models.Office
+        model = user_models.Office
 
     name = 'An Office'
-    location = factory.SubFactory(GovernorateFactory)
 
 
-class SectorFactory(factory.django.DjangoModelFactory):
+class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = report_models.Sector
+        model = user_models.Section
 
     name = factory.Sequence(lambda n: "section_%d" % n)
+
+
+class CountryFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = user_models.Country
+        django_get_or_create = ('schema_name',)
+
+    name = "Test Country"
+    schema_name = 'test'
+    domain_url = 'tenant.test.com'
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = user_models.UserProfile
 
+    country = factory.SubFactory(CountryFactory)
     office = factory.SubFactory(OfficeFactory)
-    section = factory.SubFactory(SectorFactory)
+    section = factory.SubFactory(SectionFactory)
     job_title = 'Chief Tester'
     phone_number = '0123456789'
     # We pass in profile=None to prevent UserFactory from creating another profile
@@ -64,6 +74,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     username = factory.Sequence(lambda n: "user_%d" % n)
     email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
+    password = factory.PostGenerationMethodCall('set_password', 'test')
 
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
@@ -86,7 +97,7 @@ class TripFactory(factory.django.DjangoModelFactory):
 
     owner = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
-    from_date = datetime.today()
+    from_date = datetime.today().date()
     to_date = from_date + timedelta(days=1)
 
 
@@ -99,17 +110,39 @@ class LinkedLocationFactory(factory.django.DjangoModelFactory):
     region = factory.SubFactory(RegionFactory)
 
 
+class PartnerStaffFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.PartnerStaffMember
+
+    title = 'Jedi Master'
+    first_name = 'Mace'
+    last_name = 'Windu'
+    email = factory.Sequence(lambda n: "mace{}@theforce.org".format(n))
+
+
 class PartnerFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PartnerOrganization
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
 
+    staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
+
+
+class AgreementFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Agreement
+
+    partner = factory.SubFactory(PartnerFactory)
+    agreement_type = u'PCA'
+
 
 class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PCA
 
-    title = factory.Sequence(lambda n: 'PCA {}'.format(n))
-    initiation_date = datetime.today()
     partner = factory.SubFactory(PartnerFactory)
+    agreement = factory.SubFactory(AgreementFactory)
+    partnership_type = u'PD'
+    title = u'To save the galaxy from the Empire'
+    initiation_date = datetime.today()

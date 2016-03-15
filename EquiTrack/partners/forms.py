@@ -2,72 +2,123 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
-#import pandas
-
-
+import pandas
+import logging
+from datetime import date
 
 from django.utils.translation import ugettext as _
 from django import forms
 from django.contrib import messages
-#from autocomplete_light import forms
+from django.db.models import Q
+from django.db import connection
+from django.core.validators import validate_email
+
+from autocomplete_light import forms as auto_forms
 from django.core.exceptions import (
     ValidationError,
     ObjectDoesNotExist,
     MultipleObjectsReturned
 )
 
-from suit.widgets import AutosizedTextarea, LinkedSelect
+from suit.widgets import AutosizedTextarea, SuitDateWidget
 
 from EquiTrack.forms import (
+    AutoSizeTextForm,
     ParentInlineAdminFormSet,
-    RequireOneFormSet,
     UserGroupForm,
 )
+
+from django.contrib.auth.models import User
+
+from reports.models import (
+    ResultStructure,
+)
 from locations.models import Location
-from reports.models import Sector, Result, Indicator
+from reports.models import Sector, Result, ResultType, Indicator
 from .models import (
     PCA,
+    PartnerOrganization,
+    Assessment,
     GwPCALocation,
     ResultChain,
-    IndicatorProgress,
     AmendmentLog,
     Agreement,
     AuthorizedOfficer,
     PartnerStaffMember,
     SupplyItem,
     DistributionPlan,
+    PartnershipBudget
 )
 
-
-# class LocationForm(forms.ModelForm):
-#
-#     class Media:
-#         """
-#         We're currently using Media here, but that forced to move the
-#         javascript from the footer to the extrahead block ...
-#
-#         So that example might change when this situation annoys someone a lot.
-#         """
-#         js = ('dependant_autocomplete.js',)
-#
-#     class Meta:
-#         model = GwPCALocation
+logger = logging.getLogger('partners.forms')
 
 
-class IndicatorAdminModelForm(forms.ModelForm):
+class LocationForm(auto_forms.ModelForm):
 
     class Meta:
-        model = IndicatorProgress
+        model = GwPCALocation
+        fields = ('location',)
+        autocomplete_fields = ('location',)
+
+
+class PartnersAdminForm(AutoSizeTextForm):
+
+    class Meta:
+        model = PartnerOrganization
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super(PartnersAdminForm, self).clean()
+
+        partner_type = cleaned_data.get(u'partner_type')
+        cso_type = cleaned_data.get(u'type')
+
+        if partner_type and partner_type == u'Civil Society Organisation' and not cso_type:
+            raise ValidationError(
+                _(u'You must select a type for this CSO')
+            )
+        if partner_type and partner_type != u'Civil Society Organisation' and cso_type:
+            raise ValidationError(
+                _(u'"CSO Type" does not apply to non-CSO organizations, please remove type')
+            )
+        return cleaned_data
+
+
+class AssessmentAdminForm(AutoSizeTextForm):
+
+    class Meta:
+        model = Assessment
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
-        super(IndicatorAdminModelForm, self).__init__(*args, **kwargs)
-        self.fields['indicator'].queryset = []
+        """
+        Filter linked results by sector and result structure
+        """
+        if 'parent_object' in kwargs:
+            self.parent_partnership = kwargs.pop('parent_object')
+
+        super(AssessmentAdminForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super(AssessmentAdminForm, self).clean()
+
+        current = cleaned_data[u'current']
+
+        if hasattr(self, 'parent_partnership'):
+            exisiting = self.parent_partnership.assessments.filter(current=True).exclude(pk=self.instance.id)
+            if exisiting and current:
+                raise ValidationError(
+                    _(u'You can only have assessment or audit as the basis of the risk rating')
+                )
+
+        return cleaned_data
 
 
 class ResultChainAdminForm(forms.ModelForm):
 
     class Meta:
         model = ResultChain
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -83,22 +134,17 @@ class ResultChainAdminForm(forms.ModelForm):
             results = Result.objects.filter(
                 result_structure=self.parent_partnership.result_structure
             )
-            indicators = Indicator.objects.filter(
-                result_structure=self.parent_partnership.result_structure
-            )
-            for sector in self.parent_partnership.sector_children:
-                results = results.filter(sector=sector)
-                indicators = indicators.filter(sector=sector)
+            self.fields['result'].queryset = results
 
             if self.instance.result_id:
                 self.fields['result'].queryset = results.filter(id=self.instance.result_id)
-                self.fields['indicator'].queryset = indicators.filter(result_id=self.instance.result_id)
 
 
 class AmendmentForm(forms.ModelForm):
 
     class Meta:
         model = AmendmentLog
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -111,35 +157,65 @@ class AmendmentForm(forms.ModelForm):
 
         self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
-
         self.fields['amendment'].empty_label = u'Original'
 
 
-class AuthorizedOfficesFormset(RequireOneFormSet):
+class PartnerStaffMemberForm(forms.ModelForm):
+    ERROR_MESSAGES = {
+        'active_by_default': 'New Staff Member needs to be active at the moment of creation',
+        'user_unavailable': 'The Partner Staff member you are trying to activate is associated with'
+                            'a different partnership'
+    }
 
-    def __init__(
-            self, data=None, files=None, instance=None,
-            save_as_new=False, prefix=None, queryset=None, **kwargs):
-        super(AuthorizedOfficesFormset, self).__init__(
-            data=data, files=files, instance=instance,
-            save_as_new=save_as_new, prefix=prefix,
-            queryset=queryset, **kwargs)
-        self.required = False
+    def __init__(self, *args, **kwargs):
+        super(PartnerStaffMemberForm, self).__init__(*args, **kwargs)
 
-    def _construct_form(self, i, **kwargs):
-        form = super(AuthorizedOfficesFormset, self)._construct_form(i, **kwargs)
-        if self.instance.signed_by_partner_date:
-            self.required = True
-        return form
+    class Meta:
+        model = PartnerStaffMember
+        fields = '__all__'
+
+    def clean(self):
+        cleaned_data = super(PartnerStaffMemberForm, self).clean()
+        email = cleaned_data.get('email', "")
+        active = cleaned_data.get('active')
+        validate_email(email)
+        existing_user = None
+        if not self.instance.id:
+            # user should be active first time it's created
+            if not active:
+                raise ValidationError({'active': self.ERROR_MESSAGES['active_by_default']})
+            try:
+                existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
+                if existing_user.profile.partner_staff_member:
+                    raise ValidationError("This user already exists under a different partnership: {}".format(email))
+            except User.DoesNotExist:
+                pass
+
+        else:
+            # make sure email addresses are not editable after creation.. user must be removed and re-added
+            if email != self.instance.email:
+                raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
+
+            # when removing the active tag
+            if self.instance.active and not active:
+                pass
+
+            # when adding the active tag to a previously untagged user
+            if active and not self.instance.active:
+                # make sure this user has not already been associated with another partnership.
+                if existing_user:
+                    if existing_user.partner_staff_member and \
+                            existing_user.partner_staff_member != self.instance.pk:
+                        raise ValidationError({'active': self.ERROR_MESSAGES['user_unavailable']})
+
+        return cleaned_data
 
 
 class AuthorizedOfficersForm(forms.ModelForm):
 
     class Meta:
         model = AuthorizedOfficer
-        widgets = {
-            'officer': LinkedSelect,
-        }
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -153,13 +229,14 @@ class AuthorizedOfficersForm(forms.ModelForm):
         self.fields['officer'].queryset = PartnerStaffMember.objects.filter(
             partner=self.parent_agreement.partner
         ) if hasattr(self, 'parent_agreement') \
-             and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
+            and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
 
 
 class DistributionPlanForm(forms.ModelForm):
 
     class Meta:
         model = DistributionPlan
+        fields = '__all__'
 
     def __init__(self, *args, **kwargs):
         """
@@ -213,36 +290,80 @@ class AgreementForm(UserGroupForm):
 
     class Meta:
         model = Agreement
+        fields = '__all__'
+        widgets = {
+            'start': SuitDateWidget,
+            'end': SuitDateWidget,
+        }
 
-    # def __init__(self, *args, **kwargs):
-    #     super(AgreementForm, self).__init__(*args, **kwargs)
-    #     self.fields['start'].required = True
-    #     self.fields['end'].required = True
-    #
-    # def clean(self):
-    #     cleaned_data = super(AgreementForm, self).clean()
-    #
-    #     partner = cleaned_data[u'partner']
-    #     agreement_type = cleaned_data[u'agreement_type']
-    #     start = cleaned_data[u'start']
-    #     end = cleaned_data[u'end']
-    #
-    #     # prevent more than one agreement being crated for the current period
-    #     agreements = Agreement.objects.filter(
-    #         partner=partner,
-    #         start__lte=start,
-    #         end__gte=end
-    #     )
-    #     if self.instance:
-    #         agreements = agreements.exclude(id=self.instance.id)
-    #     if agreements:
-    #         raise ValidationError(
-    #             u'You can only have one current {} per partner'.format(
-    #                 agreement_type
-    #             )
-    #         )
-    #
-    #     return cleaned_data
+    def clean(self):
+        cleaned_data = super(AgreementForm, self).clean()
+
+        partner = cleaned_data.get(u'partner')
+        agreement_type = cleaned_data.get(u'agreement_type')
+        agreement_number = cleaned_data.get(u'agreement_number')
+        start = cleaned_data.get(u'start')
+        end = cleaned_data.get(u'end')
+
+        if partner and agreement_type == Agreement.PCA:
+            # Partnership can only have one PCA
+            pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
+            if (not self.instance.id and pca_ids) or \
+                    (self.instance.id and pca_ids and self.instance.id not in pca_ids):
+                err = u'This partnership can only have one {} agreement'.format(agreement_type)
+                raise ValidationError({'agreement_type': err})
+
+            # PCAs last as long as the most recent CPD
+            result_structure = ResultStructure.objects.order_by('to_date').last()
+            if result_structure and end and end > result_structure.to_date:
+                raise ValidationError(
+                    {'end': u'This agreement cannot last longer than the current {} which ends on {}'.format(
+                        result_structure.name, result_structure.to_date
+                    )}
+                )
+
+        if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
+            raise ValidationError(
+                _(u'Please provide the agreement reference for this {}'.format(agreement_type))
+            )
+
+        if agreement_type == Agreement.PCA and partner.partner_type != u'Civil Society Organisation':
+            raise ValidationError(
+                _(u'Only Civil Society Organisations can sign Programme Cooperation Agreements')
+            )
+
+        if agreement_type == Agreement.SSFA and start and end:
+            if (end - start).days > 365:
+                raise ValidationError(
+                    _(u'SSFA can not be more than a year')
+                )
+
+        # TODO: prevent more than one agreement being created for the current period
+        # agreements = Agreement.objects.filter(
+        #     partner=partner,
+        #     start__lte=start,
+        #     end__gte=end
+        # )
+        # if self.instance:
+        #     agreements = agreements.exclude(id=self.instance.id)
+        # if agreements:
+        #     raise ValidationError(
+        #         u'You can only have one current {} per partner'.format(
+        #             agreement_type
+        #         )
+        #     )
+
+        return cleaned_data
+
+
+def check_and_return_value(column, row):
+
+    value = 0
+    if column in row:
+        if not pandas.isnull(row[column]) and row[column]:
+            value = row[column]
+        row.pop(column)
+    return value
 
 
 class PartnershipForm(UserGroupForm):
@@ -266,6 +387,7 @@ class PartnershipForm(UserGroupForm):
 
     class Meta:
         model = PCA
+        fields = '__all__'
         widgets = {
             'title': AutosizedTextarea(attrs={'class': 'input-xlarge'}),
         }
@@ -284,9 +406,6 @@ class PartnershipForm(UserGroupForm):
                 )
                 loc, new = GwPCALocation.objects.get_or_create(
                     sector=sector,
-                    governorate=location.locality.region.governorate,
-                    region=location.locality.region,
-                    locality=location.locality,
                     location=location,
                     pca=self.obj
                 )
@@ -312,41 +431,87 @@ class PartnershipForm(UserGroupForm):
         except Exception as exp:
             raise ValidationError(exp.message)
 
-        imported = found = not_found = 0
-        for code, row in data.iterrows():
+        data.fillna('', inplace=True)
+        current_output = None
+        # TODO: filter resultStructure before getting last
+        result_structure = self.obj.result_structure or ResultStructure.objects.last()
+        imported = found = not_found = row_num = 0
+        for label, series in data.iterrows():
             create_args = dict(
                 partnership=self.obj
             )
+            row_num += 1
+            row = series.to_dict()
             try:
-                result = Result.objects.get(
-                    sector=sector,
-                    code=code
-                )
+                type = label.split()[0].strip()
+                statement = row['Details'].strip()
+                row.pop('Details')
+                try:
+                    result_type = ResultType.objects.get(
+                        name__icontains=type
+                    )
+                except ResultType.DoesNotExist as exp:
+                    # we can interpret the type we are dealing with by its label
+                    if 'indicator' in type and current_output:
+                        pass
+                    else:
+                        raise ValidationError(
+                            _(u"The value of the first column must be one of: Output, Indicator or Activity."
+                              u"The value received for row {} was: {}".format(row_num, type)))
+                else:
+                    # we are dealing with a result statement
+                    # now we try to look up the result based on the statement
+                    result, created = Result.objects.get_or_create(
+                        result_structure=result_structure,
+                        result_type=result_type,
+                        sector=sector,
+                        name=statement,
+                        code=label,
+                        hidden=True,
+                    )
+                    if result_type.name == 'Output':
+                        current_output = result
+                    elif result_type.name == 'Activity' and current_output:
+                        result.parent = current_output
+                        result.save()
+
                 create_args['result'] = result
                 create_args['result_type'] = result.result_type
-                indicators = result.indicator_set.all()
-                if indicators:
-                    if indicators.count() == 1:
-                        # use this indicator if we only have one
-                        create_args['indicator'] = indicators[0]
-                    else:
-                        # attempt to fuzzy match by name
-                        candidates = indicators.filter(
-                            name__icontains=row['Indicator']
-                        )
-                        if candidates:
-                            create_args['indicator'] = candidates[0]
-                    # if we got this far also take the target
-                    create_args['target'] = row.get('Target')
-            except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
-                not_found += 1
-                #TODO: Log this
-            else:
+                create_args['partner_contribution'] = check_and_return_value('CSO', row)
+                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row)
+                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row)
+                target = check_and_return_value('Targets', row)
+                check_and_return_value('Total', row)
+
+                if 'indicator' in label:
+                    indicator, created = Indicator.objects.get_or_create(
+                        sector=sector,
+                        result=result,
+                        code=label,
+                        name=statement
+                    )
+                    create_args['indicator'] = indicator
+                    create_args['target'] = target
+
                 result_chain, new = ResultChain.objects.get_or_create(**create_args)
+
+                if row:
+                    for key in row.keys():
+                        if 'Unnamed' in key:
+                            del row[key]
+                        elif pandas.isnull(row[key]):
+                            row[key] = ''
+                    result_chain.disaggregation = row
+                    result_chain.save()
+
                 if new:
                     imported += 1
                 else:
                     found += 1
+
+            except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
+                not_found += 1
+                raise ValidationError(exp.message)
 
         messages.info(
             self.request,
@@ -361,34 +526,61 @@ class PartnershipForm(UserGroupForm):
         cleaned_data = super(PartnershipForm, self).clean()
 
         partnership_type = cleaned_data[u'partnership_type']
+        result_structure = cleaned_data.get(u'result_structure')
         agreement = cleaned_data[u'agreement']
         unicef_manager = cleaned_data[u'unicef_manager']
         signed_by_unicef_date = cleaned_data[u'signed_by_unicef_date']
         partner_manager = cleaned_data[u'partner_manager']
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
+        end_date = cleaned_data[u'end_date']
 
-        p_codes =cleaned_data[u'p_codes']
+        p_codes = cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
 
         work_plan = self.cleaned_data[u'work_plan']
         work_plan_sector = self.cleaned_data[u'work_plan_sector']
 
-        if partnership_type == PCA.PD:
+        agreement_types = dict(Agreement.AGREEMENT_TYPES)
+        partnership_types = dict(PCA.PARTNERSHIP_TYPES)
+        agreement_types[PCA.PD] = agreement_types[Agreement.PCA]
+        agreement_types[PCA.SHPD] = agreement_types[Agreement.PCA]
+
+        if partnership_type:  #TODO: Remove check once partnership type is madatory
 
             if not agreement:
                 raise ValidationError(
-                    u'Please select the PCA agreement this Programme Document relates to'
+                    u'Please select the Agreement this Document relates to'
                 )
+            else:
 
-            if partner_manager:
-                officers = agreement.authorized_officers.all().values_list('officer', flat=True)
-                if partner_manager.id not in officers:
-                    raise ValidationError(
-                        u'{} is not a named authorized officer in the {}'.format(
-                            partner_manager, agreement
+                if agreement.agreement_type != partnership_type:
+                    if agreement.agreement_type == Agreement.PCA and partnership_type in [PCA.PD, PCA.SHPD]:
+                        pass  # This is acceptable as both PDs and SHPDs both relate to PCAs
+                    else:
+                        raise ValidationError(
+                            u'Only {} can be selected for {}'.format(
+                                agreement_types[partnership_type],
+                                partnership_types[partnership_type]
+                            )
                         )
-                    )
+
+                if partner_manager:
+                    officers = agreement.authorized_officers.all().values_list('officer', flat=True)
+                    if partner_manager.id not in officers:
+                        raise ValidationError(
+                            u'{} is not a named authorized officer in the {}'.format(
+                                partner_manager, agreement
+                            )
+                        )
+
+                if partnership_type not in [PCA.PD, PCA.SHPD]:
+                    if not self.instance.pk and agreement.interventions.count():
+                        raise ValidationError(
+                                u'Only one intervention can be linked to this {}'.format(
+                                    agreement
+                                )
+                            )
 
         if unicef_manager and not signed_by_unicef_date:
             raise ValidationError(
@@ -400,7 +592,7 @@ class PartnershipForm(UserGroupForm):
                 u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
-        if start_date and start_date < signed_by_unicef_date:
+        if signed_by_unicef_date and start_date and (start_date < signed_by_unicef_date):
             raise ValidationError(
                 u'The start date must be greater or equal to the singed by date'
             )
@@ -409,6 +601,16 @@ class PartnershipForm(UserGroupForm):
             raise ValidationError(
                 u'Please select a sector to assign the locations against'
             )
+
+        if start_date and agreement.start and start_date < agreement.start:
+            err = u'The Intervention must start after the agreement starts on: {}'.format(
+                agreement.start
+            )
+            raise ValidationError({'start_date': err})
+
+        if start_date and end_date and start_date > end_date:
+            err = u'The end date has to be after the start date'
+            raise ValidationError({'end_date': err})
 
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
@@ -419,6 +621,33 @@ class PartnershipForm(UserGroupForm):
             )
 
         if work_plan and work_plan_sector:
+            if result_structure is None:
+                raise ValidationError(
+                    u'Please select a result structure from the man info tab to import results against'
+                )
             self.import_results_from_work_plan(work_plan, work_plan_sector)
 
         return cleaned_data
+
+
+class PartnershipBudgetAdminForm(AmendmentForm):
+
+    class Meta:
+        model = PartnershipBudget
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super(PartnershipBudgetAdminForm, self).__init__(*args, **kwargs)
+
+        # by default add the previous 1 years and the next 2 years
+        current_year = date.today().year
+        years = range(current_year-1, current_year+2)
+        if (hasattr(self, 'parent_partnership')) and \
+                self.parent_partnership.start_date and \
+                self.parent_partnership.end_date:
+            years = range(self.parent_partnership.start_date.year,
+                          self.parent_partnership.end_date.year+1)
+
+        self.fields['year'] = forms.ChoiceField(
+            choices=[(year, year) for year in years] if years else []
+        )

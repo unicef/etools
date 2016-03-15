@@ -1,7 +1,0 @@
-# Test dependencies go here.
-
-# Test tools
-
-django-debug-toolbar==1.0.1
-factory-boy==2.5.2
-coverage==3.6

@@ -3,23 +3,19 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 
 from import_export.admin import ImportExportModelAdmin
+from mptt.admin import MPTTModelAdmin
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
-from partners.models import IndicatorProgress
+from partners.models import ResultChain
 from reports.models import (
     Sector,
-    WBS,
     Goal,
     Unit,
-    Activity,
     Indicator,
-    Rrp5Output,
-    RRPObjective,
-    IntermediateResult,
     ResultStructure,
     ResultType,
-    Result
+    Result,
 )
 from .forms import IndicatorAdminForm
 
@@ -71,101 +67,102 @@ class GoalAdmin(ImportExportModelAdmin):
     form = AutoSizeTextForm
 
 
-class IndicatorProgressInlineAdmin(admin.TabularInline):
-    can_delete = False
-    model = IndicatorProgress
-    verbose_name = 'Programmed'
-    verbose_name_plural = 'Programmed'
-    extra = 0
-    fields = (
-        'pca_sector',
-        'pca_status',
-        'result_structure',
-        'amendment_number',
-        'programmed',
-        'changeform_link',
-    )
-    readonly_fields = (
-        'pca_sector',
-        'pca_status',
-        'result_structure',
-        'amendment_number',
-        'programmed',
-        'changeform_link',
-    )
-
-    def has_add_permission(self, request):
-        return False
-
-    def result_structure(self, obj):
-        return obj.pca_sector.pca.result_structure
-
-    def amendment_number(self, obj):
-        return obj.pca_sector.pca.amendment_number
-
-    def pca_status(self, obj):
-        return obj.pca_sector.pca.status
-
-    def changeform_link(self, obj):
-        return get_changeform_link(obj.pca_sector.pca,
-                                   link_name='View Intervention')
-    changeform_link.allow_tags = True
-    changeform_link.short_description = 'View Intervention Details'
+# class IndicatorProgressInlineAdmin(admin.TabularInline):
+#     can_delete = False
+#     model = IndicatorProgress
+#     verbose_name = 'Programmed'
+#     verbose_name_plural = 'Programmed'
+#     extra = 0
+#     fields = (
+#         'pca_sector',
+#         'pca_status',
+#         'result_structure',
+#         'amendment_number',
+#         'programmed',
+#         'changeform_link',
+#     )
+#     readonly_fields = (
+#         'pca_sector',
+#         'pca_status',
+#         'result_structure',
+#         'amendment_number',
+#         'programmed',
+#         'changeform_link',
+#     )
+#
+#     def has_add_permission(self, request):
+#         return False
+#
+#     def result_structure(self, obj):
+#         return obj.pca_sector.pca.result_structure
+#
+#     def amendment_number(self, obj):
+#         return obj.pca_sector.pca.amendment_number
+#
+#     def pca_status(self, obj):
+#         return obj.pca_sector.pca.status
+#
+#     def changeform_link(self, obj):
+#         return get_changeform_link(obj.pca_sector.pca,
+#                                    link_name='View Intervention')
+#     changeform_link.allow_tags = True
+#     changeform_link.short_description = 'View Intervention Details'
 
 
 class IndicatorAdmin(ImportExportModelAdmin):
     form = IndicatorAdminForm
     search_fields = ('name',)
     list_editable = (
-        'in_activity_info',
         'view_on_dashboard',
     )
     list_filter = (
         SectorListFilter,
         'result_structure',
+        'result__result_type'
     )
     list_display = (
         'name',
         'sector',
         'result_structure',
         'result',
-        'in_activity_info',
         'view_on_dashboard',
     )
-    filter_horizontal = (
-        'activity_info_indicators',
-    )
-    inlines = [
-        IndicatorProgressInlineAdmin,
-    ]
+    # inlines = [
+    #     IndicatorProgressInlineAdmin,
+    # ]
 
 
-class ResultAdmin(ImportExportModelAdmin):
+class ResultAdmin(MPTTModelAdmin):
     form = AutoSizeTextForm
+    mptt_indent_field = '__unicode__'
     list_filter = (
         'result_structure',
         'sector',
         'result_type'
     )
+    list_display = (
+        '__unicode__',
+        'from_date',
+        'to_date',
+        'wbs',
+    )
 
+    actions = ('hide_results',)
 
-class IntermediateResultAdmin(ImportExportModelAdmin):
-    form = AutoSizeTextForm
+    def get_queryset(self, request):
+        queryset = super(ResultAdmin, self).get_queryset(request)
+        return queryset.filter(hidden=False)
 
+    def hide_results(self, request, queryset):
 
-class WBSAdmin(ImportExportModelAdmin):
-    form = AutoSizeTextForm
-
+        for result in queryset:
+            result.hidden = True
+            result.save()
 
 admin.site.register(Result, ResultAdmin)
-admin.site.register(ResultType)
-admin.site.register(RRPObjective, ImportExportModelAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
 admin.site.register(Sector, SectorAdmin)
-admin.site.register(Activity, ImportExportModelAdmin)
-admin.site.register(IntermediateResult, IntermediateResultAdmin)
-admin.site.register(Rrp5Output, ResultStructureAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-admin.site.register(WBS, WBSAdmin)
+#admin.site.register(ResultChain)

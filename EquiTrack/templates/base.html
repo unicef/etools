@@ -1,3 +1,5 @@
+{% load uservoice %}
+{% load admin_tags %}
 <!DOCTYPE html>
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
@@ -68,8 +70,13 @@
                     </button>
                 </div>
                 <div class="user-nav">
+
                     <ul>
+                        <li id="country-select">
+                            {% show_country_select user.profile %}
+                        </li>
                         {% if messages %}
+
                             <li class="dropdown messages">
                                 <span class="badge badge-danager animated bounceIn" id="new-messages">{{ messages|length }}</span>
                                 <button type="button" class="btn btn-default dropdown-toggle options" id="toggle-mail"
@@ -93,7 +100,7 @@
                                         </li>
                                     {% endfor %}
 
-                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i class="fa fa-angle-right"></i></a>
+{#                                    <li><a href="{% url 'message_mark_all_read' %}">Mark all as read <i class="fa fa-angle-right"></i></a>#}
                                 </ul>
                             </li>
                         {% endif %}
@@ -109,19 +116,19 @@
                                     <li>
                                         <a href="{% url 'user_profile' %}"><i class="fa fa-user"></i> Profile</a>
                                     </li>
-                                    {% if user.is_superuser %}
+                                    {% if user.is_staff %}
                                         <li>
                                             <a href="{% url 'admin:index' %}"><i class="fa fa-home"></i> Admin</a>
                                         </li>
                                     {% endif %}
                                     <li>
-                                        <a href="{% url "logout" %}"><i class="fa fa-power-off"></i> Logout</a>
+                                        <a href="{% url "saml2_logout" %}"><i class="fa fa-power-off"></i> Logout</a>
                                     </li>
 
                                 </ul>
                             </li>
                         {% else %}
-                            <li><a href="{% url 'login' %}">Sign In</a></li>
+                            <li><a href="{% url 'account_login' %}">Sign In</a></li>
                         {% endif %}
                     </ul>
                 </div>
@@ -161,17 +168,18 @@
                         <li>
                             <a href="{% url 'admin:trips_trip_changelist' %}?q=&owner__id__exact={{ request.user.id }}"><i class="fa fa-road"></i><span>Trips</span></a>
                         </li>
-                        <li>
-                            <a href="{% url 'admin:tpm_tpmvisit_changelist' %}"><i class="fa fa-calendar"></i><span>TPM Portal</span></a>
-                        </li>
-                        <li>
-                            <a href="{% url 'supplies_dashboard' %}"><i class="fa fa-gift"></i><span>Supplies</span></a>
-                        </li>
+{#                        <li>#}
+{#                            <a href="{% url 'admin:tpm_tpmvisit_changelist' %}"><i class="fa fa-calendar"></i><span>TPM Portal</span></a>#}
+{#                        </li>#}
+{#                        <li>#}
+{#                            <a href="{% url 'supplies_dashboard' %}"><i class="fa fa-gift"></i><span>Supplies</span></a>#}
+{#                        </li>#}
                     </ul>
                 </div>
             </aside>
         {% endblock %}
         <!--sidebar left end-->
+
 
         <!--main content start-->
         {% block content %}
@@ -186,7 +194,7 @@
                     <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="130px"></a>
                 </div>
                 <div class="col-md-11 brand msg">
-                    <span>© Copyright 2015 UNICEF. All Rights Reserved.</span>
+                    <span>© Copyright 2015 UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</span>
                 </div>
 
             </footer>
@@ -238,9 +246,60 @@
         app.timer();
     });
 </script>
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+   // this is for the staging site only
+  ga('create', 'UA-70082239-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+<script>
+    $( document ).ready(function() {
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        var csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+        $( "#country_selection" ).change(function(ev) {
+          // send post request
+            var my_data = {'country': ev.target.value};
+            $.post('/users/api/changecountry/', my_data, function() {
+                // success here
+                location.reload();
+            }).fail(function(){window.alert('Country change failed')})
+        });
+    });
+    </script>
 {% block extra_js %}
 {% endblock %}
 
+{% uservoice %}
 </body>
 
 </html>

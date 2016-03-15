@@ -1,54 +1,121 @@
 __author__ = 'jcranwellward'
 
 import json
-
+from django.db import transaction
 from rest_framework import serializers
 
+from rest_framework_hstore.fields import HStoreField
+from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
-from .models import GwPCALocation, PCA, PCASector, IndicatorProgress
 
-
-class IndicatorProgressSerializer(serializers.ModelSerializer):
-
-    indicator = serializers.CharField(source='indicator.name')
-    programmed = serializers.IntegerField()
-    current = serializers.IntegerField()
-    unit = serializers.CharField()
-
-    class Meta:
-        model = IndicatorProgress
+from .models import (
+    GwPCALocation,
+    PCA,
+    PCASector,
+    PartnerStaffMember,
+    PartnerOrganization,
+    Agreement,
+    ResultChain,
+    IndicatorReport
+)
 
 
 class PCASectorSerializer(serializers.ModelSerializer):
 
     sector_name = serializers.CharField(source='sector.name')
     sector_id = serializers.CharField(source='sector.id')
-    indicators = serializers.SerializerMethodField()
-
-    def get_indicators(self, pca_sector):
-        return IndicatorProgressSerializer(
-            pca_sector.indicatorprogress_set.all(),
-            many=True
-        ).data
 
     class Meta:
         model = PCASector
 
 
-class PartnershipSerializer(serializers.ModelSerializer):
+class ResultChainSerializer(serializers.ModelSerializer):
+    indicator = IndicatorSerializer()
+    disaggregation = HStoreField()
+    result = OutputSerializer()
 
-    pca_title = serializers.CharField(source='title')
-    pca_number = serializers.CharField(source='number')
+    def create(self, validated_data):
+        return validated_data
+
+    class Meta:
+        model = ResultChain
+
+
+class IndicatorReportSerializer(serializers.ModelSerializer):
+    disaggregated = serializers.BooleanField(read_only=True)
+    partner_staff_member = serializers.SerializerMethodField(read_only=True)
+    indicator = serializers.SerializerMethodField(read_only=True)
+    disaggregation = serializers.JSONField()
+
+    class Meta:
+        model = IndicatorReport
+
+    def get_indicator(self, obj):
+        return obj.indicator.id
+
+    def get_partner_staff_member(self, obj):
+        return obj.partner_staff_member.id
+
+    def validate(self, data):
+        # TODO: handle validation
+        return data
+
+    def create(self, validated_data):
+        result_chain = validated_data.get('result_chain')
+        validated_data['indicator'] = result_chain.indicator
+
+        try:
+            with transaction.atomic():
+                indicator_report = IndicatorReport.objects.create(**validated_data)
+                result_chain.current_progress += validated_data.get('total')
+                result_chain.save()
+        except:
+            raise serializers.ValidationError({'result_chain': "Creation halted for now"})
+
+        return indicator_report
+
+    def update(self, instance, validated_data):
+        # TODO: update value on resultchain (atomic)
+        raise serializers.ValidationError({'result_chain': "Creation halted for now"})
+
+
+class ResultChainDetailsSerializer(serializers.ModelSerializer):
+    indicator = IndicatorSerializer()
+    disaggregation = HStoreField()
+    result = OutputSerializer()
+    indicator_reports = IndicatorReportSerializer(many=True)
+
+    class Meta:
+        model = ResultChain
+
+
+class InterventionSerializer(serializers.ModelSerializer):
+
     pca_id = serializers.CharField(source='id')
+    pca_title = serializers.CharField(source='title')
+    pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    sectors = serializers.SerializerMethodField()
+    # pcasector_set = PCASectorSerializer(many=True)
+    # results = ResultChainSerializer(many=True)
 
-    def get_sectors(self, pca):
-        return PCASectorSerializer(
-            pca.pcasector_set.all(),
-            many=True
-        ).data
+    def create(self, validated_data):
+        # print validated_data
+        # intervention, created = PCA.objects.get_or_create(**validated_data)
+        # results = validated_data.get('results')
+        # validated_data['indicator'] = results.indicator
+
+        try:
+            with transaction.atomic():
+                intervention = PCA.objects.create(**validated_data)
+                # pcasector_set = PCASectorSerializer(many=True)
+                # results = ResultChainSerializer(many=True)
+                # results.create(validated_data)
+                # pcasector_set.create(validated_data)
+        except Exception as ex:
+            raise serializers.ValidationError({'pcasector': ex.message})
+
+        return intervention
 
     class Meta:
         model = PCA
@@ -69,7 +136,7 @@ class LocationSerializer(serializers.Serializer):
             loc.pca for loc in
             location.gwpcalocation_set.all()
         ])
-        return PartnershipSerializer(pcas, many=True).data
+        return InterventionSerializer(pcas, many=True).data
 
     class Meta:
         model = Location
@@ -92,6 +159,37 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GwPCALocation
+
+
+class PartnerOrganizationSerializer(serializers.ModelSerializer):
+
+    pca_set = InterventionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = PartnerOrganization
+
+
+class AgreementSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Agreement
+
+
+class PartnerStaffMemberSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+
+
+class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
+
+    partner = PartnerOrganizationSerializer()
+    agreement_set = AgreementSerializer(many=True)
+
+    class Meta:
+        model = PartnerStaffMember
+        # fields = (
+        # )
 
 
 class RapidProRequest(serializers.Serializer):

@@ -1,0 +1,100 @@
+{% extends "login_base.html" %}
+
+
+{% block extra_head %}
+
+<style>
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    .unicefblue {
+      background-color: #0099ff;
+    }
+    .loginStaff{
+        background-color: #0099ff;
+        color: #ffffff;
+    }
+    .loginPartner{
+        background-color: #ffffff;
+        color: #ffffff;
+    }
+    .container{
+        position: relative;
+        margin-top: 20px;
+    }
+    .medium-tall{
+        padding: 1%;
+        height: 100px;
+        background-color: #3F51B5;
+        color: #ffffff;
+    }
+    .card {
+        position: relative;
+        display: block;
+        min-width: 180px;
+        max-width: 30%;
+        margin: 2% auto;
+        padding: 1%;
+    }
+    .box {
+        position: relative;
+        width: 50%;
+        float: left;
+    }
+    .partnerImage{
+        display: block;
+        margin: 0 auto;
+        background-position: center;
+        background-image: url("/static/images/partners.svg");
+        min-height: 180px;
+        min-width: 180px;
+        width: 100%;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+    .staffImage{
+        display: block;
+        margin: 0 auto;
+        background-image: url("/static/images/staff.svg");
+        background-position: center;
+        min-height: 180px;
+        min-width: 180px;
+        width: 100%;
+        background-size: contain;
+        background-repeat: no-repeat;
+    }
+    .card:hover{
+        box-shadow: 3px 3px 24px 0px #007acc;
+    }
+    .bottom{
+        padding-top: 2%;
+    }
+
+  </style>
+
+
+ {% endblock %}
+{% block toolbar %}
+        <div class="medium-tall">
+          <img src="/static/images/unicefetools.svg" style="width:200px; max-width:80%;"></img>
+          <div class="bottom title">Choose your login</div>
+        </div>
+{% endblock toolbar %}
+
+{% block content %}
+<section id="container" class="layout wrap center-justified horizontal container">
+<div class="box">
+
+    <a class="flex4child loginPartner card" href="{% url 'account_login' %}">
+        <div class="myimg partnerImage"></div>
+    </a>
+</div>
+
+<div class="box">
+    <a class="flex4child loginStaff card" href="{% url 'saml2_login' %}">
+        <div class="myimg staffImage"></div>
+    </a>
+</div>
+</section>          
+{% endblock content %}

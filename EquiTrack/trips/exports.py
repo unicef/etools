@@ -1,5 +1,6 @@
 __author__ = 'jcranwellward'
 
+from django.conf import settings
 
 from EquiTrack.utils import BaseExportResource
 from users.models import UserProfile
@@ -59,7 +60,7 @@ class TripResource(BaseExportResource):
         self.insert_column(row, 'To Date', str(trip.to_date))
         self.insert_column(row, 'Report', 'Yes' if trip.main_observations else 'No')
         self.insert_column(row, 'Attachments', trip.attachments())
-        self.insert_column(row, 'URL', 'https://equitrack.uniceflebanon.org{}'.format(trip.get_admin_url()))
+        self.insert_column(row, 'URL', 'https://{}{}'.format(settings.HOST, trip.get_admin_url()))
         return row
 
     def fill_row(self, trip, row):
@@ -87,12 +88,7 @@ class ActionPointResource(BaseExportResource):
         if UserProfile.objects.filter(user_id=action.person_responsible.id).exists():
             self.insert_column(row, 'Responsible Section', action.person_responsible.profile.section)
             self.insert_column(row, 'Responsible Office', action.person_responsible.profile.office)
-        self.insert_column(
-            row,
-            'Originally Responsible',
-            ', '.join([person.get_full_name()
-                       for person in action.persons_responsible.all()])
-        )
+        
         self.insert_column(row, 'Actions Taken', action.actions_taken)
         self.insert_column(
             row,

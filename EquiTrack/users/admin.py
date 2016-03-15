@@ -4,30 +4,62 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
 
-from import_export import resources
-from import_export.admin import ImportExportMixin
-
-from .models import UserProfile
+from .models import UserProfile, Country, Office, Section
 
 
 class ProfileInline(admin.StackedInline):
     model = UserProfile
     can_delete = False
     verbose_name_plural = 'profile'
+    fields = [
+        'country',
+        'country_override',
+        'countries_available',
+        'office',
+        'section',
+        'job_title',
+        'phone_number',
+    ]
+    filter_horizontal = (
+        'countries_available',
+    )
+    search_fields = (
+        u'office__name',
+        u'country__name',
+        u'user__email'
+    )
+    readonly_fields = (
+        u'user',
+        u'country',
+    )
 
+    def get_fields(self, request, obj=None):
 
-class UserResource(resources.ModelResource):
+        fields = super(ProfileInline, self).get_fields(request, obj=obj)
+        if not request.user.is_superuser and u'country_override' in fields:
+            fields.remove(u'country_override')
+        return fields
 
-    class Meta:
-        model = User
+    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
+        if db_field.name == u'countries_available':
+            kwargs['queryset'] = request.user.profile.countries_available.all()
 
-class UserAdminPlus(ImportExportMixin, UserAdmin):
-    resource_class = UserResource
-    inlines = (ProfileInline,)
+        return super(ProfileInline, self).formfield_for_manytomany(
+            db_field, request, **kwargs
+        )
 
 
 class ProfileAdmin(admin.ModelAdmin):
+    fields = [
+        'country',
+        'country_override',
+        'countries_available',
+        'office',
+        'section',
+        'job_title',
+        'phone_number',
+    ]
     list_display = (
         'username',
         'office',
@@ -41,9 +73,113 @@ class ProfileAdmin(admin.ModelAdmin):
         'job_title',
         'phone_number',
     )
+    list_filter = (
+        'country',
+        'office',
+    )
+    filter_horizontal = (
+        'countries_available',
+    )
+    search_fields = (
+        u'office__name',
+        u'country__name',
+        u'user__email'
+    )
+    readonly_fields = (
+        u'user',
+        u'country',
+    )
 
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_queryset(self, request):
+        """
+        You should only be able to manage users in the countries you have access to
+        :param request:
+        :return:
+        """
+        queryset = super(ProfileAdmin, self).get_queryset(request)
+        if not request.user.is_superuser:
+            queryset = queryset.filter(
+                user__is_staff=True,
+                country__in=request.user.profile.countries_available.all()
+            )
+        return queryset
+
+    def get_fields(self, request, obj=None):
+
+        fields = super(ProfileAdmin, self).get_fields(request, obj=obj)
+        if not request.user.is_superuser and u'country_override' in fields:
+            fields.remove(u'country_override')
+        return fields
+
+    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+
+        if db_field.name == u'countries_available':
+            kwargs['queryset'] = request.user.profile.countries_available.all()
+
+        return super(ProfileAdmin, self).formfield_for_manytomany(
+            db_field, request, **kwargs
+        )
+
+
+class UserAdminPlus(UserAdmin):
+
+    inlines = [ProfileInline]
+
+    list_display = [
+        'email',
+        'first_name',
+        'last_name',
+        'office',
+        'is_staff',
+        'is_active',
+    ]
+
+    def office(self, obj):
+        return obj.profile.office
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+    
+    def get_queryset(self, request):
+        """
+        You should only be able to manage users in your country
+        :param request:
+        :return:
+        """
+        queryset = super(UserAdminPlus, self).get_queryset(request)
+        if not request.user.is_superuser:
+            queryset = queryset.filter(
+                is_staff=True,
+                profile__country=request.tenant
+            )
+        return queryset
+
+    def get_readonly_fields(self, request, obj=None):
+        """
+        You shouldnt be able grant superuser access if you are not a superuser
+        :param request:
+        :param obj:
+        :return:
+        """
+        fields = list(super(UserAdminPlus, self).get_readonly_fields(request, obj))
+        if not request.user.is_superuser:
+            fields.append(u'is_superuser')
+        return fields
 
 # Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
+admin.site.register(Country)
+admin.site.register(Office)
+admin.site.register(Section)
+

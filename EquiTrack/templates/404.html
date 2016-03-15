@@ -12,6 +12,9 @@
             </header>
 
             <p class="text-center">We're having trouble loading the page you are looking for.</p>
+            {% for message in messages %}
+                <p class="text-center">{{ message }}</p>
+            {% endfor %}
 
             <div class="row">
                 <div class="col-md-6">

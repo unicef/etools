@@ -10,6 +10,7 @@ class IndicatorAdminForm(forms.ModelForm):
 
     class Meta:
         model = Indicator
+        fields = '__all__'
         widgets = {
             'name':
                 AutosizedTextarea(attrs={'class': 'input-xlarge'}),

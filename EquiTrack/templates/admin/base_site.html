@@ -1,16 +1,13 @@
+
 {% extends "admin/base.html" %}
+{% load i18n static%}
+{% load admin_tags %}
+{% load uservoice %}
 
 {% block extrahead %}
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.js" type="text/javascript"></script>
+
     <script src="{{ STATIC_URL }}js/trips_admin.js" type="text/javascript"></script>
     {% include 'autocomplete_light/static.html' %}
-{% endblock %}
-
-{% block title %}{{ title }} | eTools{% endblock %}
-
-{% block branding %}
-    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools</span></a></div>
-
     <style type="text/css">
     #header
     {
@@ -61,7 +58,7 @@
         font-weight: 300;
     }
 
-    .header #user-tools {
+    .header #user-tools, #country-select {
         padding: 15px 20px 0 0;
         float: right;
     }
@@ -95,21 +92,83 @@
         max-width: 400px;
     }
     </style>
+    <script>
+    $( document ).ready(function() {
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        var csrftoken = getCookie('csrftoken');
 
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+        $( "#country_selection" ).change(function(ev) {
+          // send post request
+            var my_data = {'country': ev.target.value};
+            $.post('/users/api/changecountry/', my_data, function() {
+                // success here
+                location.reload();
+            }).fail(function(){window.alert('Country change failed')})
+        });
+    });
+    </script>
+{% endblock %}
+
+{% block title %}{{ title }} | eTools{% endblock %}
+
+{% block branding %}
+    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools</span></a></div>
+{% endblock %}
+{% block usertools %}
+        {% if has_permission %}
+            <div id="user-tools">
+                {% block welcome-msg %}
+                    {% trans 'Welcome,' %}
+                    <strong>{% firstof user.get_short_name user.get_username %}</strong>.
+                {% endblock %}
+                {% block userlinks %}
+                <a href="{% url 'admin:logout' %}">{% trans 'Log out' %}</a>
+                {% endblock %}
+            </div>
+
+        {% endif %}
 {% endblock %}
 
 {% block nav-global %}
+ <div id="country-select">
+    {% show_country_select user.profile %}
+ </div>
 
 {% endblock %}
 
-        {% block footer %}
-            <footer id="footer">
-                <div class="brand">
-                    <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="113px" height="27px"></a>
-                </div>
-                <div class="brand msg">
-                    <span>© Copyright 2015 UNICEF. All Rights Reserved.</span>
-                </div>
-
-            </footer>
-        {% endblock footer %}
+{% block footer %}
+    <footer id="footer">
+        <div class="brand">
+            <a href="http://www.unicef.org"><img src="{{ STATIC_URL }}img/UNICEF_logo_Cyan.png" width="113px" height="27px"></a>
+        </div>
+        <div class="brand msg">
+            <span>© Copyright 2015 UNICEF. All Rights Reserved. Country: {{ request.tenant.name }}</span>
+        </div>
+    </footer>
+    {% uservoice %}
+{% endblock footer %}

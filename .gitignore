@@ -1,3 +1,4 @@
+/behave-test/reports
 # Python bytecode:
 *.py[co]
 
@@ -20,6 +21,7 @@ build
 
 *idea*
 
+EquiTrack/static/*
 static/*
 media
 
@@ -67,7 +69,18 @@ htmlcov
 
 config.json
 
-*.key
+wheelhouse
 
-EquiTrack/static
+# Frontend
+frontend/node_modules/
+frontend/dist
+frontend/bower_components/
+.tmp
+.editorconfig
+Icon
+*.sublime-project
+*.sublime-workspace
 
+assets/frontend/
+templates/frontend/
+/env_prod
