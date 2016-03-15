@@ -1,4 +1,4 @@
-FROM unicef/equitrack:etools-base
+FROM unicef/etools:base
 
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
