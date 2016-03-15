@@ -277,7 +277,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         PCAGrantFilter,
     )
     search_fields = (
-        'number',
+        'reference_number',
         'title',
     )
     readonly_fields = (
@@ -307,14 +307,15 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         (_('Dates and Signatures'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
-                (('submission_date', 'fr_number',),
+                (('submission_date',),
                  'review_date',
                  ('partner_manager', 'signed_by_partner_date',),
                  ('unicef_manager', 'signed_by_unicef_date',),
                  'partner_focal_point',
                  'unicef_managers',
                  ('days_from_submission_to_signed', 'days_from_review_to_signed',),
-                 ('start_date', 'end_date', 'duration',),)
+                 ('start_date', 'end_date', 'duration',),
+                 'fr_number',),
         }),
         (_('Add sites by P Code'), {
             u'classes': (u'suit-tab suit-tab-locations',),

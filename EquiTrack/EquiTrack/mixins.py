@@ -20,6 +20,7 @@ from rest_framework.exceptions import PermissionDenied
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
 from allauth.exceptions import ImmediateHttpResponse
@@ -150,6 +151,14 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         set_country(user, request)
 
         return user, jwt_value
+
+
+class EtoolsTokenAuthentication(TokenAuthentication):
+
+    def authenticate(self, request):
+        user, token = super(EtoolsTokenAuthentication, self).authenticate(request)
+        set_country(user, request)
+        return user, token
 
 
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
