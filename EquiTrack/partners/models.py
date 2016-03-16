@@ -394,7 +394,10 @@ class Agreement(TimeStampedModel):
     @property
     def reference_number(self):
         year = self.year
-        objects = list(Agreement.objects.filter(created__year=year).order_by('created').values_list('id', flat=True))
+        objects = list(Agreement.objects.filter(
+            created__year=year,
+            agreement_type=self.agreement_type
+        ).order_by('created').values_list('id', flat=True))
         sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{code}/{type}{year}{seq}{version}'.format(
             code=connection.tenant.country_short_code or '',
@@ -680,7 +683,10 @@ class PCA(AdminURLMixin, models.Model):
     @property
     def reference_number(self):
         year = self.year
-        objects = list(PCA.objects.filter(created_at__year=year).order_by('created_at').values_list('id', flat=True))
+        objects = list(PCA.objects.filter(
+            created_at__year=year,
+            partnership_type=self.partnership_type
+        ).order_by('created_at').values_list('id', flat=True))
         sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{agreement}/{type}{year}{seq}{version}'.format(
             agreement=self.agreement.reference_number if self.id and self.agreement else '',

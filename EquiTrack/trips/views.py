@@ -28,8 +28,11 @@ from users.models import UserProfile, Office, Section
 from locations.models import get_random_color
 from partners.models import FileType
 from .models import Trip, FileAttachment
-from .serializers import TripSerializer
+from .serializers import TripSerializer, Trip2Serializer
 from .forms import TripFilterByDateForm
+from rest_framework import status
+from django.db import connection
+from users.models import Country
 
 User = get_user_model()
 
@@ -68,6 +71,44 @@ class AppsIOSPlistView(View):
             result = my_f.read()
 
         return HttpResponse(result, content_type="application/octet-stream")
+
+
+class Trips2ViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Trip.objects.all()
+    serializer_class = Trip2Serializer
+
+    def create(self, request, *args, **kwargs):
+
+        try:
+            country_id = request.data['country']
+        except KeyError:
+            country_id = 1
+
+        country = Country.objects.get(id=country_id)
+        connection.set_tenant(country)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        partners = request.data['partners']
+        pcas = request.data['pcas']
+
+        serializer.instance = serializer.save()
+
+        for partner in partners:
+            serializer.instance.partners.add(partner)
+
+        for pca in pcas:
+            serializer.instance.pcas.add(pca)
+
+        serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED,
+                        headers=headers)
 
 
 class TripsViewSet(mixins.RetrieveModelMixin,
