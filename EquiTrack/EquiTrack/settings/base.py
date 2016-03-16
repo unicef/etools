@@ -88,7 +88,7 @@ POST_OFFICE = {
     }
 }
 EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-CELERY_EMAIL_BACKEND = "djrill.mail.backends.djrill.DjrillBackend"  # Will send mail via mandrill service
+CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', "djrill.mail.backends.djrill.DjrillBackend")  # Will send mail via mandrill service
 MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
 ########## END EMAIL CONFIGURATION
 
