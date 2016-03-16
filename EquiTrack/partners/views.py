@@ -9,9 +9,7 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
-from datetime import datetime
-from rest_framework.generics import ListAPIView, RetrieveAPIView, CreateAPIView
-from rest_framework.decorators import detail_route, list_route
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import viewsets, mixins
 from easy_pdf.views import PDFTemplateView
 
@@ -22,14 +20,19 @@ from .serializers import (
     InterventionSerializer,
     ResultChainDetailsSerializer,
     IndicatorReportSerializer,
+    PCASectorSerializer,
+    PCAGrantSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
-    AgreementSerializer
+    AgreementSerializer,
+    PartnershipBudgetSerializer,
+    PCAFileSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
 
 from .models import (
-    Agreement,
+    PartnershipBudget,
+    PCAFile,
     AuthorizedOfficer,
     PCA,
     PartnerOrganization,
@@ -41,7 +44,8 @@ from .models import (
     ResultChain,
     IndicatorReport
 )
-from .serializers import AgreementSerializer
+from rest_framework import status
+from rest_framework.response import Response
 
 
 class PcaPDFView(PDFTemplateView):
@@ -207,7 +211,22 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
     serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
 
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
     def get_queryset(self):
+
         queryset = super(AgreementViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
@@ -234,7 +253,19 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
 
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED,
+                        headers=headers)
+
     def get_queryset(self):
+
         queryset = super(InterventionsViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
@@ -289,6 +320,127 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
         serializer.save(partner_staff_member=partner_staff_member)
 
 
+class PCASectorViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
+    model = PCASector
+    queryset = PCASector.objects.all()
+    serializer_class = PCASectorSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+    def get_queryset(self):
+
+        queryset = super(PCASectorViewSet, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(pca=intervention_id)
+
+
+class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
+    model = PartnershipBudget
+    queryset = PartnershipBudget.objects.all()
+    serializer_class = PartnershipBudgetSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    def get_queryset(self):
+
+        queryset = super(PartnershipBudgetViewSet, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(partnership_id=intervention_id)
+
+
+class PCAFileViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
+    model = PCAFile
+    queryset = PCAFile.objects.all()
+    serializer_class = PCAFileSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    def get_queryset(self):
+
+        queryset = super(PCAFileViewSet, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(pca=intervention_id)
+
+
+class PCAGrantViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+
+    model = PCAGrant
+    queryset = PCAGrant.objects.all()
+    serializer_class = PCAGrantSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    def get_queryset(self):
+
+        queryset = super(PCAGrantViewSet, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_id')
+        return queryset.filter(partnership_id=intervention_id)
+
+
 class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
@@ -298,7 +450,22 @@ class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
     serializer_class = PartnerOrganizationSerializer
     permission_classes = (PartnerPermission,)
 
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
     def get_queryset(self):
+
         queryset = super(PartnerOrganizationsViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
@@ -325,7 +492,22 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
     serializer_class = PartnerStaffMemberSerializer
     permission_classes = (PartnerPermission,)
 
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
     def get_queryset(self):
+
         queryset = super(PartnerStaffMembersViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
@@ -341,3 +523,4 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
                 # Return all interventions this partner has
                 return queryset.filter(partner=current_member.partner)
         return queryset
+

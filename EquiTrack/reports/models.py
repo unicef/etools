@@ -92,6 +92,7 @@ class Result(MPTTModel):
     activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
 
     hidden = models.BooleanField(default=False)
+    ram = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['name']
@@ -102,6 +103,15 @@ class Result(MPTTModel):
             self.result_type.name,
             self.name
         )
+
+    def save(self, *args, **kwargs):
+
+        super(Result, self).save(*args, **kwargs)
+        nodes = self.get_descendants()
+        for node in nodes:
+            if node.hidden is not self.hidden:
+                node.hidden = self.hidden
+                node.save()
 
 
 class Goal(models.Model):
@@ -132,19 +142,32 @@ class Unit(models.Model):
 
 class Indicator(models.Model):
 
-    sector = models.ForeignKey(Sector)
+    sector = models.ForeignKey(
+        Sector,
+        blank=True, null=True
+    )
     result_structure = models.ForeignKey(
-        ResultStructure, blank=True, null=True)
+        ResultStructure,
+        blank=True, null=True
+    )
 
     result = models.ForeignKey(Result, null=True, blank=True)
-    name = models.CharField(max_length=128L, unique=True)
+    name = models.CharField(max_length=255, unique=True)
     code = models.CharField(max_length=50, null=True, blank=True)
     unit = models.ForeignKey(Unit, null=True, blank=True)
+
     total = models.IntegerField(verbose_name='UNICEF Target', null=True, blank=True)
     sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
     current = models.IntegerField(null=True, blank=True, default=0)
     sector_current = models.IntegerField(null=True, blank=True)
+
+    # RAM Info
+    target = models.CharField(max_length=255, null=True, blank=True)
+    baseline = models.CharField(max_length=255, null=True, blank=True)
+    ram_indicator = models.BooleanField(default=False)
+
     view_on_dashboard = models.BooleanField(default=False)
+
     in_activity_info = models.BooleanField(default=False)
     activity_info_indicators = models.ManyToManyField(
         'activityinfo.Indicator',
@@ -155,9 +178,10 @@ class Indicator(models.Model):
         ordering = ['name']
 
     def __unicode__(self):
-        return u'{} {}'.format(
+        return u'{} {} {}'.format(
             self.name,
-            'ActivityInfo' if self.in_activity_info else ''
+            u'Baseline: {}'.format(self.baseline) if self.baseline else u'',
+            u'Target: {}'.format(self.target) if self.target else u''
         )
 
     def programmed_amounts(self):

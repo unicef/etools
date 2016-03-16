@@ -124,7 +124,7 @@ class PartnerOrganization(models.Model):
     )
     rating = models.CharField(
         max_length=50,
-        default=u'High',
+        null=True,
         verbose_name=u'Risk Rating'
     )
     core_values_assessment_date = models.DateField(
@@ -397,7 +397,7 @@ class Agreement(TimeStampedModel):
         objects = list(Agreement.objects.filter(created__year=year).order_by('created').values_list('id', flat=True))
         sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{code}/{type}{year}{seq}{version}'.format(
-            code='LEBA',
+            code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
             year=year,
             seq=sequence,
@@ -488,8 +488,16 @@ class PCA(AdminURLMixin, models.Model):
         help_text=u'Document Reference Number'
     )
     title = models.CharField(max_length=256L)
+    project_type = models.CharField(
+        max_length=20,
+        blank=True, null=True,
+        choices=Choices(
+            u'Bulk Procurement',
+            u'Construction Project',
+        )
+    )
     status = models.CharField(
-        max_length=32L,
+        max_length=32,
         blank=True,
         choices=PCA_STATUS,
         default=u'in_process',
@@ -933,6 +941,28 @@ class PCAFile(models.Model):
         return u''
     download_url.allow_tags = True
     download_url.short_description = 'Download Files'
+
+
+class RAMIndicator(models.Model):
+
+    intervention = models.ForeignKey(PCA, related_name='indicators')
+    result = models.ForeignKey(Result)
+    indicator = ChainedForeignKey(
+        Indicator,
+        chained_field="result",
+        chained_model_field="result",
+        show_all=False,
+        auto_choose=True,
+    )
+    target = models.CharField(max_length=255, null=True, blank=True)
+    baseline = models.CharField(max_length=255, null=True, blank=True)
+
+    # def save(self, **kwargs):
+    #
+    #     self.target = self.indicator.target
+    #     self.baseline = self.indicator.basline
+    #
+    #     super(RAMIndicator. self).save(**kwargs)
 
 
 class ResultChain(models.Model):

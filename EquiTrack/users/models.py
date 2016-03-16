@@ -19,6 +19,10 @@ logger = logging.getLogger('users.models')
 
 class Country(TenantMixin):
     name = models.CharField(max_length=100)
+    country_short_code = models.CharField(
+        max_length=10,
+        null=True, blank=True
+    )
     business_area_code = models.CharField(
         max_length=10,
         null=True, blank=True
@@ -32,6 +36,7 @@ class Country(TenantMixin):
         max_digits=8, decimal_places=6
     )
     initial_zoom = models.IntegerField(default=8)
+    vision_sync_enabled = models.BooleanField(default=True)
 
     def __unicode__(self):
         return self.name
@@ -75,6 +80,15 @@ class UserProfile(models.Model):
 
     def username(self):
         return self.user.username
+
+    def email(self):
+        return self.user.email
+
+    def first_name(self):
+        return self.user.first_name
+
+    def last_name(self):
+        return self.user.last_name
 
     def __unicode__(self):
         return u'User profile for {}'.format(
@@ -126,6 +140,7 @@ class UserProfile(models.Model):
 
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
+pre_user_save.connect(UserProfile.custom_update_user)  #TODO: The sender should be set
 
 
 def create_partner_user(sender, instance, created, **kwargs):
@@ -183,4 +198,3 @@ def delete_partner_relationship(sender, instance, **kwargs):
 
 pre_delete.connect(delete_partner_relationship, sender='partners.PartnerStaffMember')
 post_save.connect(create_partner_user, sender='partners.PartnerStaffMember')
-pre_user_save.connect(UserProfile.custom_update_user)

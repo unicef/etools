@@ -28,7 +28,7 @@ class VisionDataSynchronizer:
         if not country:
             raise VisionException(message='Country is required')
         if self.ENDPOINT is None:
-            raise VisionException(message='You must the ENDPOINT')
+            raise VisionException(message='You must set the ENDPOINT name')
 
         self.county = country
         self.url = '{}/{}/{}'.format(
@@ -48,9 +48,8 @@ class VisionDataSynchronizer:
     def _save_records(self, records):
         pass
 
-    @abstractmethod
     def _get_json(self, data):
-        return []
+        return [] if data == self.NO_DATA_MESSAGE else data
 
     def _filter_records(self, records):
         def is_valid_record(record):

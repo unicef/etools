@@ -296,9 +296,6 @@ class AgreementForm(UserGroupForm):
             'end': SuitDateWidget,
         }
 
-    def __init__(self, *args, **kwargs):
-        super(AgreementForm, self).__init__(*args, **kwargs)
-
     def clean(self):
         cleaned_data = super(AgreementForm, self).clean()
 
@@ -330,9 +327,9 @@ class AgreementForm(UserGroupForm):
                 _(u'Please provide the agreement reference for this {}'.format(agreement_type))
             )
 
-        if agreement_type == Agreement.PCA and partner.partner_type != u'Civil Society Organisation':
+        if agreement_type == Agreement.PCA and partner.partner_type != u'Civil Society Organization':
             raise ValidationError(
-                _(u'Only Civil Society Organisations can sign Programme Cooperation Agreements')
+                _(u'Only Civil Society Organizations can sign Programme Cooperation Agreements')
             )
 
         if agreement_type == Agreement.SSFA and start and end:
@@ -341,7 +338,7 @@ class AgreementForm(UserGroupForm):
                     _(u'SSFA can not be more than a year')
                 )
 
-        # TODO: prevent more than one agreement being crated for the current period
+        # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
         #     partner=partner,
         #     start__lte=start,
