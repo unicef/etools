@@ -9,16 +9,17 @@
       "server": "http://couchbase:8091",
       "bucket": "default",
        "sync": `function(doc){
-  if(doc.type == "user") {
+          if(doc.type == "user") {
 
-    requireUser(doc.type);
-    access(doc.type, "users");
-    channel("users");
-  } 
-  else if(doc.partner_name && doc.country){
-    channel(doc.partner_name+"-"+doc.country);
-  }
-}`,
+            requireUser(doc.type);
+            access(doc.type, "users");
+            channel("users");
+          }
+          else if(doc.partner_name && doc.country){
+            channel(doc.partner_name+"-"+doc.country);
+          }
+        }`
+ ,
       "users": {        
                  "GUEST": {
                     "disabled": true 
@@ -26,7 +27,7 @@
                 "unisupply-gateway": {
                    "admin_channels": ["doc.channels"],
                    "channels": ["doc.channels"],
-                   "password": "lebanon-pass!"
+                   "password": "leban on-pass!"
                 }
             }
     }
