@@ -291,7 +291,7 @@
             var my_data = {'country': ev.target.value};
             $.post('/users/api/changecountry/', my_data, function() {
                 // success here
-                location.reload();
+                location.href="/";
             }).fail(function(){window.alert('Country change failed')})
         });
     });
