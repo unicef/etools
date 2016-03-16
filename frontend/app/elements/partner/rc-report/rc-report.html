@@ -3,6 +3,7 @@
 
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
 <link rel="import" href="../../common/etools-datepicker/etools-datepicker.html">
 <link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../../bower_components/iron-list/iron-list.html">
@@ -47,7 +48,10 @@
       <p>Target = {{rc.target}}</p>
       <p>Indicator = {{rc.indicator.name}}</p>
   </div>
+  <locations-autocomplete 
+      autocomplete-url={{appData.locationsAutocompleteEp}}
 
+  ></locations-autocomplete>
   <div>
     <paper-button class="btn" on-tap="showNewReportDialog" raised>Add Report</paper-button>
     <template is="dom-repeat" items="{{rc.indicator_reports}}" as="report">

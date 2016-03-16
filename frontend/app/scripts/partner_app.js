@@ -32,6 +32,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     userPropertiesEp: window.location.origin + '/partnership/partnerstaffmember/',
     interventionsEp: [window.location.origin, 'api', 'interventions'].join('/') + '/',
     newIndicatorReportEp: window.location.origin + '/api/reports/indicators/',
+    locationsAutocompleteEp: window.location.origin + '/autocomplete/LocationAutocompleteLocation/',
     getEndpoint: {
       userProperties: function(id) {
         return [window.location.origin, 'partners', 'api', 'profile', id].join('/') + '/';
@@ -40,7 +41,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         return [window.location.origin, 'api', 'interventions', id].join('/') + '/';
       },
       resultChainDetails: function(id) {
-        return [window.location.origin, 'api', 'results', id].join('/') + '/';
+        return [window.location.origin, 'partners', 'api', 'resultchain', id].join('/') + '/';
       }
     },
     permissions: {

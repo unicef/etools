@@ -1,0 +1,153 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../../bower_components/iron-collapse/iron-collapse.html">
+
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+
+
+  
+
+
+<dom-module id="locations-autocomplete">
+  <style>
+   iron-collapse {
+        box-shadow: 6px;
+    }
+
+    paper-button {
+        width: 100%;
+        text-transform: none;
+    }
+  </style>
+  <template>
+    <etools-ajax
+          auto
+          id="ajax"
+          url="[[url]]"
+          handle-as="text"
+          on-response="handleResponse"
+          debounce-duration="200">
+    </etools-ajax>
+    
+   
+    <paper-input-container>
+        <label>{{label}}</label>
+        <content select=".content"></content>
+        <input id="searchBox" class="paper-input-input" is="iron-input" bind-value="{{searchValue::input}}"></input>
+    </paper-input-container>
+
+    <iron-collapse id="collapse">
+        <paper-material>
+            <div>
+                <template id="resultList" is="dom-repeat" items="{{choices}}">
+                    <paper-item>
+                        <paper-button on-tap="_selectItem">{{item.name}}</paper-button>
+                    </paper-item>
+                </template>
+            </div>
+        </paper-material>
+    </iron-collapse>
+      
+    </paper-dialog>
+  </div>
+
+
+  
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'locations-autocomplete',
+    properties: {
+      autocompleteUrl: String,
+      url: {
+        type: String,
+        value: null
+      },
+      choices: Array,
+      label: String,
+      value: {
+        type: Object,
+      },
+      searchValue: {
+        type: String,
+        value: '',
+        observer: '_valueChangedDebounced'
+      }
+    },
+    ready: function() {
+        this.choices = [
+          {
+            name: 'asd',
+            value: 'asdd'
+          },
+          {
+            name: 'sadd',
+            value: 'sadds'
+          }
+        ];
+        this.$.resultList.render();
+    },
+    _getChoices: function(e) {
+      //this.url = http://localhost:8099/autocomplete/LocationAutocompleteLocation/?q=as;
+      
+      return [];
+    },
+    _valueChanged: function(e) {
+        console.log(e);
+        var collapse = this.$.collapse;
+        if (e !== undefined && e !== '') {
+          // trigger request
+          this.url = this.autocompleteUrl + '?q=' + e;
+
+          this.$.resultList.render();
+          if (!collapse.opened){
+            collapse.toggle();
+          }
+        } else
+        if (e === '' && collapse.opened) {
+            collapse.toggle();
+        }
+    },
+    _valueChangedDebounced: function(e) {
+      var callback = function() {
+        this._valueChanged(e);
+      };
+      this.debounce('locationChangedDebounce', callback, 500);
+    },
+    _selectItem: function(event) {
+        this.set('searchValue', event.model.item.name);
+        this.set('value', event.model.item);
+        this.$.collapse.toggle();
+    },
+    changeUrl: function(){
+      
+      if (this.rcId){
+        this.rc = null;
+        this.url = this.appData.getEndpoint.resultChainDetails(this.rcId);
+      } else {
+        this.url = null;
+      }
+    },
+    handleResponse: function(rsp) {
+      //
+      console.log(rsp.detail.xhr.response);
+      console.log(rsp.detail.xhr);
+
+    }
+  });
+})();
+
+</script>

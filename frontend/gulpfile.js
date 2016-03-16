@@ -334,6 +334,9 @@ gulp.task('serve', ['styles', 'elements', 'images'], function() {
       case '/api/interventions/':
         req.url = '/data/partner/interventions.json';
         break;
+      case '/autocomplete/LocationAutocompleteLocation/?q=as':
+        req.url = '/data/partner/locationsautocomplete.json';
+        break;
       case '/api/interventions/7/':
         req.url = '/data/partner/intervention_details.json';
         break;
