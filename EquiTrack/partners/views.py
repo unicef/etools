@@ -54,10 +54,9 @@ class PcaPDFView(PDFTemplateView):
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         agreement = Agreement.objects.get(id=agr_id)
-        officers = agreement.authorized_officers.all().values_list('officer', flat=True)
+        officers = agreement.authorized_officers.all()
         officers_list = []
-        for id in officers:
-            officer = AuthorizedOfficer.objects.get(id=id)
+        for officer in officers:
             officers_list.append(
                 {'first_name': officer.officer.first_name,
                  'last_name': officer.officer.last_name,
