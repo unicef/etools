@@ -15,4 +15,3 @@ RUN python manage.py collectstatic --noinput
 ENV PORT 8080
 EXPOSE $PORT
 ENV C_FORCE_ROOT true
-CMD honcho start
