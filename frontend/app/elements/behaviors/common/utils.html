@@ -1,0 +1,18 @@
+<!--
+Global behavior definition
+-->
+<script>
+var commonBv = commonBv || {};
+
+commonBv.utils = {
+  properties: {
+
+  },
+  dateFormat: function(date, format) {
+    return moment(date).format(format);
+  },
+  underscoreless: function(s){
+    return s.replace('_',' ');
+  }
+};
+</script>

@@ -5,6 +5,8 @@
 <link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../../bower_components/iron-list/iron-list.html">
 
+<link rel="import" href="../../behaviors/common/utils.html">
+
 <!--
 An element providing a solution to no problem in particular.
 
@@ -116,7 +118,10 @@ Example:
                   <div class="primary">[[item.title]]</div>
                   
                   
-                  <div class="shortText">Intervention Details</div>
+                  <div class="shortText">
+                    <p>Status: [[underscoreless(item.status)]]</p>
+                    <p>Ending: [[dateFormat(item.end_date, 'LL')]]</p>
+                  </div>
                   <div class="longText"></div>
 
                 </div>
@@ -132,15 +137,13 @@ Example:
 
 </dom-module>
 
-
-
-
 <script>
 (function() {
     // jscs:disable
   'use strict';
   Polymer({
     is: 'interventions-page',
+    behaviors: [commonBv.utils],
     properties: {
       appData: {
         type: Object,

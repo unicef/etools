@@ -1,6 +1,7 @@
 
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../../common/etools-ajax/etools-ajax.html">
 <link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../../bower_components/iron-list/iron-list.html">
@@ -20,21 +21,51 @@
    
   <h2>{{intervention.title}}</h2>
 
-  <template is="dom-repeat" items="[[indicators]]" as="rc">
-    <div on-tap="_goToReport" rc-id="{{rc.id}}">
-      <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
-      <div>Partner Target Total: {{rc.target}}</div>
-      <div>Partner Current Total: {{rc.current_progress}}</div>
-      <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
-        <div>
-          <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
-              <span>{{item.name}}, </span>
+  
+  <paper-card heading="All Indicators" image="" elevation="1" animated-shadow="false">
+    <div class="card-content">
+      <template is="dom-repeat" items="[[indicators]]" as="rc">
+        <div on-tap="_goToReport" rc-id="{{rc.id}}">
+          <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
+          <div>Partner Target Total: {{rc.target}}</div>
+          <div>Partner Current Total: {{rc.current_progress}}</div>
+          <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
+            <div>
+              <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
+                  <span>{{item.name}}, </span>
+              </template>
+            </div>
+          </div>
+        </div>  
+        <br>
+      </template>
+    </div>
+  </paper-card>
+  <br> <br> <br>
+  <paper-card heading="By Output" image="" elevation="1" animated-shadow="false">
+    <div class="card-content">
+      <template is="dom-repeat" items="[[outputs]]" as="out">
+        <h3> Output: [[out.output.name]]</h3>
+        <template is="dom-repeat" items="[[out.indicators]]" as="rc">
+            <div on-tap="_goToReport" rc-id="{{rc.id}}">
+              <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
+              <div>Partner Target Total: {{rc.target}}</div>
+              <div>Partner Current Total: {{rc.current_progress}}</div>
+              <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
+                <div>
+                  <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
+                      <span>{{item.name}}, </span>
+                  </template>
+                </div>
+              </div>
+            </div>  
+            <br>
           </template>
-        </div>
-      </div>
-    </div>  
-    <br>
-  </template>
+        <br>
+      </template>
+    </div>
+  </paper-card>
+      
 
   </template>
 
@@ -67,6 +98,10 @@
         type: Array,
         value: null,
       },
+      outputs: {
+        type: Array,
+        value: null,
+      },
       url: {
         type: String,
         value: null
@@ -87,26 +122,34 @@
           return;
         }
         // need to get a dict of indicators filtered by output;
-        var res = {};
+        var inds = [];
+        var tempOutputs = {};
         intervention.results.forEach(function(el) {
           // el is the result_chain object
           // Make sure it's an indicator result
           if (!el.indicator){
             return;
           }
-          if (res[el.id]){
-            res[el.id].push(el);
+          inds.push(el)
+          if (tempOutputs[el.result.id]){
+            tempOutputs[el.result.id].indicators.push(el)
           } else {
-            res[el.id] = el;
-          }
+            tempOutputs[el.result.id] = {};
+            tempOutputs[el.result.id].output = el.result;
+            tempOutputs[el.result.id].indicators = [el];
+          };
+
         });
-        console.log(res);
+        console.log(tempOutputs);
+        console.log(inds);
         
-        var inds = [];
-        _.each(res, function(value) {
-            inds.push(value);
+        var outputs = [];
+        _.each(tempOutputs, function(value) {
+            outputs.push(value);
         });
+        console.log(outputs);
         this.indicators = inds;
+        this.outputs = outputs;
     },
     _goToReport: function(ev){
       page(this.appData.baseUrl+'rcReport/'+this.interventionId+'/'+ ev.currentTarget.rcId + '/');

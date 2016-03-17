@@ -104,6 +104,7 @@
   'use strict';
   Polymer({
     is: 'rc-report',
+    behaviors: [commonBv.utils],
     properties: {
       appData: {
         type: Object,
@@ -136,9 +137,6 @@
     },
     ready: function() {
       //
-    },
-    dateFormat: function(date, format) {
-      return moment(date).format(format);
     },
     changeUrl: function() {
       if (this.rcId && this.interventionId){
@@ -213,9 +211,7 @@
         return item.id.toString() === params.rcIntvId;
       });
       console.log(intervention);
-
       // assuuming we have params otherwise we would not get to this view
-
     },
     _sortDate: function(a, b) {
       return a.modified < b.modified ? 1 : -1;
