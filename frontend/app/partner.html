@@ -169,7 +169,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             </section>
 
             <section data-route="rcReport">
-                <rc-report app-data="[[appData]]" interventions="{{interventions}}" rc-id="[[params.rcId]]"></rc-report> 
+                <rc-report app-data="[[appData]]" 
+                  interventions="{{interventions}}" 
+                  intervention-id="[[params.intvId]]"
+                  rc-id="[[params.rcId]]"></rc-report> 
             </section>
 
           </iron-pages>

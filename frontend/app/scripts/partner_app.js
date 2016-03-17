@@ -32,7 +32,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     userPropertiesEp: window.location.origin + '/partnership/partnerstaffmember/',
     interventionsEp: [window.location.origin, 'api', 'interventions'].join('/') + '/',
     newIndicatorReportEp: window.location.origin + '/api/reports/indicators/',
-    locationsAutocompleteEp: window.location.origin + '/autocomplete/LocationAutocompleteLocation/',
+    locationsAutocompleteEp: window.location.origin + '/locations/autocomplete/',
     getEndpoint: {
       userProperties: function(id) {
         return [window.location.origin, 'partners', 'api', 'profile', id].join('/') + '/';
@@ -40,8 +40,24 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       interventionDetails: function(id) {
         return [window.location.origin, 'api', 'interventions', id].join('/') + '/';
       },
-      resultChainDetails: function(id) {
-        return [window.location.origin, 'partners', 'api', 'resultchain', id].join('/') + '/';
+      resultChainDetails: function(int, res) {
+        return [
+          window.location.origin, 
+          'api', 
+          'interventions', 
+          int, 
+          'results', 
+          res].join('/') + '/';
+      },
+      newIndicatorReport: function(int, res) {
+        return [
+          window.location.origin, 
+          'api', 
+          'interventions', 
+          int, 
+          'results', 
+          res,
+          'reports'].join('/') + '/';
       }
     },
     permissions: {

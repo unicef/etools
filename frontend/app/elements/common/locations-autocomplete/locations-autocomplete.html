@@ -24,6 +24,12 @@
         width: 100%;
         text-transform: none;
     }
+    .loading {
+      background-color: #ff00ff;
+    }
+    .alert {
+      border: 1px solid yellow;
+    }
   </style>
   <template>
     <etools-ajax
@@ -36,7 +42,7 @@
     </etools-ajax>
     
    
-    <paper-input-container>
+    <paper-input-container invalid="{{has_value(value)}}">
         <label>{{label}}</label>
         <content select=".content"></content>
         <input id="searchBox" class="paper-input-input" is="iron-input" bind-value="{{searchValue::input}}"></input>
@@ -81,40 +87,35 @@
       value: {
         type: Object,
       },
+      selectionChange: {
+        type: Boolean,
+        value: false
+      },
       searchValue: {
         type: String,
         value: '',
         observer: '_valueChangedDebounced'
+      },
+      loadingValues: {
+        type: Boolean,
+        value: false
       }
     },
     ready: function() {
-        this.choices = [
-          {
-            name: 'asd',
-            value: 'asdd'
-          },
-          {
-            name: 'sadd',
-            value: 'sadds'
-          }
-        ];
-        this.$.resultList.render();
-    },
-    _getChoices: function(e) {
-      //this.url = http://localhost:8099/autocomplete/LocationAutocompleteLocation/?q=as;
-      
-      return [];
+        //
     },
     _valueChanged: function(e) {
-        console.log(e);
+        if (this.selectionChange) {
+          this.selectionChange = false;
+          return;
+        }
+        this.value = null;
         var collapse = this.$.collapse;
         if (e !== undefined && e !== '') {
           // trigger request
-          this.url = this.autocompleteUrl + '?q=' + e;
-
-          this.$.resultList.render();
-          if (!collapse.opened){
-            collapse.toggle();
+          if (this.url !== this.autocompleteUrl + '?q=' + e) {
+            this.url = this.autocompleteUrl + '?q=' + e;
+            this.loadingValues = true;
           }
         } else
         if (e === '' && collapse.opened) {
@@ -128,8 +129,9 @@
       this.debounce('locationChangedDebounce', callback, 500);
     },
     _selectItem: function(event) {
+        this.selectionChange = true;
         this.set('searchValue', event.model.item.name);
-        this.set('value', event.model.item);
+        this.set('value', event.model.item.id);
         this.$.collapse.toggle();
     },
     changeUrl: function(){
@@ -142,10 +144,16 @@
       }
     },
     handleResponse: function(rsp) {
-      //
-      console.log(rsp.detail.xhr.response);
-      console.log(rsp.detail.xhr);
-
+      var collapse = this.$.collapse;
+      this.loadingValues = false;
+      this.choices = rsp.detail.xhr.response;
+      this.$.resultList.render();
+      if (!collapse.opened && this.choices){
+        collapse.toggle();
+      }
+    },
+    has_value: function(e){
+      return (!e);
     }
   });
 })();

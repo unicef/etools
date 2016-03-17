@@ -91,7 +91,7 @@
         intervention.results.forEach(function(el) {
           // el is the result_chain object
           // Make sure it's an indicator result
-          if (!el.indicator.id){
+          if (!el.indicator){
             return;
           }
           if (res[el.id]){
@@ -109,7 +109,7 @@
         this.indicators = inds;
     },
     _goToReport: function(ev){
-      page(this.appData.baseUrl+'rcReport/'+ ev.currentTarget.rcId + '/');
+      page(this.appData.baseUrl+'rcReport/'+this.interventionId+'/'+ ev.currentTarget.rcId + '/');
 
     },
 

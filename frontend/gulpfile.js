@@ -334,13 +334,13 @@ gulp.task('serve', ['styles', 'elements', 'images'], function() {
       case '/api/interventions/':
         req.url = '/data/partner/interventions.json';
         break;
-      case '/autocomplete/LocationAutocompleteLocation/?q=as':
+      case '/locations/autocomplete/?q=as':
         req.url = '/data/partner/locationsautocomplete.json';
         break;
       case '/api/interventions/7/':
         req.url = '/data/partner/intervention_details.json';
         break;
-      case '/partners/api/resultchain/1/':
+      case '/api/interventions/7/results/1/':
         req.url = '/data/partner/resultchain_details.json';
         break;
     }

@@ -48,13 +48,10 @@
       <p>Target = {{rc.target}}</p>
       <p>Indicator = {{rc.indicator.name}}</p>
   </div>
-  <locations-autocomplete 
-      autocomplete-url={{appData.locationsAutocompleteEp}}
-
-  ></locations-autocomplete>
+  
   <div>
     <paper-button class="btn" on-tap="showNewReportDialog" raised>Add Report</paper-button>
-    <template is="dom-repeat" items="{{rc.indicator_reports}}" as="report">
+    <template is="dom-repeat" items="{{indicatorReports}}" id="reports" as="report" sort="_sortDate">
         <div>
           <p>
             Reported on: {{dateFormat(report.modified, 'LL')}}, 
@@ -66,26 +63,26 @@
     <!--  -->
 
     <paper-dialog class="custom" id="newReportDialog" modal on-iron-overlay-closed="dismissDialog">
-      <p>Here we go </p>
+      <p>New Report: </p>
       <paper-dialog-scrollable>
       <br>
-        <paper-input label="Total Playaz" type="number" id="reportTotal"></paper-input>
+        <paper-input label="Total Reporting" type="number" id="reportTotal" required></paper-input>
+        <br>
+        <p>Location: 
+          <locations-autocomplete id="locationSelected"
+              autocomplete-url="{{appData.locationsAutocompleteEp}}">
+          </locations-autocomplete>
+        </p>
         <br>
         <p>From: {{fromPrettyDate}}</p>
         <input id="fromDate" type="hidden" value="{{fromJsonDate}}">
         <etools-datepicker pretty-date="{{fromPrettyDate}}" json-date="{{fromJsonDate}}"></etools-datepicker>
 
-        <p>From: {{toPrettyDate}}</p>
+        <p>To: {{toPrettyDate}}</p>
         <input id="toDate" type="hidden" value="{{toJsonDate}}">
         <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{toJsonDate}}"></etools-datepicker>
         <br>
     </paper-dialog-scrollable>
-      
-      
-
-      
-
-
       <div class="buttons">
         <paper-button dialog-dismiss>Cancel</paper-button>
         <paper-button dialog-confirm>Submit</paper-button>
@@ -113,6 +110,11 @@
         // appData is received from the parent
         value: {}
       },
+      interventionId: {
+        type: Number,
+        value: null,
+        observer: 'changeUrl'
+      },
       rcId: {
         type: Number,
         value: null,
@@ -122,6 +124,10 @@
         type: Object,
         value: null,
         observer: 'update_view'
+      },
+      indicatorReports: {
+        type: Array,
+        value: null,
       },
       url: {
         type: String,
@@ -134,11 +140,10 @@
     dateFormat: function(date, format) {
       return moment(date).format(format);
     },
-    changeUrl: function(){
-      
-      if (this.rcId){
+    changeUrl: function() {
+      if (this.rcId && this.interventionId){
         this.rc = null;
-        this.url = this.appData.getEndpoint.resultChainDetails(this.rcId);
+        this.url = this.appData.getEndpoint.resultChainDetails(this.interventionId, this.rcId);
       } else {
         this.url = null;
       }
@@ -146,26 +151,46 @@
     handleResponse: function(rsp) {
       //
       this.rc = rsp.detail.xhr.response;
+      this.indicatorReports = this.rc.indicator_reports;
       console.log(this.rc);
 
     },
     handleSubmitResponse: function(rsp){
-      console.log(rsp.detail.xhr.response);
+      console.log('handling submit', rsp.detail.xhr.response);
+      this.set('indicatorReports', this.rc.indicator_reports.concat([rsp.detail.xhr.response]));
+      this.rc.indicator_reports.push(rsp.detail.xhr.response);
+      this.$.reports.render();
     },
-    handleSubmitError: function(rsp){
+    handleSubmitError: function(rsp) {
       console.log(rsp.detail.error);
+    },
+    _validateSubmision: function() {
+      if (!this.$.locationSelected.value){
+        window.alert('location needed');
+        return false;
+      }
+      if (!this.$.reportTotal.value){
+        window.alert('Report number needed');
+        return false;
+      }
+      return true;
     },
     _submitReport: function() {
       var myReq = this.$.ajaxPost;
+      //TODO: Validate for location
+      if (!this._validateSubmision()){
+        return;
+      }
       myReq.body = {
         'result_chain': this.rcId,
         'disaggregation': {},
         'total': this.$.reportTotal.value,
-        'from_date': this.$.fromDate.value,
-        'to_date': this.$.toDate.value
+        'start': this.$.fromDate.value,
+        'end': this.$.toDate.value,
+        'location': this.$.locationSelected.value
       };
       myReq.method = 'POST';
-      myReq.url = this.appData.newIndicatorReportEp;
+      myReq.url = this.appData.getEndpoint.newIndicatorReport(this.interventionId, this.rcId);
       myReq.sendPostRequest();
     },
     showNewReportDialog: function() {
@@ -191,6 +216,10 @@
 
       // assuuming we have params otherwise we would not get to this view
 
+    },
+    _sortDate: function(a, b) {
+      return a.modified < b.modified ? 1 : -1;
+      //return a.total < b.total ? 1 : -1;
     }
   });
 })();

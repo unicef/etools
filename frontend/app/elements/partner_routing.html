@@ -49,7 +49,7 @@ window.addEventListener('WebComponentsReady', function() {
     app.route = 'intervention';
     app.params = data.params;
   });
-  page('/rcReport/:rcId/', function(data) {
+  page('/rcReport/:intvId/:rcId/', function(data) {
     app.route = 'rcReport';
     app.params = data.params;
   });

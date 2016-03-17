@@ -11870,6 +11870,204 @@ this.fire('dom-change');
 </script>
 
 
+<dom-module id="iron-collapse" assetpath="../bower_components/iron-collapse/">
+
+  <style>
+
+    :host {
+      display: block;
+      transition-duration: 300ms;
+      overflow: visible;
+    }
+
+    :host(.iron-collapse-closed) {
+      display: none;
+    }
+
+    :host(:not(.iron-collapse-opened)) {
+      overflow: hidden;
+    }
+
+  </style>
+
+  <template>
+
+    <content></content>
+
+  </template>
+
+</dom-module>
+
+<script>
+
+  Polymer({
+
+    is: 'iron-collapse',
+
+    behaviors: [
+      Polymer.IronResizableBehavior
+    ],
+
+    properties: {
+
+      /**
+       * If true, the orientation is horizontal; otherwise is vertical.
+       *
+       * @attribute horizontal
+       */
+      horizontal: {
+        type: Boolean,
+        value: false,
+        observer: '_horizontalChanged'
+      },
+
+      /**
+       * Set opened to true to show the collapse element and to false to hide it.
+       *
+       * @attribute opened
+       */
+      opened: {
+        type: Boolean,
+        value: false,
+        notify: true,
+        observer: '_openedChanged'
+      },
+
+      /**
+       * Set noAnimation to true to disable animations
+       *
+       * @attribute noAnimation
+       */
+      noAnimation: {
+        type: Boolean
+      },
+
+    },
+
+    get dimension() {
+      return this.horizontal ? 'width' : 'height';
+    },
+
+    hostAttributes: {
+      role: 'group',
+      'aria-hidden': 'true',
+      'aria-expanded': 'false'
+    },
+
+    listeners: {
+      transitionend: '_transitionEnd'
+    },
+
+    attached: function() {
+      // It will take care of setting correct classes and styles.
+      this._transitionEnd();
+    },
+
+    /**
+     * Toggle the opened state.
+     *
+     * @method toggle
+     */
+    toggle: function() {
+      this.opened = !this.opened;
+    },
+
+    show: function() {
+      this.opened = true;
+    },
+
+    hide: function() {
+      this.opened = false;
+    },
+
+    updateSize: function(size, animated) {
+      // No change!
+      if (this.style[this.dimension] === size) {
+        return;
+      }
+
+      this._updateTransition(false);
+      // If we can animate, must do some prep work.
+      if (animated && !this.noAnimation) {
+        // Animation will start at the current size.
+        var startSize = this._calcSize();
+        // For `auto` we must calculate what is the final size for the animation.
+        // After the transition is done, _transitionEnd will set the size back to `auto`.
+        if (size === 'auto') {
+          this.style[this.dimension] = size;
+          size = this._calcSize();
+        }
+        // Go to startSize without animation.
+        this.style[this.dimension] = startSize;
+        // Force layout to ensure transition will go. Set offsetHeight to itself
+        // so that compilers won't remove it.
+        this.offsetHeight = this.offsetHeight;
+        // Enable animation.
+        this._updateTransition(true);
+      }
+      // Set the final size.
+      this.style[this.dimension] = size;
+    },
+
+    /**
+     * enableTransition() is deprecated, but left over so it doesn't break existing code.
+     * Please use `noAnimation` property instead.
+     *
+     * @method enableTransition
+     * @deprecated since version 1.0.4
+     */
+    enableTransition: function(enabled) {
+      console.warn('`enableTransition()` is deprecated, use `noAnimation` instead.');
+      this.noAnimation = !enabled;
+    },
+
+    _updateTransition: function(enabled) {
+      this.style.transitionDuration = (enabled && !this.noAnimation) ? '' : '0s';
+    },
+
+    _horizontalChanged: function() {
+      this.style.transitionProperty = this.dimension;
+      var otherDimension = this.dimension === 'width' ? 'height' : 'width';
+      this.style[otherDimension] = '';
+      this.updateSize(this.opened ? 'auto' : '0px', false);
+    },
+
+    _openedChanged: function() {
+      this.setAttribute('aria-expanded', this.opened);
+      this.setAttribute('aria-hidden', !this.opened);
+
+      this.toggleClass('iron-collapse-closed', false);
+      this.toggleClass('iron-collapse-opened', false);
+      this.updateSize(this.opened ? 'auto' : '0px', true);
+
+      // Focus the current collapse.
+      if (this.opened) {
+        this.focus();
+      }
+      if (this.noAnimation) {
+        this._transitionEnd();
+      }
+    },
+
+    _transitionEnd: function() {
+      if (this.opened) {
+        this.style[this.dimension] = 'auto';
+      }
+      this.toggleClass('iron-collapse-closed', !this.opened);
+      this.toggleClass('iron-collapse-opened', this.opened);
+      this._updateTransition(false);
+      this.notifyResize();
+    },
+
+    _calcSize: function() {
+      return this.getBoundingClientRect()[this.dimension] + 'px';
+    }
+
+  });
+
+</script>
+
+
 <script>
 
   Polymer({
@@ -23876,7 +24074,7 @@ window.addEventListener('WebComponentsReady', function() {
     app.route = 'intervention';
     app.params = data.params;
   });
-  page('/rcReport/:rcId/', function(data) {
+  page('/rcReport/:intvId/:rcId/', function(data) {
     app.route = 'rcReport';
     app.params = data.params;
   });
@@ -26243,7 +26441,7 @@ window.addEventListener('WebComponentsReady', function() {
     // MOMENTS
 
     // keepLocalTime = true means only change the timezone, without
-    // affecting the local hour. So 5:31:26 +0300 --[utcOffset(2, true)]--\x3e
+    // affecting the local hour. So 5:31:26 +0300 --[utcOffset(2, true)]-->
     // 5:31:26 +0200 It is possible that 5:31:26 doesn't exist with offset
     // +0200, so we adjust the time as needed, to be valid.
     //
@@ -32272,7 +32470,7 @@ window.addEventListener('WebComponentsReady', function() {
             return false;
         }
         if (number < 0) {
-            // Negative Number --\x3e always true
+            // Negative Number --> always true
             return true;
         } else if (number < 10) {
             // Only 1 digit
@@ -32288,7 +32486,7 @@ window.addEventListener('WebComponentsReady', function() {
             }
             return eifelerRegelAppliesToNumber(lastDigit);
         } else if (number < 10000) {
-            // 3 or 4 digits --\x3e recursively check first digit
+            // 3 or 4 digits --> recursively check first digit
             while (number >= 10) {
                 number = number / 10;
             }
@@ -37149,6 +37347,144 @@ window.addEventListener('WebComponentsReady', function() {
   });
 })();
 
+</script><dom-module id="locations-autocomplete" assetpath="common/locations-autocomplete/">
+  <style>
+   iron-collapse {
+        box-shadow: 6px;
+    }
+
+    paper-button {
+        width: 100%;
+        text-transform: none;
+    }
+    .loading {
+      background-color: #ff00ff;
+    }
+    .alert {
+      border: 1px solid yellow;
+    }
+  </style>
+  <template>
+    <etools-ajax auto="" id="ajax" url="[[url]]" handle-as="text" on-response="handleResponse" debounce-duration="200">
+    </etools-ajax>
+    
+   
+    <paper-input-container invalid="{{has_value(value)}}">
+        <label>{{label}}</label>
+        <content select=".content"></content>
+        <input id="searchBox" class="paper-input-input" is="iron-input" bind-value="{{searchValue::input}}">
+    </paper-input-container>
+
+    <iron-collapse id="collapse">
+        <paper-material>
+            <div>
+                <template id="resultList" is="dom-repeat" items="{{choices}}">
+                    <paper-item>
+                        <paper-button on-tap="_selectItem">{{item.name}}</paper-button>
+                    </paper-item>
+                </template>
+            </div>
+        </paper-material>
+    </iron-collapse>
+      
+    
+  
+
+
+  
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'locations-autocomplete',
+    properties: {
+      autocompleteUrl: String,
+      url: {
+        type: String,
+        value: null
+      },
+      choices: Array,
+      label: String,
+      value: {
+        type: Object,
+      },
+      selectionChange: {
+        type: Boolean,
+        value: false
+      },
+      searchValue: {
+        type: String,
+        value: '',
+        observer: '_valueChangedDebounced'
+      },
+      loadingValues: {
+        type: Boolean,
+        value: false
+      }
+    },
+    ready: function() {
+        //
+    },
+    _valueChanged: function(e) {
+        if (this.selectionChange) {
+          this.selectionChange = false;
+          return;
+        }
+        this.value = null;
+        var collapse = this.$.collapse;
+        if (e !== undefined && e !== '') {
+          // trigger request
+          if (this.url !== this.autocompleteUrl + '?q=' + e) {
+            this.url = this.autocompleteUrl + '?q=' + e;
+            this.loadingValues = true;
+          }
+        } else
+        if (e === '' && collapse.opened) {
+            collapse.toggle();
+        }
+    },
+    _valueChangedDebounced: function(e) {
+      var callback = function() {
+        this._valueChanged(e);
+      };
+      this.debounce('locationChangedDebounce', callback, 500);
+    },
+    _selectItem: function(event) {
+        this.selectionChange = true;
+        this.set('searchValue', event.model.item.name);
+        this.set('value', event.model.item.id);
+        this.$.collapse.toggle();
+    },
+    changeUrl: function(){
+      
+      if (this.rcId){
+        this.rc = null;
+        this.url = this.appData.getEndpoint.resultChainDetails(this.rcId);
+      } else {
+        this.url = null;
+      }
+    },
+    handleResponse: function(rsp) {
+      var collapse = this.$.collapse;
+      this.loadingValues = false;
+      this.choices = rsp.detail.xhr.response;
+      this.$.resultList.render();
+      if (!collapse.opened && this.choices){
+        collapse.toggle();
+      }
+    },
+    has_value: function(e){
+      return (!e);
+    }
+  });
+})();
+
 </script><style is="custom-style">
   /*
    Polymer includes a shim for CSS Custom Properties that we can use for application theming.
@@ -37569,7 +37905,7 @@ window.addEventListener('WebComponentsReady', function() {
         intervention.results.forEach(function(el) {
           // el is the result_chain object
           // Make sure it's an indicator result
-          if (!el.indicator.id){
+          if (!el.indicator){
             return;
           }
           if (res[el.id]){
@@ -37587,7 +37923,7 @@ window.addEventListener('WebComponentsReady', function() {
         this.indicators = inds;
     },
     _goToReport: function(ev){
-      page(this.appData.baseUrl+'rcReport/'+ ev.currentTarget.rcId + '/');
+      page(this.appData.baseUrl+'rcReport/'+this.interventionId+'/'+ ev.currentTarget.rcId + '/');
 
     },
 
@@ -37629,10 +37965,10 @@ window.addEventListener('WebComponentsReady', function() {
       <p>Target = {{rc.target}}</p>
       <p>Indicator = {{rc.indicator.name}}</p>
   </div>
-
+  
   <div>
     <paper-button class="btn" on-tap="showNewReportDialog" raised="">Add Report</paper-button>
-    <template is="dom-repeat" items="{{rc.indicator_reports}}" as="report">
+    <template is="dom-repeat" items="{{indicatorReports}}" id="reports" as="report" sort="_sortDate">
         <div>
           <p>
             Reported on: {{dateFormat(report.modified, 'LL')}}, 
@@ -37647,13 +37983,18 @@ window.addEventListener('WebComponentsReady', function() {
       <p>Here we go </p>
       <paper-dialog-scrollable>
       <br>
-        <paper-input label="Total Playaz" type="number" id="reportTotal"></paper-input>
+        <paper-input label="Total Reporting" type="number" id="reportTotal"></paper-input>
+        <br>
+        <p>Location: 
+          <locations-autocomplete id="locationSelected" autocomplete-url="{{appData.locationsAutocompleteEp}}">
+          </locations-autocomplete>
+        </p>
         <br>
         <p>From: {{fromPrettyDate}}</p>
         <input id="fromDate" type="hidden" value="{{fromJsonDate}}">
         <etools-datepicker pretty-date="{{fromPrettyDate}}" json-date="{{fromJsonDate}}"></etools-datepicker>
 
-        <p>From: {{toPrettyDate}}</p>
+        <p>To: {{toPrettyDate}}</p>
         <input id="toDate" type="hidden" value="{{toJsonDate}}">
         <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{toJsonDate}}"></etools-datepicker>
         <br>
@@ -37691,6 +38032,11 @@ window.addEventListener('WebComponentsReady', function() {
         // appData is received from the parent
         value: {}
       },
+      interventionId: {
+        type: Number,
+        value: null,
+        observer: 'changeUrl'
+      },
       rcId: {
         type: Number,
         value: null,
@@ -37700,6 +38046,10 @@ window.addEventListener('WebComponentsReady', function() {
         type: Object,
         value: null,
         observer: 'update_view'
+      },
+      indicatorReports: {
+        type: Array,
+        value: null,
       },
       url: {
         type: String,
@@ -37712,11 +38062,10 @@ window.addEventListener('WebComponentsReady', function() {
     dateFormat: function(date, format) {
       return moment(date).format(format);
     },
-    changeUrl: function(){
-      
-      if (this.rcId){
+    changeUrl: function() {
+      if (this.rcId && this.interventionId){
         this.rc = null;
-        this.url = this.appData.getEndpoint.resultChainDetails(this.rcId);
+        this.url = this.appData.getEndpoint.resultChainDetails(this.interventionId, this.rcId);
       } else {
         this.url = null;
       }
@@ -37724,26 +38073,46 @@ window.addEventListener('WebComponentsReady', function() {
     handleResponse: function(rsp) {
       //
       this.rc = rsp.detail.xhr.response;
+      this.indicatorReports = this.rc.indicator_reports;
       console.log(this.rc);
 
     },
     handleSubmitResponse: function(rsp){
-      console.log(rsp.detail.xhr.response);
+      console.log('handling submit', rsp.detail.xhr.response);
+      this.set('indicatorReports', this.rc.indicator_reports.concat([rsp.detail.xhr.response]));
+      this.rc.indicator_reports.push(rsp.detail.xhr.response);
+      this.$.reports.render();
     },
-    handleSubmitError: function(rsp){
+    handleSubmitError: function(rsp) {
       console.log(rsp.detail.error);
+    },
+    _validateSubmision: function() {
+      if (!this.$.locationSelected.value){
+        window.alert('location needed');
+        return false;
+      }
+      if (!this.$.reportTotal.value){
+        window.alert('Report number needed');
+        return false;
+      }
+      return true;
     },
     _submitReport: function() {
       var myReq = this.$.ajaxPost;
+      //TODO: Validate for location
+      if (!this._validateSubmision()){
+        return;
+      }
       myReq.body = {
         'result_chain': this.rcId,
         'disaggregation': {},
         'total': this.$.reportTotal.value,
-        'from_date': this.$.fromDate.value,
-        'to_date': this.$.toDate.value
+        'start': this.$.fromDate.value,
+        'end': this.$.toDate.value,
+        'location': this.$.locationSelected.value
       };
       myReq.method = 'POST';
-      myReq.url = this.appData.newIndicatorReportEp;
+      myReq.url = this.appData.getEndpoint.newIndicatorReport(this.interventionId, this.rcId);
       myReq.sendPostRequest();
     },
     showNewReportDialog: function() {
@@ -37769,6 +38138,10 @@ window.addEventListener('WebComponentsReady', function() {
 
       // assuuming we have params otherwise we would not get to this view
 
+    },
+    _sortDate: function(a, b) {
+      return a.modified < b.modified ? 1 : -1;
+      //return a.total < b.total ? 1 : -1;
     }
   });
 })();
