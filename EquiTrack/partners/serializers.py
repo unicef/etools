@@ -112,7 +112,7 @@ class ResultChainDetailsSerializer(serializers.ModelSerializer):
 
 class InterventionSerializer(serializers.ModelSerializer):
 
-    pca_id = serializers.CharField(source='id')
+    # pca_id = serializers.CharField(source='id')
     pca_title = serializers.CharField(source='title')
     pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')

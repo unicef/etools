@@ -258,7 +258,15 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        try:
+            managers = request.data['unicef_managers']
+        except KeyError:
+            managers = []
+
         serializer.instance = serializer.save()
+
+        for man in managers:
+            serializer.instance.unicef_managers.add(man)
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED,
