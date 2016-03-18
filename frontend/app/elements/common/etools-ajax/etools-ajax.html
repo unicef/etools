@@ -26,7 +26,8 @@ Example:
           on-error="handleError"
           method="[[method]]"
           params="[[params]]"
-          debounce-duration="300">
+          debounce-duration="300"
+          loading="{{loading}}">
     </iron-ajax>
   </template>
 
@@ -44,6 +45,10 @@ Example:
       authToken: {
         type: String,
         value: ''
+      },
+      loading: {
+        type: Boolean,
+        notify: true
       },
       method: {
         type: String,

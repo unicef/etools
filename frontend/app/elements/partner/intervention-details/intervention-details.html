@@ -8,19 +8,35 @@
 
 
 <dom-module id="intervention-details">
-
   <template>
+  <style>
+  :host {
+    
+  }
+  paper-card {
+    @apply(--layout-horizontal);
+    /*@apply(--layout-center);*/
+    width: 80%;
+    min-width: 260px;
+    /*margin: 0 auto;*/
+  }
+
+  
+  </style>
     <etools-ajax
           auto
           id="ajax"
           url="[[url]]"
           handle-as="json"
           on-response="handleResponse"
-          debounce-duration="300">
+          debounce-duration="300"
+          loading="{{pageLoading}}">
     </etools-ajax>
    
   <h2>{{intervention.title}}</h2>
-
+  <h1 hidden$="[[!pageLoading]]">
+      Page is loading now...
+  </h1>
   
   <paper-card heading="All Indicators" image="" elevation="1" animated-shadow="false">
     <div class="card-content">
@@ -84,6 +100,7 @@
         // appData is received from the parent
         value: {}
       },
+      pageLoading: Boolean,
       interventionId: {
         type: Number,
         value: null,
@@ -108,7 +125,6 @@
       }
     },
     changeUrl: function(){
-      
       if (this.interventionId){
         this.intervention = null;
         this.indicators = null;
@@ -130,47 +146,45 @@
           if (!el.indicator){
             return;
           }
-          inds.push(el)
+          inds.push(el);
           if (tempOutputs[el.result.id]){
-            tempOutputs[el.result.id].indicators.push(el)
+            tempOutputs[el.result.id].indicators.push(el);
           } else {
             tempOutputs[el.result.id] = {};
             tempOutputs[el.result.id].output = el.result;
             tempOutputs[el.result.id].indicators = [el];
-          };
+          }
 
         });
-        console.log(tempOutputs);
-        console.log(inds);
-        
         var outputs = [];
         _.each(tempOutputs, function(value) {
             outputs.push(value);
         });
-        console.log(outputs);
         this.indicators = inds;
         this.outputs = outputs;
     },
     _goToReport: function(ev){
+      // go to the reporting page
       page(this.appData.baseUrl+'rcReport/'+this.interventionId+'/'+ ev.currentTarget.rcId + '/');
 
     },
-
     handleResponse: function(rsp) {
+      // handle the response from the server
       this.intervention = rsp.detail.xhr.response;
     },
-
     _emptyObject: function(obj) {
+      // for validation return false if object has no keys
       return (typeof(obj) === 'object') ? Object.keys(obj).length : false;
     },
     _toArray: function(obj) {
-            return Object.keys(obj).map(function(key) {
-                return {
-                    name: key,
-                    value: obj[key]
-                };
-            });
-        }
+      // transform object to array
+      return Object.keys(obj).map(function(key) {
+          return {
+              name: key,
+              value: obj[key]
+          };
+      });
+    }
   });
 })();
 
