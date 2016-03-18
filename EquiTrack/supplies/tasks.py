@@ -51,7 +51,7 @@ def set_unisupply_user(username, password):
         {
             "_id": username,
             "type": "user",
-            "channels": ["users"],
+            "country": connection.schema_name,
             "username": username,
             "password": password,
             "organisation": username,

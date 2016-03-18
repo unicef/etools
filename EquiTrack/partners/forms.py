@@ -322,11 +322,6 @@ class AgreementForm(UserGroupForm):
                     )}
                 )
 
-        if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
-            raise ValidationError(
-                _(u'Please provide the agreement reference for this {}'.format(agreement_type))
-            )
-
         if agreement_type == Agreement.PCA and partner.partner_type != u'Civil Society Organization':
             raise ValidationError(
                 _(u'Only Civil Society Organizations can sign Programme Cooperation Agreements')

@@ -17,6 +17,7 @@ dependencies:
     - docker build -t unicef/etools:builder -f etools-build.docker .
     - docker run --rm -v "$(pwd)":/application -v "$(pwd)"/wheelhouse:/wheelhouse unicef/etools:builder
     - docker build -t unicef/equitrack:$CIRCLE_BRANCH -f etools-run.docker .
+    - cd couchbase; docker build -t unicef/equitrack:sync-gateway -f etools-sync-gateway.docker .
 
 test:
   pre: # bootstrap postgres to accept connections from our container
@@ -32,12 +33,7 @@ test:
 
 deployment:
   hub:
-    branch: develop
+    branch: [develop, master]
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker push unicef/equitrack:develop
-
-    branch: master
-    commands:
-      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker push unicef/equitrack:master
+      - docker push unicef/equitrack
