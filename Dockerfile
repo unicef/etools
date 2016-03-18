@@ -18,5 +18,7 @@ RUN python manage.py collectstatic --noinput
 
 # Start everything
 ENV PORT 8080
-EXPOSE $PORT
 ENV C_FORCE_ROOT true
+CMD newrelic-admin run-program gunicorn EquiTrack.wsgi -b "0.0.0.0:$PORT" -w 4 --timeout=3200 --log-level debug
+EXPOSE $PORT
+
