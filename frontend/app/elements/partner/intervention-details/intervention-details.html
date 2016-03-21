@@ -1,5 +1,9 @@
 
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-pages/iron-pages.html">
+<link rel="import" href="../../../bower_components/paper-tabs/paper-tabs.html">
+<link rel="import" href="../../../bower_components/paper-material/paper-material.html">
+
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../../common/etools-ajax/etools-ajax.html">
@@ -13,13 +17,22 @@
   :host {
     
   }
-  paper-card {
-    @apply(--layout-horizontal);
-    /*@apply(--layout-center);*/
-    width: 80%;
-    min-width: 260px;
-    /*margin: 0 auto;*/
+  :root {
+      --paper-tab-ink: var(--default-primary-color);
+
+      /* custom CSS property */
+      --paper-tabs-selection-bar-color: blue;
+
+      /* custom CSS mixin */
+      --paper-tabs: {
+          color: var(--default-primary-color); /* variable defined in default-theme.html */
+      }
   }
+   paper-material {
+      padding: 1%;
+      background-color: var(--primary-background-color);
+
+  } 
 
   
   </style>
@@ -32,37 +45,23 @@
           debounce-duration="300"
           loading="{{pageLoading}}">
     </etools-ajax>
-   
+
   <h2>{{intervention.title}}</h2>
   <h1 hidden$="[[!pageLoading]]">
       Page is loading now...
   </h1>
-  
-  <paper-card heading="All Indicators" image="" elevation="1" animated-shadow="false">
-    <div class="card-content">
-      <template is="dom-repeat" items="[[indicators]]" as="rc">
-        <div on-tap="_goToReport" rc-id="{{rc.id}}">
-          <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
-          <div>Partner Target Total: {{rc.target}}</div>
-          <div>Partner Current Total: {{rc.current_progress}}</div>
-          <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
-            <div>
-              <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
-                  <span>{{item.name}}, </span>
-              </template>
-            </div>
-          </div>
-        </div>  
-        <br>
-      </template>
-    </div>
-  </paper-card>
-  <br> <br> <br>
-  <paper-card heading="By Output" image="" elevation="1" animated-shadow="false">
-    <div class="card-content">
-      <template is="dom-repeat" items="[[outputs]]" as="out">
-        <h3> Output: [[out.output.name]]</h3>
-        <template is="dom-repeat" items="[[out.indicators]]" as="rc">
+  <paper-tabs selected="{{selectedTab}}">
+
+        <paper-tab>Indicators</paper-tab>
+        <paper-tab>Report</paper-tab>
+
+    </paper-tabs>
+    <iron-pages selected="{{selectedTab}}">
+
+
+      <section>
+        <paper-material elevation="1">
+          <template is="dom-repeat" items="[[indicators]]" as="rc">
             <div on-tap="_goToReport" rc-id="{{rc.id}}">
               <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
               <div>Partner Target Total: {{rc.target}}</div>
@@ -77,11 +76,38 @@
             </div>  
             <br>
           </template>
-        <br>
-      </template>
-    </div>
-  </paper-card>
+        </paper-material>
+      </section>
+
+      <section>
+        <paper-material  elevation="1">
+          <template is="dom-repeat" items="[[outputs]]" as="out">
+            <h3> Output: [[out.output.name]]</h3>
+            <template is="dom-repeat" items="[[out.indicators]]" as="rc">
+                <div on-tap="_goToReport" rc-id="{{rc.id}}">
+                  <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
+                  <div>Partner Target Total: {{rc.target}}</div>
+                  <div>Partner Current Total: {{rc.current_progress}}</div>
+                  <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
+                    <div>
+                      <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
+                          <span>{{item.name}}, </span>
+                      </template>
+                    </div>
+                  </div>
+                </div>  
+                <br>
+              </template>
+            <br>
+          </template>
+        </paper-material>
+      </section>
+
       
+
+    </iron-pages>
+  
+  
 
   </template>
 
@@ -95,6 +121,10 @@
   Polymer({
     is: 'intervention-details',
     properties: {
+      selectedTab: {
+        type: Number,
+        value: 0
+      },
       appData: {
         type: Object,
         // appData is received from the parent

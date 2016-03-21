@@ -2,6 +2,7 @@
 Global behavior definition
 -->
 <script>
+'use strict';
 var commonBv = commonBv || {};
 
 commonBv.utils = {
@@ -11,7 +12,7 @@ commonBv.utils = {
   dateFormat: function(date, format) {
     return moment(date).format(format);
   },
-  underscoreless: function(s){
+  underscoreless: function(s) {
     return s.replace('_',' ');
   }
 };
