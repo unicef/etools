@@ -1,0 +1,67 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+
+<link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
+
+
+
+
+<dom-module id="timeframe-picker">
+  <template>
+  <style>
+  #timeFrame {
+    @apply(--layout-horizontal);
+  }
+  #timeFrame div {
+    padding: 10px;
+  }
+  .label {
+    font-weight: bold;
+  }
+  etools-datepicker {
+    @apply(--layout-horizontal);
+  }
+  </style>
+  <div id="timeFrame">
+    <div>
+      <p class="label">{{label}}:</p>
+    </div>
+    
+    <div>
+      <p>
+        From: {{fromPrettyDate}}
+        <etools-datepicker pretty-date="{{fromPrettyDate}}" json-date="{{from}}"></etools-datepicker>
+      </p>
+    </div>
+
+    <div>
+      <p>
+        To: {{toPrettyDate}}
+        <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{to}}"></etools-datepicker>
+      </p>
+    </div>
+  </div>
+  
+
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'timeframe-picker',
+    properties: {
+      from: Date,
+      to: Date,
+      label: String
+    },
+    
+  });
+})();
+
+</script>
