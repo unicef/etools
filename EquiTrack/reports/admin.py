@@ -141,7 +141,8 @@ class ResultAdmin(MPTTModelAdmin):
     list_filter = (
         'result_structure',
         'sector',
-        'result_type'
+        'result_type',
+        'hidden',
     )
     list_display = (
         '__unicode__',
@@ -150,7 +151,10 @@ class ResultAdmin(MPTTModelAdmin):
         'wbs',
     )
 
-    actions = ('hide_results',)
+    actions = (
+    	'hide_results',
+    	'show_results'
+    )
 
     def get_queryset(self, request):
         queryset = super(ResultAdmin, self).get_queryset(request)
@@ -161,6 +165,13 @@ class ResultAdmin(MPTTModelAdmin):
         for result in queryset:
             result.hidden = True
             result.save()
+            
+    def show_results(self, request, queryset):
+
+        for result in queryset:
+            result.hidden = False
+            result.save()
+
 
 admin.site.register(Result, ResultAdmin)
 admin.site.register(ResultStructure, ImportExportModelAdmin)
