@@ -996,7 +996,7 @@ class ResultChain(models.Model):
     in_kind_amount = models.IntegerField(default=0)
 
     # variable disaggregation's that may be present in the work plan
-    disaggregation = HStoreField(null=True)
+    disaggregation = JSONField(null=True)
 
     @property
     def total(self):

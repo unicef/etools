@@ -152,7 +152,7 @@ class Indicator(models.Model):
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
     unit = models.ForeignKey(Unit, null=True, blank=True)
 
@@ -176,6 +176,7 @@ class Indicator(models.Model):
 
     class Meta:
         ordering = ['name']
+        unique_together = (("name", "result", "sector"),)
 
     def __unicode__(self):
         return u'{} {} {}'.format(
