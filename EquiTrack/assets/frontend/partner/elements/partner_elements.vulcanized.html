@@ -21857,6 +21857,368 @@ styles. All other styles should exist as single lines."
     });
   </script>
 </dom-module>
+<script>
+
+ /**
+ * `iron-range-behavior` provides the behavior for something with a minimum to maximum range.
+ *
+ * @demo demo/index.html
+ * @polymerBehavior
+ */
+ Polymer.IronRangeBehavior = {
+
+  properties: {
+
+    /**
+     * The number that represents the current value.
+     */
+    value: {
+      type: Number,
+      value: 0,
+      notify: true,
+      reflectToAttribute: true
+    },
+
+    /**
+     * The number that indicates the minimum value of the range.
+     */
+    min: {
+      type: Number,
+      value: 0,
+      notify: true
+    },
+
+    /**
+     * The number that indicates the maximum value of the range.
+     */
+    max: {
+      type: Number,
+      value: 100,
+      notify: true
+    },
+
+    /**
+     * Specifies the value granularity of the range's value.
+     */
+    step: {
+      type: Number,
+      value: 1,
+      notify: true
+    },
+
+    /**
+     * Returns the ratio of the value.
+     */
+    ratio: {
+      type: Number,
+      value: 0,
+      readOnly: true,
+      notify: true
+    },
+  },
+
+  observers: [
+    '_update(value, min, max, step)'
+  ],
+
+  _calcRatio: function(value) {
+    return (this._clampValue(value) - this.min) / (this.max - this.min);
+  },
+
+  _clampValue: function(value) {
+    return Math.min(this.max, Math.max(this.min, this._calcStep(value)));
+  },
+
+  _calcStep: function(value) {
+   /**
+    * if we calculate the step using
+    * `Math.round(value / step) * step` we may hit a precision point issue
+    * eg. 0.1 * 0.2 =  0.020000000000000004
+    * http://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
+    *
+    * as a work around we can divide by the reciprocal of `step`
+    */
+    // polymer/issues/2493
+    value = parseFloat(value);
+    return this.step ? (Math.round((value + this.min) / this.step) -
+        (this.min / this.step)) / (1 / this.step) : value;
+  },
+
+  _validateValue: function() {
+    var v = this._clampValue(this.value);
+    this.value = this.oldValue = isNaN(v) ? this.oldValue : v;
+    return this.value !== v;
+  },
+
+  _update: function() {
+    this._validateValue();
+    this._setRatio(this._calcRatio(this.value) * 100);
+  }
+
+};
+</script>
+
+
+<dom-module id="paper-progress" assetpath="../bower_components/paper-progress/">
+  <template>
+    <style>
+      :host {
+        display: block;
+        width: 200px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      #progressContainer {
+        position: relative;
+      }
+
+      #progressContainer,
+      /* the stripe for the indeterminate animation*/
+      .indeterminate::after {
+        height: var(--paper-progress-height, 4px);
+      }
+
+      #primaryProgress,
+      #secondaryProgress,
+      .indeterminate::after {
+        @apply(--layout-fit);
+      }
+
+      #progressContainer,
+      .indeterminate::after {
+        background-color: var(--paper-progress-container-color, --google-grey-300);
+      }
+
+      :host(.transiting) #primaryProgress,
+      :host(.transiting) #secondaryProgress {
+        -webkit-transition-property: -webkit-transform;
+        transition-property: transform;
+
+        /* Duration */
+        -webkit-transition-duration: var(--paper-progress-transition-duration, 0.08s);
+        transition-duration: var(--paper-progress-transition-duration, 0.08s);
+
+        /* Timing function */
+        -webkit-transition-timing-function: var(--paper-progress-transition-timing-function, ease);
+        transition-timing-function: var(--paper-progress-transition-timing-function, ease);
+
+        /* Delay */
+        -webkit-transition-delay: var(--paper-progress-transition-delay, 0s);
+        transition-delay: var(--paper-progress-transition-delay, 0s);
+      }
+
+      #primaryProgress,
+      #secondaryProgress {
+        @apply(--layout-fit);
+        -webkit-transform-origin: left center;
+        transform-origin: left center;
+        -webkit-transform: scaleX(0);
+        transform: scaleX(0);
+        will-change: transform;
+      }
+
+      #primaryProgress {
+        background-color: var(--paper-progress-active-color, --google-green-500);
+      }
+
+      #secondaryProgress {
+        position: relative;
+        background-color: var(--paper-progress-secondary-color, --google-green-100);
+      }
+
+      :host([disabled]) #primaryProgress {
+        background-color: var(--paper-progress-disabled-active-color, --google-grey-500);
+      }
+
+      :host([disabled]) #secondaryProgress {
+        background-color: var(--paper-progress-disabled-secondary-color, --google-grey-300);
+      }
+
+      :host(:not([disabled])) #primaryProgress.indeterminate {
+        -webkit-transform-origin: right center;
+        transform-origin: right center;
+        -webkit-animation: indeterminate-bar 2s linear infinite;
+        animation: indeterminate-bar 2s linear infinite;
+      }
+
+      :host(:not([disabled])) #primaryProgress.indeterminate::after {
+        content: "";
+        -webkit-transform-origin: center center;
+        transform-origin: center center;
+
+        -webkit-animation: indeterminate-splitter 2s linear infinite;
+        animation: indeterminate-splitter 2s linear infinite;
+      }
+
+      @-webkit-keyframes indeterminate-bar {
+        0% {
+          -webkit-transform: scaleX(1) translateX(-100%);
+        }
+        50% {
+          -webkit-transform: scaleX(1) translateX(0%);
+        }
+        75% {
+          -webkit-transform: scaleX(1) translateX(0%);
+          -webkit-animation-timing-function: cubic-bezier(.28,.62,.37,.91);
+        }
+        100% {
+          -webkit-transform: scaleX(0) translateX(0%);
+        }
+      }
+
+      @-webkit-keyframes indeterminate-splitter {
+        0% {
+          -webkit-transform: scaleX(.75) translateX(-125%);
+        }
+        30% {
+          -webkit-transform: scaleX(.75) translateX(-125%);
+          -webkit-animation-timing-function: cubic-bezier(.42,0,.6,.8);
+        }
+        90% {
+          -webkit-transform: scaleX(.75) translateX(125%);
+        }
+        100% {
+          -webkit-transform: scaleX(.75) translateX(125%);
+        }
+      }
+
+      @keyframes indeterminate-bar {
+        0% {
+          transform: scaleX(1) translateX(-100%);
+        }
+        50% {
+          transform: scaleX(1) translateX(0%);
+        }
+        75% {
+          transform: scaleX(1) translateX(0%);
+          animation-timing-function: cubic-bezier(.28,.62,.37,.91);
+        }
+        100% {
+          transform: scaleX(0) translateX(0%);
+        }
+      }
+
+      @keyframes indeterminate-splitter {
+        0% {
+          transform: scaleX(.75) translateX(-125%);
+        }
+        30% {
+          transform: scaleX(.75) translateX(-125%);
+          animation-timing-function: cubic-bezier(.42,0,.6,.8);
+        }
+        90% {
+          transform: scaleX(.75) translateX(125%);
+        }
+        100% {
+          transform: scaleX(.75) translateX(125%);
+        }
+      }
+    </style>
+
+    <div id="progressContainer">
+      <div id="secondaryProgress" hidden$="[[_hideSecondaryProgress(secondaryRatio)]]"></div>
+      <div id="primaryProgress"></div>
+    </div>
+  </template>
+</dom-module>
+
+<script>
+  Polymer({
+    is: 'paper-progress',
+
+    behaviors: [
+      Polymer.IronRangeBehavior
+    ],
+
+    properties: {
+      /**
+       * The number that represents the current secondary progress.
+       */
+      secondaryProgress: {
+        type: Number,
+        value: 0
+      },
+
+      /**
+       * The secondary ratio
+       */
+      secondaryRatio: {
+        type: Number,
+        value: 0,
+        readOnly: true
+      },
+
+      /**
+       * Use an indeterminate progress indicator.
+       */
+      indeterminate: {
+        type: Boolean,
+        value: false,
+        observer: '_toggleIndeterminate'
+      },
+
+      /**
+       * True if the progress is disabled.
+       */
+      disabled: {
+        type: Boolean,
+        value: false,
+        reflectToAttribute: true,
+        observer: '_disabledChanged'
+      }
+    },
+
+    observers: [
+      '_progressChanged(secondaryProgress, value, min, max)'
+    ],
+
+    hostAttributes: {
+      role: 'progressbar'
+    },
+
+    _toggleIndeterminate: function(indeterminate) {
+      // If we use attribute/class binding, the animation sometimes doesn't translate properly
+      // on Safari 7.1. So instead, we toggle the class here in the update method.
+      this.toggleClass('indeterminate', indeterminate, this.$.primaryProgress);
+    },
+
+    _transformProgress: function(progress, ratio) {
+      var transform = 'scaleX(' + (ratio / 100) + ')';
+      progress.style.transform = progress.style.webkitTransform = transform;
+    },
+
+    _mainRatioChanged: function(ratio) {
+      this._transformProgress(this.$.primaryProgress, ratio);
+    },
+
+    _progressChanged: function(secondaryProgress, value, min, max) {
+      secondaryProgress = this._clampValue(secondaryProgress);
+      value = this._clampValue(value);
+
+      var secondaryRatio = this._calcRatio(secondaryProgress) * 100;
+      var mainRatio = this._calcRatio(value) * 100;
+
+      this._setSecondaryRatio(secondaryRatio);
+      this._transformProgress(this.$.secondaryProgress, secondaryRatio);
+      this._transformProgress(this.$.primaryProgress, mainRatio);
+
+      this.secondaryProgress = secondaryProgress;
+
+      this.setAttribute('aria-valuenow', value);
+      this.setAttribute('aria-valuemin', min);
+      this.setAttribute('aria-valuemax', max);
+    },
+
+    _disabledChanged: function(disabled) {
+      this.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+    },
+
+    _hideSecondaryProgress: function(secondaryRatio) {
+      return secondaryRatio === 0;
+    }
+  });
+</script>
 //     Underscore.js 1.8.3
 //     http://underscorejs.org
 //     (c) 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters &amp; Editors
@@ -37892,11 +38254,6 @@ window.addEventListener('WebComponentsReady', function() {
   <template>
   <style is="custom-style" include="paper-date-picker-dialog-style">
   </style>
-  
-    
-  
-     <section>
-      
       <paper-button class="btn" on-tap="showDialog" raised="">Change</paper-button>
 
       <paper-dialog id="dialog" class="paper-date-picker-dialog" modal="" on-iron-overlay-closed="dismissDialog">
@@ -37906,9 +38263,6 @@ window.addEventListener('WebComponentsReady', function() {
           <paper-button dialog-confirm="">OK</paper-button>
         </div>
       </paper-dialog>
-    </section>
-   
-  
   
   </template>
 
@@ -38038,7 +38392,6 @@ window.addEventListener('WebComponentsReady', function() {
         value: null
       },
       choices: Array,
-      label: String,
       value: {
         type: Object,
       },
@@ -38054,6 +38407,10 @@ window.addEventListener('WebComponentsReady', function() {
       loadingValues: {
         type: Boolean,
         value: false
+      },
+      label: {
+        type: String,
+        value: ''
       }
     },
     ready: function() {
@@ -38113,6 +38470,63 @@ window.addEventListener('WebComponentsReady', function() {
   });
 })();
 
+</script><dom-module id="timeframe-picker" assetpath="common/timeframe-picker/">
+  <template>
+  <style>
+  #timeFrame {
+    @apply(--layout-horizontal);
+  }
+  #timeFrame div {
+    padding: 10px;
+  }
+  .label {
+    font-weight: bold;
+  }
+  etools-datepicker {
+    @apply(--layout-horizontal);
+  }
+  </style>
+  <div id="timeFrame">
+    <div>
+      <p class="label">{{label}}:</p>
+    </div>
+    
+    <div>
+      <p>
+        From: {{fromPrettyDate}}
+        <etools-datepicker pretty-date="{{fromPrettyDate}}" json-date="{{from}}"></etools-datepicker>
+      </p>
+    </div>
+
+    <div>
+      <p>
+        To: {{toPrettyDate}}
+        <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{to}}"></etools-datepicker>
+      </p>
+    </div>
+  </div>
+  
+
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'timeframe-picker',
+    properties: {
+      from: Date,
+      to: Date,
+      label: String
+    },
+    
+  });
+})();
+
 </script><style is="custom-style">
   /*
    Polymer includes a shim for CSS Custom Properties that we can use for application theming.
@@ -38130,6 +38544,7 @@ window.addEventListener('WebComponentsReady', function() {
     --accent-color: #FF4081;
     /*--primary-background-color: #c5cae9;*/
     --primary-background-color: #ffffff;
+    --secondary-background-color: #efefef;
     --primary-text-color: #212121;
     --secondary-text-color: #727272;
     --disabled-text-color: #bdbdbd;
@@ -38622,9 +39037,52 @@ commonBv.utils = {
       padding: 1%;
       background-color: var(--primary-background-color);
 
-  } 
-
-  
+  }
+  .bulkReportIndicator {
+    @apply(--layout-horizontal);
+  }
+  .progressBlock {
+    @apply(--layout-horizontal);
+    @apply(--layout-center);
+  }
+  .progressBlock p {
+    padding-left: 4px;
+    font-size: 80%;
+    color: var(--primary-text-color);
+  }
+  .outputTitle {
+    font-style: italic;
+    color: var(--secondary-text-color);
+    font-size: 120%;
+  }
+  .outputBlock {
+    padding: 10px;
+    margin-top: 10px;
+  }
+  .outputBlock :after{
+    content: '';
+  }
+  .indicatorsBlock, .indicatorReportBlock {
+    padding-left: 2%;
+  }
+  .indicatorName {
+    font-weight: bold;
+  }
+  paper-progress {
+    --paper-progress-height: 6px;
+  }
+  paper-progress.blue {
+    --paper-progress-active-color: var(--paper-light-blue-500);
+    --paper-progress-secondary-color: var(--paper-light-blue-100);
+  }
+  paper-progress.red {
+    --paper-progress-active-color: var(--paper-red-500);
+    --paper-progress-secondary-color: var(--paper-red-100);
+  }
+  paper-progress.green {
+    --paper-progress-active-color: var(--paper-light-green-500);
+    --paper-progress-secondary-color: var(--paper-light-green-100);
+  }
   </style>
     <etools-ajax auto="" id="ajax" url="[[url]]" handle-as="json" on-response="handleResponse" debounce-duration="300" loading="{{pageLoading}}">
     </etools-ajax>
@@ -38664,27 +39122,40 @@ commonBv.utils = {
 
       <section>
         <paper-material elevation="1">
-          <template is="dom-repeat" items="[[outputs]]" as="out">
-            <h3> Output: [[out.output.name]]</h3>
-            <template is="dom-repeat" items="[[out.indicators]]" as="rc">
-                <div on-tap="_goToReport" rc-id="{{rc.id}}">
-                  <h4>Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
-                  <div>Partner Target Total: {{rc.target}}</div>
-                  <div>Partner Current Total: {{rc.current_progress}}</div>
-                  <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
-                    <div>
-                      <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
-                          <span>{{item.name}}, </span>
-                      </template>
-                    </div>
+        <div>
+          <timeframe-picker label="Reporting Period" class="timeFrame"></timeframe-picker>
+        </div>
+        <hr>
+        <template is="dom-repeat" items="[[outputs]]" as="out">
+          <div class="outputBlock">
+            <p class="outputTitle">[[out.output.name]]</p>
+            <div class="indicatorsBlock">
+
+              <template is="dom-repeat" items="[[out.indicators]]" as="rc">
+                <p class="indicatorName">{{rc.indicator.name}} - <span on-tap="_goToReport" rc-id="{{rc.id}}">individual report</span></p>
+                <div class="indicatorReportBlock">
+                  <div class="progressBlock">
+                    <paper-progress value="{{rc.current_progress}}" max="{{rc.target}}" class="blue"></paper-progress>
+                    <p> {{rc.current_progress}}/{{rc.target}}</p>
                   </div>
-                </div>  
+                  <progress-bar current="{{rc.current_progress}}" against="{{rc.target}}"></progress-bar>
+                  <div class="bulkReportIndicator">
+                    <paper-input type="number" label="Total"></paper-input><span>&nbsp;</span>
+                    <locations-autocomplete id="locationSelected" label="Location" autocomplete-url="{{appData.locationsAutocompleteEp}}">
+                    </locations-autocomplete><span>&nbsp;</span>
+                  </div>
+                </div>
                 <br>
               </template>
-            <br>
-          </template>
-        </paper-material>
-      </section>
+
+            </div>
+          </div>   
+        </template>
+
+        <div class="reportButtons">
+          <paper-button raised="" disabled="{{submitDisabled}}">Submit Report</paper-button>
+        
+      </div></paper-material></section>
 
       
 

@@ -51,11 +51,12 @@
   }
   .outputTitle {
     font-style: italic;
+    color: var(--secondary-text-color);
+    font-size: 120%;
   }
   .outputBlock {
     padding: 10px;
     margin-top: 10px;
-    background-color: var(--secondary-background-color);
   }
   .outputBlock :after{
     content: '';
@@ -131,10 +132,11 @@
           <timeframe-picker label="Reporting Period" class="timeFrame"></timeframe-picker>
         </div>
         <hr>
-          <template is="dom-repeat" items="[[outputs]]" as="out">
+        <template is="dom-repeat" items="[[outputs]]" as="out">
           <div class="outputBlock">
-            <p class="outputTitle"> Output: [[out.output.name]]</p>
+            <p class="outputTitle">[[out.output.name]]</p>
             <div class="indicatorsBlock">
+
               <template is="dom-repeat" items="[[out.indicators]]" as="rc">
                 <p class="indicatorName">{{rc.indicator.name}} - <span on-tap="_goToReport" rc-id="{{rc.id}}">individual report</span></p>
                 <div class="indicatorReportBlock">
@@ -152,10 +154,13 @@
                 </div>
                 <br>
               </template>
+
             </div>
-          </div>
-            
-          </template>
+          </div>   
+        </template>
+
+        <div class="reportButtons">
+          <paper-button raised disabled={{submitDisabled}}>Submit Report</paper-button>
         </paper-material>
       </section>
 
