@@ -6,6 +6,7 @@
 
 <link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
 <link rel="import" href="../../common/timeframe-picker/timeframe-picker.html">
+<link rel="import" href="../value-breakdown/value-breakdown.html">
 
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../../bower_components/paper-card/paper-card.html">
@@ -146,7 +147,8 @@
                   </div>
                   <progress-bar current="{{rc.current_progress}}" against="{{rc.target}}"></progress-bar>
                   <div class="bulkReportIndicator">
-                    <paper-input type="number" label="Total"></paper-input><span>&nbsp;</span>
+                    <value-breakdown></value-breakdown><span>&nbsp;</span>
+                    <!-- <paper-input type="number" label="Total"></paper-input><span>&nbsp;</span> -->
                     <locations-autocomplete id="locationSelected" label="Location"
                         autocomplete-url="{{appData.locationsAutocompleteEp}}">
                     </locations-autocomplete><span>&nbsp;</span>
