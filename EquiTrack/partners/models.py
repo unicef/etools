@@ -684,6 +684,7 @@ class PCA(AdminURLMixin, models.Model):
     def reference_number(self):
         year = self.year
         objects = list(PCA.objects.filter(
+        	partner=self.partner,
             created_at__year=year,
             partnership_type=self.partnership_type
         ).order_by('created_at').values_list('id', flat=True))
@@ -752,17 +753,29 @@ class AmendmentLog(TimeStampedModel):
             self.amended_at
         )
 
-    def save(self, **kwargs):
-        """
+	@property
+    def amendment_number(self):
+    	"""
         Increment amendment number automatically
         """
-        previous = AmendmentLog.objects.filter(
+        objects = list(AmendmentLog.objects.filter(
             partnership=self.partnership
-        ).order_by('-amendment_number')
+        ).order_by('-created').values_list('id', flat=True))
 
-        self.amendment_number = (previous[0].amendment_number + 1) if previous else 1
+        return '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+        
+        
+class AgreementAmendmentLog(AmendmentLog):
 
-        super(AmendmentLog, self).save(**kwargs)
+	partnership = models.ForeignKey(Agreement, related_name='amendments_log')
+    type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            'Authorised Officers', 
+            'Banking Info',
+            'Agreement Changes',
+            'Additional Clauses',
+        ))
 
 
 class PartnershipBudget(TimeStampedModel):
