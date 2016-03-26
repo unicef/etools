@@ -1,0 +1,105 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
+<link rel="import" href="../../common/etools-datepicker/etools-datepicker.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../../bower_components/iron-list/iron-list.html">
+
+<link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+
+<link rel="import" href="../../../bower_components/moment-element/moment-with-locales-import.html">
+
+  
+
+
+<dom-module id="input-recursive">
+  <style>
+    div {
+      padding-left: 10px;
+    }
+  </style>
+  <template>
+  <div>
+    <p>{{breakdown.breakdownName}}</p>
+    <template is="dom-repeat" items="{{breakdown.children}}">
+      <paper-input type="number" label="{{item.name}}" value="{{item.total}}" disabled="{{disabledInput}}"></paper-input>
+      <template is="dom-if" if="{{item.breakdown}}">
+        <paper-button raised on-tap="{{_toggleChildren}}">+</paper-button>
+        <input-recursive hidden?="{{hideChildren}}" breakdown="{{item.breakdown}}" total={{item.total}}></input-recursive>
+      </template>
+    </template>
+  <div>
+    
+  </template>
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'input-recursive',
+    behaviors: [],
+    observers: [
+      '_totalChanged(breakdown.children.*)'
+    ],
+    properties: {
+      breakdown: Object,
+      total: {
+        type: Number,
+        notify: true
+      },
+      disabledInput: {
+        type: Boolean,
+        value: false
+      },
+      hideChildren: {
+        type: Boolean,
+        value: true
+      }
+    },
+    ready: function() {
+      //
+    },
+    _getTotalUpwards: function() {
+      console.log(this.breakdown.children);
+      var total = null;
+      this.breakdown.children.forEach(function(e){
+        var increment = Number(e.total)
+        if (increment) {
+          total = total ? (increment + total) : increment;
+        }
+      })
+      if (total){
+        //this.disabledInput = true;
+      }
+      this.total = total;
+    },
+    _totalChanged: function(cval) {
+      // here the cva.path should be only one level deep
+      // that means breakdown.children.#1.value,
+      // a simple way to check is to check the length
+      if ((cval) && (cval.path.length > 30)) {
+        this.disabledInput = true;
+        return;
+      }
+      this._getTotalUpwards();
+    },
+    _toggleChildren: function() {
+      this.displayChildren = !this.displayChildren;
+    }
+
+    
+    
+    
+  });
+})();
+
+</script>

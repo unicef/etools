@@ -2,18 +2,10 @@
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
-<link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
-<link rel="import" href="../../common/etools-datepicker/etools-datepicker.html">
-<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="../../../bower_components/iron-list/iron-list.html">
 
-<link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="../../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../../bower_components/paper-input/paper-input.html">
-
-<link rel="import" href="../../../bower_components/moment-element/moment-with-locales-import.html">
+<link rel="import" href="../input-recursive/input-recursive.html">
 
   
 
@@ -25,6 +17,11 @@
   <template>
 
     <paper-input type="number" label="Total"></paper-input>
+    <template is="dom-if" if="{{breakdowns.breakdown}}">
+      <input-recursive breakdown="{{breakdowns.breakdown}}"></input-recursive>
+    </template>
+
+   
     <!-- <template is="dom-repeat" items="">
     
     </template> -->
@@ -51,73 +48,23 @@
         }
       },
       breakdowns: {
-        type: Object,
-        value: {
-          order: ['Age','Gender','Removed'],
-          total: null,
-          name: 'Total',
-          breakdown: {
-            breakdownName: 'Age',
-            children: [
-              {
-                name: '0-1',
-                total: null,
-                breakdown:{
-                  breakdownName: 'Gender',
-                  children: [
-                    {
-                      name: 'Male',
-                      total: null,
-                      breakdown: null
-                    },
-                    {
-                      name: 'Female',
-                      total: null,
-                      breakdown: null
-                    }
-                  ]
-                }
-              },
-              {
-                name: '1-2',
-                total: null,
-                breakdown:{
-                  breakdownName: 'Gender',
-                  children: [
-                    {
-                      name: 'Male',
-                      total: null,
-                      breakdown: null
-                    },
-                    {
-                      name: 'Female',
-                      total: null,
-                      breakdown: null
-                    }
-                  ]
-                }
-              }
-            ]
-          }
-        }
+        type: Object
       }
            
       
     },
     ready: function() {
-      //
+      this.recursiveMap();
     },
     
     recursiveMap: function(){
       var d = {
-          'order': ['Age','Gender','Removed','Mood'],
+          'order': ['Age','Gender'],
           'Age': ['0-1','1-2','3-4'],
-          'Gender': ['M', 'F', 'O'],
-          'Removed': ['First', 'Second'],
-          'Mood': ['Happy','Sad']
+          'Gender': ['M', 'F', 'O']
         };
       var order = d.order;
-      var tempLol = [['0-1','1-2','3-4'],['M', 'F', 'O'], ['First', 'Second'],['Happy','Sad']];
+      var tempLol = [['0-1','1-2','3-4'],['M', 'F', 'O']];
 
       var createBDObject = function(name){
         return {
@@ -163,7 +110,9 @@
     };
     result.breakdown.children = mr(1, tempLol);
     console.log(result);
+    this.breakdowns = result;
     },
+    
     
   });
 })();
