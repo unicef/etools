@@ -27,11 +27,12 @@
   <template>
   <div>
     <p>{{breakdown.breakdownName}}</p>
+    
     <template is="dom-repeat" items="{{breakdown.children}}">
       <paper-input type="number" label="{{item.name}}" value="{{item.total}}" disabled="{{disabledInput}}"></paper-input>
       <template is="dom-if" if="{{item.breakdown}}">
-        <paper-button raised on-tap="{{_toggleChildren}}">+</paper-button>
-        <input-recursive hidden?="{{hideChildren}}" breakdown="{{item.breakdown}}" total={{item.total}}></input-recursive>
+        <paper-button raised on-tap="_toggleChildren">{{_expandChar(hideChildren)}}</paper-button>
+        <input-recursive hidden$={{hideChildren}} breakdown="{{item.breakdown}}" total={{item.total}}></input-recursive>
       </template>
     </template>
   <div>
@@ -69,14 +70,13 @@
       //
     },
     _getTotalUpwards: function() {
-      console.log(this.breakdown.children);
       var total = null;
       this.breakdown.children.forEach(function(e){
-        var increment = Number(e.total)
+        var increment = Number(e.total);
         if (increment) {
           total = total ? (increment + total) : increment;
         }
-      })
+      });
       if (total){
         //this.disabledInput = true;
       }
@@ -92,8 +92,13 @@
       }
       this._getTotalUpwards();
     },
-    _toggleChildren: function() {
-      this.displayChildren = !this.displayChildren;
+    _toggleChildren: function(el) {
+      console.log(el.currentTarget.innerHTML);
+      //el.currentTarget.innerHTML = (el.currentTarget.innerHTML === '+') ? '-' : '+';
+      this.hideChildren = !this.hideChildren;
+    },
+    _expandChar: function(hiddenChildren) {
+      return hiddenChildren ? '+' : '-';
     }
 
     
