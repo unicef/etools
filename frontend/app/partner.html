@@ -140,6 +140,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <ul>
                     <li>Viewing your information</li>
                     <li>Viewing the interventions associated with your partner organization</li>
+                    <li>Viewing progress on indicators associated with an intervention</li>
+                    <li>Viewing details of an indicator including past reports</li>
+                    <li>Adding a new report for each indicator</li>
+                </ul>
+                <p class="paper-font-subhead">Currently under development:</p>
+                <ul>
+                    <li>Ability to report on indicators in bulk</li>
+                    <li>Ability to report on fully flexible disaggregations as defined in the workplan</li>
                 </ul>
                 <p class="paper-font-body2">Thank you for choosing to make our children's lives better! </p>
               </paper-material>
@@ -150,7 +158,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <template is="dom-if" if='{{permissions.loggedInDefault}}'>
               <section data-route="myInfo">
                 <paper-material elevation="1">
-                    <h2 class="page-title">Hi, {{user.first_name}} {{user.last_name}}!</h2>
+                    <h2 class="page-title">Hi {{user.first_name}} {{user.last_name}},</h2>
                     <user-page siteinfo='[[siteinfo]]' permissions='[[permissions]]' user='{{user}}'></user-page>
                 </paper-material>
               </section>

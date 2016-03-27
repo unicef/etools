@@ -2,6 +2,7 @@
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
 
 <link rel="import" href="../../../bower_components/paper-date-picker/paper-date-picker.html">
 <link rel="import" href="../../../bower_components/paper-date-picker/paper-date-picker-dialog-style.html">
@@ -15,8 +16,12 @@
 <dom-module id="etools-datepicker">
   <template>
   <style is="custom-style" include="paper-date-picker-dialog-style">
+    .pickDate {
+      cursor: pointer;
+    }
   </style>
-      <paper-button class="btn" on-tap="showDialog" raised>Change</paper-button>
+      <iron-icon class="pickDate" on-tap="showDialog" icon="icons:date-range"></iron-icon>
+      <!-- <paper-button class="btn" on-tap="showDialog" raised>Change</paper-button> -->
 
       <paper-dialog id="dialog" class="paper-date-picker-dialog" modal on-iron-overlay-closed="dismissDialog">
         <paper-date-picker id="picker" date="[[date]]"></paper-date-picker>

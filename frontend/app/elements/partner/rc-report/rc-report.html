@@ -5,6 +5,7 @@
 <link rel="import" href="../../common/etools-ajax/etools-ajax.html">
 <link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
 <link rel="import" href="../../common/etools-datepicker/etools-datepicker.html">
+<link rel="import" href="../../common/timeframe-picker/timeframe-picker.html">
 <link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../../bower_components/iron-list/iron-list.html">
 
@@ -122,6 +123,7 @@
   <h2>Indicator: {{rc.indicator.name}}</h2>
   
   <paper-material elevation="1">
+
     <div class="progressBlock">
       <div>
         <p> Progress: <span class=".progressText">{{rc.current_progress}}/{{rc.target}}</span></p>
@@ -168,7 +170,7 @@
 
     <paper-dialog class="custom" id="newReportDialog" modal on-iron-overlay-closed="dismissDialog">
       <p>New Report: </p>
-      
+
       <paper-dialog-scrollable>
         <paper-input label="Total Reporting" type="number" id="reportTotal" required></paper-input>
         <br>
@@ -178,13 +180,9 @@
           </locations-autocomplete>
         </p>
         <br>
-        <p>From: {{fromPrettyDate}}</p>
-        <input id="fromDate" type="hidden" value="{{fromJsonDate}}">
-        <etools-datepicker pretty-date="{{fromPrettyDate}}" json-date="{{fromJsonDate}}"></etools-datepicker>
-
-        <p>To: {{toPrettyDate}}</p>
-        <input id="toDate" type="hidden" value="{{toJsonDate}}">
-        <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{toJsonDate}}"></etools-datepicker>
+        <timeframe-picker id="timeFrame" label="Time Period"></timeframe-picker>
+        
+        <br><br>
       </paper-dialog-scrollable>
 
       <div class="buttons">
@@ -268,11 +266,11 @@
     },
     _validateSubmision: function() {
       if (!this.$.locationSelected.value){
-        window.alert('location needed');
+        window.alert('Location needed');
         return false;
       }
       if (!this.$.reportTotal.value){
-        window.alert('Report number needed');
+        window.alert('Report Total needed');
         return false;
       }
       return true;
@@ -287,8 +285,8 @@
         'result_chain': this.rcId,
         'disaggregation': {},
         'total': this.$.reportTotal.value,
-        'start': this.$.fromDate.value,
-        'end': this.$.toDate.value,
+        'start': this.$.timeFrame.from,
+        'end': this.$.timeFrame.to,
         'location': this.$.locationSelected.value
       };
       myReq.method = 'POST';
