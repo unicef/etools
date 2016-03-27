@@ -66,12 +66,10 @@
       }
     },
     ready: function() {
-      console.log('ready called');
       this.currentDate = new Date();
       this.updateDate();
     },
     updateDate: function(){
-      console.log('updating Date');
       if (!this.currentDate){
         return;
       }
@@ -79,14 +77,12 @@
       this.jsonDate = this.dateFormat(this.date, '');
     },
     dateFormat: function(date, format) {
-      console.log('formatting Date');
       return moment(date).format(format);
     },
     showDialog: function() {
       this.$.dialog.toggle();
     },
     dismissDialog: function(event) {
-      console.log('inside datepicker');
       if (event.detail.confirmed) {
         this.date = this.$.picker.date;
         this.updateDate();

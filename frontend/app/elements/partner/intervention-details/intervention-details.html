@@ -15,6 +15,7 @@
 <link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../../bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="../../behaviors/common/utils.html">
 
 
 <dom-module id="intervention-details">
@@ -128,7 +129,11 @@
         @apply(--layout-flex);
         @apply(--layout-vertical);
       }
+      .intLabel {
+        font-size: 80%;
+        color: var(--secondary-text-color);
 
+      }
   </style>
     <etools-ajax
           auto
@@ -141,6 +146,21 @@
     </etools-ajax>
 
   <h2>{{intervention.title}}</h2>
+  <h3>Details</h3>
+  <paper-material elevation="1">
+    <p>
+      <span class="intLabel">PCA number:</span> {{intervention.pca_number}}
+    </p>
+    <p>
+      <span class="intLabel">Initiated:</span> {{dateFormat(intervention.initiation_date, 'LL')}}, 
+      <span class="intLabel">Ending:</span> {{dateFormat(intervention.end_date, 'LL')}}, 
+      <span class="intLabel">Reviewed</span> : {{dateFormat(intervention.review_date, 'LL')}}
+    </p>
+    <p>
+      <span class="intLabel">Total Cash:</span> {{intervention.total_cash}}
+      <span class="intLabel">Partner Contribution:</span> {{intervention.partner_contribution_budget}}
+    </p>
+  </paper-material>
   <h1 hidden$="[[!pageLoading]]">
       Page is loading now...
   </h1>
@@ -156,6 +176,7 @@
 
 
       <section>  -->
+      <h3>Indicators</h3>
         <paper-material elevation="1">
           <template is="dom-repeat" items="[[outputs]]" as="out">
             <div class="outputBlock">
@@ -240,6 +261,7 @@
   'use strict';
   Polymer({
     is: 'intervention-details',
+    behaviors: [commonBv.utils],
     properties: {
       selectedTab: {
         type: Number,
