@@ -259,7 +259,7 @@
       console.log('handling submit', rsp.detail.xhr.response);
       this.set('indicatorReports', this.rc.indicator_reports.concat([rsp.detail.xhr.response]));
       this.rc.indicator_reports.push(rsp.detail.xhr.response);
-      this.$.reports.render();
+      this.set('rc.current_progress', (this.rc.current_progress + rsp.detail.xhr.response.total));
     },
     handleSubmitError: function(rsp) {
       console.log(rsp.detail.error);

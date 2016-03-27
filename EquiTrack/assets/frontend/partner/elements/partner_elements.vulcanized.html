@@ -38253,8 +38253,12 @@ window.addEventListener('WebComponentsReady', function() {
 <dom-module id="etools-datepicker" assetpath="common/etools-datepicker/">
   <template>
   <style is="custom-style" include="paper-date-picker-dialog-style">
+    .pickDate {
+      cursor: pointer;
+    }
   </style>
-      <paper-button class="btn" on-tap="showDialog" raised="">Change</paper-button>
+      <iron-icon class="pickDate" on-tap="showDialog" icon="icons:date-range"></iron-icon>
+      
 
       <paper-dialog id="dialog" class="paper-date-picker-dialog" modal="" on-iron-overlay-closed="dismissDialog">
         <paper-date-picker id="picker" date="[[date]]"></paper-date-picker>
@@ -38478,12 +38482,23 @@ window.addEventListener('WebComponentsReady', function() {
   }
   #timeFrame div {
     padding: 10px;
+    @apply(--layout-horizontal);
+    @apply(--layout-center);
   }
   .label {
     font-weight: bold;
   }
+  .dateLabel {
+    font-size: 80%;
+    color: var(--secondary-text-color);
+
+  }
+  .prettyDate {
+
+  }
   etools-datepicker {
     @apply(--layout-horizontal);
+    @apply(--layout-center);
   }
   </style>
   <div id="timeFrame">
@@ -38492,17 +38507,15 @@ window.addEventListener('WebComponentsReady', function() {
     </div>
     
     <div>
-      <p>
-        From: {{fromPrettyDate}}
-        <etools-datepicker pretty-date="{{fromPrettyDate}}" json-date="{{from}}"></etools-datepicker>
-      </p>
+      
+      <p><span class="dateLabel">From: </span><span class="prettyDate">{{fromPrettyDate}}</span></p>
+      <etools-datepicker pretty-date="{{fromPrettyDate}}" json-date="{{from}}"></etools-datepicker>
+      
     </div>
 
     <div>
-      <p>
-        To: {{toPrettyDate}}
-        <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{to}}"></etools-datepicker>
-      </p>
+      <p><span class="dateLabel">To: </span><span class="prettyDate">{{toPrettyDate}}</span></p>
+      <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{to}}"></etools-datepicker>
     </div>
   </div>
   
@@ -38739,8 +38752,8 @@ commonBv.utils = {
         --iron-list-items-container: {
           max-width: 800px;
           margin: auto;
-          margin-top: 60px;
-          margin-bottom: 60px;
+          margin-top: 20px;
+          margin-bottom: 20px;
           border-bottom: 1px solid #ddd;
         };
       }
@@ -38775,30 +38788,36 @@ commonBv.utils = {
         @apply(--layout-flex);
         @apply(--layout-vertical);
       }
+      paper-material {
+        padding: 1%;
+        background-color: var(--primary-background-color);
+      }
     </style>
-    <div> These are your current interventions: </div>
-    
+  
     <etools-ajax auto="" id="ajax" url="[[url]]" handle-as="json" on-response="handleResponse" debounce-duration="300">
     </etools-ajax>
 
-    <iron-list id="list" items="[[interventions]]" as="item">
-        <template>
-            <div class="item" on-tap="_goToIntervention" tabindex="0">
-                <div class="pad">
-                  
-                  <div class="primary">[[item.title]]</div>
-                  
-                  
-                  <div class="shortText">
-                    <p>Status: [[underscoreless(item.status)]]</p>
-                    <p>Ending: [[dateFormat(item.end_date, 'LL')]]</p>
-                  </div>
+    <h2>Current interventions: </h2>
+    <paper-material elevation="1">
+      <iron-list id="list" items="[[interventions]]" as="item">
+          <template>
+              <div class="item" on-tap="_goToIntervention" tabindex="0">
+                  <div class="pad">
+                    
+                    <div class="primary">[[item.title]]</div>
+                    
+                    
+                    <div class="shortText">
+                      <p>Status: [[underscoreless(item.status)]]</p>
+                      <p>Ending: [[dateFormat(item.end_date, 'LL')]]</p>
+                    </div>
 
-                </div>
-                <iron-icon icon="icons:chevron-right"></iron-icon>
-            </div>
-        </template>
-    </iron-list>
+                  </div>
+                  <iron-icon icon="icons:chevron-right"></iron-icon>
+              </div>
+          </template>
+      </iron-list>
+    </paper-material>
    
      
 
@@ -38847,6 +38866,200 @@ commonBv.utils = {
       list.set('items.' + index + '.expanded', !isExpanded);
       list.updateSizeForItem(e.model.index);
     }
+  });
+})();
+
+</script><dom-module id="input-recursive" assetpath="partner/input-recursive/">
+  <style>
+    div {
+      padding-left: 10px;
+    }
+  </style>
+  <template>
+  <div>
+    <p>{{breakdown.breakdownName}}</p>
+    
+    <template is="dom-repeat" items="{{breakdown.children}}">
+      <paper-input type="number" label="{{item.name}}" value="{{item.total}}" disabled="{{disabledInput}}"></paper-input>
+      <template is="dom-if" if="{{item.breakdown}}">
+        <paper-button raised="" on-tap="_toggleChildren">{{_expandChar(hideChildren)}}</paper-button>
+        <input-recursive hidden$="{{hideChildren}}" breakdown="{{item.breakdown}}" total="{{item.total}}"></input-recursive>
+      </template>
+    </template>
+  <div>
+    
+  </div></div></template>
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'input-recursive',
+    behaviors: [],
+    observers: [
+      '_totalChanged(breakdown.children.*)'
+    ],
+    properties: {
+      breakdown: Object,
+      total: {
+        type: Number,
+        notify: true
+      },
+      disabledInput: {
+        type: Boolean,
+        value: false
+      },
+      hideChildren: {
+        type: Boolean,
+        value: true
+      }
+    },
+    ready: function() {
+      //
+    },
+    _getTotalUpwards: function() {
+      var total = null;
+      this.breakdown.children.forEach(function(e){
+        var increment = Number(e.total);
+        if (increment) {
+          total = total ? (increment + total) : increment;
+        }
+      });
+      if (total){
+        //this.disabledInput = true;
+      }
+      this.total = total;
+    },
+    _totalChanged: function(cval) {
+      // here the cva.path should be only one level deep
+      // that means breakdown.children.#1.value,
+      // a simple way to check is to check the length
+      if ((cval) && (cval.path.length > 30)) {
+        this.disabledInput = true;
+        return;
+      }
+      this._getTotalUpwards();
+    },
+    _toggleChildren: function(el) {
+      console.log(el.currentTarget.innerHTML);
+      //el.currentTarget.innerHTML = (el.currentTarget.innerHTML === '+') ? '-' : '+';
+      this.hideChildren = !this.hideChildren;
+    },
+    _expandChar: function(hiddenChildren) {
+      return hiddenChildren ? '+' : '-';
+    }
+
+    
+    
+    
+  });
+})();
+
+</script><dom-module id="value-breakdown" assetpath="partner/value-breakdown/">
+  <style>
+  
+  </style>
+  <template>
+
+    <paper-input type="number" label="Total"></paper-input>
+    <template is="dom-if" if="{{breakdowns.breakdown}}">
+      <input-recursive breakdown="{{breakdowns.breakdown}}"></input-recursive>
+    </template>
+
+   
+    
+  
+  </template>
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'value-breakdown',
+    behaviors: [],
+    properties: {
+      disaggregation: {
+        type: Object,
+        value: {
+          'order': ['Age','Gender','Removed'],
+          'Age': ['0-1','1-2','3-4'],
+          'Gender': ['M', 'F', 'O'],
+          'Removed': ['First', 'Second']
+        }
+      },
+      breakdowns: {
+        type: Object
+      }
+           
+      
+    },
+    ready: function() {
+      this.recursiveMap();
+    },
+    
+    recursiveMap: function(){
+      var d = {
+          'order': ['Age','Gender'],
+          'Age': ['0-1','1-2','3-4'],
+          'Gender': ['M', 'F', 'O']
+        };
+      var order = d.order;
+      var tempLol = [['0-1','1-2','3-4'],['M', 'F', 'O']];
+
+      var createBDObject = function(name){
+        return {
+          breakdownName: name,
+          children: []
+        };
+      };
+      var mr = function(cln, lol) {
+        var myL = [];
+        if (lol.length === 1) {
+          
+          for (var k in lol[0]){
+            myL.push(
+              {
+                name: lol[0][k],
+                total: null,
+                breakdown: null
+              }
+            );
+          }
+          return myL;
+        } else {
+          
+          var myBreakdown = createBDObject(order[cln]);
+          myBreakdown.children = mr(cln+1, lol.slice(1));
+          for (var l in lol[0]){
+            myL.push(
+              {
+                name: lol[0][l],
+                total: null,
+                breakdown: myBreakdown
+              }
+            );
+          }
+          return myL;
+        }
+      };
+
+    var result = { 
+      name: 'total',
+      total: null,
+      breakdown: createBDObject(d.order[0])
+    };
+    result.breakdown.children = mr(1, tempLol);
+    //console.log(result);
+    this.breakdowns = result;
+    },
+    
+    
   });
 })();
 
@@ -39083,6 +39296,51 @@ commonBv.utils = {
     --paper-progress-active-color: var(--paper-light-green-500);
     --paper-progress-secondary-color: var(--paper-light-green-100);
   }
+      iron-list {
+        padding-top: 1px;
+        padding-bottom: 16px;
+        -webkit-flex: 1 1;
+        flex: 1 1;
+        --iron-list-items-container: {
+          max-width: 800px;
+          margin: auto;
+          margin-top: 20px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid #ddd;
+        };
+      }
+      .item {
+        @apply(--layout-horizontal);
+        padding: 20px;
+        background-color: white;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+      .pad {
+        padding: 0 16px;
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .primary {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .shortText, .longText {
+        font-size: 14px;
+      }
+      .spacer {
+        @apply(--layout-flex);
+      }
+      .item-body{
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .item-icon {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+
   </style>
     <etools-ajax auto="" id="ajax" url="[[url]]" handle-as="json" on-response="handleResponse" debounce-duration="300" loading="{{pageLoading}}">
     </etools-ajax>
@@ -39091,75 +39349,38 @@ commonBv.utils = {
   <h1 hidden$="[[!pageLoading]]">
       Page is loading now...
   </h1>
-  <paper-tabs selected="{{selectedTab}}">
+    
 
-        <paper-tab>Indicators</paper-tab>
-        <paper-tab>Report</paper-tab>
-
-    </paper-tabs>
-    <iron-pages selected="{{selectedTab}}">
-
-
-      <section>
+   
+   
         <paper-material elevation="1">
-          <template is="dom-repeat" items="[[indicators]]" as="rc">
-            <div on-tap="_goToReport" rc-id="{{rc.id}}">
-              <h4>Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
-              <div>Partner Target Total: {{rc.target}}</div>
-              <div>Partner Current Total: {{rc.current_progress}}</div>
-              <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
-                <div>
-                  <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
-                      <span>{{item.name}}, </span>
-                  </template>
-                </div>
-              </div>
-            </div>  
-            <br>
+          <template is="dom-repeat" items="[[outputs]]" as="out">
+            <div class="outputBlock">
+              <p class="outputTitle">[[out.output.name]]</p>
+              <iron-list id="list" items="[[out.indicators]]" as="rc">
+                <template>
+                    <div class="item" on-tap="_goToReport" rc-id="{{rc.id}}" tabindex="0">
+                        <div class="pad">
+                          
+                          <div class="primary">{{rc.indicator.name}}</div>
+                          
+                          
+                          <div class="shortText">
+                            <div class="progressBlock">
+                              <paper-progress value="{{rc.current_progress}}" max="{{rc.target}}" class="blue"></paper-progress>
+                              <p> {{rc.current_progress}}/{{rc.target}}</p>
+                            </div>
+                          </div>
+
+                        </div>
+                        <iron-icon icon="icons:chevron-right"></iron-icon>
+                    </div>
+                </template>
+              </iron-list>
+            </div>   
           </template>
         </paper-material>
-      </section>
-
-      <section>
-        <paper-material elevation="1">
-        <div>
-          <timeframe-picker label="Reporting Period" class="timeFrame"></timeframe-picker>
-        </div>
-        <hr>
-        <template is="dom-repeat" items="[[outputs]]" as="out">
-          <div class="outputBlock">
-            <p class="outputTitle">[[out.output.name]]</p>
-            <div class="indicatorsBlock">
-
-              <template is="dom-repeat" items="[[out.indicators]]" as="rc">
-                <p class="indicatorName">{{rc.indicator.name}} - <span on-tap="_goToReport" rc-id="{{rc.id}}">individual report</span></p>
-                <div class="indicatorReportBlock">
-                  <div class="progressBlock">
-                    <paper-progress value="{{rc.current_progress}}" max="{{rc.target}}" class="blue"></paper-progress>
-                    <p> {{rc.current_progress}}/{{rc.target}}</p>
-                  </div>
-                  <progress-bar current="{{rc.current_progress}}" against="{{rc.target}}"></progress-bar>
-                  <div class="bulkReportIndicator">
-                    <paper-input type="number" label="Total"></paper-input><span>&nbsp;</span>
-                    <locations-autocomplete id="locationSelected" label="Location" autocomplete-url="{{appData.locationsAutocompleteEp}}">
-                    </locations-autocomplete><span>&nbsp;</span>
-                  </div>
-                </div>
-                <br>
-              </template>
-
-            </div>
-          </div>   
-        </template>
-
-        <div class="reportButtons">
-          <paper-button raised="" disabled="{{submitDisabled}}">Submit Report</paper-button>
-        
-      </div></paper-material></section>
-
-      
-
-    </iron-pages>
+     
   
   
 
@@ -39276,7 +39497,85 @@ commonBv.utils = {
   <style>
   .custom {
     --primary-background-color: #FFFFFF;
+    min-width: 400px;
+    width: 60%;
   }
+  iron-list {
+        padding-top: 1px;
+        padding-bottom: 16px;
+        -webkit-flex: 1 1;
+        flex: 1 1;
+        --iron-list-items-container: {
+          max-width: 800px;
+          margin: auto;
+          margin-top: 20px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid #ddd;
+        };
+      }
+      .item {
+        @apply(--layout-horizontal);
+        padding: 20px;
+        background-color: white;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+      .pad {
+        padding: 0 16px;
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .primary {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .shortText, .longText {
+        font-size: 14px;
+      }
+      .spacer {
+        @apply(--layout-flex);
+      }
+      .item-body{
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .item-icon {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      paper-material {
+        padding: 1%;
+        background-color: var(--primary-background-color);
+      }
+      paper-progress {
+        --paper-progress-height: 10px;
+      }
+      paper-progress.blue {
+        --paper-progress-active-color: var(--paper-light-blue-500);
+        --paper-progress-secondary-color: var(--paper-light-blue-100);
+      }
+      paper-progress.red {
+        --paper-progress-active-color: var(--paper-red-500);
+        --paper-progress-secondary-color: var(--paper-red-100);
+      }
+      paper-progress.green {
+        --paper-progress-active-color: var(--paper-light-green-500);
+        --paper-progress-secondary-color: var(--paper-light-green-100);
+      }
+      .progressBlock {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-justified);
+      }
+      .progressText {
+        font-size: 90%;
+        color: var(--secondary-text-color);
+      }
+      .reportBtn {
+         @apply(--layout-horizontal);
+         @apply(--layout-center-justified);
+         padding-top: 15px;
+      }
   
   </style>
   <template>
@@ -39285,31 +39584,50 @@ commonBv.utils = {
     <etools-ajax auto="" id="ajaxPost" on-response="handleSubmitResponse" on-error="handleSubmitError">
     </etools-ajax>
    
-  <h2>Report on: {{rc.indicator.name}}</h2>
+  <h2>Indicator: {{rc.indicator.name}}</h2>
+  
+  <paper-material elevation="1">
+
+    <div class="progressBlock">
+      <div>
+        <p> Progress: <span class=".progressText">{{rc.current_progress}}/{{rc.target}}</span></p>
+        <paper-progress value="{{rc.current_progress}}" max="{{rc.target}}" class="blue"></paper-progress>
+      </div>
+    </div>
+    <div class="reportBtn">
+     <paper-button on-tap="showNewReportDialog" raised="">Add Report</paper-button>
+    </div>
+    
+    <iron-list id="list" items="{{indicatorReports}}" as="report" sort="_sortDate">
+        <template>
+            <div class="item" tabindex="0">
+                <div class="pad">
+                  
+                  <div class="primary">Reported on: {{dateFormat(report.modified, 'LL')}}</div>
+                  
+                  
+                  <div class="shortText">
+                    Location: {{report.location}}, Reported #: {{report.total}}
+                  </div>
+
+                </div>
+            </div>
+        </template>
+      </iron-list>
+
+
+  </paper-material>
+  
   
   <div>
-      <p>Current Progress = {{rc.current_progress}}</p>
-      <p>Target = {{rc.target}}</p>
-      <p>Indicator = {{rc.indicator.name}}</p>
-  </div>
-  
-  <div>
-    <paper-button class="btn" on-tap="showNewReportDialog" raised="">Add Report</paper-button>
-    <template is="dom-repeat" items="{{indicatorReports}}" id="reports" as="report" sort="_sortDate">
-        <div>
-          <p>
-            Reported on: {{dateFormat(report.modified, 'LL')}}, 
-            Location: {{report.location}},
-            Reported: {{report.total}}
-          </p>
-        </div>
-    </template>
+    
+    
     
 
     <paper-dialog class="custom" id="newReportDialog" modal="" on-iron-overlay-closed="dismissDialog">
       <p>New Report: </p>
+
       <paper-dialog-scrollable>
-      <br>
         <paper-input label="Total Reporting" type="number" id="reportTotal" required=""></paper-input>
         <br>
         <p>Location: 
@@ -39317,15 +39635,11 @@ commonBv.utils = {
           </locations-autocomplete>
         </p>
         <br>
-        <p>From: {{fromPrettyDate}}</p>
-        <input id="fromDate" type="hidden" value="{{fromJsonDate}}">
-        <etools-datepicker pretty-date="{{fromPrettyDate}}" json-date="{{fromJsonDate}}"></etools-datepicker>
+        <timeframe-picker id="timeFrame" label="Time Period"></timeframe-picker>
+        
+        <br><br>
+      </paper-dialog-scrollable>
 
-        <p>To: {{toPrettyDate}}</p>
-        <input id="toDate" type="hidden" value="{{toJsonDate}}">
-        <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{toJsonDate}}"></etools-datepicker>
-        <br>
-    </paper-dialog-scrollable>
       <div class="buttons">
         <paper-button dialog-dismiss="">Cancel</paper-button>
         <paper-button dialog-confirm="">Submit</paper-button>
@@ -39400,18 +39714,18 @@ commonBv.utils = {
       console.log('handling submit', rsp.detail.xhr.response);
       this.set('indicatorReports', this.rc.indicator_reports.concat([rsp.detail.xhr.response]));
       this.rc.indicator_reports.push(rsp.detail.xhr.response);
-      this.$.reports.render();
+      this.set('rc.current_progress', (this.rc.current_progress + rsp.detail.xhr.response.total));
     },
     handleSubmitError: function(rsp) {
       console.log(rsp.detail.error);
     },
     _validateSubmision: function() {
       if (!this.$.locationSelected.value){
-        window.alert('location needed');
+        window.alert('Location needed');
         return false;
       }
       if (!this.$.reportTotal.value){
-        window.alert('Report number needed');
+        window.alert('Report Total needed');
         return false;
       }
       return true;
@@ -39426,8 +39740,8 @@ commonBv.utils = {
         'result_chain': this.rcId,
         'disaggregation': {},
         'total': this.$.reportTotal.value,
-        'start': this.$.fromDate.value,
-        'end': this.$.toDate.value,
+        'start': this.$.timeFrame.from,
+        'end': this.$.timeFrame.to,
         'location': this.$.locationSelected.value
       };
       myReq.method = 'POST';
