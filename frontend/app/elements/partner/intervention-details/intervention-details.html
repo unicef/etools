@@ -4,6 +4,7 @@
 <link rel="import" href="../../../bower_components/paper-tabs/paper-tabs.html">
 <link rel="import" href="../../../bower_components/paper-material/paper-material.html">
 
+
 <link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
 <link rel="import" href="../../common/timeframe-picker/timeframe-picker.html">
 <link rel="import" href="../value-breakdown/value-breakdown.html">
@@ -83,6 +84,51 @@
     --paper-progress-active-color: var(--paper-light-green-500);
     --paper-progress-secondary-color: var(--paper-light-green-100);
   }
+      iron-list {
+        padding-top: 1px;
+        padding-bottom: 16px;
+        -webkit-flex: 1 1;
+        flex: 1 1;
+        --iron-list-items-container: {
+          max-width: 800px;
+          margin: auto;
+          margin-top: 20px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid #ddd;
+        };
+      }
+      .item {
+        @apply(--layout-horizontal);
+        padding: 20px;
+        background-color: white;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+      .pad {
+        padding: 0 16px;
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .primary {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .shortText, .longText {
+        font-size: 14px;
+      }
+      .spacer {
+        @apply(--layout-flex);
+      }
+      .item-body{
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .item-icon {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+
   </style>
     <etools-ajax
           auto
@@ -98,34 +144,46 @@
   <h1 hidden$="[[!pageLoading]]">
       Page is loading now...
   </h1>
-  <paper-tabs selected="{{selectedTab}}">
+    <!-- <paper-tabs selected="{{selectedTab}}">
 
         <paper-tab>Indicators</paper-tab>
         <paper-tab>Report</paper-tab>
 
-    </paper-tabs>
-    <iron-pages selected="{{selectedTab}}">
+    </paper-tabs> -->
+
+   
+   <!--  <iron-pages selected="{{selectedTab}}">
 
 
-      <section>
+      <section>  -->
         <paper-material elevation="1">
-          <template is="dom-repeat" items="[[indicators]]" as="rc">
-            <div on-tap="_goToReport" rc-id="{{rc.id}}">
-              <h4 >Indicator Name: {{rc.indicator.name}}, id: {{rc.indicator.id}}</h4>
-              <div>Partner Target Total: {{rc.target}}</div>
-              <div>Partner Current Total: {{rc.current_progress}}</div>
-              <div hidden$="[[!_emptyObject(result.disaggregation)]]">Dissagregate by: 
-                <div>
-                  <template is="dom-repeat" items="[[_toArray(rc.disaggregation)]]">
-                      <span>{{item.name}}, </span>
-                  </template>
-                </div>
-              </div>
-            </div>  
-            <br>
+          <template is="dom-repeat" items="[[outputs]]" as="out">
+            <div class="outputBlock">
+              <p class="outputTitle">[[out.output.name]]</p>
+              <iron-list id="list" items="[[out.indicators]]" as="rc">
+                <template>
+                    <div class="item"  on-tap="_goToReport" rc-id="{{rc.id}}" tabindex="0">
+                        <div class="pad">
+                          
+                          <div class="primary">{{rc.indicator.name}}</div>
+                          
+                          
+                          <div class="shortText">
+                            <div class="progressBlock">
+                              <paper-progress value="{{rc.current_progress}}" max="{{rc.target}}" class="blue"></paper-progress>
+                              <p> {{rc.current_progress}}/{{rc.target}}</p>
+                            </div>
+                          </div>
+
+                        </div>
+                        <iron-icon icon="icons:chevron-right"></iron-icon>
+                    </div>
+                </template>
+              </iron-list>
+            </div>   
           </template>
         </paper-material>
-      </section>
+     <!--  </section>
 
       <section>
         <paper-material  elevation="1">
@@ -148,7 +206,6 @@
                   <progress-bar current="{{rc.current_progress}}" against="{{rc.target}}"></progress-bar>
                   <div class="bulkReportIndicator">
                     <value-breakdown></value-breakdown><span>&nbsp;</span>
-                    <!-- <paper-input type="number" label="Total"></paper-input><span>&nbsp;</span> -->
                     <locations-autocomplete id="locationSelected" label="Location"
                         autocomplete-url="{{appData.locationsAutocompleteEp}}">
                     </locations-autocomplete><span>&nbsp;</span>
@@ -168,7 +225,7 @@
 
       
 
-    </iron-pages>
+    </iron-pages> -->
   
   
 

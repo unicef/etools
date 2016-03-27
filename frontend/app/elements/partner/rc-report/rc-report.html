@@ -12,7 +12,7 @@
 <link rel="import" href="../../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../../bower_components/paper-input/paper-input.html">
-
+<link rel="import" href="../../../bower_components/paper-progress/paper-progress.html">
 <link rel="import" href="../../../bower_components/moment-element/moment-with-locales-import.html">
 
   
@@ -22,7 +22,85 @@
   <style>
   .custom {
     --primary-background-color: #FFFFFF;
+    min-width: 400px;
+    width: 60%;
   }
+  iron-list {
+        padding-top: 1px;
+        padding-bottom: 16px;
+        -webkit-flex: 1 1;
+        flex: 1 1;
+        --iron-list-items-container: {
+          max-width: 800px;
+          margin: auto;
+          margin-top: 20px;
+          margin-bottom: 20px;
+          border-bottom: 1px solid #ddd;
+        };
+      }
+      .item {
+        @apply(--layout-horizontal);
+        padding: 20px;
+        background-color: white;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        margin-bottom: 10px;
+      }
+      .pad {
+        padding: 0 16px;
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .primary {
+        font-size: 16px;
+        font-weight: bold;
+      }
+      .shortText, .longText {
+        font-size: 14px;
+      }
+      .spacer {
+        @apply(--layout-flex);
+      }
+      .item-body{
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      .item-icon {
+        @apply(--layout-flex);
+        @apply(--layout-vertical);
+      }
+      paper-material {
+        padding: 1%;
+        background-color: var(--primary-background-color);
+      }
+      paper-progress {
+        --paper-progress-height: 10px;
+      }
+      paper-progress.blue {
+        --paper-progress-active-color: var(--paper-light-blue-500);
+        --paper-progress-secondary-color: var(--paper-light-blue-100);
+      }
+      paper-progress.red {
+        --paper-progress-active-color: var(--paper-red-500);
+        --paper-progress-secondary-color: var(--paper-red-100);
+      }
+      paper-progress.green {
+        --paper-progress-active-color: var(--paper-light-green-500);
+        --paper-progress-secondary-color: var(--paper-light-green-100);
+      }
+      .progressBlock {
+        @apply(--layout-horizontal);
+        @apply(--layout-center-justified);
+      }
+      .progressText {
+        font-size: 90%;
+        color: var(--secondary-text-color);
+      }
+      .reportBtn {
+         @apply(--layout-horizontal);
+         @apply(--layout-center-justified);
+         padding-top: 15px;
+      }
   
   </style>
   <template>
@@ -41,17 +119,43 @@
           on-error="handleSubmitError">
     </etools-ajax>
    
-  <h2>Report on: {{rc.indicator.name}}</h2>
+  <h2>Indicator: {{rc.indicator.name}}</h2>
+  
+  <paper-material elevation="1">
+    <div class="progressBlock">
+      <div>
+        <p> Progress: <span class=".progressText">{{rc.current_progress}}/{{rc.target}}</span></p>
+        <paper-progress value="{{rc.current_progress}}" max="{{rc.target}}" class="blue"></paper-progress>
+      </div>
+    </div>
+    <div class="reportBtn">
+     <paper-button  on-tap="showNewReportDialog" raised>Add Report</paper-button>
+    </div>
+    
+    <iron-list id="list" items="{{indicatorReports}}" id="reports" as="report" sort="_sortDate">
+        <template>
+            <div class="item" tabindex="0">
+                <div class="pad">
+                  
+                  <div class="primary">Reported on: {{dateFormat(report.modified, 'LL')}}</div>
+                  
+                  
+                  <div class="shortText">
+                    Location: {{report.location}}, Reported #: {{report.total}}
+                  </div>
+
+                </div>
+            </div>
+        </template>
+      </iron-list>
+
+
+  </paper-material>
+  
   
   <div>
-      <p>Current Progress = {{rc.current_progress}}</p>
-      <p>Target = {{rc.target}}</p>
-      <p>Indicator = {{rc.indicator.name}}</p>
-  </div>
-  
-  <div>
-    <paper-button class="btn" on-tap="showNewReportDialog" raised>Add Report</paper-button>
-    <template is="dom-repeat" items="{{indicatorReports}}" id="reports" as="report" sort="_sortDate">
+    
+    <!-- <template is="dom-repeat" items="{{indicatorReports}}" id="reports" as="report" sort="_sortDate">
         <div>
           <p>
             Reported on: {{dateFormat(report.modified, 'LL')}}, 
@@ -59,13 +163,13 @@
             Reported: {{report.total}}
           </p>
         </div>
-    </template>
+    </template> -->
     <!--  -->
 
     <paper-dialog class="custom" id="newReportDialog" modal on-iron-overlay-closed="dismissDialog">
       <p>New Report: </p>
+      
       <paper-dialog-scrollable>
-      <br>
         <paper-input label="Total Reporting" type="number" id="reportTotal" required></paper-input>
         <br>
         <p>Location: 
@@ -81,8 +185,8 @@
         <p>To: {{toPrettyDate}}</p>
         <input id="toDate" type="hidden" value="{{toJsonDate}}">
         <etools-datepicker pretty-date="{{toPrettyDate}}" json-date="{{toJsonDate}}"></etools-datepicker>
-        <br>
-    </paper-dialog-scrollable>
+      </paper-dialog-scrollable>
+
       <div class="buttons">
         <paper-button dialog-dismiss>Cancel</paper-button>
         <paper-button dialog-confirm>Submit</paper-button>

@@ -35,8 +35,8 @@ Example:
         --iron-list-items-container: {
           max-width: 800px;
           margin: auto;
-          margin-top: 60px;
-          margin-bottom: 60px;
+          margin-top: 20px;
+          margin-bottom: 20px;
           border-bottom: 1px solid #ddd;
         };
       }
@@ -71,9 +71,12 @@ Example:
         @apply(--layout-flex);
         @apply(--layout-vertical);
       }
+      paper-material {
+        padding: 1%;
+        background-color: var(--primary-background-color);
+      }
     </style>
-    <div> These are your current interventions: </div>
-    
+  
     <etools-ajax
           auto
           id="ajax"
@@ -83,24 +86,27 @@ Example:
           debounce-duration="300">
     </etools-ajax>
 
-    <iron-list id="list" items="[[interventions]]" as="item">
-        <template>
-            <div class="item"  on-tap="_goToIntervention" tabindex="0">
-                <div class="pad">
-                  
-                  <div class="primary">[[item.title]]</div>
-                  
-                  
-                  <div class="shortText">
-                    <p>Status: [[underscoreless(item.status)]]</p>
-                    <p>Ending: [[dateFormat(item.end_date, 'LL')]]</p>
-                  </div>
+    <h2>Current interventions: </h2>
+    <paper-material elevation="1">
+      <iron-list id="list" items="[[interventions]]" as="item">
+          <template>
+              <div class="item"  on-tap="_goToIntervention" tabindex="0">
+                  <div class="pad">
+                    
+                    <div class="primary">[[item.title]]</div>
+                    
+                    
+                    <div class="shortText">
+                      <p>Status: [[underscoreless(item.status)]]</p>
+                      <p>Ending: [[dateFormat(item.end_date, 'LL')]]</p>
+                    </div>
 
-                </div>
-                <iron-icon icon="icons:chevron-right"></iron-icon>
-            </div>
-        </template>
-    </iron-list>
+                  </div>
+                  <iron-icon icon="icons:chevron-right"></iron-icon>
+              </div>
+          </template>
+      </iron-list>
+    </paper-material>
    
      
 
