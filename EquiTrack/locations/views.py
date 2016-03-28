@@ -1,9 +1,12 @@
 __author__ = 'unicef-leb-inn'
 
-from rest_framework.generics import ListAPIView
+import json
 
-from .models import CartoDBTable
-from .serializers import CartoDBTableSerializer
+from rest_framework.generics import ListAPIView
+from django.views.generic.list import BaseListView
+
+from .models import CartoDBTable, Location
+from .serializers import CartoDBTableSerializer, LocationSerializer
 
 
 class CartoDBTablesView(ListAPIView):
@@ -12,3 +15,18 @@ class CartoDBTablesView(ListAPIView):
     """
     queryset = CartoDBTable.objects.all()
     serializer_class = CartoDBTableSerializer
+
+
+class LocationQuerySetView(ListAPIView):
+    model = Location
+    lookup_field = 'q'
+    serializer_class = LocationSerializer
+
+    def get_queryset(self):
+        q = self.request.query_params.get('q')
+        qs = self.model.objects
+        if q:
+            qs = qs.filter(name__icontains=q)
+
+        # return maximum 7 records
+        return qs.all()[:7]

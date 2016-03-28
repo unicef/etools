@@ -301,7 +301,7 @@ class ResultChainViewSet(mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         queryset = super(ResultChainViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_id')
+        intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
 

@@ -9,7 +9,6 @@
     "model": "reports.resulttype",
     "fields": {"name": "Output"}
   },
-
   {
     "pk": 3,
     "model": "reports.resulttype",

@@ -50,6 +50,7 @@ var dist = function(subpath) {
       return !subpath ? DIST : path.join(DIST, subpath);
   }
 };
+//var etoolsRoot = '../EquiTrack';
 var etoolsRoot = '..';
 var etoolsAssets;
 var etoolsAssetsPath;
@@ -330,8 +331,17 @@ gulp.task('serve', ['styles', 'elements', 'images'], function() {
         break;
 
       // partner app
-      case '/partners/api/interventions/':
+      case '/api/interventions/':
         req.url = '/data/partner/interventions.json';
+        break;
+      case '/locations/autocomplete/?q=as':
+        req.url = '/data/partner/locationsautocomplete.json';
+        break;
+      case '/api/interventions/7/':
+        req.url = '/data/partner/intervention_details.json';
+        break;
+      case '/api/interventions/7/results/1/':
+        req.url = '/data/partner/resultchain_details.json';
         break;
     }
     return next();
@@ -363,34 +373,41 @@ gulp.task('serve', ['styles', 'elements', 'images'], function() {
     }
   });
 
-  gulp.watch(['app/**/*.html'], reload);
-  gulp.watch(['app/styles/**/*.css'], ['styles', reload]);
-  gulp.watch(['app/elements/**/*.css'], ['elements', reload]);
+  gulp.watch(['app/**/*.html']);
+  gulp.watch(['app/styles/**/*.css'], ['styles']);
+  gulp.watch(['app/elements/**/*.css'], ['elements']);
   gulp.watch(['app/{scripts,elements}/**/{*.js,*.html}'], ['lint']);
-  gulp.watch(['app/images/**/*'], reload);
+  gulp.watch(['app/images/**/*']);
 });
 
 // Build and serve the output from the dist build
-gulp.task('serve:dist', ['default'], function() {
-  browserSync({
-    port: 5001,
-    notify: false,
-    logPrefix: 'PSK',
-    snippetOptions: {
-      rule: {
-        match: '<span id="browser-sync-binding"></span>',
-        fn: function(snippet) {
-          return snippet;
-        }
-      }
-    },
-    // Run as an https by uncommenting 'https: true'
-    // Note: this uses an unsigned certificate which on first access
-    //       will present a certificate warning in the browser.
-    // https: true,
-    server: dist(),
-    middleware: [historyApiFallback()]
-  });
+gulp.task('serve:dist', ['buildFront:partner', 'buildFront:management'], function() {
+  // browserSync({
+  //   port: 5001,
+  //   notify: false,
+  //   logPrefix: 'PSK',
+  //   snippetOptions: {
+  //     rule: {
+  //       match: '<span id="browser-sync-binding"></span>',
+  //       fn: function(snippet) {
+  //         return snippet;
+  //       }
+  //     }
+  //   },
+  //   // Run as an https by uncommenting 'https: true'
+  //   // Note: this uses an unsigned certificate which on first access
+  //   //       will present a certificate warning in the browser.
+  //   // https: true,
+  //   server: dist(),
+  //   middleware: [historyApiFallback()]
+  // });
+  var reloadDist = ['buildFront:partner', 'buildFront:management'];
+
+  gulp.watch(['app/**/*.html', '!app/bower_components/**/*.html'], reloadDist);
+  gulp.watch(['app/styles/**/*.css'], reloadDist);
+  gulp.watch(['app/elements/**/*.css'],  reloadDist);
+  gulp.watch(['app/scripts/**/*.js'], reloadDist);
+  gulp.watch(['app/images/**/*'], reloadDist);
 });
 
 // Build production files, the default task
