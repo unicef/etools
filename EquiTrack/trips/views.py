@@ -431,7 +431,7 @@ class TripsListApi(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        trips = Trip.get_all_trips(user)
+        trips = Trip.get_current_trips(user)
         return trips
 
 
