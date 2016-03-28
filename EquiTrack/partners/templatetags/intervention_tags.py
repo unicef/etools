@@ -5,7 +5,12 @@ import tablib
 from django import template
 from django.utils.datastructures import OrderedDict as SortedDict
 
-from partners.models import PCA, FundingCommitment, DirectCashTransfer
+from partners.models import (
+    PCA,
+    PartnerOrganization,
+    FundingCommitment,
+    DirectCashTransfer,
+)
 from trips.models import Trip
 
 

@@ -23,6 +23,10 @@ class ResultStructure(models.Model):
     def __unicode__(self):
         return self.name
 
+    @classmethod
+    def current(cls):
+        return ResultStructure.objects.order_by('to_date').last()
+
 
 class ResultType(models.Model):
 

@@ -38,20 +38,20 @@
                 </tr>
                 <tr>
                     <td>
-                        <u>310,000</u>
-                        <br/>420,000
+                        <u>{{ original.actual_cash_transferred }}</u>
+                        <br/>{{ original.planned_cash_transfers }}
                     </td>
-                    <td>550,000</td>
+                    <td>{{ original.total_cash_transferred }}</td>
                     <td>
-                        <u>Medium</u>
+                        <u>{{ original.rating }}</u>
                         <br/>Micro assessment
                     </td>
                     <td>
-                        <u>1</u>
+                        <u>{{ original.programmatic_visits }}</u>
                         <br/>2
                     </td>
                     <td>
-                        <u>0</u>
+                        <u>{{ original.spot_checks }}</u>
                         <br/>1
                     </td>
                     <td>
@@ -65,32 +65,31 @@
                 <table class="table">
             <thead>
             <tr>
+                <th>Intervention</th>
                 <th colspan="2">Cash transfers</th>
-                <th></th>
-                <th></th>
                 <th>Programmatic monitoring visits</th>
                 <th>Spot-Checks</th>
             </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>Programme Document</td>
-                    <td>
-                        <u>45,000</u>
-                        <br/>70,000
-                    </td>
-                    <td>
-                        120,000
-                    </td>
-                    <td>
-                    </td>
-                    <td>
-                        0
-                    </td>
-                    <td>
-                        1
-                    </td>
-                </tr>
+                {% for intervention in original.documents.all %}
+                    <tr>
+                        <td>{{ intervention.reference_number }}</td>
+                        <td>
+                            <u>{{ intervention.actual_cash_transferred }}</u>
+                            <br/>{{ intervention.planned_cash_transfers }}
+                        </td>
+                        <td>
+                            {{ intervention.total_cash_transferred }}
+                        </td>
+                        <td>
+                            {{ intervention.programmatic_visits }}
+                        </td>
+                        <td>
+                            {{ intervention.spot_checks }}
+                        </td>
+                    </tr>
+                {% endfor %}
             </tbody>
         </table>
 

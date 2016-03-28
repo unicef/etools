@@ -144,6 +144,64 @@ class PartnerOrganization(models.Model):
     def __unicode__(self):
         return self.name
 
+    @property
+    def planned_cash_transfers(self):
+        """
+        Planned cash transfers for the current year
+        """
+        year = datetime.date.today().year
+        total = PartnershipBudget.objects.filter(
+            partnership__partner=self,
+            partnership__status=PCA.ACTIVE,
+            created__year=year).aggregate(
+            models.Sum('unicef_cash')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def actual_cash_transferred(self):
+        """
+        Actual cash transferred for the current year
+        """
+        year = datetime.date.today().year
+        total = FundingCommitment.objects.filter(
+            intervention__partner=self,
+            intervention__status=PCA.ACTIVE,
+            end__year=year).aggregate(
+            models.Sum('expenditure_amount')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def total_cash_transferred(self):
+        """
+        Total cash transferred for the current CP cycle
+        """
+        total = FundingCommitment.objects.filter(
+            intervention__partner=self,
+            intervention__status=PCA.ACTIVE).aggregate(
+            models.Sum('expenditure_amount')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def programmatic_visits(self):
+        from trips.models import LinkedPartner
+        return LinkedPartner.objects.filter(
+            partner=self,
+            trip__status=u'completed',
+            trip__travel_type=u'programme_monitoring'
+        ).count()
+
+    @property
+    def spot_checks(self):
+        from trips.models import LinkedPartner
+        return LinkedPartner.objects.filter(
+            partner=self,
+            trip__status=u'completed',
+            trip__travel_type=u'spot_check'
+        ).count()
+
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
 
@@ -462,7 +520,10 @@ class PCA(AdminURLMixin, models.Model):
         (IC, u'IC TOR'),
     )
 
-    partner = models.ForeignKey(PartnerOrganization)
+    partner = models.ForeignKey(
+        PartnerOrganization,
+        related_name='documents',
+    )
     agreement = ChainedForeignKey(
         Agreement,
         related_name='interventions',
@@ -579,7 +640,7 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
     )
 
-    # budget
+    # budget TODO: Remove
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
     unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
     in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -662,12 +723,11 @@ class PCA(AdminURLMixin, models.Model):
     @property
     def total_budget(self):
 
-        total = 0
-        if self.budget_log.exists():
-            budget = self.budget_log.latest('created')
-            total += budget.unicef_cash
-            total += budget.in_kind_amount
-            total += budget.partner_contribution
+        total = self.budget_log.all().aggregate(
+            models.Sum('unicef_cash'),
+            models.Sum('in_kind_amount'),
+            models.Sum('partner_contribution')
+        )
         return total
 
     @property
@@ -696,6 +756,49 @@ class PCA(AdminURLMixin, models.Model):
             version=u'-{}'.format(self.amendment_num) if self.amendment_num else ''
         )
         return number
+
+    @property
+    def planned_cash_transfers(self):
+        """
+        Planned cash transfers for the current year
+        """
+        year = datetime.date.today().year
+        total = self.budget_log.filter(created__year=year).aggregate(
+            models.Sum('unicef_cash')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def actual_cash_transferred(self):
+        """
+        Actual cash transferred for the current year
+        """
+        year = datetime.date.today().year
+        total = self.funding_commitments.filter(end__year=year).aggregate(
+            models.Sum('expenditure_amount')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def total_cash_transferred(self):
+        """
+        Total cash transferred for the current CP cycle
+        """
+        return 0
+
+    @property
+    def programmatic_visits(self):
+        return self.trips.filter(
+            trip__status=u'completed',
+            trip__travel_type=u'programme_monitoring'
+        ).count()
+
+    @property
+    def spot_checks(self):
+        return self.trips.filter(
+            trip__status=u'completed',
+            trip__travel_type=u'spot_check'
+        ).count()
 
     @classmethod
     def get_active_partnerships(cls):
@@ -1085,10 +1188,10 @@ class DistributionPlan(models.Model):
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
-class FundingCommitment(models.Model):
+class FundingCommitment(TimeFramedModel):
 
     grant = models.ForeignKey(Grant)
-    intervention = models.ForeignKey(PCA, null=True)
+    intervention = models.ForeignKey(PCA, null=True, related_name='funding_commitments')
     fr_number = models.CharField(max_length=50)
     wbs = models.CharField(max_length=50)
     fc_type = models.CharField(max_length=50)
