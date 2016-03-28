@@ -512,7 +512,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'core_values_assessment',)
         }),
         (_('Alternate Name'), {
-            u'classes': (u'collapse',),
+            u'classes': (u'collapse', u'collapse-open'),
             'fields':
                 ((u'alternate_id', u'alternate_name',),)
         }),
@@ -570,6 +570,28 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
 #             request, obj, form, change
 #         )
 
+class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
+    verbose_name = u'Revision'
+    model = AgreementAmendmentLog
+    extra = 0
+    fields = (
+        'type',
+        'status',
+        'amended_at',
+        'amendment_number',
+    )
+    readonly_fields = [
+        'amendment_number',
+    ]
+
+    def get_max_num(self, request, obj=None, **kwargs):
+        """
+        Overriding here to disable adding amendments to non-active partnerships
+        """
+        if obj and obj.type == PCA.ACTIVE:
+            return self.max_num
+
+        return 0
 
 class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     model = AuthorizedOfficer
@@ -635,7 +657,8 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         u'download_url',
     )
     inlines = [
-        AuthorizedOfficersInlineAdmin
+    	AgreementAmendmentLog,
+        AuthorizedOfficersInlineAdmin,
     ]
 
     def download_url(self, obj):
