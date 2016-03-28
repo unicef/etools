@@ -784,7 +784,10 @@ class PCA(AdminURLMixin, models.Model):
         """
         Total cash transferred for the current CP cycle
         """
-        return 0
+        total = self.funding_commitments.all().aggregate(
+            models.Sum('expenditure_amount')
+        )
+        return total[total.keys()[0]] or 0
 
     @property
     def programmatic_visits(self):
@@ -824,6 +827,11 @@ class PCA(AdminURLMixin, models.Model):
                 settings.DEFAULT_FROM_EMAIL,
                 *recipients
             )
+
+        commitments = FundingCommitment.objects.filter(fr_number=instance.fr_number)
+        for commit in commitments:
+            commit.intervention = instance
+            commit.save()
 
 
 post_save.connect(PCA.send_changes, sender=PCA)
