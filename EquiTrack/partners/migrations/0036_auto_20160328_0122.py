@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
+import jsonfield.fields
+
 
 class Migration(migrations.Migration):
 
@@ -30,5 +32,10 @@ class Migration(migrations.Migration):
             model_name='pca',
             name='partner',
             field=models.ForeignKey(related_name='documents', to='partners.PartnerOrganization'),
+        ),
+        migrations.AlterField(
+            model_name='resultchain',
+            name='disaggregation',
+            field=jsonfield.fields.JSONField(null=True),
         ),
     ]

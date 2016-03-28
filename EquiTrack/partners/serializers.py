@@ -8,6 +8,7 @@ from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
 from .models import (
+    FileType,
     GwPCALocation,
     PCA,
     PCASector,
@@ -33,8 +34,27 @@ class PCASectorSerializer(serializers.ModelSerializer):
 
 class PCAFileSerializer(serializers.ModelSerializer):
 
+    id = serializers.CharField(read_only=True)
+
     class Meta:
         model = PCAFile
+
+    class Meta:
+        model = PCAFile
+        fields = (
+            "id",
+            "attachment",
+            "type",
+            "pca",
+        )
+
+
+class FileTypeSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = FileType
 
 
 class PCAGrantSerializer(serializers.ModelSerializer):

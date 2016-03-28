@@ -1,12 +1,10 @@
 __author__ = 'unicef-leb-inn'
 
-import json
-
+from rest_framework import viewsets, mixins
 from rest_framework.generics import ListAPIView
-from django.views.generic.list import BaseListView
 
-from .models import CartoDBTable, Location
-from .serializers import CartoDBTableSerializer, LocationSerializer
+from .models import CartoDBTable, GatewayType, Location
+from .serializers import CartoDBTableSerializer, GatewayTypeSerializer, LocationSerializer
 
 
 class CartoDBTablesView(ListAPIView):
@@ -15,6 +13,35 @@ class CartoDBTablesView(ListAPIView):
     """
     queryset = CartoDBTable.objects.all()
     serializer_class = CartoDBTableSerializer
+
+
+class CartoDBTablesViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+    """
+    Gets a list of CartoDB tables for the mapping system
+    """
+    queryset = CartoDBTable.objects.all()
+    serializer_class = CartoDBTableSerializer
+
+
+class LocationTypesViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = GatewayType.objects.all()
+    serializer_class = GatewayTypeSerializer
+
+
+class LocationsViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
 
 
 class LocationQuerySetView(ListAPIView):

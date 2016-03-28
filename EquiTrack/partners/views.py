@@ -15,6 +15,7 @@ from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
 from .serializers import (
+    FileTypeSerializer,
     LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
@@ -29,8 +30,10 @@ from .serializers import (
     PCAFileSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import (
+    FileType,
     PartnershipBudget,
     PCAFile,
     AuthorizedOfficer,
@@ -394,7 +397,8 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
     model = PCAFile
     queryset = PCAFile.objects.all()
     serializer_class = PCAFileSerializer
-    permission_classes = (ResultChainPermission,)
+    parser_classes = (MultiPartParser, FormParser,)
+    permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
 
@@ -531,3 +535,11 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
+
+class FileTypeViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = FileType.objects.all()
+    serializer_class = FileTypeSerializer

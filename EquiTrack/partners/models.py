@@ -9,8 +9,6 @@ from django.conf import settings
 from django.db import models, connection
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
-
-from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 
 from jsonfield import JSONField
@@ -462,7 +460,7 @@ class Agreement(TimeStampedModel):
             type=self.agreement_type,
             year=year,
             seq=sequence,
-            version=u''  # TODO: Change once agreement amendments are active
+            version=u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
         )
         return number
 
@@ -744,7 +742,7 @@ class PCA(AdminURLMixin, models.Model):
     def reference_number(self):
         year = self.year
         objects = list(PCA.objects.filter(
-        	partner=self.partner,
+            partner=self.partner,
             created_at__year=year,
             partnership_type=self.partnership_type
         ).order_by('created_at').values_list('id', flat=True))
@@ -754,7 +752,7 @@ class PCA(AdminURLMixin, models.Model):
             type=self.partnership_type,
             year=year,
             seq=sequence,
-            version=u'-{}'.format(self.amendment_num) if self.amendment_num else ''
+            version=u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
         )
         return number
 
@@ -864,29 +862,55 @@ class AmendmentLog(TimeStampedModel):
             self.amended_at
         )
 
-	@property
+
+    @property
     def amendment_number(self):
-    	"""
+        """
         Increment amendment number automatically
         """
         objects = list(AmendmentLog.objects.filter(
             partnership=self.partnership
-        ).order_by('-created').values_list('id', flat=True))
+        ).order_by('created').values_list('id', flat=True))
 
-        return '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-        
-        
-class AgreementAmendmentLog(AmendmentLog):
+        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
-	partnership = models.ForeignKey(Agreement, related_name='amendments_log')
-    type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            'Authorised Officers', 
-            'Banking Info',
-            'Agreement Changes',
-            'Additional Clauses',
-        ))
+
+class AgreementAmendmentLog(TimeStampedModel):
+
+        agreement = models.ForeignKey(Agreement, related_name='amendments_log')
+        type = models.CharField(
+            max_length=50,
+            choices=Choices(
+                'Authorised Officers',
+                'Banking Info',
+                'Agreement Changes',
+                'Additional Clauses',
+            ))
+        amended_at = models.DateField(null=True, verbose_name='Signed At')
+        amendment_number = models.IntegerField(default=0)
+        status = models.CharField(
+            max_length=32L,
+            blank=True,
+            choices=PCA.PCA_STATUS,
+        )
+
+        def __unicode__(self):
+            return u'{}: {} - {}'.format(
+                self.amendment_number,
+                self.type,
+                self.amended_at
+            )
+
+        @property
+        def amendment_number(self):
+            """
+            Increment amendment number automatically
+            """
+            objects = list(AgreementAmendmentLog.objects.filter(
+                agreement=self.agreement
+            ).order_by('created').values_list('id', flat=True))
+
+            return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
 
 class PartnershipBudget(TimeStampedModel):

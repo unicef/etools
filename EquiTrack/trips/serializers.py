@@ -98,12 +98,17 @@ class ActionPointSerializer(serializers.ModelSerializer):
 
 class FileAttachmentSerializer(serializers.ModelSerializer):
 
+    id = serializers.CharField(read_only=True)
+
     class Meta:
         model = FileAttachment
         fields = (
             "id",
             "report",
-            "type"
+            "type",
+            "object_id",
+            "content_type",
+            "trip",
         )
 
 

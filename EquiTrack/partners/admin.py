@@ -42,6 +42,7 @@ from .models import (
     SupplyPlan,
     DistributionPlan,
     FundingCommitment,
+    AgreementAmendmentLog
 )
 
 from .filters import (
@@ -588,10 +589,11 @@ class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
         """
         Overriding here to disable adding amendments to non-active partnerships
         """
-        if obj and obj.type == PCA.ACTIVE:
+        if obj and obj.agreement_type == Agreement.PCA:
             return self.max_num
 
         return 0
+
 
 class AuthorizedOfficersInlineAdmin(admin.TabularInline):
     model = AuthorizedOfficer
@@ -657,7 +659,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         u'download_url',
     )
     inlines = [
-    	AgreementAmendmentLog,
+        AgreementAmendmentLogInlineAdmin,
         AuthorizedOfficersInlineAdmin,
     ]
 
