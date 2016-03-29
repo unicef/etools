@@ -3,6 +3,9 @@ __author__ = 'jcranwellward'
 from rest_framework import serializers
 
 from .models import (
+    ResultStructure,
+    ResultType,
+    Unit,
     Sector,
     Goal,
     Indicator,
@@ -43,3 +46,59 @@ class OutputSerializer(serializers.ModelSerializer):
     class Meta:
         model = Result
         fields = ('id', 'name', 'sector', 'humanitarian_tag')
+
+
+class SectorCreateSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Sector
+
+
+class GoalCreateSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Goal
+
+
+class IndicatorCreateSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Indicator
+
+
+class ResultSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Result
+
+
+class ResultStructureSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = ResultStructure
+
+
+class ResultTypeSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = ResultType
+
+
+class UnitSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Unit

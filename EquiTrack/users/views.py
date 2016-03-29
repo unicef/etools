@@ -4,6 +4,7 @@ import string
 
 from django.views.generic import FormView
 
+from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework import permissions
@@ -11,12 +12,16 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
-from users.models import Office
+from users.models import Office, Section
 from reports.models import Sector
 from .forms import ProfileForm
-from .models import User, UserProfile, Country
+from .models import User, UserProfile, Country, Group
 from .serializers import (
     UserSerializer,
+    GroupSerializer,
+    OfficeSerializer,
+    SectionSerializer,
+    UserCreationSerializer,
     SimpleProfileSerializer,
 )
 
@@ -121,3 +126,85 @@ class ProfileEdit(FormView):
         except UserProfile.DoesNotExist:
             pass
         return initial
+
+
+class GroupViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        permissions = request.data['permissions']
+        serializer.instance = serializer.save()
+        data = serializer.data
+
+        try:
+            for perm in permissions:
+                serializer.instance.permissions.add(perm)
+            serializer.save()
+        except Exception:
+            pass
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+
+class UserViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = User.objects.all()
+    serializer_class = UserCreationSerializer
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        groups = request.data['groups']
+        permissions = request.data['user_permissions']
+
+        serializer.instance = serializer.save()
+        data = serializer.data
+
+        try:
+            for grp in groups:
+                serializer.instance.groups.add(grp)
+
+            for perm in permissions:
+                serializer.instance.user_permissions.add(perm)
+
+            serializer.save()
+        except Exception:
+            pass
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+
+class OfficeViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Office.objects.all()
+    serializer_class = OfficeSerializer
+
+
+class SectionViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Section.objects.all()
+    serializer_class = SectionSerializer

@@ -161,6 +161,14 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         return user, jwt_value
 
 
+class EtoolsTokenAuthentication(TokenAuthentication):
+
+    def authenticate(self, request):
+        user, token = super(EtoolsTokenAuthentication, self).authenticate(request)
+        set_country(user, request)
+        return user, token
+
+
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def pre_social_login(self, request, sociallogin):

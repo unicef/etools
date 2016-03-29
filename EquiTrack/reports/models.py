@@ -23,6 +23,10 @@ class ResultStructure(models.Model):
     def __unicode__(self):
         return self.name
 
+    @classmethod
+    def current(cls):
+        return ResultStructure.objects.order_by('to_date').last()
+
 
 class ResultType(models.Model):
 
@@ -106,13 +110,12 @@ class Result(MPTTModel):
 
     def save(self, *args, **kwargs):
 
+        super(Result, self).save(*args, **kwargs)
         nodes = self.get_descendants()
         for node in nodes:
             if node.hidden is not self.hidden:
                 node.hidden = self.hidden
                 node.save()
-
-        super(Result, self).save(*args, **kwargs)
 
 
 class Goal(models.Model):
@@ -153,7 +156,7 @@ class Indicator(models.Model):
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     code = models.CharField(max_length=50, null=True, blank=True)
     unit = models.ForeignKey(Unit, null=True, blank=True)
 
@@ -177,6 +180,7 @@ class Indicator(models.Model):
 
     class Meta:
         ordering = ['name']
+        unique_together = (("name", "result", "sector"),)
 
     def __unicode__(self):
         return u'{} {} {}'.format(

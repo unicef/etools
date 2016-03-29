@@ -5,7 +5,12 @@ import tablib
 from django import template
 from django.utils.datastructures import OrderedDict as SortedDict
 
-from partners.models import PCA, FundingCommitment, DirectCashTransfer
+from partners.models import (
+    PCA,
+    PartnerOrganization,
+    FundingCommitment,
+    DirectCashTransfer,
+)
 from trips.models import Trip
 
 
@@ -28,8 +33,9 @@ def show_work_plan(value):
         row['Code'] = result.indicator.code if result.indicator else result.result.code
         row['Details'] = result.indicator.name if result.indicator else result.result.name
         row['Targets'] = result.target if result.target else ''
-        if result.disaggregation:
-            row.update(result.disaggregation)
+        # temporarily remove disaggregations since the number of fields can vary
+        # if result.disaggregation:
+        #     row.update(result.disaggregation)
         row['Total'] = result.total if result.total else ''
         row['CSO'] = result.partner_contribution if result.partner_contribution else ''
         row['UNICEF Cash'] = result.unicef_cash if result.unicef_cash else ''

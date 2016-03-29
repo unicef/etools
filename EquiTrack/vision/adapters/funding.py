@@ -2,6 +2,7 @@ import json
 
 
 from vision.vision_data_synchronizer import VisionDataSynchronizer
+from vision.utils import wcf_json_date_as_datetime
 
 from funds.models import Grant, Donor
 from partners.models import FundingCommitment, DirectCashTransfer
@@ -47,6 +48,8 @@ class FundingSynchronizer(VisionDataSynchronizer):
                     grant=grant,
                     fr_number=fc_line["DOC_NUMBER"],
                 )
+                funding_commitment.start = wcf_json_date_as_datetime("START_DATE")
+                funding_commitment.end = wcf_json_date_as_datetime("END_DATE")
                 funding_commitment.wbs = fc_line["WBS_ELEMENT_EX"]
                 funding_commitment.fc_type = fc_line["COMMITMENT_SUBTYPE_DESC"]
                 funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]

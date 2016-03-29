@@ -12,11 +12,12 @@ dependencies:
 
   override:
     - if [[ -e ~/docker/base_image.tar ]]; then docker load -i ~/docker/base_image.tar; fi
-    - docker build -t unicef/equitrack:etools-base -f etools-base.docker .
-    - mkdir -p ~/docker; docker save unicef/equitrack:etools-base > ~/docker/base_image.tar
-    - docker build -t unicef/equitrack:etools-builder -f etools-build.docker .
-    - docker run --rm -v "$(pwd)":/application -v "$(pwd)"/wheelhouse:/wheelhouse unicef/equitrack:etools-builder
-    - docker build -t unicef/equitrack:etools -f etools-run.docker .
+    - docker build -t unicef/etools:base -f etools-base.docker .
+    - mkdir -p ~/docker; docker save unicef/etools:base > ~/docker/base_image.tar
+    - docker build -t unicef/etools:builder -f etools-build.docker .
+    - docker run --rm -v "$(pwd)":/application -v "$(pwd)"/wheelhouse:/wheelhouse unicef/etools:builder
+    - docker build -t unicef/equitrack:$CIRCLE_BRANCH -f etools-run.docker .
+    - cd couchbase; docker build -t unicef/equitrack:sync-gateway -f etools-sync-gateway.docker .
 
 test:
   pre: # bootstrap postgres to accept connections from our container
@@ -27,12 +28,12 @@ test:
     - sudo /etc/init.d/postgresql restart
   override:
     - export HOSTIP=`ip -4 addr show scope global dev eth0 | grep inet | awk '{print \$2}' | cut -d / -f 1`;
-      docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/equitrack:etools
+      docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/equitrack:$CIRCLE_BRANCH
       coverage run manage.py test --keepdb --settings=EquiTrack.settings.test
 
 deployment:
   hub:
-    branch: etools
+    branch: [develop, master, etools]
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-      - docker push unicef/equitrack:etools
+      - docker push unicef/equitrack

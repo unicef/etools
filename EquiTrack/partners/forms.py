@@ -322,11 +322,6 @@ class AgreementForm(UserGroupForm):
                     )}
                 )
 
-        if not agreement_number and agreement_type in [Agreement.PCA, Agreement.SSFA, Agreement.MOU]:
-            raise ValidationError(
-                _(u'Please provide the agreement reference for this {}'.format(agreement_type))
-            )
-
         if agreement_type == Agreement.PCA and partner.partner_type != u'Civil Society Organization':
             raise ValidationError(
                 _(u'Only Civil Society Organizations can sign Programme Cooperation Agreements')
@@ -356,14 +351,22 @@ class AgreementForm(UserGroupForm):
         return cleaned_data
 
 
-def check_and_return_value(column, row):
+def check_and_return_value(column, row, number=False):
 
     value = 0
     if column in row:
         if not pandas.isnull(row[column]) and row[column]:
-            value = row[column]
+            # In case numbers are written in locale eg: u"6,000"
+            if number and type(row[column]) in [str, unicode]:
+                value = int(row[column].replace(',', ''))
+            else:
+                value = row[column]
         row.pop(column)
     return value
+
+
+def parse_disaggregate_val(csvs):
+    return [x.strip() for x in csvs.split(',')]
 
 
 class PartnershipForm(UserGroupForm):
@@ -433,9 +436,10 @@ class PartnershipForm(UserGroupForm):
 
         data.fillna('', inplace=True)
         current_output = None
-        # TODO: filter resultStructure before getting last
-        result_structure = self.obj.result_structure or ResultStructure.objects.last()
+        result_structure = self.obj.result_structure or ResultStructure.objects.order_by('to_date').last()
         imported = found = not_found = row_num = 0
+        # TODO: make sure to check all the expected columns are in
+
         for label, series in data.iterrows():
             create_args = dict(
                 partnership=self.obj
@@ -444,8 +448,7 @@ class PartnershipForm(UserGroupForm):
             row = series.to_dict()
             try:
                 type = label.split()[0].strip()
-                statement = row['Details'].strip()
-                row.pop('Details')
+                statement = row.pop('Details').strip()
                 try:
                     result_type = ResultType.objects.get(
                         name__icontains=type
@@ -477,11 +480,11 @@ class PartnershipForm(UserGroupForm):
 
                 create_args['result'] = result
                 create_args['result_type'] = result.result_type
-                create_args['partner_contribution'] = check_and_return_value('CSO', row)
-                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row)
-                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row)
-                target = check_and_return_value('Targets', row)
-                check_and_return_value('Total', row)
+                create_args['partner_contribution'] = check_and_return_value('CSO', row, number=True)
+                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, number=True)
+                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, number=True)
+                target = check_and_return_value('Targets', row, number=True)
+                check_and_return_value('Total', row, number=True)
 
                 if 'indicator' in label:
                     indicator, created = Indicator.objects.get_or_create(
@@ -493,16 +496,32 @@ class PartnershipForm(UserGroupForm):
                     create_args['indicator'] = indicator
                     create_args['target'] = target
 
-                result_chain, new = ResultChain.objects.get_or_create(**create_args)
+                    for key in row.keys():
+                        # "TP_" refers to activity time periods
+                        if 'Unnamed' in key or \
+                                'TF_' in key or \
+                                pandas.isnull(row[key]) or \
+                                not row[key]:
+                            del row[key]
+                            continue
+                        row[key] = parse_disaggregate_val(row[key])
+
+                    create_args['disaggregation'] = row.copy() if row else None
+                    # remove all contents of row
+                    row = {}
 
                 if row:
                     for key in row.keys():
-                        if 'Unnamed' in key:
+                        if 'Unnamed' in key or 'TF_' not in key:
                             del row[key]
                         elif pandas.isnull(row[key]):
                             row[key] = ''
-                    result_chain.disaggregation = row
-                    result_chain.save()
+
+                # activity only
+                if row:
+                    create_args['disaggregation'] = row.copy() if row else None
+
+                result_chain, new = ResultChain.objects.get_or_create(**create_args)
 
                 if new:
                     imported += 1

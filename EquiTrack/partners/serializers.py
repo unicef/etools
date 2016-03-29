@@ -4,14 +4,17 @@ import json
 from django.db import transaction
 from rest_framework import serializers
 
-from rest_framework_hstore.fields import HStoreField
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
 from .models import (
+    FileType,
     GwPCALocation,
     PCA,
     PCASector,
+    PCAFile,
+    PCAGrant,
+    PartnershipBudget,
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
@@ -29,9 +32,46 @@ class PCASectorSerializer(serializers.ModelSerializer):
         model = PCASector
 
 
+class PCAFileSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = PCAFile
+
+    class Meta:
+        model = PCAFile
+        fields = (
+            "id",
+            "attachment",
+            "type",
+            "pca",
+        )
+
+
+class FileTypeSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = FileType
+
+
+class PCAGrantSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PCAGrant
+
+
+class PartnershipBudgetSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnershipBudget
+
+
 class ResultChainSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
-    disaggregation = HStoreField()
+    disaggregation = serializers.JSONField()
     result = OutputSerializer()
 
     def create(self, validated_data):
@@ -46,6 +86,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
     partner_staff_member = serializers.SerializerMethodField(read_only=True)
     indicator = serializers.SerializerMethodField(read_only=True)
     disaggregation = serializers.JSONField()
+
 
     class Meta:
         model = IndicatorReport
@@ -81,7 +122,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
 
 class ResultChainDetailsSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
-    disaggregation = HStoreField()
+    disaggregation = serializers.JSONField()
     result = OutputSerializer()
     indicator_reports = IndicatorReportSerializer(many=True)
 
@@ -91,31 +132,13 @@ class ResultChainDetailsSerializer(serializers.ModelSerializer):
 
 class InterventionSerializer(serializers.ModelSerializer):
 
-    pca_id = serializers.CharField(source='id')
+    pca_id = serializers.CharField(source='id', read_only=True)
     pca_title = serializers.CharField(source='title')
     pca_number = serializers.CharField(source='reference_number')
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
-    # pcasector_set = PCASectorSerializer(many=True)
-    # results = ResultChainSerializer(many=True)
-
-    def create(self, validated_data):
-        # print validated_data
-        # intervention, created = PCA.objects.get_or_create(**validated_data)
-        # results = validated_data.get('results')
-        # validated_data['indicator'] = results.indicator
-
-        try:
-            with transaction.atomic():
-                intervention = PCA.objects.create(**validated_data)
-                # pcasector_set = PCASectorSerializer(many=True)
-                # results = ResultChainSerializer(many=True)
-                # results.create(validated_data)
-                # pcasector_set.create(validated_data)
-        except Exception as ex:
-            raise serializers.ValidationError({'pcasector': ex.message})
-
-        return intervention
+    pcasector_set = PCASectorSerializer(many=True, read_only=True)
+    results = ResultChainSerializer(many=True, read_only=True)
 
     class Meta:
         model = PCA

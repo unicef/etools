@@ -9,8 +9,6 @@ from django.conf import settings
 from django.db import models, connection
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
-
-from django.contrib.postgres.fields import HStoreField
 from django.contrib.auth.models import User
 
 from jsonfield import JSONField
@@ -143,6 +141,94 @@ class PartnerOrganization(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    def hact_min_requirements(self):
+        programme_visits = spot_checks = audits = 0
+        cash_transferred = self.actual_cash_transferred
+        if cash_transferred <= 50000.00:
+            programme_visits = 1
+        elif cash_transferred > 50000.00 and cash_transferred <= 100000.00:
+            programme_visits = 1
+            spot_checks = 1
+        elif cash_transferred > 100000.00 and cash_transferred <= 350000.00:
+            if self.rating in [u'Low', u'Medium']:
+                programme_visits = 1
+                spot_checks = 1
+            else:
+                programme_visits = 2
+                spot_checks = 2
+        else:
+            if self.rating in [u'Low', u'Medium']:
+                programme_visits = 2
+                spot_checks = 2
+            else:
+                programme_visits = 4
+                spot_checks = 3
+        if self.total_cash_transferred > 500000.00:
+            audits = 1
+
+        return programme_visits, spot_checks, audits
+
+    @property
+    def planned_cash_transfers(self):
+        """
+        Planned cash transfers for the current year
+        """
+        year = datetime.date.today().year
+        total = PartnershipBudget.objects.filter(
+            partnership__partner=self,
+            partnership__status=PCA.ACTIVE,
+            year=year).aggregate(
+            models.Sum('unicef_cash')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def actual_cash_transferred(self):
+        """
+        Actual cash transferred for the current year
+        """
+        year = datetime.date.today().year
+        total = FundingCommitment.objects.filter(
+            intervention__partner=self,
+            intervention__status=PCA.ACTIVE,
+            end__year=year).aggregate(
+            models.Sum('expenditure_amount')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def total_cash_transferred(self):
+        """
+        Total cash transferred for the current CP cycle
+        """
+        cp = ResultStructure.current()
+        total = FundingCommitment.objects.filter(
+            end__gte=cp.from_date,
+            end__lte=cp.to_date,
+            intervention__partner=self,
+            intervention__status=PCA.ACTIVE).aggregate(
+            models.Sum('expenditure_amount')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def programmatic_visits(self):
+        from trips.models import LinkedPartner
+        return LinkedPartner.objects.filter(
+            partner=self,
+            trip__status=u'completed',
+            trip__travel_type=u'programme_monitoring'
+        ).count()
+
+    @property
+    def spot_checks(self):
+        from trips.models import LinkedPartner
+        return LinkedPartner.objects.filter(
+            partner=self,
+            trip__status=u'completed',
+            trip__travel_type=u'spot_check'
+        ).count()
 
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
@@ -394,14 +480,17 @@ class Agreement(TimeStampedModel):
     @property
     def reference_number(self):
         year = self.year
-        objects = list(Agreement.objects.filter(created__year=year).order_by('created').values_list('id', flat=True))
+        objects = list(Agreement.objects.filter(
+            created__year=year,
+            agreement_type=self.agreement_type
+        ).order_by('created').values_list('id', flat=True))
         sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
         number = u'{code}/{type}{year}{seq}{version}'.format(
             code=connection.tenant.country_short_code or '',
             type=self.agreement_type,
             year=year,
             seq=sequence,
-            version=u''  # TODO: Change once agreement amendments are active
+            version=u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
         )
         return number
 
@@ -459,7 +548,10 @@ class PCA(AdminURLMixin, models.Model):
         (IC, u'IC TOR'),
     )
 
-    partner = models.ForeignKey(PartnerOrganization)
+    partner = models.ForeignKey(
+        PartnerOrganization,
+        related_name='documents',
+    )
     agreement = ChainedForeignKey(
         Agreement,
         related_name='interventions',
@@ -576,7 +668,7 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
     )
 
-    # budget
+    # budget TODO: Remove
     partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
     unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
     in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
@@ -679,17 +771,75 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def reference_number(self):
-        year = self.year
-        objects = list(PCA.objects.filter(created_at__year=year).order_by('created_at').values_list('id', flat=True))
-        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-        number = u'{agreement}/{type}{year}{seq}{version}'.format(
-            agreement=self.agreement.reference_number if self.id and self.agreement else '',
-            type=self.partnership_type,
-            year=year,
-            seq=sequence,
-            version=u'-{}'.format(self.amendment_num) if self.amendment_num else ''
+        if self.partnership_type == PCA.SSFA:
+            return self.agreement.reference_number
+        else:
+            year = self.year
+            objects = list(PCA.objects.filter(
+                partner=self.partner,
+                created_at__year=year,
+                partnership_type=self.partnership_type
+            ).order_by('created_at').values_list('id', flat=True))
+            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            number = u'{agreement}/{type}{year}{seq}{version}'.format(
+                agreement=self.agreement.reference_number if self.id and self.agreement else '',
+                type=self.partnership_type,
+                year=year,
+                seq=sequence,
+                version=u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
+                if self.amendments_log.last() else ''
+            )
+            return number
+
+    @property
+    def planned_cash_transfers(self):
+        """
+        Planned cash transfers for the current year
+        """
+        year = datetime.date.today().year
+        total = self.budget_log.filter(year=year).aggregate(
+            models.Sum('unicef_cash')
         )
-        return number
+        return total[total.keys()[0]] or 0
+
+    @property
+    def actual_cash_transferred(self):
+        """
+        Actual cash transferred for the current year
+        """
+        year = datetime.date.today().year
+        total = self.funding_commitments.filter(end__year=year).aggregate(
+            models.Sum('expenditure_amount')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def total_cash_transferred(self):
+        """
+        Total cash transferred for the current CP cycle
+        """
+        cp = ResultStructure.current()
+        total = self.funding_commitments.filter(
+            end__gte=cp.to_date,
+            end__lte=cp.to_date
+        ).aggregate(
+            models.Sum('expenditure_amount')
+        )
+        return total[total.keys()[0]] or 0
+
+    @property
+    def programmatic_visits(self):
+        return self.trips.filter(
+            trip__status=u'completed',
+            trip__travel_type=u'programme_monitoring'
+        ).count()
+
+    @property
+    def spot_checks(self):
+        return self.trips.filter(
+            trip__status=u'completed',
+            trip__travel_type=u'spot_check'
+        ).count()
 
     @classmethod
     def get_active_partnerships(cls):
@@ -715,6 +865,11 @@ class PCA(AdminURLMixin, models.Model):
                 settings.DEFAULT_FROM_EMAIL,
                 *recipients
             )
+
+        commitments = FundingCommitment.objects.filter(fr_number=instance.fr_number)
+        for commit in commitments:
+            commit.intervention = instance
+            commit.save()
 
 
 post_save.connect(PCA.send_changes, sender=PCA)
@@ -746,17 +901,55 @@ class AmendmentLog(TimeStampedModel):
             self.amended_at
         )
 
-    def save(self, **kwargs):
+
+    @property
+    def amendment_number(self):
         """
         Increment amendment number automatically
         """
-        previous = AmendmentLog.objects.filter(
+        objects = list(AmendmentLog.objects.filter(
             partnership=self.partnership
-        ).order_by('-amendment_number')
+        ).order_by('created').values_list('id', flat=True))
 
-        self.amendment_number = (previous[0].amendment_number + 1) if previous else 1
+        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
-        super(AmendmentLog, self).save(**kwargs)
+
+class AgreementAmendmentLog(TimeStampedModel):
+
+        agreement = models.ForeignKey(Agreement, related_name='amendments_log')
+        type = models.CharField(
+            max_length=50,
+            choices=Choices(
+                'Authorised Officers',
+                'Banking Info',
+                'Agreement Changes',
+                'Additional Clauses',
+            ))
+        amended_at = models.DateField(null=True, verbose_name='Signed At')
+        amendment_number = models.IntegerField(default=0)
+        status = models.CharField(
+            max_length=32L,
+            blank=True,
+            choices=PCA.PCA_STATUS,
+        )
+
+        def __unicode__(self):
+            return u'{}: {} - {}'.format(
+                self.amendment_number,
+                self.type,
+                self.amended_at
+            )
+
+        @property
+        def amendment_number(self):
+            """
+            Increment amendment number automatically
+            """
+            objects = list(AgreementAmendmentLog.objects.filter(
+                agreement=self.agreement
+            ).order_by('created').values_list('id', flat=True))
+
+            return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
 
 class PartnershipBudget(TimeStampedModel):
@@ -990,7 +1183,7 @@ class ResultChain(models.Model):
     in_kind_amount = models.IntegerField(default=0)
 
     # variable disaggregation's that may be present in the work plan
-    disaggregation = HStoreField(null=True)
+    disaggregation = JSONField(null=True)
 
     @property
     def total(self):
@@ -1079,10 +1272,10 @@ class DistributionPlan(models.Model):
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
-class FundingCommitment(models.Model):
+class FundingCommitment(TimeFramedModel):
 
     grant = models.ForeignKey(Grant)
-    intervention = models.ForeignKey(PCA, null=True)
+    intervention = models.ForeignKey(PCA, null=True, related_name='funding_commitments')
     fr_number = models.CharField(max_length=50)
     wbs = models.CharField(max_length=50)
     fc_type = models.CharField(max_length=50)

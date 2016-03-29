@@ -30,5 +30,6 @@ urlpatterns = patterns(
         ),
         name='sub-districts'),
 
-    url(r'^cartodbtables/$', views.CartoDBTablesView.as_view(), name='cartodbtables')
+    url(r'^cartodbtables/$', views.CartoDBTablesView.as_view(), name='cartodbtables'),
+    url(r'^autocomplete/$', views.LocationQuerySetView.as_view(), name='locations_autocomplete')
 )

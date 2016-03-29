@@ -28,8 +28,9 @@ from users.models import UserProfile, Office, Section
 from locations.models import get_random_color
 from partners.models import FileType
 from .models import Trip, FileAttachment
-from .serializers import TripSerializer
+from .serializers import TripSerializer, Trip2Serializer, FileAttachmentSerializer
 from .forms import TripFilterByDateForm
+from rest_framework import status
 
 User = get_user_model()
 
@@ -68,6 +69,57 @@ class AppsIOSPlistView(View):
             result = my_f.read()
 
         return HttpResponse(result, content_type="application/octet-stream")
+
+
+class Trips2ViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Trip.objects.all()
+    serializer_class = Trip2Serializer
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        partners = request.data['partners']
+        pcas = request.data['pcas']
+
+        serializer.instance = serializer.save()
+        data = serializer.data
+
+        try:
+            for partner in partners:
+                serializer.instance.partners.add(partner)
+
+            for pca in pcas:
+                serializer.instance.pcas.add(pca)
+
+            serializer.save()
+        except Exception:
+            pass
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+
+class TripFileViewSet(mixins.RetrieveModelMixin,
+                      mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      viewsets.GenericViewSet):
+
+    queryset = FileAttachment.objects.all()
+    serializer_class = FileAttachmentSerializer
+    parser_classes = (MultiPartParser, FormParser,)
+
+    def get_queryset(self):
+
+        queryset = super(TripFileViewSet, self).get_queryset()
+        trip_id = self.kwargs.get('trip_id')
+        return queryset.filter(trip=trip_id)
 
 
 class TripsViewSet(mixins.RetrieveModelMixin,

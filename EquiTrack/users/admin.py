@@ -43,7 +43,10 @@ class ProfileInline(admin.StackedInline):
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
 
         if db_field.name == u'countries_available':
-            kwargs['queryset'] = request.user.profile.countries_available.all()
+            if request and request.user.is_superuser:
+                kwargs['queryset'] = Country.objects.all()
+            else:
+                kwargs['queryset'] = request.user.profile.countries_available.all()
 
         return super(ProfileInline, self).formfield_for_manytomany(
             db_field, request, **kwargs
@@ -178,11 +181,17 @@ class UserAdminPlus(UserAdmin):
             fields.append(u'is_superuser')
         return fields
 
+
+class CountryAdmin(admin.ModelAdmin):
+
+    def has_add_permission(self, request):
+        return False
+
 # Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
-admin.site.register(Country)
+admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
 admin.site.register(Section)
 
