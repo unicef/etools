@@ -178,11 +178,17 @@ class UserAdminPlus(UserAdmin):
             fields.append(u'is_superuser')
         return fields
 
+
+class CountryAdmin(admin.ModelAdmin):
+
+    def has_add_permission(self, request):
+        return False
+
 # Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
 admin.site.register(UserProfile, ProfileAdmin)
-admin.site.register(Country)
+admin.site.register(Country, CountryAdmin)
 admin.site.register(Office)
 admin.site.register(Section)
 
