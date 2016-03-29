@@ -38303,12 +38303,10 @@ window.addEventListener('WebComponentsReady', function() {
       }
     },
     ready: function() {
-      console.log('ready called');
       this.currentDate = new Date();
       this.updateDate();
     },
     updateDate: function(){
-      console.log('updating Date');
       if (!this.currentDate){
         return;
       }
@@ -38316,14 +38314,12 @@ window.addEventListener('WebComponentsReady', function() {
       this.jsonDate = this.dateFormat(this.date, '');
     },
     dateFormat: function(date, format) {
-      console.log('formatting Date');
       return moment(date).format(format);
     },
     showDialog: function() {
       this.$.dialog.toggle();
     },
     dismissDialog: function(event) {
-      console.log('inside datepicker');
       if (event.detail.confirmed) {
         this.date = this.$.picker.date;
         this.updateDate();
@@ -39340,12 +39336,31 @@ commonBv.utils = {
         @apply(--layout-flex);
         @apply(--layout-vertical);
       }
+      .intLabel {
+        font-size: 80%;
+        color: var(--secondary-text-color);
 
+      }
   </style>
     <etools-ajax auto="" id="ajax" url="[[url]]" handle-as="json" on-response="handleResponse" debounce-duration="300" loading="{{pageLoading}}">
     </etools-ajax>
 
   <h2>{{intervention.title}}</h2>
+  <h3>Details</h3>
+  <paper-material elevation="1">
+    <p>
+      <span class="intLabel">PCA number:</span> {{intervention.pca_number}}
+    </p>
+    <p>
+      <span class="intLabel">Initiated:</span> {{dateFormat(intervention.initiation_date, 'LL')}}, 
+      <span class="intLabel">Ending:</span> {{dateFormat(intervention.end_date, 'LL')}}, 
+      <span class="intLabel">Reviewed</span> : {{dateFormat(intervention.review_date, 'LL')}}
+    </p>
+    <p>
+      <span class="intLabel">Total Cash:</span> {{intervention.total_cash}}
+      <span class="intLabel">Partner Contribution:</span> {{intervention.partner_contribution_budget}}
+    </p>
+  </paper-material>
   <h1 hidden$="[[!pageLoading]]">
       Page is loading now...
   </h1>
@@ -39353,6 +39368,7 @@ commonBv.utils = {
 
    
    
+      <h3>Indicators</h3>
         <paper-material elevation="1">
           <template is="dom-repeat" items="[[outputs]]" as="out">
             <div class="outputBlock">
@@ -39395,6 +39411,7 @@ commonBv.utils = {
   'use strict';
   Polymer({
     is: 'intervention-details',
+    behaviors: [commonBv.utils],
     properties: {
       selectedTab: {
         type: Number,
