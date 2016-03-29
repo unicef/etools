@@ -142,6 +142,33 @@ class PartnerOrganization(models.Model):
     def __unicode__(self):
         return self.name
 
+    def hact_min_requirements(self):
+        programme_visits = spot_checks = audits = 0
+        cash_transferred = self.actual_cash_transferred
+        if cash_transferred <= 50000.00:
+            programme_visits = 1
+        elif cash_transferred > 50000.00 and cash_transferred <= 100000.00:
+            programme_visits = 1
+            spot_checks = 1
+        elif cash_transferred > 100000.00 and cash_transferred <= 350000.00:
+            if self.rating in [u'Low', u'Medium']:
+                programme_visits = 1
+                spot_checks = 1
+            else:
+                programme_visits = 2
+                spot_checks = 2
+        else:
+            if self.rating in [u'Low', u'Medium']:
+                programme_visits = 2
+                spot_checks = 2
+            else:
+                programme_visits = 4
+                spot_checks = 3
+        if self.total_cash_transferred > 500000.00:
+            audits = 1
+
+        return programme_visits, spot_checks, audits
+
     @property
     def planned_cash_transfers(self):
         """
@@ -151,7 +178,7 @@ class PartnerOrganization(models.Model):
         total = PartnershipBudget.objects.filter(
             partnership__partner=self,
             partnership__status=PCA.ACTIVE,
-            created__year=year).aggregate(
+            year=year).aggregate(
             models.Sum('unicef_cash')
         )
         return total[total.keys()[0]] or 0
@@ -175,7 +202,10 @@ class PartnerOrganization(models.Model):
         """
         Total cash transferred for the current CP cycle
         """
+        cp = ResultStructure.current()
         total = FundingCommitment.objects.filter(
+            end__gte=cp.to_date,
+            end__lte=cp.to_date,
             intervention__partner=self,
             intervention__status=PCA.ACTIVE).aggregate(
             models.Sum('expenditure_amount')
@@ -721,11 +751,12 @@ class PCA(AdminURLMixin, models.Model):
     @property
     def total_budget(self):
 
-        total = self.budget_log.all().aggregate(
-            models.Sum('unicef_cash'),
-            models.Sum('in_kind_amount'),
-            models.Sum('partner_contribution')
-        )
+        total = 0
+        if self.budget_log.exists():
+            budget = self.budget_log.latest('created')
+            total += budget.unicef_cash
+            total += budget.in_kind_amount
+            total += budget.partner_contribution
         return total
 
     @property
@@ -762,7 +793,7 @@ class PCA(AdminURLMixin, models.Model):
         Planned cash transfers for the current year
         """
         year = datetime.date.today().year
-        total = self.budget_log.filter(created__year=year).aggregate(
+        total = self.budget_log.filter(year=year).aggregate(
             models.Sum('unicef_cash')
         )
         return total[total.keys()[0]] or 0
@@ -783,7 +814,11 @@ class PCA(AdminURLMixin, models.Model):
         """
         Total cash transferred for the current CP cycle
         """
-        total = self.funding_commitments.all().aggregate(
+        cp = ResultStructure.current()
+        total = self.funding_commitments.filter(
+            end__gte=cp.to_date,
+            end__lte=cp.to_date
+        ).aggregate(
             models.Sum('expenditure_amount')
         )
         return total[total.keys()[0]] or 0

@@ -10,6 +10,7 @@ import factory
 
 from users import models as user_models
 from trips import models as trip_models
+from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
@@ -146,3 +147,16 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     partnership_type = u'PD'
     title = u'To save the galaxy from the Empire'
     initiation_date = datetime.today()
+
+
+# class FundingCommitmentFactory(factory.django.DjangoModelFactory):
+#     class Meta:
+#         model = partner_models.FundingCommitment
+#
+#     grant = grant,
+#     intervention = factory.SubFactory(PartnershipFactory)
+#
+#
+#     fr_number = models.CharField(max_length=50)
+#     wbs = models.CharField(max_length=50)
+#     fc_type = models.CharField(max_length=50)
