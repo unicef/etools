@@ -45,11 +45,14 @@ window.addEventListener('WebComponentsReady', function() {
   page('/myInterventions', function() {
     app.route = 'myInterventions';
   });
-  page('/intervention/:intv', function(data) {
+  page('/intervention/:intv/', function(data) {
     app.route = 'intervention';
     app.params = data.params;
   });
-  
+  page('/rcReport/:intvId/:rcId/', function(data) {
+    app.route = 'rcReport';
+    app.params = data.params;
+  });
   page('/accounts/logout', function() {
     window.location.href = '/accounts/logout';
   });

@@ -16,6 +16,7 @@ from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import AutoSizeTextForm
 from .models import (
     Trip,
+    LinkedPartner,
     TripFunds,
     ActionPoint,
     TravelRoutes,
@@ -38,6 +39,12 @@ from .filters import (
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
+
+
+class LinkedPartnerInlineAdmin(admin.TabularInline):
+    model = LinkedPartner
+    suit_classes = u'suit-tab suit-tab-planning'
+    extra = 1
 
 
 class TravelRoutesInlineAdmin(admin.TabularInline):
@@ -103,6 +110,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     save_as = True
     form = TripForm
     inlines = (
+        LinkedPartnerInlineAdmin,
         TravelRoutesInlineAdmin,
         TripLocationsInlineAdmin,
         TripFundsInlineAdmin,

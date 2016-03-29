@@ -23,9 +23,21 @@ from .views import (
     UserDashboardView,
     CmtDashboardView,
 )
-from trips.views import TripsViewSet, Trips2ViewSet
+from locations.views import CartoDBTablesViewSet, LocationTypesViewSet, LocationsViewSet
+from trips.views import TripsViewSet, Trips2ViewSet, TripFileViewSet
 from partners.views import InterventionsViewSet, IndicatorReportViewSet
-from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet
+from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
+from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
+from funds.views import DonorViewSet, GrantViewSet
+from reports.views import (
+    ResultStructureViewSet,
+    ResultTypeViewSet,
+    SectorViewSet,
+    GoalViewSet,
+    IndicatorViewSet,
+    OutputViewSet,
+    UnitViewSet
+)
 
 from partners.urls import (
     interventions_api,
@@ -39,10 +51,37 @@ from partners.urls import (
 
 api = routers.SimpleRouter()
 api.register(r'trips', TripsViewSet, base_name='trip')
-api.register(r'trips2', Trips2ViewSet, base_name='trip2')
+
+trips2_api = routers.SimpleRouter()
+trips2_api.register(r'trips2', Trips2ViewSet, base_name='trips2')
+
+trips2files_api = routers.NestedSimpleRouter(trips2_api, r'trips2', lookup='trips2')
+trips2files_api.register(r'trips2files', TripFileViewSet, base_name='trips2files')
+
 api.register(r'partnerorganizations', PartnerOrganizationsViewSet, base_name='partnerorganizations')
 api.register(r'partnerstaffmemebers', PartnerStaffMembersViewSet, base_name='partnerstaffmemebers')
 api.register(r'agreements', AgreementViewSet, base_name='agreements')
+api.register(r'filetypes', FileTypeViewSet, base_name='filetypes')
+
+api.register(r'users', UserViewSet, base_name='user')
+api.register(r'groups', GroupViewSet, base_name='groups')
+api.register(r'offices', OfficeViewSet, base_name='offices')
+api.register(r'sections', SectionViewSet, base_name='sections')
+
+api.register(r'donors', DonorViewSet, base_name='donors')
+api.register(r'grants', GrantViewSet, base_name='grants')
+
+api.register(r'resultstructures', ResultStructureViewSet, base_name='resultstructures')
+api.register(r'resulttypes', ResultTypeViewSet, base_name='resulttypes')
+api.register(r'sectors', SectorViewSet, base_name='sectors')
+api.register(r'goals', GoalViewSet, base_name='goals')
+api.register(r'indicators', IndicatorViewSet, base_name='indicators')
+api.register(r'outputs', OutputViewSet, base_name='outputs')
+api.register(r'units', UnitViewSet, base_name='units')
+
+api.register(r'locationtypes', LocationTypesViewSet, base_name='locationtypes')
+api.register(r'locationcartodb', CartoDBTablesViewSet, base_name='locationcartodb')
+api.register(r'locations', LocationsViewSet, base_name='locations')
 
 
 urlpatterns = patterns(
@@ -69,6 +108,8 @@ urlpatterns = patterns(
     url(r'^api/', include(pcafiles_api.urls)),
     url(r'^api/', include(pcagrants_api.urls)),
     url(r'^api/', include(reports_api.urls)),
+    url(r'^api/', include(trips2_api.urls)),
+    url(r'^api/', include(trips2files_api.urls)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
 
     # Uncomment the next line to enable the admin:

@@ -20,11 +20,14 @@ Example:
   <template>
     <iron-ajax
           auto
-          url="[[url]]"
+          id="customAjax"
           handle-as="json"
           on-response="handleResponse"
           on-error="handleError"
-          debounce-duration="300">
+          method="[[method]]"
+          params="[[params]]"
+          debounce-duration="300"
+          loading="{{loading}}">
     </iron-ajax>
   </template>
 
@@ -43,6 +46,27 @@ Example:
         type: String,
         value: ''
       },
+      loading: {
+        type: Boolean,
+        notify: true
+      },
+      method: {
+        type: String,
+        method: 'GET'
+      },
+      params: {
+        type: Object,
+        value: null
+      },
+      body: {
+        type: Object,
+        value: null
+      },
+      url: {
+        type: String,
+        value: null,
+        observer: '_prepareRequest'
+      }
     },
 
     handleError: function(request, error){
@@ -63,13 +87,55 @@ Example:
       //console.log(rsp.srcElement.url);
       // TODO: move this logic into default behaviours
       if (rsp.detail.xhr.responseURL !== rsp.srcElement.url){
-        console.error('expected link did not work, got redirected');
+        console.error('expected link did not work, got redirected',rsp.detail.xhr.responseURL, rsp.srcElement.url);
         // TODO: if we get redirected to login.. trigger a global redirect mechanism
         // this._handleUnexpectedResponse();
         return;
       }
       this.fire('response', rsp.detail, {bubbles: false});
-    }
+    },
+    _getCSRFCookie: function() {
+      var name = 'csrftoken';
+      var cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+      }
+      return cookieValue;
+    },
+    _csrfSafeMethod: function(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    },
+
+    _prepareRequest: function(newUrl){
+      if ((this.method !== undefined) && (!this._csrfSafeMethod(this.method))) {
+        // unsafe (post, put, delete) requests should be triggered manually
+        return;
+      }
+      this.$.customAjax.url = newUrl;
+    },
+    sendPostRequest: function(){
+      console.log('unsafe method', this.method);
+      var csrfToken = this._getCSRFCookie();
+      this.$.customAjax.auto=false;
+      this.$.customAjax.body = this.body;
+      this.$.customAjax.contentType = 'application/json';
+      this.$.customAjax.headers = {
+        'X-CSRFToken': csrfToken
+      };
+      this.$.customAjax.url = this.url;
+      this.$.customAjax.generateRequest();
+      return;
+    },
+
     
   });
 })();

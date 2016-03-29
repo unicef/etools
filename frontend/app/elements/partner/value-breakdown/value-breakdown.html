@@ -1,0 +1,120 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../input-recursive/input-recursive.html">
+
+  
+
+
+<dom-module id="value-breakdown">
+  <style>
+  
+  </style>
+  <template>
+
+    <paper-input type="number" label="Total"></paper-input>
+    <template is="dom-if" if="{{breakdowns.breakdown}}">
+      <input-recursive breakdown="{{breakdowns.breakdown}}"></input-recursive>
+    </template>
+
+   
+    <!-- <template is="dom-repeat" items="">
+    
+    </template> -->
+  
+  </template>
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'value-breakdown',
+    behaviors: [],
+    properties: {
+      disaggregation: {
+        type: Object,
+        value: {
+          'order': ['Age','Gender','Removed'],
+          'Age': ['0-1','1-2','3-4'],
+          'Gender': ['M', 'F', 'O'],
+          'Removed': ['First', 'Second']
+        }
+      },
+      breakdowns: {
+        type: Object
+      }
+           
+      
+    },
+    ready: function() {
+      this.recursiveMap();
+    },
+    
+    recursiveMap: function(){
+      var d = {
+          'order': ['Age','Gender'],
+          'Age': ['0-1','1-2','3-4'],
+          'Gender': ['M', 'F', 'O']
+        };
+      var order = d.order;
+      var tempLol = [['0-1','1-2','3-4'],['M', 'F', 'O']];
+
+      var createBDObject = function(name){
+        return {
+          breakdownName: name,
+          children: []
+        };
+      };
+      var mr = function(cln, lol) {
+        var myL = [];
+        if (lol.length === 1) {
+          
+          for (var k in lol[0]){
+            myL.push(
+              {
+                name: lol[0][k],
+                total: null,
+                breakdown: null
+              }
+            );
+          }
+          return myL;
+        } else {
+          
+          var myBreakdown = createBDObject(order[cln]);
+          myBreakdown.children = mr(cln+1, lol.slice(1));
+          for (var l in lol[0]){
+            myL.push(
+              {
+                name: lol[0][l],
+                total: null,
+                breakdown: myBreakdown
+              }
+            );
+          }
+          return myL;
+        }
+      };
+
+    var result = { 
+      name: 'total',
+      total: null,
+      breakdown: createBDObject(d.order[0])
+    };
+    result.breakdown.children = mr(1, tempLol);
+    //console.log(result);
+    this.breakdowns = result;
+    },
+    
+    
+  });
+})();
+
+</script>

@@ -15,6 +15,7 @@ from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
 from .serializers import (
+    FileTypeSerializer,
     LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
@@ -29,8 +30,10 @@ from .serializers import (
     PCAFileSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
+from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import (
+    FileType,
     PartnershipBudget,
     PCAFile,
     AuthorizedOfficer,
@@ -257,7 +260,15 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        try:
+            managers = request.data['unicef_managers']
+        except KeyError:
+            managers = []
+
         serializer.instance = serializer.save()
+
+        for man in managers:
+            serializer.instance.unicef_managers.add(man)
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED,
@@ -293,7 +304,7 @@ class ResultChainViewSet(mixins.RetrieveModelMixin,
 
     def get_queryset(self):
         queryset = super(ResultChainViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_id')
+        intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
 
@@ -386,7 +397,8 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
     model = PCAFile
     queryset = PCAFile.objects.all()
     serializer_class = PCAFileSerializer
-    permission_classes = (ResultChainPermission,)
+    parser_classes = (MultiPartParser, FormParser,)
+    permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
 
@@ -523,3 +535,11 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
+
+class FileTypeViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = FileType.objects.all()
+    serializer_class = FileTypeSerializer

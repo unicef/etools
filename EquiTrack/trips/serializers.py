@@ -98,12 +98,17 @@ class ActionPointSerializer(serializers.ModelSerializer):
 
 class FileAttachmentSerializer(serializers.ModelSerializer):
 
+    id = serializers.CharField(read_only=True)
+
     class Meta:
         model = FileAttachment
         fields = (
             "id",
             "report",
-            "type"
+            "type",
+            "object_id",
+            "content_type",
+            "trip",
         )
 
 
@@ -219,6 +224,7 @@ class Trip2Serializer(serializers.ModelSerializer):
             'actionpoint_set',
             'tripfunds_set',
             'triplocation_set',
+            'programme_assistant'
             # 'all_files'
         )
 
