@@ -105,7 +105,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
         'EquiTrack.mixins.EToolsTenantJWTAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        'EquiTrack.mixins.EtoolsTokenAuthentication',
     )
 }
 

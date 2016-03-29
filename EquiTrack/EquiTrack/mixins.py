@@ -20,6 +20,7 @@ from rest_framework.exceptions import PermissionDenied
 from tenant_schemas.middleware import TenantMiddleware
 from tenant_schemas.utils import get_public_schema_name
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework_jwt.settings import api_settings
 
 from allauth.exceptions import ImmediateHttpResponse
@@ -128,6 +129,14 @@ class EToolsTenantMiddleware(TenantMiddleware):
         # Do we have a public-specific urlconf?
         if hasattr(settings, 'PUBLIC_SCHEMA_URLCONF') and request.tenant.schema_name == get_public_schema_name():
             request.urlconf = settings.PUBLIC_SCHEMA_URLCONF
+
+
+class EtoolsTokenAuthentication(TokenAuthentication):
+
+    def authenticate(self, request):
+        user, token = super(EtoolsTokenAuthentication, self).authenticate(request)
+        set_country(user, request)
+        return user, token
 
 
 class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
