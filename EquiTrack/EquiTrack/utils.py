@@ -198,7 +198,7 @@ def staff_test(u):
     return False
 
 
-def staff_required(function, home_url="/partner", redirect_field_name=None):
+def staff_required(function, home_url="/partners/", redirect_field_name=None):
     actual_decorator = user_passes_test(staff_test, home_url, redirect_field_name)
     return actual_decorator(function)
 

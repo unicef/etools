@@ -36,6 +36,7 @@
                         <br/>Required
                     </td>
                 </tr>
+                {% with reqs=original.hact_min_requirements %}
                 <tr>
                     <td>
                         <u>{{ original.actual_cash_transferred }}</u>
@@ -48,17 +49,18 @@
                     </td>
                     <td>
                         <u>{{ original.programmatic_visits }}</u>
-                        <br/>2
+                        <br/>{{ reqs.0 }}
                     </td>
                     <td>
                         <u>{{ original.spot_checks }}</u>
-                        <br/>1
+                        <br/>{{ reqs.1 }}
                     </td>
                     <td>
                         <u>No</u>
-                        <br/>Yes
+                        <br/>{{ reqs.2 }}
                     </td>
                 </tr>
+                {% endwith %}
             </tbody>
         </table>
 
