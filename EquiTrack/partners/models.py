@@ -143,7 +143,7 @@ class PartnerOrganization(models.Model):
         return self.name
 	
 	@property
-    def hact_min_requirements(self):
+	def hact_min_requirements(self):
         programme_visits = spot_checks = audits = 0
         cash_transferred = self.actual_cash_transferred
         if cash_transferred <= 50000.00:
