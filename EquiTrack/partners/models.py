@@ -141,10 +141,11 @@ class PartnerOrganization(models.Model):
 
     def __unicode__(self):
         return self.name
-	
-	@property
-	def hact_min_requirements(self):
-        programme_visits = spot_checks = audits = 0
+
+    @property
+    def hact_min_requirements(self):
+        audit = 'No'
+        programme_visits = spot_checks = 0
         cash_transferred = self.actual_cash_transferred
         if cash_transferred <= 50000.00:
             programme_visits = 1
@@ -166,9 +167,9 @@ class PartnerOrganization(models.Model):
                 programme_visits = 4
                 spot_checks = 3
         if self.total_cash_transferred > 500000.00:
-            audits = 1
+            audit = 'Yes'
 
-        return programme_visits, spot_checks, audits
+        return programme_visits, spot_checks, audit
 
     @property
     def planned_cash_transfers(self):
