@@ -142,8 +142,10 @@ class PartnerOrganization(models.Model):
     def __unicode__(self):
         return self.name
 
+    @property
     def hact_min_requirements(self):
-        programme_visits = spot_checks = audits = 0
+        audit = 'No'
+        programme_visits = spot_checks = 0
         cash_transferred = self.actual_cash_transferred
         if cash_transferred <= 50000.00:
             programme_visits = 1
@@ -165,9 +167,9 @@ class PartnerOrganization(models.Model):
                 programme_visits = 4
                 spot_checks = 3
         if self.total_cash_transferred > 500000.00:
-            audits = 1
+            audit = 'Yes'
 
-        return programme_visits, spot_checks, audits
+        return programme_visits, spot_checks, audit
 
     @property
     def planned_cash_transfers(self):
@@ -204,7 +206,7 @@ class PartnerOrganization(models.Model):
         """
         cp = ResultStructure.current()
         total = FundingCommitment.objects.filter(
-            end__gte=cp.to_date,
+            end__gte=cp.from_date,
             end__lte=cp.to_date,
             intervention__partner=self,
             intervention__status=PCA.ACTIVE).aggregate(
@@ -771,21 +773,25 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def reference_number(self):
-        year = self.year
-        objects = list(PCA.objects.filter(
-            partner=self.partner,
-            created_at__year=year,
-            partnership_type=self.partnership_type
-        ).order_by('created_at').values_list('id', flat=True))
-        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-        number = u'{agreement}/{type}{year}{seq}{version}'.format(
-            agreement=self.agreement.reference_number if self.id and self.agreement else '',
-            type=self.partnership_type,
-            year=year,
-            seq=sequence,
-            version=u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
-        )
-        return number
+        if self.partnership_type == PCA.SSFA:
+            return self.agreement.reference_number
+        else:
+            year = self.year
+            objects = list(PCA.objects.filter(
+                partner=self.partner,
+                created_at__year=year,
+                partnership_type=self.partnership_type
+            ).order_by('created_at').values_list('id', flat=True))
+            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            number = u'{agreement}/{type}{year}{seq}{version}'.format(
+                agreement=self.agreement.reference_number if self.id and self.agreement else '',
+                type=self.partnership_type,
+                year=year,
+                seq=sequence,
+                version=u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
+                if self.amendments_log.last() else ''
+            )
+            return number
 
     @property
     def planned_cash_transfers(self):

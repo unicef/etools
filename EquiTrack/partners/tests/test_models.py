@@ -18,7 +18,7 @@ class TestHACTCalculations(TenantTestCase):
         current_cp = ResultStructure.objects.create(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
-            to_date=datetime.date(year+2, 12, 31)
+            to_date=datetime.date(year+1, 12, 31)
         )
         grant = Grant.objects.create(
             donor=Donor.objects.create(name='Test Donor'),
@@ -27,7 +27,7 @@ class TestHACTCalculations(TenantTestCase):
         PartnershipBudget.objects.create(
             partnership=self.intervention,
             partner_contribution=10000,
-            unicef_cash=40000,
+            unicef_cash=60000,
             in_kind_amount=5000,
             year=str(year)
         )
@@ -40,7 +40,7 @@ class TestHACTCalculations(TenantTestCase):
         )
         FundingCommitment.objects.create(
             start=current_cp.from_date,
-            end=current_cp.to_date+datetime.timedelta(days=200),
+            end=current_cp.from_date+datetime.timedelta(days=200),
             grant=grant,
             intervention=self.intervention,
             fr_number='0123456789',
@@ -49,7 +49,7 @@ class TestHACTCalculations(TenantTestCase):
             expenditure_amount=40000.00
         )
         FundingCommitment.objects.create(
-            start=current_cp.from_date+datetime.timedelta(days=400),
+            start=current_cp.from_date+datetime.timedelta(days=200),
             end=current_cp.to_date,
             grant=grant,
             intervention=self.intervention,
@@ -62,4 +62,12 @@ class TestHACTCalculations(TenantTestCase):
     def test_planned_cash_transfers(self):
 
         total = self.intervention.partner.planned_cash_transfers
+        self.assertEqual(total, 60000)
+
+    def test_actual_cash_transferred(self):
+        total = self.intervention.partner.actual_cash_transferred
         self.assertEqual(total, 40000)
+
+    def test_total_cash_transferred(self):
+        total = self.intervention.partner.total_cash_transferred
+        self.assertEqual(total, 80000)
