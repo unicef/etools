@@ -141,7 +141,8 @@ class PartnerOrganization(models.Model):
 
     def __unicode__(self):
         return self.name
-
+	
+	@property
     def hact_min_requirements(self):
         programme_visits = spot_checks = audits = 0
         cash_transferred = self.actual_cash_transferred
