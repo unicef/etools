@@ -20,8 +20,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   if ((window.location.port === '') || (window.location.port === '8099')) {  // if production
     // Uncomment app.baseURL below and
     // set app.baseURL to '/your-pathname/' if running from folder in production
-    app.baseUrl = '/partner/';
+    app.baseUrl = '/partners/';
   }
+  // console.log(typeof(_));
 
   app.appData = {
     baseUrl: app.baseUrl,
@@ -29,10 +30,34 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     logoutEndpoint: window.location.origin + '/accounts/logout/',
     userInfoEp: window.location.origin + '/users/api/profile/',
     userPropertiesEp: window.location.origin + '/partnership/partnerstaffmember/',
-    interventionsEp: [window.location.origin, 'partners', 'api', 'interventions'].join('/') + '/',
+    interventionsEp: [window.location.origin, 'api', 'interventions'].join('/') + '/',
+    newIndicatorReportEp: window.location.origin + '/api/reports/indicators/',
+    locationsAutocompleteEp: window.location.origin + '/locations/autocomplete/',
     getEndpoint: {
       userProperties: function(id) {
         return [window.location.origin, 'partners', 'api', 'profile', id].join('/') + '/';
+      },
+      interventionDetails: function(id) {
+        return [window.location.origin, 'api', 'interventions', id].join('/') + '/';
+      },
+      resultChainDetails: function(int, res) {
+        return [
+          window.location.origin, 
+          'api', 
+          'interventions', 
+          int, 
+          'results', 
+          res].join('/') + '/';
+      },
+      newIndicatorReport: function(int, res) {
+        return [
+          window.location.origin, 
+          'api', 
+          'interventions', 
+          int, 
+          'results', 
+          res,
+          'reports'].join('/') + '/';
       }
     },
     permissions: {
@@ -59,6 +84,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   // See https://github.com/Polymer/polymer/issues/1381
   window.addEventListener('WebComponentsReady', function() {
     // imports are loaded and elements have been registered
+    app.$.refresh.addEventListener('tap', function() {
+      window.location.reload();
+    });
   });
 
   // Main area's paper-scroll-header-panel custom condensing transformation of

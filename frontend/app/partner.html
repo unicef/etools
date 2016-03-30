@@ -41,13 +41,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
   <!-- Tile icon for Win8 (144x144) -->
   <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144-precomposed.png">
-
   <!-- build:css /static/frontend/partner/styles/main.css -->
-  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/partner/main.css">
   <!-- endbuild-->
 
   <!-- build:js /static/frontend/partner/bower_components/webcomponentsjs/webcomponents-lite.min.js -->
   <script src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+  <script src="bower_components/underscore/underscore-min.js">
+</script>
   <!-- endbuild -->
 
   <!-- will be replaced with /static/frontend/partner/elements/partner_elements.vulcanized.html -->
@@ -109,10 +110,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <!-- <paper-icon-button icon="refresh"></paper-icon-button>
           <paper-icon-button icon="search"></paper-icon-button> -->
           <template is="dom-if" if="{{user.id}}">
-            <a href="[[siteinfo.logoutEndpoint]]" style="color:white;"><paper-button>logout</paper-button></a>
+            <a href="[[appData.logoutEndpoint]]" style="color:white;"><paper-button>logout</paper-button></a>
           </template>
           
-          
+          <paper-icon-button id="refresh" icon="refresh"></paper-icon-button>
 
           <!-- Application name -->
           <div class="middle middle-container center horizontal layout">
@@ -139,6 +140,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <ul>
                     <li>Viewing your information</li>
                     <li>Viewing the interventions associated with your partner organization</li>
+                    <li>Viewing progress on indicators associated with an intervention</li>
+                    <li>Viewing details of an indicator including past reports</li>
+                    <li>Adding a new report for each indicator</li>
+                </ul>
+                <p class="paper-font-subhead">Currently under development:</p>
+                <ul>
+                    <li>Ability to report on indicators in bulk</li>
+                    <li>Ability to report on fully flexible disaggregations as defined in the workplan</li>
                 </ul>
                 <p class="paper-font-body2">Thank you for choosing to make our children's lives better! </p>
               </paper-material>
@@ -149,7 +158,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <template is="dom-if" if='{{permissions.loggedInDefault}}'>
               <section data-route="myInfo">
                 <paper-material elevation="1">
-                    <h2 class="page-title">Hi, {{user.first_name}} {{user.last_name}}!</h2>
+                    <h2 class="page-title">Hi {{user.first_name}} {{user.last_name}},</h2>
                     <user-page siteinfo='[[siteinfo]]' permissions='[[permissions]]' user='{{user}}'></user-page>
                 </paper-material>
               </section>
@@ -158,17 +167,20 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <template is="dom-if" if='{{permissions.interventionsMenu}}'>
               <section data-route="myInterventions">
                   <interventions-page 
-                      app-data="[[appData]]">
+                      app-data="[[appData]]" interventions={{interventions}}>
                   </interventions-page>
               </section>
             </template>
 
-
             <section data-route="intervention">
-              <paper-material elevation="1">
-                <h2 class="page-title">Intervention with id: {{params.intv}} </h2>
-                <div>This is {{params.intv}}'s section</div>
-              </paper-material>
+                <intervention-details app-data="{{appData}}" intervention-id="[[params.intv]]"></intervention-details> 
+            </section>
+
+            <section data-route="rcReport">
+                <rc-report app-data="[[appData]]" 
+                  interventions="{{interventions}}" 
+                  intervention-id="[[params.intvId]]"
+                  rc-id="[[params.rcId]]"></rc-report> 
             </section>
 
           </iron-pages>

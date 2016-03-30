@@ -4,6 +4,9 @@
 <link rel="import" href="../../common/etools-ajax/etools-ajax.html">
 <link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../../bower_components/iron-flex-layout/iron-flex-layout.html">
+
+<link rel="import" href="../../behaviors/common/utils.html">
 
 <!--
 An element providing a solution to no problem in particular.
@@ -32,8 +35,8 @@ Example:
         --iron-list-items-container: {
           max-width: 800px;
           margin: auto;
-          margin-top: 60px;
-          margin-bottom: 60px;
+          margin-top: 20px;
+          margin-bottom: 20px;
           border-bottom: 1px solid #ddd;
         };
       }
@@ -44,17 +47,6 @@ Example:
         border: 1px solid #ddd;
         cursor: pointer;
         margin-bottom: 10px;
-      }
-      .item:focus {
-        outline: 0;
-        border-color: #666;
-      }
-      .avatar {
-        height: 40px;
-        width: 40px;
-        border-radius: 20px;
-        box-sizing: border-box;
-        background-color: #DDD;
       }
       .pad {
         padding: 0 16px;
@@ -68,23 +60,6 @@ Example:
       .shortText, .longText {
         font-size: 14px;
       }
-      .longText {
-        color: gray;
-        display: none;
-      }
-      .item:hover .shortText::after {
-        /*content: ' [+]';*/
-        color: gray;
-      }
-      .item.expanded:hover .shortText::after {
-        /*content: '';*/
-      }
-      .item.expanded .longText {
-        display: block;
-      }
-      .item.expanded:hover .longText::after {
-        /*content: ' [–]';*/
-      }
       .spacer {
         @apply(--layout-flex);
       }
@@ -96,9 +71,12 @@ Example:
         @apply(--layout-flex);
         @apply(--layout-vertical);
       }
+      paper-material {
+        padding: 1%;
+        background-color: var(--primary-background-color);
+      }
     </style>
-    <div> These are your current interventions: </div>
-    
+  
     <etools-ajax
           auto
           id="ajax"
@@ -108,23 +86,27 @@ Example:
           debounce-duration="300">
     </etools-ajax>
 
-    <iron-list id="list" items="[[interventions]]" as="item">
-        <template>
-            <div class="item" class$="[[getClassForItem(item, item.expanded)]]" on-tap="_goToIntervention" tabindex="0">
-                <div class="pad">
-                  <a hresf$="{{appData.baseUrl}}intervention/1">
+    <h2>Current interventions: </h2>
+    <paper-material elevation="1">
+      <iron-list id="list" items="[[interventions]]" as="item">
+          <template>
+              <div class="item"  on-tap="_goToIntervention" tabindex="0">
+                  <div class="pad">
+                    
                     <div class="primary">[[item.title]]</div>
-                  </a>
-                  
-                  <div class="shortText">Intervention Details</div>
-                  <div class="longText"></div>
+                    
+                    
+                    <div class="shortText">
+                      <p>Status: [[underscoreless(item.status)]]</p>
+                      <p>Ending: [[dateFormat(item.end_date, 'LL')]]</p>
+                    </div>
 
-                </div>
-                <iron-icon icon="icons:chevron-right"></iron-icon>
-            </div>
-            
-        </template>
-    </iron-list>
+                  </div>
+                  <iron-icon icon="icons:chevron-right"></iron-icon>
+              </div>
+          </template>
+      </iron-list>
+    </paper-material>
    
      
 
@@ -132,15 +114,13 @@ Example:
 
 </dom-module>
 
-
-
-
 <script>
 (function() {
     // jscs:disable
   'use strict';
   Polymer({
     is: 'interventions-page',
+    behaviors: [commonBv.utils],
     properties: {
       appData: {
         type: Object,
@@ -166,11 +146,7 @@ Example:
     },
 
     _goToIntervention: function(e){
-      console.log(e.model.item);
-      console.log(this.appData.baseUrl+'intervention/' + e.model.item.id+'/');
-      
-      page(this.appData.baseUrl+'intervention/' + e.model.item.id);
-
+      page(this.appData.baseUrl+'intervention/' + e.model.item.id+'/');
     },
     _collapseExpand: function(e) {
       var list = this.$.list;
@@ -178,12 +154,6 @@ Example:
       var isExpanded = list.items[index].expanded;
       list.set('items.' + index + '.expanded', !isExpanded);
       list.updateSizeForItem(e.model.index);
-    },
-    iconForItem: function(item) {
-      return item ? (item.integer < 50 ? 'star-border' : 'star') : '';
-    },
-    getClassForItem: function(item, expanded) {
-      return expanded ? 'item expanded' : 'item';
     }
   });
 })();

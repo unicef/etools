@@ -42,3 +42,18 @@ class LocationsViewSet(mixins.RetrieveModelMixin,
 
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
+
+
+class LocationQuerySetView(ListAPIView):
+    model = Location
+    lookup_field = 'q'
+    serializer_class = LocationSerializer
+
+    def get_queryset(self):
+        q = self.request.query_params.get('q')
+        qs = self.model.objects
+        if q:
+            qs = qs.filter(name__icontains=q)
+
+        # return maximum 7 records
+        return qs.all()[:7]

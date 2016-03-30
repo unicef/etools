@@ -1,0 +1,95 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+
+<link rel="import" href="../../../bower_components/paper-date-picker/paper-date-picker.html">
+<link rel="import" href="../../../bower_components/paper-date-picker/paper-date-picker-dialog-style.html">
+<link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/moment-element/moment-with-locales-import.html">
+
+  
+
+
+<dom-module id="etools-datepicker">
+  <template>
+  <style is="custom-style" include="paper-date-picker-dialog-style">
+    .pickDate {
+      cursor: pointer;
+    }
+  </style>
+      <iron-icon class="pickDate" on-tap="showDialog" icon="icons:date-range"></iron-icon>
+      <!-- <paper-button class="btn" on-tap="showDialog" raised>Change</paper-button> -->
+
+      <paper-dialog id="dialog" class="paper-date-picker-dialog" modal on-iron-overlay-closed="dismissDialog">
+        <paper-date-picker id="picker" date="[[date]]"></paper-date-picker>
+        <div class="buttons">
+          <paper-button dialog-dismiss>Cancel</paper-button>
+          <paper-button dialog-confirm>OK</paper-button>
+        </div>
+      </paper-dialog>
+  
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'etools-datepicker',
+    properties: {
+      currentDate: {
+        type: Date
+      },
+      chosenDate: {
+        type: Object,
+        value: null
+      },
+      prettyDate: {
+        type: String,
+        value: null,
+        notify: true
+      },
+      jsonDate: {
+        type: String,
+        value: null,
+        notify: true
+      },
+      closingReason: {
+        type: Object,
+        observer: 'dismissDialog'
+      }
+    },
+    ready: function() {
+      this.currentDate = new Date();
+      this.updateDate();
+    },
+    updateDate: function(){
+      if (!this.currentDate){
+        return;
+      }
+      this.prettyDate = this.dateFormat(this.date, 'LL');
+      this.jsonDate = this.dateFormat(this.date, '');
+    },
+    dateFormat: function(date, format) {
+      return moment(date).format(format);
+    },
+    showDialog: function() {
+      this.$.dialog.toggle();
+    },
+    dismissDialog: function(event) {
+      if (event.detail.confirmed) {
+        this.date = this.$.picker.date;
+        this.updateDate();
+      }
+      event.stopPropagation();
+    }
+  });
+})();
+
+</script>

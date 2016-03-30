@@ -28,6 +28,7 @@ media
 README.rst
 
 *.dump
+dump.rdb
 .vagrant
 vagrant_ansible_inventory_default
 

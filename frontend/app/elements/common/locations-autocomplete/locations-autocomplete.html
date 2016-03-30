@@ -1,0 +1,164 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../../bower_components/iron-collapse/iron-collapse.html">
+
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../../bower_components/paper-input/paper-input.html">
+
+
+  
+
+
+<dom-module id="locations-autocomplete">
+  <style>
+   iron-collapse {
+        box-shadow: 6px;
+    }
+
+    paper-button {
+        width: 100%;
+        text-transform: none;
+    }
+    .loading {
+      background-color: #ff00ff;
+    }
+    .alert {
+      border: 1px solid yellow;
+    }
+  </style>
+  <template>
+    <etools-ajax
+          auto
+          id="ajax"
+          url="[[url]]"
+          handle-as="text"
+          on-response="handleResponse"
+          debounce-duration="200">
+    </etools-ajax>
+    
+   
+    <paper-input-container invalid="{{has_value(value)}}">
+        <label>{{label}}</label>
+        <content select=".content"></content>
+        <input id="searchBox" class="paper-input-input" is="iron-input" bind-value="{{searchValue::input}}"></input>
+    </paper-input-container>
+
+    <iron-collapse id="collapse">
+        <paper-material>
+            <div>
+                <template id="resultList" is="dom-repeat" items="{{choices}}">
+                    <paper-item>
+                        <paper-button on-tap="_selectItem">{{item.name}}</paper-button>
+                    </paper-item>
+                </template>
+            </div>
+        </paper-material>
+    </iron-collapse>
+      
+    </paper-dialog>
+  </div>
+
+
+  
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'locations-autocomplete',
+    properties: {
+      autocompleteUrl: String,
+      url: {
+        type: String,
+        value: null
+      },
+      choices: Array,
+      value: {
+        type: Object,
+      },
+      selectionChange: {
+        type: Boolean,
+        value: false
+      },
+      searchValue: {
+        type: String,
+        value: '',
+        observer: '_valueChangedDebounced'
+      },
+      loadingValues: {
+        type: Boolean,
+        value: false
+      },
+      label: {
+        type: String,
+        value: ''
+      }
+    },
+    ready: function() {
+        //
+    },
+    _valueChanged: function(e) {
+        if (this.selectionChange) {
+          this.selectionChange = false;
+          return;
+        }
+        this.value = null;
+        var collapse = this.$.collapse;
+        if (e !== undefined && e !== '') {
+          // trigger request
+          if (this.url !== this.autocompleteUrl + '?q=' + e) {
+            this.url = this.autocompleteUrl + '?q=' + e;
+            this.loadingValues = true;
+          }
+        } else
+        if (e === '' && collapse.opened) {
+            collapse.toggle();
+        }
+    },
+    _valueChangedDebounced: function(e) {
+      var callback = function() {
+        this._valueChanged(e);
+      };
+      this.debounce('locationChangedDebounce', callback, 500);
+    },
+    _selectItem: function(event) {
+        this.selectionChange = true;
+        this.set('searchValue', event.model.item.name);
+        this.set('value', event.model.item.id);
+        this.$.collapse.toggle();
+    },
+    changeUrl: function(){
+      
+      if (this.rcId){
+        this.rc = null;
+        this.url = this.appData.getEndpoint.resultChainDetails(this.rcId);
+      } else {
+        this.url = null;
+      }
+    },
+    handleResponse: function(rsp) {
+      var collapse = this.$.collapse;
+      this.loadingValues = false;
+      this.choices = rsp.detail.xhr.response;
+      this.$.resultList.render();
+      if (!collapse.opened && this.choices){
+        collapse.toggle();
+      }
+    },
+    has_value: function(e){
+      return (!e);
+    }
+  });
+})();
+
+</script>

@@ -13,12 +13,14 @@ from django.contrib.sites.models import Site
 
 from filer.fields.file import FilerFileField
 from reversion.revisions import get_for_object
+from smart_selects.db_fields import ChainedForeignKey
 
 from EquiTrack.mixins import AdminURLMixin
 from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
 from locations.models import Governorate, Locality, Location, Region
+from partners.models import PartnerOrganization, PCA, ResultChain
 from . import emails
 
 User = settings.AUTH_USER_MODEL
@@ -432,6 +434,31 @@ class Trip(AdminURLMixin, models.Model):
             )
 
 post_save.connect(Trip.send_trip_request, sender=Trip)
+
+
+class LinkedPartner(models.Model):
+
+    trip = models.ForeignKey(Trip)
+    partner = models.ForeignKey(
+        PartnerOrganization,
+    )
+    intervention = ChainedForeignKey(
+        PCA,
+        related_name='trips',
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=True,
+        blank=True, null=True,
+    )
+    result = ChainedForeignKey(
+        ResultChain,
+        chained_field="intervention",
+        chained_model_field="intervention",
+        show_all=False,
+        auto_choose=True,
+        blank=True, null=True,
+    )
 
 
 class TripFunds(models.Model):

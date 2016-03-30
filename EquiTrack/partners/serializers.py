@@ -4,7 +4,6 @@ import json
 from django.db import transaction
 from rest_framework import serializers
 
-from rest_framework_hstore.fields import HStoreField
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
@@ -72,7 +71,7 @@ class PartnershipBudgetSerializer(serializers.ModelSerializer):
 
 class ResultChainSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
-    disaggregation = HStoreField()
+    disaggregation = serializers.JSONField()
     result = OutputSerializer()
 
     def create(self, validated_data):
@@ -87,6 +86,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
     partner_staff_member = serializers.SerializerMethodField(read_only=True)
     indicator = serializers.SerializerMethodField(read_only=True)
     disaggregation = serializers.JSONField()
+
 
     class Meta:
         model = IndicatorReport
@@ -122,7 +122,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
 
 class ResultChainDetailsSerializer(serializers.ModelSerializer):
     indicator = IndicatorSerializer()
-    disaggregation = HStoreField()
+    disaggregation = serializers.JSONField()
     result = OutputSerializer()
     indicator_reports = IndicatorReportSerializer(many=True)
 

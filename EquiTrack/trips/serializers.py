@@ -224,6 +224,7 @@ class Trip2Serializer(serializers.ModelSerializer):
             'actionpoint_set',
             'tripfunds_set',
             'triplocation_set',
+            'programme_assistant'
             # 'all_files'
         )
 
