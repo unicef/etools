@@ -38,6 +38,9 @@ class LocationSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
+            'p_code',
             'gateway',
-            'point'
+            'point',
+            'latitude',
+            'longitude'
         )

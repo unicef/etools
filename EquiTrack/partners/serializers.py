@@ -35,9 +35,7 @@ class PCASectorSerializer(serializers.ModelSerializer):
 class PCAFileSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = PCAFile
+    attachment = serializers.FileField(read_only=True)
 
     class Meta:
         model = PCAFile
