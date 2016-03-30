@@ -446,6 +446,8 @@ class PartnershipForm(UserGroupForm):
             )
             row_num += 1
             row = series.to_dict()
+            # get the labels in order
+            labels = list(series.axes[0])
             try:
                 type = label.split()[0].strip()
                 statement = row.pop('Details').strip()
@@ -506,7 +508,12 @@ class PartnershipForm(UserGroupForm):
                             continue
                         row[key] = parse_disaggregate_val(row[key])
 
-                    create_args['disaggregation'] = row.copy() if row else None
+                    create_args['disaggregation'] = None
+                    if row:
+                        order = [e for e in labels if row.get(e)]
+                        row['order'] = order
+                        create_args['disaggregation'] = row.copy()
+
                     # remove all contents of row
                     row = {}
 
