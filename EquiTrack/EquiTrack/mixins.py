@@ -131,6 +131,14 @@ class EToolsTenantMiddleware(TenantMiddleware):
             request.urlconf = settings.PUBLIC_SCHEMA_URLCONF
 
 
+class EtoolsTokenAuthentication(TokenAuthentication):
+
+    def authenticate(self, request):
+        user, token = super(EtoolsTokenAuthentication, self).authenticate(request)
+        set_country(user, request)
+        return user, token
+
+
 class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
     """
     Handles setting the tenant after a JWT successful authentication
