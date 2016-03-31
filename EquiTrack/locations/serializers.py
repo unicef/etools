@@ -1,7 +1,7 @@
 
 from rest_framework import serializers
 
-from .models import CartoDBTable, GatewayType, Location
+from .models import CartoDBTable, GatewayType, Location, Governorate, Region, Locality
 
 
 class CartoDBTableSerializer(serializers.ModelSerializer):
@@ -29,6 +29,59 @@ class GatewayTypeSerializer(serializers.ModelSerializer):
         model = GatewayType
 
 
+class GovernorateSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Governorate
+        fields = (
+            'id',
+            'name',
+            'p_code',
+            'gateway',
+            'color',
+            'geom',
+        )
+
+
+class RegionSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Region
+        fields = (
+            'id',
+            'name',
+            'p_code',
+            'gateway',
+            'color',
+            'geom',
+            'governorate'
+        )
+
+class LocalitySerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Locality
+        fields = (
+            'id',
+            'region',
+            'cad_code',
+            'cas_code',
+            'cas_code_un',
+            'name',
+            'cas_village_name',
+            'p_code',
+            'gateway',
+            'geom',
+            'color'
+        )
+
+
 class LocationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
@@ -40,6 +93,7 @@ class LocationSerializer(serializers.ModelSerializer):
             'name',
             'p_code',
             'gateway',
+            'locality',
             'point',
             'latitude',
             'longitude'

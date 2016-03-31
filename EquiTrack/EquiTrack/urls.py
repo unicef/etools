@@ -23,7 +23,14 @@ from .views import (
     UserDashboardView,
     CmtDashboardView,
 )
-from locations.views import CartoDBTablesViewSet, LocationTypesViewSet, LocationsViewSet
+from locations.views import (
+    CartoDBTablesViewSet,
+    LocationTypesViewSet,
+    LocationsViewSet,
+    GovernoratesViewSet,
+    RegionsViewSet,
+    LocalitiesViewSet
+)
 from trips.views import TripsViewSet, Trips2ViewSet, TripFileViewSet
 from partners.views import InterventionsViewSet, IndicatorReportViewSet
 from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
@@ -82,6 +89,9 @@ api.register(r'units', UnitViewSet, base_name='units')
 api.register(r'locationtypes', LocationTypesViewSet, base_name='locationtypes')
 api.register(r'locationcartodb', CartoDBTablesViewSet, base_name='locationcartodb')
 api.register(r'locations', LocationsViewSet, base_name='locations')
+api.register(r'regions', RegionsViewSet, base_name='regions')
+api.register(r'governorates', GovernoratesViewSet, base_name='governorates')
+api.register(r'localities', LocalitiesViewSet, base_name='localities')
 
 
 urlpatterns = patterns(
