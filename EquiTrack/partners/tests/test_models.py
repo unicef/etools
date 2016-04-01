@@ -2,10 +2,76 @@ import datetime
 
 from tenant_schemas.test.cases import TenantTestCase
 
-from EquiTrack.factories import PartnershipFactory, TripFactory
+from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
 from funds.models import Donor, Grant
 from reports.models import ResultStructure
-from partners.models import FundingCommitment, PartnershipBudget
+from partners.models import (
+    PCA,
+    Agreement,
+    AmendmentLog,
+    FundingCommitment,
+    PartnershipBudget,
+    AgreementAmendmentLog,
+)
+
+
+class TestRefNumberGeneration(TenantTestCase):
+
+    def setUp(self):
+        self.date = datetime.date.today()
+        self.tenant.country_short_code = 'LEBA'
+        self.tenant.save()
+
+        self.text = 'LEBA/{{}}{}01'.format(self.date.year)
+
+    def test_pca_ref_generation(self):
+
+        text = self.text.format('PCA')
+
+        # test basic sequence
+        agreement = AgreementFactory()
+        self.assertEqual(agreement.reference_number, text)
+
+        # create amendment
+        AgreementAmendmentLog.objects.create(
+            agreement=agreement,
+            amended_at=self.date,
+            status=PCA.ACTIVE
+        )
+        self.assertEqual(agreement.reference_number, text+'-01')
+
+        # add another agreement
+        agreement = AgreementFactory()
+        self.assertEqual(agreement.reference_number, text[:-1]+'2')
+
+    def test_other_agreement_types(self):
+
+        for doc_type in [Agreement.MOU, Agreement.IC, Agreement.AWP, Agreement.SSFA]:
+            agreement = AgreementFactory(agreement_type=doc_type)
+            self.assertEqual(agreement.reference_number, self.text.format(doc_type))
+
+    def test_pd_numbering(self):
+
+        pd_ref = 'LEBA/PCA{year}01/{{}}{year}{{}}'.format(year=self.date.year)
+
+        # create one programme document
+        intervention = PartnershipFactory()
+        self.assertEqual(intervention.reference_number, pd_ref.format('PD', '01'))
+
+        # create another under the same partner and agreement
+        intervention = PartnershipFactory(
+            partner=intervention.partner,
+            agreement=intervention.agreement
+        )
+        self.assertEqual(intervention.reference_number, pd_ref.format('PD', '02'))
+
+        # create amendment
+        AmendmentLog.objects.create(
+            partnership=intervention,
+            amended_at=self.date,
+            status=PCA.ACTIVE
+        )
+        self.assertEqual(intervention.reference_number, pd_ref.format('PD', '02-01'))
 
 
 class TestHACTCalculations(TenantTestCase):
