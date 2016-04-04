@@ -3,8 +3,15 @@ __author__ = 'unicef-leb-inn'
 from rest_framework import viewsets, mixins
 from rest_framework.generics import ListAPIView
 
-from .models import CartoDBTable, GatewayType, Location
-from .serializers import CartoDBTableSerializer, GatewayTypeSerializer, LocationSerializer
+from .models import CartoDBTable, GatewayType, Location, Governorate, Region, Locality
+from .serializers import (
+    CartoDBTableSerializer,
+    GatewayTypeSerializer,
+    LocationSerializer,
+    GovernorateSerializer,
+    RegionSerializer,
+    LocalitySerializer
+)
 
 
 class CartoDBTablesView(ListAPIView):
@@ -33,6 +40,33 @@ class LocationTypesViewSet(mixins.RetrieveModelMixin,
 
     queryset = GatewayType.objects.all()
     serializer_class = GatewayTypeSerializer
+
+
+class RegionsViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Region.objects.all()
+    serializer_class = RegionSerializer
+
+
+class GovernoratesViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Governorate.objects.all()
+    serializer_class = GovernorateSerializer
+
+
+class LocalitiesViewSet(mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           viewsets.GenericViewSet):
+
+    queryset = Locality.objects.all()
+    serializer_class = LocalitySerializer
 
 
 class LocationsViewSet(mixins.RetrieveModelMixin,

@@ -354,7 +354,7 @@ class PCASectorViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
 
         queryset = super(PCASectorViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_id')
+        intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(pca=intervention_id)
 
 
@@ -385,7 +385,7 @@ class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
 
         queryset = super(PartnershipBudgetViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_id')
+        intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
 
@@ -397,15 +397,23 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
     model = PCAFile
     queryset = PCAFile.objects.all()
     serializer_class = PCAFileSerializer
-    parser_classes = (MultiPartParser, FormParser,)
+    # parser_classes = (MultiPartParser, FormParser,)
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        try:
+            attachment = request.data["attachment"]
+        except KeyError:
+            attachment = None
 
         serializer.instance = serializer.save()
+
+        if attachment:
+            serializer.instance.attachment = attachment
+            serializer.instance.save()
 
         headers = self.get_success_headers(serializer.data)
         return Response(
@@ -417,7 +425,7 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
 
         queryset = super(PCAFileViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_id')
+        intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(pca=intervention_id)
 
 
@@ -448,7 +456,7 @@ class PCAGrantViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
 
         queryset = super(PCAGrantViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_id')
+        intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
 

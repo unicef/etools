@@ -99,6 +99,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
 class FileAttachmentSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
+    report = serializers.FileField(read_only=True)
 
     class Meta:
         model = FileAttachment
