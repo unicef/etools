@@ -1256,7 +1256,7 @@ class DistributionPlan(models.Model):
         related_name='distribution_plans'
     )
     item = models.ForeignKey(SupplyItem)
-    location = models.ForeignKey(Region)
+    site = models.ForeignKey(Location, null=True)
     quantity = models.PositiveIntegerField(
         help_text=u'Quantity required for this location'
     )
@@ -1265,22 +1265,25 @@ class DistributionPlan(models.Model):
         verbose_name=u'Send to partner?'
     )
     sent = models.BooleanField(default=False)
+    document = JSONField(null=True, blank=True)
     delivered = models.IntegerField(default=0)
 
     def __unicode__(self):
         return u'{}-{}-{}-{}'.format(
             self.partnership,
             self.item,
-            self.location,
+            self.site,
             self.quantity
         )
 
     @classmethod
     def send_distribution(cls, sender, instance, created, **kwargs):
 
-        if instance.send and not instance.sent:
+        if instance.send and instance.sent is False:
             set_unisupply_distribution.delay(instance)
-
+        elif instance.send and instance.sent:
+            instance.sent = False
+            instance.save()
 
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 

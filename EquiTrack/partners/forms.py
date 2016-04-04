@@ -232,7 +232,7 @@ class AuthorizedOfficersForm(forms.ModelForm):
             and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
 
 
-class DistributionPlanForm(forms.ModelForm):
+class DistributionPlanForm(auto_forms.ModelForm):
 
     class Meta:
         model = DistributionPlan

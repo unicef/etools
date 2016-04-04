@@ -49,19 +49,15 @@ couchbase:
     - 8092:8092
     - 8093:8093
     - 18091:18091
-  restart: always
-
 
 sync-gateway:
-  image: unicef/equitrack:sync-gateway
-  entrypoint: /bin/bash
-  command: -c "sleep 30 && /usr/local/bin/sync_gateway sync-gateway.json"
+  image: couchbase/sync-gateway
+  command: sync-gateway.json
   volumes:
-    - ./sync-gateway.json:/sync-gateway.json
+    - ./couchbase/sync-gateway.json:/sync-gateway.json
   links:
     - couchbase:couchbase
   ports:
     - 4984:4984
     - 4985:4985
-  restart: always
 

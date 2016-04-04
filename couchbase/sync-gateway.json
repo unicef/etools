@@ -1,9 +1,9 @@
- {
+{
   "log": ["*"],
- "adminInterface":":4985",
- "MaxFileDescriptors":100000,
- "logFilePath":"sync_log.text",
- "maxCouchbaseConnections":100,
+  "adminInterface":":4985",
+  "MaxFileDescriptors":100000,
+  "logFilePath":"sync_log.text",
+  "maxCouchbaseConnections":100,
   "databases": {
     "default": {
       "server": "http://etools-staging-couchbase.westeurope.cloudapp.azure.com:8091",
@@ -19,10 +19,10 @@
             channel(doc.partner_name+"-"+doc.country);
           }
         }`
- ,
-      "users": {        
+      ,
+      "users": {
                  "GUEST": {
-                    "disabled": true 
+                    "disabled": true
                 }
             }
     }
