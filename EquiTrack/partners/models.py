@@ -396,6 +396,16 @@ class Recommendation(models.Model):
         verbose_name_plural = 'Key recommendations'
 
 
+def get_agreement_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'agreements',
+         str(instance.id),
+         filename]
+    )
+
+
 class Agreement(TimeStampedModel):
 
     PCA = u'PCA'
@@ -422,7 +432,7 @@ class Agreement(TimeStampedModel):
         help_text=u'Reference Number'
     )
     attached_agreement = models.FileField(
-        upload_to=u'agreements',
+        upload_to=get_agreement_path,
         blank=True,
     )
     start = models.DateField(null=True, blank=True)
@@ -446,7 +456,7 @@ class Agreement(TimeStampedModel):
         blank=True, null=True,
     )
 
-    #bank information
+    # bank information
     bank_name = models.CharField(max_length=255, null=True, blank=True)
     bank_address = models.CharField(
         max_length=256L,
@@ -627,7 +637,7 @@ class PCA(AdminURLMixin, models.Model):
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
-    # contacts
+    # contacts #TODO: Remove
     unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
     unicef_mng_email = models.CharField(max_length=128L, blank=True)
@@ -644,6 +654,7 @@ class PCA(AdminURLMixin, models.Model):
         blank=True
     )
 
+    #TODO: Remove
     partner_mng_first_name = models.CharField(max_length=64L, blank=True)
     partner_mng_last_name = models.CharField(max_length=64L, blank=True)
     partner_mng_email = models.CharField(max_length=128L, blank=True)
@@ -773,7 +784,7 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def reference_number(self):
-        if self.partnership_type == PCA.SSFA:
+        if self.partnership_type in [Agreement.SSFA, Agreement.MOU]:
             return self.agreement.reference_number
         else:
             year = self.year

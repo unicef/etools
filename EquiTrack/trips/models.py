@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 import datetime
 from copy import deepcopy
 
-from django.db import models
+from django.db import models, connection
 from django.db.models import Q
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -591,7 +591,7 @@ post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 
 def get_report_filename(instance, filename):
     return '/'.join([
-        instance.trip.owner.profile.country.name,
+        connection.schema_name,
         'trip_reports',
         str(instance.trip.id),
         filename

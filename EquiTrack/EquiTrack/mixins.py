@@ -145,10 +145,16 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
     """
     def authenticate(self, request):
 
+        jwt_value = self.get_jwt_value(request)
+        if jwt_value is None:
+            # no JWT token return to skip this authentication mechanism
+            return None
+
         try:
             user, jwt_value = super(EToolsTenantJWTAuthentication, self).authenticate(request)
         except TypeError as exp:
             raise PermissionDenied(detail='No valid authentication provided')
+
         if not user.profile.country:
             raise PermissionDenied(detail='No country found for user')
 
