@@ -156,11 +156,6 @@ BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
-CELERY_DEFAULT_QUEUE = 'default'
-CELERY_QUEUES = (
-    Queue('default', Exchange('default'), routing_key='default'),
-    Queue('periodic', Exchange('periodic'), routing_key='periodic'),
-)
 
 # Sensible settings for celery
 CELERY_ALWAYS_EAGER = False
@@ -176,12 +171,12 @@ CELERY_SEND_TASK_ERROR_EMAILS = False
 CELERY_TASK_RESULT_EXPIRES = 600
 
 # Don't use pickle as serializer, json is much safer
-CELERY_TASK_SERIALIZER = "json"
-CELERY_ACCEPT_CONTENT = ['application/json']
+# CELERY_TASK_SERIALIZER = "json"
+# CELERY_ACCEPT_CONTENT = ['application/json']
 
-CELERYD_HIJACK_ROOT_LOGGER = False
-CELERYD_PREFETCH_MULTIPLIER = 1
-CELERYD_MAX_TASKS_PER_CHILD = 1000
+# CELERYD_HIJACK_ROOT_LOGGER = False
+# CELERYD_PREFETCH_MULTIPLIER = 1
+# CELERYD_MAX_TASKS_PER_CHILD = 1000
 
 SLACK_URL = os.environ.get('SLACK_URL')
 
