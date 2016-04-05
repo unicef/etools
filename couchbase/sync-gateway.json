@@ -1,12 +1,12 @@
- {
+{
   "log": ["*"],
- "adminInterface":":4985",
- "MaxFileDescriptors":100000,
- "logFilePath":"sync_log.text",
- "maxCouchbaseConnections":100,
+  "adminInterface":":4985",
+  "MaxFileDescriptors":100000,
+  "logFilePath":"sync_log.text",
+  "maxCouchbaseConnections":100,
   "databases": {
     "default": {
-      "server": "http://couchbase:8091",
+      "server": "http://etools-staging-couchbase.westeurope.cloudapp.azure.com:8091",
       "bucket": "default",
        "sync": `function(doc){
           if(doc.type == "user") {
@@ -19,15 +19,10 @@
             channel(doc.partner_name+"-"+doc.country);
           }
         }`
- ,
-      "users": {        
+      ,
+      "users": {
                  "GUEST": {
-                    "disabled": true 
-                },
-                "unisupply-gateway": {
-                   "admin_channels": ["doc.channels"],
-                   "channels": ["doc.channels"],
-                   "password": "leban on-pass!"
+                    "disabled": true
                 }
             }
     }
