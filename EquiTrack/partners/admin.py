@@ -218,7 +218,8 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
     model = DistributionPlan
     form = DistributionPlanForm
     formset = DistributionPlanFormSet
-    extra = 3
+    extra = 1
+    fields = [u'item', u'site', u'quantity', u'send', u'sent', u'delivered']
     readonly_fields = [u'delivered', u'sent']
 
     def get_max_num(self, request, obj=None, **kwargs):
