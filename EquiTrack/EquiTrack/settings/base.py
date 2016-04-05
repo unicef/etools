@@ -156,11 +156,6 @@ BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
-CELERY_DEFAULT_QUEUE = 'default'
-CELERY_QUEUES = (
-    Queue('default', Exchange('default'), routing_key='default'),
-    Queue('periodic', Exchange('periodic'), routing_key='periodic'),
-)
 
 # Sensible settings for celery
 CELERY_ALWAYS_EAGER = False

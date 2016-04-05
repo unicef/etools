@@ -7,13 +7,11 @@ import datetime
 
 from django.db import connection
 from django.conf import settings
-from django.template.defaultfilters import slugify
 
 from requests.auth import HTTPBasicAuth
-from tenant_schemas.utils import tenant_context
 
 from EquiTrack.celery import app
-from users.models import Country
+from partners.models import DistributionPlan
 
 
 @app.task
@@ -63,8 +61,10 @@ def set_unisupply_user(username, password):
 
 
 @app.task
-def set_unisupply_distribution(distribution_plan):
-    doc = {
+def set_unisupply_distribution(distribution_plan_id):
+    distribution_plan = DistributionPlan.objects.get(id=distribution_plan_id)
+
+    doc = distribution_plan.document if distribution_plan.document else {
         "country": connection.schema_name,
         "distribution_id": distribution_plan.id,
         "intervention": distribution_plan.partnership.__unicode__(),
@@ -85,13 +85,11 @@ def set_unisupply_distribution(distribution_plan):
         },
         "type": "distribution",
         "name": distribution_plan.site.name,
+        "completed": False,
+        "creation_date": datetime.datetime.now().isoformat()
     }
-    if distribution_plan.document is not None:
-        doc["_id"] = distribution_plan.document["id"]
-        doc["_rev"] = distribution_plan.document["rev"]
-    else:
-        doc["completed"] = False
-        doc["creation_date"] = datetime.datetime.now().isoformat()
+    doc["item_list"][0]["quantity"] = distribution_plan.quantity
+    doc["item_list"][0]["delivered"] = distribution_plan.delivered
 
     response = set_docs([doc])
     if response.status_code in [requests.codes.ok, requests.codes.created]:
