@@ -11,7 +11,6 @@ from django.conf import settings
 from requests.auth import HTTPBasicAuth
 
 from EquiTrack.celery import app
-from partners.models import DistributionPlan
 
 
 @app.task
@@ -62,6 +61,7 @@ def set_unisupply_user(username, password):
 
 @app.task
 def set_unisupply_distribution(distribution_plan_id):
+    from partners.models import DistributionPlan
     distribution_plan = DistributionPlan.objects.get(id=distribution_plan_id)
 
     doc = distribution_plan.document if distribution_plan.document else {
