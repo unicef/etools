@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+import datetime
+
 __author__ = 'jcranwellward'
 
 
@@ -266,12 +268,16 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
             managers = []
 
         serializer.instance = serializer.save()
+        serializer.instance.created_at = datetime.datetime.strptime(request.data['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.updated_at = datetime.datetime.strptime(request.data['updated_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.save()
+        data = serializer.data
 
         for man in managers:
             serializer.instance.unicef_managers.add(man)
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED,
                         headers=headers)
 
     def get_queryset(self):

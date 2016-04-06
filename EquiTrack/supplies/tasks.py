@@ -61,6 +61,9 @@ def set_unisupply_user(username, password):
 
 @app.task
 def set_unisupply_distribution(distribution_plan_id):
+    """
+    Creates or edits a distibution document in Couchbase
+    """
     from partners.models import DistributionPlan
     distribution_plan = DistributionPlan.objects.get(id=distribution_plan_id)
 
@@ -88,15 +91,15 @@ def set_unisupply_distribution(distribution_plan_id):
         "completed": False,
         "creation_date": datetime.datetime.now().isoformat()
     }
+
     doc["item_list"][0]["quantity"] = distribution_plan.quantity
     doc["item_list"][0]["delivered"] = distribution_plan.delivered
 
     response = set_docs([doc])
     if response.status_code in [requests.codes.ok, requests.codes.created]:
-
+        #TODO: Check if it was actually saved by couchbase
         distribution_plan.send = False
         distribution_plan.sent = True
-        distribution_plan.document = response.json()[0] if type(response.json()) is list else response.json()
         distribution_plan.save()
 
         return response.text
@@ -131,6 +134,3 @@ def import_docs(**kwargs):
                 )
             except Exception as exp:
                 print exp.message
-
-
-
