@@ -60,6 +60,8 @@ class TripLocationSerializer(serializers.ModelSerializer):
 
 class ActionPoint2Serializer(serializers.ModelSerializer):
 
+    id = serializers.CharField(read_only=True)
+
     class Meta:
         model = ActionPoint
         fields = (
@@ -73,7 +75,6 @@ class ActionPoint2Serializer(serializers.ModelSerializer):
             'actions_taken',
             'completed_date'
         )
-        extra_kwargs = {'id': {'read_only': False}}
 
 
 class ActionPointSerializer(serializers.ModelSerializer):
@@ -225,7 +226,17 @@ class Trip2Serializer(serializers.ModelSerializer):
             'actionpoint_set',
             'tripfunds_set',
             'triplocation_set',
-            'programme_assistant'
+            'programme_assistant',
+            'created_date',
+            'cancelled_reason',
+            'driver',
+            'driver_supervisor',
+            'approved_email_sent',
+            'submitted_email_sent',
+            'ta_trip_took_place_as_planned',
+            'ta_trip_repay_travel_allowance',
+            'ta_trip_final_claim',
+            'pending_ta_amendment'
             # 'all_files'
         )
 
