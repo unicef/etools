@@ -12,6 +12,7 @@ from .models import (
     GwPCALocation,
     PCA,
     PCASector,
+    PCASectorGoal,
     PCAFile,
     PCAGrant,
     AmendmentLog,
@@ -24,10 +25,41 @@ from .models import (
 )
 
 
+class PCASectorGoalSerializer(serializers.ModelSerializer):
+
+    pca_sector = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = PCASectorGoal
+        fields = (
+            'pca_sector',
+            'goal'
+        )
+
+
 class PCASectorSerializer(serializers.ModelSerializer):
 
     sector_name = serializers.CharField(source='sector.name')
     sector_id = serializers.CharField(source='sector.id')
+    pcasectorgoal_set = PCASectorGoalSerializer(many=True)
+
+    def create(self, validated_data):
+
+        try:
+            pcasectorgoals = validated_data.pop('pcasectorgoal_set')
+        except KeyError:
+            pcasectorgoals = []
+
+        try:
+            instance = PCASector.objects.create(**validated_data)
+
+            for sectorgoal in pcasectorgoals:
+                PCASectorGoal.objects.create(pca_sector=instance, **sectorgoal)
+
+        except Exception as ex:
+            raise serializers.ValidationError({'instance': ex.message})
+
+        return instance
 
     class Meta:
         model = PCASector
