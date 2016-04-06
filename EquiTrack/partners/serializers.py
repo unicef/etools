@@ -14,6 +14,7 @@ from .models import (
     PCASector,
     PCAFile,
     PCAGrant,
+    AmendmentLog,
     PartnershipBudget,
     PartnerStaffMember,
     PartnerOrganization,
@@ -65,6 +66,12 @@ class PartnershipBudgetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnershipBudget
+
+
+class AmendmentLogSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AmendmentLog
 
 
 class ResultChainSerializer(serializers.ModelSerializer):
@@ -165,18 +172,18 @@ class LocationSerializer(serializers.Serializer):
 
 class GWLocationSerializer(serializers.ModelSerializer):
 
-    pca_title = serializers.CharField(source='pca.title')
-    pca_number = serializers.CharField(source='pca.number')
-    pca_id = serializers.CharField(source='pca.id')
-    partner_name = serializers.CharField(source='pca.partner.name')
-    partner_id = serializers.CharField(source='pca.partner.id')
-    sector_name = serializers.CharField(source='pca.sectors')
-    sector_id = serializers.CharField(source='pca.sector_id')
-    latitude = serializers.CharField(source='location.point.y')
-    longitude = serializers.CharField(source='location.point.x')
-    location_name = serializers.CharField(source='location.name')
-    location_type = serializers.CharField(source='location.gateway.name')
-    gateway_id = serializers.CharField(source='location.gateway.id')
+    pca_title = serializers.CharField(source='pca.title', read_only=True)
+    pca_number = serializers.CharField(source='pca.number', read_only=True)
+    pca_id = serializers.CharField(source='pca.id', read_only=True)
+    partner_name = serializers.CharField(source='pca.partner.name', read_only=True)
+    partner_id = serializers.CharField(source='pca.partner.id', read_only=True)
+    sector_name = serializers.CharField(source='pca.sectors', read_only=True)
+    sector_id = serializers.CharField(source='pca.sector_id', read_only=True)
+    latitude = serializers.CharField(source='location.point.y', read_only=True)
+    longitude = serializers.CharField(source='location.point.x', read_only=True)
+    location_name = serializers.CharField(source='location.name', read_only=True)
+    location_type = serializers.CharField(source='location.gateway.name', read_only=True)
+    gateway_id = serializers.CharField(source='location.gateway.id', read_only=True)
 
     class Meta:
         model = GwPCALocation
