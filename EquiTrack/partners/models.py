@@ -1280,7 +1280,7 @@ class DistributionPlan(models.Model):
     def send_distribution(cls, sender, instance, created, **kwargs):
 
         if instance.send and instance.sent is False:
-            set_unisupply_distribution.delay(instance)
+            set_unisupply_distribution.delay(instance.id)
         elif instance.send and instance.sent:
             instance.sent = False
             instance.save()
