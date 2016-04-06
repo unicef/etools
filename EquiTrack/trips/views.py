@@ -88,6 +88,8 @@ class Trips2ViewSet(mixins.RetrieveModelMixin,
         pcas = request.data['pcas']
 
         serializer.instance = serializer.save()
+        serializer.instance.created_date = datetime.datetime.strptime(request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.save()
         data = serializer.data
 
         try:
