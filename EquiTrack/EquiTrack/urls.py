@@ -53,6 +53,8 @@ from partners.urls import (
     pcasectors_api,
     pcabudgets_api,
     pcafiles_api,
+    pcaamendments_api,
+    pcalocations_api,
     pcagrants_api
 )
 
@@ -117,6 +119,8 @@ urlpatterns = patterns(
     url(r'^api/', include(pcabudgets_api.urls)),
     url(r'^api/', include(pcafiles_api.urls)),
     url(r'^api/', include(pcagrants_api.urls)),
+    url(r'^api/', include(pcaamendments_api.urls)),
+    url(r'^api/', include(pcalocations_api.urls)),
     url(r'^api/', include(reports_api.urls)),
     url(r'^api/', include(trips2_api.urls)),
     url(r'^api/', include(trips2files_api.urls)),

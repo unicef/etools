@@ -16,6 +16,8 @@ from .views import (
     PCASectorViewSet,
     PCAFileViewSet,
     PCAGrantViewSet,
+    AmendmentLogViewSet,
+    GwPCALocationViewSet,
     ResultChainViewSet,
     IndicatorReportViewSet,
     PcaPDFView,
@@ -35,6 +37,12 @@ pcafiles_api.register(r'pcafiles', PCAFileViewSet, base_name='intervention-pcafi
 
 pcagrants_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
 pcagrants_api.register(r'pcagrants', PCAGrantViewSet, base_name='intervention-pcagrants')
+
+pcalocations_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
+pcalocations_api.register(r'pcalocations', GwPCALocationViewSet, base_name='intervention-pcalocations')
+
+pcaamendments_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
+pcaamendments_api.register(r'pcaamendments', AmendmentLogViewSet, base_name='intervention-pcaamendments')
 
 results_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
 results_api.register(r'results', ResultChainViewSet, base_name='intervention-results')
