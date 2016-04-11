@@ -29,7 +29,7 @@ class TestPartnershipViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/agreements/',
+            '/api/partners/agreements/',
             user=self.unicef_staff,
             data=data
         )
@@ -38,7 +38,7 @@ class TestPartnershipViews(APITenantTestCase):
 
     def test_api_agreements_list(self):
 
-        response = self.forced_auth_req('get', '/api/agreements/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/partners/agreements/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         # the length of this list should be 1
@@ -46,7 +46,7 @@ class TestPartnershipViews(APITenantTestCase):
 
     def test_api_interventions_list(self):
 
-        response = self.forced_auth_req('get', '/api/interventions/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/partners/interventions/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         # the length of this list should be 1
