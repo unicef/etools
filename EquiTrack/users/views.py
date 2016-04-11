@@ -132,12 +132,17 @@ class GroupViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all User Groups
+    """
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add a User Group
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -161,12 +166,17 @@ class UserViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Users
+    """
     queryset = User.objects.all()
     serializer_class = UserCreationSerializer
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add a new User abd User Profile
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -196,7 +206,9 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Offices
+    """
     queryset = Office.objects.all()
     serializer_class = OfficeSerializer
 
@@ -205,6 +217,8 @@ class SectionViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Sections
+    """
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
