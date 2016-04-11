@@ -62,15 +62,15 @@ trips2_api.register(r'trips2', Trips2ViewSet, base_name='trips2')
 trips2files_api = routers.NestedSimpleRouter(trips2_api, r'trips2', lookup='trips2')
 trips2files_api.register(r'files', TripFileViewSet, base_name='trips2files')
 
-api.register(r'partners', PartnerOrganizationsViewSet, base_name='partnerorganizations')
+api.register(r'partners/organizations', PartnerOrganizationsViewSet, base_name='partnerorganizations')
 api.register(r'partners/staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
 api.register(r'partners/agreements', AgreementViewSet, base_name='agreements')
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 
 api.register(r'users', UserViewSet, base_name='users')
-api.register(r'users/groups', GroupViewSet, base_name='groups')
-api.register(r'users/offices', OfficeViewSet, base_name='offices')
-api.register(r'users/sections', SectionViewSet, base_name='sections')
+api.register(r'groups', GroupViewSet, base_name='groups')
+api.register(r'offices', OfficeViewSet, base_name='offices')
+api.register(r'sections', SectionViewSet, base_name='sections')
 
 api.register(r'funds/donors', DonorViewSet, base_name='donors')
 api.register(r'funds/grants', GrantViewSet, base_name='grants')
@@ -83,7 +83,7 @@ api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
 api.register(r'reports/outputs', OutputViewSet, base_name='outputs')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
-api.register(r'locations/types', LocationTypesViewSet, base_name='locationtypes')
+api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 api.register(r'locations', LocationsViewSet, base_name='locations')
 
 
