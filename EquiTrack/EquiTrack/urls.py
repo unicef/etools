@@ -63,7 +63,7 @@ trips2files_api = routers.NestedSimpleRouter(trips2_api, r'trips2', lookup='trip
 trips2files_api.register(r'files', TripFileViewSet, base_name='trips2files')
 
 api.register(r'partners', PartnerOrganizationsViewSet, base_name='partnerorganizations')
-api.register(r'partners/staffmemebers', PartnerStaffMembersViewSet, base_name='partnerstaffmemebers')
+api.register(r'partners/staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
 api.register(r'partners/agreements', AgreementViewSet, base_name='agreements')
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 
