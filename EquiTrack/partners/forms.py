@@ -383,10 +383,6 @@ class PartnershipForm(UserGroupForm):
 
     # fields needed to import log frames/work plans from excel
     work_plan = forms.FileField(required=False)
-    work_plan_sector = forms.ModelChoiceField(
-        required=False,
-        queryset=Sector.objects.all()
-    )
 
     class Meta:
         model = PCA
@@ -423,7 +419,7 @@ class PartnershipForm(UserGroupForm):
                 created, notfound
             ))
 
-    def import_results_from_work_plan(self, work_plan, sector):
+    def import_results_from_work_plan(self, work_plan):
         """
         Matches results from the work plan to country result structure.
         Will try to match indicators one to one or by name, this can be ran
@@ -469,7 +465,6 @@ class PartnershipForm(UserGroupForm):
                     result, created = Result.objects.get_or_create(
                         result_structure=result_structure,
                         result_type=result_type,
-                        sector=sector,
                         name=statement,
                         code=label,
                         hidden=True,
@@ -490,7 +485,6 @@ class PartnershipForm(UserGroupForm):
 
                 if 'indicator' in label:
                     indicator, created = Indicator.objects.get_or_create(
-                        sector=sector,
                         result=result,
                         code=label,
                         name=statement
@@ -565,7 +559,6 @@ class PartnershipForm(UserGroupForm):
         location_sector = cleaned_data[u'location_sector']
 
         work_plan = self.cleaned_data[u'work_plan']
-        work_plan_sector = self.cleaned_data[u'work_plan_sector']
 
         agreement_types = dict(Agreement.AGREEMENT_TYPES)
         partnership_types = dict(PCA.PARTNERSHIP_TYPES)
@@ -646,12 +639,12 @@ class PartnershipForm(UserGroupForm):
                 u'Please select a sector to import results against'
             )
 
-        if work_plan and work_plan_sector:
+        if work_plan:
             if result_structure is None:
                 raise ValidationError(
                     u'Please select a result structure from the man info tab to import results against'
                 )
-            self.import_results_from_work_plan(work_plan, work_plan_sector)
+            self.import_results_from_work_plan(work_plan)
 
         return cleaned_data
 

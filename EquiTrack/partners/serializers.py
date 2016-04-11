@@ -21,7 +21,8 @@ from .models import (
     PartnerOrganization,
     Agreement,
     ResultChain,
-    IndicatorReport
+    IndicatorReport,
+    DistributionPlan,
 )
 
 
@@ -167,6 +168,16 @@ class ResultChainDetailsSerializer(serializers.ModelSerializer):
         model = ResultChain
 
 
+class DistributionPlanSerializer(serializers.ModelSerializer):
+    item = serializers.CharField(source='item.name')
+    site = serializers.CharField(source='site.name')
+    quantity = serializers.IntegerField()
+    delivered = serializers.IntegerField()
+
+    class Meta:
+        model = DistributionPlan
+
+
 class InterventionSerializer(serializers.ModelSerializer):
 
     pca_id = serializers.CharField(source='id', read_only=True)
@@ -176,6 +187,7 @@ class InterventionSerializer(serializers.ModelSerializer):
     partner_id = serializers.CharField(source='partner.id')
     pcasector_set = PCASectorSerializer(many=True, read_only=True)
     results = ResultChainSerializer(many=True, read_only=True)
+    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
 
     class Meta:
         model = PCA
@@ -183,8 +195,8 @@ class InterventionSerializer(serializers.ModelSerializer):
 
 class LocationSerializer(serializers.Serializer):
 
-    latitude = serializers.CharField(source='point.y')
-    longitude = serializers.CharField(source='point.x')
+    latitude = serializers.CharField(source='geo_point.y')
+    longitude = serializers.CharField(source='geo_point.x')
     location_name = serializers.CharField(source='name')
     location_type = serializers.CharField(source='gateway.name')
     gateway_id = serializers.CharField(source='gateway.id')

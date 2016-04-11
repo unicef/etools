@@ -37,6 +37,7 @@ class Country(TenantMixin):
     )
     initial_zoom = models.IntegerField(default=8)
     vision_sync_enabled = models.BooleanField(default=True)
+    vision_last_synced = models.DateTimeField(null=True, blank=True)
 
     def __unicode__(self):
         return self.name

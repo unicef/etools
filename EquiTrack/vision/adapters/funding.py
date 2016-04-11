@@ -23,7 +23,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
         "WBS_ELEMENT_EX",               # VARCHAR2	IR WBS
         "COMMITMENT_SUBTYPE_CODE",  # VARCHAR2	Commitment Doc Type
         "COMMITMENT_SUBTYPE_DESC",
-        #"COMMITMENT_REF",       # VARCHAR2	Commitment Reference
+        "COMMITMENT_REF",       # VARCHAR2	Commitment Reference
         "FR_ITEM_AMT",          # Number    Fr Item Amount
         "AGREEMENT_AMT",        # NUMBER	Agreement Amount
         "COMMITMENT_AMT",       # NUMBER	Commitment Amount
@@ -35,6 +35,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
 
     def _save_records(self, records):
 
+        processed = 0
         filtered_records = self._filter_records(records)
         for fc_line in filtered_records:
             try:
@@ -42,11 +43,12 @@ class FundingSynchronizer(VisionDataSynchronizer):
                     name=fc_line["GRANT_REF"],
                 )
             except Grant.DoesNotExist:
-                pass
+                print 'Grant: {} does not exist'.format(fc_line["GRANT_REF"])
             else:
                 funding_commitment, created = FundingCommitment.objects.get_or_create(
                     grant=grant,
                     fr_number=fc_line["DOC_NUMBER"],
+                    fc_ref=fc_line["COMMITMENT_AMT"]
                 )
                 funding_commitment.start = wcf_json_date_as_datetime("START_DATE")
                 funding_commitment.end = wcf_json_date_as_datetime("END_DATE")
@@ -57,6 +59,9 @@ class FundingSynchronizer(VisionDataSynchronizer):
                 funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]
                 funding_commitment.expenditure_amount = fc_line["EXPENDITURE_AMT"]
                 funding_commitment.save()
+                processed += 1
+
+        return processed
 
 
 class DCTSynchronizer(VisionDataSynchronizer):
@@ -87,6 +92,7 @@ class DCTSynchronizer(VisionDataSynchronizer):
 
     def _save_records(self, records):
 
+        processed = 0
         filtered_records = self._filter_records(records)
         for dct_line in filtered_records:
             dct, created = DirectCashTransfer.objects.get_or_create(
@@ -100,3 +106,6 @@ class DCTSynchronizer(VisionDataSynchronizer):
             dct.amount_3_to_6_months_usd = dct_line["AMT_3TO6_MONTHS_USD"]
             dct.amount_6_to_9_months_usd = dct_line["AMT_6TO9_MONTHS_USD"]
             dct.amount_more_than_9_Months_usd = dct_line["AMT_MORE9_MONTHS_USD"]
+            processed += 1
+
+        return processed
