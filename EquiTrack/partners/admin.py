@@ -513,7 +513,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'core_values_assessment',)
         }),
         (_('Alternate Name'), {
-            u'classes': (u'collapse', u'collapse-open'),
+            u'classes': (u'collapse', u'open'),
             'fields':
                 ((u'alternate_id', u'alternate_name',),)
         }),

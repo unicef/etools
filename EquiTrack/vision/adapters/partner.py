@@ -42,11 +42,11 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             grant.save()
 
             partner_org, created = PartnerOrganization.objects.get_or_create(
-                name__iexact=partner["VENDOR_NAME"]
+                name__iexact=partner["VENDOR_NAME"],
+                vendor_number=partner["VENDOR_CODE"]
             )
             partner_org.partner_type = u'Civil Society Organization'
             partner_org.cso_type = partner["CSO_TYPE_NAME"]
-            partner_org.vendor_number = partner["VENDOR_CODE"]
             partner_org.rating = partner["RISK_RATING_NAME"]
             partner_org.vision_synced = True
             partner_org.save()
