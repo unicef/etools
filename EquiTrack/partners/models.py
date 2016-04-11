@@ -10,6 +10,7 @@ from django.db import models, connection
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
+from django.utils.translation import ugettext as _
 
 from jsonfield import JSONField
 from filer.fields.file import FilerFileField
@@ -49,12 +50,12 @@ from . import emails
 
 HIGH = u'high'
 SIGNIFICANT = u'significant'
-MODERATE = u'moderate'
+MEDIUM = u'medium'
 LOW = u'low'
 RISK_RATINGS = (
     (HIGH, u'High'),
     (SIGNIFICANT, u'Significant'),
-    (MODERATE, u'Moderate'),
+    (MEDIUM, u'Medium'),
     (LOW, u'Low'),
 )
 
@@ -125,6 +126,10 @@ class PartnerOrganization(models.Model):
         null=True,
         verbose_name=u'Risk Rating'
     )
+    type_of_assessment = models.CharField(
+        max_length=50,
+        null=True,
+    )
     core_values_assessment_date = models.DateField(
         blank=True, null=True,
         verbose_name=u'Date positively assessed against core values'
@@ -143,16 +148,50 @@ class PartnerOrganization(models.Model):
         return self.name
 
     @property
+    def latest_assessment(self):
+        assessment = self.assessments.last()
+        if assessment is None:
+            return 'Missing'
+        else:
+            return assessment.type
+
+    @property
+    def micro_assessment_needed(self):
+        """
+        Returns Yes if:
+        1. type of assessment field is 'high risk assumed';
+        2. planned amount is >$100K and type of assessment is 'simplified checklist' or risk rating is 'not required';
+        3. risk rating is 'low, medium, significant, high', type of assessment is 'ma' or 'negative audit results'
+            and date is older than 54 months.
+        return 'missing' if ma is not attached in the Assessment and Audit record in the Partner screen.
+        Displays No in all other instances.
+        :return:
+        """
+        micro_assessment = self.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
+        if self.type_of_assessment == 'High Risk Assumed':
+            return 'Yes'
+        elif self.planned_cash_transfers > 100000.00 \
+            and self.type_of_assessment == 'Simplified Checklist' or self.rating == 'Not Required':
+            return 'Yes'
+        elif self.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
+            and self.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
+            and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
+            return 'Yes'
+        elif micro_assessment is None:
+            return 'Missing'
+        return 'No'
+
+    @property
     def hact_min_requirements(self):
         audit = 'No'
         programme_visits = spot_checks = 0
         cash_transferred = self.actual_cash_transferred
         if cash_transferred <= 50000.00:
             programme_visits = 1
-        elif cash_transferred > 50000.00 and cash_transferred <= 100000.00:
+        elif 50000.00 < cash_transferred <= 100000.00:
             programme_visits = 1
             spot_checks = 1
-        elif cash_transferred > 100000.00 and cash_transferred <= 350000.00:
+        elif 100000.00 < cash_transferred <= 350000.00:
             if self.rating in [u'Low', u'Medium']:
                 programme_visits = 1
                 spot_checks = 1

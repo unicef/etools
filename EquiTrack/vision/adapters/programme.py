@@ -64,6 +64,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
 
     def _save_records(self, records):
 
+        processed = 0
         filtered_records = self._filter_records(records)
         for result in filtered_records:
             result_structure, created = ResultStructure.objects.get_or_create(
@@ -110,6 +111,9 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
             activity.activity_focus_code = result['ACTIVITY_FOCUS_CODE']
             activity.activity_focus_name = result['ACTIVITY_FOCUS_NAME']
             activity.save()
+            processed += 1
+
+        return processed
 
 
 class RAMSynchronizer(VisionDataSynchronizer):
@@ -133,6 +137,7 @@ class RAMSynchronizer(VisionDataSynchronizer):
         for result in results:
             lookup[result.wbs.replace('/', '')+'000'] = result
 
+        processed = 0
         filtered_records = self._filter_records(records)
         for ram_indicator in filtered_records:
             try:
@@ -152,3 +157,6 @@ class RAMSynchronizer(VisionDataSynchronizer):
 
                 result.ram = True
                 result.save()
+                processed += 1
+
+        return processed

@@ -103,7 +103,6 @@ class InterventionLocationView(ListAPIView):
 
         queryset = self.model.objects.filter(
             pca__status=status,
-            location__point__isnull=False
         )
 
         if gateway is not None:

@@ -7,6 +7,8 @@ from abc import ABCMeta, abstractmethod
 import requests
 from celery.utils.log import get_task_logger
 
+from .models import VisionSyncLog
+
 logger = get_task_logger('vision.synchronize')
 
 
@@ -76,11 +78,24 @@ class VisionDataSynchronizer:
         return self._get_json(response.json())
 
     def sync(self):
+        """
+        Performs the database sync
+        :return:
+        """
+        log = VisionSyncLog(
+            country=self.county,
+            handler_name=self.__class__.__name__
+        )
         try:
             original_records = self._load_records()
             converted_records = self._convert_records(original_records)
-            logger.info('Processing {} records'.format(len(original_records)))
-            self._save_records(converted_records)
+            log.total_records = len(converted_records)
+            logger.info('Processing {} records'.format(len(converted_records)))
+            log.total_processed = self._save_records(converted_records)
+            log.successful = True
         except Exception as e:
+            log.exception_message = e.message
             raise VisionException(message=e.message)
+        finally:
+            log.save()
 
