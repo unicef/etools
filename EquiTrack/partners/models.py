@@ -530,19 +530,22 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        year = self.year
-        objects = list(Agreement.objects.filter(
-            created__year=year,
-            agreement_type=self.agreement_type
-        ).order_by('created').values_list('id', flat=True))
-        sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-        number = u'{code}/{type}{year}{seq}{version}'.format(
-            code=connection.tenant.country_short_code or '',
-            type=self.agreement_type,
-            year=year,
-            seq=sequence,
-            version=u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
-        )
+        if self.agreement_number is not None:
+            number = self.agreement_number
+        else:
+            year = self.year
+            objects = list(Agreement.objects.filter(
+                created__year=year,
+                agreement_type=self.agreement_type
+            ).order_by('created').values_list('id', flat=True))
+            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            number = u'{code}/{type}{year}{seq}'.format(
+                code=connection.tenant.country_short_code or '',
+                type=self.agreement_type,
+                year=year,
+                seq=sequence,
+            )
+        number + u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
         return number
 
 
@@ -824,7 +827,9 @@ class PCA(AdminURLMixin, models.Model):
     @property
     def reference_number(self):
         if self.partnership_type in [Agreement.SSFA, Agreement.MOU]:
-            return self.agreement.reference_number
+            number = self.agreement.reference_number
+        elif self.number is not None:
+            number = self.number
         else:
             year = self.year
             objects = list(PCA.objects.filter(
@@ -833,15 +838,14 @@ class PCA(AdminURLMixin, models.Model):
                 partnership_type=self.partnership_type
             ).order_by('created_at').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-            number = u'{agreement}/{type}{year}{seq}{version}'.format(
+            number = u'{agreement}/{type}{year}{seq}'.format(
                 agreement=self.agreement.reference_number if self.id and self.agreement else '',
                 type=self.partnership_type,
                 year=year,
-                seq=sequence,
-                version=u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
-                if self.amendments_log.last() else ''
+                seq=sequence
             )
-            return number
+        number + u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
+        return number
 
     @property
     def planned_cash_transfers(self):
