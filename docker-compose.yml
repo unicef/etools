@@ -1,6 +1,6 @@
 web:
   image: unicef/equitrack:develop
-  command: honcho start
+  command: python manage.py runserver
   volumes:
     - ./EquiTrack:/code
   ports:
@@ -8,7 +8,7 @@ web:
   links:
     - db
     - redis
-    - sync-gateway
+#    - sync-gateway
   environment:
     - REDIS_URL=redis://redis:6379/0
     - DATABASE_URL=postgis://postgres:password@db:5432/postgres
@@ -18,9 +18,19 @@ web:
   env_file:
     - env_prod
 
+worker:
+  image: unicef/equitrack:develop
+  command: python manage.py celery worker -E --loglevel=info
+  links:
+    - db
+    - redis
+  environment:
+    - REDIS_URL=redis://redis:6379/0
+    - DATABASE_URL=postgis://postgres:password@db:5432/postgres
+
 beater:
   image: unicef/equitrack:develop
-  command: python manage.py celery worker -B -E --loglevel=info
+  command: python manage.py celery beat --loglevel=info
   links:
     - db
     - redis
@@ -42,22 +52,22 @@ db:
 redis:
   image: redis
 
-couchbase:
-  image: couchbase/server:community-4.0.0
-  ports:
-    - 8091:8091
-    - 8092:8092
-    - 8093:8093
-    - 18091:18091
-
-sync-gateway:
-  image: couchbase/sync-gateway
-  command: sync-gateway.json
-  volumes:
-    - ./couchbase/sync-gateway.json:/sync-gateway.json
-  links:
-    - couchbase:couchbase
-  ports:
-    - 4984:4984
-    - 4985:4985
+#couchbase:
+#  image: couchbase/server:community-4.0.0
+#  ports:
+#    - 8091:8091
+#    - 8092:8092
+#    - 8093:8093
+#    - 18091:18091
+#
+#sync-gateway:
+#  image: couchbase/sync-gateway
+#  command: sync-gateway.json
+#  volumes:
+#    - ./couchbase/sync-gateway.json:/sync-gateway.json
+#  links:
+#    - couchbase:couchbase
+#  ports:
+#    - 4984:4984
+#    - 4985:4985
 
