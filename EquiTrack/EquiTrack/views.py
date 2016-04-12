@@ -142,3 +142,8 @@ class UserDashboardView(TemplateView):
                 person_responsible=user).order_by("-due_date")[:10]
         }
 
+
+class HACTDashboardView(TemplateView):
+
+    template_name = 'hact/dashboard.html'
+
