@@ -21,9 +21,22 @@ from .views import (
     ResultChainViewSet,
     IndicatorReportViewSet,
     PcaPDFView,
+    PartnerOrganizationsViewSet,
+    PartnerStaffMembersViewSet,
+    AgreementViewSet,
 )
 
-interventions_api = routers.SimpleRouter()
+partners_api = routers.SimpleRouter()
+partners_api.register(r'partners', PartnerOrganizationsViewSet, base_name='partnerorganizations')
+
+staffm_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
+staffm_api.register(r'staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
+
+agreement_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
+agreement_api.register(r'agreements', AgreementViewSet, base_name='agreements')
+
+# interventions_api = routers.SimpleRouter()
+interventions_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
 interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')
 
 pcasectors_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
