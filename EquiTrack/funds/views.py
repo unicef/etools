@@ -14,7 +14,9 @@ from .serializers import (
 
 class DonorViewSet(mixins.ListModelMixin,
                    viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Donors
+    """
     queryset = Donor.objects.all()
     serializer_class = DonorSerializer
 

@@ -35,9 +35,9 @@ from reports.views import (
     ResultStructureViewSet,
     ResultTypeViewSet,
     SectorViewSet,
-    GoalViewSet,
+    # GoalViewSet,
     IndicatorViewSet,
-    OutputViewSet,
+    ResultViewSet,
     UnitViewSet
 )
 
@@ -78,9 +78,9 @@ api.register(r'funds/grants', GrantViewSet, base_name='grants')
 api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
-api.register(r'reports/goals', GoalViewSet, base_name='goals')
+# api.register(r'reports/goals', GoalViewSet, base_name='goals')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
-api.register(r'reports/outputs', OutputViewSet, base_name='outputs')
+api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
@@ -105,14 +105,14 @@ urlpatterns = patterns(
 
     url(r'^api/', include(api.urls)),
     url(r'^api/partners/', include(interventions_api.urls)),
-    url(r'^api/', include(results_api.urls)),
+    url(r'^api/partners/', include(results_api.urls)),
     url(r'^api/partners/', include(pcasectors_api.urls)),
     url(r'^api/partners/', include(pcabudgets_api.urls)),
     url(r'^api/partners/', include(pcafiles_api.urls)),
     url(r'^api/partners/', include(pcagrants_api.urls)),
     url(r'^api/partners/', include(pcaamendments_api.urls)),
     url(r'^api/partners/', include(pcalocations_api.urls)),
-    url(r'^api/', include(reports_api.urls)),
+    url(r'^api/partners/', include(reports_api.urls)),
     url(r'^api/', include(trips2_api.urls)),
     url(r'^api/', include(trips2files_api.urls)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),

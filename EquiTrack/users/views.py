@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
+from .permissions import IsSuperUser
 from users.models import Office, Section
 from reports.models import Sector
 from .forms import ProfileForm
@@ -137,6 +138,7 @@ class GroupViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    permission_classes = (IsSuperUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -163,43 +165,14 @@ class GroupViewSet(mixins.RetrieveModelMixin,
 
 
 class UserViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+                  mixins.ListModelMixin,
+                  viewsets.GenericViewSet):
     """
     Returns a list of all Users
     """
     queryset = User.objects.all()
     serializer_class = UserCreationSerializer
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add a new User abd User Profile
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        groups = request.data['groups']
-        permissions = request.data['user_permissions']
-
-        serializer.instance = serializer.save()
-        data = serializer.data
-
-        try:
-            for grp in groups:
-                serializer.instance.groups.add(grp)
-
-            for perm in permissions:
-                serializer.instance.user_permissions.add(perm)
-
-            serializer.save()
-        except Exception:
-            pass
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(data, status=status.HTTP_201_CREATED,
-                        headers=headers)
+    permission_classes = (IsSuperUser,)
 
 
 class OfficeViewSet(mixins.RetrieveModelMixin,
@@ -211,6 +184,7 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Office.objects.all()
     serializer_class = OfficeSerializer
+    permission_classes = (IsSuperUser,)
 
 
 class SectionViewSet(mixins.RetrieveModelMixin,
@@ -222,3 +196,4 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
+    permission_classes = (IsSuperUser,)

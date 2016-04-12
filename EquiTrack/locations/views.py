@@ -31,14 +31,20 @@ class LocationTypesViewSet(mixins.RetrieveModelMixin,
 
 
 class LocationsViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+                       mixins.ListModelMixin,
+                       mixins.CreateModelMixin,
+                       viewsets.GenericViewSet):
     """
     Returns a list of all Locations
     """
+    lookup_field = 'p_code'
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
+
+    def get_queryset(self):
+        queryset = super(LocationsViewSet, self).get_queryset()
+        p_code = self.kwargs.get('p_code')
+        return queryset.filter(p_code=p_code)
 
 
 class LocationQuerySetView(ListAPIView):

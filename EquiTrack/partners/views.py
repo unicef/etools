@@ -332,7 +332,9 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
 class ResultChainViewSet(mixins.RetrieveModelMixin,
                          mixins.ListModelMixin,
                          viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Result Chain for an Intervention
+    """
     model = ResultChain
     queryset = ResultChain.objects.all()
     serializer_class = ResultChainDetailsSerializer
@@ -348,7 +350,9 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Indicator Reports for an Intervention and Result
+    """
     model = IndicatorReport
     queryset = IndicatorReport.objects.all()
     serializer_class = IndicatorReportSerializer
