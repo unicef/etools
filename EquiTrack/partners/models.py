@@ -84,7 +84,6 @@ class PartnerOrganization(models.Model):
     )
     name = models.CharField(
         max_length=255,
-        unique=True,
         verbose_name='Full Name',
         help_text=u'Please make sure this matches the name you enter in VISION'
     )
@@ -143,6 +142,7 @@ class PartnerOrganization(models.Model):
 
     class Meta:
         ordering = ['name']
+        unique_together = ('name', 'vendor_number')
 
     def __unicode__(self):
         return self.name
