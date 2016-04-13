@@ -109,7 +109,8 @@ class PartnerOrganization(models.Model):
     )
     vendor_number = models.BigIntegerField(
         blank=True,
-        null=True
+        null=True,
+        unique=True,
     )
     alternate_id = models.IntegerField(
         blank=True,
@@ -922,6 +923,7 @@ class PCA(AdminURLMixin, models.Model):
                 *recipients
             )
 
+        # attach any FCs immediately
         commitments = FundingCommitment.objects.filter(fr_number=instance.fr_number)
         for commit in commitments:
             commit.intervention = instance

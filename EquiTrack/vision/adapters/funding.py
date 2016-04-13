@@ -5,7 +5,7 @@ from vision.vision_data_synchronizer import VisionDataSynchronizer
 from vision.utils import wcf_json_date_as_datetime
 
 from funds.models import Grant, Donor
-from partners.models import FundingCommitment, DirectCashTransfer
+from partners.models import FundingCommitment, DirectCashTransfer, PCA
 
 
 class FundingSynchronizer(VisionDataSynchronizer):
@@ -47,19 +47,23 @@ class FundingSynchronizer(VisionDataSynchronizer):
                 print 'Grant: {} does not exist'.format(fc_line["GRANT_REF"])
             else:
                 funding_commitment, created = FundingCommitment.objects.get_or_create(
-                    grant=grant,
-                    fr_number=fc_line["FR_DOC_NUMBER"],
                     fc_ref=fc_line["COMMITMENT_REF"]
                 )
+                funding_commitment.grant = grant
+                funding_commitment.fr_number = fc_line["FR_DOC_NUMBER"]
                 funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
                 funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])
                 funding_commitment.wbs = fc_line["IR_WBS"]
                 funding_commitment.fc_type = fc_line["COMMITMENT_DOC_TYPE"]
-                funding_commitment.fc_ref = fc_line["COMMITMENT_REF"]
                 funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
                 funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
                 funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]
                 funding_commitment.expenditure_amount = fc_line["EXPENDITURE_AMT"]
+                try:
+                    intervention = PCA.objects.get(fr_number=fc_line["FR_DOC_NUMBER"])
+                    funding_commitment.intervention = intervention
+                except PCA.DoesNotExist:
+                    pass
                 funding_commitment.save()
                 processed += 1
 
