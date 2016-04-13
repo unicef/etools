@@ -531,23 +531,33 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.agreement_number is not None:
+        if self.agreement_number:
             number = self.agreement_number
         else:
-            year = self.year
             objects = list(Agreement.objects.filter(
-                created__year=year,
+                created__year=self.year,
                 agreement_type=self.agreement_type
             ).order_by('created').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
             number = u'{code}/{type}{year}{seq}'.format(
                 code=connection.tenant.country_short_code or '',
                 type=self.agreement_type,
-                year=year,
+                year=self.year,
                 seq=sequence,
             )
-        number + u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
-        return number
+        return u'{}{}'.format(
+            number,
+            u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
+            if self.amendments_log.last() else ''
+        )
+
+    def save(self, **kwargs):
+
+        # commit the reference number to the database once the agreement is signed
+        if self.signed_by_unicef_date and not self.agreement_number:
+            self.agreement_number = self.reference_number
+
+        super(Agreement, self).save(**kwargs)
 
 
 class AuthorizedOfficer(models.Model):
@@ -630,8 +640,7 @@ class PCA(AdminURLMixin, models.Model):
     )
     number = models.CharField(
         max_length=45L,
-        blank=True,
-        default=u'UNASSIGNED',
+        blank=True, null=True,
         help_text=u'Document Reference Number'
     )
     title = models.CharField(max_length=256L)
@@ -829,24 +838,26 @@ class PCA(AdminURLMixin, models.Model):
     def reference_number(self):
         if self.partnership_type in [Agreement.SSFA, Agreement.MOU]:
             number = self.agreement.reference_number
-        elif self.number is not None:
+        elif self.number:
             number = self.number
         else:
-            year = self.year
             objects = list(PCA.objects.filter(
                 partner=self.partner,
-                created_at__year=year,
+                created_at__year=self.year,
                 partnership_type=self.partnership_type
             ).order_by('created_at').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
             number = u'{agreement}/{type}{year}{seq}'.format(
                 agreement=self.agreement.reference_number if self.id and self.agreement else '',
                 type=self.partnership_type,
-                year=year,
+                year=self.year,
                 seq=sequence
             )
-        number + u'-{0:02d}'.format(self.amendments_log.last().amendment_number) if self.amendments_log.last() else ''
-        return number
+        return u'{}{}'.format(
+            number,
+            u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
+            if self.amendments_log.last() else ''
+        )
 
     @property
     def planned_cash_transfers(self):
@@ -897,6 +908,14 @@ class PCA(AdminURLMixin, models.Model):
             trip__status=u'completed',
             trip__travel_type=u'spot_check'
         ).count()
+
+    def save(self, **kwargs):
+
+        # commit the referece number to the database once the intervention is signed
+        if self.signed_by_unicef_date and not self.number:
+            self.number = self.reference_number
+
+        super(PCA, self).save(**kwargs)
 
     @classmethod
     def get_active_partnerships(cls):
