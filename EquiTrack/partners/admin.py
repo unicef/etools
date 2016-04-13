@@ -682,6 +682,10 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
 
 
 class FundingCommitmentAdmin(admin.ModelAdmin):
+    search_fields = (
+        u'fr_number',
+        u'grant__name',
+    )
     list_filter = (
         u'grant',
         u'intervention',

@@ -22,6 +22,7 @@ from .views import (
     DashboardView,
     UserDashboardView,
     CmtDashboardView,
+    HACTDashboardView,
 )
 from locations.views import (
     LocationTypesViewSet,
@@ -86,8 +87,8 @@ api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
 api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
-api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 api.register(r'locations', LocationsViewSet, base_name='locations')
+api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
 
 urlpatterns = patterns(
@@ -98,6 +99,7 @@ urlpatterns = patterns(
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
+    url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact'),
 
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),

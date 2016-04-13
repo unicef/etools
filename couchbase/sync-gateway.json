@@ -6,7 +6,7 @@
   "maxCouchbaseConnections":100,
   "databases": {
     "default": {
-      "server": "http://etools-staging-couchbase.westeurope.cloudapp.azure.com:8091",
+      "server": "http://couchbase:8091",
       "bucket": "default",
        "sync": `function(doc){
           if(doc.type == "user") {

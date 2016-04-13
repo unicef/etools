@@ -135,7 +135,8 @@ class RAMSynchronizer(VisionDataSynchronizer):
         results = Result.objects.filter(result_type__name='Output')
         lookup = {}
         for result in results:
-            lookup[result.wbs.replace('/', '')+'000'] = result
+            if result.wbs:
+                lookup[result.wbs.replace('/', '')+'000'] = result
 
         processed = 0
         filtered_records = self._filter_records(records)
