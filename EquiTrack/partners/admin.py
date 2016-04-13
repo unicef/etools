@@ -482,6 +482,13 @@ class DocumentInlineAdmin(admin.TabularInline):
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
     resource_class = PartnerResource
+    search_fields = (
+        u'name',
+        u'vendor_number',
+    )
+    list_filter = (
+        u'partner_type',
+    )
     list_display = (
         u'name',
         u'vendor_number',
