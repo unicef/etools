@@ -176,6 +176,7 @@ class DistributionPlanSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DistributionPlan
+        fields = ('item', 'site', 'quantity', 'delivered')
 
 
 class InterventionSerializer(serializers.ModelSerializer):
