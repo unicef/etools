@@ -34,6 +34,16 @@ class FundingSynchronizer(VisionDataSynchronizer):
     def _convert_records(self, records):
         return json.loads(records)
 
+    def _filter_records(self, records):
+        records = super(FundingSynchronizer, self)._filter_records(records)
+
+        def bad_record(record):
+            if record['GRANT_REF'] == 'Unknown':
+                return False
+            return True
+
+        return filter(bad_record, records)
+
     def _save_records(self, records):
 
         processed = 0
@@ -67,7 +77,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
                         pass
                     funding_commitment.save()
                 except FundingCommitment.MultipleObjectsReturned as exp:
-                    exp.message += 'FC Ref' + fc_line["FR_DOC_NUMBER"]
+                    exp.message += 'FC Ref' + fc_line["COMMITMENT_REF"]
 
                 processed += 1
 
