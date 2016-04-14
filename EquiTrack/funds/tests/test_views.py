@@ -15,12 +15,8 @@ class TestFundViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/funds/donors/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # the length of this list should be 1
-        self.assertEquals(len(response.data), 1)
 
     def test_api_grants_list(self):
         response = self.forced_auth_req('get', '/api/funds/grants/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # the length of this list should be 1
-        self.assertEquals(len(response.data), 1)
