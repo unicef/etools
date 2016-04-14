@@ -255,6 +255,15 @@ class PartnerOrganization(models.Model):
         return total[total.keys()[0]] or 0
 
     @property
+    def planned_visits(self):
+        planned = self.documents.filter(
+            status=PCA.ACTIVE
+        ).aggregate(
+            models.Sum('planned_visits')
+        )
+        return planned[planned.keys()[0]] or 0
+
+    @property
     def programmatic_visits(self):
         from trips.models import LinkedPartner
         return LinkedPartner.objects.filter(
@@ -741,6 +750,7 @@ class PCA(AdminURLMixin, models.Model):
     cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
     total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
     fr_number = models.CharField(max_length=50, null=True, blank=True)
+    planned_visits = models.IntegerField(default=0)
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
