@@ -149,5 +149,5 @@ class HACTDashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         return {
-            #'partners': PartnerOrganization.objects.filter(documents__)
+            'partners': PartnerOrganization.objects.filter(documents__status=PCA.ACTIVE)
         }
