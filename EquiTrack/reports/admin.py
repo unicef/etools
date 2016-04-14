@@ -138,6 +138,10 @@ class IndicatorAdmin(admin.ModelAdmin):
 class ResultAdmin(MPTTModelAdmin):
     form = AutoSizeTextForm
     mptt_indent_field = '__unicode__'
+    search_fields = (
+        'wbs',
+        'name',
+    )
     list_filter = (
         'result_structure',
         'sector',

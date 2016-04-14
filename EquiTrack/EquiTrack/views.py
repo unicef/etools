@@ -147,3 +147,7 @@ class HACTDashboardView(TemplateView):
 
     template_name = 'hact/dashboard.html'
 
+    def get_context_data(self, **kwargs):
+        return {
+            #'partners': PartnerOrganization.objects.filter(documents__)
+        }
