@@ -34,6 +34,16 @@ class FundingSynchronizer(VisionDataSynchronizer):
     def _convert_records(self, records):
         return json.loads(records)
 
+    def _filter_records(self, records):
+        records = super(FundingSynchronizer, self)._filter_records(records)
+
+        def bad_record(record):
+            if record['GRANT_REF'] == 'Unknown':
+                return False
+            return True
+
+        return filter(bad_record, records)
+
     def _save_records(self, records):
 
         processed = 0
@@ -47,9 +57,9 @@ class FundingSynchronizer(VisionDataSynchronizer):
                 print 'Grant: {} does not exist'.format(fc_line["GRANT_REF"])
             else:
                 funding_commitment, created = FundingCommitment.objects.get_or_create(
+                    grant=grant,
                     fc_ref=fc_line["COMMITMENT_REF"]
                 )
-                funding_commitment.grant = grant
                 funding_commitment.fr_number = fc_line["FR_DOC_NUMBER"]
                 funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
                 funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])
@@ -76,7 +86,7 @@ class DCTSynchronizer(VisionDataSynchronizer):
     REQUIRED_KEYS = (
         "VENDOR_NAME",              # VARCHAR2	Vendor Name
         "VENDOR_CODE",              # VARCHAR2	Vendor Code
-        "WBS_ELEMENT_EX",           #_VARCHAR2	WBS Element
+        "WBS_ELEMENT_EX",           # VARCHAR2	WBS Element
         "GRANT_REF",                # VARCHAR2	Grant Reference
         "DONOR_NAME",               # VARCHAR2	Donor Name
         "EXPIRY_DATE",              # VARCHAR2	Donor Expiry Date

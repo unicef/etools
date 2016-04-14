@@ -275,10 +275,11 @@ class PartnerOrganization(models.Model):
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
 
-        set_unisupply_user.delay(
-            instance.short_name,
-            instance.alternate_name
-        )
+        if instance.short_name and instance.alternate_name:
+            set_unisupply_user.delay(
+                instance.short_name,
+                instance.alternate_name
+            )
 
 post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 
