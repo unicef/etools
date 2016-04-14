@@ -45,6 +45,9 @@ window.addEventListener('WebComponentsReady', function() {
   page('/myInterventions', function() {
     app.route = 'myInterventions';
   });
+  page('/reportingDash', function() {
+    app.route = 'reportingDash';
+  });
   page('/intervention/:intv/', function(data) {
     app.route = 'intervention';
     app.params = data.params;

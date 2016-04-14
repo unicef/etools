@@ -157,7 +157,7 @@ SAML_CONFIG = {
     'valid_for': 24,  # how long is our metadata valid
 }
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-
+SAML_SIGNED_LOGOUT = True
 ########## JWT AUTH CONFIGURATION
 certificate_text = open(join(DJANGO_ROOT, 'saml/stspem.cer'), 'r').read()
 certificate = load_pem_x509_certificate(certificate_text, default_backend())

@@ -634,11 +634,6 @@ class PartnershipForm(UserGroupForm):
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
 
-        if work_plan and not work_plan_sector:
-            raise ValidationError(
-                u'Please select a sector to import results against'
-            )
-
         if work_plan:
             if result_structure is None:
                 raise ValidationError(
