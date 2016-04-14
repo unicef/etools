@@ -72,15 +72,17 @@
                             </thead>
 
                             <tbody>
-{#                                <tr>#}
-{#                                    <td>Tiger Nixon</td>#}
-{#                                    <td>System Architect</td>#}
-{#                                    <td>Edinburgh</td>#}
-{#                                    <td>61</td>#}
-{#                                    <td>2011/04/25</td>#}
-{#                                    <td>$320,800</td>#}
-{#                                </tr>#}
-
+                                {% for partner in partners %}
+                                    <tr>
+                                        <td>{{ partner.name }}</td>
+                                        <td>{{ partner.type }}</td>
+                                        <td>{{ partner.shared_ip }}</td>
+                                        <td>{{ partner.type_of_assessment }}</td>
+                                        <td>{{ partner.planned_cash_transfers }}</td>
+                                        <td>{{ partner.micro_assessment_needed }}</td>
+                                        <td>{{ partner. }}</td>
+                                    </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
 
