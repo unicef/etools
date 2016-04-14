@@ -152,8 +152,8 @@ class ResultAdmin(MPTTModelAdmin):
     )
 
     actions = (
-    	'hide_results',
-    	'show_results'
+        'hide_results',
+        'show_results'
     )
 
     def get_queryset(self, request):
@@ -174,7 +174,7 @@ class ResultAdmin(MPTTModelAdmin):
 
 
 admin.site.register(Result, ResultAdmin)
-admin.site.register(ResultStructure, ImportExportModelAdmin)
+admin.site.register(ResultStructure)
 admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)

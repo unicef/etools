@@ -77,7 +77,8 @@ class FundingSynchronizer(VisionDataSynchronizer):
                         pass
                     funding_commitment.save()
                 except FundingCommitment.MultipleObjectsReturned as exp:
-                    exp.message += 'FC Ref' + fc_line["COMMITMENT_REF"]
+                    exp.message += 'FC Ref ' + fc_line["COMMITMENT_REF"]
+                    raise
 
                 processed += 1
 
