@@ -46,25 +46,29 @@ class FundingSynchronizer(VisionDataSynchronizer):
             except Grant.DoesNotExist:
                 print 'Grant: {} does not exist'.format(fc_line["GRANT_REF"])
             else:
-                funding_commitment, created = FundingCommitment.objects.get_or_create(
-                    fc_ref=fc_line["COMMITMENT_REF"]
-                )
-                funding_commitment.grant = grant
-                funding_commitment.fr_number = fc_line["FR_DOC_NUMBER"]
-                funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
-                funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])
-                funding_commitment.wbs = fc_line["IR_WBS"]
-                funding_commitment.fc_type = fc_line["COMMITMENT_DOC_TYPE"]
-                funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
-                funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
-                funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]
-                funding_commitment.expenditure_amount = fc_line["EXPENDITURE_AMT"]
                 try:
-                    intervention = PCA.objects.get(fr_number=fc_line["FR_DOC_NUMBER"])
-                    funding_commitment.intervention = intervention
-                except PCA.DoesNotExist:
-                    pass
-                funding_commitment.save()
+                    funding_commitment, created = FundingCommitment.objects.get_or_create(
+                        fc_ref=fc_line["COMMITMENT_REF"]
+                    )
+                    funding_commitment.grant = grant
+                    funding_commitment.fr_number = fc_line["FR_DOC_NUMBER"]
+                    funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
+                    funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])
+                    funding_commitment.wbs = fc_line["IR_WBS"]
+                    funding_commitment.fc_type = fc_line["COMMITMENT_DOC_TYPE"]
+                    funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
+                    funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
+                    funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]
+                    funding_commitment.expenditure_amount = fc_line["EXPENDITURE_AMT"]
+                    try:
+                        intervention = PCA.objects.get(fr_number=fc_line["FR_DOC_NUMBER"])
+                        funding_commitment.intervention = intervention
+                    except PCA.DoesNotExist:
+                        pass
+                    funding_commitment.save()
+                except FundingCommitment.MultipleObjectsReturned as exp:
+                    exp.message += 'FC Ref' + fc_line["FR_DOC_NUMBER"]
+
                 processed += 1
 
         return processed
@@ -76,7 +80,7 @@ class DCTSynchronizer(VisionDataSynchronizer):
     REQUIRED_KEYS = (
         "VENDOR_NAME",              # VARCHAR2	Vendor Name
         "VENDOR_CODE",              # VARCHAR2	Vendor Code
-        "WBS_ELEMENT_EX",           #_VARCHAR2	WBS Element
+        "WBS_ELEMENT_EX",           # VARCHAR2	WBS Element
         "GRANT_REF",                # VARCHAR2	Grant Reference
         "DONOR_NAME",               # VARCHAR2	Donor Name
         "EXPIRY_DATE",              # VARCHAR2	Donor Expiry Date
