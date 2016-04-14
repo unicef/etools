@@ -366,7 +366,6 @@ SHARED_APPS = (
     'easy_thumbnails',
     'filer',
     'storages',
-    'reversion',
     'rest_framework',
     'rest_framework_swagger',
     'rest_framework.authtoken',
@@ -380,7 +379,6 @@ SHARED_APPS = (
     'djcelery',
     'djcelery_email',
     'datetimewidget',
-    'logentry_admin',
     'leaflet',
     'djgeojson',
     'paintstore',
@@ -408,6 +406,8 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # Apps specific for this project go here.
 TENANT_APPS = (
+    'logentry_admin',
+    'reversion',
     'funds',
     'locations',
     'activityinfo',
