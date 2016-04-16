@@ -85,7 +85,7 @@
                                     {% with reqs=partner.hact_min_requirements %}
                                     <tr>
                                         <td>{{ forloop.counter }}</td>
-                                        <td>{{ partner.name }}</td>
+                                        <td><a href="{{ partner.get_admin_url }}">{{ partner.name }}</a></td>
                                         <td>{{ partner.partner_type }}</td>
                                         <td>{{ partner.shared_ip }}</td>
                                         <td>{{ partner.planned_cash_transfers }}</td>
@@ -94,12 +94,12 @@
                                         <td>{{ partner.actual_cash_transferred }}</td>
                                         <td>{{ partner.rating }}</td>
                                         <td>{{ partner.planned_visits }}</td>
-                                        <td>{{ reqs.0 }}</td>
+                                        <td>{{ reqs.programme_visits }}</td>
                                         <td>{{ partner.programmatic_visits }}</td>
-                                        <td>{{ reqs.1 }}</td>
+                                        <td>{{ reqs.spot_checks }}</td>
                                         <td>{{ partner.spot_checks }}</td>
-                                        <td>{{ reqs.2 }}</td>
-                                        <td>{{ partner.latest_assessment }}</td>
+                                        <td>{{ reqs.audits }}</td>
+                                        <td>{{ partner.audits }}</td>
                                         <td>0</td>
                                     </tr>
                                     {% endwith %}
