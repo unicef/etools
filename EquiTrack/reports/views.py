@@ -1,13 +1,12 @@
 __author__ = 'achamseddine'
 
 from rest_framework import viewsets, mixins
-from .models import ResultStructure, ResultType, Result, Sector, Goal, Indicator, Unit
+from .models import ResultStructure, ResultType, Result, Sector, Indicator, Unit
 from .serializers import (
     ResultStructureSerializer,
     ResultTypeSerializer,
     ResultSerializer,
     SectorCreateSerializer,
-    GoalCreateSerializer,
     IndicatorCreateSerializer,
     UnitSerializer
 )
@@ -42,21 +41,21 @@ class SectorViewSet(mixins.RetrieveModelMixin,
     serializer_class = SectorCreateSerializer
 
 
-class GoalViewSet(mixins.RetrieveModelMixin,
-                  mixins.ListModelMixin,
-                  mixins.CreateModelMixin,
-                  viewsets.GenericViewSet):
-    """
-    Return a list of all Goals (CCCs)
-    """
-    queryset = Goal.objects.all()
-    serializer_class = GoalCreateSerializer
+# class GoalViewSet(mixins.RetrieveModelMixin,
+#                   mixins.ListModelMixin,
+#                   mixins.CreateModelMixin,
+#                   viewsets.GenericViewSet):
+#     """
+#     Return a list of all Goals (CCCs)
+#     """
+#     queryset = Goal.objects.all()
+#     serializer_class = GoalCreateSerializer
 
 
-class OutputViewSet(mixins.ListModelMixin,
+class ResultViewSet(mixins.ListModelMixin,
                     viewsets.GenericViewSet):
     """
-    Returns a list of all Results (Outputs)
+    Returns a list of all Results
     """
     queryset = Result.objects.all()
     serializer_class = ResultSerializer

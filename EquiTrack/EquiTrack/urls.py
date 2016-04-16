@@ -36,9 +36,9 @@ from reports.views import (
     ResultStructureViewSet,
     ResultTypeViewSet,
     SectorViewSet,
-    GoalViewSet,
+    # GoalViewSet,
     IndicatorViewSet,
-    OutputViewSet,
+    ResultViewSet,
     UnitViewSet
 )
 
@@ -51,7 +51,10 @@ from partners.urls import (
     pcafiles_api,
     pcaamendments_api,
     pcalocations_api,
-    pcagrants_api
+    pcagrants_api,
+    partners_api,
+    staffm_api,
+    agreement_api,
 )
 
 api = routers.SimpleRouter()
@@ -63,9 +66,9 @@ trips2_api.register(r'trips2', Trips2ViewSet, base_name='trips2')
 trips2files_api = routers.NestedSimpleRouter(trips2_api, r'trips2', lookup='trips2')
 trips2files_api.register(r'files', TripFileViewSet, base_name='trips2files')
 
-api.register(r'partners/organizations', PartnerOrganizationsViewSet, base_name='partnerorganizations')
-api.register(r'partners/staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
-api.register(r'partners/agreements', AgreementViewSet, base_name='agreements')
+# api.register(r'partners', PartnerOrganizationsViewSet, base_name='partnerorganizations')
+# api.register(r'partners/staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
+# api.register(r'partners/agreements', AgreementViewSet, base_name='agreements')
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 
 api.register(r'users', UserViewSet, base_name='users')
@@ -79,9 +82,9 @@ api.register(r'funds/grants', GrantViewSet, base_name='grants')
 api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
-api.register(r'reports/goals', GoalViewSet, base_name='goals')
+# api.register(r'reports/goals', GoalViewSet, base_name='goals')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
-api.register(r'reports/outputs', OutputViewSet, base_name='outputs')
+api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
 api.register(r'locations', LocationsViewSet, base_name='locations')
@@ -106,14 +109,17 @@ urlpatterns = patterns(
     url(r'^supplies/', include('supplies.urls')),
 
     url(r'^api/', include(api.urls)),
-    url(r'^api/partners/', include(interventions_api.urls)),
+    url(r'^api/', include(partners_api.urls)),
+    url(r'^api/', include(staffm_api.urls)),
+    url(r'^api/', include(agreement_api.urls)),
+    url(r'^api/', include(interventions_api.urls)),
     url(r'^api/', include(results_api.urls)),
-    url(r'^api/partners/', include(pcasectors_api.urls)),
-    url(r'^api/partners/', include(pcabudgets_api.urls)),
-    url(r'^api/partners/', include(pcafiles_api.urls)),
-    url(r'^api/partners/', include(pcagrants_api.urls)),
-    url(r'^api/partners/', include(pcaamendments_api.urls)),
-    url(r'^api/partners/', include(pcalocations_api.urls)),
+    url(r'^api/', include(pcasectors_api.urls)),
+    url(r'^api/', include(pcabudgets_api.urls)),
+    url(r'^api/', include(pcafiles_api.urls)),
+    url(r'^api/', include(pcagrants_api.urls)),
+    url(r'^api/', include(pcaamendments_api.urls)),
+    url(r'^api/', include(pcalocations_api.urls)),
     url(r'^api/', include(reports_api.urls)),
     url(r'^api/', include(trips2_api.urls)),
     url(r'^api/', include(trips2files_api.urls)),

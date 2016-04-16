@@ -241,11 +241,11 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
         )
 
     @detail_route(methods=['get'], url_path='interventions')
-    def interventions(self, request, pk =None):
+    def interventions(self, request, partner_pk=None, pk =None):
         """
-        Return All Interventions for this Agreement
+        Return All Interventions for Partner and Agreement
         """
-        data = PCA.objects.filter(agreement_id=pk).values()
+        data = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk).values()
         headers = self.get_success_headers(data)
         return Response(
             data,
@@ -270,6 +270,21 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
                 # Return all interventions this partner has
                 return queryset.filter(partner=current_member.partner)
         return queryset
+
+    def retrieve(self, request, partner_pk=None, pk=None):
+        """
+        Returns an Agreement object for this Agreement PK and partner
+        """
+        try:
+            queryset = self.queryset.get(partner=partner_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except Agreement.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
 
 
 class InterventionsViewSet(mixins.RetrieveModelMixin,
@@ -330,11 +345,28 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
+    def retrieve(self, request, partner_pk=None, pk=None):
+        """
+        Returns an Intervention object for this Intervention PK and partner
+        """
+        try:
+            queryset = self.queryset.get(partner_id=partner_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PCA.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class ResultChainViewSet(mixins.RetrieveModelMixin,
                          mixins.ListModelMixin,
                          viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Result Chain for an Intervention
+    """
     model = ResultChain
     queryset = ResultChain.objects.all()
     serializer_class = ResultChainDetailsSerializer
@@ -345,12 +377,29 @@ class ResultChainViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns an Intervention object for this Intervention PK and partner
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except ResultChain.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class IndicatorReportViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Indicator Reports for an Intervention and Result
+    """
     model = IndicatorReport
     queryset = IndicatorReport.objects.all()
     serializer_class = IndicatorReportSerializer
@@ -366,6 +415,21 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
             raise Exception('Hell')
 
         serializer.save(partner_staff_member=partner_staff_member)
+
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, result_pk=None, pk=None):
+        """
+        Returns an Indicator report object
+        """
+        try:
+            queryset = self.queryset.get(id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except IndicatorReport.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
 
 
 class PCASectorViewSet(mixins.RetrieveModelMixin,
@@ -403,6 +467,21 @@ class PCASectorViewSet(mixins.RetrieveModelMixin,
         queryset = super(PCASectorViewSet, self).get_queryset()
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(pca=intervention_id)
+
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Sector object
+        """
+        try:
+            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PCASector.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
 
 
 class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
@@ -443,6 +522,21 @@ class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
         queryset = super(PartnershipBudgetViewSet, self).get_queryset()
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
+
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Budget Object
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PartnershipBudget.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
 
 
 class PCAFileViewSet(mixins.RetrieveModelMixin,
@@ -489,6 +583,21 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(pca=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA File Object
+        """
+        try:
+            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PCAFile.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class PCAGrantViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
@@ -529,6 +638,21 @@ class PCAGrantViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Grant Object
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PCAGrant.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class GwPCALocationViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
@@ -565,6 +689,21 @@ class GwPCALocationViewSet(mixins.RetrieveModelMixin,
         queryset = super(GwPCALocationViewSet, self).get_queryset()
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(pca_id=intervention_id)
+
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Grant Object
+        """
+        try:
+            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except GwPCALocation.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
 
 
 class AmendmentLogViewSet(mixins.RetrieveModelMixin,
@@ -606,6 +745,21 @@ class AmendmentLogViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Grant Object
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except AmendmentLog.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
@@ -632,59 +786,6 @@ class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
-    @detail_route(methods=['get'], url_path='agreements')
-    def agreements(self, request, pk=None):
-        """
-        Return all the Agreements for this Partner
-        """
-        data = Agreement.objects.filter(partner_id=pk).values()
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_200_OK,
-            headers=headers
-        )
-
-    @detail_route(methods=['get'], url_path='staffmembers')
-    def staffmembers(self, request, pk=None):
-        """
-        Return all the Staff Members for this Partner
-        """
-        data = PartnerStaffMember.objects.filter(partner_id=pk).values()
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_200_OK,
-            headers=headers
-        )
-
-    @detail_route(methods=['get'], url_path='interventions')
-    def interventions(self, request, pk=None):
-        """
-        Return all the Intervention for this Partner
-        """
-        data = PCA.objects.filter(partner_id=pk).values()
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_200_OK,
-            headers=headers
-        )
-
-    @detail_route(methods=['get'], url_path='agreements/(?P<agreement_pk>\d+)/interventions')
-    def agreementintervention(self, request, pk=None, agreement_pk=None):
-        """
-        Return all the Interventions for this Partner and this Agreement
-        """
-        print request.data
-        data = PCA.objects.filter(partner_id=pk, agreement_id=agreement_pk).values()
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_200_OK,
             headers=headers
         )
 
@@ -733,6 +834,14 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
             serializer.data,
             status=status.HTTP_201_CREATED,
             headers=headers
+        )
+
+    def retrieve(self, request, partner_pk=None, pk=None):
+        queryset = self.queryset.get(partner_id=partner_pk, id=pk)
+        serializer = self.serializer_class(queryset)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
         )
 
 
