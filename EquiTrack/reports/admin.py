@@ -135,6 +135,25 @@ class IndicatorAdmin(admin.ModelAdmin):
     # ]
 
 
+class HiddenResultFilter(admin.SimpleListFilter):
+
+    title = 'Show Hidden'
+    parameter_name = 'hidden'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (True, 'Yes'),
+            (False, 'No')
+        ]
+
+    def queryset(self, request, queryset):
+
+        if self.value():
+            return queryset.filter(hidden=self.value())
+        return queryset.filter(hidden=False)
+
+
 class ResultAdmin(MPTTModelAdmin):
     form = AutoSizeTextForm
     mptt_indent_field = '__unicode__'
@@ -146,7 +165,7 @@ class ResultAdmin(MPTTModelAdmin):
         'result_structure',
         'sector',
         'result_type',
-        'hidden',
+        HiddenResultFilter,
     )
     list_display = (
         '__unicode__',
