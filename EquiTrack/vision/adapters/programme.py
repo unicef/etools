@@ -64,52 +64,66 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
 
     def _save_records(self, records):
 
+        processed = 0
         filtered_records = self._filter_records(records)
         for result in filtered_records:
-            result_structure, created = ResultStructure.objects.get_or_create(
-                name=result['COUNTRY_PROGRAMME_NAME'],
-                from_date=wcf_json_date_as_datetime(result['CP_START_DATE']),
-                to_date=wcf_json_date_as_datetime(result['CP_END_DATE']),
-            )
+            try:
+                result_structure, created = ResultStructure.objects.get_or_create(
+                    name=result['COUNTRY_PROGRAMME_NAME'],
+                    from_date=wcf_json_date_as_datetime(result['CP_START_DATE']),
+                    to_date=wcf_json_date_as_datetime(result['CP_END_DATE']),
+                )
+            except ResultStructure.MultipleObjectsReturned as exp:
+                exp.message += 'Result Structure: ' + result['COUNTRY_PROGRAMME_NAME']
+                raise
 
-            outcome, created = Result.objects.get_or_create(
-                result_structure=result_structure,
-                result_type=ResultType.objects.get_or_create(name='Outcome')[0],
-                wbs=result['OUTCOME_WBS'],
-            )
-            outcome.name = result['OUTCOME_DESCRIPTION']
-            outcome.from_date = wcf_json_date_as_datetime(result['OUTCOME_START_DATE'])
-            outcome.to_date = wcf_json_date_as_datetime(result['OUTCOME_END_DATE'])
-            outcome.save()
+            try:
+                outcome, created = Result.objects.get_or_create(
+                    result_structure=result_structure,
+                    result_type=ResultType.objects.get_or_create(name='Outcome')[0],
+                    wbs=result['OUTCOME_WBS'],
+                )
+                outcome.name = result['OUTCOME_DESCRIPTION']
+                outcome.from_date = wcf_json_date_as_datetime(result['OUTCOME_START_DATE'])
+                outcome.to_date = wcf_json_date_as_datetime(result['OUTCOME_END_DATE'])
+                outcome.save()
 
-            output, created = Result.objects.get_or_create(
-                result_structure=result_structure,
-                result_type=ResultType.objects.get_or_create(name='Output')[0],
-                wbs=result['OUTPUT_WBS'],
-            )
-            output.name = result['OUTPUT_DESCRIPTION']
-            output.from_date = wcf_json_date_as_datetime(result['OUTPUT_START_DATE'])
-            output.to_date = wcf_json_date_as_datetime(result['OUTPUT_END_DATE'])
-            output.parent = outcome
-            output.save()
+                output, created = Result.objects.get_or_create(
+                    result_structure=result_structure,
+                    result_type=ResultType.objects.get_or_create(name='Output')[0],
+                    wbs=result['OUTPUT_WBS'],
+                )
+                output.name = result['OUTPUT_DESCRIPTION']
+                output.from_date = wcf_json_date_as_datetime(result['OUTPUT_START_DATE'])
+                output.to_date = wcf_json_date_as_datetime(result['OUTPUT_END_DATE'])
+                output.parent = outcome
+                output.save()
 
-            activity, created = Result.objects.get_or_create(
-                result_structure=result_structure,
-                result_type=ResultType.objects.get_or_create(name='Activity')[0],
-                wbs=result['ACTIVITY_WBS'],
-            )
-            activity.name = result['ACTIVITY_DESCRIPTION']
-            activity.from_date = wcf_json_date_as_datetime(result['ACTIVITY_START_DATE'])
-            activity.to_date = wcf_json_date_as_datetime(result['ACTIVITY_END_DATE'])
-            activity.parent = output
+                activity, created = Result.objects.get_or_create(
+                    result_structure=result_structure,
+                    result_type=ResultType.objects.get_or_create(name='Activity')[0],
+                    wbs=result['ACTIVITY_WBS'],
+                )
+                activity.name = result['ACTIVITY_DESCRIPTION']
+                activity.from_date = wcf_json_date_as_datetime(result['ACTIVITY_START_DATE'])
+                activity.to_date = wcf_json_date_as_datetime(result['ACTIVITY_END_DATE'])
+                activity.parent = output
 
-            activity.sic_code = result['SIC_CODE']
-            activity.sic_name = result['SIC_NAME']
-            activity.gic_code = result['GIC_CODE']
-            activity.gic_name = result['GIC_NAME']
-            activity.activity_focus_code = result['ACTIVITY_FOCUS_CODE']
-            activity.activity_focus_name = result['ACTIVITY_FOCUS_NAME']
-            activity.save()
+                activity.sic_code = result['SIC_CODE']
+                activity.sic_name = result['SIC_NAME']
+                activity.gic_code = result['GIC_CODE']
+                activity.gic_name = result['GIC_NAME']
+                activity.activity_focus_code = result['ACTIVITY_FOCUS_CODE']
+                activity.activity_focus_name = result['ACTIVITY_FOCUS_NAME']
+                activity.save()
+                processed += 1
+            except Result.MultipleObjectsReturned as exp:
+                exp.message += 'Outcome WBS: ' + result['OUTCOME_WBS'] \
+                            + ' Output WBS: ' + result['OUTPUT_WBS'] \
+                            + ' Activity WBS: ' + result['ACTIVITY_WBS']
+                raise
+
+        return processed
 
 
 class RAMSynchronizer(VisionDataSynchronizer):
@@ -131,8 +145,10 @@ class RAMSynchronizer(VisionDataSynchronizer):
         results = Result.objects.filter(result_type__name='Output')
         lookup = {}
         for result in results:
-            lookup[result.wbs.replace('/', '')+'000'] = result
+            if result.wbs:
+                lookup[result.wbs.replace('/', '')+'000'] = result
 
+        processed = 0
         filtered_records = self._filter_records(records)
         for ram_indicator in filtered_records:
             try:
@@ -152,3 +168,6 @@ class RAMSynchronizer(VisionDataSynchronizer):
 
                 result.ram = True
                 result.save()
+                processed += 1
+
+        return processed

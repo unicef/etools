@@ -64,6 +64,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
   <global-data app-data="[[appData]]" user="{{user}}" permissions="{{permissions}}"></global-data>
+
+  <template is="dom-if" if='{{permissions.interventionsMenu}}'>
+    <interventions-data id="interventionData" interventions={{interventions}}></interventions-data>
+  </template>
       
     <paper-drawer-panel id="paperDrawerPanel">
       <!-- Drawer Scroll Header Panel -->
@@ -83,15 +87,19 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             
           <template is="dom-if" if='{{permissions.loggedInDefault}}'>
             <a data-route="myInfo" href="{{baseUrl}}myInfo">
-              <iron-icon icon="info"></iron-icon>
+              <iron-icon icon="account-circle"></iron-icon>
               <span>My Information</span>
             </a>
           </template>   
 
           <template is="dom-if" if='{{permissions.interventionsMenu}}'>
             <a data-route="myInterventions" href="{{baseUrl}}myInterventions">
-              <iron-icon icon="info"></iron-icon>
+              <iron-icon icon="group-work"></iron-icon>
               <span>Interventions</span>
+            </a>
+            <a data-route="reportingDash" href="{{baseUrl}}reportingDash">
+              <iron-icon icon="dashboard"></iron-icon>
+              <span>Reporting Dashbord</span>
             </a>
           </template> 
 
@@ -143,11 +151,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <li>Viewing progress on indicators associated with an intervention</li>
                     <li>Viewing details of an indicator including past reports</li>
                     <li>Adding a new report for each indicator</li>
+                    <li>Ability to set up a custom reporting dashboard</li>
                 </ul>
                 <p class="paper-font-subhead">Currently under development:</p>
                 <ul>
                     <li>Ability to report on indicators in bulk</li>
                     <li>Ability to report on fully flexible disaggregations as defined in the workplan</li>
+                    
                 </ul>
                 <p class="paper-font-body2">Thank you for choosing to make our children's lives better! </p>
               </paper-material>
@@ -159,7 +169,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <section data-route="myInfo">
                 <paper-material elevation="1">
                     <h2 class="page-title">Hi {{user.first_name}} {{user.last_name}},</h2>
-                    <user-page siteinfo='[[siteinfo]]' permissions='[[permissions]]' user='{{user}}'></user-page>
+                    <user-page permissions='[[permissions]]' user='{{user}}'></user-page>
                 </paper-material>
               </section>
             </template> 
@@ -170,34 +180,43 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                       app-data="[[appData]]" interventions={{interventions}}>
                   </interventions-page>
               </section>
-            </template>
+            
+              <section data-route="intervention">
+                  <intervention-details app-data="{{appData}}" interventions={{interventions}} intervention-id="[[params.intv]]"></intervention-details> 
+              </section>
 
-            <section data-route="intervention">
-                <intervention-details app-data="{{appData}}" intervention-id="[[params.intv]]"></intervention-details> 
-            </section>
+              <section data-route="reportingDash">
+                  <reporting-dash interventions={{interventions}}></reporting-dash>
+              </section>
 
-            <section data-route="rcReport">
-                <rc-report app-data="[[appData]]" 
-                  interventions="{{interventions}}" 
-                  intervention-id="[[params.intvId]]"
-                  rc-id="[[params.rcId]]"></rc-report> 
-            </section>
+              <section data-route="rcReport">
+                  <rc-report app-data="[[appData]]" 
+                    interventions="{{interventions}}" 
+                    intervention-id="[[params.intvId]]"
+                    rc-id="[[params.rcId]]"></rc-report> 
+              </section>
+            </template> 
 
           </iron-pages>
         </div>
       </paper-scroll-header-panel>
     </paper-drawer-panel>
       
-      
+
+
+
       <paper-toast id="toast" duration="0">
       <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
     </paper-toast>
     
-
+    
   </template>
 
   <!-- build:js /static/frontend/partner/scripts/app.js -->
   <script src="scripts/partner_app.js"></script>
+  <!-- endbuild-->
+  <!-- build:js /static/frontend/partner/scripts/polyfills.js -->
+  <script src="scripts/polyfills.js"></script>
   <!-- endbuild-->
 </body>
 

@@ -1,0 +1,382 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+
+
+<link rel="import" href="../../../bower_components/paper-toggle-button/paper-toggle-button.html">
+
+<link rel="import" href="../interventions-data/interventions-data.html">
+
+<link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
+
+<link rel="import" href="../../behaviors/common/utils.html">
+<link rel="import" href="../../behaviors/partner/partner.html">
+
+
+<link rel="import" href="reporting-dash-wizzard.html">
+<link rel="import" href="reporting-dash-indicators.html">
+
+
+
+<dom-module id="reporting-dash">
+  <template>
+  <style>
+  :host {
+    
+  }
+  .item.selected {
+    background-color: var(--paper-light-blue-100);
+    border-bottom: 1px solid #ccc;
+  }
+  .progressBlock, .indicatorReportBlock{
+    @apply(--layout-horizontal);
+    @apply(--layout-center);
+  }
+  .reportBtns{
+    @apply(--layout-horizontal);
+    @apply(--layout-center);
+  }
+  .reportBtn{
+    padding-left:5px;
+    padding-right:5px;
+  }
+  .progressBlock p {
+    padding-left: 4px;
+    font-size: 80%;
+    color: var(--primary-text-color);
+  }
+  .star {
+    width: 24px;
+    height: 24px;
+  }
+  iron-list {
+      padding-top: 1px;
+      padding-bottom: 16px;
+      -webkit-flex: 1 1;
+      flex: 1 1;
+      --iron-list-items-container: {
+        max-width: 800px;
+        margin: auto;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+      };
+    }
+    .item {
+      @apply(--layout-horizontal);
+      padding: 20px;
+      background-color: white;
+      border: 1px solid #ddd;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    .pad {
+      padding: 0 16px;
+      @apply(--layout-flex);
+      @apply(--layout-vertical);
+    }
+  .custom {
+    --primary-background-color: #FFFFFF;
+    min-width: 400px;
+    width: 60%;
+  }
+  paper-button.add {
+    background-color: var(--paper-green-500);
+    color: white;
+  }
+  paper-button.add:hover {
+    background-color: var(--paper-green-900);
+  }
+  paper-button.add[disabled] {
+    background-color: #eaeaea;
+  }
+  .indicatorsMaterial {
+    padding: 10px;
+    background-color: #ffffff;
+  }
+  .locationTitle {
+    @apply(--paper-font-headline);
+    font-weight: 600;
+  }
+  :root {
+      --paper-tab-ink: var(--default-primary-color);
+
+      /* custom CSS property */
+      --paper-tabs-selection-bar-color: blue;
+
+      /* custom CSS mixin */
+      --paper-tabs: {
+          color: var(--default-primary-color); /* variable defined in default-theme.html */
+      }
+  }
+
+   
+  </style>
+  <!-- Add indicator toggle -->
+
+  <!-- Add indicator wizzard -->
+  <div class="reportBtns">
+    <paper-button raised on-tap="showNewIndicatorDialog">
+      <iron-icon icon="add"></iron-icon> Add Indicators
+    </paper-button>
+    <paper-toggle-button class="reportBtn" checked="{{removableIndicators}}">Edit</paper-toggle-button>
+  </div>
+
+
+  <paper-dialog class="custom" id="newIndicatorDialog" modal on-iron-overlay-closed="dismissDialog">
+
+    <p>Add New Indicator: </p>
+    
+    <paper-dialog-scrollable>
+      <reportingdash-wizzard 
+          id="wizzard"
+          interventions=[[interventions]] 
+          on-dialogupd="_recenterDialog"
+          add-ready={{addReady}}></reportingdash-wizzard>
+    </paper-dialog-scrollable>
+
+    <div class="buttons">
+      <paper-button dialog-dismiss>Cancel</paper-button>
+      <paper-button disabled="{{!addReady}}" class="add" dialog-confirm><iron-icon icon="check"></iron-icon>Add</paper-button>
+    </div>
+      
+  </paper-dialog>
+
+  <!-- End Add indicator wizzard -->
+
+  <!-- Display indicators founds in localstorage -->
+
+  <div class="emptyTemplate" hidden$="{{!emptyTemplate}}">
+    <p class="title">You have not set up your template yet</p>
+    <p>To add some indicators, please click "Add Indicators".</p>
+    <p>You will be asked to start with a location, then choose an intervention. After choosing an intervention you will be allowed to select multiple indicators for reporting in the chosen location -> click add to finish</p>
+    <p>You may repeat the process as needed until you added all the desired indicators in the desired locations</p>
+  </div>
+
+  <template is="dom-repeat" id="myIndicators" items="[[myIndicators]]" as="item">
+    <p class="locationTitle">[[item.name.name]]</p>
+    <paper-material class="indicatorsMaterial">      
+      <reportingdash-indicators 
+        id="allIndicators" 
+        indicators="[[item.value]]"
+        removable-indicators="[[removableIndicators]]"
+        on-remove-indicator="_removeIndicator"
+        data-location="[[item.name]]"></reportingdash-indicators>
+    </paper-material>
+            
+  </template>
+
+  </template>
+
+</dom-module>
+
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'reporting-dash',
+    behaviors: [commonBv.utils, commonBv.globals, commonBv.interventions],
+    observers: ['updateView(interventions.*)'],
+    properties: {
+      interventions: {
+        type: Array
+        // observer: 'updateView'
+      },
+      wizzardStep: {
+        type: Number,
+        value: 0
+      },
+      addReady: Boolean,
+      locations: Object,
+      indicators: Object,
+      myIndicators: Array,
+      emptyTemplate: {
+        type: Boolean,
+        value: false
+      },
+      removableIndicators: {
+        type: Boolean,
+        value: false
+      }
+    },
+    _getMyIndicators: function (dashData){
+      // console.log('getting my indicators ', dashData);
+      if (!dashData) {
+        console.info('no dasboard data set');
+        return;
+      }
+      var myIndicators = [];
+      var tempData = this._toArray(dashData.indicators);
+      
+      // tempdata now contains an array of objects with name = locationId and value = indicator list for that location
+      tempData.forEach(function (obj){
+        var tempArray = [];
+        var location = obj.name;
+        obj.value.forEach(function (ind){
+          // deep copy the indicator
+          var indicator = JSON.parse(JSON.stringify(this._getIndicator(ind.interventionId, ind.rcId)));
+          indicator.preselectedLocation = dashData.locations[location];
+          tempArray.push(indicator);
+        }, this);
+        myIndicators.push({
+          name: dashData.locations[location],
+          value: tempArray
+        });
+      }, this);
+      // console.log('my indicators in _getMyIndicators', myIndicators);
+      this.myIndicators = myIndicators;
+
+    },
+    _editIndicators: function() {
+      this.removableIndicators = !this.removableIndicators;
+    },
+    _removeIndicator: function(ev){
+      // console.log('removing indicator');
+      var rcId = ev.detail.rcId;
+      var interventionId = ev.detail.interventionId;
+      var location = ev.currentTarget.dataLocation;
+      var dashData = this.dashData;
+      // remove indicator from indicator list
+      // console.log(dashData.indicators[location.id]);
+      dashData.indicators[location.id] =  _.reject(
+        dashData.indicators[location.id], 
+        function(ind){ 
+          return ((ind.rcId === rcId) && (ind.interventionId === interventionId));
+        });
+      if (!dashData.indicators[location.id].length){
+        // if there are no more indicator in the location also remove locations
+        delete dashData.indicators[location.id];
+        delete dashData.locations[location.id];
+      }
+      this.dashData = dashData;
+      window.localStorage.setItem('dash_dashData', 
+          JSON.stringify(dashData)
+        );
+      this._getMyIndicators(dashData);
+
+    },
+    _updateLocal: function(newObj){ 
+      // var localData = this.dashData;
+      var dashData = this.dashData;
+      if (!dashData.locations[newObj.location.id]){
+        dashData.locations[newObj.location.id] = newObj.location;
+        dashData.indicators[newObj.location.id] = newObj.indicators;
+      } else {
+        dashData.indicators[newObj.location.id] = _.union(
+          dashData.indicators[newObj.location.id], newObj.indicators
+          );
+      }
+      window.localStorage.setItem('dash_dashData', 
+          JSON.stringify(dashData)
+        );
+      this.dashData = dashData;
+      this._getMyIndicators(dashData);
+      this.emptyTemplate = false;
+    },
+    _updateViewDebounced: function() {
+      console.log('updating reporting Dash View');
+      if (!this.interventions.length) {
+        return;
+      }
+      // console.log('booo', this.interventions);
+      var dashData = JSON.parse(window.localStorage.getItem('dash_dashData') || null);
+      // console.log('dashData ', dashData);
+      // this.locations = dashData ? dashData.locations : [];
+      this.dashData = dashData ? dashData : {locations: {}, indicators: {}};
+      
+      this.emptyTemplate = ((!dashData) || (_.isEmpty(dashData.locations))) ? true : false;
+      this._getMyIndicators(dashData);
+      
+    },
+    updateView: function() {
+      this.debounce('updateReportingDashDebounce', this._updateViewDebounced, 2000);
+    },
+    _recenterDialog: function(event) {
+      this.$.newIndicatorDialog.center();
+      event.stopPropagation();
+    },
+    _updateSelected: function(loc, inds){
+      var locationInds = [];
+      inds.forEach(function(ind) {
+        locationInds.push({
+          interventionId: ind.partnership,
+          rcId: ind.id
+        });
+        //ind.preselectedLocation = loc;
+      });
+      this._updateLocal({
+        location:loc,
+        indicators: locationInds
+      });
+      // if (this.locations.indexOf(loc) === -1){
+      //   this.locations.push(loc);
+      //   this.dashData[loc.name] = inds;
+      // } else {
+      //   var existingInds = this.dashData[loc.name];
+      //   this.dashData[loc.name] = _.union(existingInds, inds);
+      // }
+      // this.myIndicators = this._toArray(this.dashData);
+      // console.log(this.myIndicators);
+    },
+    dismissDialog: function() {
+      if (event.detail.confirmed) {
+        this._updateSelected(this.$.wizzard.selectedLocation, this.$.wizzard.selectedIndicators);
+        // console.log(this.$.wizzard.selectedLocation);
+        // console.log(this.$.wizzard.selectedIndicators);
+        // this.$.allIndicators.indicators = this.$.wizzard.selectedIndicators;
+      }
+      this.$.wizzard.wizzardStep = 0;
+      event.stopPropagation();
+    },
+    _goToNextStep: function() {
+      // maximum 3 steps
+      this.wizzardStep = (this.wizzardStep === 2) ? 2 : this.wizzardStep +1;
+      this.async(this._recenterDialog, 150);
+    },
+    _goToPrevStep: function() {
+      // maximum 3 steps
+      this.wizzardStep = (this.wizzardStep === 0) ? 0 : this.wizzardStep -1;
+      this.async(this._recenterDialog, 150);
+    },
+    _computedClass: function(isSelected) {
+      var classes = 'item';
+      if (isSelected) {
+        classes += ' selected';
+      }
+      return classes;
+    },
+    _getEditClass: function(isSelected){
+      var classes = '';
+      if (isSelected) {
+        classes += ' selected';
+      }
+      return classes;
+    },
+    iconForItem: function(isSelected) {
+      return isSelected ? 'star' : 'star-border';
+    },
+    showNewIndicatorDialog: function() {
+      this.$.newIndicatorDialog.toggle();
+    },
+    _locationSelected: function() {
+      // only if location is selected:
+      if (!this.$.locationSelected){
+        window.alert('location is needed');
+      }
+      this._goToNextStep();
+    },
+    _interventionSelected: function(e) {
+      var interventionId = e.model.item.id;
+      this.interventionIndicators = this._getIndicators(interventionId);
+      this._goToNextStep();
+
+    },
+    _autocompleteUrl: function() {
+      return this.getEp('locationsAutocomplete').url;
+    }
+  });
+})();
+
+</script>
+</dom-module>

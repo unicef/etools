@@ -30,6 +30,12 @@
     .alert {
       border: 1px solid yellow;
     }
+    .label {
+      font-size: 80%;
+      color: var(--secondary-text-color);
+    }
+   
+    
   </style>
   <template>
     <etools-ajax
@@ -41,11 +47,13 @@
           debounce-duration="200">
     </etools-ajax>
     
-   
-    <paper-input-container invalid="{{has_value(value)}}">
+    <div hidden$="[[!preselected]]">
+      <span class="label">{{label}}: </span><span>{{searchValue}}</span>
+    </div>
+    <paper-input-container hidden$="[[preselected]]" invalid="[[!value]]">
         <label>{{label}}</label>
         <content select=".content"></content>
-        <input id="searchBox" class="paper-input-input" is="iron-input" bind-value="{{searchValue::input}}"></input>
+        <input disabled="[[preselected]]" id="searchBox" class="paper-input-input" is="iron-input" bind-value="{{searchValue::input}}"></input>
     </paper-input-container>
 
     <iron-collapse id="collapse">
@@ -84,7 +92,16 @@
       },
       choices: Array,
       value: {
+        type: Number,
+        notify: true
+      },
+      selectedLocation: {
         type: Object,
+        notify: true
+      },
+      selectedLocationReport: {
+        type: Object,
+        notify: true
       },
       selectionChange: {
         type: Boolean,
@@ -102,17 +119,39 @@
       label: {
         type: String,
         value: ''
+      },
+      preselected: {
+        type: Boolean,
+        value: false
       }
     },
-    ready: function() {
+    reset: function() {
+      this.selectionChange = true;
+      this.value = null;
+      this.searchValue = null;
+      this.selectedLocation = null;
+      this.selectedLocationReport = null;
+    },
+    attached: function() {
         //
+        if (this.selectedLocation){
+          this.preselected = true;
+          this.selectedLocationReport = this.selectedLocation;
+          this.searchValue = this.selectedLocation.name;
+          this.value = this.selectedLocation.id;
+          // console.log('preselectedlocation, ', this.selectedLocation)
+        }
+
     },
     _valueChanged: function(e) {
-        if (this.selectionChange) {
+        // console.log('value changed', this.selectedLocation, this.preselected)
+        if ((this.selectionChange) || (this.preselected)) {
           this.selectionChange = false;
           return;
         }
         this.value = null;
+        this.selectedLocation = null;
+        this.selectedLocationReport = null;
         var collapse = this.$.collapse;
         if (e !== undefined && e !== '') {
           // trigger request
@@ -126,6 +165,9 @@
         }
     },
     _valueChangedDebounced: function(e) {
+      if (this.preselected){
+        return;
+      }
       var callback = function() {
         this._valueChanged(e);
       };
@@ -135,6 +177,14 @@
         this.selectionChange = true;
         this.set('searchValue', event.model.item.name);
         this.set('value', event.model.item.id);
+        this.set('selectedLocation', {
+          id: event.model.item.id,
+          name: event.model.item.name
+        });
+        this.set('selectedLocationReport', {
+          id: event.model.item.id,
+          name: event.model.item.name
+        });
         this.$.collapse.toggle();
     },
     changeUrl: function(){
@@ -149,14 +199,11 @@
     handleResponse: function(rsp) {
       var collapse = this.$.collapse;
       this.loadingValues = false;
-      this.choices = rsp.detail.xhr.response;
+      this.choices = rsp.detail;
       this.$.resultList.render();
       if (!collapse.opened && this.choices){
         collapse.toggle();
       }
-    },
-    has_value: function(e){
-      return (!e);
     }
   });
 })();

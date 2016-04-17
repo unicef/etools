@@ -99,8 +99,8 @@
                 </li>
                 <li>“<u>Implementing Partner</u>” or “<u>IP</u>”
                     means {{ agreement.partner }}, {{ agreement.partner.address }} </li>
-                <li>“<u>Country Programme</u>” means the UNICEF [country programme for Lebanon], approved by the
-                    Executive Board of the United Nations Children’s Fund for the period [year to year].
+                <li>“<u>Country Programme</u>” means the UNICEF [country programme for {{ country }}], approved by the
+                    Executive Board of the United Nations Children’s Fund for the period [{{ cp.from|date:"Y" }} to {{ cp.to|date:"Y" }}].
                 </li>
                 <li>“<u>Programme Document</u>” means the formal document (in standard format) attached to this
                     Agreement, which is concluded by the Parties and reflects expected results, detailed activities,
@@ -113,7 +113,7 @@
                     by UNICEF.
                 </li>
                 <li>“<u>HACT</u>” means the Harmonized Approach to Cash Transfer of the United Nations Development Group
-                    (“<u>UNDG</u>”), available at http://www.undg.org/index.cfm?P=255 or at such other URL as UNDG may
+                    (“<u>UNDG</u>”), available at <u>http://www.undg.org/index.cfm?P=255</u> or at such other URL as UNDG may
                     from time to time decide.
                 </li>
                 <li>“<u>FACE form</u>” means the UNDG’s standard Funding Authorization and Certificate of Expenditure
@@ -146,8 +146,8 @@
                     (US$2,500) or more, including costs of initial delivery and handling, and which has a service
                     lifetime of at least three (3) years.
                 </li>
-                <li>“<u>Government</u>” means the Government of Lebanon.</li>
-                <li>“<u>Country</u>” means LEB.</li>
+                <li>“<u>Government</u>” means the Government of {{ country }}.</li>
+                <li>“<u>Country</u>” means {{ country }}.</li>
             </ol>
         </div>
         <div class="page-break"></div>
@@ -595,9 +595,9 @@
                     Transfer was made. The IP is not required to convert transactions into United States Dollars or any
                     other currency.
                 </li>
-                <div><p><u>Use of FACE e-tool:</u></p></div>
+                <div><p><u>Use of eFACE:</u></p></div>
                 <li>In addition to using the FACE form, the IP may enter the information contained in the FACE form into
-                    the FACE e-tool, once available, if requested by UNICEF.
+                    the eFACE portal, once available, if requested by UNICEF.
                 </li>
                 <div><p><b>(B) Progress reporting</b></p></div>
                 <li>The IP will submit to UNICEF narrative progress reports against the planned activities contained in
@@ -689,7 +689,7 @@
                 <div><p>IN WITNESS WHEREOF, the undersigned, duly authorized by the respective Parties, have signed this
                     Agreement.</p></div>
                 <div style="padding-top: 3px">
-                    <table border="1" style="border: 2px; grey">
+                    <table border="1" style="border: none;">
                         <tr>
                             <td style="padding-top: 8px; padding-bottom: 0px"><b>For the Implementing Partner</b></td>
                             <td style="padding-top: 8px; padding-bottom: 0px"><b>For the United Nations Children’s

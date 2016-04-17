@@ -205,7 +205,7 @@ def staff_required(function, home_url="/partners/", redirect_field_name=None):
 
 def set_country(user, request):
 
-    request.tenant = user.profile.country
+    request.tenant = user.profile.country or user.profile.country_override
     connection.set_tenant(request.tenant)
 
 

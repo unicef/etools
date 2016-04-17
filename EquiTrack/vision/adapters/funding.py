@@ -5,25 +5,26 @@ from vision.vision_data_synchronizer import VisionDataSynchronizer
 from vision.utils import wcf_json_date_as_datetime
 
 from funds.models import Grant, Donor
-from partners.models import FundingCommitment, DirectCashTransfer
+from partners.models import FundingCommitment, DirectCashTransfer, PCA
 
 
 class FundingSynchronizer(VisionDataSynchronizer):
 
     ENDPOINT = 'GetPCA_SSFAInfo_JSON'
     REQUIRED_KEYS = (
-        "GRANT_REF",            # VARCHAR2	Grant Ref
-        "DOC_NUMBER",        # VARCHAR2	FR Doc Number
-        "HDR_DESC",	            # VARCHAR2  FR Desc
-        "START_DATE",        # DATE	    FR Start Date
-        "END_DATE",	        # DATE	    FR End Date
-        "FR_LINE_ITEM",         # VARCHAR2	FR Line Item
-        "FR_ITEM_DESC",         # VARCHAR2	FR Item Description
-        "DUE_DATE",            # DATE	    FR Due Dt
-        "WBS_ELEMENT_EX",               # VARCHAR2	IR WBS
-        "COMMITMENT_SUBTYPE_CODE",  # VARCHAR2	Commitment Doc Type
-        "COMMITMENT_SUBTYPE_DESC",
-        #"COMMITMENT_REF",       # VARCHAR2	Commitment Reference
+        "GRANT_REF",
+        "GRANT_DESC",                     # VARCHAR2	Grant Ref
+        "FR_DOC_NUMBER",        # VARCHAR2	FR Doc Number
+        "FR_DESC",	            # VARCHAR2  FR Desc
+        "FR_START_DATE",        # DATE	    FR Start Date
+        "FR_END_DATE",	        # DATE	    FR End Date
+        "LINE_ITEM",         # VARCHAR2	FR Line Item
+        "ITEM_DESC",         # VARCHAR2	FR Item Description
+        "FR_DUE_DATE",            # DATE	    FR Due Dt
+        "IR_WBS",               # VARCHAR2	IR WBS
+        "COMMITMENT_DOC_TYPE",  # VARCHAR2	Commitment Doc Type
+        "COMMITMENT_DESC",
+        "COMMITMENT_REF",       # VARCHAR2	Commitment Reference
         "FR_ITEM_AMT",          # Number    Fr Item Amount
         "AGREEMENT_AMT",        # NUMBER	Agreement Amount
         "COMMITMENT_AMT",       # NUMBER	Commitment Amount
@@ -33,8 +34,19 @@ class FundingSynchronizer(VisionDataSynchronizer):
     def _convert_records(self, records):
         return json.loads(records)
 
+    def _filter_records(self, records):
+        records = super(FundingSynchronizer, self)._filter_records(records)
+
+        def bad_record(record):
+            if record['GRANT_REF'] == 'Unknown':
+                return False
+            return True
+
+        return filter(bad_record, records)
+
     def _save_records(self, records):
 
+        processed = 0
         filtered_records = self._filter_records(records)
         for fc_line in filtered_records:
             try:
@@ -42,21 +54,35 @@ class FundingSynchronizer(VisionDataSynchronizer):
                     name=fc_line["GRANT_REF"],
                 )
             except Grant.DoesNotExist:
-                pass
+                print 'Grant: {} does not exist'.format(fc_line["GRANT_REF"])
             else:
-                funding_commitment, created = FundingCommitment.objects.get_or_create(
-                    grant=grant,
-                    fr_number=fc_line["DOC_NUMBER"],
-                )
-                funding_commitment.start = wcf_json_date_as_datetime("START_DATE")
-                funding_commitment.end = wcf_json_date_as_datetime("END_DATE")
-                funding_commitment.wbs = fc_line["WBS_ELEMENT_EX"]
-                funding_commitment.fc_type = fc_line["COMMITMENT_SUBTYPE_DESC"]
-                funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
-                funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
-                funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]
-                funding_commitment.expenditure_amount = fc_line["EXPENDITURE_AMT"]
-                funding_commitment.save()
+                try:
+                    funding_commitment, created = FundingCommitment.objects.get_or_create(
+                        grant=grant,
+                        fc_ref=fc_line["COMMITMENT_REF"]
+                    )
+                    funding_commitment.fr_number = fc_line["FR_DOC_NUMBER"]
+                    funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
+                    funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])
+                    funding_commitment.wbs = fc_line["IR_WBS"]
+                    funding_commitment.fc_type = fc_line["COMMITMENT_DOC_TYPE"]
+                    funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
+                    funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
+                    funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]
+                    funding_commitment.expenditure_amount = fc_line["EXPENDITURE_AMT"]
+                    try:
+                        intervention = PCA.objects.get(fr_number=fc_line["FR_DOC_NUMBER"])
+                        funding_commitment.intervention = intervention
+                    except PCA.DoesNotExist:
+                        pass
+                    funding_commitment.save()
+                except FundingCommitment.MultipleObjectsReturned as exp:
+                    exp.message += 'FC Ref ' + fc_line["COMMITMENT_REF"]
+                    raise
+
+                processed += 1
+
+        return processed
 
 
 class DCTSynchronizer(VisionDataSynchronizer):
@@ -65,7 +91,7 @@ class DCTSynchronizer(VisionDataSynchronizer):
     REQUIRED_KEYS = (
         "VENDOR_NAME",              # VARCHAR2	Vendor Name
         "VENDOR_CODE",              # VARCHAR2	Vendor Code
-        "WBS_ELEMENT_EX",           #_VARCHAR2	WBS Element
+        "WBS_ELEMENT_EX",           # VARCHAR2	WBS Element
         "GRANT_REF",                # VARCHAR2	Grant Reference
         "DONOR_NAME",               # VARCHAR2	Donor Name
         "EXPIRY_DATE",              # VARCHAR2	Donor Expiry Date
@@ -87,6 +113,7 @@ class DCTSynchronizer(VisionDataSynchronizer):
 
     def _save_records(self, records):
 
+        processed = 0
         filtered_records = self._filter_records(records)
         for dct_line in filtered_records:
             dct, created = DirectCashTransfer.objects.get_or_create(
@@ -100,3 +127,6 @@ class DCTSynchronizer(VisionDataSynchronizer):
             dct.amount_3_to_6_months_usd = dct_line["AMT_3TO6_MONTHS_USD"]
             dct.amount_6_to_9_months_usd = dct_line["AMT_6TO9_MONTHS_USD"]
             dct.amount_more_than_9_Months_usd = dct_line["AMT_MORE9_MONTHS_USD"]
+            processed += 1
+
+        return processed

@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 import datetime
 
+from rest_framework.decorators import detail_route
+
 __author__ = 'jcranwellward'
 
 
@@ -25,6 +27,8 @@ from .serializers import (
     IndicatorReportSerializer,
     PCASectorSerializer,
     PCAGrantSerializer,
+    AmendmentLogSerializer,
+    GWLocationSerializer,
     PartnerOrganizationSerializer,
     PartnerStaffMemberSerializer,
     AgreementSerializer,
@@ -43,12 +47,14 @@ from .models import (
     PartnerOrganization,
     Agreement,
     PCAGrant,
+    AmendmentLog,
     PCASector,
     GwPCALocation,
     PartnerStaffMember,
     ResultChain,
     IndicatorReport
 )
+from reports.models import ResultStructure
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -72,6 +78,7 @@ class PcaPDFView(PDFTemplateView):
             pagesize="Letter",
             title="Partnership",
             agreement=agreement,
+            cp=ResultStructure.current(),
             auth_officers=officers_list,
             country=self.request.tenant.name,
             **kwargs
@@ -100,7 +107,6 @@ class InterventionLocationView(ListAPIView):
 
         queryset = self.model.objects.filter(
             pca__status=status,
-            location__point__isnull=False
         )
 
         if gateway is not None:
@@ -210,13 +216,18 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
                        mixins.ListModelMixin,
                        mixins.CreateModelMixin,
                        viewsets.GenericViewSet):
-
+    """
+    Returns a list of Agreements
+    """
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add a new Agreement
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -226,6 +237,19 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
         return Response(
             serializer.data,
             status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    @detail_route(methods=['get'], url_path='interventions')
+    def interventions(self, request, partner_pk=None, pk =None):
+        """
+        Return All Interventions for Partner and Agreement
+        """
+        data = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk).values()
+        headers = self.get_success_headers(data)
+        return Response(
+            data,
+            status=status.HTTP_200_OK,
             headers=headers
         )
 
@@ -247,18 +271,38 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
+    def retrieve(self, request, partner_pk=None, pk=None):
+        """
+        Returns an Agreement object for this Agreement PK and partner
+        """
+        try:
+            queryset = self.queryset.get(partner=partner_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except Agreement.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class InterventionsViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Interventions,
+    """
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add an Intervention
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -268,7 +312,10 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
             managers = []
 
         serializer.instance = serializer.save()
-        serializer.instance.created_at = datetime.datetime.strptime(request.data['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        try:
+            serializer.instance.created_at = datetime.datetime.strptime(request.data['created_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        except Exception:
+            serializer.instance.created_at = datetime.datetime.strptime(request.data['created_at'], '%Y-%m-%dT%H:%M:%SZ')
         serializer.instance.updated_at = datetime.datetime.strptime(request.data['updated_at'], '%Y-%m-%dT%H:%M:%S.%fZ')
         serializer.instance.save()
         data = serializer.data
@@ -298,11 +345,28 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
                 return queryset.filter(partner=current_member.partner)
         return queryset
 
+    def retrieve(self, request, partner_pk=None, pk=None):
+        """
+        Returns an Intervention object for this Intervention PK and partner
+        """
+        try:
+            queryset = self.queryset.get(partner_id=partner_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PCA.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class ResultChainViewSet(mixins.RetrieveModelMixin,
                          mixins.ListModelMixin,
                          viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Result Chain for an Intervention
+    """
     model = ResultChain
     queryset = ResultChain.objects.all()
     serializer_class = ResultChainDetailsSerializer
@@ -313,12 +377,29 @@ class ResultChainViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns an Intervention object for this Intervention PK and partner
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except ResultChain.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class IndicatorReportViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Indicator Reports for an Intervention and Result
+    """
     model = IndicatorReport
     queryset = IndicatorReport.objects.all()
     serializer_class = IndicatorReportSerializer
@@ -335,26 +416,50 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
 
         serializer.save(partner_staff_member=partner_staff_member)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, result_pk=None, pk=None):
+        """
+        Returns an Indicator report object
+        """
+        try:
+            queryset = self.queryset.get(id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except IndicatorReport.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class PCASectorViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
-
+    """
+    Returns a list of Sectors for an Interventions (PCA)
+    """
     model = PCASector
     queryset = PCASector.objects.all()
     serializer_class = PCASectorSerializer
     permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add a Sector to the PCA
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         serializer.instance = serializer.save()
+        serializer.instance.created = datetime.datetime.strptime(request.data['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.modified = datetime.datetime.strptime(request.data['modified'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.save()
+        data = serializer.data
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED,
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED,
                         headers=headers)
 
     def get_queryset(self):
@@ -363,27 +468,51 @@ class PCASectorViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(pca=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Sector object
+        """
+        try:
+            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PCASector.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
-
+    """
+    Returns a list of partnership Budgets for an Intervention (PCA)
+    """
     model = PartnershipBudget
     queryset = PartnershipBudget.objects.all()
     serializer_class = PartnershipBudgetSerializer
     permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add partnership Budget to the PCA
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         serializer.instance = serializer.save()
+        serializer.instance.created = datetime.datetime.strptime(request.data['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.modified = datetime.datetime.strptime(request.data['modified'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.save()
+        data = serializer.data
 
-        headers = self.get_success_headers(serializer.data)
+        headers = self.get_success_headers(data)
         return Response(
-            serializer.data,
+            data,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
@@ -394,12 +523,29 @@ class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Budget Object
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PartnershipBudget.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class PCAFileViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
-
+    """
+    Returns a list of files URL for an Intervention (PCA)
+    """
     model = PCAFile
     queryset = PCAFile.objects.all()
     serializer_class = PCAFileSerializer
@@ -407,7 +553,10 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add a file to the PCA
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         try:
@@ -434,27 +583,51 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(pca=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA File Object
+        """
+        try:
+            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PCAFile.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class PCAGrantViewSet(mixins.RetrieveModelMixin,
                              mixins.CreateModelMixin,
                              mixins.ListModelMixin,
                              viewsets.GenericViewSet):
-
+    """
+    Returns a list of Grants for a Intervention (PCA)
+    """
     model = PCAGrant
     queryset = PCAGrant.objects.all()
     serializer_class = PCAGrantSerializer
     permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add a Grant to the PCA
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         serializer.instance = serializer.save()
+        serializer.instance.created = datetime.datetime.strptime(request.data['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.modified = datetime.datetime.strptime(request.data['modified'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.save()
+        data = serializer.data
 
-        headers = self.get_success_headers(serializer.data)
+        headers = self.get_success_headers(data)
         return Response(
-            serializer.data,
+            data,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
@@ -465,18 +638,145 @@ class PCAGrantViewSet(mixins.RetrieveModelMixin,
         intervention_id = self.kwargs.get('intervention_pk')
         return queryset.filter(partnership_id=intervention_id)
 
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Grant Object
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PCAGrant.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
+
+class GwPCALocationViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+    """
+    Returns a list of GW Locations for an Intervention (PCA)
+    """
+    model = GwPCALocation
+    queryset = GwPCALocation.objects.all()
+    serializer_class = GWLocationSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Add an GW location to the PCA
+        :return: JSON
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+        data = serializer.data
+
+        headers = self.get_success_headers(data)
+        return Response(
+            data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    def get_queryset(self):
+
+        queryset = super(GwPCALocationViewSet, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_pk')
+        return queryset.filter(pca_id=intervention_id)
+
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Grant Object
+        """
+        try:
+            queryset = self.queryset.get(pca_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except GwPCALocation.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
+
+class AmendmentLogViewSet(mixins.RetrieveModelMixin,
+                             mixins.CreateModelMixin,
+                             mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+    """
+    Returns a list of Amendment logs for an Intervention (PCA)
+    """
+    model = AmendmentLog
+    queryset = AmendmentLog.objects.all()
+    serializer_class = AmendmentLogSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Add an Amendment log to the PCA
+        :return: JSON
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+        serializer.instance.created = datetime.datetime.strptime(request.data['created'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.modified = datetime.datetime.strptime(request.data['modified'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.save()
+        data = serializer.data
+
+        headers = self.get_success_headers(data)
+        return Response(
+            data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    def get_queryset(self):
+
+        queryset = super(AmendmentLogViewSet, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_pk')
+        return queryset.filter(partnership_id=intervention_id)
+
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns a PCA Grant Object
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except AmendmentLog.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 
 class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Partner Organizations
+    """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationSerializer
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add a Partner Organization
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -512,13 +812,18 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Partner staff members
+    """
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberSerializer
     permission_classes = (PartnerPermission,)
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Add Staff member to Partner Organization
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -531,29 +836,21 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
             headers=headers
         )
 
-    def get_queryset(self):
-
-        queryset = super(PartnerStaffMembersViewSet, self).get_queryset()
-        if not self.request.user.is_staff:
-            # This must be a partner
-            try:
-                # TODO: Promote this to a permissions class
-                current_member = PartnerStaffMember.objects.get(
-                    id=self.request.user.profile.partner_staff_member
-                )
-            except PartnerStaffMember.DoesNotExist:
-                # This is an authenticated user with no access to interventions
-                return queryset.none()
-            else:
-                # Return all interventions this partner has
-                return queryset.filter(partner=current_member.partner)
-        return queryset
+    def retrieve(self, request, partner_pk=None, pk=None):
+        queryset = self.queryset.get(partner_id=partner_pk, id=pk)
+        serializer = self.serializer_class(queryset)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
 
 class FileTypeViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Partner file types
+    """
     queryset = FileType.objects.all()
     serializer_class = FileTypeSerializer

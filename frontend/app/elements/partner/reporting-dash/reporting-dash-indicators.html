@@ -1,0 +1,33 @@
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../etools-indicator/etools-indicator.html">
+
+
+
+<dom-module id="reportingdash-indicators">
+  <template>
+    <template is="dom-repeat" items="[[indicators]]" as="rc">
+      <etools-indicator rc={{rc}} removable-indicators={{removableIndicators}}></etools-indicator>
+    </template>
+  </template>
+
+<script>
+(function() {
+    // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'reportingdash-indicators',
+    behaviors: [commonBv.utils, commonBv.interventions, commonBv.globals],
+    properties: {
+      indicators: {
+        type: Array
+      },
+      removableIndicators: {
+        type: Boolean,
+        value: false
+      }
+    }
+  });
+})();
+</script>
+</dom-module>

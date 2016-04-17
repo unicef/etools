@@ -1,25 +1,15 @@
 __author__ = 'jcranwellward'
 
-import os
-import json
-import requests
 import datetime
+import json
+import os
 
-from django.db import connection
+import requests
 from django.conf import settings
-
+from django.db import connection
 from requests.auth import HTTPBasicAuth
 
 from EquiTrack.celery import app
-
-
-@app.task
-def send(message):
-    if settings.SLACK_URL:
-        requests.post(
-            settings.SLACK_URL,
-            data=json.dumps({'text': message})
-        )
 
 
 def set_docs(docs):
