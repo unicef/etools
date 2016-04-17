@@ -325,13 +325,12 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         }),
         (_('Import work plan'), {
             u'classes': (u'suit-tab suit-tab-results',),
-            'fields': ('work_plan_sector', 'work_plan', 'work_plan_template'),
+            'fields': ('work_plan', 'work_plan_template'),
         }),
     )
     remove_fields_if_read_only = (
         'location_sector',
         'p_codes',
-        'work_plan_sector',
         'work_plan',
     )
 
@@ -393,7 +392,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
         if obj and obj.sector_children:
             form.base_fields['location_sector'].queryset = obj.sector_children
-            form.base_fields['work_plan_sector'].queryset = obj.sector_children
 
         return form
 
@@ -459,14 +457,14 @@ class DocumentInlineAdmin(admin.TabularInline):
     verbose_name_plural = 'Interventions'
     extra = 0
     fields = (
-        'number',
+        'reference_number',
         'status',
         'start_date',
         'end_date',
         'result_structure',
         'sector_names',
         'title',
-        'total_cash',
+        'total_budget',
         'changeform_link',
     )
     readonly_fields = fields
@@ -484,6 +482,13 @@ class DocumentInlineAdmin(admin.TabularInline):
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
     resource_class = PartnerResource
+    search_fields = (
+        u'name',
+        u'vendor_number',
+    )
+    list_filter = (
+        u'partner_type',
+    )
     list_display = (
         u'name',
         u'vendor_number',
@@ -497,6 +502,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'vision_synced',
         u'vendor_number',
         u'rating',
+        u'type_of_assessment',
         u'core_values_assessment_date',
     )
     fieldsets = (
@@ -514,7 +520,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'core_values_assessment',)
         }),
         (_('Alternate Name'), {
-            u'classes': (u'collapse', u'collapse-open'),
+            u'classes': (u'collapse', u'open'),
             'fields':
                 ((u'alternate_id', u'alternate_name',),)
         }),
@@ -682,6 +688,27 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
             yield inline.get_formset(request, obj)
 
 
+class FundingCommitmentAdmin(admin.ModelAdmin):
+    search_fields = (
+        u'fr_number',
+        u'grant__name',
+    )
+    list_filter = (
+        u'grant',
+        u'intervention',
+    )
+    list_display = (
+        u'grant',
+        u'intervention',
+        u'fr_number',
+        u'fc_ref',
+        u'fr_item_amount_usd',
+        u'agreement_amount',
+        u'commitment_amount',
+        u'expenditure_amount',
+    )
+
+
 admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Agreement, AgreementAdmin)
@@ -689,4 +716,4 @@ admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 #admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
-admin.site.register(FundingCommitment)
+admin.site.register(FundingCommitment, FundingCommitmentAdmin)

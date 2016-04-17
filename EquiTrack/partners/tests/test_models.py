@@ -29,20 +29,30 @@ class TestRefNumberGeneration(TenantTestCase):
         text = self.text.format('PCA')
 
         # test basic sequence
-        agreement = AgreementFactory()
-        self.assertEqual(agreement.reference_number, text)
+        agreement1 = AgreementFactory()
+        self.assertEqual(agreement1.reference_number, text)
 
         # create amendment
         AgreementAmendmentLog.objects.create(
-            agreement=agreement,
+            agreement=agreement1,
             amended_at=self.date,
             status=PCA.ACTIVE
         )
-        self.assertEqual(agreement.reference_number, text+'-01')
+        self.assertEqual(agreement1.reference_number, text+'-01')
 
         # add another agreement
-        agreement = AgreementFactory()
-        self.assertEqual(agreement.reference_number, text[:-1]+'2')
+        agreement2 = AgreementFactory()
+        self.assertEqual(agreement2.reference_number, text[:-1]+'2')
+
+        # now sign the agreement and commit the number to the database
+        agreement2.signed_by_unicef_date = self.date
+        agreement2.save()
+        self.assertEqual(agreement2.reference_number, text[:-1] + '2')
+
+        # agreement numbering remains the same even if previous agreement is deleted
+        agreement3 = AgreementFactory(signed_by_unicef_date=self.date)
+        agreement1.delete()
+        self.assertEqual(agreement3.reference_number, text[:-1] + '3')
 
     def test_other_agreement_types(self):
 
@@ -55,23 +65,35 @@ class TestRefNumberGeneration(TenantTestCase):
         pd_ref = 'LEBA/PCA{year}01/{{}}{year}{{}}'.format(year=self.date.year)
 
         # create one programme document
-        intervention = PartnershipFactory()
-        self.assertEqual(intervention.reference_number, pd_ref.format('PD', '01'))
+        intervention1 = PartnershipFactory()
+        self.assertEqual(intervention1.reference_number, pd_ref.format('PD', '01'))
 
         # create another under the same partner and agreement
-        intervention = PartnershipFactory(
-            partner=intervention.partner,
-            agreement=intervention.agreement
+        intervention2 = PartnershipFactory(
+            partner=intervention1.partner,
+            agreement=intervention1.agreement
         )
-        self.assertEqual(intervention.reference_number, pd_ref.format('PD', '02'))
+        self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02'))
 
         # create amendment
         AmendmentLog.objects.create(
-            partnership=intervention,
+            partnership=intervention2,
             amended_at=self.date,
             status=PCA.ACTIVE
         )
-        self.assertEqual(intervention.reference_number, pd_ref.format('PD', '02-01'))
+        self.assertEqual(intervention2.reference_number, pd_ref.format('PD', '02-01'))
+
+        intervention3 = PartnershipFactory(
+            partner=intervention1.partner,
+            agreement=intervention1.agreement,
+        )
+        self.assertEqual(intervention3.reference_number, pd_ref.format('PD', '03'))
+
+        # agreement numbering remains the same even if previous agreement is deleted
+        intervention3.signed_by_unicef_date = self.date
+        intervention3.save()
+        intervention1.delete()
+        self.assertEqual(intervention3.reference_number, pd_ref.format('PD', '03'))
 
 
 class TestHACTCalculations(TenantTestCase):

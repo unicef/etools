@@ -75,12 +75,17 @@ class Trips2ViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
                            viewsets.GenericViewSet):
-
+    """
+    Returns a list of all Trips
+    """
     queryset = Trip.objects.all()
     serializer_class = Trip2Serializer
 
     def create(self, request, *args, **kwargs):
-
+        """
+        Create a new Trip
+        :return: JSON
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -88,6 +93,8 @@ class Trips2ViewSet(mixins.RetrieveModelMixin,
         pcas = request.data['pcas']
 
         serializer.instance = serializer.save()
+        serializer.instance.created_date = datetime.datetime.strptime(request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.save()
         data = serializer.data
 
         try:
@@ -110,12 +117,18 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
                       mixins.ListModelMixin,
                       mixins.CreateModelMixin,
                       viewsets.GenericViewSet):
-
+    """
+    Returns a list of Files link for a Trip
+    """
     queryset = FileAttachment.objects.all()
     serializer_class = FileAttachmentSerializer
     # parser_classes = (MultiPartParser, FormParser,)
 
     def create(self, request, *args, **kwargs):
+        """
+        Add a file to a trip
+        :return: JSON
+        """
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -140,8 +153,8 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
 
         queryset = super(TripFileViewSet, self).get_queryset()
-        trip_id = self.kwargs.get('trip_id')
-        return queryset.filter(trip=trip_id)
+        trip_id = self.kwargs.get('trips2_pk')
+        return queryset.filter(trip_id=trip_id)
 
 
 class TripsViewSet(mixins.RetrieveModelMixin,

@@ -22,17 +22,13 @@ from .views import (
     DashboardView,
     UserDashboardView,
     CmtDashboardView,
+    HACTDashboardView,
 )
 from locations.views import (
-    CartoDBTablesViewSet,
     LocationTypesViewSet,
-    LocationsViewSet,
-    GovernoratesViewSet,
-    RegionsViewSet,
-    LocalitiesViewSet
+    LocationsViewSet
 )
 from trips.views import TripsViewSet, Trips2ViewSet, TripFileViewSet
-from partners.views import InterventionsViewSet, IndicatorReportViewSet
 from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
@@ -40,9 +36,9 @@ from reports.views import (
     ResultStructureViewSet,
     ResultTypeViewSet,
     SectorViewSet,
-    GoalViewSet,
+    # GoalViewSet,
     IndicatorViewSet,
-    OutputViewSet,
+    ResultViewSet,
     UnitViewSet
 )
 
@@ -53,7 +49,12 @@ from partners.urls import (
     pcasectors_api,
     pcabudgets_api,
     pcafiles_api,
-    pcagrants_api
+    pcaamendments_api,
+    pcalocations_api,
+    pcagrants_api,
+    partners_api,
+    staffm_api,
+    agreement_api,
 )
 
 api = routers.SimpleRouter()
@@ -63,35 +64,31 @@ trips2_api = routers.SimpleRouter()
 trips2_api.register(r'trips2', Trips2ViewSet, base_name='trips2')
 
 trips2files_api = routers.NestedSimpleRouter(trips2_api, r'trips2', lookup='trips2')
-trips2files_api.register(r'trips2files', TripFileViewSet, base_name='trips2files')
+trips2files_api.register(r'files', TripFileViewSet, base_name='trips2files')
 
-api.register(r'partnerorganizations', PartnerOrganizationsViewSet, base_name='partnerorganizations')
-api.register(r'partnerstaffmemebers', PartnerStaffMembersViewSet, base_name='partnerstaffmemebers')
-api.register(r'agreements', AgreementViewSet, base_name='agreements')
-api.register(r'filetypes', FileTypeViewSet, base_name='filetypes')
+# api.register(r'partners', PartnerOrganizationsViewSet, base_name='partnerorganizations')
+# api.register(r'partners/staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
+# api.register(r'partners/agreements', AgreementViewSet, base_name='agreements')
+api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 
-api.register(r'users', UserViewSet, base_name='user')
+api.register(r'users', UserViewSet, base_name='users')
 api.register(r'groups', GroupViewSet, base_name='groups')
 api.register(r'offices', OfficeViewSet, base_name='offices')
 api.register(r'sections', SectionViewSet, base_name='sections')
 
-api.register(r'donors', DonorViewSet, base_name='donors')
-api.register(r'grants', GrantViewSet, base_name='grants')
+api.register(r'funds/donors', DonorViewSet, base_name='donors')
+api.register(r'funds/grants', GrantViewSet, base_name='grants')
 
-api.register(r'resultstructures', ResultStructureViewSet, base_name='resultstructures')
-api.register(r'resulttypes', ResultTypeViewSet, base_name='resulttypes')
-api.register(r'sectors', SectorViewSet, base_name='sectors')
-api.register(r'goals', GoalViewSet, base_name='goals')
-api.register(r'indicators', IndicatorViewSet, base_name='indicators')
-api.register(r'outputs', OutputViewSet, base_name='outputs')
-api.register(r'units', UnitViewSet, base_name='units')
+api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
+api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
+api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
+# api.register(r'reports/goals', GoalViewSet, base_name='goals')
+api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
+api.register(r'reports/results', ResultViewSet, base_name='results')
+api.register(r'reports/units', UnitViewSet, base_name='units')
 
-api.register(r'locationtypes', LocationTypesViewSet, base_name='locationtypes')
-api.register(r'locationcartodb', CartoDBTablesViewSet, base_name='locationcartodb')
 api.register(r'locations', LocationsViewSet, base_name='locations')
-api.register(r'regions', RegionsViewSet, base_name='regions')
-api.register(r'governorates', GovernoratesViewSet, base_name='governorates')
-api.register(r'localities', LocalitiesViewSet, base_name='localities')
+api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
 
 urlpatterns = patterns(
@@ -102,6 +99,7 @@ urlpatterns = patterns(
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
+    url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact'),
 
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),
@@ -111,12 +109,17 @@ urlpatterns = patterns(
     url(r'^supplies/', include('supplies.urls')),
 
     url(r'^api/', include(api.urls)),
+    url(r'^api/', include(partners_api.urls)),
+    url(r'^api/', include(staffm_api.urls)),
+    url(r'^api/', include(agreement_api.urls)),
     url(r'^api/', include(interventions_api.urls)),
     url(r'^api/', include(results_api.urls)),
     url(r'^api/', include(pcasectors_api.urls)),
     url(r'^api/', include(pcabudgets_api.urls)),
     url(r'^api/', include(pcafiles_api.urls)),
     url(r'^api/', include(pcagrants_api.urls)),
+    url(r'^api/', include(pcaamendments_api.urls)),
+    url(r'^api/', include(pcalocations_api.urls)),
     url(r'^api/', include(reports_api.urls)),
     url(r'^api/', include(trips2_api.urls)),
     url(r'^api/', include(trips2files_api.urls)),

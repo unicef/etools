@@ -11,6 +11,8 @@ from cryptography.hazmat.backends import default_backend
 import dj_database_url
 import saml2
 from saml2 import saml
+from kombu import Exchange, Queue
+
 
 ########## PATH CONFIGURATION
 # Absolute filesystem path to the Django project directory:
@@ -137,7 +139,7 @@ if isinstance(DEBUG, str):
 POSTGIS_VERSION = (2, 1)
 db_config = dj_database_url.config(
     env="DATABASE_URL",
-    default='postgis:///etools'
+    default='postgis:///postgres'
 )
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
@@ -153,6 +155,28 @@ djcelery.setup_loader()
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
+
+
+# Sensible settings for celery
+CELERY_ALWAYS_EAGER = False
+CELERY_ACKS_LATE = True
+CELERY_TASK_PUBLISH_RETRY = True
+CELERY_DISABLE_RATE_LIMITS = False
+
+# By default we will ignore result
+# If you want to see results and try out tasks interactively, change it to False
+# Or change this setting on tasks level
+CELERY_IGNORE_RESULT = True
+CELERY_SEND_TASK_ERROR_EMAILS = False
+CELERY_TASK_RESULT_EXPIRES = 600
+
+# Don't use pickle as serializer, json is much safer
+# CELERY_TASK_SERIALIZER = "json"
+# CELERY_ACCEPT_CONTENT = ['application/json']
+
+# CELERYD_HIJACK_ROOT_LOGGER = False
+# CELERYD_PREFETCH_MULTIPLIER = 1
+# CELERYD_MAX_TASKS_PER_CHILD = 1000
 
 SLACK_URL = os.environ.get('SLACK_URL')
 
@@ -342,7 +366,6 @@ SHARED_APPS = (
     'easy_thumbnails',
     'filer',
     'storages',
-    'reversion',
     'rest_framework',
     'rest_framework_swagger',
     'rest_framework.authtoken',
@@ -356,7 +379,6 @@ SHARED_APPS = (
     'djcelery',
     'djcelery_email',
     'datetimewidget',
-    'logentry_admin',
     'leaflet',
     'djgeojson',
     'paintstore',
@@ -384,6 +406,8 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # Apps specific for this project go here.
 TENANT_APPS = (
+    'logentry_admin',
+    'reversion',
     'funds',
     'locations',
     'activityinfo',

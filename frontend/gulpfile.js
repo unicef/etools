@@ -340,7 +340,7 @@ gulp.task('serve', ['styles', 'elements', 'images'], function() {
       case '/api/interventions/7/':
         req.url = '/data/partner/intervention_details.json';
         break;
-      case '/api/interventions/7/results/1/':
+      case '/api/interventions/7/results/201/':
         req.url = '/data/partner/resultchain_details.json';
         break;
     }

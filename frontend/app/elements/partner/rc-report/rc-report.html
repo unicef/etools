@@ -1,6 +1,8 @@
 
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 
+<link rel="import" href="../etools-indicator/etools-indicator.html">
+
 <link rel="import" href="../../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../common/etools-ajax/etools-ajax.html">
 <link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
@@ -156,31 +158,24 @@
   
   
   <div>
-    
-    <!-- <template is="dom-repeat" items="{{indicatorReports}}" id="reports" as="report" sort="_sortDate">
-        <div>
-          <p>
-            Reported on: {{dateFormat(report.modified, 'LL')}}, 
-            Location: {{report.location}},
-            Reported: {{report.total}}
-          </p>
-        </div>
-    </template> -->
-    <!--  -->
+
 
     <paper-dialog class="custom" id="newReportDialog" modal on-iron-overlay-closed="dismissDialog">
       <p>New Report: </p>
 
       <paper-dialog-scrollable>
-        <paper-input label="Total Reporting" type="number" id="reportTotal" required></paper-input>
+        <timeframe-picker id="timeFrame" label="Time Period"></timeframe-picker>
+        <etools-indicator id="indicator" rc="{{rc}}" no-link></etools-indicator>
+
+        <!-- <paper-input label="Total Reporting" type="number" id="reportTotal" required></paper-input>
         <br>
         <p>Location: 
           <locations-autocomplete id="locationSelected"
-              autocomplete-url="{{appData.locationsAutocompleteEp}}">
+              autocomplete-url="{{_autocompleteUrl()}}">
           </locations-autocomplete>
         </p>
-        <br>
-        <timeframe-picker id="timeFrame" label="Time Period"></timeframe-picker>
+        <br> -->
+        
         
         <br><br>
       </paper-dialog-scrollable>
@@ -206,12 +201,17 @@
   'use strict';
   Polymer({
     is: 'rc-report',
-    behaviors: [commonBv.utils],
+    behaviors: [commonBv.utils, commonBv.interventions, commonBv.globals],
+    observers: ['_interventionsChanged(interventions.*)'],
     properties: {
       appData: {
         type: Object,
         // appData is received from the parent
         value: {}
+      },
+      interventions: {
+        type: Array,
+        notify: true
       },
       interventionId: {
         type: Number,
@@ -226,7 +226,7 @@
       rc: {
         type: Object,
         value: null,
-        observer: 'update_view'
+        observer: 'update_view',
       },
       indicatorReports: {
         type: Array,
@@ -250,16 +250,20 @@
     },
     handleResponse: function(rsp) {
       //
-      this.rc = rsp.detail.xhr.response;
+      this.rc = rsp.detail;
       this.indicatorReports = this.rc.indicator_reports;
       console.log(this.rc);
 
     },
     handleSubmitResponse: function(rsp){
-      console.log('handling submit', rsp.detail.xhr.response);
-      this.set('indicatorReports', this.rc.indicator_reports.concat([rsp.detail.xhr.response]));
-      this.rc.indicator_reports.push(rsp.detail.xhr.response);
-      this.set('rc.current_progress', (this.rc.current_progress + rsp.detail.xhr.response.total));
+      console.log('handling submit', rsp.detail);
+      this.set('indicatorReports', this.rc.indicator_reports.concat([rsp.detail]));
+      this.rc.indicator_reports.push(rsp.detail);
+      this.set('rc.current_progress', (this.rc.current_progress + rsp.detail.total));
+
+      // update indicator in localstorage
+      this._updateIndicator(this.rc);
+      
     },
     handleSubmitError: function(rsp) {
       console.log(rsp.detail.error);
@@ -278,16 +282,26 @@
     _submitReport: function() {
       var myReq = this.$.ajaxPost;
       //TODO: Validate for location
-      if (!this._validateSubmision()){
-        return;
-      }
+      // if (!this._validateSubmision()){
+      //   return;
+      // }
+      // myReq.body = {
+      //   'result_chain': this.rcId,
+      //   'disaggregation': {},
+      //   'total': this.$.reportTotal.value,
+      //   'start': this.$.timeFrame.from,
+      //   'end': this.$.timeFrame.to,
+      //   'location': this.$.locationSelected.value
+      // };
+      var myRep = this.$.indicator.getReport();
+      // console.log(myRep);
       myReq.body = {
         'result_chain': this.rcId,
-        'disaggregation': {},
-        'total': this.$.reportTotal.value,
+        'disaggregation': myRep.number.breakdown,
+        'total': myRep.number.total,
         'start': this.$.timeFrame.from,
         'end': this.$.timeFrame.to,
-        'location': this.$.locationSelected.value
+        'location': myRep.location.id
       };
       myReq.method = 'POST';
       myReq.url = this.appData.getEndpoint.newIndicatorReport(this.interventionId, this.rcId);
@@ -318,6 +332,12 @@
     _sortDate: function(a, b) {
       return a.modified < b.modified ? 1 : -1;
       //return a.total < b.total ? 1 : -1;
+    },
+    _autocompleteUrl: function() {
+      return this.getEp('locationsAutocomplete').url;
+    },
+    _interventionsChanged: function() {
+      console.log('interventions changed inside rc-report');
     }
   });
 })();

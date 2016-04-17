@@ -1,28 +1,15 @@
 __author__ = 'jcranwellward'
 
-import os
-import json
-import requests
 import datetime
+import json
+import os
 
-from django.db import connection
+import requests
 from django.conf import settings
-from django.template.defaultfilters import slugify
-
+from django.db import connection
 from requests.auth import HTTPBasicAuth
-from tenant_schemas.utils import tenant_context
 
 from EquiTrack.celery import app
-from users.models import Country
-
-
-@app.task
-def send(message):
-    if settings.SLACK_URL:
-        requests.post(
-            settings.SLACK_URL,
-            data=json.dumps({'text': message})
-        )
 
 
 def set_docs(docs):
@@ -63,8 +50,14 @@ def set_unisupply_user(username, password):
 
 
 @app.task
-def set_unisupply_distribution(distribution_plan):
-    doc = {
+def set_unisupply_distribution(distribution_plan_id):
+    """
+    Creates or edits a distibution document in Couchbase
+    """
+    from partners.models import DistributionPlan
+    distribution_plan = DistributionPlan.objects.get(id=distribution_plan_id)
+
+    doc = distribution_plan.document if distribution_plan.document else {
         "country": connection.schema_name,
         "distribution_id": distribution_plan.id,
         "intervention": distribution_plan.partnership.__unicode__(),
@@ -85,20 +78,18 @@ def set_unisupply_distribution(distribution_plan):
         },
         "type": "distribution",
         "name": distribution_plan.site.name,
+        "completed": False,
+        "creation_date": datetime.datetime.now().isoformat()
     }
-    if distribution_plan.document is not None:
-        doc["_id"] = distribution_plan.document["id"]
-        doc["_rev"] = distribution_plan.document["rev"]
-    else:
-        doc["completed"] = False
-        doc["creation_date"] = datetime.datetime.now().isoformat()
+
+    doc["item_list"][0]["quantity"] = distribution_plan.quantity
+    doc["item_list"][0]["delivered"] = distribution_plan.delivered
 
     response = set_docs([doc])
     if response.status_code in [requests.codes.ok, requests.codes.created]:
-
+        #TODO: Check if it was actually saved by couchbase
         distribution_plan.send = False
         distribution_plan.sent = True
-        distribution_plan.document = response.json()[0] if type(response.json()) is list else response.json()
         distribution_plan.save()
 
         return response.text
@@ -133,6 +124,3 @@ def import_docs(**kwargs):
                 )
             except Exception as exp:
                 print exp.message
-
-
-

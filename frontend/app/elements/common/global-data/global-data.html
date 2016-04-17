@@ -2,6 +2,8 @@
 
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 <link rel="import" href="../etools-ajax/etools-ajax.html">
+
+<link rel="import" href="../../behaviors/common/utils.html">
 <!--
 An element providing a solution to no problem in particular.
 
@@ -21,7 +23,6 @@ Example:
     <etools-ajax
           autos
           id="ajax"
-          url="[[userUrl]]"
           handle-as="json"
           on-response="handleUserResponse"
           on-error="handleError"
@@ -39,20 +40,12 @@ Example:
   'use strict';
   Polymer({
     is: 'global-data',
+    behaviors: [commonBv.globals],
     properties: {
-      appData: {
-        type: Object,
-        // appData is received from the parent
-        value: {}
-      },
       user: {
         type: Object,
         notify: true,
         value: function() {return {};}
-      },
-      userUrl: {
-        type: String,
-        value: null
       },
       permissions: {
         type: Object,
@@ -61,13 +54,7 @@ Example:
       }
     },
     ready: function() {
-      // console.log(this.appData);
-      // console.log(this.appData.getEndpoint.userProperties(2));
-      // TODO: fire the ajax request at this point
-      this.userUrl = this.appData.userInfoEp;
-    },
-    computeUrl: function(appData) {
-        return appData.userInfoEp;
+      this.$.ajax.endpoint = {ep: 'userInfo'};
     },
     _setDefaultUser: function(){
       var defaultUser = {
@@ -83,7 +70,7 @@ Example:
                     'country_override': null},
         'last_login': '2015-12 04T19:24:08.714193Z', 
         'is_superuser': false, 
-        'username': 'email@example.com', 
+        'username': 'emaill@example.com', 
         'first_name': 'Anonymous',
         'last_name': 'User',
         'email': 'email@example.com',
@@ -111,18 +98,9 @@ Example:
       this._setDefaultUser();
     },
     handleUserResponse: function(rsp) {
-      // console.log(rsp.detail, rsp, rsp.response)
-      // console.log(rsp.detail.xhr.responseURL);
-      // console.log(rsp.srcElement.url);
       // TODO: move this logic into default behaviours
-      if (rsp.detail.xhr.responseURL !== rsp.srcElement.url){
-        console.error('expected link did not work, got redirected');
-        // TODO: if we get redirected to login.. trigger a global redirect mechanism
-        this._setDefaultUser();
-        return;
-      }
       // TODO: check response to make sure it contains a valid user
-      this.user = rsp.detail.xhr.response;
+      this.user = rsp.detail;
       this._setPermissions(this.user);
     },
 
@@ -131,27 +109,32 @@ Example:
     },
 
     _setPermissions: function(user) {
-      var myPermisions = {'loggedInDefault':true};
+      var myPermisions = {};
+      var allp  = this.allPermissions;
       // add all default permissions (while testing these are set to all permissions)
-      var defaultPermissions = this.appData.permissions.defaultPermissions;
-      for (var dperm in defaultPermissions) {
-        myPermisions[defaultPermissions[dperm]] = true;
-      }
-      if (!user.is_staff) {
-        var partnerOnlyPermissions = this.appData.permissions.partnerOnlyPermissions;
-        for (var perm in partnerOnlyPermissions) {
-          myPermisions[partnerOnlyPermissions[perm]] = true;
-        }
+      var defaultPermissions = allp.defaultPermissions;
+
+      defaultPermissions.forEach(function(perm){
+        myPermisions[perm] = true;
+      });
+      // if partner: (!staff)
+      if (!user.is_staff){
+        allp.partnerOnlyPermissions.forEach(function(perm){
+          myPermisions[perm] = true;
+        });
       } else {
-        this.appData.permissions.managementPermissions.forEach(function(perm){
+        // user is not partner but staff:
+        allp.managementPermissions.forEach(function(perm){
           myPermisions[perm] = true;
         });
+        if (user.profile.partner_staff_member){
+        // staff that has faked partnership by setting partner_staff_member on their profile
+          allp.partnerPermissions.forEach(function(perm){
+            myPermisions[perm] = true;
+          });
+        }
       }
-      if (user.profile.partner_staff_member){
-        this.appData.permissions.partnerPermissions.forEach(function(perm){
-          myPermisions[perm] = true;
-        });
-      }
+      
       this.set('permissions', myPermisions);
     }
     

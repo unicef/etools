@@ -19,21 +19,52 @@
 
 
 <dom-module id="input-recursive">
-  <style>
+  <style is="custom-style" include="iron-flex iron-flex-alignment">
+    :host {
+      --paper-input-container: {
+        width: 4em;
+      }
+    };
     div {
       padding-left: 10px;
     }
+    .motherInput {
+
+    }
+     .hiddenInputLabel {
+        font-size: 80%;
+        color: var(--secondary-text-color);
+
+      }
   </style>
   <template>
-  <div>
-    <p>{{breakdown.breakdownName}}</p>
+  <div class="layout horizontal wrap">
+    
     
     <template is="dom-repeat" items="{{breakdown.children}}">
-      <paper-input type="number" label="{{item.name}}" value="{{item.total}}" disabled="{{disabledInput}}"></paper-input>
-      <template is="dom-if" if="{{item.breakdown}}">
-        <paper-button raised on-tap="_toggleChildren">{{_expandChar(hideChildren)}}</paper-button>
-        <input-recursive hidden$={{hideChildren}} breakdown="{{item.breakdown}}" total={{item.total}}></input-recursive>
-      </template>
+      <div>
+        <paper-input 
+              class="motherInput"
+              always-float-label="{{hiddenChildren(level)}}"
+              type="number" 
+              min="0"
+              maxlength="7"
+              label="{{item.name}}"
+              value="{{item.total}}" 
+              disabled="{{!hiddenChildren(level)}}"
+              hidden$="{{!hiddenChildren(level)}}">
+        </paper-input>
+        <p hidden$="{{hiddenChildren(level)}}"><span class="hiddenInputLabel">{{_getLabel(item.name)}}: </span> <span class="hiddenInputTotal">{{item.total}}</span></p>
+        <template is="dom-if" if="{{item.breakdown}}">
+          <input-recursive 
+                level="[[_decrement(level)]]" 
+                hidden$={{hiddenChildren(level)}} 
+                mother="{{_getLabel(item.name)}}" 
+                breakdown="{{item.breakdown}}" 
+                total={{item.total}}>
+          </input-recursive>
+        </template>
+      </div>
     </template>
   <div>
     
@@ -61,18 +92,20 @@
         type: Boolean,
         value: false
       },
-      hideChildren: {
-        type: Boolean,
-        value: true
+      level: {
+        type: Number,
+        observer: '_levelChanged'
       }
     },
     ready: function() {
-      //
+      //c
     },
     _getTotalUpwards: function() {
       var total = null;
+      var increment;
+      // console.log('breakdown ', this._getLabel(this.label) ,' ', this.breakdown.children);
       this.breakdown.children.forEach(function(e){
-        var increment = Number(e.total);
+        increment = Number(e.total);
         if (increment) {
           total = total ? (increment + total) : increment;
         }
@@ -81,24 +114,40 @@
         //this.disabledInput = true;
       }
       this.total = total;
+      
     },
     _totalChanged: function(cval) {
       // here the cva.path should be only one level deep
       // that means breakdown.children.#1.value,
       // a simple way to check is to check the length
-      if ((cval) && (cval.path.length > 30)) {
-        this.disabledInput = true;
+      if ((cval) && ((cval.path.length > 30) || (cval.path.length < 26))) {
+        // this.disabledInput = true;
         return;
+      } else {
+        this._getTotalUpwards();
       }
-      this._getTotalUpwards();
+      
     },
-    _toggleChildren: function(el) {
-      console.log(el.currentTarget.innerHTML);
-      //el.currentTarget.innerHTML = (el.currentTarget.innerHTML === '+') ? '-' : '+';
-      this.hideChildren = !this.hideChildren;
+    _getLabel: function(el) {
+      return this.mother ? [this.mother, el].join(' | ') : el;
     },
-    _expandChar: function(hiddenChildren) {
-      return hiddenChildren ? '+' : '-';
+    // _getInputLabel: function(el) {
+    //   return el //[this.breakdown.breakdownName, el].join(' ');
+    // },
+    _decrement: function(n) {
+      return ((n-1)>0) ? n-1 : 0;
+    },
+    hiddenChildren: function(level){
+      return ((level-1)<1) ? true : false;
+    },
+    _levelChanged: function(){
+      if (true) {
+        // set all values to null
+        var elements = Array.from(this.querySelectorAll('.motherInput'));
+        elements.forEach(function(el) {
+          el.value = null;
+        });
+      }
     }
 
     

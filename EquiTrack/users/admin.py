@@ -187,6 +187,17 @@ class CountryAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    list_display = (
+        'name',
+        'country_short_code',
+        'business_area_code',
+        'vision_sync_enabled',
+        'vision_last_synced',
+    )
+    readonly_fields = (
+        'vision_last_synced',
+    )
+
 # Re-register UserAdmin
 admin.site.unregister(User)
 admin.site.register(User, UserAdminPlus)
