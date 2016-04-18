@@ -193,14 +193,14 @@ class PartnerOrganization(models.Model):
             programme_visits = 1
             spot_checks = 1
         elif 100000.00 < cash_transferred <= 350000.00:
-            if self.rating in [u'Low', u'Medium']:
+            if self.rating in [LOW, MEDIUM]:
                 programme_visits = 1
                 spot_checks = 1
             else:
                 programme_visits = 2
                 spot_checks = 2
         else:
-            if self.rating in [u'Low', u'Medium']:
+            if self.rating in [LOW, MEDIUM]:
                 programme_visits = 2
                 spot_checks = 2
             else:

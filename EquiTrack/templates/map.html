@@ -540,42 +540,64 @@
                     var popup_content='';
                     //looping through all Interventions for one location
                     $.each( valueq.parterships, function( keyp, valuep ) {
-                            popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
-                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
-                            "<div class='row'>" +
+                        popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
+                        popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
+                                "<div class='row'>" +
                                 "<div class='row col-md-12'><label class='col-md-3 control-label'>Title</label><div id='pca_title' class='col-md-9'>" + valuep.pca_title + "</div></div>" +
                                 "<div class='row col-md-12'><label class='col-md-3 control-label'>Partner</label><div id='partner_name' class='col-md-9'>" + valuep.partner_name + "</div></div>" +
                                 "<div class='row col-md-12'><label class='col-md-10 control-label'>Results by Sector:</label><div id='partner_name' class='col-md-2'></div></div>" +
-                            "</div>";
+                                "</div>";
 
 
+                        if (valuep.distribution_plans != null) {
 
-                            //looping for sectors for one PD
-                            $.each( valuep.sectors, function( keys, valueSec ) {
-                                var popup_content_tabs_indicator='';
 
-                                var popup_content_tabs_sec =  '<div class="row"><div class="panel-group col-md-12" id="accordion">' +
-                                                                    '<div class="panel panel-default">' +
-                                                                        '<div class="panel-heading">' +
-                                                                            '<h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapse' + keyp + keys + '">' + valueSec.sector_name +'</a></h3>' +
-                                                                        '</div>' +
-                                                                        '<div id="collapse' + keyp + keys + '" class="panel-collapse collapse">';
+                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
+                                            "<div class='row'>" +
+                                    "<div class='row col-md-12'><label class='col-md-10 control-label'>Distribution Plans:</label><div id='partner_name' class='col-md-2'></div></div>" +
+                                    "<div class='row col-md-12'><div class='col-md-1'></div><label class='col-md-4 control-label'>Item Type</label><label class='col-md-4 control-label'>Delivered</label></div>" +
+                                    "</div>";
 
-                                $.each( valueSec.indicators, function( keyi, valuei ) {
+                            $.each(valuep.distribution_plans, function (keyDist, valueDist) {
+
+                                if(valueq.location_name ==valueDist.site) {
+
+                                    popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
+                                            "<div class='row'>" +
+                                            "<div class='row col-md-12'><div class='col-md-1'></div><div class='col-md-4'>"+valueDist.item+"</div><div id='dist_delivered' class='col-md-4'>" + valueDist.delivered + "/" + valueDist.quantity + "</div></div>" +
+                                            "</div>";
+                                }
+                            });
+                        }
+                        //looping for sectors for one PD
+
+                        if (valuep.sectors != null){
+                            $.each(valuep.sectors, function (keys, valueSec) {
+                                var popup_content_tabs_indicator = '';
+
+                                var popup_content_tabs_sec = '<div class="row"><div class="panel-group col-md-12" id="accordion">' +
+                                        '<div class="panel panel-default">' +
+                                        '<div class="panel-heading">' +
+                                        '<h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapse' + keyp + keys + '">' + valueSec.sector_name + '</a></h3>' +
+                                        '</div>' +
+                                        '<div id="collapse' + keyp + keys + '" class="panel-collapse collapse">';
+
+                                $.each(valueSec.indicators, function (keyi, valuei) {
                                     popup_content_tabs_indicator +=
-                                                                        '<div class="panel-body">' +
-                                                                            '<a href=""><span class="sublabel">' + valuei.indicator+ '</span></a>' + '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
-                                                                            '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
-                                                                            '<div class="progress progress-striped">' +
-                                                                                '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current/valuei.programmed*100 +'%">' + (valuei.current/valuei.programmed*100).toFixed(1) + '% </div>' +
-                                                                            '</div>' +
-                                                                        '</div>';
+                                            '<div class="panel-body">' +
+                                            '<a href=""><span class="sublabel">' + valuei.indicator + '</span></a>' + '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
+                                            '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
+                                            '<div class="progress progress-striped">' +
+                                            '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current / valuei.programmed * 100 + '%">' + (valuei.current / valuei.programmed * 100).toFixed(1) + '% </div>' +
+                                            '</div>' +
+                                            '</div>';
                                 });
                                 popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div>';
 
                                 popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
 
                             });
+                    }
                             popup_content_tabs += '</div>';
                     });
                     popup_content_navs += '</ul>';

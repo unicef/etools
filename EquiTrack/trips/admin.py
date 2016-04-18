@@ -231,13 +231,11 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
             ),
         }),
 
-        (u'Travel Closure', {
+        (u'Travel Certification', {
             u'classes': (u'suit-tab suit-tab-reporting',),
             u'fields': (
                 u'ta_trip_took_place_as_planned',
-                u'ta_trip_repay_travel_allowance',
-                u'ta_trip_final_claim',
-                u'pending_ta_amendment'),
+                u'ta_trip_repay_travel_allowance',),
         }),
     )
     suit_form_tabs = (

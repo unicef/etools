@@ -18,6 +18,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         "VENDOR_NAME",
         "VENDOR_CODE",
         "RISK_RATING_NAME",
+        "TYPE_OF_ASSESSMENT",
+        "STREET_ADDRESS",
+        "PHONE_NUMBER",
         "GRANT_REF",
         "DONOR_NAME",
         "EXPIRY_DATE",
@@ -64,6 +67,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.partner_type = u'Civil Society Organization'
                 partner_org.cso_type = partner["CSO_TYPE_NAME"]
                 partner_org.rating = partner["RISK_RATING_NAME"]
+                partner_org.type_of_assessment = partner["TYPE_OF_ASSESSMENT"]
+                partner_org.address = partner["STREET_ADDRESS"]
+                partner_org.phone_number = partner["PHONE_NUMBER"]
                 partner_org.vision_synced = True
                 partner_org.save()
                 processed += 1

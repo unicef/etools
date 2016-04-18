@@ -299,8 +299,8 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
             'fields':
                 ('partner',
                  'agreement',
-                 'number',
                  'partnership_type',
+                 'reference_number',
                  'result_structure',
                  ('title', 'project_type',),
                  'status',
