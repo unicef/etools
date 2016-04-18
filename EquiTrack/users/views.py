@@ -166,6 +166,7 @@ class GroupViewSet(mixins.RetrieveModelMixin,
 
 class UserViewSet(mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
+                  mixins.CreateModelMixin,
                   viewsets.GenericViewSet):
     """
     Returns a list of all Users
@@ -173,6 +174,28 @@ class UserViewSet(mixins.RetrieveModelMixin,
     queryset = User.objects.all()
     serializer_class = UserCreationSerializer
     permission_classes = (IsSuperUser,)
+
+    def create(self, request, *args, **kwargs):
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        groups = request.data['groups']
+
+        serializer.instance = serializer.save()
+        data = serializer.data
+
+        try:
+            for grp in groups:
+                serializer.instance.groups.add(grp)
+
+            serializer.save()
+        except Exception:
+            pass
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED,
+                        headers=headers)
 
 
 class OfficeViewSet(mixins.RetrieveModelMixin,
