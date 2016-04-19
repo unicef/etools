@@ -2,7 +2,16 @@
 
 {% block extra_head %}
 
-    <link rel="stylesheet" href="//cdn.datatables.net/1.10.7/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.11/css/dataTables.bootstrap.min.css" />
+
+    <style>
+
+        th {
+            border-color: black;
+            background-color: lightskyblue;
+        }
+    </style>
 
 {% endblock %}
 
@@ -30,7 +39,7 @@
                             </div>
                           </div>
                           <div class="panel-body">
-                            <table id="plan" class="table table-striped table-bordered"
+                            <table id="plan" class="table table-striped table-bordered cell-border"
                                    data-height="500"
                                    data-pagination="true"
                                    data-search="true"
@@ -73,15 +82,28 @@
 
                             <tbody>
                                 {% for partner in partners %}
+
+                                    {% with reqs=partner.hact_min_requirements %}
                                     <tr>
-                                        <td>{{ partner.name }}</td>
-                                        <td>{{ partner.type }}</td>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td><a href="{{ partner.get_admin_url }}">{{ partner.name }}</a></td>
+                                        <td>{{ partner.partner_type }}</td>
                                         <td>{{ partner.shared_ip }}</td>
-                                        <td>{{ partner.type_of_assessment }}</td>
                                         <td>{{ partner.planned_cash_transfers }}</td>
                                         <td>{{ partner.micro_assessment_needed }}</td>
-                                        <td>{{ partner. }}</td>
+                                        <td>{{ partner.total_cash_transferred }}</td>
+                                        <td>{{ partner.actual_cash_transferred }}</td>
+                                        <td>{{ partner.rating }}</td>
+                                        <td>{{ partner.planned_visits }}</td>
+                                        <td>{{ reqs.programme_visits }}</td>
+                                        <td>{{ partner.programmatic_visits }}</td>
+                                        <td>{{ reqs.spot_checks }}</td>
+                                        <td>{{ partner.spot_checks }}</td>
+                                        <td>{{ reqs.audits }}</td>
+                                        <td>{{ partner.audits }}</td>
+                                        <td>0</td>
                                     </tr>
+                                    {% endwith %}
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -98,7 +120,9 @@
 
 
 {% block extra_js %}
-<script type="text/javascript" src="//cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.11/js/dataTables.bootstrap.min.js"></script>
+
 
     <script type="text/javascript">
         $(document).ready(function() {
