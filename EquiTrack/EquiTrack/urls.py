@@ -43,6 +43,7 @@ from reports.views import (
 )
 
 from partners.urls import (
+    simple_interventions_api,
     interventions_api,
     results_api,
     reports_api,
@@ -113,6 +114,7 @@ urlpatterns = patterns(
     url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(agreement_api.urls)),
     url(r'^api/', include(interventions_api.urls)),
+    url(r'^api/', include(simple_interventions_api.urls)),
     url(r'^api/', include(results_api.urls)),
     url(r'^api/', include(pcasectors_api.urls)),
     url(r'^api/', include(pcabudgets_api.urls)),
