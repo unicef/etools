@@ -39,6 +39,9 @@ agreement_api.register(r'agreements', AgreementViewSet, base_name='agreements')
 interventions_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
 interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')
 
+simple_interventions_api = routers.SimpleRouter()
+simple_interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')
+
 pcasectors_api = routers.NestedSimpleRouter(interventions_api, r'interventions', lookup='intervention')
 pcasectors_api.register(r'sectors', PCASectorViewSet, base_name='intervention-sectors')
 
