@@ -60,7 +60,7 @@ RISK_RATINGS = (
 )
 
 
-class PartnerOrganization(models.Model):
+class PartnerOrganization(AdminURLMixin, models.Model):
 
     partner_type = models.CharField(
         max_length=50,
@@ -148,6 +148,35 @@ class PartnerOrganization(models.Model):
     def __unicode__(self):
         return self.name
 
+    def latest_assessment(self, type):
+        return self.assessments.filter(type=type).order_by('completed_date').last()
+
+    @property
+    def micro_assessment_needed(self):
+        """
+        Returns Yes if:
+        1. type of assessment field is 'high risk assumed';
+        2. planned amount is >$100K and type of assessment is 'simplified checklist' or risk rating is 'not required';
+        3. risk rating is 'low, medium, significant, high', type of assessment is 'ma' or 'negative audit results'
+            and date is older than 54 months.
+        return 'missing' if ma is not attached in the Assessment and Audit record in the Partner screen.
+        Displays No in all other instances.
+        :return:
+        """
+        micro_assessment = self.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
+        if self.type_of_assessment == 'High Risk Assumed':
+            return 'Yes'
+        elif self.planned_cash_transfers > 100000.00 \
+            and self.type_of_assessment == 'Simplified Checklist' or self.rating == 'Not Required':
+            return 'Yes'
+        elif self.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
+            and self.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
+            and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
+            return 'Yes'
+        elif micro_assessment is None:
+            return 'Missing'
+        return 'No'
+
     @property
     def latest_assessment(self):
         assessment = self.assessments.last()
@@ -184,8 +213,7 @@ class PartnerOrganization(models.Model):
 
     @property
     def hact_min_requirements(self):
-        audit = 'No'
-        programme_visits = spot_checks = 0
+        programme_visits = spot_checks = audits = 0
         cash_transferred = self.actual_cash_transferred
         if cash_transferred <= 50000.00:
             programme_visits = 1
@@ -207,9 +235,17 @@ class PartnerOrganization(models.Model):
                 programme_visits = 4
                 spot_checks = 3
         if self.total_cash_transferred > 500000.00:
-            audit = 'Yes'
+            audits = 1
+            current_cycle = ResultStructure.current()
+            last_audit = self.latest_assessment(u'Scheduled Audit report')
+            if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
+                audits = 0
 
-        return programme_visits, spot_checks, audit
+        return {
+            'programme_visits': programme_visits,
+            'spot_checks': spot_checks,
+            'audits': audits
+        }
 
     @property
     def planned_cash_transfers(self):
@@ -255,6 +291,15 @@ class PartnerOrganization(models.Model):
         return total[total.keys()[0]] or 0
 
     @property
+    def planned_visits(self):
+        planned = self.documents.filter(
+            status=PCA.ACTIVE
+        ).aggregate(
+            models.Sum('planned_visits')
+        )
+        return planned[planned.keys()[0]] or 0
+
+    @property
     def programmatic_visits(self):
         from trips.models import LinkedPartner
         return LinkedPartner.objects.filter(
@@ -271,6 +316,9 @@ class PartnerOrganization(models.Model):
             trip__status=u'completed',
             trip__travel_type=u'spot_check'
         ).count()
+
+    def audits(self):
+        return self.assessments.filter(type=u'Scheduled Audit report').count()
 
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
@@ -741,6 +789,7 @@ class PCA(AdminURLMixin, models.Model):
     cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
     total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
     fr_number = models.CharField(max_length=50, null=True, blank=True)
+    planned_visits = models.IntegerField(default=0)
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
@@ -889,8 +938,8 @@ class PCA(AdminURLMixin, models.Model):
         """
         cp = ResultStructure.current()
         total = self.funding_commitments.filter(
-            end__gte=cp.to_date,
-            end__lte=cp.to_date
+            end__gte=cp.from_date,
+            end__lte=cp.to_date,
         ).aggregate(
             models.Sum('expenditure_amount')
         )

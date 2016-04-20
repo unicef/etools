@@ -43,6 +43,7 @@ from reports.views import (
 )
 
 from partners.urls import (
+    simple_interventions_api,
     interventions_api,
     results_api,
     reports_api,
@@ -99,7 +100,7 @@ urlpatterns = patterns(
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
-    url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact'),
+    url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),
@@ -113,6 +114,7 @@ urlpatterns = patterns(
     url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(agreement_api.urls)),
     url(r'^api/', include(interventions_api.urls)),
+    url(r'^api/', include(simple_interventions_api.urls)),
     url(r'^api/', include(results_api.urls)),
     url(r'^api/', include(pcasectors_api.urls)),
     url(r'^api/', include(pcabudgets_api.urls)),

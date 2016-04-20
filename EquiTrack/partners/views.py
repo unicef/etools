@@ -253,24 +253,6 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
             headers=headers
         )
 
-    def get_queryset(self):
-
-        queryset = super(AgreementViewSet, self).get_queryset()
-        if not self.request.user.is_staff:
-            # This must be a partner
-            try:
-                # TODO: Promote this to a permissions class
-                current_member = PartnerStaffMember.objects.get(
-                    id=self.request.user.profile.partner_staff_member
-                )
-            except PartnerStaffMember.DoesNotExist:
-                # This is an authenticated user with no access to interventions
-                return queryset.none()
-            else:
-                # Return all interventions this partner has
-                return queryset.filter(partner=current_member.partner)
-        return queryset
-
     def retrieve(self, request, partner_pk=None, pk=None):
         """
         Returns an Agreement object for this Agreement PK and partner
@@ -788,24 +770,6 @@ class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
-
-    def get_queryset(self):
-
-        queryset = super(PartnerOrganizationsViewSet, self).get_queryset()
-        if not self.request.user.is_staff:
-            # This must be a partner
-            try:
-                # TODO: Promote this to a permissions class
-                current_member = PartnerStaffMember.objects.get(
-                    id=self.request.user.profile.partner_staff_member
-                )
-            except PartnerStaffMember.DoesNotExist:
-                # This is an authenticated user with no access to interventions
-                return queryset.none()
-            else:
-                # Return all interventions this partner has
-                return queryset.filter(partner=current_member.partner)
-        return queryset
 
 
 class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
