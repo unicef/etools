@@ -313,7 +313,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
                  'review_date',
                  ('partner_manager', 'signed_by_partner_date',),
                  ('unicef_manager', 'signed_by_unicef_date',),
-                 'partner_focal_point',
+                 ('partner_focal_point', 'planned_visits',),
                  'unicef_managers',
                  ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start_date', 'end_date', 'duration',),
