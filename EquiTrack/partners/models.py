@@ -178,40 +178,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return 'No'
 
     @property
-    def latest_assessment(self):
-        assessment = self.assessments.last()
-        if assessment is None:
-            return 'Missing'
-        else:
-            return assessment.type
-
-    @property
-    def micro_assessment_needed(self):
-        """
-        Returns Yes if:
-        1. type of assessment field is 'high risk assumed';
-        2. planned amount is >$100K and type of assessment is 'simplified checklist' or risk rating is 'not required';
-        3. risk rating is 'low, medium, significant, high', type of assessment is 'ma' or 'negative audit results'
-            and date is older than 54 months.
-        return 'missing' if ma is not attached in the Assessment and Audit record in the Partner screen.
-        Displays No in all other instances.
-        :return:
-        """
-        micro_assessment = self.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
-        if self.type_of_assessment == 'High Risk Assumed':
-            return 'Yes'
-        elif self.planned_cash_transfers > 100000.00 \
-            and self.type_of_assessment == 'Simplified Checklist' or self.rating == 'Not Required':
-            return 'Yes'
-        elif self.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
-            and self.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
-            and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
-            return 'Yes'
-        elif micro_assessment is None:
-            return 'Missing'
-        return 'No'
-
-    @property
     def hact_min_requirements(self):
         programme_visits = spot_checks = audits = 0
         cash_transferred = self.actual_cash_transferred
