@@ -62,15 +62,14 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
         },
     }
 
-    # from storages.backends.azure_storage import AzureStorage
-    # storage = AzureStorage()
-    # with storage.open('saml/certs/saml.key') as key, \
-    #         storage.open('saml/certs/sp.crt') as crt:
-    #     with open('EquiTrack/saml/certs/saml.key') as new_key, \
-    #             open('EquiTrack/saml/certs/sp.crt') as new_crt:
-    #         new_key.write(key.read())
-    #         new_crt.write(crt.read())
-    print os.getcwd()
+    from storages.backends.azure_storage import AzureStorage
+    storage = AzureStorage()
+    with storage.open('saml/certs/saml.key') as key, \
+            storage.open('saml/certs/sp.crt') as crt:
+        with open('EquiTrack/saml/certs/saml.key', 'w+') as new_key, \
+                open('EquiTrack/saml/certs/sp.crt', 'w+') as new_crt:
+            new_key.write(key.read())
+            new_crt.write(crt.read())
 
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
