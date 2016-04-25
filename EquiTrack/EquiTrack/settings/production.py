@@ -65,8 +65,13 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
-#LOGIN_URL = '/saml2/login/'
+
 LOGIN_URL = '/login/'
 SAML_ATTRIBUTE_MAPPING = {
     'upn': ('username',),
@@ -137,8 +142,8 @@ SAML_CONFIG = {
     'accepted_time_diff': 3,  # in seconds
 
     # certificate
-    'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
-    'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
+    'key_file': join(MEDIA_URL, 'saml/certs/saml.key'),  # private part
+    'cert_file': join(MEDIA_URL, 'saml/certs/sp.crt'),  # public part
 
     # own metadata settings
     'contact_person': [
@@ -156,8 +161,8 @@ SAML_CONFIG = {
     },
     'valid_for': 24,  # how long is our metadata valid
 }
-SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-SAML_SIGNED_LOGOUT = True
+#SAML_SIGNED_LOGOUT = True
+
 ########## JWT AUTH CONFIGURATION
 certificate_text = open(join(DJANGO_ROOT, 'saml/stspem.cer'), 'r').read()
 certificate = load_pem_x509_certificate(certificate_text, default_backend())

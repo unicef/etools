@@ -13,7 +13,6 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
 from jsonfield import JSONField
-from filer.fields.file import FilerFileField
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
@@ -1211,7 +1210,6 @@ class PCAFile(models.Model):
 
     pca = models.ForeignKey(PCA, related_name='attachments')
     type = models.ForeignKey(FileType)
-    file = FilerFileField(blank=True, null=True)
     attachment = models.FileField(
         max_length=255,
         upload_to=get_file_path

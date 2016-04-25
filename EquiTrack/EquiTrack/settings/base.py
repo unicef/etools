@@ -75,6 +75,7 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 
 REGISTRATION_OPEN = True
 ACCOUNT_ACTIVATION_DAYS = 7
@@ -115,8 +116,6 @@ SWAGGER_SETTINGS = {
     'is_authenticated': True,
     'is_superuser': True,
 }
-
-CORS_ORIGIN_ALLOW_ALL = True
 
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:
@@ -190,7 +189,7 @@ MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
 
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
-VISION_URL = 'https://devapis.unicef.org/BIService/BIWebService.svc'
+VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 
 USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # ########## MANAGER CONFIGURATION
