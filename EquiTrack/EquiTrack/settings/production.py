@@ -62,6 +62,15 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
         },
     }
 
+    from storages.backends.azure_storage import AzureStorage
+    storage = AzureStorage()
+    with storage.open('saml/certs/saml.key') as key, \
+            storage.open('saml/certs/sp.crt') as crt:
+        with open('EquiTrack/saml/certs/saml.key') as new_key, \
+                open('EquiTrack/saml/certs/sp.crt') as new_crt:
+            new_key.write(key.read())
+            new_crt.write(crt.read())
+
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -142,8 +151,8 @@ SAML_CONFIG = {
     'accepted_time_diff': 3,  # in seconds
 
     # certificate
-    'key_file': join(MEDIA_URL, 'saml/certs/saml.key'),  # private part
-    'cert_file': join(MEDIA_URL, 'saml/certs/sp.crt'),  # public part
+    'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
+    'cert_file': join(DJANGO_ROOT, 'saml/certs/sp.crt'),  # public part
 
     # own metadata settings
     'contact_person': [
