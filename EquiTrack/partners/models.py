@@ -220,7 +220,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         year = datetime.date.today().year
         total = PartnershipBudget.objects.filter(
             partnership__partner=self,
-            partnership__status=PCA.ACTIVE,
+            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
             year=year).aggregate(
             models.Sum('unicef_cash')
         )
@@ -234,7 +234,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         year = datetime.date.today().year
         total = FundingCommitment.objects.filter(
             intervention__partner=self,
-            intervention__status=PCA.ACTIVE,
+            intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
             end__year=year).aggregate(
             models.Sum('expenditure_amount')
         )
@@ -250,7 +250,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             end__gte=cp.from_date,
             end__lte=cp.to_date,
             intervention__partner=self,
-            intervention__status=PCA.ACTIVE).aggregate(
+            intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
             models.Sum('expenditure_amount')
         )
         return total[total.keys()[0]] or 0
@@ -258,7 +258,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @property
     def planned_visits(self):
         planned = self.documents.filter(
-            status=PCA.ACTIVE
+            status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
         ).aggregate(
             models.Sum('planned_visits')
         )
