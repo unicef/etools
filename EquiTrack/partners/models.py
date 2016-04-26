@@ -703,11 +703,7 @@ class PCA(AdminURLMixin, models.Model):
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
-    # contacts #TODO: Remove
-    unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
-    unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
-    unicef_mng_email = models.CharField(max_length=128L, blank=True)
-
+    # managers and focal points
     unicef_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='approved_partnerships',
@@ -719,13 +715,6 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
-
-    #TODO: Remove
-    partner_mng_first_name = models.CharField(max_length=64L, blank=True)
-    partner_mng_last_name = models.CharField(max_length=64L, blank=True)
-    partner_mng_email = models.CharField(max_length=128L, blank=True)
-    partner_mng_phone = models.CharField(max_length=64L, blank=True)
-
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         verbose_name=u'Signed by partner',
@@ -736,7 +725,6 @@ class PCA(AdminURLMixin, models.Model):
         auto_choose=False,
         blank=True, null=True,
     )
-
     partner_focal_point = ChainedForeignKey(
         PartnerStaffMember,
         related_name='my_partnerships',
@@ -747,12 +735,6 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
     )
 
-    # budget TODO: Remove
-    partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
-    unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
-    in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
-    cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
-    total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
     fr_number = models.CharField(max_length=50, null=True, blank=True)
     planned_visits = models.IntegerField(default=0)
 
@@ -761,11 +743,6 @@ class PCA(AdminURLMixin, models.Model):
     current = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    amendment = models.BooleanField(default=False)
-    amended_at = models.DateTimeField(null=True)
-    amendment_number = models.IntegerField(default=0)
-    original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
         verbose_name = 'Intervention'
@@ -942,7 +919,7 @@ class PCA(AdminURLMixin, models.Model):
         manager, created = Group.objects.get_or_create(
             name=u'Partnership Manager'
         )
-        managers = manager.user_set.filter(profile__country=connection.tenant) | instance.unicef_managers.all()
+        managers = set(manager.user_set.filter(profile__country=connection.tenant) | instance.unicef_managers.all())
         recipients = [user.email for user in managers]
 
         if created:  # new partnership
