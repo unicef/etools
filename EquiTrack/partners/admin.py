@@ -42,7 +42,8 @@ from .models import (
     SupplyPlan,
     DistributionPlan,
     FundingCommitment,
-    AgreementAmendmentLog
+    AgreementAmendmentLog,
+    IndicatorDueDates
 )
 
 from .filters import (
@@ -213,6 +214,12 @@ class SupplyPlanInlineAdmin(admin.TabularInline):
     extra = 1
 
 
+class IndicatorDueDatesAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-results'
+    model = IndicatorDueDates
+    extra = 1
+
+
 class DistributionPlanInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-supplies'
     model = DistributionPlan
@@ -346,6 +353,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         #ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
+        IndicatorDueDatesAdmin,
     )
 
     suit_form_tabs = (
