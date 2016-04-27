@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0044_pca_planned_visits'),
+        ('partners', '0044_20160414_1846'),
     ]
 
     operations = [
