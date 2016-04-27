@@ -43,7 +43,7 @@ from supplies.tasks import (
     set_unisupply_distribution,
     set_unisupply_user
 )
-
+from users.models import Section
 from . import emails
 
 
@@ -128,6 +128,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     type_of_assessment = models.CharField(
         max_length=50,
         null=True,
+    )
+    last_assessment_date = models.DateField(
+        blank=True, null=True
     )
     core_values_assessment_date = models.DateField(
         blank=True, null=True,
@@ -220,7 +223,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         year = datetime.date.today().year
         total = PartnershipBudget.objects.filter(
             partnership__partner=self,
-            partnership__status=PCA.ACTIVE,
+            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
             year=year).aggregate(
             models.Sum('unicef_cash')
         )
@@ -234,7 +237,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         year = datetime.date.today().year
         total = FundingCommitment.objects.filter(
             intervention__partner=self,
-            intervention__status=PCA.ACTIVE,
+            intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
             end__year=year).aggregate(
             models.Sum('expenditure_amount')
         )
@@ -250,7 +253,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             end__gte=cp.from_date,
             end__lte=cp.to_date,
             intervention__partner=self,
-            intervention__status=PCA.ACTIVE).aggregate(
+            intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
             models.Sum('expenditure_amount')
         )
         return total[total.keys()[0]] or 0
@@ -258,7 +261,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @property
     def planned_visits(self):
         planned = self.documents.filter(
-            status=PCA.ACTIVE
+            status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
         ).aggregate(
             models.Sum('planned_visits')
         )
@@ -350,6 +353,7 @@ class Assessment(models.Model):
             u'Simplified Checklist',
             u'Scheduled Audit report',
             u'Special Audit report',
+            u'High Risk Assumed',
             u'Other',
         ),
     )
@@ -410,44 +414,6 @@ class Assessment(models.Model):
             date=self.completed_date.strftime("%d-%m-%Y") if
             self.completed_date else u'NOT COMPLETED'
         )
-
-
-class Recommendation(models.Model):
-
-    PARTNER = u'partner'
-    FUNDS = u'funds'
-    STAFF = u'staff'
-    POLICY = u'policy'
-    INT_AUDIT = u'int-audit'
-    EXT_AUDIT = u'ext-audit'
-    REPORTING = u'reporting'
-    SYSTEMS = u'systems'
-    SUBJECT_AREAS = (
-        (PARTNER, u'Implementing Partner'),
-        (FUNDS, u'Funds Flow'),
-        (STAFF, u'Staffing'),
-        (POLICY, u'Acct Policies & Procedures'),
-        (INT_AUDIT, u'Internal Audit'),
-        (EXT_AUDIT, u'External Audit'),
-        (REPORTING, u'Reporting and Monitoring'),
-        (SYSTEMS, u'Information Systems'),
-    )
-
-    assessment = models.ForeignKey(Assessment)
-    subject_area = models.CharField(max_length=50, choices=SUBJECT_AREAS)
-    description = models.CharField(max_length=254)
-    level = models.CharField(max_length=50, choices=RISK_RATINGS,
-                             verbose_name=u'Priority Flag')
-    closed = models.BooleanField(default=False, verbose_name=u'Closed?')
-    completed_date = models.DateField(blank=True, null=True)
-
-    @classmethod
-    def send_action(cls, sender, instance, created, **kwargs):
-        pass
-
-    class Meta:
-        verbose_name = 'Key recommendation'
-        verbose_name_plural = 'Key recommendations'
 
 
 def get_agreement_path(instance, filename):
@@ -717,11 +683,7 @@ class PCA(AdminURLMixin, models.Model):
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
-    # contacts #TODO: Remove
-    unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
-    unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
-    unicef_mng_email = models.CharField(max_length=128L, blank=True)
-
+    # managers and focal points
     unicef_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='approved_partnerships',
@@ -733,13 +695,6 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
-
-    #TODO: Remove
-    partner_mng_first_name = models.CharField(max_length=64L, blank=True)
-    partner_mng_last_name = models.CharField(max_length=64L, blank=True)
-    partner_mng_email = models.CharField(max_length=128L, blank=True)
-    partner_mng_phone = models.CharField(max_length=64L, blank=True)
-
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         verbose_name=u'Signed by partner',
@@ -750,7 +705,6 @@ class PCA(AdminURLMixin, models.Model):
         auto_choose=False,
         blank=True, null=True,
     )
-
     partner_focal_point = ChainedForeignKey(
         PartnerStaffMember,
         related_name='my_partnerships',
@@ -761,12 +715,6 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
     )
 
-    # budget TODO: Remove
-    partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
-    unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
-    in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
-    cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
-    total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
     fr_number = models.CharField(max_length=50, null=True, blank=True)
     planned_visits = models.IntegerField(default=0)
 
@@ -775,11 +723,6 @@ class PCA(AdminURLMixin, models.Model):
     current = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    amendment = models.BooleanField(default=False)
-    amended_at = models.DateTimeField(null=True)
-    amendment_number = models.IntegerField(default=0)
-    original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
         verbose_name = 'Intervention'
@@ -956,7 +899,7 @@ class PCA(AdminURLMixin, models.Model):
         manager, created = Group.objects.get_or_create(
             name=u'Partnership Manager'
         )
-        managers = manager.user_set.filter(profile__country=connection.tenant) | instance.unicef_managers.all()
+        managers = set(manager.user_set.filter(profile__country=connection.tenant) | instance.unicef_managers.all())
         recipients = [user.email for user in managers]
 
         if created:  # new partnership
@@ -979,6 +922,51 @@ class PCA(AdminURLMixin, models.Model):
 
 
 post_save.connect(PCA.send_changes, sender=PCA)
+
+
+class GovernmentIntervention(models.Model):
+
+    partner = models.ForeignKey(
+        PartnerOrganization,
+        related_name='work_plans',
+    )
+    result_structure = models.ForeignKey(
+        ResultStructure,
+        help_text=u'Which result structure does this partnership report under?'
+    )
+
+
+class GovernmentInterventionResult(models.Model):
+
+    intervention = models.ForeignKey(
+        GovernmentIntervention,
+        related_name='results'
+    )
+    result = models.ForeignKey(
+        Result,
+    )
+    year = models.CharField(
+        max_length=4,
+    )
+    planned_amount = models.IntegerField(
+        default=0,
+        verbose_name='Planned Cash Transfers'
+    )
+    activities = models.TextField()
+    unicef_managers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Unicef focal points',
+        blank=True
+    )
+    sector = models.ForeignKey(
+        Sector,
+        blank=True, null=True,
+        verbose_name='Programme/Sector'
+    )
+    section = models.ForeignKey(
+        Section,
+        null=True, blank=True
+    )
 
 
 class AmendmentLog(TimeStampedModel):

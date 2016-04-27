@@ -44,6 +44,7 @@ SUIT_CONFIG = {
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
             {'model': 'partners.agreement'},
             {'model': 'partners.pca'},
+            {'model': 'partners.governmentintervention', 'label': 'Government'},
         ]},
 
         {'app': 'trips', 'icon': 'icon-road', 'models': [

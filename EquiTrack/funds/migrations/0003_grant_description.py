@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0043_auto_20160413_1358'),
+        ('funds', '0002_grant_expiry'),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='pca',
-            name='planned_visits',
-            field=models.IntegerField(default=0),
+            model_name='grant',
+            name='description',
+            field=models.CharField(max_length=255, null=True, blank=True),
         ),
     ]

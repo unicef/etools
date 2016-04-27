@@ -149,8 +149,9 @@ class HiddenResultFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
 
-        if self.value():
-            return queryset.filter(hidden=self.value())
+        value = self.value()
+        if value == 'True':
+            return queryset.filter(hidden=True)
         return queryset.filter(hidden=False)
 
 
@@ -179,21 +180,23 @@ class ResultAdmin(MPTTModelAdmin):
         'show_results'
     )
 
-    def get_queryset(self, request):
-        queryset = super(ResultAdmin, self).get_queryset(request)
-        return queryset.filter(hidden=False)
-
     def hide_results(self, request, queryset):
 
+        results = 0
         for result in queryset:
             result.hidden = True
             result.save()
+            results += 1
+        self.message_user(request, '{} results were hidden'.format(results))
             
     def show_results(self, request, queryset):
 
+        results = 0
         for result in queryset:
             result.hidden = False
             result.save()
+            results += 1
+        self.message_user(request, '{} results were shown'.format(results))
 
 
 admin.site.register(Result, ResultAdmin)

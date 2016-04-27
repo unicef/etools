@@ -170,7 +170,7 @@ SAML_CONFIG = {
     },
     'valid_for': 24,  # how long is our metadata valid
 }
-#SAML_SIGNED_LOGOUT = True
+SAML_SIGNED_LOGOUT = True
 
 ########## JWT AUTH CONFIGURATION
 certificate_text = open(join(DJANGO_ROOT, 'saml/stspem.cer'), 'r').read()
