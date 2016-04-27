@@ -18,5 +18,6 @@ class Migration(migrations.Migration):
                 ('due_date', models.DateField(null=True, blank=True)),
                 ('intervention', models.ForeignKey(related_name='indicator_due_dates', blank=True, to='partners.PCA', null=True)),
             ],
+            options={'ordering': ['-due_date'], 'verbose_name': 'Indicator Due Date', 'verbose_name_plural': 'Indicator Due Dates'},
         ),
     ]
