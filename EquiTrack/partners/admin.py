@@ -714,6 +714,9 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
     )
     readonly_fields = list_display + (
         u'wbs',
+        u'fc_type',
+        u'start',
+        u'end',
     )
 
     def has_add_permission(self, request):
