@@ -568,6 +568,20 @@ class AuthorizedOfficer(models.Model):
 post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 
+class IndicatorDueDates(models.Model):
+
+    intervention = models.ForeignKey(
+        'PCA',
+        blank=True, null=True,
+        related_name='indicator_due_dates'
+    )
+    due_date = models.DateField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Indicator Due Date'
+        verbose_name_plural = 'Indicator Due Dates'
+        ordering = ['-due_date']
+
 class PCA(AdminURLMixin, models.Model):
 
     IN_PROCESS = u'in_process'
