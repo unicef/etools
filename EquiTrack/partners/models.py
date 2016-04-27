@@ -43,7 +43,7 @@ from supplies.tasks import (
     set_unisupply_distribution,
     set_unisupply_user
 )
-
+from users.models import Section
 from . import emails
 
 
@@ -128,6 +128,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     type_of_assessment = models.CharField(
         max_length=50,
         null=True,
+    )
+    last_assessment_date = models.DateField(
+        blank=True, null=True
     )
     core_values_assessment_date = models.DateField(
         blank=True, null=True,
@@ -350,6 +353,7 @@ class Assessment(models.Model):
             u'Simplified Checklist',
             u'Scheduled Audit report',
             u'Special Audit report',
+            u'High Risk Assumed',
             u'Other',
         ),
     )
@@ -410,44 +414,6 @@ class Assessment(models.Model):
             date=self.completed_date.strftime("%d-%m-%Y") if
             self.completed_date else u'NOT COMPLETED'
         )
-
-
-class Recommendation(models.Model):
-
-    PARTNER = u'partner'
-    FUNDS = u'funds'
-    STAFF = u'staff'
-    POLICY = u'policy'
-    INT_AUDIT = u'int-audit'
-    EXT_AUDIT = u'ext-audit'
-    REPORTING = u'reporting'
-    SYSTEMS = u'systems'
-    SUBJECT_AREAS = (
-        (PARTNER, u'Implementing Partner'),
-        (FUNDS, u'Funds Flow'),
-        (STAFF, u'Staffing'),
-        (POLICY, u'Acct Policies & Procedures'),
-        (INT_AUDIT, u'Internal Audit'),
-        (EXT_AUDIT, u'External Audit'),
-        (REPORTING, u'Reporting and Monitoring'),
-        (SYSTEMS, u'Information Systems'),
-    )
-
-    assessment = models.ForeignKey(Assessment)
-    subject_area = models.CharField(max_length=50, choices=SUBJECT_AREAS)
-    description = models.CharField(max_length=254)
-    level = models.CharField(max_length=50, choices=RISK_RATINGS,
-                             verbose_name=u'Priority Flag')
-    closed = models.BooleanField(default=False, verbose_name=u'Closed?')
-    completed_date = models.DateField(blank=True, null=True)
-
-    @classmethod
-    def send_action(cls, sender, instance, created, **kwargs):
-        pass
-
-    class Meta:
-        verbose_name = 'Key recommendation'
-        verbose_name_plural = 'Key recommendations'
 
 
 def get_agreement_path(instance, filename):
@@ -942,6 +908,51 @@ class PCA(AdminURLMixin, models.Model):
 
 
 post_save.connect(PCA.send_changes, sender=PCA)
+
+
+class GovernmentIntervention(models.Model):
+
+    partner = models.ForeignKey(
+        PartnerOrganization,
+        related_name='work_plans',
+    )
+    result_structure = models.ForeignKey(
+        ResultStructure,
+        help_text=u'Which result structure does this partnership report under?'
+    )
+
+
+class GovernmentInterventionResult(models.Model):
+
+    intervention = models.ForeignKey(
+        GovernmentIntervention,
+        related_name='results'
+    )
+    result = models.ForeignKey(
+        Result,
+    )
+    year = models.CharField(
+        max_length=4,
+    )
+    planned_amount = models.IntegerField(
+        default=0,
+        verbose_name='Planned Cash Transfers'
+    )
+    activities = models.TextField()
+    unicef_managers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Unicef focal points',
+        blank=True
+    )
+    sector = models.ForeignKey(
+        Sector,
+        blank=True, null=True,
+        verbose_name='Programme/Sector'
+    )
+    section = models.ForeignKey(
+        Section,
+        null=True, blank=True
+    )
 
 
 class AmendmentLog(TimeStampedModel):

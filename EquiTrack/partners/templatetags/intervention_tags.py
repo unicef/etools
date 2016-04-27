@@ -10,6 +10,7 @@ from partners.models import (
     PartnerOrganization,
     FundingCommitment,
     DirectCashTransfer,
+    GovernmentIntervention,
 )
 from trips.models import Trip
 
@@ -98,6 +99,39 @@ def show_fr_fc(value):
 
     intervention = PCA.objects.get(id=int(value))
     commitments = FundingCommitment.objects.filter(intervention=intervention)
+    data = tablib.Dataset()
+    fr_fc_summary = []
+
+    for commit in commitments:
+        row = SortedDict()
+        row['Grant'] = commit.grant.__unicode__()
+        row['FR Number'] = commit.fr_number
+        row['WBS'] = commit.wbs
+        row['FC Type'] = commit.fc_type
+        row['FC Ref'] = commit.fc_ref
+        row['Agreement Amount'] = commit.agreement_amount
+        row['Commitment Amount'] = commit.commitment_amount
+        row['Expenditure Amount'] = commit.expenditure_amount
+        fr_fc_summary.append(row)
+
+    if fr_fc_summary:
+        data.headers = fr_fc_summary[0].keys()
+        for row in fr_fc_summary:
+            data.append(row.values())
+
+        return data.html
+
+    return '<p>No FR Set</p>'
+
+
+@register.simple_tag
+def show_government_funding(value):
+
+    if not value:
+        return ''
+
+    intervention = GovernmentIntervention.objects.get(id=int(value))
+    commitments = FundingCommitment.objects.filter(wbs=intervention)
     data = tablib.Dataset()
     fr_fc_summary = []
 

@@ -432,7 +432,7 @@ class PartnershipForm(UserGroupForm):
 
         data.fillna('', inplace=True)
         current_output = None
-        result_structure = self.obj.result_structure or ResultStructure.objects.order_by('to_date').last()
+        result_structure = self.obj.result_structure or ResultStructure.current()
         imported = found = not_found = row_num = 0
         # TODO: make sure to check all the expected columns are in
 
@@ -453,9 +453,7 @@ class PartnershipForm(UserGroupForm):
                     )
                 except ResultType.DoesNotExist as exp:
                     # we can interpret the type we are dealing with by its label
-                    if 'indicator' in type and current_output:
-                        pass
-                    else:
+                    if 'indicator' not in type and current_output:
                         raise ValidationError(
                             _(u"The value of the first column must be one of: Output, Indicator or Activity."
                               u"The value received for row {} was: {}".format(row_num, type)))
@@ -481,7 +479,7 @@ class PartnershipForm(UserGroupForm):
                 create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, number=True)
                 create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, number=True)
                 target = check_and_return_value('Targets', row, number=True)
-                check_and_return_value('Total', row, number=True)
+                check_and_return_value('Total', row, number=True)  # ignore value as we calculate this
 
                 if 'indicator' in label:
                     indicator, created = Indicator.objects.get_or_create(
@@ -507,19 +505,14 @@ class PartnershipForm(UserGroupForm):
                         order = [e for e in labels if row.get(e)]
                         row['order'] = order
                         create_args['disaggregation'] = row.copy()
-
-                    # remove all contents of row
-                    row = {}
-
-                if row:
+                else:
+                    # this is an activity
                     for key in row.keys():
                         if 'Unnamed' in key or 'TF_' not in key:
                             del row[key]
                         elif pandas.isnull(row[key]):
                             row[key] = ''
 
-                # activity only
-                if row:
                     create_args['disaggregation'] = row.copy() if row else None
 
                 result_chain, new = ResultChain.objects.get_or_create(**create_args)
