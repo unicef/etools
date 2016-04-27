@@ -14,7 +14,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, generics
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
@@ -386,6 +386,15 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
     queryset = IndicatorReport.objects.all()
     serializer_class = IndicatorReportSerializer
     # permission_classes = (IndicatorReportPermission,)
+
+    def get_serializer(self, *args, **kwargs):
+        if "data" in kwargs:
+            data = kwargs["data"]
+
+            if isinstance(data, list):
+                kwargs["many"] = True
+
+        return super(IndicatorReportViewSet, self).get_serializer(*args, **kwargs)
 
     def perform_create(self, serializer):
         # add the user to the arguments

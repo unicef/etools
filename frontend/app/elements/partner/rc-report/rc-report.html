@@ -145,7 +145,8 @@
                   
                   
                   <div class="shortText">
-                    Location: {{report.location}}, Reported #: {{report.total}}
+                    Location: {{report.location_object.location_name}}, Reported #: {{report.total}},
+                    narrative: {{report.remarks}}, Status: {{report.report_status}}
                   </div>
 
                 </div>
@@ -281,22 +282,14 @@
     },
     _submitReport: function() {
       var myReq = this.$.ajaxPost;
-      //TODO: Validate for location
-      // if (!this._validateSubmision()){
-      //   return;
-      // }
-      // myReq.body = {
-      //   'result_chain': this.rcId,
-      //   'disaggregation': {},
-      //   'total': this.$.reportTotal.value,
-      //   'start': this.$.timeFrame.from,
-      //   'end': this.$.timeFrame.to,
-      //   'location': this.$.locationSelected.value
-      // };
+      //TODO: Validate
+      
       var myRep = this.$.indicator.getReport();
       // console.log(myRep);
       myReq.body = {
         'result_chain': this.rcId,
+        'report_status': myRep.status,
+        'remarks': myRep.remarks,
         'disaggregation': myRep.number.breakdown,
         'total': myRep.number.total,
         'start': this.$.timeFrame.from,

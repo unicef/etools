@@ -1276,6 +1276,7 @@ class ResultChain(models.Model):
     # variable disaggregation's that may be present in the work plan
     disaggregation = JSONField(null=True)
 
+
     @property
     def total(self):
 
@@ -1290,6 +1291,13 @@ class ResultChain(models.Model):
 
 
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
+
+    STATUS_CHOICES = Choices(
+        ('ontrack', _('On Track')),
+        ('constrained', _('Constrained')),
+        ('noprogress', _('No Progress')),
+        ('targetmet', _('Target Met'))
+    )
 
     # FOR WHOM / Beneficiary
     #  -  ResultChain
@@ -1311,8 +1319,9 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     location = models.ForeignKey(Location, blank=True, null=True)
 
     # Metadata
-    #  - Remarks
+    #  - Remarks, Report Status
     remarks = models.TextField(blank=True, null=True)
+    report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
 
 
 class SupplyPlan(models.Model):
