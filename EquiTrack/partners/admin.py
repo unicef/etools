@@ -374,10 +374,6 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
     work_plan_template.allow_tags = True
     work_plan_template.short_description = 'Template'
 
-    def get_queryset(self, request):
-        queryset = super(PartnershipAdmin, self).get_queryset(request)
-        return queryset.filter(amendment=False)
-
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
     created_date.admin_order_field = '-created_at'
