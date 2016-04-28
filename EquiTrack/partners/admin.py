@@ -433,7 +433,9 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
     filter_horizontal = (
         'unicef_managers',
     )
-    extra = 1
+
+    def get_extra(self, request, obj=None, **kwargs):
+        return 0 if obj else 1
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == u'result':

@@ -98,12 +98,10 @@ class Trip(AdminURLMixin, models.Model):
 
     pcas = models.ManyToManyField(
         u'partners.PCA',
-        blank=True, null=True,
         verbose_name=u"Related Interventions"
     )
     partners = models.ManyToManyField(
         u'partners.PartnerOrganization',
-        blank=True, null=True
     )
     main_observations = models.TextField(
         blank=True, null=True

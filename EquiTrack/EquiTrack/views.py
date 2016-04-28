@@ -71,12 +71,10 @@ class DashboardView(TemplateView):
                 'active': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.ACTIVE,
-                    amendment_number=0,
                 ).count(),
                 'implemented': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.IMPLEMENTED,
-                    amendment_number=0,
                 ).count(),
                 'in_process': PCA.objects.filter(
                     result_structure=current_structure,
@@ -85,7 +83,6 @@ class DashboardView(TemplateView):
                 'cancelled': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.CANCELLED,
-                    amendment_number=0,
                 ).count(),
             }
         }

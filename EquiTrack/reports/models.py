@@ -175,7 +175,6 @@ class Indicator(models.Model):
     in_activity_info = models.BooleanField(default=False)
     activity_info_indicators = models.ManyToManyField(
         'activityinfo.Indicator',
-        blank=True, null=True
     )
 
     class Meta:

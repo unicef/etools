@@ -129,7 +129,7 @@ class GovernmentInterventionAdminForm(forms.ModelForm):
         years = range(current_year - 1, current_year + 2)
 
         self.fields['year'] = forms.ChoiceField(
-            choices=[(year, year) for year in years] if years else []
+            choices=[('', 'Select')] + [(year, year) for year in years]
         )
 
 
