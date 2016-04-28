@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='trip',
             name='partners',
-            field=models.ManyToManyField(to='partners.PartnerOrganization'),
+            field=models.ManyToManyField(to='partners.PartnerOrganization', blank=True),
         ),
         migrations.AlterField(
             model_name='trip',
             name='pcas',
-            field=models.ManyToManyField(to='partners.PCA', verbose_name='Related Interventions'),
+            field=models.ManyToManyField(to='partners.PCA', verbose_name='Related Interventions', blank=True),
         ),
     ]
