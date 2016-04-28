@@ -92,8 +92,12 @@ POST_OFFICE = {
     }
 }
 EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', "djrill.mail.backends.djrill.DjrillBackend")  # Will send mail via mandrill service
-MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
+CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+MAIL_HOST = os.environ.get('MAIL_HOST', '')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = True
+EMAIL_PORT = 465
 ########## END EMAIL CONFIGURATION
 
 REST_FRAMEWORK = {
