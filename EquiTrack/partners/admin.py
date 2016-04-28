@@ -59,7 +59,6 @@ from .forms import (
     PartnershipForm,
     PartnersAdminForm,
     AssessmentAdminForm,
-    ResultChainAdminForm,
     AmendmentForm,
     AgreementForm,
     AuthorizedOfficersForm,
@@ -67,7 +66,8 @@ from .forms import (
     DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
-    LocationForm
+    LocationForm,
+    GovernmentInterventionAdminForm
 )
 
 
@@ -181,14 +181,6 @@ class PcaGrantInlineAdmin(admin.TabularInline):
 class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
-
-
-class ResultsInlineAdmin(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-results'
-    model = ResultChain
-    form = ResultChainAdminForm
-    formset = ParentInlineAdminFormSet
-    extra = 3
 
 
 class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
@@ -429,8 +421,10 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
 class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.StackedInline):
     model = GovernmentInterventionResult
+    form = GovernmentInterventionAdminForm
     fields = (
-        ('result', 'year', 'planned_amount',),
+        'result',
+        ('year', 'planned_amount',),
         'activities',
         'unicef_managers',
         'sector',
@@ -439,10 +433,11 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
     filter_horizontal = (
         'unicef_managers',
     )
+    extra = 1
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == u'result':
-            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output')
+            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output', hidden=False)
 
         return super(GovernmentInterventionResultAdminInline, self).formfield_for_foreignkey(
             db_field, request, **kwargs
@@ -458,6 +453,10 @@ class GovernmentInterventionAdmin(admin.ModelAdmin):
         }),
     )
     inlines = [GovernmentInterventionResultAdminInline]
+
+    suit_form_includes = (
+        ('admin/partners/government_funding.html', 'bottom'),
+    )
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.rel.to is PartnerOrganization:

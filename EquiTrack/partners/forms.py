@@ -47,7 +47,8 @@ from .models import (
     PartnerStaffMember,
     SupplyItem,
     DistributionPlan,
-    PartnershipBudget
+    PartnershipBudget,
+    GovernmentIntervention,
 )
 
 logger = logging.getLogger('partners.forms')
@@ -114,30 +115,22 @@ class AssessmentAdminForm(AutoSizeTextForm):
         return cleaned_data
 
 
-class ResultChainAdminForm(forms.ModelForm):
+class GovernmentInterventionAdminForm(forms.ModelForm):
 
     class Meta:
-        model = ResultChain
+        model = GovernmentIntervention
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
-        """
-        Filter linked results by sector and result structure
-        """
-        if 'parent_object' in kwargs:
-            self.parent_partnership = kwargs.pop('parent_object')
+        super(GovernmentInterventionAdminForm, self).__init__(*args, **kwargs)
 
-        super(ResultChainAdminForm, self).__init__(*args, **kwargs)
+        # by default add the previous 1 years and the next 2 years
+        current_year = date.today().year
+        years = range(current_year - 1, current_year + 2)
 
-        if hasattr(self, 'parent_partnership'):
-
-            results = Result.objects.filter(
-                result_structure=self.parent_partnership.result_structure
-            )
-            self.fields['result'].queryset = results
-
-            if self.instance.result_id:
-                self.fields['result'].queryset = results.filter(id=self.instance.result_id)
+        self.fields['year'] = forms.ChoiceField(
+            choices=[(year, year) for year in years] if years else []
+        )
 
 
 class AmendmentForm(forms.ModelForm):
@@ -442,8 +435,7 @@ class PartnershipForm(UserGroupForm):
             )
             row_num += 1
             row = series.to_dict()
-            # get the labels in order
-            labels = list(series.axes[0])
+            labels = list(series.axes[0])  # get the labels in order
             try:
                 type = label.split()[0].strip()
                 statement = row.pop('Details').strip()

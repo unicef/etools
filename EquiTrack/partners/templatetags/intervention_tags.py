@@ -131,30 +131,29 @@ def show_government_funding(value):
         return ''
 
     intervention = GovernmentIntervention.objects.get(id=int(value))
-    commitments = FundingCommitment.objects.filter(wbs=intervention)
+    outputs = list(intervention.results.values_list('result__wbs', flat=True))
+    commitments = FundingCommitment.objects.filter(wbs__in=outputs)
     data = tablib.Dataset()
-    fr_fc_summary = []
+    fc_summary = []
 
     for commit in commitments:
         row = SortedDict()
-        row['Grant'] = commit.grant.__unicode__()
-        row['FR Number'] = commit.fr_number
         row['WBS'] = commit.wbs
         row['FC Type'] = commit.fc_type
         row['FC Ref'] = commit.fc_ref
         row['Agreement Amount'] = commit.agreement_amount
         row['Commitment Amount'] = commit.commitment_amount
         row['Expenditure Amount'] = commit.expenditure_amount
-        fr_fc_summary.append(row)
+        fc_summary.append(row)
 
-    if fr_fc_summary:
-        data.headers = fr_fc_summary[0].keys()
-        for row in fr_fc_summary:
+    if fc_summary:
+        data.headers = fc_summary[0].keys()
+        for row in fc_summary:
             data.append(row.values())
 
         return data.html
 
-    return '<p>No FR Set</p>'
+    return '<p>No FCs Found</p>'
 
 
 @register.simple_tag

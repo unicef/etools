@@ -13,6 +13,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
 from jsonfield import JSONField
+from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
@@ -568,20 +569,6 @@ class AuthorizedOfficer(models.Model):
 post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 
-class IndicatorDueDates(models.Model):
-
-    intervention = models.ForeignKey(
-        'PCA',
-        blank=True, null=True,
-        related_name='indicator_due_dates'
-    )
-    due_date = models.DateField(blank=True, null=True)
-
-    class Meta:
-        verbose_name = 'Indicator Due Date'
-        verbose_name_plural = 'Indicator Due Dates'
-        ordering = ['-due_date']
-
 class PCA(AdminURLMixin, models.Model):
 
     IN_PROCESS = u'in_process'
@@ -932,7 +919,6 @@ class GovernmentIntervention(models.Model):
     )
     result_structure = models.ForeignKey(
         ResultStructure,
-        help_text=u'Which result structure does this partnership report under?'
     )
 
 
@@ -952,7 +938,9 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = models.TextField()
+    activities = hstore.DictionaryField(
+        blank=True, null=True
+    )
     unicef_managers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         verbose_name='Unicef focal points',
@@ -967,6 +955,8 @@ class GovernmentInterventionResult(models.Model):
         Section,
         null=True, blank=True
     )
+
+    objects = hstore.HStoreManager()
 
 
 class AmendmentLog(TimeStampedModel):
@@ -1290,6 +1280,21 @@ class ResultChain(models.Model):
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
+
+
+class IndicatorDueDates(models.Model):
+
+    intervention = models.ForeignKey(
+        'PCA',
+        blank=True, null=True,
+        related_name='indicator_due_dates'
+    )
+    due_date = models.DateField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Report Due Date'
+        verbose_name_plural = 'Report Due Dates'
+        ordering = ['-due_date']
 
 
 class IndicatorReport(TimeStampedModel, TimeFramedModel):

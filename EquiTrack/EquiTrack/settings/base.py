@@ -395,11 +395,12 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
+    'django_hstore',
 
     'vision',
+    'management',
     # you must list the app where your tenant model resides in
     'users',
-    'management',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20
