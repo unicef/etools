@@ -129,8 +129,9 @@ class GovernmentInterventionAdminForm(forms.ModelForm):
         years = range(current_year - 1, current_year + 2)
 
         self.fields['year'] = forms.ChoiceField(
-            choices=[('', 'Select')] + [(year, year) for year in years]
+            choices=[(year, year) for year in years]
         )
+        self.fields['year'].empty_label = u'Select year'
 
 
 class AmendmentForm(forms.ModelForm):

@@ -95,6 +95,17 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=256L,
         blank=True
     )
+    shared_partner = models.CharField(
+        help_text=u'Partner shared with UNDP or UNFPA?',
+        choices=Choices(
+            u'No',
+            u'with UNDP',
+            u'with UNFPA',
+            u'with UNDP & UNFPA',
+        ),
+        default=u'No',
+        max_length=50
+    )
     address = models.TextField(
         blank=True,
         null=True
