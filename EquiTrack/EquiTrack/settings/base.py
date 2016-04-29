@@ -117,6 +117,8 @@ REST_FRAMEWORK = {
     )
 }
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 SWAGGER_SETTINGS = {
     'is_authenticated': True,
     'is_superuser': True,
