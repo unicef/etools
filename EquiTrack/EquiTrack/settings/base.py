@@ -96,7 +96,6 @@ CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backend
 MAIL_HOST = os.environ.get('MAIL_HOST', '')
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-EMAIL_USE_TLS = True
 EMAIL_PORT = 465
 ########## END EMAIL CONFIGURATION
 
