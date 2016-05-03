@@ -29,14 +29,21 @@ def show_work_plan(value):
     data = tablib.Dataset()
     work_plan = SortedDict()
 
+    if results:
+        tf_cols = next(x.disaggregation for x in results if x.result_type.name == 'activity').keys()
+
     for num, result in enumerate(results):
         row = SortedDict()
         row['Code'] = result.indicator.code if result.indicator else result.result.code
         row['Details'] = result.indicator.name if result.indicator else result.result.name
         row['Targets'] = result.target if result.target else ''
-        # temporarily remove disaggregations since the number of fields can vary
-        # if result.disaggregation:
-        #     row.update(result.disaggregation)
+
+        if result.result_type.name == 'Activity':
+            row.update(result.disaggregation)
+        else:
+            row.update(dict.fromkeys(tf_cols, ''))
+
+
         row['Total'] = result.total if result.total else ''
         row['CSO'] = result.partner_contribution if result.partner_contribution else ''
         row['UNICEF Cash'] = result.unicef_cash if result.unicef_cash else ''

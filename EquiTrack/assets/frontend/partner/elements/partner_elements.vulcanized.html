@@ -39337,9 +39337,11 @@ commonBv.globals = {
    */
   /* Application theme */
   :root {
-    --dark-primary-color: #303F9F;
-    --default-primary-color: #3F51B5;
-    --light-primary-color: #C5CAE9;
+    --dark-primary-color: #42515A;
+    /*--dark-primary-color: #303F9F;*/
+    --default-primary-color: #1D85BF;
+    /*--default-primary-color: #3F51B5;*/
+    --light-primary-color: #00ADEF;
     --text-primary-color: #ffffff; /*text/icons*/
     --accent-color: #FF4081;
     /*--primary-background-color: #c5cae9;*/
@@ -39349,6 +39351,8 @@ commonBv.globals = {
     --secondary-text-color: #727272;
     --disabled-text-color: #bdbdbd;
     --divider-color: #B6B6B6;
+    --default-font-family: "-apple-system","Helvetica Neue",Roboto,"Segoe UI",sans-serif;
+
     /* Components */
     /* paper-drawer-panel */
     --drawer-menu-color: #ffffff;
@@ -39358,6 +39362,7 @@ commonBv.globals = {
     --paper-menu-background-color: #fff;
     --menu-link-color: #111111;
   }
+  
   /* General styles */
   #drawerToolbar {
     color: var(--secondary-text-color);
@@ -39374,6 +39379,7 @@ commonBv.globals = {
     width: calc(98.66% - 16px);
     margin: 16px auto;
     background: white;
+    font-family: var(--default-font-family);  
   }
   paper-menu iron-icon {
     margin-right: 33px;
@@ -39387,7 +39393,7 @@ commonBv.globals = {
     @apply(--layout-center);
     text-decoration: none;
     color: var(--menu-link-color);
-    font-family: 'Roboto', 'Noto', sans-serif;
+    font-family: var(--default-font-family);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     font-size: 14px;
@@ -39395,6 +39401,9 @@ commonBv.globals = {
     line-height: 24px;
     min-height: 48px;
     padding: 0 16px;
+  }
+  paper-toolbar {
+    --paper-toolbar-background: var(--dark-primary-color);
   }
   paper-toolbar.tall .app-name {
     font-size: 40px;
