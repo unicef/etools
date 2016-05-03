@@ -30,7 +30,7 @@ def show_work_plan(value):
     work_plan = SortedDict()
 
     if results:
-        tf_cols = next(x.disaggregation for x in results if x.result_type.name == 'activity').keys()
+        tf_cols = next(x.disaggregation for x in results if x.result_type.name == 'Activity').keys()
 
     for num, result in enumerate(results):
         row = SortedDict()
