@@ -12,11 +12,6 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='indicatorreport',
-            name='report_status',
-            field=models.CharField(default=b'ontrack', max_length=15, choices=[(b'ontrack', b'On Track'), (b'constrained', b'Constrained'), (b'noprogress', b'No Progress'), (b'targetmet', b'Target Met')]),
-        ),
-        migrations.AddField(
             model_name='pca',
             name='planned_visits',
             field=models.IntegerField(default=0),
