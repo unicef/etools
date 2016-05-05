@@ -13,7 +13,8 @@ def updateResultChain(apps, schema_editor):
     for rc in ResultChain.objects.all():
 
         if rc.disaggregation is not None:
-            rc.disaggregation = '{' + rc.disaggregation.replace('=>', ':') + '}'
+            if rc.disaggregation[0] != '{':
+                rc.disaggregation = '{' + rc.disaggregation.replace('=>', ':') + '}'
 
         rc.save()
 
@@ -26,8 +27,7 @@ def revert(apps, schema_editor):
         if rc.disaggregation == '{}':
             rc.disaggregation = None
         if rc.disaggregation is not None:
-            rc.disaggregation = rc.disaggregation[1:-1].replace(':', '=>')
-
+            rc.disaggregation = rc.disaggregation[1:-1]
         rc.save()
 
 
