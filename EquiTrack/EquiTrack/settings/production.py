@@ -69,7 +69,7 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
             storage.open('saml/federationmetadata.xml') as meta:
         with open('EquiTrack/saml/certs/saml.key', 'w+') as new_key, \
                 open('EquiTrack/saml/certs/sp.crt', 'w+') as new_crt, \
-                open('EquiTrack/saml/federationmetadata.xml') as new_meta:
+                open('EquiTrack/saml/federationmetadata.xml', 'w+') as new_meta:
             new_key.write(key.read())
             new_crt.write(crt.read())
             new_meta.write(meta.read())
