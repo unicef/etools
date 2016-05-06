@@ -58,9 +58,9 @@ class FundingSynchronizer(VisionDataSynchronizer):
             else:
                 try:
                     funding_commitment, created = FundingCommitment.objects.get_or_create(
+                        grant=grant,
                         fc_ref=fc_line["COMMITMENT_REF"]
                     )
-                    funding_commitment.grant = grant
                     funding_commitment.fr_number = fc_line["FR_DOC_NUMBER"]
                     funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
                     funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])

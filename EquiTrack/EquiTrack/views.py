@@ -71,12 +71,10 @@ class DashboardView(TemplateView):
                 'active': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.ACTIVE,
-                    amendment_number=0,
                 ).count(),
                 'implemented': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.IMPLEMENTED,
-                    amendment_number=0,
                 ).count(),
                 'in_process': PCA.objects.filter(
                     result_structure=current_structure,
@@ -85,7 +83,6 @@ class DashboardView(TemplateView):
                 'cancelled': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.CANCELLED,
-                    amendment_number=0,
                 ).count(),
             }
         }
@@ -136,7 +133,7 @@ class UserDashboardView(TemplateView):
                 user=self.request.user).order_by("-id")[:10],
             'pcas': PCA.objects.filter(unicef_managers=user).filter(
                 Q(status=PCA.ACTIVE) | Q(status=PCA.IN_PROCESS)
-            ).order_by("number", "-amendment_number")[:10],
+            ).order_by("number", "-created_at")[:10],
             'action_points': ActionPoint.objects.filter(
                 Q(status='open') | Q(status='ongoing'),
                 person_responsible=user).order_by("-due_date")[:10]

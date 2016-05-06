@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 
 from jsonfield import JSONField
-from filer.fields.file import FilerFileField
+from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
@@ -44,7 +44,7 @@ from supplies.tasks import (
     set_unisupply_distribution,
     set_unisupply_user
 )
-
+from users.models import Section
 from . import emails
 
 
@@ -60,7 +60,7 @@ RISK_RATINGS = (
 )
 
 
-class PartnerOrganization(models.Model):
+class PartnerOrganization(AdminURLMixin, models.Model):
 
     partner_type = models.CharField(
         max_length=50,
@@ -94,6 +94,17 @@ class PartnerOrganization(models.Model):
     description = models.CharField(
         max_length=256L,
         blank=True
+    )
+    shared_partner = models.CharField(
+        help_text=u'Partner shared with UNDP or UNFPA?',
+        choices=Choices(
+            u'No',
+            u'with UNDP',
+            u'with UNFPA',
+            u'with UNDP & UNFPA',
+        ),
+        default=u'No',
+        max_length=50
     )
     address = models.TextField(
         blank=True,
@@ -130,6 +141,9 @@ class PartnerOrganization(models.Model):
         max_length=50,
         null=True,
     )
+    last_assessment_date = models.DateField(
+        blank=True, null=True
+    )
     core_values_assessment_date = models.DateField(
         blank=True, null=True,
         verbose_name=u'Date positively assessed against core values'
@@ -148,13 +162,8 @@ class PartnerOrganization(models.Model):
     def __unicode__(self):
         return self.name
 
-    @property
-    def latest_assessment(self):
-        assessment = self.assessments.last()
-        if assessment is None:
-            return 'Missing'
-        else:
-            return assessment.type
+    def latest_assessment(self, type):
+        return self.assessments.filter(type=type).order_by('completed_date').last()
 
     @property
     def micro_assessment_needed(self):
@@ -184,8 +193,7 @@ class PartnerOrganization(models.Model):
 
     @property
     def hact_min_requirements(self):
-        audit = 'No'
-        programme_visits = spot_checks = 0
+        programme_visits = spot_checks = audits = 0
         cash_transferred = self.actual_cash_transferred
         if cash_transferred <= 50000.00:
             programme_visits = 1
@@ -207,9 +215,17 @@ class PartnerOrganization(models.Model):
                 programme_visits = 4
                 spot_checks = 3
         if self.total_cash_transferred > 500000.00:
-            audit = 'Yes'
+            audits = 1
+            current_cycle = ResultStructure.current()
+            last_audit = self.latest_assessment(u'Scheduled Audit report')
+            if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
+                audits = 0
 
-        return programme_visits, spot_checks, audit
+        return {
+            'programme_visits': programme_visits,
+            'spot_checks': spot_checks,
+            'audits': audits
+        }
 
     @property
     def planned_cash_transfers(self):
@@ -219,7 +235,7 @@ class PartnerOrganization(models.Model):
         year = datetime.date.today().year
         total = PartnershipBudget.objects.filter(
             partnership__partner=self,
-            partnership__status=PCA.ACTIVE,
+            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
             year=year).aggregate(
             models.Sum('unicef_cash')
         )
@@ -233,7 +249,7 @@ class PartnerOrganization(models.Model):
         year = datetime.date.today().year
         total = FundingCommitment.objects.filter(
             intervention__partner=self,
-            intervention__status=PCA.ACTIVE,
+            intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
             end__year=year).aggregate(
             models.Sum('expenditure_amount')
         )
@@ -249,10 +265,19 @@ class PartnerOrganization(models.Model):
             end__gte=cp.from_date,
             end__lte=cp.to_date,
             intervention__partner=self,
-            intervention__status=PCA.ACTIVE).aggregate(
+            intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
             models.Sum('expenditure_amount')
         )
         return total[total.keys()[0]] or 0
+
+    @property
+    def planned_visits(self):
+        planned = self.documents.filter(
+            status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
+        ).aggregate(
+            models.Sum('planned_visits')
+        )
+        return planned[planned.keys()[0]] or 0
 
     @property
     def programmatic_visits(self):
@@ -271,6 +296,9 @@ class PartnerOrganization(models.Model):
             trip__status=u'completed',
             trip__travel_type=u'spot_check'
         ).count()
+
+    def audits(self):
+        return self.assessments.filter(type=u'Scheduled Audit report').count()
 
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
@@ -337,6 +365,7 @@ class Assessment(models.Model):
             u'Simplified Checklist',
             u'Scheduled Audit report',
             u'Special Audit report',
+            u'High Risk Assumed',
             u'Other',
         ),
     )
@@ -397,44 +426,6 @@ class Assessment(models.Model):
             date=self.completed_date.strftime("%d-%m-%Y") if
             self.completed_date else u'NOT COMPLETED'
         )
-
-
-class Recommendation(models.Model):
-
-    PARTNER = u'partner'
-    FUNDS = u'funds'
-    STAFF = u'staff'
-    POLICY = u'policy'
-    INT_AUDIT = u'int-audit'
-    EXT_AUDIT = u'ext-audit'
-    REPORTING = u'reporting'
-    SYSTEMS = u'systems'
-    SUBJECT_AREAS = (
-        (PARTNER, u'Implementing Partner'),
-        (FUNDS, u'Funds Flow'),
-        (STAFF, u'Staffing'),
-        (POLICY, u'Acct Policies & Procedures'),
-        (INT_AUDIT, u'Internal Audit'),
-        (EXT_AUDIT, u'External Audit'),
-        (REPORTING, u'Reporting and Monitoring'),
-        (SYSTEMS, u'Information Systems'),
-    )
-
-    assessment = models.ForeignKey(Assessment)
-    subject_area = models.CharField(max_length=50, choices=SUBJECT_AREAS)
-    description = models.CharField(max_length=254)
-    level = models.CharField(max_length=50, choices=RISK_RATINGS,
-                             verbose_name=u'Priority Flag')
-    closed = models.BooleanField(default=False, verbose_name=u'Closed?')
-    completed_date = models.DateField(blank=True, null=True)
-
-    @classmethod
-    def send_action(cls, sender, instance, created, **kwargs):
-        pass
-
-    class Meta:
-        verbose_name = 'Key recommendation'
-        verbose_name_plural = 'Key recommendations'
 
 
 def get_agreement_path(instance, filename):
@@ -690,11 +681,7 @@ class PCA(AdminURLMixin, models.Model):
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
-    # contacts #TODO: Remove
-    unicef_mng_first_name = models.CharField(max_length=64L, blank=True)
-    unicef_mng_last_name = models.CharField(max_length=64L, blank=True)
-    unicef_mng_email = models.CharField(max_length=128L, blank=True)
-
+    # managers and focal points
     unicef_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='approved_partnerships',
@@ -706,13 +693,6 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
-
-    #TODO: Remove
-    partner_mng_first_name = models.CharField(max_length=64L, blank=True)
-    partner_mng_last_name = models.CharField(max_length=64L, blank=True)
-    partner_mng_email = models.CharField(max_length=128L, blank=True)
-    partner_mng_phone = models.CharField(max_length=64L, blank=True)
-
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         verbose_name=u'Signed by partner',
@@ -723,7 +703,6 @@ class PCA(AdminURLMixin, models.Model):
         auto_choose=False,
         blank=True, null=True,
     )
-
     partner_focal_point = ChainedForeignKey(
         PartnerStaffMember,
         related_name='my_partnerships',
@@ -734,24 +713,14 @@ class PCA(AdminURLMixin, models.Model):
         blank=True, null=True,
     )
 
-    # budget TODO: Remove
-    partner_contribution_budget = models.IntegerField(null=True, blank=True, default=0)
-    unicef_cash_budget = models.IntegerField(null=True, blank=True, default=0)
-    in_kind_amount_budget = models.IntegerField(null=True, blank=True, default=0)
-    cash_for_supply_budget = models.IntegerField(null=True, blank=True, default=0)
-    total_cash = models.IntegerField(null=True, blank=True, verbose_name='Total Budget', default=0)
     fr_number = models.CharField(max_length=50, null=True, blank=True)
+    planned_visits = models.IntegerField(default=0)
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
     current = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    amendment = models.BooleanField(default=False)
-    amended_at = models.DateTimeField(null=True)
-    amendment_number = models.IntegerField(default=0)
-    original = models.ForeignKey('PCA', null=True, related_name='amendments')
 
     class Meta:
         verbose_name = 'Intervention'
@@ -889,8 +858,8 @@ class PCA(AdminURLMixin, models.Model):
         """
         cp = ResultStructure.current()
         total = self.funding_commitments.filter(
-            end__gte=cp.to_date,
-            end__lte=cp.to_date
+            end__gte=cp.from_date,
+            end__lte=cp.to_date,
         ).aggregate(
             models.Sum('expenditure_amount')
         )
@@ -928,7 +897,7 @@ class PCA(AdminURLMixin, models.Model):
         manager, created = Group.objects.get_or_create(
             name=u'Partnership Manager'
         )
-        managers = manager.user_set.filter(profile__country=connection.tenant) | instance.unicef_managers.all()
+        managers = set(manager.user_set.filter(profile__country=connection.tenant) | instance.unicef_managers.all())
         recipients = [user.email for user in managers]
 
         if created:  # new partnership
@@ -951,6 +920,54 @@ class PCA(AdminURLMixin, models.Model):
 
 
 post_save.connect(PCA.send_changes, sender=PCA)
+
+
+class GovernmentIntervention(models.Model):
+
+    partner = models.ForeignKey(
+        PartnerOrganization,
+        related_name='work_plans',
+    )
+    result_structure = models.ForeignKey(
+        ResultStructure,
+    )
+
+
+class GovernmentInterventionResult(models.Model):
+
+    intervention = models.ForeignKey(
+        GovernmentIntervention,
+        related_name='results'
+    )
+    result = models.ForeignKey(
+        Result,
+    )
+    year = models.CharField(
+        max_length=4,
+    )
+    planned_amount = models.IntegerField(
+        default=0,
+        verbose_name='Planned Cash Transfers'
+    )
+    activities = hstore.DictionaryField(
+        blank=True, null=True
+    )
+    unicef_managers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Unicef focal points',
+        blank=True
+    )
+    sector = models.ForeignKey(
+        Sector,
+        blank=True, null=True,
+        verbose_name='Programme/Sector'
+    )
+    section = models.ForeignKey(
+        Section,
+        null=True, blank=True
+    )
+
+    objects = hstore.HStoreManager()
 
 
 class AmendmentLog(TimeStampedModel):
@@ -1196,7 +1213,6 @@ class PCAFile(models.Model):
 
     pca = models.ForeignKey(PCA, related_name='attachments')
     type = models.ForeignKey(FileType)
-    file = FilerFileField(blank=True, null=True)
     attachment = models.FileField(
         max_length=255,
         upload_to=get_file_path
@@ -1263,6 +1279,7 @@ class ResultChain(models.Model):
     # variable disaggregation's that may be present in the work plan
     disaggregation = JSONField(null=True)
 
+
     @property
     def total(self):
 
@@ -1276,7 +1293,29 @@ class ResultChain(models.Model):
         )
 
 
+class IndicatorDueDates(models.Model):
+
+    intervention = models.ForeignKey(
+        'PCA',
+        blank=True, null=True,
+        related_name='indicator_due_dates'
+    )
+    due_date = models.DateField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Report Due Date'
+        verbose_name_plural = 'Report Due Dates'
+        ordering = ['-due_date']
+
+
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
+
+    STATUS_CHOICES = Choices(
+        ('ontrack', _('On Track')),
+        ('constrained', _('Constrained')),
+        ('noprogress', _('No Progress')),
+        ('targetmet', _('Target Met'))
+    )
 
     # FOR WHOM / Beneficiary
     #  -  ResultChain
@@ -1298,8 +1337,9 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     location = models.ForeignKey(Location, blank=True, null=True)
 
     # Metadata
-    #  - Remarks
+    #  - Remarks, Report Status
     remarks = models.TextField(blank=True, null=True)
+    report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
 
 
 class SupplyPlan(models.Model):

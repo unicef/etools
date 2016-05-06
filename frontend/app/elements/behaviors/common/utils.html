@@ -44,14 +44,17 @@ var config = {
       template: '/api/interventions/<%=id%>/'
     },
     interventions: {
-      template: '/api/partners/interventions/',
-      exp: 1*1000*60
+      template: '/api/interventions/',
+      exp: 1*1000*60  // cache for this amount of time (in milliseconds)
     },
     resultChainDetails: {
       template: '/api/interventions/<%=interventionId%>/results/<%=rcId%>/'
     },
     newIndicatorReport: {
-      template: '/api/interventions/<%=interventionId%>/results/<%=rcId%>/reports'
+      template: '/api/interventions/<%=interventionId%>/results/<%=rcId%>/reports/'
+    },
+    bulkIndicatorReport: {
+      template: '/api/bulk_reports/'
     }
   },
   paths: {

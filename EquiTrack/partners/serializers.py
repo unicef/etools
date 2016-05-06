@@ -118,13 +118,33 @@ class ResultChainSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResultChain
 
+class LocationSerializer(serializers.Serializer):
+
+    latitude = serializers.CharField(source='geo_point.y')
+    longitude = serializers.CharField(source='geo_point.x')
+    location_name = serializers.CharField(source='name')
+    location_type = serializers.CharField(source='gateway.name')
+    gateway_id = serializers.CharField(source='gateway.id')
+    p_code = serializers.CharField()
+    parterships = serializers.SerializerMethodField('get_pcas')
+
+    def get_pcas(self, location):
+        pcas = set([
+            loc.pca for loc in
+            location.gwpcalocation_set.all()
+        ])
+        return InterventionSerializer(pcas, many=True).data
+
+    class Meta:
+        model = Location
+
 
 class IndicatorReportSerializer(serializers.ModelSerializer):
     disaggregated = serializers.BooleanField(read_only=True)
     partner_staff_member = serializers.SerializerMethodField(read_only=True)
     indicator = serializers.SerializerMethodField(read_only=True)
+    location_object = LocationSerializer(source='location', read_only=True)
     disaggregation = serializers.JSONField()
-
 
     class Meta:
         model = IndicatorReport
@@ -137,10 +157,23 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         # TODO: handle validation
+        # result_chain.partner.partner.id
+        user = self.context['request'].user
+        rc = data.get('result_chain')
+        # make sure only a partner staff member can create a new submission on a partner result chain
+        # we could allow superusers by checking for superusers first
+        if not (user or rc) or \
+                (user.profile.partner_staff_member not in
+                    rc.partnership.partner.partnerstaffmember_set.values_list('id', flat=True)):
+            raise Exception('hell')
+
         return data
 
     def create(self, validated_data):
         result_chain = validated_data.get('result_chain')
+        # for multi report this needs to be
+        # refreshed from the db in order to reflect the latest value
+        result_chain.refresh_from_db()
         validated_data['indicator'] = result_chain.indicator
 
         try:
@@ -192,27 +225,6 @@ class InterventionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
-
-
-class LocationSerializer(serializers.Serializer):
-
-    latitude = serializers.CharField(source='geo_point.y')
-    longitude = serializers.CharField(source='geo_point.x')
-    location_name = serializers.CharField(source='name')
-    location_type = serializers.CharField(source='gateway.name')
-    gateway_id = serializers.CharField(source='gateway.id')
-    p_code = serializers.CharField()
-    parterships = serializers.SerializerMethodField('get_pcas')
-
-    def get_pcas(self, location):
-        pcas = set([
-            loc.pca for loc in
-            location.gwpcalocation_set.all()
-        ])
-        return InterventionSerializer(pcas, many=True).data
-
-    class Meta:
-        model = Location
 
 
 class GWLocationSerializer(serializers.ModelSerializer):

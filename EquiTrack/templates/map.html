@@ -552,9 +552,9 @@
                         if (valuep.distribution_plans != null) {
 
 
-                            popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
+                            popup_content_tabs += "<div id='dist" + keyp + "' style='padding-top: 5px;'>" +
                                             "<div class='row'>" +
-                                    "<div class='row col-md-12'><label class='col-md-10 control-label'>Distribution Plans:</label><div id='partner_name' class='col-md-2'></div></div>" +
+                                    "<div class='row col-md-12'><label class='col-md-10 control-label'>Distribution Plans:</label><div class='col-md-2'></div></div>" +
                                     "<div class='row col-md-12'><div class='col-md-1'></div><label class='col-md-4 control-label'>Item Type</label><label class='col-md-4 control-label'>Delivered</label></div>" +
                                     "</div>";
 
@@ -562,13 +562,14 @@
 
                                 if(valueq.location_name ==valueDist.site) {
 
-                                    popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
+                                    popup_content_tabs += "<div id='dist" + keyp + "' style='padding-top: 5px;'>" +
                                             "<div class='row'>" +
                                             "<div class='row col-md-12'><div class='col-md-1'></div><div class='col-md-4'>"+valueDist.item+"</div><div id='dist_delivered' class='col-md-4'>" + valueDist.delivered + "/" + valueDist.quantity + "</div></div>" +
                                             "</div>";
                                 }
                             });
                         }
+
                         //looping for sectors for one PD
 
                         if (valuep.sectors != null){
@@ -598,11 +599,13 @@
 
                             });
                     }
+                                                popup_content_tabs  += "</div></div>";
                             popup_content_tabs += '</div>';
                     });
                     popup_content_navs += '</ul>';
                     popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
                     console.log(popup_content);
+                    //alert(popup_content);
 
                     var RedIcon = L.icon({
                         iconUrl: '../static/img/marker-icon.png'

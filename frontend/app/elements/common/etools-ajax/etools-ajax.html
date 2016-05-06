@@ -87,6 +87,7 @@ Example:
         window.location = this.getEp('login');
         return;
       }
+      window.alert('Page has not loaded sucessfully '+event.srcElement.url);
       this.fire('error', {
         request: event,
         error: error.error

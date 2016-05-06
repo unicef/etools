@@ -135,6 +135,26 @@ class IndicatorAdmin(admin.ModelAdmin):
     # ]
 
 
+class HiddenResultFilter(admin.SimpleListFilter):
+
+    title = 'Show Hidden'
+    parameter_name = 'hidden'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (True, 'Yes'),
+            (False, 'No')
+        ]
+
+    def queryset(self, request, queryset):
+
+        value = self.value()
+        if value == 'True':
+            return queryset.filter(hidden=True)
+        return queryset.filter(hidden=False)
+
+
 class ResultAdmin(MPTTModelAdmin):
     form = AutoSizeTextForm
     mptt_indent_field = '__unicode__'
@@ -146,7 +166,7 @@ class ResultAdmin(MPTTModelAdmin):
         'result_structure',
         'sector',
         'result_type',
-        'hidden',
+        HiddenResultFilter,
     )
     list_display = (
         '__unicode__',
@@ -160,21 +180,23 @@ class ResultAdmin(MPTTModelAdmin):
         'show_results'
     )
 
-    def get_queryset(self, request):
-        queryset = super(ResultAdmin, self).get_queryset(request)
-        return queryset.filter(hidden=False)
-
     def hide_results(self, request, queryset):
 
+        results = 0
         for result in queryset:
             result.hidden = True
             result.save()
+            results += 1
+        self.message_user(request, '{} results were hidden'.format(results))
             
     def show_results(self, request, queryset):
 
+        results = 0
         for result in queryset:
             result.hidden = False
             result.save()
+            results += 1
+        self.message_user(request, '{} results were shown'.format(results))
 
 
 admin.site.register(Result, ResultAdmin)
@@ -184,3 +206,4 @@ admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 #admin.site.register(ResultChain)
+#admin.site.register(ResultType)
