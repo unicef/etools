@@ -36,6 +36,7 @@ from .filters import (
     SupervisorFilter,
     OwnerFilter
 )
+from reports.models import Result
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -61,6 +62,14 @@ class TripFundsInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-planning'
     extra = 3
     max_num = 3
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.name == u'result':
+            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Activity', hidden=False)
+
+        return super(TripFundsInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
 
 class ActionPointInlineAdmin(CountryUsersAdminMixin, admin.StackedInline):

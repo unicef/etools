@@ -1,13 +1,3 @@
-<!--
-@license
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
--->
-
 <style is="custom-style">
   /*
    Polymer includes a shim for CSS Custom Properties that we can use for application theming.
@@ -28,6 +18,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     --secondary-text-color: #727272;
     --disabled-text-color: #bdbdbd;
     --divider-color: #B6B6B6;
+    --default-font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;;
+    
     /* Components */
     /* paper-drawer-panel */
     --drawer-menu-color: #ffffff;
@@ -66,7 +58,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     @apply(--layout-center);
     text-decoration: none;
     color: var(--menu-link-color);
-    font-family: 'Roboto', 'Noto', sans-serif;
+    font-family: var(--default-font-family);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     font-size: 14px;
