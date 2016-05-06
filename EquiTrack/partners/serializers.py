@@ -171,6 +171,9 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         result_chain = validated_data.get('result_chain')
+        # for multi report this needs to be
+        # refreshed from the db in order to reflect the latest value
+        result_chain.refresh_from_db()
         validated_data['indicator'] = result_chain.indicator
 
         try:
