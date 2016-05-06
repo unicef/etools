@@ -65,11 +65,14 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
     from storages.backends.azure_storage import AzureStorage
     storage = AzureStorage()
     with storage.open('saml/certs/saml.key') as key, \
-            storage.open('saml/certs/sp.crt') as crt:
+            storage.open('saml/certs/sp.crt') as crt, \
+            storage.open('saml/federationmetadata.xml') as meta:
         with open('EquiTrack/saml/certs/saml.key', 'w+') as new_key, \
-                open('EquiTrack/saml/certs/sp.crt', 'w+') as new_crt:
+                open('EquiTrack/saml/certs/sp.crt', 'w+') as new_crt, \
+                open('EquiTrack/saml/federationmetadata.xml') as new_meta:
             new_key.write(key.read())
             new_crt.write(crt.read())
+            new_meta.write(meta.read())
 
 
 SECRET_KEY = os.environ.get("SECRET_KEY", SECRET_KEY)
@@ -135,7 +138,7 @@ SAML_CONFIG = {
     },
     # where the remote metadata is stored
     'metadata': {
-        "local": [join(DJANGO_ROOT, 'saml/FederationMetadata.xml')],
+        "local": [join(DJANGO_ROOT, 'saml/federationmetadata.xml')],
         # "remote": [
         #     {
         #         "url": "http://sts.unicef.org/federationmetadata/2007-06/federationmetadata.xml",
