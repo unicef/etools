@@ -33,6 +33,7 @@ from .models import (
     PartnerOrganization,
     Assessment,
     Agreement,
+    BankDetails,
     RAMIndicator,
     ResultChain,
     PartnerStaffMember,
@@ -47,7 +48,6 @@ from .models import (
     GovernmentInterventionResult,
     IndicatorDueDates
 )
-
 from .filters import (
     PCASectorFilter,
     PCADonorFilter,
@@ -631,6 +631,12 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
         return 0
 
 
+class BankDetailsInlineAdmin(admin.StackedInline):
+    model = BankDetails
+    verbose_name_plural = "Bank Details"
+    extra = 0
+
+
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
     list_filter = (
@@ -678,6 +684,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     )
     inlines = [
         AgreementAmendmentLogInlineAdmin,
+        BankDetailsInlineAdmin,
         AuthorizedOfficersInlineAdmin,
     ]
 

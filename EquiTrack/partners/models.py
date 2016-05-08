@@ -552,6 +552,25 @@ class Agreement(TimeStampedModel):
         super(Agreement, self).save(**kwargs)
 
 
+class BankDetails(models.Model):
+
+    agreement = models.ForeignKey(Agreement, related_name='bank_details')
+    bank_name = models.CharField(max_length=255, null=True, blank=True)
+    bank_address = models.CharField(
+        max_length=256L,
+        blank=True
+    )
+    account_title = models.CharField(max_length=255, null=True, blank=True)
+    account_number = models.CharField(max_length=50, null=True, blank=True)
+    routing_details = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
+    )
+    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
+
 class AuthorizedOfficer(models.Model):
     agreement = models.ForeignKey(
         Agreement,

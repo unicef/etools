@@ -13,7 +13,7 @@ from users.models import UserProfile
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import CountryUsersAdminMixin
-from EquiTrack.forms import AutoSizeTextForm
+from EquiTrack.forms import AutoSizeTextForm, RequireOneFormSet
 from .models import (
     Trip,
     LinkedPartner,
@@ -148,26 +148,28 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'to_date',
         u'supervisor',
         u'status',
+        u'ta_required',
+        u'ta_number',
         u'approved_date',
         u'attachments',
         u'outstanding_actions',
         u'show_driver_trip',
     )
     list_filter = (
-        OwnerFilter,
-        SupervisorFilter,
-        u'section',
-        u'office',
+        (u'owner', admin.RelatedOnlyFieldListFilter),
+        (u'supervisor', admin.RelatedOnlyFieldListFilter),
+        (u'section', admin.RelatedOnlyFieldListFilter),
+        (u'office', admin.RelatedOnlyFieldListFilter),
         u'from_date',
         u'to_date',
         u'travel_type',
         u'international_travel',
-        u'budget_owner',
+        (u'budget_owner', admin.RelatedOnlyFieldListFilter),
         u'status',
         u'approved_date',
-        u'partners',
         u'pending_ta_amendment',
         TripReportFilter,
+        u'ta_trip_took_place_as_planned',
         PartnerFilter,
     )
     filter_vertical = (
@@ -196,12 +198,12 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                  (u'international_travel', u'representative',),
                  u'approved_by_human_resources',)
         }),
-        (u'Partnership Details', {
-            u'classes': (u'suit-tab suit-tab-planning', u'collapse',),
-            u'fields':
-                (u'pcas',
-                 u'partners',),
-        }),
+        # (u'Partnership Details', {
+        #     u'classes': (u'suit-tab suit-tab-planning', u'collapse',),
+        #     u'fields':
+        #         (u'pcas',
+        #          u'partners',),
+        # }),
         (u'Approval', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
@@ -393,8 +395,8 @@ class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
         u'status'
     )
     list_filter = (
-        u'trip__owner',
-        u'person_responsible',
+        #(u'trip__owner', admin.RelatedOnlyFieldListFilter),
+        (u'person_responsible', admin.RelatedOnlyFieldListFilter),
         u'status',
     )
     search_fields = (
