@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from django.db.models import Q
+
 __author__ = 'unicef-leb-inn'
 
 from django import forms
@@ -72,6 +74,6 @@ class UserGroupForm(forms.ModelForm):
                 name=self.group_name
             )
             self.fields[self.user_field].queryset = group.user_set.filter(
-                profile__country__schema_name=connection.schema_name,
-                profile__partner_staff_member__isnull=True
+                Q(profile__country__schema_name=connection.schema_name) &
+                Q(Q(profile__partner_staff_member__isnull=True) | Q(profile__partner_staff_member=0))
             )

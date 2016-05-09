@@ -22,13 +22,13 @@ from rest_framework.exceptions import (
     PermissionDenied,
     ParseError,
 )
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from users.models import UserProfile, Office, Section
 from locations.models import get_random_color
 from partners.models import FileType
 from .models import Trip, FileAttachment
-from .serializers import TripSerializer, Trip2Serializer, FileAttachmentSerializer
+from .serializers import TripSerializer, TripCreateSerializer, FileAttachmentSerializer
 from .forms import TripFilterByDateForm
 from rest_framework import status
 
@@ -69,48 +69,6 @@ class AppsIOSPlistView(View):
             result = my_f.read()
 
         return HttpResponse(result, content_type="application/octet-stream")
-
-
-class Trips2ViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
-    """
-    Returns a list of all Trips
-    """
-    queryset = Trip.objects.all()
-    serializer_class = Trip2Serializer
-
-    def create(self, request, *args, **kwargs):
-        """
-        Create a new Trip
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        partners = request.data['partners']
-        pcas = request.data['pcas']
-
-        serializer.instance = serializer.save()
-        serializer.instance.created_date = datetime.datetime.strptime(request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
-        serializer.instance.save()
-        data = serializer.data
-
-        try:
-            for partner in partners:
-                serializer.instance.partners.add(partner)
-
-            for pca in pcas:
-                serializer.instance.pcas.add(pca)
-
-            serializer.save()
-        except Exception:
-            pass
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(data, status=status.HTTP_201_CREATED,
-                        headers=headers)
 
 
 class TripFileViewSet(mixins.RetrieveModelMixin,
@@ -159,21 +117,75 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
 
 class TripsViewSet(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
                    viewsets.GenericViewSet):
-
+    """
+    Returns a list of Trips
+    """
     model = Trip
     lookup_url_kwarg = 'trip'
     serializer_class = TripSerializer
-    parser_classes = (MultiPartParser, FormParser)
+    # parser_classes = (MultiPartParser, FormParser)
 
     def get_queryset(self):
         user = self.request.user
         trips = Trip.get_current_trips(user)
         return trips
 
+    def create(self, request, *args, **kwargs):
+        """
+        Create a new Trip
+        :return: JSON
+        """
+        self.parser_classes = (JSONParser,)
+        self.serializer_class = TripCreateSerializer
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        partners = request.data['partners']
+        pcas = request.data['pcas']
+
+        serializer.instance = serializer.save()
+        serializer.instance.created_date = datetime.datetime.strptime(request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        serializer.instance.save()
+        data = serializer.data
+
+        try:
+            for partner in partners:
+                serializer.instance.partners.add(partner)
+
+            for pca in pcas:
+                serializer.instance.pcas.add(pca)
+
+            serializer.save()
+        except Exception:
+            pass
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(data, status=status.HTTP_201_CREATED,
+                        headers=headers)
+
+    def retrieve(self, request, trip=None):
+        """
+        Returns the Trip object json
+        """
+        try:
+            queryset = Trip.objects.get(id=trip)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except Trip.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
     @detail_route(methods=['post'])
     def upload(self, request, **kwargs):
-
+        """
+        Upload image/photo to the Trip
+        """
+        self.parser_classes = (MultiPartParser, FormParser)
         # get the file object
         file_obj = request.data.get('file')
         logging.info("File received: {}".format(file_obj))
@@ -221,9 +233,12 @@ class TripsViewSet(mixins.RetrieveModelMixin,
 
     @detail_route(methods=['post'], url_path='(?P<action>\D+)')
     def action(self, request, *args, **kwargs):
+        """
+        Change status to the Trip
+        """
         action = kwargs.get('action', False)
         current_user = self.request.user
-
+        self.parser_classes = (MultiPartParser, FormParser)
         # for now... hardcoding some validation in here.
         if action not in [
             "approved",
