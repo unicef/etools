@@ -4,6 +4,12 @@ from django.core.urlresolvers import resolve
 from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
 
 from tenant_schemas.test.cases import TenantTestCase
+from tenant_schemas.test.client import TenantClient
+
+
+class APITenantClient(TenantClient, APIClient):
+    def __init__(self, tenant, **defaults):
+        super(APITenantClient, self).__init__(tenant=tenant, defaults=defaults)
 
 
 class APITenantTestCase(TenantTestCase):

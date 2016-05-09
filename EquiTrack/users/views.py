@@ -98,8 +98,8 @@ class ProfileEdit(FormView):
     def get_context_data(self, **kwargs):
         context = super(ProfileEdit, self).get_context_data(**kwargs)
         context.update({
-            'office_list': connection.tenant.oofices.all().order_by('name'),
-            'section_list': connection.tenant.sections.objects.all().order_by('name')
+            'office_list': connection.tenant.offices.all().order_by('name'),
+            'section_list': connection.tenant.sections.all().order_by('name')
         })
         return context
 
@@ -206,7 +206,7 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Offices
     """
-    queryset = connection.tenant.offices.all()
+    queryset = Office.objects.all()
     serializer_class = OfficeSerializer
     permission_classes = (IsSuperUser,)
 
@@ -218,6 +218,6 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Sections
     """
-    queryset = connection.tenant.sections.all()
+    queryset = Section.objects.all()
     serializer_class = SectionSerializer
     permission_classes = (IsSuperUser,)
