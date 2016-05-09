@@ -4,6 +4,8 @@ import datetime
 
 
 def wcf_json_date_as_datetime(jd):
+    if jd is None:
+        return None
     sign = jd[-7]
     if sign not in '-+' or len(jd) == 13:
         millisecs = int(jd[6:-2])

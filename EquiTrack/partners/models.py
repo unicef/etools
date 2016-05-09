@@ -112,11 +112,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
     email = models.CharField(
         max_length=255,
-        blank=True
+        blank=True, null=True
     )
     phone_number = models.CharField(
         max_length=32L,
-        blank=True
+        blank=True, null=True
     )
     vendor_number = models.BigIntegerField(
         blank=True,

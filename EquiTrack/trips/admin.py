@@ -149,7 +149,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'supervisor',
         u'status',
         u'ta_required',
-        u'ta_number',
+        u'ta_reference',
         u'approved_date',
         u'attachments',
         u'outstanding_actions',
