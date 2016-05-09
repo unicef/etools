@@ -13,7 +13,8 @@ from users.models import UserProfile
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import CountryUsersAdminMixin
-from EquiTrack.forms import AutoSizeTextForm
+from EquiTrack.forms import AutoSizeTextForm, RequireOneFormSet
+from users.models import Office, Section
 from .models import (
     Trip,
     LinkedPartner,
@@ -101,7 +102,7 @@ class FileAttachmentInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     # make the textarea a little smaller by default. they can be extended if needed
     formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':40})},
+        models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
     fields = (u'type', u'caption', u'report')
     # get the number of extra fields (it looks to bulky with 3
@@ -148,26 +149,28 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         u'to_date',
         u'supervisor',
         u'status',
+        u'ta_required',
+        u'ta_reference',
         u'approved_date',
         u'attachments',
         u'outstanding_actions',
         u'show_driver_trip',
     )
     list_filter = (
-        OwnerFilter,
-        SupervisorFilter,
-        u'section',
-        u'office',
+        (u'owner', admin.RelatedOnlyFieldListFilter),
+        (u'supervisor', admin.RelatedOnlyFieldListFilter),
+        (u'section', admin.RelatedOnlyFieldListFilter),
+        (u'office', admin.RelatedOnlyFieldListFilter),
         u'from_date',
         u'to_date',
         u'travel_type',
         u'international_travel',
-        u'budget_owner',
+        (u'budget_owner', admin.RelatedOnlyFieldListFilter),
         u'status',
         u'approved_date',
-        u'partners',
         u'pending_ta_amendment',
         TripReportFilter,
+        u'ta_trip_took_place_as_planned',
         PartnerFilter,
     )
     filter_vertical = (
@@ -196,12 +199,12 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                  (u'international_travel', u'representative',),
                  u'approved_by_human_resources',)
         }),
-        (u'Partnership Details', {
-            u'classes': (u'suit-tab suit-tab-planning', u'collapse',),
-            u'fields':
-                (u'pcas',
-                 u'partners',),
-        }),
+        # (u'Partnership Details', {
+        #     u'classes': (u'suit-tab suit-tab-planning', u'collapse',),
+        #     u'fields':
+        #         (u'pcas',
+        #          u'partners',),
+        # }),
         (u'Approval', {
             u'classes': (u'suit-tab suit-tab-planning',),
             u'fields':
@@ -374,6 +377,12 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                 is_staff=True,
             )
 
+        if db_field.rel.to is Office:
+            kwargs['queryset'] = connection.tenant.offices.all()
+
+        if db_field.rel.to is Section:
+            kwargs['queryset'] = connection.tenant.sections.all()
+
         return super(TripReportAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
         )
@@ -393,8 +402,8 @@ class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
         u'status'
     )
     list_filter = (
-        u'trip__owner',
-        u'person_responsible',
+        #(u'trip__owner', admin.RelatedOnlyFieldListFilter),
+        (u'person_responsible', admin.RelatedOnlyFieldListFilter),
         u'status',
     )
     search_fields = (

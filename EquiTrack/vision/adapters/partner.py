@@ -12,7 +12,8 @@ type_mapping = {
     "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
     "CIVIL SOCIETY ORGANIZATION": u'Civil Society Organization',
     "GOVERNMENT": u'Government',
-    "UN AGNENCY": u'UN Agency',
+    "UN AGENCY": u'UN Agency',
+    None: None
 }
 
 
@@ -82,7 +83,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.cso_type = partner["CSO_TYPE_NAME"]
                 partner_org.rating = partner["RISK_RATING_NAME"]
                 partner_org.type_of_assessment = partner["TYPE_OF_ASSESSMENT"]
-                partner_org.last_assessment_date = partner["LAST_ASSESSMENT_DATE"]
+                partner_org.last_assessment_date = wcf_json_date_as_datetime(partner["LAST_ASSESSMENT_DATE"])
                 partner_org.address = partner["STREET_ADDRESS"]
                 partner_org.phone_number = partner["PHONE_NUMBER"]
                 partner_org.email = partner["EMAIL"]

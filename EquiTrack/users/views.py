@@ -2,6 +2,7 @@ __author__ = 'jcranwellward'
 
 import string
 
+from django.db import connection
 from django.views.generic import FormView
 
 from rest_framework import viewsets, mixins
@@ -97,8 +98,8 @@ class ProfileEdit(FormView):
     def get_context_data(self, **kwargs):
         context = super(ProfileEdit, self).get_context_data(**kwargs)
         context.update({
-            'office_list': Office.objects.all().order_by('name'),
-            'section_list': Sector.objects.all().order_by('name')
+            'office_list': connection.tenant.offices.all().order_by('name'),
+            'section_list': connection.tenant.sections.all().order_by('name')
         })
         return context
 

@@ -42,6 +42,7 @@ from .models import (
     GwPCALocation,
     ResultChain,
     AmendmentLog,
+    AgreementAmendmentLog,
     Agreement,
     AuthorizedOfficer,
     PartnerStaffMember,
@@ -154,6 +155,13 @@ class AmendmentForm(forms.ModelForm):
         self.fields['amendment'].empty_label = u'Original'
 
 
+class AgreementAmendmentForm(AmendmentForm):
+
+    class Meta:
+        model = AgreementAmendmentLog
+        fields = '__all__'
+
+
 class PartnerStaffMemberForm(forms.ModelForm):
     ERROR_MESSAGES = {
         'active_by_default': 'New Staff Member needs to be active at the moment of creation',
@@ -224,6 +232,10 @@ class AuthorizedOfficersForm(forms.ModelForm):
             partner=self.parent_agreement.partner
         ) if hasattr(self, 'parent_agreement') \
             and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
+
+        self.fields['amendment'].queryset = self.parent_agreement.amendments_log \
+            if hasattr(self, 'parent_agreement') else AgreementAmendmentLog.objects.none()
+        self.fields['amendment'].empty_label = u'Original'
 
 
 class DistributionPlanForm(auto_forms.ModelForm):

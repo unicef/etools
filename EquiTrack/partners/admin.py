@@ -33,6 +33,7 @@ from .models import (
     PartnerOrganization,
     Assessment,
     Agreement,
+    BankDetails,
     RAMIndicator,
     ResultChain,
     PartnerStaffMember,
@@ -47,7 +48,6 @@ from .models import (
     GovernmentInterventionResult,
     IndicatorDueDates
 )
-
 from .filters import (
     PCASectorFilter,
     PCADonorFilter,
@@ -61,6 +61,7 @@ from .forms import (
     AssessmentAdminForm,
     AmendmentForm,
     AgreementForm,
+    AgreementAmendmentForm,
     AuthorizedOfficersForm,
     DistributionPlanForm,
     DistributionPlanFormSet,
@@ -259,6 +260,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         'partnership_type',
         'status',
         'created_date',
+        'signed_by_unicef_date',
         'start_date',
         'end_date',
         'partner',
@@ -631,6 +633,14 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
         return 0
 
 
+class BankDetailsInlineAdmin(admin.StackedInline):
+    model = BankDetails
+    form = AgreementAmendmentForm
+    formset = ParentInlineAdminFormSet
+    verbose_name_plural = "Bank Details"
+    extra = 1
+
+
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
     list_filter = (
@@ -659,18 +669,18 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                     u'signed_by',
                 )
         }),
-        (_('Bank Details'), {
-            u'classes': (u'collapse',),
-            'fields':
-                (
-                    u'bank_name',
-                    u'bank_address',
-                    u'account_title',
-                    u'account_number',
-                    u'routing_details',
-                    u'bank_contact_person',
-                )
-        })
+        # (_('Bank Details'), {
+        #     u'classes': (u'collapse',),
+        #     'fields':
+        #         (
+        #             u'bank_name',
+        #             u'bank_address',
+        #             u'account_title',
+        #             u'account_number',
+        #             u'routing_details',
+        #             u'bank_contact_person',
+        #         )
+        # })
     )
     readonly_fields = (
         u'reference_number',
@@ -678,6 +688,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     )
     inlines = [
         AgreementAmendmentLogInlineAdmin,
+        BankDetailsInlineAdmin,
         AuthorizedOfficersInlineAdmin,
     ]
 

@@ -28,7 +28,7 @@ from locations.views import (
     LocationTypesViewSet,
     LocationsViewSet
 )
-from trips.views import TripsViewSet, Trips2ViewSet, TripFileViewSet
+from trips.views import TripsViewSet, TripFileViewSet
 from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
@@ -61,13 +61,12 @@ from partners.urls import (
 )
 
 api = routers.SimpleRouter()
-api.register(r'trips', TripsViewSet, base_name='trip')
 
-trips2_api = routers.SimpleRouter()
-trips2_api.register(r'trips2', Trips2ViewSet, base_name='trips2')
+trips_api = routers.SimpleRouter()
+trips_api.register(r'trips', TripsViewSet, base_name='trips')
 
-trips2files_api = routers.NestedSimpleRouter(trips2_api, r'trips2', lookup='trips2')
-trips2files_api.register(r'files', TripFileViewSet, base_name='trips2files')
+tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
+tripsfiles_api.register(r'files', TripFileViewSet, base_name='tripsfiles')
 
 # api.register(r'partners', PartnerOrganizationsViewSet, base_name='partnerorganizations')
 # api.register(r'partners/staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
@@ -127,8 +126,8 @@ urlpatterns = patterns(
     url(r'^api/', include(pcalocations_api.urls)),
     url(r'^api/', include(intervention_reports_api.urls)),
     url(r'^api/', include(bulk_reports_api.urls)),
-    url(r'^api/', include(trips2_api.urls)),
-    url(r'^api/', include(trips2files_api.urls)),
+    url(r'^api/', include(trips_api.urls)),
+    url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
 
     # Uncomment the next line to enable the admin:
