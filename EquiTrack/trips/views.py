@@ -16,7 +16,7 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView
 )
 from rest_framework.views import APIView
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
 from rest_framework.exceptions import (
     PermissionDenied,
@@ -28,7 +28,7 @@ from users.models import UserProfile, Office, Section
 from locations.models import get_random_color
 from partners.models import FileType
 from .models import Trip, FileAttachment
-from .serializers import TripSerializer, TripCreateSerializer, FileAttachmentSerializer
+from .serializers import TripSerializer, FileAttachmentSerializer
 from .forms import TripFilterByDateForm
 from rest_framework import status
 
@@ -125,20 +125,19 @@ class TripsViewSet(mixins.RetrieveModelMixin,
     model = Trip
     lookup_url_kwarg = 'trip'
     serializer_class = TripSerializer
-    # parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (MultiPartParser, FormParser, JSONParser)
 
     def get_queryset(self):
         user = self.request.user
         trips = Trip.get_current_trips(user)
         return trips
 
+    @detail_route(methods=['post'])
     def create(self, request, *args, **kwargs):
         """
         Create a new Trip
         :return: JSON
         """
-        self.parser_classes = (JSONParser,)
-        self.serializer_class = TripCreateSerializer
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -165,7 +164,8 @@ class TripsViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_201_CREATED,
                         headers=headers)
 
-    def retrieve(self, request, trip=None):
+    @list_route()
+    def retrieve(self, request, trip=None, **kwargs):
         """
         Returns the Trip object json
         """
@@ -365,7 +365,7 @@ class TripsDashboard(FormView):
 
         by_month = []
         section_ids = Trip.objects.all().values_list(
-        	'section', flat=True)
+            'section', flat=True)
         for section in Section.objects.filter(
             id__in=section_ids
         ):

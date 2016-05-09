@@ -569,6 +569,10 @@ class BankDetails(models.Model):
         help_text='Routing Details, including SWIFT/IBAN (if applicable)'
     )
     bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+    amendment = models.ForeignKey(
+        'AgreementAmendmentLog',
+        blank=True, null=True,
+    )
 
 
 class AuthorizedOfficer(models.Model):
@@ -578,6 +582,10 @@ class AuthorizedOfficer(models.Model):
     )
     officer = models.ForeignKey(
         PartnerStaffMember
+    )
+    amendment = models.ForeignKey(
+        'AgreementAmendmentLog',
+        blank=True, null=True,
     )
 
     def __unicode__(self):
@@ -900,11 +908,12 @@ class PCA(AdminURLMixin, models.Model):
 
     def save(self, **kwargs):
 
+        super(PCA, self).save(**kwargs)
+
         # commit the referece number to the database once the intervention is signed
         if self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
-
-        super(PCA, self).save(**kwargs)
+            self.save()
 
     @classmethod
     def get_active_partnerships(cls):
@@ -1260,15 +1269,14 @@ class RAMIndicator(models.Model):
         show_all=False,
         auto_choose=True,
     )
-    target = models.CharField(max_length=255, null=True, blank=True)
-    baseline = models.CharField(max_length=255, null=True, blank=True)
 
-    # def save(self, **kwargs):
-    #
-    #     self.target = self.indicator.target
-    #     self.baseline = self.indicator.basline
-    #
-    #     super(RAMIndicator. self).save(**kwargs)
+    @property
+    def baseline(self):
+        return self.indicator.baseline
+
+    @property
+    def target(self):
+        return self.indicator.target
 
 
 class ResultChain(models.Model):

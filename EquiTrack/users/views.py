@@ -2,6 +2,7 @@ __author__ = 'jcranwellward'
 
 import string
 
+from django.db import connection
 from django.views.generic import FormView
 
 from rest_framework import viewsets, mixins
@@ -97,8 +98,8 @@ class ProfileEdit(FormView):
     def get_context_data(self, **kwargs):
         context = super(ProfileEdit, self).get_context_data(**kwargs)
         context.update({
-            'office_list': Office.objects.all().order_by('name'),
-            'section_list': Sector.objects.all().order_by('name')
+            'office_list': connection.tenant.oofices.all().order_by('name'),
+            'section_list': connection.tenant.sections.objects.all().order_by('name')
         })
         return context
 
@@ -205,7 +206,7 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Offices
     """
-    queryset = Office.objects.all()
+    queryset = connection.tenant.offices.all()
     serializer_class = OfficeSerializer
     permission_classes = (IsSuperUser,)
 
@@ -217,6 +218,6 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Sections
     """
-    queryset = Section.objects.all()
+    queryset = connection.tenant.sections.all()
     serializer_class = SectionSerializer
     permission_classes = (IsSuperUser,)

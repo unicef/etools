@@ -1,6 +1,7 @@
 __author__ = 'jcranwellward'
 
 from django import forms
+from django.db import connection
 from django.contrib.auth import get_user_model
 
 from .models import UserProfile, Country, Section
@@ -10,7 +11,7 @@ User = get_user_model()
 
 class ProfileForm(forms.ModelForm):
     section = forms.ModelChoiceField(
-        Section.objects.all(),
+        connection.tenant.sections.all(),
         empty_label='Section',
         widget=forms.Select(attrs={'class': 'form-control input-sm'})
     )

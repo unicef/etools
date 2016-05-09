@@ -14,6 +14,7 @@ from users.models import UserProfile
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import AutoSizeTextForm, RequireOneFormSet
+from users.models import Office, Section
 from .models import (
     Trip,
     LinkedPartner,
@@ -101,7 +102,7 @@ class FileAttachmentInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     # make the textarea a little smaller by default. they can be extended if needed
     formfield_overrides = {
-        models.TextField: {'widget': Textarea(attrs={'rows':4, 'cols':40})},
+        models.TextField: {'widget': Textarea(attrs={'rows': 4, 'cols': 40})},
     }
     fields = (u'type', u'caption', u'report')
     # get the number of extra fields (it looks to bulky with 3
@@ -375,6 +376,12 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
                 profile__country=connection.tenant,
                 is_staff=True,
             )
+
+        if db_field.rel.to is Office:
+            kwargs['queryset'] = connection.tenant.offices.all()
+
+        if db_field.rel.to is Section:
+            kwargs['queryset'] = connection.tenant.sections.all()
 
         return super(TripReportAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs

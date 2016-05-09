@@ -39,12 +39,8 @@ class Country(TenantMixin):
     vision_sync_enabled = models.BooleanField(default=True)
     vision_last_synced = models.DateTimeField(null=True, blank=True)
 
-    def __unicode__(self):
-        return self.name
-
-
-class Section(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    offices = models.ManyToManyField('Office', related_name='offices')
+    sections = models.ManyToManyField('Section', related_name='sections')
 
     def __unicode__(self):
         return self.name
@@ -58,6 +54,13 @@ class Office(models.Model):
         related_name='offices',
         verbose_name='Chief'
     )
+
+    def __unicode__(self):
+        return self.name
+
+
+class Section(models.Model):
+    name = models.CharField(max_length=50, unique=True)
 
     def __unicode__(self):
         return self.name
