@@ -114,7 +114,7 @@ class FileAttachmentSerializer(serializers.ModelSerializer):
         )
 
 
-class Trip2Serializer(serializers.ModelSerializer):
+class TripCreateSerializer(serializers.ModelSerializer):
 
     partners = serializers.SerializerMethodField()
     pcas = serializers.SerializerMethodField()
@@ -123,6 +123,7 @@ class Trip2Serializer(serializers.ModelSerializer):
     tripfunds_set = TripFunds2Serializer(many=True)
     triplocation_set = TripLocationSerializer(many=True)
     actionpoint_set = ActionPoint2Serializer(many=True)
+    files = FileAttachmentSerializer(many=True, read_only=True)
 
     def get_pcas(self, trip):
         return [pca.id for pca in trip.pcas.all()]
@@ -236,8 +237,8 @@ class Trip2Serializer(serializers.ModelSerializer):
             'ta_trip_took_place_as_planned',
             'ta_trip_repay_travel_allowance',
             'ta_trip_final_claim',
-            'pending_ta_amendment'
-            # 'all_files'
+            'pending_ta_amendment',
+            'files'
         )
 
 
