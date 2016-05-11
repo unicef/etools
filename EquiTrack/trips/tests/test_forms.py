@@ -53,13 +53,13 @@ class TestTripForm(TenantTestCase):
         form.request.user = user if user else self.trip.owner
         return form
 
-    def test_form_validation_for_programme_monitoring(self):
-        form = self.create_form()
-        self.assertFalse(form.is_valid())
-        self.assertEqual(
-            form.errors['pcas'][0],
-            TripForm.ERROR_MESSAGES['no_linked_interventions']
-        )
+    # def test_form_validation_for_programme_monitoring(self):
+    #     form = self.create_form()
+    #     self.assertFalse(form.is_valid())
+    #     self.assertEqual(
+    #         form.errors['pcas'][0],
+    #         TripForm.ERROR_MESSAGES['no_linked_interventions']
+    #     )
 
     def test_form_validation_for_international_travel(self):
         trip_dict = to_dict(self.trip)
@@ -203,8 +203,8 @@ class TestTripForm(TenantTestCase):
             'Arrival must be greater than departure'
         )
 
-    def test_form_validation_for_no_trip_location(self):
-        trip_dict = to_dict(self.trip)
-        trip_dict['status'] = Trip.SUBMITTED
-        form = self.create_form(data=trip_dict)
-        self.assertFalse(form.is_valid())
+    # def test_form_validation_for_no_trip_location(self):
+    #     trip_dict = to_dict(self.trip)
+    #     trip_dict['status'] = Trip.SUBMITTED
+    #     form = self.create_form(data=trip_dict)
+    #     self.assertFalse(form.is_valid())

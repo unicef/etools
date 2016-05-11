@@ -42,6 +42,7 @@ from .models import (
     GwPCALocation,
     ResultChain,
     AmendmentLog,
+    AgreementAmendmentLog,
     Agreement,
     AuthorizedOfficer,
     PartnerStaffMember,
@@ -154,6 +155,13 @@ class AmendmentForm(forms.ModelForm):
         self.fields['amendment'].empty_label = u'Original'
 
 
+class AgreementAmendmentForm(AmendmentForm):
+
+    class Meta:
+        model = AgreementAmendmentLog
+        fields = '__all__'
+
+
 class PartnerStaffMemberForm(forms.ModelForm):
     ERROR_MESSAGES = {
         'active_by_default': 'New Staff Member needs to be active at the moment of creation',
@@ -224,6 +232,10 @@ class AuthorizedOfficersForm(forms.ModelForm):
             partner=self.parent_agreement.partner
         ) if hasattr(self, 'parent_agreement') \
             and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
+
+        self.fields['amendment'].queryset = self.parent_agreement.amendments_log \
+            if hasattr(self, 'parent_agreement') else AgreementAmendmentLog.objects.none()
+        self.fields['amendment'].empty_label = u'Original'
 
 
 class DistributionPlanForm(auto_forms.ModelForm):
@@ -437,6 +449,13 @@ class PartnershipForm(UserGroupForm):
             row_num += 1
             row = series.to_dict()
             labels = list(series.axes[0])  # get the labels in order
+
+            # check if there are correct time frames set on activities:
+            at_least_one_tf = [x for x in labels if 'TF_' in x]
+            if not at_least_one_tf:
+                raise ValidationError('There are no valid time frames for the activities,'
+                                      'please prefix activities with "TF_')
+
             try:
                 type = label.split()[0].strip()
                 statement = row.pop('Details').strip()
@@ -621,10 +640,18 @@ class PartnershipForm(UserGroupForm):
             self.add_locations(p_codes, location_sector)
 
         if work_plan:
+            # make sure the status of the intervention is in process
+            if self.instance.status != PCA.IN_PROCESS:
+                raise ValidationError(
+                    u'After the intervention is signed, the workplan cannot be changed'
+                )
             if result_structure is None:
                 raise ValidationError(
                     u'Please select a result structure from the man info tab to import results against'
                 )
+            # make sure another workplan has not been uploaded already:
+            if self.instance.results and self.instance.results.count() > 0:
+                self.instance.results.all().delete()
             self.import_results_from_work_plan(work_plan)
 
         return cleaned_data

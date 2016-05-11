@@ -10,25 +10,25 @@
     {% block layout_style %}
         <style type="text/css">
             @page {
-                size: {{ pagesize|default:"letter" }};
-                margin-left: 2.0cm;
-                margin-right: 2.0cm;
-                margin-top: 1.8cm;
-                margin-bottom: 1.8cm;
-                @frame header {
-                -pdf-frame-content: page-header;
-                margin-top: 0cm;
-                margin-right: 0mm;
-                margin-bottom: 0.3cm;
-                margin-left: 0cm;
-                background-color: #0099ff;
-                height: 2cm;
-            }
-            @frame footer_frame {
-                /* Static frame */
-            -pdf-frame-content:footer_content;
-            left: 50pt; width: 512pt; top: 772pt; height: 20pt;
-            }
+                    size: {{ pagesize|default:"letter" }};
+                    margin-left: 2.0cm;
+                    margin-right: 2.0cm;
+                    margin-top: 1.8cm;
+                    margin-bottom: 1.8cm;
+                    @frame header {
+                    -pdf-frame-content: page-header;
+                    margin-top: 0cm;
+                    margin-right: 0mm;
+                    margin-bottom: 0.3cm;
+                    margin-left: 0cm;
+                    background-color: #0099ff;
+                    height: 2cm;
+                }
+                @frame footer_frame {
+                    /* Static frame */
+                    -pdf-frame-content:footer_content;
+                    left: 50pt; width: 512pt; top: 772pt; height: 20pt;
+                }
 
             }
         </style>
@@ -82,7 +82,7 @@
             <div><b>AND THE</b></div>
             <div><b>UNITED NATIONS CHILDREN'S FUND</b></div>
             <div><b>FOR THE</b></div>
-            <div><b>IMPLEMENTATION of UNICEF-funded PROGRAMME RELATING TO THE UNICEF COUNTRY PROGRAMME
+            <div><b>IMPLEMENTATION OF UNICEF-FUNDED PROGRAMME RELATING TO THE UNICEF COUNTRY PROGRAMME
                 FOR {{ country|upper }}</b></div>
             <div>{{ agreement.partner }} and the United Nations Children’s Fund (referred to jointly as the “Parties”
                 and each separately as a “Party”), hereby agree as follows:
@@ -99,7 +99,7 @@
                 </li>
                 <li>“<u>Implementing Partner</u>” or “<u>IP</u>”
                     means {{ agreement.partner }}, {{ agreement.partner.address }} </li>
-                <li>“<u>Country Programme</u>” means the UNICEF [country programme for {{ country }}], approved by the
+                <li>“<u>Country Programme</u>” means the UNICEF {{ country|upper }}, approved by the
                     Executive Board of the United Nations Children’s Fund for the period [{{ cp.from|date:"Y" }} to {{ cp.to|date:"Y" }}].
                 </li>
                 <li>“<u>Programme Document</u>” means the formal document (in standard format) attached to this
@@ -413,14 +413,16 @@
                 <li>The Cash Transfer other than Direct Payments shall be made by UNICEF to the following bank account
                     of the IP:
                 </li>
-                <div style="padding-bottom: 0px; padding-top: 0px">Bank name: {{ agreement.bank_name }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Bank address: {{ agreement.bank_address }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Account title: {{ agreement.account_title }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Account No.: {{ agreement.account_number }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Routing Details, including SWIFT/IBAN (if
-                    applicable): {{ agreement.routing_details }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Bank contact
-                    person: {{ agreement.bank_contact_person }}</div>
+                {% for details in agreement.bank_details.all %}
+                    <div style="padding-bottom: 0px; padding-top: 0px">Bank name: {{ details.bank_name }}</div>
+                    <div style="padding-bottom: 0px; padding-top: 0px">Bank address: {{ details.bank_address }}</div>
+                    <div style="padding-bottom: 0px; padding-top: 0px">Account title: {{ details.account_title }}</div>
+                    <div style="padding-bottom: 0px; padding-top: 0px">Account No.: {{ details.account_number }}</div>
+                    <div style="padding-bottom: 0px; padding-top: 0px">Routing Details, including SWIFT/IBAN (if
+                        applicable): {{ details.routing_details }}</div>
+                    <div style="padding-bottom: 0px; padding-top: 0px">Bank contact
+                        person: {{ details.bank_contact_person }}</div>
+                {% endfor %}
                 <div><p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p></div>
                 <li>Supplies and equipment transferred to the IP by UNICEF will be used exclusively for the
                     implementation of the Programme Document, unless UNICEF agrees otherwise.
@@ -689,7 +691,7 @@
                 <div><p>IN WITNESS WHEREOF, the undersigned, duly authorized by the respective Parties, have signed this
                     Agreement.</p></div>
                 <div style="padding-top: 3px">
-                    <table border="1" style="border: none;">
+                    <table border="0" style="border: none;">
                         <tr>
                             <td style="padding-top: 8px; padding-bottom: 0px"><b>For the Implementing Partner</b></td>
                             <td style="padding-top: 8px; padding-bottom: 0px"><b>For the United Nations Children’s

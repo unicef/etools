@@ -5,6 +5,7 @@ __author__ = 'jcranwellward'
 import datetime
 from dateutil.relativedelta import relativedelta
 
+from django.db.models import Q
 from django.conf import settings
 from django.db import models, connection
 from django.contrib.auth.models import Group
@@ -112,11 +113,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
     email = models.CharField(
         max_length=255,
-        blank=True
+        blank=True, null=True
     )
     phone_number = models.CharField(
         max_length=32L,
-        blank=True
+        blank=True, null=True
     )
     vendor_number = models.BigIntegerField(
         blank=True,
@@ -281,12 +282,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @property
     def programmatic_visits(self):
-        from trips.models import LinkedPartner
-        return LinkedPartner.objects.filter(
-            partner=self,
-            trip__status=u'completed',
-            trip__travel_type=u'programme_monitoring'
-        ).count()
+        year = datetime.date.today().year
+        from trips.models import LinkedPartner, Trip
+        trip_ids = LinkedPartner.objects.filter(
+            partner=self).values_list('trip__id', flat=True)
+
+        trips = Trip.objects.filter(
+            Q(id__in=trip_ids),
+            Q(from_date__year=year),
+            Q(status=Trip.COMPLETED),
+            Q(travel_type=Trip.PROGRAMME_MONITORING),
+            ~Q(section__name='Drivers'),
+        )
+        return trips.count()
 
     @property
     def spot_checks(self):
@@ -552,6 +560,29 @@ class Agreement(TimeStampedModel):
         super(Agreement, self).save(**kwargs)
 
 
+class BankDetails(models.Model):
+
+    agreement = models.ForeignKey(Agreement, related_name='bank_details')
+    bank_name = models.CharField(max_length=255, null=True, blank=True)
+    bank_address = models.CharField(
+        max_length=256L,
+        blank=True
+    )
+    account_title = models.CharField(max_length=255, null=True, blank=True)
+    account_number = models.CharField(max_length=50, null=True, blank=True)
+    routing_details = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
+    )
+    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+    amendment = models.ForeignKey(
+        'AgreementAmendmentLog',
+        blank=True, null=True,
+    )
+
+
 class AuthorizedOfficer(models.Model):
     agreement = models.ForeignKey(
         Agreement,
@@ -559,6 +590,10 @@ class AuthorizedOfficer(models.Model):
     )
     officer = models.ForeignKey(
         PartnerStaffMember
+    )
+    amendment = models.ForeignKey(
+        'AgreementAmendmentLog',
+        blank=True, null=True,
     )
 
     def __unicode__(self):
@@ -867,10 +902,20 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def programmatic_visits(self):
-        return self.trips.filter(
-            trip__status=u'completed',
-            trip__travel_type=u'programme_monitoring'
-        ).count()
+        year = datetime.date.today().year
+        from trips.models import LinkedPartner, Trip
+        trip_ids = LinkedPartner.objects.filter(
+            intervention=self
+        ).values_list('trip__id', flat=True)
+
+        trips = Trip.objects.filter(
+            Q(id__in=trip_ids),
+            Q(from_date__year=year),
+            Q(status=Trip.COMPLETED),
+            Q(travel_type=Trip.PROGRAMME_MONITORING),
+            ~Q(section__name='Drivers'),
+        )
+        return trips.count()
 
     @property
     def spot_checks(self):
@@ -881,11 +926,12 @@ class PCA(AdminURLMixin, models.Model):
 
     def save(self, **kwargs):
 
+        super(PCA, self).save(**kwargs)
+
         # commit the referece number to the database once the intervention is signed
         if self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
-
-        super(PCA, self).save(**kwargs)
+            self.save()
 
     @classmethod
     def get_active_partnerships(cls):
@@ -1241,15 +1287,14 @@ class RAMIndicator(models.Model):
         show_all=False,
         auto_choose=True,
     )
-    target = models.CharField(max_length=255, null=True, blank=True)
-    baseline = models.CharField(max_length=255, null=True, blank=True)
 
-    # def save(self, **kwargs):
-    #
-    #     self.target = self.indicator.target
-    #     self.baseline = self.indicator.basline
-    #
-    #     super(RAMIndicator. self).save(**kwargs)
+    @property
+    def baseline(self):
+        return self.indicator.baseline
+
+    @property
+    def target(self):
+        return self.indicator.target
 
 
 class ResultChain(models.Model):

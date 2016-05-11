@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
+from django.db import connection
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
@@ -18,6 +19,7 @@ from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
 from reports.models import Result, Indicator
+from users.models import Section
 from .exports import (
     # DonorsFormat,
     PCAResource,
@@ -33,6 +35,7 @@ from .models import (
     PartnerOrganization,
     Assessment,
     Agreement,
+    BankDetails,
     RAMIndicator,
     ResultChain,
     PartnerStaffMember,
@@ -47,7 +50,6 @@ from .models import (
     GovernmentInterventionResult,
     IndicatorDueDates
 )
-
 from .filters import (
     PCASectorFilter,
     PCADonorFilter,
@@ -61,6 +63,7 @@ from .forms import (
     AssessmentAdminForm,
     AmendmentForm,
     AgreementForm,
+    AgreementAmendmentForm,
     AuthorizedOfficersForm,
     DistributionPlanForm,
     DistributionPlanFormSet,
@@ -97,6 +100,15 @@ class PcaSectorInlineAdmin(admin.TabularInline):
         'sector',
         'amendment',
     )
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+
+        if db_field.rel.to is Section:
+            kwargs['queryset'] = connection.tenant.sections.all()
+
+        return super(PcaSectorInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
 
 class PCAFileInline(admin.TabularInline):
@@ -259,6 +271,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         'partnership_type',
         'status',
         'created_date',
+        'signed_by_unicef_date',
         'start_date',
         'end_date',
         'partner',
@@ -631,6 +644,14 @@ class AuthorizedOfficersInlineAdmin(admin.TabularInline):
         return 0
 
 
+class BankDetailsInlineAdmin(admin.StackedInline):
+    model = BankDetails
+    form = AgreementAmendmentForm
+    formset = ParentInlineAdminFormSet
+    verbose_name_plural = "Bank Details"
+    extra = 1
+
+
 class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
     list_filter = (
@@ -659,18 +680,18 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                     u'signed_by',
                 )
         }),
-        (_('Bank Details'), {
-            u'classes': (u'collapse',),
-            'fields':
-                (
-                    u'bank_name',
-                    u'bank_address',
-                    u'account_title',
-                    u'account_number',
-                    u'routing_details',
-                    u'bank_contact_person',
-                )
-        })
+        # (_('Bank Details'), {
+        #     u'classes': (u'collapse',),
+        #     'fields':
+        #         (
+        #             u'bank_name',
+        #             u'bank_address',
+        #             u'account_title',
+        #             u'account_number',
+        #             u'routing_details',
+        #             u'bank_contact_person',
+        #         )
+        # })
     )
     readonly_fields = (
         u'reference_number',
@@ -678,6 +699,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     )
     inlines = [
         AgreementAmendmentLogInlineAdmin,
+        BankDetailsInlineAdmin,
         AuthorizedOfficersInlineAdmin,
     ]
 
