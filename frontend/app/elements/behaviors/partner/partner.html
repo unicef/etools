@@ -73,10 +73,11 @@ commonBv.interventions = {
         intervention.results.forEach(function(el) {
           // el is the result_chain object
           // Make sure it's an indicator result
-          if (!el.indicator){
+          if (!el.indicator){  //indicator should be populated
             return;
           }
           inds.push(el);
+          // el.result is the output object for the indicator
           if (tempOutputs[el.result.id]){
             tempOutputs[el.result.id].indicators.push(el);
           } else {
