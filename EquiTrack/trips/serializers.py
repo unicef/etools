@@ -127,6 +127,7 @@ class FileAttachmentSerializer(serializers.ModelSerializer):
             "id",
             "file",
             "type",
+            "caption",
             "trip",
         )
 

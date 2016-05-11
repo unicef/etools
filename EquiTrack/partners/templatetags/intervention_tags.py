@@ -30,7 +30,10 @@ def show_work_plan(value):
     work_plan = SortedDict()
 
     if results:
-        tf_cols = next(x.disaggregation for x in results if x.result_type.name == 'Activity').keys()
+        try:
+            tf_cols = next(x.disaggregation for x in results if x.result_type.name == 'Activity').keys()
+        except:
+            tf_cols = []
 
     for num, result in enumerate(results):
         row = SortedDict()
@@ -38,7 +41,7 @@ def show_work_plan(value):
         row['Details'] = result.indicator.name if result.indicator else result.result.name
         row['Targets'] = result.target if result.target else ''
 
-        if result.result_type.name == 'Activity':
+        if result.result_type.name == 'Activity' and result.disaggregation:
             row.update(result.disaggregation)
         else:
             row.update(dict.fromkeys(tf_cols, ''))
