@@ -2,7 +2,22 @@
 {% load leaflet_tags %}
 
 {% block extra_head %}
+    <!-- Polymer START -->
+    <base href="{{ STATIC_URL }}bower_components/">
+    <script src="webcomponentsjs/webcomponents-lite.js"></script>
 
+    <link rel="import" href="iron-flex-layout/iron-flex-layout-classes.html">
+    <link rel="import" href="iron-flex-layout/iron-flex-layout.html">
+
+    <link rel="import" href="paper-button/paper-button.html">
+    <link rel="import" href="paper-dialog/paper-dialog.html">
+    <link rel="import" href="paper-dialog-scrollable/paper-dialog-scrollable.html">
+    <link rel="import" href="paper-item/paper-item.html">
+
+    <link rel="import" href="google-map/google-map.html">
+
+    <base href="">
+    <!-- Polymer END -->
 
     {% leaflet_css %}
     <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.awesome-markers.css" />
@@ -115,7 +130,7 @@
 
                 </div>
             </div>
-            <div class="col-md-2">
+<!--             <div class="col-md-2">
                 <div class="btn-group btn-block">
                     <button id="btn-governorate" type="button" class="col-md-10 btn btn-success">
                        Governorate
@@ -131,16 +146,10 @@
                         {% endfor %}
                     </ul>
                 </div>
-            </div>
-            <div class="col-md-2 col-md-offset-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-submit" type="button" class="col-md-5 btn btn-warning" onclick="SubmitSearch();">
-                       Submit
-                    </button>
-                    <button id="btn-clear" type="button" class="col-md-5 btn btn-danger" onclick="ClearButtonClick();">
-                       Clear
-                    </button>
-                </div>
+            </div> -->
+            <div class="col-md-2 col-md-offset-2" style="white-space: nowrap;">
+                <paper-button raised noink class="btn-warning" onclick="submitSearch()">Submit</paper-button>
+                <paper-button raised noink class="btn-danger" onclick="clearSearch()">Clear</paper-button>
             </div>
 
             </div>
@@ -199,7 +208,7 @@
                         </ul>
                     </div>
                 </div>
-                <div class="col-md-2">
+              <!--   <div class="col-md-2">
                     <div class="btn-group btn-block">
                         <button id="btn-district" type="button" class="col-md-10 btn btn-success">
                            District
@@ -215,7 +224,7 @@
                             {% endfor %}
                         </ul>
                     </div>
-                </div>
+                </div> -->
             </div>
 
         <!-- new row -->
@@ -355,15 +364,15 @@
             $('#' + id).css({"color" : "#fff"})
         }
 
-        function SubmitSearch(){
+        function submitSearch(){
             var resultStructure = $('#btn-result_structure').html();
             var sector = $('#btn-sector').html();
             var gateway = $('#btn-gateway').html();
-            var governorate = $('#btn-governorate').html();
+            //var governorate = $('#btn-governorate').html();
             var status = $('#btn-status').html();
             var donor = $('#btn-donor').html();
             var partner = $('#btn-partner').html();
-            var district = $('#btn-district').html();
+            //var district = $('#btn-district').html();
 
             var query='';
             if(!resultStructure.includes('Result Structure'))
@@ -375,8 +384,8 @@
             if(!gateway.includes('Gateways'))
                 query += 'gateway=' + $("a:contains(" + gateway + ")").attr("itemid") + '&';
 
-            if(!governorate.includes('Governorate'))
-                query += 'governorate=' + $("a:contains(" + governorate + ")").attr("itemid") + '&';
+            // if(!governorate.includes('Governorate'))
+            //     query += 'governorate=' + $("a:contains(" + governorate + ")").attr("itemid") + '&';
 
             if(!status.includes('Status'))
                 query += 'status=' + $("a:contains(" + status + ")").html().toLowerCase() + '&';
@@ -387,8 +396,8 @@
             if(!partner.includes('Partner'))
                 query += 'partner=' + $("a:contains(" + partner + ")").attr("itemid") + '&';
 
-            if(!district.includes('District'))
-                query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';
+            // if(!district.includes('District'))
+            //     query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';
 
             history.pushState(query, "", "/map/?" + query);
             //console.log(query);
@@ -400,16 +409,16 @@
             });
         }
 
+        function clearSearch(){
+            history.replaceState("", "", "/map/");
+            location.reload();
+        }
+
         $(document).ajaxStart(function(){
             $('#loading').show();
         }).ajaxStop(function(){
             $('#loading').hide();
         });
-
-        function ClearButtonClick(){
-            history.replaceState("", "", "/map/");
-            location.reload();
-        }
 
         function getRandomColor() {
             var letters = '0123456789ABCDEF'.split('');
