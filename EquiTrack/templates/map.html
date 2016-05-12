@@ -5,6 +5,7 @@
     <!-- Polymer START -->
     <base href="{{ STATIC_URL }}bower_components/">
     <script src="webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="lodash/lodash.min.js"></script>
 
     <link rel="import" href="iron-flex-layout/iron-flex-layout-classes.html">
     <link rel="import" href="iron-flex-layout/iron-flex-layout.html">
@@ -12,7 +13,10 @@
     <link rel="import" href="paper-button/paper-button.html">
     <link rel="import" href="paper-dialog/paper-dialog.html">
     <link rel="import" href="paper-dialog-scrollable/paper-dialog-scrollable.html">
+    <link rel="import" href="paper-dropdown-menu/paper-dropdown-menu.html">
+    <link rel="import" href="paper-dropdown-menu/paper-dropdown-menu-light.html">
     <link rel="import" href="paper-item/paper-item.html">
+    <link rel="import" href="paper-listbox/paper-listbox.html">
 
     <link rel="import" href="google-map/google-map.html">
 
@@ -67,168 +71,85 @@
         display: block;
     }
 
+    paper-dropdown-menu {
+        width: 150px;
+        padding-right: 20px;
+    }
+
+    .vertical-align {
+        display: inline-block;
+        vertical-align: middle;
+        float: none;
+    }
     </style>
 
 {% endblock %}
 
 {% block content %}
 
-
     <section class="main-content-wrapper">
         <section id="main-content">
-           <div class="row col-md-offset-1" style=" padding-top: 10px;">
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-result_structure" type="button" class="col-md-10 btn btn-info">
-                       Result Structure
-                    </button>
-
-                    <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu">
-                        <li><a href="javascript:void(0);" id="result_structure999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
-                        {% for result_structure in result_structure_list %}
-                            <li><a href="javascript:void(0);" id="result_structure{{ result_structure.id }}" onclick="DropdownSelect(this.id);" itemid="{{ result_structure.id }}">{{ result_structure.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-           <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-sector" type="button" class="col-md-10 btn btn-danger">
-                       Sector
-                    </button>
-
-                    <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu">
-                        <li><a href="javascript:void(0);" id="sector999" onclick="DropdownSelect(this.id);" itemid="999">All Sectors</a></li>
-                        {% for sector in sectors_list %}
-                            <li><a href="javascript:void(0);" id="sector{{ sector.id }}" onclick="DropdownSelect(this.id);" itemid="{{ sector.id }}">{{ sector.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-gateway" type="button" class="col-md-10 btn btn-primary">
-                       Gateways
-                    </button>
-
-                    <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
-                         <span class="caret"></span>
-                    </button>
-
-                    <ul class="dropdown-menu scrollable-menu" role="menu" id="gateway_ul">
-                        <li><a href="javascript:void(0);" id="gateway999" onclick="DropdownSelect(this.id);" itemid="999">All Gateways</a></li>
-                        {% for gateway in gateway_list %}
-                            <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="DropdownSelect(this.id);" itemid="{{ gateway.id }}">{{ gateway.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-
-                </div>
-            </div>
-<!--             <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-governorate" type="button" class="col-md-10 btn btn-success">
-                       Governorate
-                    </button>
-
-                    <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu" id="governorate_ul">
-                       <li><a href="javascript:void(0);" id="governorate999" onclick="DropdownSelect(this.id);" itemid="999">All Governorates</a></li>
-                        {% for governorate in governorate_list %}
-                            <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="DropdownSelect(this.id);" itemid="{{ governorate.id }}">{{ governorate.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div> -->
-            <div class="col-md-2 col-md-offset-2" style="white-space: nowrap;">
-                <paper-button raised noink class="btn-warning" onclick="submitSearch()">Submit</paper-button>
-                <paper-button raised noink class="btn-danger" onclick="clearSearch()">Clear</paper-button>
-            </div>
-
-            </div>
-
-            <!-- new row -->
-            <div class="row col-md-offset-1">
-                <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-status" type="button" class="col-md-10 btn btn-info">
-                           Status
-                        </button>
-
-                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown" type="=button">
-                             <span class="caret"></span>
-                        </button>
-                            <ul class="dropdown-menu scrollable-menu" role="menu">
-                                    <li><a href="javascript:void(0);" id="status999" onclick="DropdownSelect(this.id);" itemid="999">All Statuses</a></li>
-                                    <li><a href="javascript:void(0);" id="status0" onclick="DropdownSelect(this.id);" itemid="0">IN_PROCESS</a></li>
-                                    <li><a href="javascript:void(0);" id="status1" onclick="DropdownSelect(this.id);" itemid="1">ACTIVE</a></li>
-                                    <li><a href="javascript:void(0);" id="status2" onclick="DropdownSelect(this.id);" itemid="2">IMPLEMENTED</a></li>
-                                    <li><a href="javascript:void(0);" id="status3" onclick="DropdownSelect(this.id);" itemid="3">CANCELLED</a></li>
-                            </ul>
-                    </div>
-                </div>
-               <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-donor" type="button" class="col-md-10 btn btn-danger">
-                           Donor
-                        </button>
-
-                        <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
-                             <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                            <li><a href="javascript:void(0);" id="donor999" onclick="DropdownSelect(this.id);" itemid="999">All Donors</a></li>
-                           {% for donor in donor_list %}
-                                <li><a href="javascript:void(0);" id="donor{{ donor.id }}" onclick="DropdownSelect(this.id);" itemid="{{ donor.id }}">{{ donor.name }}</a></li>
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="col-xs-10">
+                        <paper-dropdown-menu id="result_structure" label="Result structures" selected-item>
+                          <paper-listbox class="dropdown-content">
+                            <paper-item>All result structures</paper-item>
+                            {% for result_structure in result_structure_list %}
+                                <paper-item id="result_structure{{ result_structure.id }}" itemid="{{ result_structure.id }}">{{ result_structure.name }}</paper-item>
                             {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-partner" type="button" class="col-md-10 btn btn-primary">
-                           Partner
-                        </button>
+                          </paper-listbox>
+                        </paper-dropdown-menu>
+                        <paper-dropdown-menu id="sector" label="Sectors" selected-item>
+                            <paper-listbox class="dropdown-content">
+                                <paper-item>All sectors</paper-item>
+                                {% for sector in sectors_list %}
+                                <paper-item id="sector{{ sector.id }}" itemid="{{ sector.id }}">{{ sector.name }}</paper-item>
+                                {% endfor %}
+                            </paper-listbox>
+                        </paper-dropdown-menu>
+                         <paper-dropdown-menu id="gateway" label="Gateways" selected-item>
+                            <paper-listbox class="dropdown-content">
+                                <paper-item>All gateways</paper-item>
+                                {% for gateway in gateway_list %}
+                                <paper-item id="gateway{{ gateway.id }}" itemid="{{ gateway.id }}">{{ gateway.name }}</paper-item>
+                                {% endfor %}
+                            </paper-listbox>
+                        </paper-dropdown-menu>
+                        <br />
+                         <paper-dropdown-menu id="status" label="Status" selected-item>
+                            <paper-listbox class="dropdown-content">
+                                <paper-item>All Statuses</paper-item>
+                                <paper-item id="status0" itemid="0">In process</paper-item>
+                                <paper-item id="status1" itemid="1">Active</paper-item>
+                                <paper-item id="status2" itemid="2">Implemented</paper-item>
+                                <paper-item id="status3" itemid="3">Cancelled</paper-item>
+                            </paper-listbox>
+                        </paper-dropdown-menu>
+                          <paper-dropdown-menu id="donor" label="Donors" selected-item>
+                            <paper-listbox class="dropdown-content">
+                                <paper-item>All donors</paper-item>
+                                {% for donor in donor_list %}
+                                <paper-item id="donor{{ donor.id }}" itemid="{{ donor.id }}">{{ donor.name }}</paper-item>
+                                {% endfor %}
+                            </paper-listbox>
+                        </paper-dropdown-menu>
 
-                        <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                             <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                            <li><a href="javascript:void(0);" id="partner999" onclick="DropdownSelect(this.id);" itemid="999">All Partners</a></li>
-                           {% for partner in partner_list %}
-                                <li><a href="javascript:void(0);" id="partner{{ partner.id }}" onclick="DropdownSelect(this.id);" itemid="{{ partner.id }}">{{ partner.name }}</a></li>
+                        <paper-dropdown-menu id="partner" label="Partners" selected-item>
+                          <paper-listbox class="dropdown-content">
+                          <paper-item>All partners</paper-item>
+                            {% for partner in partner_list %}
+                                <paper-item id="partner{{ partner.id }}" itemid="{{ partner.id }}">{{ partner.name }}</paper-item>
                             {% endfor %}
-                        </ul>
-                    </div>
+                          </paper-listbox>
+                        </paper-dropdown-menu>
                 </div>
-              <!--   <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-district" type="button" class="col-md-10 btn btn-success">
-                           District
-                        </button>
-
-                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
-                             <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                            <li><a href="javascript:void(0);" id="district999" onclick="DropdownSelect(this.id);" itemid="999">All Districts</a></li>
-                           {% for district in region_list %}
-                                <li><a href="javascript:void(0);" id="district{{ district.id }}" onclick="DropdownSelect(this.id);" itemid="{{ district.id }}">{{ district.name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div> -->
+                <div class="col-xs-2 text-right" style="padding-top: 25px;">
+                    <paper-button raised noink onclick="submitSearch()" style="margin-bottom: 10px;">Submit</paper-button><br />
+                    <paper-button raised noink onclick="clearSearch()">Clear</paper-button>
+                </div>
             </div>
 
-        <!-- new row -->
-            <div class="row col-md-11 col-md-offset-1" style="display:none">
+            <div class="row col-md-11 col-md-offset-1" style="display: none;">
                 <div id="accordion" class="panel-group">
                     <div class="panel panel-default">
                         <div class="panel-heading">
@@ -249,7 +170,7 @@
                                         </button>
                                         <ul class="dropdown-menu scrollable-menu" role="menu">
                                            {% for indicator in indicator_list %}
-                                                <li><a href="javascript:void(0);" id="indicator{{ indicator.id }}" onclick="DropdownSelect(this.id);" itemid="{{ indicator.id }}">{{ indicator.name }}</a></li>
+                                                <li><a href="javascript:void(0);" id="indicator{{ indicator.id }}" itemid="{{ indicator.id }}">{{ indicator.name }}</a></li>
                                             {% endfor %}
                                         </ul>
                                     </div>
@@ -265,7 +186,7 @@
                                         </button>
                                         <ul class="dropdown-menu scrollable-menu" role="menu">
                                            {% for output in output_list %}
-                                                <li><a href="javascript:void(0);" id="output{{ output.id }}" onclick="DropdownSelect(this.id);" itemid="{{ output.id }}">{{ output.name }}</a></li>
+                                                <li><a href="javascript:void(0);" id="output{{ output.id }}" itemid="{{ output.id }}">{{ output.name }}</a></li>
                                             {% endfor %}
                                         </ul>
                                     </div>
@@ -321,113 +242,34 @@
     {% leaflet_js %}
 
     <script type="text/javascript">
-
-        //querying JSON
-        function getObjects(obj, key, val) {
-            var objects = [];
-            for (var i in obj) {
-                if (!obj.hasOwnProperty(i)) continue;
-                if (typeof obj[i] == 'object') {
-                    objects = objects.concat(getObjects(obj[i], key, val));
-                } else if (i == key && obj[key] == val) {
-                    objects.push(obj);
-                }
-            }
-            return objects;
-        }
-
-        function DropdownSelect(id){
-            var selectVal = $('#' + id).html();
-            var itemId = $('#' + id).attr('itemid');
-            var btnId = "btn-" + id.substring(0, id.indexOf(itemId));
-            //if(itemId != '999'){
-                $('#' + btnId).html(selectVal);
-           // }
-            //else{ //all is clicked
-                 //$('#' + btnId).html('Result Structure');
-            //}
-
-            //get the current color class and set the background of selected item
-            var colorClass = '';
-            var arr =  $('#' + btnId).attr('class').split(" ");
-
-            for (var i = 0; i < arr.length; i++){
-                if(arr[i].indexOf("btn-")>-1){
-                    colorClass = arr[i];
-                    break;
-                }
-            }
-            $('#' + btnId).next().next().find('*').removeClass(colorClass);
-            $('#' + btnId).next().next().find('*').css({"color": ""});
-
-            $('#' + id).addClass(colorClass);
-            $('#' + id).css({"color" : "#fff"})
-        }
-
         function submitSearch(){
-            var resultStructure = $('#btn-result_structure').html();
-            var sector = $('#btn-sector').html();
-            var gateway = $('#btn-gateway').html();
-            //var governorate = $('#btn-governorate').html();
-            var status = $('#btn-status').html();
-            var donor = $('#btn-donor').html();
-            var partner = $('#btn-partner').html();
-            //var district = $('#btn-district').html();
+            var filterTypes = ['result_structure', 'sector', 'gateway', 'status', 'donor', 'partner'];
+            var query = '';
 
-            var query='';
-            if(!resultStructure.includes('Result Structure'))
-                query += 'result_structure=' + $("a:contains(" + resultStructure + ")").attr("itemid") + '&';
+            _.each(filterTypes, function(filterType) {
+                if (document.querySelector('#' + filterType).selectedItem !== undefined && document.querySelector('#' + filterType).selectedItem.getAttribute('itemid') !== null) {
+                    query += filterType + '=' + document.querySelector('#' + filterType).selectedItem.getAttribute('itemid') + '&';
+                }
+            });
 
-            if(!sector.includes('Sector'))
-                query += 'sector=' + $("a:contains(" + sector + ")").attr("itemid") + '&';
+            history.pushState(query, '', '/map/?' + query);
 
-            if(!gateway.includes('Gateways'))
-                query += 'gateway=' + $("a:contains(" + gateway + ")").attr("itemid") + '&';
-
-            // if(!governorate.includes('Governorate'))
-            //     query += 'governorate=' + $("a:contains(" + governorate + ")").attr("itemid") + '&';
-
-            if(!status.includes('Status'))
-                query += 'status=' + $("a:contains(" + status + ")").html().toLowerCase() + '&';
-
-            if(!donor.includes('Donor'))
-                query += 'donor=' + $("a:contains(" + donor + ")").attr("itemid") + '&';
-
-            if(!partner.includes('Partner'))
-                query += 'partner=' + $("a:contains(" + partner + ")").attr("itemid") + '&';
-
-            // if(!district.includes('District'))
-            //     query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';
-
-            history.pushState(query, "", "/map/?" + query);
-            //console.log(query);
-            //alert("{% url 'locations' %}?" + query);
             $.getJSON("{% url 'locations' %}?" + query, function (data) {
-                UpdateMap(data);
-            }).done({
-
+                //console.log(data.length);
+                updateMap(data);
             });
         }
 
         function clearSearch(){
-            history.replaceState("", "", "/map/");
+            history.replaceState('', '', "/map/");
             location.reload();
         }
 
-        $(document).ajaxStart(function(){
-            $('#loading').show();
-        }).ajaxStop(function(){
-            $('#loading').hide();
-        });
-
-        function getRandomColor() {
-            var letters = '0123456789ABCDEF'.split('');
-            var color = '#';
-            for (var i = 0; i < 6; i++ ) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        }
+        // $(document).ajaxStart(function(){
+        //     $('#loading').show();
+        // }).ajaxStop(function(){
+        //     $('#loading').hide();
+        // });
 
         var map1;
         var sublayer;
@@ -523,16 +365,16 @@
                     })
                     .error(function (errors) {
                         // errors contains a list of errors
-                        console.log("errors:" + errors);
+                        //console.log("errors:" + errors);
                     });
                 });
                 $('.leaflet-top.leaflet-right').prepend('<div>Select Layers</div>');
             });
 
-            UpdateMap();
+            updateMap();
         }
 
-        function UpdateMap(pca_locations1){
+        function updateMap(pca_locations1){
                 //remove previous search layer
                 $.each(searchLayerArr, function(keys,vals) {
                     map1.removeLayer(vals);
@@ -580,7 +422,6 @@
                         }
 
                         //looping for sectors for one PD
-
                         if (valuep.sectors != null){
                             $.each(valuep.sectors, function (keys, valueSec) {
                                 var popup_content_tabs_indicator = '';
@@ -613,7 +454,7 @@
                     });
                     popup_content_navs += '</ul>';
                     popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
-                    console.log(popup_content);
+                    //console.log(popup_content);
                     //alert(popup_content);
 
                     var RedIcon = L.icon({
@@ -669,7 +510,7 @@
                 searchLayerArr.push(layerGr);
                 layer_control.addOverlay(layerGr, "<span style='background:" + markerColors[count] + "; color:white;'>Search Results" + searchLayerArr.length + "</span>");
                 layerGr.addTo(map1);
-                console.log(JSON.stringify(layerGr.toGeoJSON()));
+                //console.log(JSON.stringify(layerGr.toGeoJSON()));
 
                     count++;
                 $.each(tableArr, function(keyt,valt) {
