@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 __author__ = 'jcranwellward'
 
+from django.db import connection
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
@@ -18,6 +19,7 @@ from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
 from reports.models import Result, Indicator
+from users.models import Section
 from .exports import (
     # DonorsFormat,
     PCAResource,
@@ -98,6 +100,15 @@ class PcaSectorInlineAdmin(admin.TabularInline):
         'sector',
         'amendment',
     )
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+
+        if db_field.rel.to is Section:
+            kwargs['queryset'] = connection.tenant.sections.all()
+
+        return super(PcaSectorInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
 
 class PCAFileInline(admin.TabularInline):

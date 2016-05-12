@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 
 from partners.models import PartnerOrganization
+from trips.models import LinkedPartner
 
 
 class PartnerFilter(admin.SimpleListFilter):
@@ -21,7 +22,9 @@ class PartnerFilter(admin.SimpleListFilter):
     def queryset(self, request, queryset):
         if self.value():
             partner = PartnerOrganization.objects.get(pk=self.value())
-            return queryset.filter(linkpartners_set__containts=[partner])
+            trip_ids = LinkedPartner.objects.filter(
+                partner=partner).values_list('trip__id', flat=True)
+            return queryset.filter(id__in=trip_ids)
         return queryset
 
 

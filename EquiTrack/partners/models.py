@@ -5,6 +5,7 @@ __author__ = 'jcranwellward'
 import datetime
 from dateutil.relativedelta import relativedelta
 
+from django.db.models import Q
 from django.conf import settings
 from django.db import models, connection
 from django.contrib.auth.models import Group
@@ -281,12 +282,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @property
     def programmatic_visits(self):
-        from trips.models import LinkedPartner
-        return LinkedPartner.objects.filter(
-            partner=self,
-            trip__status=u'completed',
-            trip__travel_type=u'programme_monitoring'
-        ).count()
+        year = datetime.date.today().year
+        from trips.models import LinkedPartner, Trip
+        trip_ids = LinkedPartner.objects.filter(
+            partner=self).values_list('trip__id', flat=True)
+
+        trips = Trip.objects.filter(
+            Q(id__in=trip_ids),
+            Q(from_date__year=year),
+            Q(status=Trip.COMPLETED),
+            Q(travel_type=Trip.PROGRAMME_MONITORING),
+            ~Q(section__name='Drivers'),
+        )
+        return trips.count()
 
     @property
     def spot_checks(self):
@@ -894,10 +902,20 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def programmatic_visits(self):
-        return self.trips.filter(
-            trip__status=u'completed',
-            trip__travel_type=u'programme_monitoring'
-        ).count()
+        year = datetime.date.today().year
+        from trips.models import LinkedPartner, Trip
+        trip_ids = LinkedPartner.objects.filter(
+            intervention=self
+        ).values_list('trip__id', flat=True)
+
+        trips = Trip.objects.filter(
+            Q(id__in=trip_ids),
+            Q(from_date__year=year),
+            Q(status=Trip.COMPLETED),
+            Q(travel_type=Trip.PROGRAMME_MONITORING),
+            ~Q(section__name='Drivers'),
+        )
+        return trips.count()
 
     @property
     def spot_checks(self):

@@ -413,7 +413,7 @@
                 <li>The Cash Transfer other than Direct Payments shall be made by UNICEF to the following bank account
                     of the IP:
                 </li>
-                {% for details in agreement.bank_details %}
+                {% for details in agreement.bank_details.all %}
                     <div style="padding-bottom: 0px; padding-top: 0px">Bank name: {{ details.bank_name }}</div>
                     <div style="padding-bottom: 0px; padding-top: 0px">Bank address: {{ details.bank_address }}</div>
                     <div style="padding-bottom: 0px; padding-top: 0px">Account title: {{ details.account_title }}</div>
