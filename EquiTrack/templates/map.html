@@ -3,24 +3,21 @@
 
 {% block extra_head %}
     <!-- Polymer START -->
-    <base href="{{ STATIC_URL }}bower_components/">
-    <script src="webcomponentsjs/webcomponents-lite.js"></script>
-    <script src="lodash/lodash.min.js"></script>
+    <script src="{{ STATIC_URL }}bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="{{ STATIC_URL }}bower_components/lodash/lodash.min.js"></script>
 
-    <link rel="import" href="iron-flex-layout/iron-flex-layout-classes.html">
-    <link rel="import" href="iron-flex-layout/iron-flex-layout.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/iron-flex-layout/iron-flex-layout.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-button/paper-button.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dialog/paper-dialog.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dropdown-menu/paper-dropdown-menu-light.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-item/paper-item.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-listbox/paper-listbox.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/google-map/google-map.html">
 
-    <link rel="import" href="paper-button/paper-button.html">
-    <link rel="import" href="paper-dialog/paper-dialog.html">
-    <link rel="import" href="paper-dialog-scrollable/paper-dialog-scrollable.html">
-    <link rel="import" href="paper-dropdown-menu/paper-dropdown-menu.html">
-    <link rel="import" href="paper-dropdown-menu/paper-dropdown-menu-light.html">
-    <link rel="import" href="paper-item/paper-item.html">
-    <link rel="import" href="paper-listbox/paper-listbox.html">
-
-    <link rel="import" href="google-map/google-map.html">
-
-    <base href="">
+    <link rel="import" href="{{ STATIC_URL }}elements/etools-dropdown-filter.html">
     <!-- Polymer END -->
 
     {% leaflet_css %}
@@ -86,68 +83,63 @@
 {% endblock %}
 
 {% block content %}
-
+{% verbatim %}
     <section class="main-content-wrapper">
         <section id="main-content">
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-10">
-                        <paper-dropdown-menu id="result_structure" label="Result structures" selected-item>
-                          <paper-listbox class="dropdown-content">
-                            <paper-item>All result structures</paper-item>
-                            {% for result_structure in result_structure_list %}
-                                <paper-item id="result_structure{{ result_structure.id }}" itemid="{{ result_structure.id }}">{{ result_structure.name }}</paper-item>
-                            {% endfor %}
-                          </paper-listbox>
-                        </paper-dropdown-menu>
-                        <paper-dropdown-menu id="sector" label="Sectors" selected-item>
-                            <paper-listbox class="dropdown-content">
-                                <paper-item>All sectors</paper-item>
-                                {% for sector in sectors_list %}
-                                <paper-item id="sector{{ sector.id }}" itemid="{{ sector.id }}">{{ sector.name }}</paper-item>
-                                {% endfor %}
-                            </paper-listbox>
-                        </paper-dropdown-menu>
-                         <paper-dropdown-menu id="gateway" label="Gateways" selected-item>
-                            <paper-listbox class="dropdown-content">
-                                <paper-item>All gateways</paper-item>
-                                {% for gateway in gateway_list %}
-                                <paper-item id="gateway{{ gateway.id }}" itemid="{{ gateway.id }}">{{ gateway.name }}</paper-item>
-                                {% endfor %}
-                            </paper-listbox>
-                        </paper-dropdown-menu>
-                        <br />
-                         <paper-dropdown-menu id="status" label="Status" selected-item>
-                            <paper-listbox class="dropdown-content">
-                                <paper-item>All Statuses</paper-item>
-                                <paper-item id="status0" itemid="0">In process</paper-item>
-                                <paper-item id="status1" itemid="1">Active</paper-item>
-                                <paper-item id="status2" itemid="2">Implemented</paper-item>
-                                <paper-item id="status3" itemid="3">Cancelled</paper-item>
-                            </paper-listbox>
-                        </paper-dropdown-menu>
-                          <paper-dropdown-menu id="donor" label="Donors" selected-item>
-                            <paper-listbox class="dropdown-content">
-                                <paper-item>All donors</paper-item>
-                                {% for donor in donor_list %}
-                                <paper-item id="donor{{ donor.id }}" itemid="{{ donor.id }}">{{ donor.name }}</paper-item>
-                                {% endfor %}
-                            </paper-listbox>
-                        </paper-dropdown-menu>
+                    <etools-dropdown-filter
+                        url="/api/reports/result-structures/"
+                        filter-id="result_structure"
+                        label="Result structures"
+                        all-label="All result structures">
+                    </etools-dropdown-filter>
 
-                        <paper-dropdown-menu id="partner" label="Partners" selected-item>
-                          <paper-listbox class="dropdown-content">
-                          <paper-item>All partners</paper-item>
-                            {% for partner in partner_list %}
-                                <paper-item id="partner{{ partner.id }}" itemid="{{ partner.id }}">{{ partner.name }}</paper-item>
-                            {% endfor %}
-                          </paper-listbox>
-                        </paper-dropdown-menu>
+                    <etools-dropdown-filter
+                        url="/api/reports/sectors/"
+                        filter-id="sector"
+                        label="Sectors"
+                        all-label="All sectors">
+                    </etools-dropdown-filter>
+
+                    <etools-dropdown-filter
+                        url="/api/locations-types/"
+                        filter-id="gateway"
+                        label="Gateways"
+                        all-label="All gateways">
+                    </etools-dropdown-filter><br />
+
+                    <paper-dropdown-menu id="status" label="Status" selected-item>
+                        <paper-listbox class="dropdown-content">
+                            <paper-item id="">All Statuses</paper-item>
+                            <paper-item id="0">In process</paper-item>
+                            <paper-item id="1">Active</paper-item>
+                            <paper-item id="2">Implemented</paper-item>
+                            <paper-item id="3">Cancelled</paper-item>
+                        </paper-listbox>
+                    </paper-dropdown-menu>
+
+                    <etools-dropdown-filter
+                        url="/api/funds/donors/"
+                        filter-id="donor"
+                        label="Donors"
+                        all-label="All donors">
+                    </etools-dropdown-filter>
+
+                    <etools-dropdown-filter
+                        url="/api/partners/"
+                        filter-id="partner"
+                        label="Partners"
+                        all-label="All partners">
+                    </etools-dropdown-filter><br />
                 </div>
                 <div class="col-xs-2 text-right" style="padding-top: 25px;">
                     <paper-button raised noink onclick="submitSearch()" style="margin-bottom: 10px;">Submit</paper-button><br />
                     <paper-button raised noink onclick="clearSearch()">Clear</paper-button>
                 </div>
             </div>
+
+{% endverbatim %}
 
             <div class="row col-md-11 col-md-offset-1" style="display: none;">
                 <div id="accordion" class="panel-group">
@@ -247,15 +239,15 @@
             var query = '';
 
             _.each(filterTypes, function(filterType) {
-                if (document.querySelector('#' + filterType).selectedItem !== undefined && document.querySelector('#' + filterType).selectedItem.getAttribute('itemid') !== null) {
-                    query += filterType + '=' + document.querySelector('#' + filterType).selectedItem.getAttribute('itemid') + '&';
+                if (document.querySelector('#' + filterType).selectedItem !== undefined &&
+                    document.querySelector('#' + filterType).selectedItem.id !== '') {
+                    query += filterType + '=' + document.querySelector('#' + filterType).selectedItem.getAttribute('id') + '&';
                 }
             });
 
             history.pushState(query, '', '/map/?' + query);
 
             $.getJSON("{% url 'locations' %}?" + query, function (data) {
-                //console.log(data.length);
                 updateMap(data);
             });
         }

@@ -1,0 +1,50 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../bower_components/paper-item/paper-item.html">
+
+<dom-module id="etools-dropdown-filter">
+    <template>
+        <iron-ajax auto
+            url="{{url}}"
+            handle-as="json"
+            last-response="{{items}}">
+        </iron-ajax>
+
+        <paper-dropdown-menu id="{{ filterId }}" label="{{ label }}" selected-item>
+            <paper-listbox class="dropdown-content">
+                <paper-item id="">{{ allLabel }}</paper-item>
+                <template is="dom-repeat" items="[[items]]">
+                    <paper-item id="[[ item.id ]]">[[ item.name ]]</paper-item>
+                </template>
+            </paper-listbox>
+        </paper-dropdown-menu>
+    </template>
+</dom-module>
+<script>
+Polymer({
+    is: 'etools-dropdown-filter',
+    properties: {
+        filterId: {
+            type: String,
+            value: ''
+        },
+        label: {
+            type: String,
+            value: ''
+        },
+        allLabel: {
+            type: String,
+            value: ''
+        },
+        url: {
+            type: String,
+            value: ''
+        }
+    },
+    ready: function() {
+        this.url = window.location.protocol + '//' + window.location.host + this.url;
+    }
+});
+</script>
