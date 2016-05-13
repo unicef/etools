@@ -2,81 +2,61 @@
 {% load leaflet_tags %}
 
 {% block extra_head %}
-    <!-- Polymer START -->
     <script src="{{ STATIC_URL }}bower_components/webcomponentsjs/webcomponents-lite.js"></script>
     <script src="{{ STATIC_URL }}bower_components/lodash/lodash.min.js"></script>
 
     <link rel="import" href="{{ STATIC_URL }}bower_components/iron-flex-layout/iron-flex-layout-classes.html">
     <link rel="import" href="{{ STATIC_URL }}bower_components/iron-flex-layout/iron-flex-layout.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/iron-label/iron-label.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/iron-pages/iron-pages.html">
+
     <link rel="import" href="{{ STATIC_URL }}bower_components/paper-button/paper-button.html">
     <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dialog/paper-dialog.html">
     <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
     <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
     <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dropdown-menu/paper-dropdown-menu-light.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-input/paper-input.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-input/paper-textarea.html">
     <link rel="import" href="{{ STATIC_URL }}bower_components/paper-item/paper-item.html">
     <link rel="import" href="{{ STATIC_URL }}bower_components/paper-listbox/paper-listbox.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-tabs/paper-tabs.html">
+
     <link rel="import" href="{{ STATIC_URL }}bower_components/google-map/google-map.html">
 
+    <link rel="import" href="{{ STATIC_URL }}bower_components/neon-animation/animations/fade-out-animation.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/neon-animation/animations/scale-up-animation.html">
+
     <link rel="import" href="{{ STATIC_URL }}elements/etools-dropdown-filter.html">
-    <!-- Polymer END -->
-
-    {% leaflet_css %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.awesome-markers.css" />
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
-
-    <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
-    <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
-
-    <!--[if lte IE 8 -->
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
-    <![endif]-->
-    <!--Switch between the different themes changing the stylesheet below - light-theme.css |dark-theme.css -->
-   <!-- <link rel="stylesheet" href="{{ STATIC_URL }}css/dark-theme.css"> -->
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/makeitresponsive.css">
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/spongemap.css" />
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.awesome-markers.css" />
 
     <style>
-    /* Start by setting display:none to make this hidden.
-   Then we position it in relation to the viewport window
-   with position:fixed. Width, height, top and left speak
-   speak for themselves. Background we set to 80% white with
-   our animation centered, and no-repeating */
-    .modal {
-        display:    none;
-        position:   fixed;
-        z-index:    1000;
-        top:        0;
-        left:       0;
-        height:     100%;
-        width:      100%;
-        background: rgba( 255, 255, 255, .8 )
-                    url('http://i.stack.imgur.com/FhHRx.gif')
-                    50% 50%
-                    no-repeat;
+    google-map {
+        height: 600px;
     }
 
-    /* When the body has the loading class, we turn
-       the scrollbar off with overflow:hidden */
-    body.loading {
-        overflow: hidden;
-    }
-
-    /* Anytime the body has the loading class, our
-       modal element will be visible */
-    body.loading .modal {
-        display: block;
+    paper-dialog.size-position {
+        width: 600px;
+        height: 600px;
+        overflow: auto;
     }
 
     paper-dropdown-menu {
         width: 150px;
         padding-right: 20px;
     }
+    </style>
+    <style is="custom-style">
+    :root {
+        --paper-tabs-selection-bar-color: var(--paper-red-900);
+    }
 
-    .vertical-align {
-        display: inline-block;
-        vertical-align: middle;
-        float: none;
+    iron-pages {
+        max-height: 355px;
+        padding-right: 10px;
+        overflow:auto;
+    }
+
+    paper-tabs, paper-toolbar {
+        height: 30px;
     }
     </style>
 
@@ -138,402 +118,144 @@
                     <paper-button raised noink onclick="clearSearch()">Clear</paper-button>
                 </div>
             </div>
-
-{% endverbatim %}
-
-            <div class="row col-md-11 col-md-offset-1" style="display: none;">
-                <div id="accordion" class="panel-group">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Detailed Search</a>
-                            </h4>
-                        </div>
-                         <div id="collapseOne" class="panel-collapse collapse">
-                            <div class="panel-body">
-                                <div class="col-md-2">
-                                    <div class="btn-group btn-block">
-                                        <button id="btn-indicator" type="button" class="col-md-10 btn btn-info">
-                                           Indicator
-                                        </button>
-
-                                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
-                                             <span class="caret"></span>
-                                        </button>
-                                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                                           {% for indicator in indicator_list %}
-                                                <li><a href="javascript:void(0);" id="indicator{{ indicator.id }}" itemid="{{ indicator.id }}">{{ indicator.name }}</a></li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="btn-group btn-block">
-                                        <button id="btn-output" type="button" class="col-md-10 btn btn-success">
-                                           Output
-                                        </button>
-
-                                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
-                                             <span class="caret"></span>
-                                        </button>
-                                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                                           {% for output in output_list %}
-                                                <li><a href="javascript:void(0);" id="output{{ output.id }}" itemid="{{ output.id }}">{{ output.name }}</a></li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div class='col-md-3'>
-                                    <div class="form-group">
-                                        <label class="col-md-2 control-label nopadding">Date From</label>
-                                        <div class='input-group input-append date col-md-10' id='datetimepicker6'>
-                                            <input type='text' class="form-control" name="date" />
-                                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class='col-md-3'>
-                                    <div class="form-group">
-                                        <label class="col-md-2 control-label no nopadding">Date To</label>
-                                        <div class='input-group input-append date col-md-10' id='datetimepicker7'>
-                                            <input type='text' class="form-control" name="date" />
-                                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                             </div>
-                         </div>
-                    </div>
-                </div>
-            </div>
             <div class="row">
                 <div class="col-md-12">
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-
-                             {% leaflet_map "leaflet-map" callback="window.main" %}
-
-                            <div id='mapmenu' class="col-md-10">
-                            </div>
-                        </div>
-                    </div>
+                    <google-map zoom="3" latitude="30.826781" longitude="-41.308594" fit-to-markers max-zoom="10" info open></google-map>
+                    <paper-dialog id="gmap_dialog" class="size-position" entry-animation="scale-up-animation" exit-animation="fade-out-animation"></paper-dialog>
                 </div>
             </div>
-        <div id="loading" class="modal"></div>
         </section>
     </section>
+{% endverbatim %}
 
+<script type="text/javascript">
+    function submitSearch(){
+        var filterTypes = ['result_structure', 'sector', 'gateway', 'status', 'donor', 'partner'];
+        var query = '';
 
-{% endblock %}
+        _.each(filterTypes, function(filterType) {
+            if (document.querySelector('#' + filterType).selectedItem !== undefined &&
+                document.querySelector('#' + filterType).selectedItem.id !== '') {
+                query += filterType + '=' + document.querySelector('#' + filterType).selectedItem.getAttribute('id') + '&';
+            }
+        });
 
-{% block extra_js %}
+        $.getJSON("{% url 'locations' %}?" + query, function(data) {
+            updateMap(data);
+        });
+    }
 
-    {% leaflet_js %}
+    function clearSearch(){
+        location.reload();
+    }
 
-    <script type="text/javascript">
-        function submitSearch(){
-            var filterTypes = ['result_structure', 'sector', 'gateway', 'status', 'donor', 'partner'];
-            var query = '';
+    function updateMap(locations){
+        var gmap = document.querySelector('google-map');
+        gmap.clear();
 
-            _.each(filterTypes, function(filterType) {
-                if (document.querySelector('#' + filterType).selectedItem !== undefined &&
-                    document.querySelector('#' + filterType).selectedItem.id !== '') {
-                    query += filterType + '=' + document.querySelector('#' + filterType).selectedItem.getAttribute('id') + '&';
+        _.each(locations, function(location, locationIndex) {
+            var marker = document.createElement('google-map-marker');
+            marker.setAttribute('id', location.id);
+            marker.setAttribute('latitude', location.latitude);
+            marker.setAttribute('longitude', location.longitude);
+            marker.setAttribute('title', location.location_name);
+            marker.setAttribute('click-events', true);
+
+            marker.addEventListener('google-map-marker-click', function (e) {
+                var dialog = document.getElementById('gmap_dialog');
+
+                if (dialog) {
+                    injectBoundHTML(createDialogContent(locationIndex, location), dialog);
+
+                    var template = document.querySelector('template[is="dom-bind"]');
+                    template.selected = 0;
+
+                    dialog.open();
                 }
             });
 
-            history.pushState(query, '', '/map/?' + query);
-
-            $.getJSON("{% url 'locations' %}?" + query, function (data) {
-                updateMap(data);
-            });
-        }
-
-        function clearSearch(){
-            history.replaceState('', '', "/map/");
-            location.reload();
-        }
-
-        // $(document).ajaxStart(function(){
-        //     $('#loading').show();
-        // }).ajaxStop(function(){
-        //     $('#loading').hide();
-        // });
-
-        var map1;
-        var sublayer;
-        var table;
-        var uniqueID;
-        var subLayerOptions = '[';
-        var count = 0;
-        var tableArr = [];
-        var color="";
-        var searchLayerArr = [];
-        var markerColors = ['red', 'darkred', 'orange', 'green', 'darkgreen', 'blue', 'purple', 'darkpuple', 'cadetblue'];
-
-        function main(map, options) {
-            map1=map;
-            {% if lat and lng %}
-                map.setZoom({{ zoom }});
-                map.panTo(new L.LatLng({{ lat }}, {{ lng }}));
-            {% endif %}
-            layer_control = L.control.layers().addTo(map);
-            //get all cartodb tables from etools and pull data from CartoDB
-            $.getJSON("{% url 'cartodbtables' %}", function (data) {
-                $.each(data, function (key, val) {
-                    $.getJSON(
-                            "https://"+ val.domain +".cartodb.com/api/v2/sql?q=SELECT * FROM " + val.table_name +
-                            "&format=GeoJSON&api_key=" + val.api_key
-                    )
-                    .done(function (data) {
-                        var newlayer;
-                        color = val.color;
-                          tableArr.push({
-                              table_name: val.table_name,
-                              pcode_col: val.pcode_col,
-                              color: color,
-                              display_name: val.display_name
-                          });
-                        if (data.features[0].geometry != null) {
-                            if (data.features[0].geometry.type == "MultiPolygon" ||
-                                    data.features[0].geometry.type == "Polygon") {
-                                newlayer = L.geoJson(data, {
-                                    style: {
-                                        color: "#fff",
-                                        weight: 2,
-                                        opacity: 0.5,
-                                        fillOpacity: 0.3,
-                                        fillColor: color
-                                    }
-                                });
-                            }
-                            else{
-
-                                newlayer = L.geoJson(data, {
-                                    style: function (feature) {
-                                        return feature.properties && feature.properties.style;
-                                    },
-
-                                    pointToLayer: function (feature, latlng) {
-                                        return L.circleMarker(latlng, {
-                                            radius: 5,
-                                            fillColor: color,
-                                            color: "#fff",
-                                            weight: 1,
-                                            opacity: 1,
-                                            fillOpacity: 0.8
-                                        });
-			                        }
-                                 });
-                            }
-                        }
-                        else{
-                            newlayer = L.geoJson(data, {
-                                style: function (feature) {
-                                    return feature.properties && feature.properties.style;
-                                },
-
-                                pointToLayer: function (feature, latlng) {
-                                    return L.circleMarker(latlng, {
-                                        radius: 5,
-                                        fillColor: color,
-                                        color: "#fff",
-                                        weight: 1,
-                                        opacity: 1,
-                                        fillOpacity: 0.8
-                                    });
-                                }
-                             });
-                        }
-                        layer_control.addOverlay(newlayer, val.display_name);
-
-                        $.each(tableArr, function(keyt,valt) {
-                            $("span:contains(" + valt.display_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
-                            $("span:contains(" + valt.display_name + ")").css("color", "#fff");
-                        });
-                    })
-                    .error(function (errors) {
-                        // errors contains a list of errors
-                        //console.log("errors:" + errors);
-                    });
-                });
-                $('.leaflet-top.leaflet-right').prepend('<div>Select Layers</div>');
-            });
-
-            updateMap();
-        }
-
-        function updateMap(pca_locations1){
-                //remove previous search layer
-                $.each(searchLayerArr, function(keys,vals) {
-                    map1.removeLayer(vals);
-                });
-                var layerGr = new L.layerGroup();
-                $.each( pca_locations1, function( keyq, valueq ) {
-                    var popup_content_start = "<div class='row col-md-12'><label class='col-md-3 control-label'>Location</label><div id='location_name' class='col-md-9'>" + valueq.location_name + "</div></div>" +
-                                    "<div class='row col-md-12'><label class='col-md-3 control-label'>Location Type</label><div id='location_type' class='col-md-9'>" + valueq.location_type + "</div></div>" +
-                                    "<div class='row col-md-12'><label class='col-md-8 control-label'>Interventions associated with this location:</label><div id='Interventions' class='col-md-4'>" +  "</div></div>" +
-                            '<div class="content" id="mytab" style="padding:20px col-md-11">' +
-                                                '';
-                    var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
-                    var popup_content_tabs = '<div class="tab-content" id="infotabs">';
-                    var popup_content='';
-                    //looping through all Interventions for one location
-                    $.each( valueq.parterships, function( keyp, valuep ) {
-                        popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
-                        popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
-                                "<div class='row'>" +
-                                "<div class='row col-md-12'><label class='col-md-3 control-label'>Title</label><div id='pca_title' class='col-md-9'>" + valuep.pca_title + "</div></div>" +
-                                "<div class='row col-md-12'><label class='col-md-3 control-label'>Partner</label><div id='partner_name' class='col-md-9'>" + valuep.partner_name + "</div></div>" +
-                                "<div class='row col-md-12'><label class='col-md-10 control-label'>Results by Sector:</label><div id='partner_name' class='col-md-2'></div></div>" +
-                                "</div>";
-
-
-                        if (valuep.distribution_plans != null) {
-
-
-                            popup_content_tabs += "<div id='dist" + keyp + "' style='padding-top: 5px;'>" +
-                                            "<div class='row'>" +
-                                    "<div class='row col-md-12'><label class='col-md-10 control-label'>Distribution Plans:</label><div class='col-md-2'></div></div>" +
-                                    "<div class='row col-md-12'><div class='col-md-1'></div><label class='col-md-4 control-label'>Item Type</label><label class='col-md-4 control-label'>Delivered</label></div>" +
-                                    "</div>";
-
-                            $.each(valuep.distribution_plans, function (keyDist, valueDist) {
-
-                                if(valueq.location_name ==valueDist.site) {
-
-                                    popup_content_tabs += "<div id='dist" + keyp + "' style='padding-top: 5px;'>" +
-                                            "<div class='row'>" +
-                                            "<div class='row col-md-12'><div class='col-md-1'></div><div class='col-md-4'>"+valueDist.item+"</div><div id='dist_delivered' class='col-md-4'>" + valueDist.delivered + "/" + valueDist.quantity + "</div></div>" +
-                                            "</div>";
-                                }
-                            });
-                        }
-
-                        //looping for sectors for one PD
-                        if (valuep.sectors != null){
-                            $.each(valuep.sectors, function (keys, valueSec) {
-                                var popup_content_tabs_indicator = '';
-
-                                var popup_content_tabs_sec = '<div class="row"><div class="panel-group col-md-12" id="accordion">' +
-                                        '<div class="panel panel-default">' +
-                                        '<div class="panel-heading">' +
-                                        '<h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapse' + keyp + keys + '">' + valueSec.sector_name + '</a></h3>' +
-                                        '</div>' +
-                                        '<div id="collapse' + keyp + keys + '" class="panel-collapse collapse">';
-
-                                $.each(valueSec.indicators, function (keyi, valuei) {
-                                    popup_content_tabs_indicator +=
-                                            '<div class="panel-body">' +
-                                            '<a href=""><span class="sublabel">' + valuei.indicator + '</span></a>' + '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
-                                            '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
-                                            '<div class="progress progress-striped">' +
-                                            '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current / valuei.programmed * 100 + '%">' + (valuei.current / valuei.programmed * 100).toFixed(1) + '% </div>' +
-                                            '</div>' +
-                                            '</div>';
-                                });
-                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div>';
-
-                                popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
-
-                            });
-                    }
-                                                popup_content_tabs  += "</div></div>";
-                            popup_content_tabs += '</div>';
-                    });
-                    popup_content_navs += '</ul>';
-                    popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
-                    //console.log(popup_content);
-                    //alert(popup_content);
-
-                    var RedIcon = L.icon({
-                        iconUrl: '../static/img/marker-icon.png'
-                    });
-
-                    //var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
-                    var fIcon = 'building-o';
-
-                    switch(valueq.gateway_id){
-                        case 6: // Collective Shelter
-                            fIcon = 'home';
-                            break;
-                        case 2: //Community Center
-                            fIcon = 'building-o';
-                            break;
-                        case 5: //Informal Tented Settlement
-                            fIcon = 'home';
-                            break;
-                        case 8: //Palestinian Camps
-                            fIcon = 'home';
-                            break;
-                        case 4: //Primary Health Care Center
-                            fIcon = 'h-square';
-                            break;
-                        case 1: //School
-                            fIcon = 'book';
-                            break;
-                        case 4: //Social Development Center
-                            fIcon = 'building-o';
-                            break;
-                        case 7: //UNHCR Registration Site
-                            fIcon = 'flag';
-                            break;
-                        case 9: //Village
-                            fIcon = 'home';
-                            break;
-                    }
-
-                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude)
-                            , {
-                        icon: L.AwesomeMarkers.icon({
-                            icon: fIcon,
-                            prefix: 'fa',
-                            markerColor: markerColors[count]
-
-                        })
-                    });
-                    marker.bindPopup(popup_content);
-                    layerGr.addLayer(marker);
-
-                });
-                searchLayerArr.push(layerGr);
-                layer_control.addOverlay(layerGr, "<span style='background:" + markerColors[count] + "; color:white;'>Search Results" + searchLayerArr.length + "</span>");
-                layerGr.addTo(map1);
-                //console.log(JSON.stringify(layerGr.toGeoJSON()));
-
-                    count++;
-                $.each(tableArr, function(keyt,valt) {
-                    //alert($("span:contains(" + valt.table_name + ")").html());
-                    $("span:contains(" + valt.display_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
-                    $("span:contains(" + valt.display_name + ")").css("color", "#fff");
-                });
-
-
-                //create tabs in info window
-                $("#myTab a").click(function (e) {
-                    alert("tab");
-                    e.preventDefault();
-                    $(this).tab('show');
-                });
-           // });
-        }
-
-        $(document).ready(function() {
-            $('#datetimepicker6').datepicker({ format: 'mm/dd/yyyy' });
-            $('#datetimepicker7').datepicker({ format: 'mm/dd/yyyy' });
-
-            $("#datetimepicker6").on("dp.change",function (e) {
-                $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
-            });
-            $("#datetimepicker7").on("dp.change",function (e) {
-                $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
-            });
+            Polymer.dom(gmap).appendChild(marker);
         });
 
-    </script>
+        function injectBoundHTML(html, element) {
+            var template = document.createElement('template', 'dom-bind');
+            var doc = template.content.ownerDocument;
+            var div = doc.createElement('div');
+            div.innerHTML = html;
+            template.content.appendChild(div);
+            while (element.firstChild) {
+                element.removeChild(element.firstChild);
+            }
+            element.appendChild(Polymer.Base.instanceTemplate(template));
+        }
 
-    <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
+        {% verbatim %}
+        function createDialogContent(locationIndex, location) {
+            var popupContent = '';
+            var popupContentStart = '\
+            <paper-input name="location_name" id="location_name" label="Location Name" value="' + location.location_name + '" readonly></paper-input>\
+            <paper-input name="location_type" id="location_type" label="Location Type" value="' + location.location_type + '" readonly></paper-input>\
+            <br /><div>Interventions</div><template is="dom-bind">';
+
+            // tabs
+            var popupContentTabs = '<div class="middle"><paper-tabs class="bottom self-end" selected="{{selected}}">';
+
+            _.each(location.parterships, function(partnership, partnershipIndex) {
+                popupContentTabs += '<paper-tab>' + partnership.pca_number + '</paper-tab>';
+            });
+
+            popupContentTabs += '</paper-tabs></div>';
+
+            // content for each tab
+            var popupContentNavs = '<div class="bottom"><iron-pages selected="{{selected}}">';
+
+            _.each(location.parterships, function(partnership, partnershipIndex) {
+                popupContentNavs += '<div>';
+                popupContentNavs += '<paper-textarea label="Title" value="' + partnership.pca_title + '" readonly></paper-textarea>';
+                popupContentNavs += '<paper-input label="Partner" value="' + partnership.partner_name + '" readonly></paper-input>';
+
+                popupContentNavs += '<br><div>Distribution Plans</div>';
+
+                if (partnership.distribution_plans != null && partnership.distribution_plans.length > 0) {
+                    popupContentNavs += '<paper-input label="Item Type" value="Delivered" readonly style="padding-left: 10px;"></paper-input>';
+
+                    _.each(partnership.distribution_plans, function(distributionPlan) {
+                        if (location.location_name == distributionPlan.site) {
+                            popupContentNavs += '<paper-input label="' + distributionPlan.item + '" value="' + distributionPlan.delivered + '" readonly style="padding-left: 10px;"></paper-input>';
+                        }
+                    });
+                }
+
+                popupContentNavs += '<br><div>Sectors</div>';
+
+                if (partnership.pcasector_set != null && partnership.pcasector_set.length > 0) {
+                    _.each(partnership.pcasector_set, function(sector, sectorKey) {
+                        popupContentNavs += '<paper-input label="' + sector.sector_name + '" value="Delivered" readonly style="padding-left: 10px;"></paper-input>';
+
+                        _.each(sector.indicators, function(indicator) {
+                            popupContentNavs +=
+                                    '<div style="padding-left: 10px; margin-top: 8px;">' +
+                                        '<label class="style-scope paper-input" style="font-weight: normal; font-size: 12px; color: #737373;">' + indicator.indicator + '</label><div><span class="sublabel" style="float: right;">Programmed: ' + indicator.programmed + '</span></div>' +
+                                        '<div><span class="sublabel">Reached: ' + indicator.current + '</span></div>' +
+                                        '<div class="progress progress-striped">' +
+                                            '<div class="progress-bar progress-bar-blue" style="width: ' + indicator.current / indicator.programmed * 100 + '%">' + (indicator.current / indicator.programmed * 100).toFixed(1) + '% </div>' +
+                                        '</div>' +
+                                    '</div>';
+                        });
+                    });
+                }
+
+                popupContentNavs += '</div>';
+            });
+
+            popupContentNavs += '</iron-pages></div>';
+
+            popupContent = popupContentStart + popupContentTabs + popupContentNavs + '</template>';
+
+            return popupContent;
+        }
+
+        {% endverbatim %}
+    }
+</script>
 {% endblock %}
