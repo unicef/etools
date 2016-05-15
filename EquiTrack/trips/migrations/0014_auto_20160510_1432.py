@@ -19,7 +19,7 @@ def migrate_partners(apps, schema_editor):
             )
             if created:
                 print 'Linked Intervention {} to Trip {}'.format(
-                    intervention.number..encode('utf8'), trip.id
+                    intervention.number.encode('utf8'), trip.id
                 )
 
 
