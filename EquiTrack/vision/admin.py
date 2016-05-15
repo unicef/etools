@@ -9,6 +9,12 @@ class VisionSyncLogAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
+    list_filter = (
+        'country',
+        'handler_name',
+        'successful',
+        'date_processed',
+    )
     list_display = (
         'country',
         'handler_name',
