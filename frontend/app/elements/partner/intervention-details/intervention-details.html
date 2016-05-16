@@ -298,6 +298,7 @@
     },
 
     _submitReport: function() {
+      var error = false;
       var myReq = this.$.ajaxPost;
       var tf = this.$.timeFrame;
       var body = [];
@@ -305,7 +306,13 @@
       console.log(inds);
 
       inds.forEach(function(el) {
-        console.log(el);
+        // console.log('Checking indicator: ', el);
+        var valid = el.validReport();
+        // console.log(valid);
+        if (valid.status !== true){
+          error = valid;
+          return;
+        }
         var rep = el.getReport();
         body.push({
           'result_chain': el.rc.id,
@@ -319,6 +326,10 @@
         });
 
       });
+      if (error) {
+        app.$.alert.showText('One or more values selected is incomplete');
+        return;
+      }
       // console.log(myRep);
       myReq.body = body;
       myReq.method = 'POST';

@@ -134,20 +134,19 @@ class FileAttachmentSerializer(serializers.ModelSerializer):
 
 class TripSerializer(serializers.ModelSerializer):
 
-    traveller = serializers.CharField(source='owner')
-    traveller_id = serializers.IntegerField(source='owner.id')
-    supervisor_name = serializers.CharField(source='supervisor')
-    section = serializers.CharField(source='section.name')
+    traveller = serializers.CharField(source='owner', read_only=True)
+    traveller_id = serializers.IntegerField(source='owner.id', read_only=True)
+    supervisor_name = serializers.CharField(source='supervisor', read_only=True)
+    section_name = serializers.CharField(source='section.name', read_only=True)
     travel_type = serializers.CharField()
-    # related_to_pca = serializers.CharField(source='no_pca')
-    url = serializers.URLField(source='get_admin_url')
-    travel_assistant = serializers.CharField()
-    budget_owner = serializers.CharField()
-    staff_responsible_ta = serializers.CharField(source='programme_assistant')
-    representative = serializers.CharField()
-    human_resources = serializers.CharField()
-    vision_approver = serializers.CharField()
-    office = serializers.CharField(source='office.name')
+    url = serializers.URLField(source='get_admin_url', read_only=True)
+    travel_assistant = serializers.CharField(read_only=True)
+    budget_owner = serializers.CharField(read_only=True)
+    staff_responsible_ta = serializers.CharField(source='programme_assistant', read_only=True)
+    representative = serializers.CharField(read_only=True)
+    human_resources = serializers.CharField(read_only=True)
+    vision_approver = serializers.CharField(read_only=True)
+    office_name = serializers.CharField(source='office.name', read_only=True)
 
     partners = serializers.SerializerMethodField()
     partnerships = serializers.SerializerMethodField()
@@ -266,8 +265,10 @@ class TripSerializer(serializers.ModelSerializer):
             'supervisor_name',
             'travel_assistant',
             'section',
+            'section_name',
             'purpose_of_travel',
             'office',
+            'office_name',
             'main_observations',
             'constraints',
             'lessons_learned',

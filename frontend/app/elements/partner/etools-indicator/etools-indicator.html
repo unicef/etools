@@ -114,6 +114,28 @@
     _autocompleteUrl: function() {
       return this.getEp('locationsAutocomplete').url;
     },
+    validReport: function() {
+      // make sure location is selected and location ID is present
+      // TODO: make sure location is valid according to the latest locations
+      var valid = {
+        status: true,
+        errors: []
+      };
+      if ((!this.selectedLocationReport) || (!this.selectedLocationReport.id)) {
+        valid.status = false;
+        valid.errors.push({
+          'location': 'Valid location not selected'
+        });
+      }
+      // console.log(this.selectedNumberResult, this.selectedNumberResult.total);
+      if (isNaN(this.selectedNumberResult.total) || (this.selectedNumberResult.total === '')) {
+        valid.status = false;
+        valid.errors.push({
+          'number': 'Valid total measurement is needed'
+        });
+      }
+      return valid;
+    },
     getReport: function() {
       return {
         location: this.selectedLocationReport,
