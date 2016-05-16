@@ -101,6 +101,8 @@ class ActionPointSerializer(serializers.ModelSerializer):
             'status',
             'description',
             'due_date',
+            'actions_taken',
+            'completed_date',
             'comments'
         )
         extra_kwargs = {'id': {'read_only': False}}
