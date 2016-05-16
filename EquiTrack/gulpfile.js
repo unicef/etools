@@ -73,4 +73,37 @@ gulp.task('postgres:load_data', function(){
     });
 })
 
+// web component test (polymer unit test)
+gulp.task('wct:browser', function() {
+  gulp.src(__filename)
+    .pipe($.open({uri: 'http://127.0.0.1:2000/test/index.html'}));
+});
+
+gulp.task('wct:livereload', function() {
+  var child = childProcess.exec('./node_modules/livereloadx/bin/livereloadx.js test/');
+  child.stdout.on('data', function(data) {
+    console.log(data.replace(/[\n\r]+/g, ''));
+  });
+});
+
+gulp.task('wct:start', function() {
+  var child = childProcess.exec('./node_modules/web-component-tester/bin/wct -p');
+  child.stdout.on('data', function(data) {
+    console.log(data.replace(/[\n\r]+/g, ''));
+  });
+});
+
+gulp.task('wct:test:local', function(cb) {
+  runSequence(
+    'wct:start',
+    'wct:browser',
+    'wct:livereload',
+    cb
+  );
+});
+
+// Load tasks for web-component-tester
+// Adds tasks for `gulp test:local` and `gulp test:remote`
+require('web-component-tester').gulp.init(gulp);
+
 }());
