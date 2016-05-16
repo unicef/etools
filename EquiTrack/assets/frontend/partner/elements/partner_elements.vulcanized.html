@@ -25835,8 +25835,17 @@ commonBv.globals = {
         observer: '_endpointChanged'
       }
     },
-
+    _startLoading: function() {
+      console.log('ajax-startloading');
+      app.$.loading.loadingText = 'Loading...';
+      app.$.loading.show();
+    },
+    _stopLoading: function() {
+      console.log('ajax-stoploading');
+      app.$.loading.hide();
+    },
     handleError: function(event, error){
+      this._stopLoading();
       console.log('handling the error from etools-ajax');
       console.log('add error checking and validation here');
       // TODO: alert with needed errors.
@@ -25846,7 +25855,7 @@ commonBv.globals = {
         window.location = this.getEp('login');
         return;
       }
-      window.alert('Page has not loaded sucessfully '+event.srcElement.url);
+      app.$.alert.showText('Page has not loaded sucessfully '+event.srcElement.url);
       this.fire('error', {
         request: event,
         error: error.error
@@ -25854,19 +25863,7 @@ commonBv.globals = {
     },
 
     handleResponse: function(rsp) {
-      //console.log('handling the response from etools-ajax')
-      //console.log(rsp.detail.xhr.response, rsp.detail.xhr)
-      //console.log(rsp.detail.xhr.responseURL);
-      //console.log(rsp.srcElement.url);
-
-      // TODO: responseURL does not exist in IE11 and Safari
-      // if (rsp.detail.xhr.responseURL !== rsp.srcElement.url){
-      //   console.error('expected link did not work, got redirected', rsp.detail.xhr.responseURL, rsp.srcElement.url);
-      //   // TODO: if we get redirected to login.. trigger a global redirect mechanism
-      //   // this._handleUnexpectedResponse();
-      //   return;
-      // }
-      // console.log('detail here', rsp.detail.xhr.response)
+      this._stopLoading();
       console.log(
         rsp.srcElement.url,
         'xhr response ',
@@ -25885,7 +25882,6 @@ commonBv.globals = {
       }
       // TODO: check if endpoint should be in localstorage
         // TODO: if true place response in localstorage + expiration time (expiration time should be taken based on each endpoint)
-
       this.fire('response', rsp.detail.xhr.response, {bubbles: false});
     },
     _getCSRFCookie: function() {
@@ -25915,6 +25911,10 @@ commonBv.globals = {
         return;
       }
       this.$.customAjax.url = newUrl;
+
+      if (newUrl !== null) {
+        this._startLoading();
+      }
     },
     sendPostRequest: function() {
       console.log('unsafe method', this.method);
@@ -25927,6 +25927,7 @@ commonBv.globals = {
       };
       this.$.customAjax.url = this.url;
       this.$.customAjax.generateRequest();
+      this._startLoading();
       return;
     },
     _endpointChanged: function(newEndpoint) {
@@ -25947,9 +25948,11 @@ commonBv.globals = {
         } else {
           // If expired shoot a new request
           this.$.customAjax.url = this.ep.url;
+          this._startLoading();
         }
       } else {
         this.$.customAjax.url = this.ep.url;
+        this._startLoading();
       }
     }
 
@@ -25957,6 +25960,595 @@ commonBv.globals = {
   });
 })();
 
+</script><script>
+
+  /** @polymerBehavior */
+  Polymer.PaperSpinnerBehavior = {
+
+    listeners: {
+      'animationend': '__reset',
+      'webkitAnimationEnd': '__reset'
+    },
+
+    properties: {
+      /**
+       * Displays the spinner.
+       */
+      active: {
+        type: Boolean,
+        value: false,
+        reflectToAttribute: true,
+        observer: '__activeChanged'
+      },
+
+      /**
+       * Alternative text content for accessibility support.
+       * If alt is present, it will add an aria-label whose content matches alt when active.
+       * If alt is not present, it will default to 'loading' as the alt value.
+       */
+      alt: {
+        type: String,
+        value: 'loading',
+        observer: '__altChanged'
+      },
+
+      __coolingDown: {
+        type: Boolean,
+        value: false
+      }
+    },
+
+    __computeContainerClasses: function(active, coolingDown) {
+      return [
+        active || coolingDown ? 'active' : '',
+        coolingDown ? 'cooldown' : ''
+      ].join(' ');
+    },
+
+    __activeChanged: function(active, old) {
+      this.__setAriaHidden(!active);
+      this.__coolingDown = !active && old;
+    },
+
+    __altChanged: function(alt) {
+      // user-provided `aria-label` takes precedence over prototype default
+      if (alt === this.getPropertyInfo('alt').value) {
+        this.alt = this.getAttribute('aria-label') || alt;
+      } else {
+        this.__setAriaHidden(alt==='');
+        this.setAttribute('aria-label', alt);
+      }
+    },
+
+    __setAriaHidden: function(hidden) {
+      var attr = 'aria-hidden';
+      if (hidden) {
+        this.setAttribute(attr, 'true');
+      } else {
+        this.removeAttribute(attr);
+      }
+    },
+
+    __reset: function() {
+      this.active = false;
+      this.__coolingDown = false;
+    }
+  };
+</script>
+<dom-module id="paper-spinner-styles" assetpath="../bower_components/paper-spinner/">
+  <template>
+    <style>
+      /*
+      /**************************/
+      /* STYLES FOR THE SPINNER */
+      /**************************/
+
+      /*
+       * Constants:
+       *      ARCSIZE     = 270 degrees (amount of circle the arc takes up)
+       *      ARCTIME     = 1333ms (time it takes to expand and contract arc)
+       *      ARCSTARTROT = 216 degrees (how much the start location of the arc
+       *                                should rotate each time, 216 gives us a
+       *                                5 pointed star shape (it's 360/5 * 3).
+       *                                For a 7 pointed star, we might do
+       *                                360/7 * 3 = 154.286)
+       *      CONTAINERWIDTH = 28px
+       *      SHRINK_TIME = 400ms
+       */
+
+      :host {
+        display: inline-block;
+        position: relative;
+        width: 28px; /* CONTAINERWIDTH */
+        height: 28px; /* CONTAINERWIDTH */
+      }
+
+      #spinnerContainer {
+        width: 100%;
+        height: 100%;
+
+        /* The spinner does not have any contents that would have to be
+         * flipped if the direction changes. Always use ltr so that the
+         * style works out correctly in both cases. */
+        direction: ltr;
+      }
+
+      #spinnerContainer.active {
+        /* duration: 360 * ARCTIME / (ARCSTARTROT + (360-ARCSIZE)) */
+        -webkit-animation: container-rotate 1568ms linear infinite;
+        animation: container-rotate 1568ms linear infinite;
+      }
+
+      @-webkit-keyframes container-rotate {
+        to { -webkit-transform: rotate(360deg) }
+      }
+
+      @keyframes container-rotate {
+        to { transform: rotate(360deg) }
+      }
+
+      .spinner-layer {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        white-space: nowrap;
+        border-color: var(--paper-spinner-color, --google-blue-500);
+      }
+
+      .layer-1 {
+        border-color: var(--paper-spinner-layer-1-color, --google-blue-500);
+      }
+
+      .layer-2 {
+        border-color: var(--paper-spinner-layer-2-color, --google-red-500);
+      }
+
+      .layer-3 {
+        border-color: var(--paper-spinner-layer-3-color, --google-yellow-500);
+      }
+
+      .layer-4 {
+        border-color: var(--paper-spinner-layer-4-color, --google-green-500);
+      }
+
+      /**
+       * IMPORTANT NOTE ABOUT CSS ANIMATION PROPERTIES (keanulee):
+       *
+       * iOS Safari (tested on iOS 8.1) does not handle animation-delay very well - it doesn't
+       * guarantee that the animation will start _exactly_ after that value. So we avoid using
+       * animation-delay and instead set custom keyframes for each color (as layer-2undant as it
+       * seems).
+       *
+       * We write out each animation in full (instead of separating animation-name,
+       * animation-duration, etc.) because under the polyfill, Safari does not recognize those
+       * specific properties properly, treats them as -webkit-animation, and overrides the
+       * other animation rules. See https://github.com/Polymer/platform/issues/53.
+       */
+      .active .spinner-layer {
+        /* durations: 4 * ARCTIME */
+        -webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+        animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+        opacity: 1;
+      }
+
+      .active .spinner-layer.layer-1 {
+        /* durations: 4 * ARCTIME */
+        -webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-1-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+        animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-1-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+      }
+
+      .active .spinner-layer.layer-2 {
+        /* durations: 4 * ARCTIME */
+        -webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-2-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+        animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-2-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+      }
+
+      .active .spinner-layer.layer-3 {
+        /* durations: 4 * ARCTIME */
+        -webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-3-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+        animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-3-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+      }
+
+      .active .spinner-layer.layer-4 {
+        /* durations: 4 * ARCTIME */
+        -webkit-animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-4-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+        animation: fill-unfill-rotate 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both, layer-4-fade-in-out 5332ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+      }
+
+      @-webkit-keyframes fill-unfill-rotate {
+        12.5% { -webkit-transform: rotate(135deg);  } /* 0.5 * ARCSIZE */
+        25%   { -webkit-transform: rotate(270deg);  } /* 1   * ARCSIZE */
+        37.5% { -webkit-transform: rotate(405deg);  } /* 1.5 * ARCSIZE */
+        50%   { -webkit-transform: rotate(540deg);  } /* 2   * ARCSIZE */
+        62.5% { -webkit-transform: rotate(675deg);  } /* 2.5 * ARCSIZE */
+        75%   { -webkit-transform: rotate(810deg);  } /* 3   * ARCSIZE */
+        87.5% { -webkit-transform: rotate(945deg);  } /* 3.5 * ARCSIZE */
+        to    { -webkit-transform: rotate(1080deg); } /* 4   * ARCSIZE */
+      }
+
+      @keyframes fill-unfill-rotate {
+        12.5% { transform: rotate(135deg);  } /* 0.5 * ARCSIZE */
+        25%   { transform: rotate(270deg);  } /* 1   * ARCSIZE */
+        37.5% { transform: rotate(405deg);  } /* 1.5 * ARCSIZE */
+        50%   { transform: rotate(540deg);  } /* 2   * ARCSIZE */
+        62.5% { transform: rotate(675deg);  } /* 2.5 * ARCSIZE */
+        75%   { transform: rotate(810deg);  } /* 3   * ARCSIZE */
+        87.5% { transform: rotate(945deg);  } /* 3.5 * ARCSIZE */
+        to    { transform: rotate(1080deg); } /* 4   * ARCSIZE */
+      }
+
+      /**
+       * HACK: Even though the intention is to have the current .spinner-layer at
+       * `opacity: 1`, we set it to `opacity: 0.99` instead since this forces Chrome
+       * to do proper subpixel rendering for the elements being animated. This is
+       * especially visible in Chrome 39 on Ubuntu 14.04. See:
+       *
+       * - https://github.com/Polymer/paper-spinner/issues/9
+       * - https://code.google.com/p/chromium/issues/detail?id=436255
+       */
+      @-webkit-keyframes layer-1-fade-in-out {
+        from { opacity: 0.99; }
+        25% { opacity: 0.99; }
+        26% { opacity: 0; }
+        89% { opacity: 0; }
+        90% { opacity: 0.99; }
+        100% { opacity: 0.99; }
+      }
+
+      @keyframes layer-1-fade-in-out {
+        from { opacity: 0.99; }
+        25% { opacity: 0.99; }
+        26% { opacity: 0; }
+        89% { opacity: 0; }
+        90% { opacity: 0.99; }
+        100% { opacity: 0.99; }
+      }
+
+      @-webkit-keyframes layer-2-fade-in-out {
+        from { opacity: 0; }
+        15% { opacity: 0; }
+        25% { opacity: 0.99; }
+        50% { opacity: 0.99; }
+        51% { opacity: 0; }
+      }
+
+      @keyframes layer-2-fade-in-out {
+        from { opacity: 0; }
+        15% { opacity: 0; }
+        25% { opacity: 0.99; }
+        50% { opacity: 0.99; }
+        51% { opacity: 0; }
+      }
+
+      @-webkit-keyframes layer-3-fade-in-out {
+        from { opacity: 0; }
+        40% { opacity: 0; }
+        50% { opacity: 0.99; }
+        75% { opacity: 0.99; }
+        76% { opacity: 0; }
+      }
+
+      @keyframes layer-3-fade-in-out {
+        from { opacity: 0; }
+        40% { opacity: 0; }
+        50% { opacity: 0.99; }
+        75% { opacity: 0.99; }
+        76% { opacity: 0; }
+      }
+
+      @-webkit-keyframes layer-4-fade-in-out {
+        from { opacity: 0; }
+        65% { opacity: 0; }
+        75% { opacity: 0.99; }
+        90% { opacity: 0.99; }
+        100% { opacity: 0; }
+      }
+
+      @keyframes layer-4-fade-in-out {
+        from { opacity: 0; }
+        65% { opacity: 0; }
+        75% { opacity: 0.99; }
+        90% { opacity: 0.99; }
+        100% { opacity: 0; }
+      }
+
+      /**
+       * Patch the gap that appear between the two adjacent div.circle-clipper while the
+       * spinner is rotating (appears on Chrome 38, Safari 7.1, and IE 11).
+       *
+       * Update: the gap no longer appears on Chrome when .spinner-layer's opacity is 0.99,
+       * but still does on Safari and IE.
+       */
+      .gap-patch {
+        position: absolute;
+        box-sizing: border-box;
+        top: 0;
+        left: 45%;
+        width: 10%;
+        height: 100%;
+        overflow: hidden;
+        border-color: inherit;
+      }
+
+      .gap-patch .circle {
+        width: 1000%;
+        left: -450%;
+      }
+
+      .circle-clipper {
+        display: inline-block;
+        position: relative;
+        width: 50%;
+        height: 100%;
+        overflow: hidden;
+        border-color: inherit;
+      }
+
+      .circle-clipper .circle {
+        width: 200%;
+      }
+
+      .circle {
+        box-sizing: border-box;
+        height: 100%;
+        border-width: var(--paper-spinner-stroke-width, 3px); /* STROKEWIDTH */
+        border-style: solid;
+        border-color: inherit;
+        border-bottom-color: transparent !important;
+        border-radius: 50%;
+        -webkit-animation: none;
+        animation: none;
+
+        @apply(--layout-fit);
+      }
+
+      .circle-clipper.left .circle {
+        border-right-color: transparent !important;
+        -webkit-transform: rotate(129deg);
+        transform: rotate(129deg);
+      }
+
+      .circle-clipper.right .circle {
+        left: -100%;
+        border-left-color: transparent !important;
+        -webkit-transform: rotate(-129deg);
+        transform: rotate(-129deg);
+      }
+
+      .active .circle-clipper.left .circle {
+        /* duration: ARCTIME */
+        -webkit-animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+        animation: left-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+      }
+
+      .active .circle-clipper.right .circle {
+        /* duration: ARCTIME */
+        -webkit-animation: right-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+        animation: right-spin 1333ms cubic-bezier(0.4, 0.0, 0.2, 1) infinite both;
+      }
+
+      @-webkit-keyframes left-spin {
+        from { -webkit-transform: rotate(130deg); }
+        50% { -webkit-transform: rotate(-5deg); }
+        to { -webkit-transform: rotate(130deg); }
+      }
+
+      @keyframes left-spin {
+        from { transform: rotate(130deg); }
+        50% { transform: rotate(-5deg); }
+        to { transform: rotate(130deg); }
+      }
+
+      @-webkit-keyframes right-spin {
+        from { -webkit-transform: rotate(-130deg); }
+        50% { -webkit-transform: rotate(5deg); }
+        to { -webkit-transform: rotate(-130deg); }
+      }
+
+      @keyframes right-spin {
+        from { transform: rotate(-130deg); }
+        50% { transform: rotate(5deg); }
+        to { transform: rotate(-130deg); }
+      }
+
+      #spinnerContainer.cooldown {
+        /* duration: SHRINK_TIME */
+        -webkit-animation: container-rotate 1568ms linear infinite, fade-out 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+        animation: container-rotate 1568ms linear infinite, fade-out 400ms cubic-bezier(0.4, 0.0, 0.2, 1);
+      }
+
+      @-webkit-keyframes fade-out {
+        from { opacity: 0.99; }
+        to { opacity: 0; }
+      }
+
+      @keyframes fade-out {
+        from { opacity: 0.99; }
+        to { opacity: 0; }
+      }
+    </style>
+  </template>
+</dom-module>
+
+
+<dom-module id="paper-spinner" assetpath="../bower_components/paper-spinner/">
+  <template>
+    <style include="paper-spinner-styles"></style>
+
+    <div id="spinnerContainer" class-name="[[__computeContainerClasses(active, __coolingDown)]]">
+      <div class="spinner-layer layer-1">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer layer-2">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer layer-3">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+
+      <div class="spinner-layer layer-4">
+        <div class="circle-clipper left">
+          <div class="circle"></div>
+        </div><div class="gap-patch">
+          <div class="circle"></div>
+        </div><div class="circle-clipper right">
+          <div class="circle"></div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'paper-spinner',
+
+      behaviors: [
+        Polymer.PaperSpinnerBehavior
+      ]
+    });
+  </script>
+</dom-module>
+<dom-module id="etools-loading" assetpath="common/etools-loading/">
+<style>
+  #loading {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(180, 180, 180, 0.8);
+    z-index: 1000;
+    @apply(--layout-vertical);
+    @apply(--layout-around-justified);
+    text-align: center;
+  }
+</style>
+<template>
+  <div id="loading" hidden$="{{!loadingShown}}">
+    <div>
+      <paper-spinner active="{{loadingShown}}"></paper-spinner>
+      <h3>{{loadingText}}</h3>
+    </div>
+  </div>
+</template>
+  
+</dom-module>
+
+<script>
+ // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'etools-loading',
+    properties: {
+      loadingShown: {
+        type: Number,
+      },
+      loadingText: {
+        type: String,
+        value: 'Loading'
+      }
+    },
+    show: function() {
+      this.loadingShown = this.loadingShown ? this.loadingShown += 1 : 1;
+    },
+    hide: function() {
+      if (!this.loadingShown){
+        return;
+      }
+      this.loadingShown = this.loadingShown -= 1;
+    },
+    startLoading: function(){
+      console.log('asd');
+      this.loadingHidden = false;
+    },
+    stopLoading: function(){
+      this.loadingHidden = true;
+    },
+    isVisible: function(){
+      return this.loadingShown !== 0 ? true : false;
+    }
+     
+  });
+</script><dom-module id="etools-alert" assetpath="common/etools-alert/">
+<style>
+
+</style>
+<template>
+
+  <paper-dialog id="dialog" class="" modal="" on-iron-overlay-closed="dismissDialog">
+    <paper-dialog-scrollable>
+      <div>
+        <h3>{{alertTitle}}</h3>
+        <hr>
+        <p>{{alertText}}</p>
+      </div>
+    <paper-dialog-scrollable>
+    <div class="buttons">
+      <paper-button dialog-dismiss="">Dismiss</paper-button>
+      
+    </div>
+  </paper-dialog-scrollable></paper-dialog-scrollable></paper-dialog>
+
+</template>
+  
+</dom-module>
+
+<script>
+ // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'etools-alert',
+    properties: {
+      alertVisible: {
+        type: Boolean,
+        value: false
+      },
+      alertTitle: {
+        type: String,
+        value: 'Warning'
+      },
+      alertText: {
+        type: String,
+        value: 'Loading'
+      }
+    },
+    show: function() {
+      this.alertVisible = true;
+      this.$.dialog.toggle();
+    },
+    hide: function() {
+      this.alertVisible = false;
+    },
+    showText: function(alertText){
+      this.alertText = alertText;
+      this.show();
+    },
+    dismissDialog: function(event) {
+      // if (event.detail.confirmed) {
+      //   // do something if confirmed
+      // }
+      event.stopPropagation();
+    }
+  });
 </script><dom-module id="user-page" assetpath="common/user-page/">
 
   <template>
@@ -41267,10 +41859,11 @@ commonBv.interventions = {
         intervention.results.forEach(function(el) {
           // el is the result_chain object
           // Make sure it's an indicator result
-          if (!el.indicator){
+          if (!el.indicator){  //indicator should be populated
             return;
           }
           inds.push(el);
+          // el.result is the output object for the indicator
           if (tempOutputs[el.result.id]){
             tempOutputs[el.result.id].indicators.push(el);
           } else {
@@ -41391,6 +41984,28 @@ commonBv.interventions = {
     },
     _autocompleteUrl: function() {
       return this.getEp('locationsAutocomplete').url;
+    },
+    validReport: function() {
+      // make sure location is selected and location ID is present
+      // TODO: make sure location is valid according to the latest locations
+      var valid = {
+        status: true,
+        errors: []
+      };
+      if ((!this.selectedLocationReport) || (!this.selectedLocationReport.id)) {
+        valid.status = false;
+        valid.errors.push({
+          'location': 'Valid location not selected'
+        });
+      }
+      // console.log(this.selectedNumberResult, this.selectedNumberResult.total);
+      if (isNaN(this.selectedNumberResult.total) || (this.selectedNumberResult.total === '')) {
+        valid.status = false;
+        valid.errors.push({
+          'number': 'Valid total measurement is needed'
+        });
+      }
+      return valid;
     },
     getReport: function() {
       return {
@@ -41675,6 +42290,7 @@ commonBv.interventions = {
     },
 
     _submitReport: function() {
+      var error = false;
       var myReq = this.$.ajaxPost;
       var tf = this.$.timeFrame;
       var body = [];
@@ -41682,7 +42298,13 @@ commonBv.interventions = {
       console.log(inds);
 
       inds.forEach(function(el) {
-        console.log(el);
+        // console.log('Checking indicator: ', el);
+        var valid = el.validReport();
+        // console.log(valid);
+        if (valid.status !== true){
+          error = valid;
+          return;
+        }
         var rep = el.getReport();
         body.push({
           'result_chain': el.rc.id,
@@ -41696,6 +42318,10 @@ commonBv.interventions = {
         });
 
       });
+      if (error) {
+        app.$.alert.showText('One or more values selected is incomplete');
+        return;
+      }
       // console.log(myRep);
       myReq.body = body;
       myReq.method = 'POST';
@@ -41938,11 +42564,11 @@ commonBv.interventions = {
     },
     _validateSubmision: function() {
       if (!this.$.locationSelected.value){
-        window.alert('Location needed');
+        app.$.alert.showText('Location needed');
         return false;
       }
       if (!this.$.reportTotal.value){
-        window.alert('Report Total needed');
+        app.$.alert.showText('Report Total needed');
         return false;
       }
       return true;
@@ -41951,6 +42577,12 @@ commonBv.interventions = {
       var myReq = this.$.ajaxPost;
       //TODO: Validate
       
+      var valid = this.$.indicator.validReport();
+      // console.log(valid);
+      if (valid.status !== true){
+        app.$.alert.showText('One or more values selected is incomplete');
+        return;
+      }
       var myRep = this.$.indicator.getReport();
       // console.log(myRep);
       myReq.body = {
@@ -42431,7 +43063,7 @@ commonBv.interventions = {
     _locationSelectionDone: function() {
       // only if location is selected:
       if (!this.$.locationSelected){
-        window.alert('location is needed');
+        app.$.alert.showText('location is needed');
       }
       this._goToNextStep();
     },
@@ -42831,7 +43463,7 @@ commonBv.interventions = {
     _locationSelected: function() {
       // only if location is selected:
       if (!this.$.locationSelected){
-        window.alert('location is needed');
+        app.$.alert.showText('location is needed');
       }
       this._goToNextStep();
     },
@@ -42845,11 +43477,12 @@ commonBv.interventions = {
       return this.getEp('locationsAutocomplete').url;
     },
     handleSubmitResponse: function(rsp){
-      window.alert('Report submitted');
+      app.$.alert.showText('Report submitted');
       console.log('handling submit', rsp.detail);
       
     },
     _submitReport: function() {
+      var error = false;
       var myReq = this.$.ajaxPost;
       var tf = this.$.timeFrame;
       var body = [];
@@ -42857,7 +43490,13 @@ commonBv.interventions = {
       console.log(inds);
 
       inds.forEach(function(el) {
-        console.log(el);
+        // console.log('Checking indicator: ', el);
+        var valid = el.validReport();
+        // console.log(valid);
+        if (valid.status !== true){
+          error = valid;
+          return;
+        }
         var rep = el.getReport();
         body.push({
           'result_chain': el.rc.id,
@@ -42871,6 +43510,10 @@ commonBv.interventions = {
         });
 
       });
+      if (error) {
+        app.$.alert.showText('One or more values selected is incomplete');
+        return;
+      }
       // console.log(myRep);
       myReq.body = body;
       myReq.method = 'POST';

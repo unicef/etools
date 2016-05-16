@@ -1,0 +1,70 @@
+
+<link rel="import" href="../../../bower_components/polymer/polymer.html">
+
+<link rel="import" href="../../../bower_components/iron-localstorage/iron-localstorage.html">
+<link rel="import" href="../../../bower_components/paper-spinner/paper-spinner.html">
+
+
+
+
+
+<dom-module id="etools-loading">
+<style>
+  #loading {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(180, 180, 180, 0.8);
+    z-index: 1000;
+    @apply(--layout-vertical);
+    @apply(--layout-around-justified);
+    text-align: center;
+  }
+</style>
+<template>
+  <div id="loading" hidden$="{{!loadingShown}}">
+    <div>
+      <paper-spinner active="{{loadingShown}}"></paper-spinner>
+      <h3>{{loadingText}}</h3>
+    </div>
+  </div>
+</template>
+  
+</dom-module>
+
+<script>
+ // jscs:disable
+  'use strict';
+  Polymer({
+    is: 'etools-loading',
+    properties: {
+      loadingShown: {
+        type: Number,
+      },
+      loadingText: {
+        type: String,
+        value: 'Loading'
+      }
+    },
+    show: function() {
+      this.loadingShown = this.loadingShown ? this.loadingShown += 1 : 1;
+    },
+    hide: function() {
+      if (!this.loadingShown){
+        return;
+      }
+      this.loadingShown = this.loadingShown -= 1;
+    },
+    startLoading: function(){
+      console.log('asd');
+      this.loadingHidden = false;
+    },
+    stopLoading: function(){
+      this.loadingHidden = true;
+    },
+    isVisible: function(){
+      return this.loadingShown !== 0 ? true : false;
+    }
+     
+  });
+</script>
