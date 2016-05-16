@@ -943,7 +943,8 @@ class PCA(AdminURLMixin, models.Model):
         manager, created = Group.objects.get_or_create(
             name=u'Partnership Manager'
         )
-        managers = set(manager.user_set.filter(profile__country=connection.tenant) | instance.unicef_managers.all())
+        managers = set(manager.user_set.filter(profile__country=connection.tenant, is_staff=True) |
+                       instance.unicef_managers.all())
         recipients = [user.email for user in managers]
 
         if created:  # new partnership

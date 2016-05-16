@@ -271,11 +271,11 @@
     },
     _validateSubmision: function() {
       if (!this.$.locationSelected.value){
-        window.alert('Location needed');
+        app.$.alert.showText('Location needed');
         return false;
       }
       if (!this.$.reportTotal.value){
-        window.alert('Report Total needed');
+        app.$.alert.showText('Report Total needed');
         return false;
       }
       return true;
@@ -284,6 +284,12 @@
       var myReq = this.$.ajaxPost;
       //TODO: Validate
       
+      var valid = this.$.indicator.validReport();
+      // console.log(valid);
+      if (valid.status !== true){
+        app.$.alert.showText('One or more values selected is incomplete');
+        return;
+      }
       var myRep = this.$.indicator.getReport();
       // console.log(myRep);
       myReq.body = {

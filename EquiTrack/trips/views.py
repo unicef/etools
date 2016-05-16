@@ -141,8 +141,15 @@ class TripsViewSet(mixins.RetrieveModelMixin,
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        partners = request.data['partners']
-        pcas = request.data['pcas']
+        try:
+            partners = request.data['partners']
+        except KeyError:
+            partners = []
+
+        try:
+            partnerships = request.data['partnerships']
+        except KeyError:
+            partnerships = []
 
         serializer.instance = serializer.save()
         serializer.instance.created_date = datetime.datetime.strptime(request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
@@ -153,7 +160,7 @@ class TripsViewSet(mixins.RetrieveModelMixin,
             for partner in partners:
                 serializer.instance.partners.add(partner)
 
-            for pca in pcas:
+            for pca in partnerships:
                 serializer.instance.pcas.add(pca)
 
             serializer.save()
@@ -234,7 +241,7 @@ class TripsViewSet(mixins.RetrieveModelMixin,
     @detail_route(methods=['post'], url_path='(?P<action>\D+)')
     def action(self, request, *args, **kwargs):
         """
-        Change status to the Trip
+        Change status of the Trip
         """
         action = kwargs.get('action', False)
         current_user = self.request.user
