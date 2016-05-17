@@ -1013,8 +1013,44 @@ class GovernmentInterventionResult(models.Model):
         Section,
         null=True, blank=True
     )
+    activities_list = models.ManyToManyField(
+        Result,
+        related_name='activities_list',
+        blank=True, null=True
+    )
 
     objects = hstore.HStoreManager()
+
+    def save(self, **kwargs):
+
+        super(GovernmentInterventionResult, self).save(**kwargs)
+
+        for activity in self.activities.items():
+            try:
+                referenced_activity = self.activities_list.get(code=activity[0])
+                if referenced_activity.name != activity[1]:
+                    referenced_activity.name = activity[1]
+                    referenced_activity.save()
+
+            except Result.DoesNotExist:
+                referenced_activity = Result.objects.create(
+                    result_structure=self.intervention.result_structure,
+                    result_type=ResultType.objects.get(name='Activity'),
+                    parent=self.result,
+                    code=activity[0],
+                    name=activity[1],
+                    hidden=True
+                )
+                self.activities_list.add(referenced_activity)
+
+        for ref_activity in self.activities_list.all():
+            if ref_activity.code not in self.activities:
+                ref_activity.delete()
+
+    def delete(self, using=None):
+
+        self.activities_list.all().delete()
+        super(GovernmentInterventionResult, self).delete(using=using)
 
 
 class AmendmentLog(TimeStampedModel):

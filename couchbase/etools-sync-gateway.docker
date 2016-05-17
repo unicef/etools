@@ -1,3 +1,0 @@
-FROM couchbase/sync-gateway:1.2.0
-
-ADD sync-gateway.json /
