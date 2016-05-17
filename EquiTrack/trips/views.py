@@ -241,7 +241,7 @@ class TripsViewSet(mixins.RetrieveModelMixin,
     @detail_route(methods=['post'], url_path='(?P<action>\D+)')
     def action(self, request, *args, **kwargs):
         """
-        Change status to the Trip
+        Change status of the Trip
         """
         action = kwargs.get('action', False)
         current_user = self.request.user
