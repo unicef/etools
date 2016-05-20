@@ -75,19 +75,19 @@ gulp.task('postgres:load_data', function(){
 
 // web component test (polymer unit test)
 gulp.task('wct:browser', function() {
-  gulp.src(__filename)
+  gulp.src('../EquiTrack')
     .pipe($.open({uri: 'http://127.0.0.1:2000/test/index.html'}));
 });
 
 gulp.task('wct:livereload', function() {
-  var child = childProcess.exec('./node_modules/livereloadx/bin/livereloadx.js test/');
+  var child = childProcess.exec('./node_modules/livereloadx/bin/livereloadx.js ../EquiTrack/test/');
   child.stdout.on('data', function(data) {
     console.log(data.replace(/[\n\r]+/g, ''));
   });
 });
 
 gulp.task('wct:start', function() {
-  var child = childProcess.exec('./node_modules/web-component-tester/bin/wct -p');
+  var child = childProcess.exec('./node_modules/web-component-tester/bin/wct -p --root ../EquiTrack');
   child.stdout.on('data', function(data) {
     console.log(data.replace(/[\n\r]+/g, ''));
   });

@@ -7,7 +7,7 @@ var path = require('path');
 
 var conf = {
   'expanded' : true,
-  'suites': ['./test/index.html'],
+  //'suites': ['./test/index.html'],
   'webserver': {
     'pathMappings': []
   },
