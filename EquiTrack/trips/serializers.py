@@ -68,19 +68,25 @@ class TripLocationSerializer(serializers.ModelSerializer):
 class ActionPoint2Serializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
+    person_responsible_name = serializers.CharField(
+        source="person_responsible",
+        read_only=True
+    )
 
     class Meta:
         model = ActionPoint
         fields = (
             'id',
             'person_responsible',
+            'person_responsible_name',
             'status',
             'description',
             'due_date',
             'comments',
             'created_date',
             'actions_taken',
-            'completed_date'
+            'completed_date',
+            'trip'
         )
 
 

@@ -27,8 +27,8 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from users.models import UserProfile, Office, Section
 from locations.models import get_random_color
 from partners.models import FileType
-from .models import Trip, FileAttachment
-from .serializers import TripSerializer, FileAttachmentSerializer
+from .models import Trip, FileAttachment, ActionPoint
+from .serializers import TripSerializer, FileAttachmentSerializer, ActionPoint2Serializer
 from .forms import TripFilterByDateForm
 from rest_framework import status
 
@@ -78,6 +78,7 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of Files for a Trip
     """
+    queryset = FileAttachment.objects.all()
     model = FileAttachment
     serializer_class = FileAttachmentSerializer
 
@@ -108,12 +109,25 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
         )
 
     def get_queryset(self):
+        trip_id = self.kwargs.get('trips_trip')
+        return FileAttachment.objects.filter(trip_id=trip_id)
 
-        queryset = super(TripFileViewSet, self).get_queryset()
-        trip_id = self.kwargs.get('trip_id')
-        return queryset.filter(trip_id=trip_id)
+    def retrieve(self, request, trips_trip=None, pk=None):
+        """
+        Returns an Attachment object
+        """
+        try:
+            queryset = self.queryset.get(trip_id=trips_trip, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except FileAttachment.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
 
-    @detail_route(methods=['post'], url_path='upload')
+    @list_route(methods=['post'], url_path='upload')
     def upload(self, request, **kwargs):
         """
         Upload image/photo to the Trip
@@ -221,7 +235,7 @@ class TripsViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_201_CREATED,
                         headers=headers)
 
-    @detail_route(methods=['post'], url_path='(?P<action>\D+)')
+    @detail_route(methods=['post'], url_path='change-status/(?P<action>\D+)')
     def action(self, request, *args, **kwargs):
         """
         Change status of the Trip
@@ -419,3 +433,52 @@ class TripsDashboard(FormView):
         })
 
         return super(TripsDashboard, self).get_context_data(**kwargs)
+
+
+class TripActionPointViewSet(mixins.RetrieveModelMixin,
+                      mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      viewsets.GenericViewSet):
+    """
+    Returns a list of Action point for a Trip
+    """
+    model = ActionPoint
+    queryset = ActionPoint.objects.all()
+    serializer_class = ActionPoint2Serializer
+
+    def create(self, request, *args, **kwargs):
+        """
+        Add an Action point to a trip
+        :return: JSON
+        """
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        data = serializer.data
+
+        headers = self.get_success_headers(data)
+        return Response(
+            data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+    def get_queryset(self):
+        trip_id = self.kwargs.get('trips_trip')
+        return ActionPoint.objects.filter(trip_id=trip_id)
+
+    def retrieve(self, request, trips_trip=None, pk=None):
+        """
+        Returns an Action point object
+        """
+        try:
+            queryset = self.queryset.get(trip_id=trips_trip, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except ActionPoint.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
