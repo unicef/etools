@@ -46,6 +46,11 @@ class Country(TenantMixin):
         return self.name
 
 
+class CountryOfficeManager(models.Manager):
+    def get_query_set(self):
+        return connection.tenant.offices.all()
+
+
 class Office(models.Model):
     name = models.CharField(max_length=254)
     zonal_chief = models.ForeignKey(
@@ -55,12 +60,21 @@ class Office(models.Model):
         verbose_name='Chief'
     )
 
+    objects = CountryOfficeManager()
+
     def __unicode__(self):
         return self.name
 
 
+class CountrySectionManager(models.Manager):
+    def get_query_set(self):
+        return connection.tenant.sections.all()
+
+
 class Section(models.Model):
     name = models.CharField(max_length=50, unique=True)
+
+    objects = CountrySectionManager()
 
     def __unicode__(self):
         return self.name
