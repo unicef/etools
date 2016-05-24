@@ -22,7 +22,7 @@ gulp.task('clean', function () {
 });
 
 gulp.task('livereload', function() {
-  var child = childProcess.exec('./node_modules/livereloadx/bin/livereloadx.js');
+  var child = childProcess.exec('./node_modules/livereloadx/bin/livereloadx.js ../EquiTrack');
   child.stdout.on('data', function(data) {
     console.log(data.replace(/[\n\r]+/g, ''));
   });

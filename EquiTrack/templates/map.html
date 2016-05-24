@@ -86,7 +86,7 @@
                     </etools-dropdown-filter><br />
 
                     <paper-dropdown-menu id="status" label="Status" selected-item>
-                        <paper-listbox class="dropdown-content">
+                        <paper-listbox class="dropdown-content" id="status_listbox">
                             <paper-item id="">All Statuses</paper-item>
                             <paper-item id="0">In process</paper-item>
                             <paper-item id="1">Active</paper-item>
@@ -114,9 +114,12 @@
                     <paper-button raised noink onclick="clearSearch()">Clear</paper-button>
                 </div>
             </div>
+            <div class="row"">
+                <div class="col-md-12 text-right" style="margin-bottom: 10px; padding-right: 25px;" id="results_label"></div>
+            </div>
             <div class="row">
                 <div class="col-md-12">
-                    <google-map zoom="3" latitude="30.826781" longitude="-41.308594" fit-to-markers max-zoom="10" info open></google-map>
+                    <google-map fit-to-markers max-zoom="10" info open style="display:none;"></google-map>
                     <paper-dialog id="gmap_dialog" class="size-position" entry-animation="scale-up-animation" exit-animation="fade-out-animation"></paper-dialog>
                 </div>
             </div>
@@ -125,24 +128,65 @@
 {% endverbatim %}
 
 <script type="text/javascript">
+    var filterTypes = ['result_structure', 'sector', 'gateway', 'status', 'donor', 'partner'];
+    var locationsUrl = "{% url 'locations' %}?";
+    var base = 'map';
+    var mapDefaultValues = {
+        latitude: 30.826781,
+        longitude: -41.308594,
+        zoom: 3
+    }
+
+    window.addEventListener('WebComponentsReady', function(e) {
+        resetMap();
+        updateResultsLabel(0);
+    });
+
     function submitSearch(){
-        var filterTypes = ['result_structure', 'sector', 'gateway', 'status', 'donor', 'partner'];
         var query = '';
 
         _.each(filterTypes, function(filterType) {
             if (document.querySelector('#' + filterType).selectedItem !== undefined &&
+                document.querySelector('#' + filterType).selectedItem !== null &&
                 document.querySelector('#' + filterType).selectedItem.id !== '') {
                 query += filterType + '=' + document.querySelector('#' + filterType).selectedItem.getAttribute('id') + '&';
             }
         });
 
-        $.getJSON("{% url 'locations' %}?" + query, function(data) {
+        var searchUrl = locationsUrl + query;
+
+        $.getJSON(searchUrl, function(data) {
             updateMap(data);
+            updateResultsLabel(data.length);
         });
     }
 
-    function clearSearch(){
-        location.reload();
+    function clearSearch() {
+        resetFilters();
+        resetMap();
+        updateResultsLabel(0);
+    }
+
+    function resetFilters() {
+        _.each(filterTypes, function(filterType) {
+            document.querySelector('#' + filterType + '_listbox').selected = null;
+        });
+    }
+
+    function resetMap() {
+        var gmap = document.querySelector('google-map');
+        var markers = Polymer.dom(gmap).childNodes;
+
+        _.each(markers, function(marker) {
+            Polymer.dom(gmap).removeChild(marker);
+        });
+
+        gmap.clear();
+        gmap.latitude = mapDefaultValues.latitude;
+        gmap.longitude = mapDefaultValues.longitude;
+        gmap.zoom = mapDefaultValues.zoom;
+        gmap._updateCenter();
+        gmap.style.display = '';
     }
 
     function updateMap(locations){
@@ -151,7 +195,7 @@
 
         _.each(locations, function(location, locationIndex) {
             var marker = document.createElement('google-map-marker');
-            marker.setAttribute('id', location.id);
+            marker.setAttribute('id', location.location_name);
             marker.setAttribute('latitude', location.latitude);
             marker.setAttribute('longitude', location.longitude);
             marker.setAttribute('title', location.location_name);
@@ -253,5 +297,10 @@
 
         {% endverbatim %}
     }
+
+    function updateResultsLabel(locationsSize) {
+        document.getElementById('results_label').innerHTML = locationsSize + ' locations';
+    }
+
 </script>
 {% endblock %}

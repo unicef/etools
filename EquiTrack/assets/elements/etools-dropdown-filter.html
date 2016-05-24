@@ -12,8 +12,8 @@
             last-response="{{items}}">
         </iron-ajax>
 
-        <paper-dropdown-menu id="{{ filterId }}" label="{{ label }}" selected-item>
-            <paper-listbox class="dropdown-content">
+        <paper-dropdown-menu id="{{ filterId }}" label="{{ label }}">
+            <paper-listbox class="dropdown-content" id="{{ filterId }}_listbox">
                 <paper-item id="">{{ allLabel }}</paper-item>
                 <template is="dom-repeat" items="[[items]]">
                     <paper-item id="[[ item.id ]]">[[ item.name ]]</paper-item>
