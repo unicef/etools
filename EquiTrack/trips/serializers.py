@@ -76,7 +76,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
             'created_date',
             'actions_taken',
             'completed_date',
-            'trip'
+            'trip',
             'comments'
         )
 
