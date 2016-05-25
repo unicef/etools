@@ -28,7 +28,7 @@ from users.models import UserProfile, Office, Section
 from locations.models import get_random_color
 from partners.models import FileType
 from .models import Trip, FileAttachment, ActionPoint
-from .serializers import TripSerializer, FileAttachmentSerializer, ActionPoint2Serializer
+from .serializers import TripSerializer, FileAttachmentSerializer, ActionPointSerializer
 from .forms import TripFilterByDateForm
 from rest_framework import status
 
@@ -444,7 +444,7 @@ class TripActionPointViewSet(mixins.RetrieveModelMixin,
     """
     model = ActionPoint
     queryset = ActionPoint.objects.all()
-    serializer_class = ActionPoint2Serializer
+    serializer_class = ActionPointSerializer
 
     def create(self, request, *args, **kwargs):
         """

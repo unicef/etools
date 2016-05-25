@@ -30,25 +30,16 @@ class TravelRoutesSerializer(serializers.ModelSerializer):
 
 
 class TripFundsSerializer(serializers.ModelSerializer):
-    wbs = serializers.CharField(source='wbs.name')
-    grant = serializers.CharField(source='grant.name')
+    wbs_name = serializers.CharField(source='wbs.name', read_only=True)
+    grant_name = serializers.CharField(source='grant.name', read_only=True)
 
     class Meta:
         model = TripFunds
         fields = (
             'wbs',
+            'wbs_name',
             'grant',
-            'amount'
-        )
-
-
-class TripFunds2Serializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = TripFunds
-        fields = (
-            'wbs',
-            'grant',
+            'grant_name',
             'amount'
         )
 
@@ -65,7 +56,7 @@ class TripLocationSerializer(serializers.ModelSerializer):
         )
 
 
-class ActionPoint2Serializer(serializers.ModelSerializer):
+class ActionPointSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
     person_responsible_name = serializers.CharField(
@@ -82,34 +73,12 @@ class ActionPoint2Serializer(serializers.ModelSerializer):
             'status',
             'description',
             'due_date',
-            'comments',
             'created_date',
             'actions_taken',
             'completed_date',
             'trip'
-        )
-
-
-class ActionPointSerializer(serializers.ModelSerializer):
-
-
-    person_responsible_name = serializers.CharField(
-        source="person_responsible",
-        read_only=True
-    )
-
-    class Meta:
-        model = ActionPoint
-        fields = (
-            'id',
-            'person_responsible',
-            'person_responsible_name',
-            'status',
-            'description',
-            'due_date',
             'comments'
         )
-        extra_kwargs = {'id': {'read_only': False}}
 
 
 class FileAttachmentSerializer(serializers.ModelSerializer):
@@ -158,9 +127,9 @@ class TripSerializer(serializers.ModelSerializer):
     partnerships = serializers.SerializerMethodField()
 
     travelroutes_set = TravelRoutesSerializer(many=True)
-    tripfunds_set = TripFunds2Serializer(many=True)
+    tripfunds_set = TripFundsSerializer(many=True)
     triplocation_set = TripLocationSerializer(many=True)
-    actionpoint_set = ActionPoint2Serializer(many=True)
+    actionpoint_set = ActionPointSerializer(many=True)
     files = FileAttachmentSerializer(many=True, read_only=True)
 
     def get_partnerships(self, trip):
