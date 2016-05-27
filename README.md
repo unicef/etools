@@ -35,7 +35,7 @@
 
 <span class="c0"></span>
 
-<span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 604.77px; height: 300.00px;">![Shape](images/image03.png)</span>
+
 
 <span class="c5 c0"></span>
 
@@ -53,7 +53,6 @@
 
 <span class="c0">These are &nbsp;modules planned for the eTools platform:</span>
 
-<span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 604.77px; height: 333.33px;">![Screen Shot 2016-05-27 at 12.35.41.png](images/image00.png)</span><span class="c0"></span>
 
 <span class="c0"></span>
 
@@ -65,7 +64,6 @@
 
 <span class="c5 c0"></span>
 
-<span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 604.77px; height: 346.67px;">![Screen Shot 2016-05-27 at 12.58.54.png](images/image01.png)</span>
 
 <span class="c0"></span>
 
