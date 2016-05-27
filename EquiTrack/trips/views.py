@@ -436,9 +436,10 @@ class TripsDashboard(FormView):
 
 
 class TripActionPointViewSet(mixins.RetrieveModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.CreateModelMixin,
-                      viewsets.GenericViewSet):
+                            mixins.ListModelMixin,
+                            mixins.CreateModelMixin,
+                            mixins.UpdateModelMixin,
+                            viewsets.GenericViewSet):
     """
     Returns a list of Action point for a Trip
     """
