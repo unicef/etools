@@ -1,120 +1,86 @@
-EquiTrack
-=========
+<meta content="text/html; charset=UTF-8" http-equiv="content-type"><style type="text/css">@import url('https://themes.googleusercontent.com/fonts/css?kit=wAPX1HepqA24RkYW1AuHYA');.lst-kix_list_1-3>li:before{content:"\0025cf  "}.lst-kix_list_1-4>li:before{content:"o  "}ul.lst-kix_list_1-0{list-style-type:none}.lst-kix_list_1-7>li:before{content:"o  "}.lst-kix_list_1-5>li:before{content:"\0025aa  "}.lst-kix_list_1-6>li:before{content:"\0025cf  "}ul.lst-kix_list_1-3{list-style-type:none}.lst-kix_list_1-0>li:before{content:"\0025cf  "}ul.lst-kix_list_1-4{list-style-type:none}.lst-kix_list_1-8>li:before{content:"\0025aa  "}ul.lst-kix_list_1-1{list-style-type:none}ul.lst-kix_list_1-2{list-style-type:none}ul.lst-kix_list_1-7{list-style-type:none}.lst-kix_list_1-1>li:before{content:"o  "}.lst-kix_list_1-2>li:before{content:"\0025aa  "}ul.lst-kix_list_1-8{list-style-type:none}ul.lst-kix_list_1-5{list-style-type:none}ul.lst-kix_list_1-6{list-style-type:none}ol{margin:0;padding:0}table td,table th{padding:0}.c7{margin-left:36pt;padding-top:0pt;padding-left:0pt;padding-bottom:0pt}.c1{line-height:1.15;orphans:2;widows:2;height:12pt}.c10{background-color:#ffffff;max-width:453.3pt;padding:70.8pt 70.8pt 70.8pt 70.8pt}.c3{line-height:1.15;orphans:2;widows:2}.c5{color:#0070c0;font-weight:bold}.c9{padding:0;margin:0}.c6{font-size:12pt;font-weight:normal}.c0{font-family:"Times New Roman"}.c2{color:#000000}.c8{font-weight:normal}.c4{margin-left:34pt}.title{padding-top:24pt;color:#000000;font-weight:bold;font-size:36pt;padding-bottom:6pt;font-family:"Calibri";line-height:1.0;page-break-after:avoid;orphans:2;widows:2;text-align:left}.subtitle{padding-top:18pt;color:#666666;font-size:24pt;padding-bottom:4pt;font-family:"Georgia";line-height:1.0;page-break-after:avoid;font-style:italic;orphans:2;widows:2;text-align:left}li{color:#000000;font-size:12pt;font-family:"Calibri"}p{margin:0;color:#000000;font-size:12pt;font-family:"Calibri"}h1{padding-top:24pt;color:#000000;font-weight:bold;font-size:24pt;padding-bottom:6pt;font-family:"Calibri";line-height:1.0;page-break-after:avoid;orphans:2;widows:2;text-align:left}h2{padding-top:18pt;color:#000000;font-weight:bold;font-size:18pt;padding-bottom:4pt;font-family:"Calibri";line-height:1.0;page-break-after:avoid;orphans:2;widows:2;text-align:left}h3{padding-top:14pt;color:#000000;font-weight:bold;font-size:14pt;padding-bottom:4pt;font-family:"Calibri";line-height:1.0;page-break-after:avoid;orphans:2;widows:2;text-align:left}h4{padding-top:12pt;color:#000000;font-weight:bold;font-size:12pt;padding-bottom:2pt;font-family:"Calibri";line-height:1.0;page-break-after:avoid;orphans:2;widows:2;text-align:left}h5{padding-top:11pt;color:#000000;font-weight:bold;font-size:11pt;padding-bottom:2pt;font-family:"Calibri";line-height:1.0;page-break-after:avoid;orphans:2;widows:2;text-align:left}h6{padding-top:10pt;color:#000000;font-weight:bold;font-size:10pt;padding-bottom:2pt;font-family:"Calibri";line-height:1.0;page-break-after:avoid;orphans:2;widows:2;text-align:left}</style>
 
-[![Circle CI](https://circleci.com/gh/UNICEFLebanonInnovation/EquiTrack/tree/develop.svg?style=svg)](https://circleci.com/gh/UNICEFLebanonInnovation/EquiTrack/tree/develop)
+<span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 235.74px; height: 101.93px;">![](images/image02.png)</span><span class="c0 c2"></span>
 
-**Monitoring and Tracking Results for Children**
+<span class="c0 c2"></span>
 
+<span class="c5 c0">ABOUT eTools</span>
 
+<span class="c0 c2">eTools is&nbsp;a platform to strengthen efficiency and results in UNICEF’s core work processes – work planning, partnership management, implementation monitoring – in development and humanitarian contexts. </span>
 
-**What does it do?**
+<span class="c0"></span>
 
-* Create and manage partnerships in a centralized and online database
-* Attributing and tracking partnerships against multitude of Result Structures, Donors, Grants, Geographical locations and Gateways
-* An online repository of PCA documentation accessible anywhere
-* Custom reports generation to Excel, Google Earth (KML) and Shapefile (GIS)
-* Monitors partnerships with standard indicators against set targets
-* Dynamic Dashboard for Analysis and tracking results against global targets
-* Convergence and Coverage analysis
-* Interactive mapping of partner activities and locations
+<span class="c0">The eTools platform has a modular suite of applications that enables the disaggregation of programme processes while still enabling data to be shared across modules. </span>
 
-PCA Input
+<span class="c0"></span>
 
-1. Add new PCA - can be multi-sector, with attributes: Status, Start and End Date, Budget, Implementing Partner NGO, Locations where it will be implemented, the Goals it is fulfilling, Target Number of Beneficiaries, Intermediate Results, WBS, RRP Outputs, PCA Files, Grants and Donors, etc.
-2. Edit PCA - can add new attributes or remove existing ones.
-3. Delete PCA - a PCA can be deleted, unless the implementation has started. In that case, its status can be set to "canceled".
-4. Filtering of PCAs - is one of the main utilities of the tool, through which one can filter PCAs through one or more conditions, e.g.: by Sector, Indicator, Implementing Partner, CCC as well as through a more advanced filtering of attributes like, budget, locations, grant, start and end dates etc. , and export the results in excel and many other formats.
+<span class="c0">eTools will enable UNICEF to: </span>
 
-Result Structure Setup
+*   <span class="c6 c0">Reduce staff time spent on administrative processes and increase staff time spent on achieving results </span>
+*   <span class="c6 c0">Modernize work processes under a single platform </span>
+*   <span class="c0 c6">Establish quality control on planning, agreements, and reporting </span>
+*   <span class="c6 c0">Link data between results monitoring, implementation monitoring and partnership management </span>
+*   <span class="c6 c0">Improve national civil society mapping and partnerships opportunities </span>
+*   <span class="c6 c0">Provide transparency in partner selection</span>
 
-1. RRP (Regional Response Plan) - belongs to a sector, and is a standardized description of UNICEF's outputs in emergencies.
-2. CCC - How a PCA is contributing to a CCC.
-3. Indicator - expressed through one (or more Units) and a target number of the corresponding unit. The automatic calculation of shortfall and progress towards target for all indicators, as PCAs are programmed and implemented, is the core feature of the system.
-4. Units - add/edit/remove unit types, e.g. schools, children, women etc. (generally representing beneficiaries or points of interest where activities of PCAs happen or are about)
-5. Activities - generic activities that happen in various PCAs, e.g. training, distribution of water tanks etc.
-6. Intermediate Results, WBS Activity - correspond to a particular sector, with an Intermediate Result having many WBS (work breakdown structure) Activities
+<span class="c0"></span>
 
-Administrative Data
+<span class="c5 c0">EQUITRACK & eTOOLS</span>
 
-1. Manage Sectors - UNICEF Sectors can be added, edited or removed (unless the sector has CCCs and other data that it is attributed with)
-2. Add administrative data about country - 3 administrative levels are supported: Governorate, District, Cadastral
-3. Add gateways (locations) - these represent schools, health centers and other generic locations where activities happen.
-4. Partners - Partners can be added and assigned to PCAs.
-5. Donors - donors can be added.
-6. Grants - can be added and identified uniquely through grant reference numbers.
+<span class="c0">The predecessor to eTools was a system developed in the Lebanon Country Office (LCO) called Equitrack. The success of Equitrack’s use in LCO drew other country programmes in MENA to also begin using it. With over 20 locally developed systems being used in country offices, FRG and EMOPS convened various stakeholders from the organization to design a universal platform for managing results for children. Equitrack was determined to be the system closest to addressing the common needs of this group. eTools manifested from the foundational elements of Equitrack, and has ever since been introduced with new features.</span>
 
-Dashboard - Visualization of cumulative (i.e. data from all PCAs) current and shortfall target levels, categorized by sector, 
-Map - a web-based public map with bubbles, representing PCAs, which are clustered depending on zoom level and categorized through sector, indicator and partner organization.
+<span class="c0"></span>
 
+<span class="c0">Today, the eTools team has made three notable restructuring in the way it functions moving forward: Core Project Team has 3 defined work streams for managing the platform from scoping to development to support. External software firms will begin to take on software development activities while the eTools Engineering is concentrating on technical project management and developer operations.</span>
 
-**Installing the application locally**
+<span class="c0"></span>
 
-1.  Checkout the develop branch of the git repository
-> $ `git clone https://github.com/UNICEFLebanonInnovation/EquiTrack [loc_folder]`
+<span class="c0"></span>
 
-2. Navigate to the parent folder
-> $ `cd [loc_folder]`
+<span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 604.77px; height: 300.00px;">![Shape](images/image03.png)</span>
 
-3. Install Docker for Mac OSX
-> * Download and Install from:  [https://www.docker.com/toolbox]
-> * Make sure that your system supports Docker
+<span class="c5 c0"></span>
 
-4. Create the Docker machine
-> $`docker-machine create --driver virtualbox eq`
->> (eq is the name of the virtual machine)
+<span class="c0 c5">AGILE METHODOLOGY</span>
 
-5. Bring in the environment variables from the docker vm
-> $`eval "$(docker-machine env eq)"`
+<span class="c0">The development of eTools takes on a methodology known as Agile. This methodology takes into account shot, iterative software development cycles that incorporates user feedback.</span>
 
-6. Spin up all containers and connect them
-> $`docker-compose up -d`
->> (-d runs the containers deamonized - in the backroud)
+<span class="c0"></span>
 
-7. Set up the database
-> `docker run -it --link [LOC_FOLDER]_db_1:postgres --rm postgres sh`
-> `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres`
-> Once connected to the db:
-> \#`CREATE EXTENSION postgis;`
-> \#`CREATE EXTENSION postgis_topology;`
-> \#`exit`
+<span class="c5 c0">MODULES</span>
 
-8. Make the apporpriate migrations 
-> docker exec -it [LOC_FOLDER]_web_1 python equitrack/manage.py migrate_schemas --fake-initial
+<span class="c0 c2">eTools development follows a phased and modular approach to software development, with releases based on an agreed set of prioritized modules and features – new modules and features are released on a quarterly basis. </span>
 
-9. Find out the running docker machine’s ip address and navigate to it on port 8080
-> $`docker-machine ip eq`
+<span class="c0"></span>
 
-**Bring in backed up data or faux data from backup.sq**
+<span class="c0">These are &nbsp;modules planned for the eTools platform:</span>
 
-1. Download faux data from [here](https://example.com/link_to_come)
-> unpack the data file at `[DOWNLOAD_PATH]/backup.sql`
+<span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 604.77px; height: 333.33px;">![Screen Shot 2016-05-27 at 12.35.41.png](images/image00.png)</span><span class="c0"></span>
 
-2. Get the data into the running database container by spinning up another container and linking it to the running db container.
->  $`docker run -it --link [LOC_FOLDER]_db_1:postgres -v [DOWNLOAD_PATH]:/sqlbackup --rm postgres sh`
->> (notice [LOC_FOLDER] is the name of the folder that you originally checked out the git repo to.)
+<span class="c0"></span>
 
-3. Once the container is started, load the new data in:
-  > \# `psql -h "$POSTGRES_PORT_5432_TCP_ADDR" -p "$POSTGRES_PORT_5432_TCP_PORT" -U postgres < /sqlbackup/backup.sql` 
-  > enter db password
-  > \ after the command executes exit out of the container
-  > \# `exit`
+<span class="c5 c0">DEVELOPMENT ROADMAP</span>
 
+<span class="c0"></span>
 
+<span class="c0">Along with introducing new features, eTools releases will also include refinements to existing features based on feedback received from users and business owners.</span>
 
-**The process**
+<span class="c5 c0"></span>
 
-![image](/screenshots/PCA_process.jpg "PCA Process")
+<span style="overflow: hidden; display: inline-block; margin: 0.00px 0.00px; border: 0.00px solid #000000; transform: rotate(0.00rad) translateZ(0px); -webkit-transform: rotate(0.00rad) translateZ(0px); width: 604.77px; height: 346.67px;">![Screen Shot 2016-05-27 at 12.58.54.png](images/image01.png)</span>
 
-**Screenshots**
+<span class="c0"></span>
 
+<span class="c0"></span>
 
-PCA Management:
+<span class="c0"></span>
 
-![PCA list](/screenshots/equitrack_pcas.png "List of PCAs")
+<span class="c0 c2"></span>
 
+<span class="c0"></span>
 
-Mapping of partner activities:
+<span class="c0"></span>
 
-![PCA map](/screenshots/equitrack_map.png "Map of PCAs")
+<span class="c0"></span>
 
-
+<span class="c0"></span>
