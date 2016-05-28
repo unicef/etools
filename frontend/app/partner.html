@@ -64,6 +64,8 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
   <global-data app-data="[[appData]]" user="{{user}}" permissions="{{permissions}}"></global-data>
+  <etools-loading id="loading"></etools-loading>
+  <etools-alert id="alert"></etools-alert>
 
   <template is="dom-if" if='{{permissions.interventionsMenu}}'>
     <interventions-data id="interventionData" interventions={{interventions}}></interventions-data>
@@ -156,10 +158,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <p class="paper-font-subhead">Currently under development:</p>
                 <ul>
                     <li>Ability to report on indicators in bulk</li>
-                    <li>Ability to report on fully flexible disaggregations as defined in the workplan</li>
-                    
+                    <li>Ability to report on fully flexible disaggregations as defined in the workplan</li>   
                 </ul>
-                <p class="paper-font-body2">Thank you for choosing to make our children's lives better! </p>
+                <p class="paper-font-subhead">Thank you for choosing to make our children's lives better!</p>
               </paper-material>
               
 
@@ -205,7 +206,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
 
 
-      <paper-toast id="toast" duration="0">
+    <paper-toast id="toast" duration="0">
       <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
     </paper-toast>
     

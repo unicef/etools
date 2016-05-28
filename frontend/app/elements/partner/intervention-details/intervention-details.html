@@ -157,8 +157,12 @@
     color: white;
   }
   </style>
-  <!-- <interventions-data id="interventionData" details="true" intervention={{intervention}}></interventions-data> -->
-    
+  
+    <etools-ajax
+          auto
+          id="ajaxPost"
+          on-response="handleSubmitResponse">
+    </etools-ajax>
 
   <h1 hidden$="[[!pageLoading]]">
       Page is loading now...
@@ -190,7 +194,7 @@
     </paper-button>
   </div>
   <div hidden$="[[reportingActive]]">
-    <timeframe-picker label="Reporting Period" class="timeFrame"></timeframe-picker>
+    <timeframe-picker label="Reporting Period" id="timeFrame"></timeframe-picker>
   </div>
   <hr hidden$="[[reportingActive]]">
   <template is="dom-repeat" id="indicatorsList" items="[[outputs]]" as="out">
@@ -199,7 +203,7 @@
       <div class="indicatorsBlock">
 
         <template is="dom-repeat" items="[[out.indicators]]" as="rc">
-          <etools-indicator rc={{rc}} reporting-active={{reportingActive}}></etools-indicator>
+          <etools-indicator class="indicator" rc={{rc}} reporting-active={{reportingActive}}></etools-indicator>
         </template>
 
       </div>
@@ -207,7 +211,7 @@
   </template>
 
   <div hidden$="[[reportingActive]]" class="reportButtons">
-    <paper-button raised class="green" disabled={{submitDisabled}}>Submit Report</paper-button>
+    <paper-button raised class="green" on-tap="_submitReport" disabled={{submitDisabled}}>Submit Report</paper-button>
   </div>
   </paper-material>
  
@@ -263,6 +267,10 @@
       reportingActive: {
         type: Boolean,
         value: true
+      },
+      submitDisabled: {
+        type: Boolean,
+        value: false
       }
     },
     changeUrl: function(){
@@ -283,7 +291,51 @@
     },
     _reportIcon: function(v) {
       return v ? 'check' : 'clear';
-    }
+    },
+    handleSubmitResponse: function(rsp){
+      console.log('handling submit', rsp.detail);
+      
+    },
+
+    _submitReport: function() {
+      var error = false;
+      var myReq = this.$.ajaxPost;
+      var tf = this.$.timeFrame;
+      var body = [];
+      var inds = Array.from(this.querySelectorAll('etools-indicator'));
+      console.log(inds);
+
+      inds.forEach(function(el) {
+        // console.log('Checking indicator: ', el);
+        var valid = el.validReport();
+        // console.log(valid);
+        if (valid.status !== true){
+          error = valid;
+          return;
+        }
+        var rep = el.getReport();
+        body.push({
+          'result_chain': el.rc.id,
+          'report_status': rep.status,
+          'remarks': rep.remarks,
+          'disaggregation': rep.number.breakdown,
+          'total': rep.number.total,
+          'start': tf.from,
+          'end': tf.to,
+          'location': rep.location.id
+        });
+
+      });
+      if (error) {
+        app.$.alert.showText('One or more values selected is incomplete');
+        return;
+      }
+      // console.log(myRep);
+      myReq.body = body;
+      myReq.method = 'POST';
+      myReq.url = this.getEp('bulkIndicatorReport').url;
+      myReq.sendPostRequest();
+    },
   });
 })();
 

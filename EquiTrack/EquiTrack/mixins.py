@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.template.response import SimpleTemplateResponse
 
 from django.utils.http import urlsafe_base64_encode
 from django.http.response import HttpResponseRedirect
@@ -109,13 +110,8 @@ class EToolsTenantMiddleware(TenantMiddleware):
             set_country(request.user, request)
 
         except Exception as exp:
-            messages.info(
-                request,
-                'Your country instance is not yet configured, '
-                'probably because eTools has not been rolled in your office yet. '
-                'Please contact a member of the eTools team for more information.')
-            raise self.TENANT_NOT_FOUND_EXCEPTION(
-                'No country found for user {}'.format(request.user))
+            logger.info('No country found for user {}'.format(request.user))
+            return SimpleTemplateResponse('no_country_found.html', {'user': request.user});
 
         # Content type can no longer be cached as public and tenant schemas
         # have different models. If someone wants to change this, the cache

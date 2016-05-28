@@ -42,10 +42,16 @@ packer_cache
 *.box
 
 Vagrantfile
+EquiTrack/EquiTrack/saml/FederationMetadata.xml
 
 *.tar
 
 *.gz
+
+# no keys
+*.key
+*.crt
+
 
 server_config.yaml
 robots/*.png

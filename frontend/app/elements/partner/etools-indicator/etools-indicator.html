@@ -17,8 +17,9 @@
    /*paper-fab.red {
           --paper-fab-background: var(--paper-red-500);
         }*/
+    
   </style>
-      <div class="indicator">
+      <div class="">
         <div class="indicatorHeader">
           <p class="indicatorName">{{rc.indicator.name}}</p>
           <paper-fab class="grey" mini icon="launch" on-tap="_goToReport" rc-id="{{rc.id}}" hidden$="[[noLink]]" intervention-id="{{rc.partnership}}"></paper-fab>
@@ -41,13 +42,13 @@
                 <paper-radio-button class="green" name="ontrack">On Track</paper-radio-button>
                 <paper-radio-button class="yellow" name="constrained">Constrained</paper-radio-button>
                 <paper-radio-button class="red" name="noprogress">No Progress</paper-radio-button>
-                <paper-radio-button name="met">Target Met</paper-radio-button>
+                <paper-radio-button name="targetmet">Target Met</paper-radio-button>
               </paper-radio-group>
             </div>
             
             <value-breakdown class="reportInput" id="valBreakdown" repres="{{selectedNumberResult}}" disaggregation="[[rc.disaggregation]]"></value-breakdown><span>&nbsp;</span>
             <div class="narativeReport">
-              <paper-textarea value="{{selectedNarative}}" label="Optional Narative (this text area grows as you type)"></paper-textarea>
+              <paper-textarea value="{{selectedRemarks}}" label="Optional Narrative (this text area grows as you type)"></paper-textarea>
             </div>
           </div>
         </div>
@@ -93,7 +94,7 @@
       selectedNumberResult: {
         type: Object
       },
-      selectedNarative: Object
+      selectedRemarks: Object
 
     },
     _removeFromView: function(ev){
@@ -113,12 +114,34 @@
     _autocompleteUrl: function() {
       return this.getEp('locationsAutocomplete').url;
     },
+    validReport: function() {
+      // make sure location is selected and location ID is present
+      // TODO: make sure location is valid according to the latest locations
+      var valid = {
+        status: true,
+        errors: []
+      };
+      if ((!this.selectedLocationReport) || (!this.selectedLocationReport.id)) {
+        valid.status = false;
+        valid.errors.push({
+          'location': 'Valid location not selected'
+        });
+      }
+      // console.log(this.selectedNumberResult, this.selectedNumberResult.total);
+      if (isNaN(this.selectedNumberResult.total) || (this.selectedNumberResult.total === '')) {
+        valid.status = false;
+        valid.errors.push({
+          'number': 'Valid total measurement is needed'
+        });
+      }
+      return valid;
+    },
     getReport: function() {
       return {
         location: this.selectedLocationReport,
         number: this.selectedNumberResult,
         status: this.selectedStatus,
-        narative: this.selectedNarative
+        remarks: this.selectedRemarks,
       };
     }
   });

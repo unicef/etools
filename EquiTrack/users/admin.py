@@ -197,6 +197,10 @@ class CountryAdmin(admin.ModelAdmin):
     readonly_fields = (
         'vision_last_synced',
     )
+    filter_horizontal = (
+        'offices',
+        'sections',
+    )
 
 # Re-register UserAdmin
 admin.site.unregister(User)

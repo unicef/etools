@@ -23,6 +23,7 @@ var glob = require('glob-all');
 var historyApiFallback = require('connect-history-api-fallback');
 var packageJson = require('./package.json');
 var crypto = require('crypto');
+var childProcess = require('child_process');
 // var ghPages = require('gulp-gh-pages');
 
 var AUTOPREFIXER_BROWSERS = [
@@ -490,6 +491,35 @@ gulp.task('serve:partner', function(cb) {
   targetApp = 'partner';
   setGlobals();
   runSequence('serve', cb);
+});
+
+// web component test (polymer unit test)
+gulp.task('wct:browser', function() {
+  gulp.src(__filename)
+    .pipe($.open({uri: 'http://127.0.0.1:2000/components/frontend/app/test/index.html'}));
+});
+
+gulp.task('wct:livereload', function() {  
+  var child = childProcess.exec('./node_modules/livereloadx/bin/livereloadx.js app/test/');
+  child.stdout.on('data', function(data) {
+    console.log(data.replace(/[\n\r]+/g, ''));
+  });
+});
+
+gulp.task('wct:start', function() {  
+  var child = childProcess.exec('./node_modules/web-component-tester/bin/wct -p');
+  child.stdout.on('data', function(data) {
+    console.log(data.replace(/[\n\r]+/g, ''));
+  });
+});
+
+gulp.task('wct:test:local', function(cb) {
+  runSequence(
+    'wct:start',
+    'wct:browser',
+    'wct:livereload',
+    cb
+  );
 });
 
 // Load tasks for web-component-tester

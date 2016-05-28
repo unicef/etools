@@ -11,7 +11,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
 
-from filer.fields.file import FilerFileField
 from reversion.revisions import get_for_object
 from smart_selects.db_fields import ChainedForeignKey
 
@@ -99,12 +98,12 @@ class Trip(AdminURLMixin, models.Model):
 
     pcas = models.ManyToManyField(
         u'partners.PCA',
-        blank=True, null=True,
+        blank=True,
         verbose_name=u"Related Interventions"
     )
     partners = models.ManyToManyField(
         u'partners.PartnerOrganization',
-        blank=True, null=True
+        blank=True
     )
     main_observations = models.TextField(
         blank=True, null=True
@@ -602,7 +601,6 @@ class FileAttachment(models.Model):
 
     trip = models.ForeignKey(Trip, null=True, blank=True, related_name=u'files')
     type = models.ForeignKey(u'partners.FileType')
-    file = FilerFileField(null=True, blank=True)
     caption = models.TextField(
         null=True,
         blank=True,
@@ -610,7 +608,8 @@ class FileAttachment(models.Model):
         help_text='Description of the file to upload: optional',
     )
     report = models.FileField(
-        upload_to=get_report_filename
+        upload_to=get_report_filename,
+        max_length=255,
     )
 
     content_type = models.ForeignKey(ContentType, null=True, blank=True)

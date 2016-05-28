@@ -2,6 +2,8 @@
 
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../../bower_components/iron-ajax/iron-ajax.html">
+
+
 <link rel="import" href="../../behaviors/common/utils.html">
 
 
@@ -76,8 +78,17 @@ Example:
         observer: '_endpointChanged'
       }
     },
-
+    _startLoading: function() {
+      console.log('ajax-startloading');
+      app.$.loading.loadingText = 'Loading...';
+      app.$.loading.show();
+    },
+    _stopLoading: function() {
+      console.log('ajax-stoploading');
+      app.$.loading.hide();
+    },
     handleError: function(event, error){
+      this._stopLoading();
       console.log('handling the error from etools-ajax');
       console.log('add error checking and validation here');
       // TODO: alert with needed errors.
@@ -87,6 +98,7 @@ Example:
         window.location = this.getEp('login');
         return;
       }
+      app.$.alert.showText('Page has not loaded sucessfully '+event.srcElement.url);
       this.fire('error', {
         request: event,
         error: error.error
@@ -94,19 +106,7 @@ Example:
     },
 
     handleResponse: function(rsp) {
-      //console.log('handling the response from etools-ajax')
-      //console.log(rsp.detail.xhr.response, rsp.detail.xhr)
-      //console.log(rsp.detail.xhr.responseURL);
-      //console.log(rsp.srcElement.url);
-
-      // TODO: responseURL does not exist in IE11 and Safari
-      // if (rsp.detail.xhr.responseURL !== rsp.srcElement.url){
-      //   console.error('expected link did not work, got redirected', rsp.detail.xhr.responseURL, rsp.srcElement.url);
-      //   // TODO: if we get redirected to login.. trigger a global redirect mechanism
-      //   // this._handleUnexpectedResponse();
-      //   return;
-      // }
-      // console.log('detail here', rsp.detail.xhr.response)
+      this._stopLoading();
       console.log(
         rsp.srcElement.url,
         'xhr response ',
@@ -125,7 +125,6 @@ Example:
       }
       // TODO: check if endpoint should be in localstorage
         // TODO: if true place response in localstorage + expiration time (expiration time should be taken based on each endpoint)
-
       this.fire('response', rsp.detail.xhr.response, {bubbles: false});
     },
     _getCSRFCookie: function() {
@@ -155,6 +154,10 @@ Example:
         return;
       }
       this.$.customAjax.url = newUrl;
+
+      if (newUrl !== null) {
+        this._startLoading();
+      }
     },
     sendPostRequest: function() {
       console.log('unsafe method', this.method);
@@ -167,6 +170,7 @@ Example:
       };
       this.$.customAjax.url = this.url;
       this.$.customAjax.generateRequest();
+      this._startLoading();
       return;
     },
     _endpointChanged: function(newEndpoint) {
@@ -187,9 +191,11 @@ Example:
         } else {
           // If expired shoot a new request
           this.$.customAjax.url = this.ep.url;
+          this._startLoading();
         }
       } else {
         this.$.customAjax.url = this.ep.url;
+        this._startLoading();
       }
     }
 

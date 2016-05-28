@@ -1,0 +1,21 @@
+{% load i18n admin_static admin_modify %}
+{% load intervention_tags %}
+
+    <h2>Intervention implementation status</h2>
+    <div id="fr" class="table">
+      {% autoescape off %} {% show_government_funding object_id %}{% endautoescape %}
+    </div>
+
+{#    <h2>DCTs</h2>#}
+{#    <div id="dct" class="table">#}
+{#      {% autoescape off %} {% show_dct object_id %}{% endautoescape %}#}
+{#    </div>#}
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.table').addClass("table-striped table-hover");
+        $('.table table thead th').each( function(){
+            $(this).attr("data-sortable", "true");
+        });
+    });
+</script>

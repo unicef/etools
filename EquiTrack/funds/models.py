@@ -17,6 +17,7 @@ class Grant(models.Model):
 
     donor = models.ForeignKey(Donor)
     name = models.CharField(max_length=128L, unique=True)
+    description = models.CharField(max_length=255, null=True, blank=True)
     expiry = models.DateField(null=True, blank=True)
 
     class Meta:
