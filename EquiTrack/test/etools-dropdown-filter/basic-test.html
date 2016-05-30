@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+    <script src="../../assets/bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <script src="../../assets/bower_components/web-component-tester/browser.js"></script>
+    <script src="../../assets/bower_components/test-fixture/test-fixture-mocha.js"></script>
+
+    <link rel="import" href="../../assets/bower_components/test-fixture/test-fixture.html">
+    <link rel="import" href="../../assets/elements/etools-dropdown-filter.html">
+  </head>
+  <body>
+
+    <test-fixture id="etools-dropdown-filter">
+      <template>
+        <etools-dropdown-filter
+            url="/responds_to_get_with_json"
+            filter-id="result_structure"
+            label="Result structures"
+            all-label="All result structures">
+        </etools-dropdown-filter>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('<etools-dropdown-filter>', function() {
+      var responseHeaders = {
+        json: { 'Content-Type': 'application/json' },
+        plain: { 'Content-Type': 'text/plain' }
+      };
+      var ajax;
+      var request;
+      var server;
+      var data = [
+        {
+          "id": "1",
+          "name": "Brekke Inc",
+          "from_date": "2001-01-01",
+          "to_date": "2001-01-01"
+        },
+        {
+          "id": "5",
+          "name": "Heaney, Frami and Larkin",
+          "from_date": "2001-01-01",
+          "to_date": "2001-01-01"
+        },
+        {
+          "id": "2",
+          "name": "Hoppe Inc",
+          "from_date": "2001-01-01",
+          "to_date": "2001-01-01"
+        },
+        {
+          "id": "4",
+          "name": "Lesch, Sanford and Harvey",
+          "from_date": "2001-01-01",
+          "to_date": "2001-01-01"
+        },
+        {
+          "id": "3",
+          "name": "Sipes - Gerhold",
+          "from_date": "2001-01-01",
+          "to_date": "2001-01-01"
+        }
+      ];
+
+      setup(function() {
+        server = sinon.fakeServer.create();
+          server.respondWith(
+          'GET',
+          /\/responds_to_get_with_json.*/,
+          [
+            200,
+            responseHeaders.json,
+            JSON.stringify(data)
+          ]
+        );
+
+        server.respondWith(
+          'GET',
+          /\/responds_to_different_get_with_json.*/,
+          [
+            200,
+            responseHeaders.json,
+            '{"success":true}'
+          ]
+        );
+
+        element = fixture('etools-dropdown-filter');
+      });
+
+      teardown(function () {
+        server.restore();
+      });
+
+      suite('when making request for element', function() {
+        test('has the valid response element', function() {
+          var ajax = element.getElementsByTagName('iron-ajax')[0];
+          request = ajax.generateRequest();
+          server.respond();
+
+          expect(request.response).to.be.ok;
+          expect(request.response).to.be.an('array');
+          expect(request.response.length).to.be.equal(data.length);
+        });
+
+        test('has valid properties', function() {
+          var ajax = element.getElementsByTagName('iron-ajax')[0];
+          request = ajax.generateRequest();
+          server.respond();
+
+          expect(element.url).to.be.equal(window.location.protocol + '//' + window.location.host + '/responds_to_get_with_json');
+          expect(element.filterId).to.be.equal('result_structure');
+          expect(element.label).to.be.equal('Result structures');
+          expect(element.allLabel).to.be.equal('All result structures');
+        });
+
+        test('has valid JSON response object', function() {
+          var ajax = element.getElementsByTagName('iron-ajax')[0];
+          request = ajax.generateRequest();
+          server.respond();
+
+          var response = request.response[0];
+          expect(response.id).to.be.equal(data[0].id);
+          expect(response.filterId).to.be.equal(data[0].filterId);
+          expect(response.label).to.be.equal(data[0].label);
+          expect(response.allLabel).to.be.equal(data[0].allLabel);
+        });
+      });
+
+      suite('when properties are changed', function() {
+        test('generates request element that reflect the change', function() {
+          var label = 'Phasellus nec sem in justo';
+          var filterId = 123;
+          var url = '/responds_to_different_get_with_json';
+          var allLabel = 'Nullam nulla eros ultricies sit';
+
+          element.url = url;
+          element.label = label;
+          element.filterId = filterId;
+          element.allLabel = allLabel;
+
+          var ajax = element.getElementsByTagName('iron-ajax')[0];
+          request = ajax.generateRequest();
+          expect(request.xhr.method).to.be.equal('GET');
+
+          request = ajax.generateRequest();
+          expect(request.xhr.url).to.be.equal(url);
+          expect(element.filterId).to.be.equal(filterId);
+          expect(element.label).to.be.equal(label);
+          expect(element.allLabel).to.be.equal(allLabel);
+        });
+      });
+    });
+    </script>
+
+  </body>
+</html>
