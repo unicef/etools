@@ -1,6 +1,6 @@
 __author__ = 'unicef-leb-inn'
 
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, permissions
 from rest_framework.generics import ListAPIView
 
 from .models import CartoDBTable, GatewayType, Location
@@ -17,6 +17,7 @@ class CartoDBTablesView(ListAPIView):
     """
     queryset = CartoDBTable.objects.all()
     serializer_class = CartoDBTableSerializer
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class LocationTypesViewSet(mixins.RetrieveModelMixin,
@@ -28,6 +29,7 @@ class LocationTypesViewSet(mixins.RetrieveModelMixin,
     """
     queryset = GatewayType.objects.all()
     serializer_class = GatewayTypeSerializer
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class LocationsViewSet(mixins.RetrieveModelMixin,
