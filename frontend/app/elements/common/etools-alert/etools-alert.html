@@ -1,7 +1,7 @@
 
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
-
-
+<link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../../bower_components/paper-button/paper-button.html">
 
 
 
@@ -59,10 +59,16 @@
       this.alertText = alertText;
       this.show();
     },
+    showSuccess: function(alertText){
+      this.alertTitle = 'Success';
+      this.showText(alertText);
+    },
     dismissDialog: function(event) {
       // if (event.detail.confirmed) {
       //   // do something if confirmed
       // }
+      this.hide();
+      this.alertTitle = 'Warning';
       event.stopPropagation();
     }
   });

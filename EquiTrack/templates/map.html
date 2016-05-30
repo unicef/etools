@@ -2,696 +2,305 @@
 {% load leaflet_tags %}
 
 {% block extra_head %}
+    <script src="{{ STATIC_URL }}bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+    <script src="{{ STATIC_URL }}bower_components/lodash/lodash.min.js"></script>
 
+    <link rel="import" href="{{ STATIC_URL }}bower_components/iron-pages/iron-pages.html">
 
-    {% leaflet_css %}
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.awesome-markers.css" />
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.css" />
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-button/paper-button.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dialog/paper-dialog.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-dropdown-menu/paper-dropdown-menu-light.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-input/paper-input.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-input/paper-textarea.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-item/paper-item.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-listbox/paper-listbox.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/paper-tabs/paper-tabs.html">
 
-    <script src="http://libs.cartocdn.com/cartodb.js/v3/cartodb.js"></script>
-    <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
+    <link rel="import" href="{{ STATIC_URL }}bower_components/google-map/google-map.html">
 
-    <!--[if lte IE 8 -->
-    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/themes/css/cartodb.ie.css" />
-    <![endif]-->
-    <!--Switch between the different themes changing the stylesheet below - light-theme.css |dark-theme.css -->
-   <!-- <link rel="stylesheet" href="{{ STATIC_URL }}css/dark-theme.css"> -->
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/makeitresponsive.css">
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/spongemap.css" />
-    <link rel="stylesheet" href="{{ STATIC_URL }}css/leaflet.awesome-markers.css" />
+    <link rel="import" href="{{ STATIC_URL }}bower_components/neon-animation/animations/fade-out-animation.html">
+    <link rel="import" href="{{ STATIC_URL }}bower_components/neon-animation/animations/scale-up-animation.html">
+
+    <link rel="import" href="{{ STATIC_URL }}elements/etools-dropdown-filter.html">
 
     <style>
-    /* Start by setting display:none to make this hidden.
-   Then we position it in relation to the viewport window
-   with position:fixed. Width, height, top and left speak
-   speak for themselves. Background we set to 80% white with
-   our animation centered, and no-repeating */
-    .modal {
-        display:    none;
-        position:   fixed;
-        z-index:    1000;
-        top:        0;
-        left:       0;
-        height:     100%;
-        width:      100%;
-        background: rgba( 255, 255, 255, .8 )
-                    url('http://i.stack.imgur.com/FhHRx.gif')
-                    50% 50%
-                    no-repeat;
+    google-map {
+        height: 600px;
     }
 
-    /* When the body has the loading class, we turn
-       the scrollbar off with overflow:hidden */
-    body.loading {
-        overflow: hidden;
+    paper-dialog.size-position {
+        width: 600px;
+        height: 600px;
+        overflow: auto;
     }
 
-    /* Anytime the body has the loading class, our
-       modal element will be visible */
-    body.loading .modal {
-        display: block;
+    paper-dropdown-menu {
+        width: 150px;
+        padding-right: 20px;
+    }
+    </style>
+    <style is="custom-style">
+    :root {
+        --paper-tabs-selection-bar-color: var(--paper-red-900);
     }
 
+    iron-pages {
+        max-height: 355px;
+        padding-right: 10px;
+        overflow:auto;
+    }
+
+    paper-tabs, paper-toolbar {
+        height: 30px;
+    }
     </style>
 
 {% endblock %}
 
 {% block content %}
-
-
+{% verbatim %}
     <section class="main-content-wrapper">
         <section id="main-content">
-           <div class="row col-md-offset-1" style=" padding-top: 10px;">
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-result_structure" type="button" class="col-md-10 btn btn-info">
-                       Result Structure
-                    </button>
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="col-xs-10">
+                    <etools-dropdown-filter
+                        url="/api/reports/result-structures/"
+                        filter-id="result_structure"
+                        label="Result structures"
+                        all-label="All result structures">
+                    </etools-dropdown-filter>
 
-                    <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu">
-                        <li><a href="javascript:void(0);" id="result_structure999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
-                        {% for result_structure in result_structure_list %}
-                            <li><a href="javascript:void(0);" id="result_structure{{ result_structure.id }}" onclick="DropdownSelect(this.id);" itemid="{{ result_structure.id }}">{{ result_structure.name }}</a></li>
-                        {% endfor %}
-                    </ul>
+                    <etools-dropdown-filter
+                        url="/api/reports/sectors/"
+                        filter-id="sector"
+                        label="Sectors"
+                        all-label="All sectors">
+                    </etools-dropdown-filter>
+
+                    <etools-dropdown-filter
+                        url="/api/locations-types/"
+                        filter-id="gateway"
+                        label="Gateways"
+                        all-label="All gateways">
+                    </etools-dropdown-filter><br />
+
+                    <paper-dropdown-menu id="status" label="Status" selected-item>
+                        <paper-listbox class="dropdown-content" id="status_listbox">
+                            <paper-item id="">All Statuses</paper-item>
+                            <paper-item id="in_process">In process</paper-item>
+                            <paper-item id="active">Active</paper-item>
+                            <paper-item id="implemented">Implemented</paper-item>
+                            <paper-item id="cancelled">Cancelled</paper-item>
+                        </paper-listbox>
+                    </paper-dropdown-menu>
+
+                    <etools-dropdown-filter
+                        url="/api/funds/donors/"
+                        filter-id="donor"
+                        label="Donors"
+                        all-label="All donors">
+                    </etools-dropdown-filter>
+
+                    <etools-dropdown-filter
+                        url="/api/partners/"
+                        filter-id="partner"
+                        label="Partners"
+                        all-label="All partners">
+                    </etools-dropdown-filter><br />
+                </div>
+                <div class="col-xs-2 text-right" style="padding-top: 25px;">
+                    <paper-button raised noink onclick="submitSearch()" style="margin-bottom: 10px;">Submit</paper-button><br />
+                    <paper-button raised noink onclick="clearSearch()">Clear</paper-button>
                 </div>
             </div>
-           <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-sector" type="button" class="col-md-10 btn btn-danger">
-                       Sector
-                    </button>
-
-                    <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu">
-                        <li><a href="javascript:void(0);" id="sector999" onclick="DropdownSelect(this.id);" itemid="999">All Sectors</a></li>
-                        {% for sector in sectors_list %}
-                            <li><a href="javascript:void(0);" id="sector{{ sector.id }}" onclick="DropdownSelect(this.id);" itemid="{{ sector.id }}">{{ sector.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-gateway" type="button" class="col-md-10 btn btn-primary">
-                       Gateways
-                    </button>
-
-                    <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown" type="button">
-                         <span class="caret"></span>
-                    </button>
-
-                    <ul class="dropdown-menu scrollable-menu" role="menu" id="gateway_ul">
-                        <li><a href="javascript:void(0);" id="gateway999" onclick="DropdownSelect(this.id);" itemid="999">All Gateways</a></li>
-                        {% for gateway in gateway_list %}
-                            <li><a href="javascript:void(0);" id="gateway{{ gateway.id }}" onclick="DropdownSelect(this.id);" itemid="{{ gateway.id }}">{{ gateway.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-governorate" type="button" class="col-md-10 btn btn-success">
-                       Governorate
-                    </button>
-
-                    <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu" id="governorate_ul">
-                       <li><a href="javascript:void(0);" id="governorate999" onclick="DropdownSelect(this.id);" itemid="999">All Governorates</a></li>
-                        {% for governorate in governorate_list %}
-                            <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="DropdownSelect(this.id);" itemid="{{ governorate.id }}">{{ governorate.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-2 col-md-offset-2">
-                <div class="btn-group btn-block">
-                    <button id="btn-submit" type="button" class="col-md-5 btn btn-warning" onclick="SubmitSearch();">
-                       Submit
-                    </button>
-                    <button id="btn-clear" type="button" class="col-md-5 btn btn-danger" onclick="ClearButtonClick();">
-                       Clear
-                    </button>
-                </div>
-            </div>
-
-            </div>
-
-            <!-- new row -->
-            <div class="row col-md-offset-1">
-                <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-status" type="button" class="col-md-10 btn btn-info">
-                           Status
-                        </button>
-
-                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown" type="=button">
-                             <span class="caret"></span>
-                        </button>
-                            <ul class="dropdown-menu scrollable-menu" role="menu">
-                                    <li><a href="javascript:void(0);" id="status999" onclick="DropdownSelect(this.id);" itemid="999">All Statuses</a></li>
-                                    <li><a href="javascript:void(0);" id="status0" onclick="DropdownSelect(this.id);" itemid="0">IN_PROCESS</a></li>
-                                    <li><a href="javascript:void(0);" id="status1" onclick="DropdownSelect(this.id);" itemid="1">ACTIVE</a></li>
-                                    <li><a href="javascript:void(0);" id="status2" onclick="DropdownSelect(this.id);" itemid="2">IMPLEMENTED</a></li>
-                                    <li><a href="javascript:void(0);" id="status3" onclick="DropdownSelect(this.id);" itemid="3">CANCELLED</a></li>
-                            </ul>
-                    </div>
-                </div>
-               <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-donor" type="button" class="col-md-10 btn btn-danger">
-                           Donor
-                        </button>
-
-                        <button class="col-md-2 btn btn-danger dropdown-toggle" data-toggle="dropdown">
-                             <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                            <li><a href="javascript:void(0);" id="donor999" onclick="DropdownSelect(this.id);" itemid="999">All Donors</a></li>
-                           {% for donor in donor_list %}
-                                <li><a href="javascript:void(0);" id="donor{{ donor.id }}" onclick="DropdownSelect(this.id);" itemid="{{ donor.id }}">{{ donor.name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-partner" type="button" class="col-md-10 btn btn-primary">
-                           Partner
-                        </button>
-
-                        <button class="col-md-2 btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                             <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                            <li><a href="javascript:void(0);" id="partner999" onclick="DropdownSelect(this.id);" itemid="999">All Partners</a></li>
-                           {% for partner in partner_list %}
-                                <li><a href="javascript:void(0);" id="partner{{ partner.id }}" onclick="DropdownSelect(this.id);" itemid="{{ partner.id }}">{{ partner.name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-2">
-                    <div class="btn-group btn-block">
-                        <button id="btn-district" type="button" class="col-md-10 btn btn-success">
-                           District
-                        </button>
-
-                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
-                             <span class="caret"></span>
-                        </button>
-                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                            <li><a href="javascript:void(0);" id="district999" onclick="DropdownSelect(this.id);" itemid="999">All Districts</a></li>
-                           {% for district in region_list %}
-                                <li><a href="javascript:void(0);" id="district{{ district.id }}" onclick="DropdownSelect(this.id);" itemid="{{ district.id }}">{{ district.name }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-        <!-- new row -->
-            <div class="row col-md-11 col-md-offset-1" style="display:none">
-                <div id="accordion" class="panel-group">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <h4 class="panel-title">
-                                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">Detailed Search</a>
-                            </h4>
-                        </div>
-                         <div id="collapseOne" class="panel-collapse collapse">
-                            <div class="panel-body">
-                                <div class="col-md-2">
-                                    <div class="btn-group btn-block">
-                                        <button id="btn-indicator" type="button" class="col-md-10 btn btn-info">
-                                           Indicator
-                                        </button>
-
-                                        <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
-                                             <span class="caret"></span>
-                                        </button>
-                                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                                           {% for indicator in indicator_list %}
-                                                <li><a href="javascript:void(0);" id="indicator{{ indicator.id }}" onclick="DropdownSelect(this.id);" itemid="{{ indicator.id }}">{{ indicator.name }}</a></li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="btn-group btn-block">
-                                        <button id="btn-output" type="button" class="col-md-10 btn btn-success">
-                                           Output
-                                        </button>
-
-                                        <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown">
-                                             <span class="caret"></span>
-                                        </button>
-                                        <ul class="dropdown-menu scrollable-menu" role="menu">
-                                           {% for output in output_list %}
-                                                <li><a href="javascript:void(0);" id="output{{ output.id }}" onclick="DropdownSelect(this.id);" itemid="{{ output.id }}">{{ output.name }}</a></li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-
-                                <div class='col-md-3'>
-                                    <div class="form-group">
-                                        <label class="col-md-2 control-label nopadding">Date From</label>
-                                        <div class='input-group input-append date col-md-10' id='datetimepicker6'>
-                                            <input type='text' class="form-control" name="date" />
-                                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class='col-md-3'>
-                                    <div class="form-group">
-                                        <label class="col-md-2 control-label no nopadding">Date To</label>
-                                        <div class='input-group input-append date col-md-10' id='datetimepicker7'>
-                                            <input type='text' class="form-control" name="date" />
-                                            <span class="input-group-addon add-on"><span class="glyphicon glyphicon-calendar"></span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                             </div>
-                         </div>
-                    </div>
-                </div>
+            <div class="row"">
+                <div class="col-md-12 text-right" style="margin-bottom: 10px; padding-right: 25px;" id="results_label"></div>
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <div class="panel panel-default">
-                        <div class="panel-body">
-
-                             {% leaflet_map "leaflet-map" callback="window.main" %}
-
-                            <div id='mapmenu' class="col-md-10">
-                            </div>
-                        </div>
-                    </div>
+                    <google-map fit-to-markers max-zoom="10" info open style="display:none;"></google-map>
+                    <paper-dialog id="gmap_dialog" class="size-position" entry-animation="scale-up-animation" exit-animation="fade-out-animation"></paper-dialog>
                 </div>
             </div>
-        <div id="loading" class="modal"></div>
         </section>
     </section>
+{% endverbatim %}
 
+<script type="text/javascript">
+    var filterTypes = ['result_structure', 'sector', 'gateway', 'status', 'donor', 'partner'];
+    var locationsUrl = "{% url 'locations' %}?";
+    var base = 'map';
+    var mapDefaultValues = {
+        latitude: 30.826781,
+        longitude: -41.308594,
+        zoom: 3
+    }
 
-{% endblock %}
+    window.addEventListener('WebComponentsReady', function(e) {
+        resetMap();
+        updateResultsLabel(0);
+    });
 
-{% block extra_js %}
+    function submitSearch(){
+        var query = '';
 
-    {% leaflet_js %}
-
-    <script type="text/javascript">
-
-        //querying JSON
-        function getObjects(obj, key, val) {
-            var objects = [];
-            for (var i in obj) {
-                if (!obj.hasOwnProperty(i)) continue;
-                if (typeof obj[i] == 'object') {
-                    objects = objects.concat(getObjects(obj[i], key, val));
-                } else if (i == key && obj[key] == val) {
-                    objects.push(obj);
-                }
+        _.each(filterTypes, function(filterType) {
+            if (document.querySelector('#' + filterType).selectedItem !== undefined &&
+                document.querySelector('#' + filterType).selectedItem !== null &&
+                document.querySelector('#' + filterType).selectedItem.id !== '') {
+                query += filterType + '=' + document.querySelector('#' + filterType).selectedItem.getAttribute('id') + '&';
             }
-            return objects;
-        }
-
-        function DropdownSelect(id){
-            var selectVal = $('#' + id).html();
-            var itemId = $('#' + id).attr('itemid');
-            var btnId = "btn-" + id.substring(0, id.indexOf(itemId));
-            //if(itemId != '999'){
-                $('#' + btnId).html(selectVal);
-           // }
-            //else{ //all is clicked
-                 //$('#' + btnId).html('Result Structure');
-            //}
-
-            //get the current color class and set the background of selected item
-            var colorClass = '';
-            var arr =  $('#' + btnId).attr('class').split(" ");
-
-            for (var i = 0; i < arr.length; i++){
-                if(arr[i].indexOf("btn-")>-1){
-                    colorClass = arr[i];
-                    break;
-                }
-            }
-            $('#' + btnId).next().next().find('*').removeClass(colorClass);
-            $('#' + btnId).next().next().find('*').css({"color": ""});
-
-            $('#' + id).addClass(colorClass);
-            $('#' + id).css({"color" : "#fff"})
-        }
-
-        function SubmitSearch(){
-            var resultStructure = $('#btn-result_structure').html();
-            var sector = $('#btn-sector').html();
-            var gateway = $('#btn-gateway').html();
-            var governorate = $('#btn-governorate').html();
-            var status = $('#btn-status').html();
-            var donor = $('#btn-donor').html();
-            var partner = $('#btn-partner').html();
-            var district = $('#btn-district').html();
-
-            var query='';
-            if(!resultStructure.includes('Result Structure'))
-                query += 'result_structure=' + $("a:contains(" + resultStructure + ")").attr("itemid") + '&';
-
-            if(!sector.includes('Sector'))
-                query += 'sector=' + $("a:contains(" + sector + ")").attr("itemid") + '&';
-
-            if(!gateway.includes('Gateways'))
-                query += 'gateway=' + $("a:contains(" + gateway + ")").attr("itemid") + '&';
-
-            if(!governorate.includes('Governorate'))
-                query += 'governorate=' + $("a:contains(" + governorate + ")").attr("itemid") + '&';
-
-            if(!status.includes('Status'))
-                query += 'status=' + $("a:contains(" + status + ")").html().toLowerCase() + '&';
-
-            if(!donor.includes('Donor'))
-                query += 'donor=' + $("a:contains(" + donor + ")").attr("itemid") + '&';
-
-            if(!partner.includes('Partner'))
-                query += 'partner=' + $("a:contains(" + partner + ")").attr("itemid") + '&';
-
-            if(!district.includes('District'))
-                query += 'district=' + $("a:contains(" + district + ")").attr("itemid") + '&';
-
-            history.pushState(query, "", "/map/?" + query);
-            //console.log(query);
-            //alert("{% url 'locations' %}?" + query);
-            $.getJSON("{% url 'locations' %}?" + query, function (data) {
-                UpdateMap(data);
-            }).done({
-
-            });
-        }
-
-        $(document).ajaxStart(function(){
-            $('#loading').show();
-        }).ajaxStop(function(){
-            $('#loading').hide();
         });
 
-        function ClearButtonClick(){
-            history.replaceState("", "", "/map/");
-            location.reload();
-        }
+        var searchUrl = locationsUrl + query;
 
-        function getRandomColor() {
-            var letters = '0123456789ABCDEF'.split('');
-            var color = '#';
-            for (var i = 0; i < 6; i++ ) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
-        }
+        $.getJSON(searchUrl, function(data) {
+            updateMap(data);
+            updateResultsLabel(data.length);
+        });
+    }
 
-        var map1;
-        var sublayer;
-        var table;
-        var uniqueID;
-        var subLayerOptions = '[';
-        var count = 0;
-        var tableArr = [];
-        var color="";
-        var searchLayerArr = [];
-        var markerColors = ['red', 'darkred', 'orange', 'green', 'darkgreen', 'blue', 'purple', 'darkpuple', 'cadetblue'];
+    function clearSearch() {
+        resetFilters();
+        resetMap();
+        updateResultsLabel(0);
+    }
 
-        function main(map, options) {
-            map1=map;
-            {% if lat and lng %}
-                map.setZoom({{ zoom }});
-                map.panTo(new L.LatLng({{ lat }}, {{ lng }}));
-            {% endif %}
-            layer_control = L.control.layers().addTo(map);
-            //get all cartodb tables from etools and pull data from CartoDB
-            $.getJSON("{% url 'cartodbtables' %}", function (data) {
-                $.each(data, function (key, val) {
-                    $.getJSON(
-                            "https://"+ val.domain +".cartodb.com/api/v2/sql?q=SELECT * FROM " + val.table_name +
-                            "&format=GeoJSON&api_key=" + val.api_key
-                    )
-                    .done(function (data) {
-                        var newlayer;
-                        color = val.color;
-                          tableArr.push({
-                              table_name: val.table_name,
-                              pcode_col: val.pcode_col,
-                              color: color,
-                              display_name: val.display_name
-                          });
-                        if (data.features[0].geometry != null) {
-                            if (data.features[0].geometry.type == "MultiPolygon" ||
-                                    data.features[0].geometry.type == "Polygon") {
-                                newlayer = L.geoJson(data, {
-                                    style: {
-                                        color: "#fff",
-                                        weight: 2,
-                                        opacity: 0.5,
-                                        fillOpacity: 0.3,
-                                        fillColor: color
-                                    }
-                                });
-                            }
-                            else{
+    function resetFilters() {
+        _.each(filterTypes, function(filterType) {
+            document.querySelector('#' + filterType + '_listbox').selected = null;
+        });
+    }
 
-                                newlayer = L.geoJson(data, {
-                                    style: function (feature) {
-                                        return feature.properties && feature.properties.style;
-                                    },
+    function resetMap() {
+        var gmap = document.querySelector('google-map');
+        var markers = Polymer.dom(gmap).childNodes;
 
-                                    pointToLayer: function (feature, latlng) {
-                                        return L.circleMarker(latlng, {
-                                            radius: 5,
-                                            fillColor: color,
-                                            color: "#fff",
-                                            weight: 1,
-                                            opacity: 1,
-                                            fillOpacity: 0.8
-                                        });
-			                        }
-                                 });
-                            }
-                        }
-                        else{
-                            newlayer = L.geoJson(data, {
-                                style: function (feature) {
-                                    return feature.properties && feature.properties.style;
-                                },
+        _.each(markers, function(marker) {
+            Polymer.dom(gmap).removeChild(marker);
+        });
 
-                                pointToLayer: function (feature, latlng) {
-                                    return L.circleMarker(latlng, {
-                                        radius: 5,
-                                        fillColor: color,
-                                        color: "#fff",
-                                        weight: 1,
-                                        opacity: 1,
-                                        fillOpacity: 0.8
-                                    });
-                                }
-                             });
-                        }
-                        layer_control.addOverlay(newlayer, val.display_name);
+        gmap.clear();
+        gmap.latitude = mapDefaultValues.latitude;
+        gmap.longitude = mapDefaultValues.longitude;
+        gmap.zoom = mapDefaultValues.zoom;
+        gmap._updateCenter();
+        gmap.style.display = '';
+    }
 
-                        $.each(tableArr, function(keyt,valt) {
-                            $("span:contains(" + valt.display_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
-                            $("span:contains(" + valt.display_name + ")").css("color", "#fff");
-                        });
-                    })
-                    .error(function (errors) {
-                        // errors contains a list of errors
-                        console.log("errors:" + errors);
-                    });
-                });
-                $('.leaflet-top.leaflet-right').prepend('<div>Select Layers</div>');
+    function updateMap(locations){
+        var gmap = document.querySelector('google-map');
+        gmap.clear();
+
+        _.each(locations, function(location, locationIndex) {
+            var marker = document.createElement('google-map-marker');
+            marker.setAttribute('id', location.location_name);
+            marker.setAttribute('latitude', location.latitude);
+            marker.setAttribute('longitude', location.longitude);
+            marker.setAttribute('title', location.location_name);
+            marker.setAttribute('click-events', true);
+
+            marker.addEventListener('google-map-marker-click', function (e) {
+                var dialog = document.getElementById('gmap_dialog');
+
+                if (dialog) {
+                    injectBoundHTML(createDialogContent(locationIndex, location), dialog);
+
+                    var template = document.querySelector('template[is="dom-bind"]');
+                    template.selected = 0;
+
+                    dialog.open();
+                }
             });
 
-            UpdateMap();
+            Polymer.dom(gmap).appendChild(marker);
+        });
+
+        function injectBoundHTML(html, element) {
+            var template = document.createElement('template', 'dom-bind');
+            var doc = template.content.ownerDocument;
+            var div = doc.createElement('div');
+            div.innerHTML = html;
+            template.content.appendChild(div);
+            while (element.firstChild) {
+                element.removeChild(element.firstChild);
+            }
+            element.appendChild(Polymer.Base.instanceTemplate(template));
         }
 
-        function UpdateMap(pca_locations1){
-                //remove previous search layer
-                $.each(searchLayerArr, function(keys,vals) {
-                    map1.removeLayer(vals);
-                });
-                var layerGr = new L.layerGroup();
-                $.each( pca_locations1, function( keyq, valueq ) {
-                    var popup_content_start = "<div class='row col-md-12'><label class='col-md-3 control-label'>Location</label><div id='location_name' class='col-md-9'>" + valueq.location_name + "</div></div>" +
-                                    "<div class='row col-md-12'><label class='col-md-3 control-label'>Location Type</label><div id='location_type' class='col-md-9'>" + valueq.location_type + "</div></div>" +
-                                    "<div class='row col-md-12'><label class='col-md-8 control-label'>Interventions associated with this location:</label><div id='Interventions' class='col-md-4'>" +  "</div></div>" +
-                            '<div class="content" id="mytab" style="padding:20px col-md-11">' +
-                                                '';
-                    var popup_content_navs = '<ul class="nav nav-tabs nav-justified" role="tablist" id="myTab">';
-                    var popup_content_tabs = '<div class="tab-content" id="infotabs">';
-                    var popup_content='';
-                    //looping through all Interventions for one location
-                    $.each( valueq.parterships, function( keyp, valuep ) {
-                        popup_content_navs += '<li id="link' + keyp + '" class=""><a data-toggle="tab" href="#tab' + keyp + '">' + valuep.pca_number + '</a></li>';
-                        popup_content_tabs += "<div role='tabpanel' class='tab-pane fade in' id='tab" + keyp + "' style='padding-top: 5px;'>" +
-                                "<div class='row'>" +
-                                "<div class='row col-md-12'><label class='col-md-3 control-label'>Title</label><div id='pca_title' class='col-md-9'>" + valuep.pca_title + "</div></div>" +
-                                "<div class='row col-md-12'><label class='col-md-3 control-label'>Partner</label><div id='partner_name' class='col-md-9'>" + valuep.partner_name + "</div></div>" +
-                                "<div class='row col-md-12'><label class='col-md-10 control-label'>Results by Sector:</label><div id='partner_name' class='col-md-2'></div></div>" +
-                                "</div>";
+        {% verbatim %}
+        function createDialogContent(locationIndex, location) {
+            var popupContent = '';
+            var popupContentStart = '\
+            <paper-input name="location_name" id="location_name" label="Location Name" value="' + location.location_name + '" readonly></paper-input>\
+            <paper-input name="location_type" id="location_type" label="Location Type" value="' + location.location_type + '" readonly></paper-input>\
+            <br /><div>Interventions</div><template is="dom-bind">';
 
+            // tabs
+            var popupContentTabs = '<div class="middle"><paper-tabs class="bottom self-end" selected="{{selected}}">';
 
-                        if (valuep.distribution_plans != null) {
+            _.each(location.parterships, function(partnership, partnershipIndex) {
+                popupContentTabs += '<paper-tab>' + partnership.pca_number + '</paper-tab>';
+            });
 
+            popupContentTabs += '</paper-tabs></div>';
 
-                            popup_content_tabs += "<div id='dist" + keyp + "' style='padding-top: 5px;'>" +
-                                            "<div class='row'>" +
-                                    "<div class='row col-md-12'><label class='col-md-10 control-label'>Distribution Plans:</label><div class='col-md-2'></div></div>" +
-                                    "<div class='row col-md-12'><div class='col-md-1'></div><label class='col-md-4 control-label'>Item Type</label><label class='col-md-4 control-label'>Delivered</label></div>" +
-                                    "</div>";
+            // content for each tab
+            var popupContentNavs = '<div class="bottom"><iron-pages selected="{{selected}}">';
 
-                            $.each(valuep.distribution_plans, function (keyDist, valueDist) {
+            _.each(location.parterships, function(partnership, partnershipIndex) {
+                popupContentNavs += '<div>';
+                popupContentNavs += '<paper-textarea label="Title" value="' + partnership.pca_title + '" readonly></paper-textarea>';
+                popupContentNavs += '<paper-input label="Partner" value="' + partnership.partner_name + '" readonly></paper-input>';
 
-                                if(valueq.location_name ==valueDist.site) {
+                popupContentNavs += '<br><div>Distribution Plans</div>';
 
-                                    popup_content_tabs += "<div id='dist" + keyp + "' style='padding-top: 5px;'>" +
-                                            "<div class='row'>" +
-                                            "<div class='row col-md-12'><div class='col-md-1'></div><div class='col-md-4'>"+valueDist.item+"</div><div id='dist_delivered' class='col-md-4'>" + valueDist.delivered + "/" + valueDist.quantity + "</div></div>" +
-                                            "</div>";
-                                }
-                            });
+                if (partnership.distribution_plans != null && partnership.distribution_plans.length > 0) {
+                    popupContentNavs += '<paper-input label="Item Type" value="Delivered" readonly style="padding-left: 10px;"></paper-input>';
+
+                    _.each(partnership.distribution_plans, function(distributionPlan) {
+                        if (location.location_name == distributionPlan.site) {
+                            popupContentNavs += '<paper-input label="' + distributionPlan.item + '" value="' + distributionPlan.delivered + '" readonly style="padding-left: 10px;"></paper-input>';
                         }
+                    });
+                }
 
-                        //looping for sectors for one PD
+                popupContentNavs += '<br><div>Sectors</div>';
 
-                        if (valuep.sectors != null){
-                            $.each(valuep.sectors, function (keys, valueSec) {
-                                var popup_content_tabs_indicator = '';
+                if (partnership.pcasector_set != null && partnership.pcasector_set.length > 0) {
+                    _.each(partnership.pcasector_set, function(sector, sectorKey) {
+                        popupContentNavs += '<paper-input label="' + sector.sector_name + '" value="Delivered" readonly style="padding-left: 10px;"></paper-input>';
 
-                                var popup_content_tabs_sec = '<div class="row"><div class="panel-group col-md-12" id="accordion">' +
-                                        '<div class="panel panel-default">' +
-                                        '<div class="panel-heading">' +
-                                        '<h3 class="panel-title"><a data-toggle="collapse" data-parent="#accordion" href="#collapse' + keyp + keys + '">' + valueSec.sector_name + '</a></h3>' +
+                        _.each(sector.indicators, function(indicator) {
+                            popupContentNavs +=
+                                    '<div style="padding-left: 10px; margin-top: 8px;">' +
+                                        '<label class="style-scope paper-input" style="font-weight: normal; font-size: 12px; color: #737373;">' + indicator.indicator + '</label><div><span class="sublabel" style="float: right;">Programmed: ' + indicator.programmed + '</span></div>' +
+                                        '<div><span class="sublabel">Reached: ' + indicator.current + '</span></div>' +
+                                        '<div class="progress progress-striped">' +
+                                            '<div class="progress-bar progress-bar-blue" style="width: ' + indicator.current / indicator.programmed * 100 + '%">' + (indicator.current / indicator.programmed * 100).toFixed(1) + '% </div>' +
                                         '</div>' +
-                                        '<div id="collapse' + keyp + keys + '" class="panel-collapse collapse">';
-
-                                $.each(valueSec.indicators, function (keyi, valuei) {
-                                    popup_content_tabs_indicator +=
-                                            '<div class="panel-body">' +
-                                            '<a href=""><span class="sublabel">' + valuei.indicator + '</span></a>' + '<div><span class="sublabel" style="float: right;">Programmed: ' + valuei.programmed + '</span></div>' +
-                                            '<div><span class="sublabel">Reached: ' + valuei.current + '</span></div>' +
-                                            '<div class="progress progress-striped">' +
-                                            '<div class="progress-bar progress-bar-blue" style="width: ' + valuei.current / valuei.programmed * 100 + '%">' + (valuei.current / valuei.programmed * 100).toFixed(1) + '% </div>' +
-                                            '</div>' +
-                                            '</div>';
-                                });
-                                popup_content_tabs_indicator += '</div>' + '</div>' + '</div>' + '</div>';
-
-                                popup_content_tabs += popup_content_tabs_sec + popup_content_tabs_indicator;
-
-                            });
-                    }
-                                                popup_content_tabs  += "</div></div>";
-                            popup_content_tabs += '</div>';
+                                    '</div>';
+                        });
                     });
-                    popup_content_navs += '</ul>';
-                    popup_content = popup_content_start + popup_content_navs + popup_content_tabs + '</div></div>';
-                    console.log(popup_content);
-                    //alert(popup_content);
+                }
 
-                    var RedIcon = L.icon({
-                        iconUrl: '../static/img/marker-icon.png'
-                    });
+                popupContentNavs += '</div>';
+            });
 
-                    //var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude), {icon: RedIcon});
-                    var fIcon = 'building-o';
+            popupContentNavs += '</iron-pages></div>';
 
-                    switch(valueq.gateway_id){
-                        case 6: // Collective Shelter
-                            fIcon = 'home';
-                            break;
-                        case 2: //Community Center
-                            fIcon = 'building-o';
-                            break;
-                        case 5: //Informal Tented Settlement
-                            fIcon = 'home';
-                            break;
-                        case 8: //Palestinian Camps
-                            fIcon = 'home';
-                            break;
-                        case 4: //Primary Health Care Center
-                            fIcon = 'h-square';
-                            break;
-                        case 1: //School
-                            fIcon = 'book';
-                            break;
-                        case 4: //Social Development Center
-                            fIcon = 'building-o';
-                            break;
-                        case 7: //UNHCR Registration Site
-                            fIcon = 'flag';
-                            break;
-                        case 9: //Village
-                            fIcon = 'home';
-                            break;
-                    }
+            popupContent = popupContentStart + popupContentTabs + popupContentNavs + '</template>';
 
-                    var marker = L.marker(new L.LatLng(valueq.latitude, valueq.longitude)
-                            , {
-                        icon: L.AwesomeMarkers.icon({
-                            icon: fIcon,
-                            prefix: 'fa',
-                            markerColor: markerColors[count]
-
-                        })
-                    });
-                    marker.bindPopup(popup_content);
-                    layerGr.addLayer(marker);
-
-                });
-                searchLayerArr.push(layerGr);
-                layer_control.addOverlay(layerGr, "<span style='background:" + markerColors[count] + "; color:white;'>Search Results" + searchLayerArr.length + "</span>");
-                layerGr.addTo(map1);
-                console.log(JSON.stringify(layerGr.toGeoJSON()));
-
-                    count++;
-                $.each(tableArr, function(keyt,valt) {
-                    //alert($("span:contains(" + valt.table_name + ")").html());
-                    $("span:contains(" + valt.display_name + ")").parent().css({"background-color": valt.color, "opacity": "0.6"});
-                    $("span:contains(" + valt.display_name + ")").css("color", "#fff");
-                });
-
-
-                //create tabs in info window
-                $("#myTab a").click(function (e) {
-                    alert("tab");
-                    e.preventDefault();
-                    $(this).tab('show');
-                });
-           // });
+            return popupContent;
         }
 
-        $(document).ready(function() {
-            $('#datetimepicker6').datepicker({ format: 'mm/dd/yyyy' });
-            $('#datetimepicker7').datepicker({ format: 'mm/dd/yyyy' });
+        {% endverbatim %}
+    }
 
-            $("#datetimepicker6").on("dp.change",function (e) {
-                $('#datetimepicker7').data("DateTimePicker").minDate(e.date);
-            });
-            $("#datetimepicker7").on("dp.change",function (e) {
-                $('#datetimepicker6').data("DateTimePicker").maxDate(e.date);
-            });
-        });
+    function updateResultsLabel(locationsSize) {
+        document.getElementById('results_label').innerHTML = locationsSize + ' locations';
+    }
 
-    </script>
-
-    <script src="{{ STATIC_URL }}js/leaflet.awesome-markers.min.js"></script>
+</script>
 {% endblock %}

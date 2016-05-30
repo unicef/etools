@@ -18,6 +18,8 @@ class TestTripViews(APITenantTestCase):
             supervisor=self.supervisor,
             travel_type=Trip.MEETING,
         )
+        self.trip.owner.is_staff = True
+        self.trip.owner.save()
         self.user = self.trip.owner
 
         self.client.login(

@@ -19,7 +19,7 @@ from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
 from locations.models import Governorate, Locality, Location, Region
-from partners.models import PartnerOrganization, PCA, ResultChain
+from partners.models import PartnerOrganization, PCA, ResultChain, RAMIndicator
 from . import emails
 
 User = settings.AUTH_USER_MODEL
@@ -451,7 +451,7 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
     result = ChainedForeignKey(
-        ResultChain,
+        RAMIndicator,
         chained_field="intervention",
         chained_model_field="intervention",
         show_all=False,

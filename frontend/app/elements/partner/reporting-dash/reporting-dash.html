@@ -400,9 +400,8 @@
       return this.getEp('locationsAutocomplete').url;
     },
     handleSubmitResponse: function(rsp){
-      app.$.alert.showText('Report submitted');
+      app.$.alert.showSuccess('Report submitted');
       console.log('handling submit', rsp.detail);
-      
     },
     _submitReport: function() {
       var error = false;

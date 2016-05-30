@@ -1333,6 +1333,13 @@ class RAMIndicator(models.Model):
     def target(self):
         return self.indicator.target
 
+    def __unicode__(self):
+        return u'{} -> {} -> {}'.format(
+            self.result.result_structure.name,
+            self.result.sector.name if self.result.sector else '',
+            self.result.__unicode__(),
+        )
+
 
 class ResultChain(models.Model):
 
@@ -1420,7 +1427,7 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 
     # Metadata
     #  - Remarks, Report Status
-    remarks = models.TextField(blank=True, null=True)
+    remarks = models.TextField(blank=True, null=True)  # TODO: set max_length property
     report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
 
 

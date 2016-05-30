@@ -40,6 +40,8 @@ AZURE_AUTO_SIGN = True  # flag for automatically signing urls
 AZURE_ACCESS_POLICY_EXPIRY = 120  # length of time before signature expires in seconds
 AZURE_ACCESS_POLICY_PERMISSION = 'r'  # read permission
 
+CORS_ORIGIN_ALLOW_ALL = False
+
 if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
 
     DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'

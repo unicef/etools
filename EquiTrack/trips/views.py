@@ -9,7 +9,7 @@ from django.views.generic import FormView, TemplateView, View
 from django.http import HttpResponse
 from django.conf import settings
 
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, permissions
 from rest_framework.generics import (
     GenericAPIView,
     ListAPIView,
@@ -80,6 +80,7 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
     """
     queryset = FileAttachment.objects.all()
     serializer_class = FileAttachmentSerializer
+    permission_classes = (permissions.IsAdminUser,)
     # parser_classes = (MultiPartParser, FormParser,)
 
     def create(self, request, *args, **kwargs):
@@ -126,6 +127,7 @@ class TripsViewSet(mixins.RetrieveModelMixin,
     lookup_url_kwarg = 'trip'
     serializer_class = TripSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
+    permission_classes = (permissions.IsAdminUser,)
 
     def get_queryset(self):
         user = self.request.user
@@ -311,6 +313,9 @@ class TripsByOfficeView(APIView):
     """
     Returns an object used for the chart library on the trips dashboard
     """
+    permission_classes = (permissions.IsAdminUser,)
+
+
     def get(self, request):
 
         months = get_trip_months()
@@ -442,6 +447,7 @@ class TripsDashboard(FormView):
 
 class TripUploadPictureView(APIView):
     parser_classes = (MultiPartParser, FormParser)
+    permission_classes = (permissions.IsAdminUser,)
 
     def post(self, request, **kwargs):
 
@@ -496,6 +502,7 @@ class TripsListApi(ListAPIView):
 
     model = Trip
     serializer_class = TripSerializer
+    permission_classes = (permissions.IsAdminUser,)
 
     def get_queryset(self):
         user = self.request.user
@@ -508,12 +515,14 @@ class TripDetailsView(RetrieveUpdateDestroyAPIView):
     serializer_class = TripSerializer
     lookup_url_kwarg = 'trip'
     queryset = Trip.objects.all()
+    permission_classes = (permissions.IsAdminUser,)
 
 
 class TripActionView(GenericAPIView):
 
     model = Trip
     serializer_class = TripSerializer
+    permission_classes = (permissions.IsAdminUser,)
 
     lookup_url_kwarg = 'trip'
     queryset = Trip.objects.all()
