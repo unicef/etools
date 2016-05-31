@@ -9,12 +9,7 @@ from django.views.generic import FormView, TemplateView, View
 from django.http import HttpResponse
 from django.conf import settings
 
-from rest_framework import viewsets, mixins
-from rest_framework.generics import (
-    GenericAPIView,
-    ListAPIView,
-    RetrieveUpdateDestroyAPIView
-)
+from rest_framework import viewsets, mixins, permissions
 from rest_framework.views import APIView
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
@@ -76,11 +71,12 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
                       mixins.CreateModelMixin,
                       viewsets.GenericViewSet):
     """
-    Returns a list of Files for a Trip
+    Returns a list of Files link for a Trip
     """
     queryset = FileAttachment.objects.all()
     model = FileAttachment
     serializer_class = FileAttachmentSerializer
+    permission_classes = (permissions.IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -191,12 +187,14 @@ class TripsViewSet(mixins.RetrieveModelMixin,
     lookup_url_kwarg = 'trip'
     serializer_class = TripSerializer
     parser_classes = (MultiPartParser, FormParser, JSONParser)
+    permission_classes = (permissions.IsAdminUser,)
 
     def get_queryset(self):
         user = self.request.user
         trips = Trip.get_current_trips(user)
         return trips
 
+    @detail_route(methods=['post'])
     def create(self, request, *args, **kwargs):
         """
         Create a new Trip
@@ -308,6 +306,8 @@ class TripsByOfficeView(APIView):
     """
     Returns an object used for the chart library on the trips dashboard
     """
+    permission_classes = (permissions.IsAdminUser,)
+
     def get(self, request):
 
         months = get_trip_months()
