@@ -222,6 +222,7 @@ class InterventionSerializer(serializers.ModelSerializer):
     pcasector_set = PCASectorSerializer(many=True, read_only=True)
     results = ResultChainSerializer(many=True, read_only=True)
     distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
+    total_budget = serializers.CharField(read_only=True)
 
     class Meta:
         model = PCA
