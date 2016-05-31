@@ -14,11 +14,12 @@
   <body>
     <script>
       var suitesNames = [
-        'etools-ajax/basic-test'
+        'etools-ajax/basic-test',
+        'uservoice-input/basic-test'
       ];
 
       var suites = _.flatten(_.map(suitesNames, function(suiteName){
-        return [suiteName + '.html', suiteName + '.html?dom=shadow'];
+        return [suiteName + '.html'];
       }));
 
       WCT.loadSuites(suites);

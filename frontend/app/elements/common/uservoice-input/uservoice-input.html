@@ -1,0 +1,54 @@
+<link rel="import" href="../../../bower_components/iron-icons/iron-icons.html">
+
+<dom-module id="uservoice-input">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <a id="userVoiceContact" data-uv-trigger style="color:white; cursor:pointer;" on-tap="loadUserVoice"><iron-icon icon="question-answer"></iron-icon></a>
+  </template>
+  <script>
+    Polymer({
+      is: 'uservoice-input',
+      properties: {
+        apiKey: {
+          type: String,
+          value: ''
+        },
+        enabled: {
+          type: Boolean,
+          value: false
+        },
+        isScriptLoaded: {
+          type: Boolean,
+          value: false
+        }
+      },
+      loadUserVoice: function() {
+        var userVoiceInterval;
+
+        function showUserVoiceWindow() {
+          if (window.UserVoice !== undefined) {
+            document.getElementById('userVoiceContact').click();
+            clearInterval(userVoiceInterval);
+          }
+        }
+
+        if (this.enabled === true && this.apiKey.length > 0 && this.isScriptLoaded === false) {
+          var uv = document.createElement('script');
+          uv.type = 'text/javascript';
+          uv.async = false;
+          uv.src = '//widget.uservoice.com/' + this.apiKey + '.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(uv, s);
+          this.isScriptLoaded = true;
+          Polymer.dom(this.$.userVoiceContact).removeAttribute('on-tap');
+
+          userVoiceInterval = setInterval(showUserVoiceWindow, 200);
+        }
+      }
+    });
+  </script>
+</dom-module>

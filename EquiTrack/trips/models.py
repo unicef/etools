@@ -497,9 +497,9 @@ class TripLocation(models.Model):
 
     def __unicode__(self):
         desc = u'{} -> {} ({})'.format(
-            self.location.parent.name if self.location.parent else u'',
-            self.location.name,
-            self.location.gateway.name
+            self.location.parent.name if (self.location and self.location.parent) else u'',
+            self.location.name if self.location else '',
+            self.location.gateway.name if (self.location and self.location.gateway) else ''
         )
 
         return desc
