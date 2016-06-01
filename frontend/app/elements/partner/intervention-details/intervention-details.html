@@ -173,7 +173,7 @@
   <h3>Details</h3>
   <paper-material elevation="1">
     <p>
-      <span class="intLabel">PCA number:</span> {{intervention.pca_number}}
+      <span class="intLabel">PD number:</span> {{intervention.pca_number}}
     </p>
     <p>
       <span class="intLabel">Initiated:</span> {{dateFormat(intervention.initiation_date, 'LL')}}, 
@@ -181,18 +181,18 @@
       <span class="intLabel">Reviewed</span> : {{dateFormat(intervention.review_date, 'LL')}}
     </p>
     <p>
-      <span class="intLabel">Total Cash:</span> {{intervention.total_cash}}
-      <span class="intLabel">Partner Contribution:</span> {{intervention.partner_contribution_budget}}
+      <span class="intLabel">Total Budget:</span> {{intervention.total_budget}}
+      <!-- <span class="intLabel">Partner Contribution:</span> {{intervention.partner_contribution_budget}} -->
     </p>
   </paper-material>
 
   <h3>Indicators</h3>
   <paper-material  elevation="1">
-  <div class="reportButtons">
+  <!-- <div class="reportButtons">
     <paper-button raised class$="{{_reportButton(reportingActive)}}" on-tap="_toggleReport">
       <iron-icon icon="{{_reportIcon(reportingActive)}}"></iron-icon>Report
     </paper-button>
-  </div>
+  </div> -->
   <div hidden$="[[reportingActive]]">
     <timeframe-picker label="Reporting Period" id="timeFrame"></timeframe-picker>
   </div>
@@ -229,6 +229,7 @@
   Polymer({
     is: 'intervention-details',
     behaviors: [commonBv.utils, commonBv.interventions, commonBv.globals],
+    observers: ['_updateInterventions(interventions.*)'],
     properties: {
       selectedTab: {
         type: Number,
@@ -278,6 +279,12 @@
         this.reportingActive = true;
         this.intervention = this._getIntervention(this.interventionId);
         //this.$.interventionData.interventionId = this.interventionId;
+      }
+    },
+    _updateInterventions: function() {
+      if (this.intervention){
+        // console.log('update intervetnions called');
+        this.intervention = this._getIntervention(this.interventionId);
       }
     },
     _toggleReport: function() {

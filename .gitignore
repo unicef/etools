@@ -22,6 +22,8 @@ build
 *idea*
 
 EquiTrack/static/*
+EquiTrack/assets/bower_components/
+
 static/*
 media
 
