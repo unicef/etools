@@ -5,6 +5,7 @@ from rest_framework import status
 from EquiTrack.factories import TripFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from trips.models import Trip
+from trips.serializers import TripSerializer
 
 
 class TestTripViews(APITenantTestCase):
@@ -40,7 +41,7 @@ class TestTripViews(APITenantTestCase):
         self.assertEquals(self.trip.status, Trip.PLANNED)
         response = self.forced_auth_req(
             'post',
-            '/api/trips/{}/submitted/'.format(self.trip.id),
+            '/api/trips/{}/change-status/submitted/'.format(self.trip.id),
         )
 
         # refresh trip from db
