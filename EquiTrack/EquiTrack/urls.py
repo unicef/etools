@@ -28,7 +28,7 @@ from locations.views import (
     LocationTypesViewSet,
     LocationsViewSet
 )
-from trips.views import TripsViewSet, TripFileViewSet
+from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
 from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
@@ -66,11 +66,11 @@ trips_api = routers.SimpleRouter()
 trips_api.register(r'trips', TripsViewSet, base_name='trips')
 
 tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
-tripsfiles_api.register(r'files', TripFileViewSet, base_name='tripsfiles')
+tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
 
-# api.register(r'partners', PartnerOrganizationsViewSet, base_name='partnerorganizations')
-# api.register(r'partners/staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
-# api.register(r'partners/agreements', AgreementViewSet, base_name='agreements')
+actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
+actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
+
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 
 api.register(r'users', UserViewSet, base_name='users')
@@ -84,7 +84,6 @@ api.register(r'funds/grants', GrantViewSet, base_name='grants')
 api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
-# api.register(r'reports/goals', GoalViewSet, base_name='goals')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
 api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
@@ -128,6 +127,7 @@ urlpatterns = patterns(
     url(r'^api/', include(bulk_reports_api.urls)),
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
+    url(r'^api/', include(actionpoint_api.urls)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
 
     # Uncomment the next line to enable the admin:
