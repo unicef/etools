@@ -10,12 +10,6 @@ from .views import (
     AppsIOSTemplateView,
     AppsAndroidTemplateView,
     AppsIOSPlistView,
-
-    # TODO: remove these when eTrips application was rolled out
-    TripsListApi,
-    TripActionView,
-    TripDetailsView,
-    TripUploadPictureView,
 )
 
 urlpatterns = patterns(
@@ -26,11 +20,4 @@ urlpatterns = patterns(
     url(r'^api/apps/ios/etrips.plist$', AppsIOSPlistView.as_view(), name="eTrips_plist"),
     url(r'^offices/$', TripsByOfficeView.as_view()),
     url(r'^$', TripsDashboard.as_view(), name='trips_dashboard'),
-
-    # TODO: remove these when eTrips application was rolled out
-    url(r'^api/list/$', TripsListApi.as_view()),
-    url(r'^api/(?P<trip>\d+)/upload/$', TripUploadPictureView.as_view()),
-    url(r'^api/(?P<trip>\d+)/(?P<action>\D+)/$', TripActionView.as_view()),
-    url(r'^api/(?P<trip>\d+)/$', TripDetailsView.as_view()),
-
 )

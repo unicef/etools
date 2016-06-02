@@ -10,11 +10,6 @@ from django.http import HttpResponse
 from django.conf import settings
 
 from rest_framework import viewsets, mixins, permissions
-from rest_framework.generics import (
-    GenericAPIView,
-    ListAPIView,
-    RetrieveUpdateDestroyAPIView
-)
 from rest_framework.views import APIView
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.response import Response
@@ -27,8 +22,8 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from users.models import UserProfile, Office, Section
 from locations.models import get_random_color
 from partners.models import FileType
-from .models import Trip, FileAttachment
-from .serializers import TripSerializer, FileAttachmentSerializer
+from .models import Trip, FileAttachment, ActionPoint
+from .serializers import TripSerializer, FileAttachmentSerializer, ActionPointSerializer
 from .forms import TripFilterByDateForm
 from rest_framework import status
 
@@ -79,13 +74,13 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
     Returns a list of Files link for a Trip
     """
     queryset = FileAttachment.objects.all()
+    model = FileAttachment
     serializer_class = FileAttachmentSerializer
     permission_classes = (permissions.IsAdminUser,)
-    # parser_classes = (MultiPartParser, FormParser,)
 
     def create(self, request, *args, **kwargs):
         """
-        Add a file to a trip
+        Add a file to a trip - only for migration
         :return: JSON
         """
 
@@ -110,15 +105,80 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
         )
 
     def get_queryset(self):
+        trip_id = self.kwargs.get('trips_trip')
+        return FileAttachment.objects.filter(trip_id=trip_id)
 
-        queryset = super(TripFileViewSet, self).get_queryset()
-        trip_id = self.kwargs.get('trips2_pk')
-        return queryset.filter(trip_id=trip_id)
+    def retrieve(self, request, trips_trip=None, pk=None):
+        """
+        Returns an Attachment object
+        """
+        try:
+            queryset = self.queryset.get(trip_id=trips_trip, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except FileAttachment.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
+    @list_route(methods=['post'], url_path='upload')
+    def upload(self, request, **kwargs):
+        """
+        Upload image/photo to the Trip
+        """
+        self.parser_classes = (MultiPartParser, FormParser)
+        # get the file object
+        file_obj = request.data.get('file')
+        logging.info("File received: {}".format(file_obj))
+        if not file_obj:
+            raise ParseError(detail="No file was sent.")
+
+        caption = request.data.get('caption')
+        logging.info("Caption received :{}".format(caption))
+
+        # get the trip id from the url
+        trip = self.get_object()
+
+        # the file field automatically adds incremental numbers
+        mime_types = {"image/jpeg": "jpeg",
+                      "image/png": "png"}
+
+        if mime_types.get(file_obj.content_type):
+            ext = mime_types.get(file_obj.content_type)
+        else:
+            raise ParseError(detail="File type not supported")
+
+        # format it "picture_01.jpg" this way will be making the file easier to search
+        # if the file doesn't get auto_incremented use this:
+        # file_obj.name = "picture_"+ str(trip.files.count()) + "." + ext
+        file_obj.name = "picture." + ext
+
+        # get the picture type
+        picture_type, created = FileType.objects.get_or_create(name='Picture')
+
+        # create the FileAttachment object
+        # TODO: desperate need of validation here: need to check if file is indeed a valid picture type
+        # TODO: potentially process the image at this point to reduce size / create thumbnails
+        my_file_attachment = {
+            "report": file_obj,
+            "type": picture_type,
+            "trip": trip
+        }
+        if caption:
+            my_file_attachment['caption'] = caption
+
+        FileAttachment.objects.create(**my_file_attachment)
+
+        # TODO: return a more meaningful response
+        return Response(status=204)
 
 
 class TripsViewSet(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
                    mixins.CreateModelMixin,
+                   mixins.UpdateModelMixin,
                    viewsets.GenericViewSet):
     """
     Returns a list of Trips
@@ -173,74 +233,7 @@ class TripsViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_201_CREATED,
                         headers=headers)
 
-    @list_route()
-    def retrieve(self, request, trip=None, **kwargs):
-        """
-        Returns the Trip object json
-        """
-        try:
-            queryset = Trip.objects.get(id=trip)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except Trip.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
-
-    @detail_route(methods=['post'])
-    def upload(self, request, **kwargs):
-        """
-        Upload image/photo to the Trip
-        """
-        self.parser_classes = (MultiPartParser, FormParser)
-        # get the file object
-        file_obj = request.data.get('file')
-        logging.info("File received: {}".format(file_obj))
-        if not file_obj:
-            raise ParseError(detail="No file was sent.")
-
-        caption = request.data.get('caption')
-        logging.info("Caption received :{}".format(caption))
-
-        # get the trip id from the url
-        trip = self.get_object()
-
-        # the file field automatically adds incremental numbers
-        mime_types = {"image/jpeg": "jpeg",
-                      "image/png": "png"}
-
-        if mime_types.get(file_obj.content_type):
-            ext = mime_types.get(file_obj.content_type)
-        else:
-            raise ParseError(detail="File type not supported")
-
-        # format it "picture_01.jpg" this way will be making the file easier to search
-        # if the file doesn't get auto_incremented use this:
-        # file_obj.name = "picture_"+ str(trip.files.count()) + "." + ext
-        file_obj.name = "picture." + ext
-
-        # get the picture type
-        picture_type, created = FileType.objects.get_or_create(name='Picture')
-
-        # create the FileAttachment object
-        # TODO: desperate need of validation here: need to check if file is indeed a valid picture type
-        # TODO: potentially process the image at this point to reduce size / create thumbnails
-        my_file_attachment = {
-            "report": file_obj,
-            "type": picture_type,
-            "trip": trip
-        }
-        if caption:
-            my_file_attachment['caption'] = caption
-
-        FileAttachment.objects.create(**my_file_attachment)
-
-        # TODO: return a more meaningful response
-        return Response(status=204)
-
-    @detail_route(methods=['post'], url_path='(?P<action>\D+)')
+    @detail_route(methods=['post'], url_path='change-status/(?P<action>\D+)')
     def action(self, request, *args, **kwargs):
         """
         Change status of the Trip
@@ -314,7 +307,6 @@ class TripsByOfficeView(APIView):
     Returns an object used for the chart library on the trips dashboard
     """
     permission_classes = (permissions.IsAdminUser,)
-
 
     def get(self, request):
 
@@ -443,150 +435,51 @@ class TripsDashboard(FormView):
         return super(TripsDashboard, self).get_context_data(**kwargs)
 
 
-# TODO: remove these when eTrips application was rolled out
+class TripActionPointViewSet(mixins.RetrieveModelMixin,
+                            mixins.ListModelMixin,
+                            mixins.CreateModelMixin,
+                            mixins.UpdateModelMixin,
+                            viewsets.GenericViewSet):
+    """
+    Returns a list of Action point for a Trip
+    """
+    model = ActionPoint
+    queryset = ActionPoint.objects.all()
+    serializer_class = ActionPointSerializer
 
-class TripUploadPictureView(APIView):
-    parser_classes = (MultiPartParser, FormParser)
-    permission_classes = (permissions.IsAdminUser,)
+    def create(self, request, *args, **kwargs):
+        """
+        Add an Action point to a trip
+        :return: JSON
+        """
 
-    def post(self, request, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        data = serializer.data
 
-        # get the file object
-        file_obj = request.data.get('file')
-        logging.info("File received: {}".format(file_obj))
-        if not file_obj:
-            raise ParseError(detail="No file was sent.")
-
-        caption = request.data.get('caption')
-        logging.info("Caption received :{}".format(caption))
-
-        # get the trip id from the url
-        trip_id = kwargs.get("trip")
-        trip = Trip.objects.filter(pk=trip_id).get()
-
-        # the file field automatically adds incremental numbers
-        mime_types = {"image/jpeg": "jpeg",
-                      "image/png": "png"}
-
-        if mime_types.get(file_obj.content_type):
-            ext = mime_types.get(file_obj.content_type)
-        else:
-            raise ParseError(detail="File type not supported")
-
-        # format it "picture_01.jpg" this way will be making the file easier to search
-        # if the file doesn't get auto_incremented use this:
-        # file_obj.name = "picture_"+ str(trip.files.count()) + "." + ext
-        file_obj.name = "picture." + ext
-
-        # get the picture type
-        picture_type, created = FileType.objects.get_or_create(name='Picture')
-
-        # create the FileAttachment object
-        # TODO: desperate need of validation here: need to check if file is indeed a valid picture type
-        # TODO: potentially process the image at this point to reduce size / create thumbnails
-        my_file_attachment = {
-            "report": file_obj,
-            "type": picture_type,
-            "trip": trip
-        }
-        if caption:
-            my_file_attachment['caption'] = caption
-
-        FileAttachment.objects.create(**my_file_attachment)
-
-        # TODO: return a more meaningful response
-        return Response(status=204)
-
-
-class TripsListApi(ListAPIView):
-
-    model = Trip
-    serializer_class = TripSerializer
-    permission_classes = (permissions.IsAdminUser,)
+        headers = self.get_success_headers(data)
+        return Response(
+            data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
 
     def get_queryset(self):
-        user = self.request.user
-        trips = Trip.get_current_trips(user)
-        return trips
+        trip_id = self.kwargs.get('trips_trip')
+        return ActionPoint.objects.filter(trip_id=trip_id)
 
-
-class TripDetailsView(RetrieveUpdateDestroyAPIView):
-    model = Trip
-    serializer_class = TripSerializer
-    lookup_url_kwarg = 'trip'
-    queryset = Trip.objects.all()
-    permission_classes = (permissions.IsAdminUser,)
-
-
-class TripActionView(GenericAPIView):
-
-    model = Trip
-    serializer_class = TripSerializer
-    permission_classes = (permissions.IsAdminUser,)
-
-    lookup_url_kwarg = 'trip'
-    queryset = Trip.objects.all()
-
-    def post(self, request, *args, **kwargs):
-        action = kwargs.get('action', False)
-        current_user = self.request.user
-
-        # for now... hardcoding some validation in here.
-        if action not in [
-            "approved",
-            "submitted",
-            "cancelled",
-            "completed"
-        ]:
-            raise ParseError(detail="action must be a valid action")
-
-        trip = self.get_object()
-
-        # some more hard-coded validation:
-        if current_user.id not in [trip.owner.id, trip.supervisor.id]:
-            raise PermissionDenied(detail="You must be the traveller or the supervisor to change the status of the trip")
-
-        if action == 'approved':
-            # make sure the current user is the supervisor:
-            # maybe in the future allow an admin to make this change as well.
-            if not current_user.id == trip.supervisor.id:
-                raise PermissionDenied(detail="You must be the supervisor to approve this trip")
-
-            data = {"approved_by_supervisor": True,
-                    "date_supervisor_approved": datetime.date.today()}
-
-        elif action == 'completed':
-
-            if trip.status != Trip.APPROVED:
-                raise ParseError(
-                    detail='The trip has to be previously approved in order to complete it'
-                )
-
-            if not trip.main_observations and trip.travel_type != Trip.STAFF_ENTITLEMENT:
-                raise ParseError(
-                    detail='You must provide a narrative report before the trip can be completed'
-                )
-
-            if trip.ta_required and trip.ta_trip_took_place_as_planned is False and current_user != trip.programme_assistant:
-                raise ParseError(
-                    detail='Only the TA travel assistant can complete the trip'
-                )
-            data = {
-                "status": action,
-            }
-
-        else:
-            data = {"status": action,
-                    "approved_by_supervisor": False,
-                    "approved_date": None,
-                    "date_supervisor_approved": None}
-
-        serializer = self.get_serializer(data=data,
-                                         instance=trip,
-                                         partial=True)
-
-        if not serializer.is_valid():
-            raise ParseError(detail="data submitted is not valid")
-        serializer.save()
-
-        return Response(serializer.data)
+    def retrieve(self, request, trips_trip=None, pk=None):
+        """
+        Returns an Action point object
+        """
+        try:
+            queryset = self.queryset.get(trip_id=trips_trip, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except ActionPoint.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )

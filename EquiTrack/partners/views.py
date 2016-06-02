@@ -147,9 +147,9 @@ class InterventionLocationView(ListAPIView):
             pcas = queryset.values_list('pca__id', flat=True)
             # get those that contain this donor
             pcas = PCAGrant.objects.filter(
-                pca__id__in=pcas,
+                partnership__id__in=pcas,
                 grant__donor__id=int(donor)
-            ).values_list('pca', flat=True)
+            ).values_list('partnership', flat=True)
             # now filter the current query by the selected ids
             queryset = queryset.filter(
                 pca__id__in=pcas

@@ -30,25 +30,16 @@ class TravelRoutesSerializer(serializers.ModelSerializer):
 
 
 class TripFundsSerializer(serializers.ModelSerializer):
-    wbs = serializers.CharField(source='wbs.name')
-    grant = serializers.CharField(source='grant.name')
+    wbs_name = serializers.CharField(source='wbs.name', read_only=True)
+    grant_name = serializers.CharField(source='grant.name', read_only=True)
 
     class Meta:
         model = TripFunds
         fields = (
             'wbs',
+            'wbs_name',
             'grant',
-            'amount'
-        )
-
-
-class TripFunds2Serializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = TripFunds
-        fields = (
-            'wbs',
-            'grant',
+            'grant_name',
             'amount'
         )
 
@@ -65,28 +56,9 @@ class TripLocationSerializer(serializers.ModelSerializer):
         )
 
 
-class ActionPoint2Serializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = ActionPoint
-        fields = (
-            'id',
-            'person_responsible',
-            'status',
-            'description',
-            'due_date',
-            'comments',
-            'created_date',
-            'actions_taken',
-            'completed_date'
-        )
-
-
 class ActionPointSerializer(serializers.ModelSerializer):
 
-
+    id = serializers.CharField(read_only=True)
     person_responsible_name = serializers.CharField(
         source="person_responsible",
         read_only=True
@@ -101,18 +73,19 @@ class ActionPointSerializer(serializers.ModelSerializer):
             'status',
             'description',
             'due_date',
+            'created_date',
             'actions_taken',
             'completed_date',
+            'trip',
             'comments'
         )
-        extra_kwargs = {'id': {'read_only': False}}
 
 
 class FileAttachmentSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-    file = serializers.SerializerMethodField()
-    type = serializers.SerializerMethodField()
+    file = serializers.SerializerMethodField(read_only=True)
+    type_name = serializers.SerializerMethodField(read_only=True)
 
     def get_file(self, obj):
         return 'https://{}{}'.format(
@@ -120,7 +93,7 @@ class FileAttachmentSerializer(serializers.ModelSerializer):
             obj.report.url
         )
 
-    def get_type(self, obj):
+    def get_type_name(self, obj):
         return obj.type.name
 
     class Meta:
@@ -129,6 +102,7 @@ class FileAttachmentSerializer(serializers.ModelSerializer):
             "id",
             "file",
             "type",
+            "type_name",
             "caption",
             "trip",
         )
@@ -142,21 +116,21 @@ class TripSerializer(serializers.ModelSerializer):
     section_name = serializers.CharField(source='section.name', read_only=True)
     travel_type = serializers.CharField()
     url = serializers.URLField(source='get_admin_url', read_only=True)
-    travel_assistant = serializers.CharField(read_only=True)
-    budget_owner = serializers.CharField(read_only=True)
+    travel_assistant_name = serializers.CharField(source='travel_assistant', read_only=True)
+    budget_owner_name = serializers.CharField(source='budget_owner', read_only=True)
     staff_responsible_ta = serializers.CharField(source='programme_assistant', read_only=True)
-    representative = serializers.CharField(read_only=True)
-    human_resources = serializers.CharField(read_only=True)
-    vision_approver = serializers.CharField(read_only=True)
+    representative_name = serializers.CharField(source='representative', read_only=True)
+    human_resources_name = serializers.CharField(source='human_resources', read_only=True)
+    vision_approver_name = serializers.CharField(source='vision_approver', read_only=True)
     office_name = serializers.CharField(source='office.name', read_only=True)
 
     partners = serializers.SerializerMethodField()
     partnerships = serializers.SerializerMethodField()
 
     travelroutes_set = TravelRoutesSerializer(many=True)
-    tripfunds_set = TripFunds2Serializer(many=True)
+    tripfunds_set = TripFundsSerializer(many=True)
     triplocation_set = TripLocationSerializer(many=True)
-    actionpoint_set = ActionPoint2Serializer(many=True)
+    actionpoint_set = ActionPointSerializer(many=True)
     files = FileAttachmentSerializer(many=True, read_only=True)
 
     def get_partnerships(self, trip):
@@ -266,6 +240,7 @@ class TripSerializer(serializers.ModelSerializer):
             'supervisor',
             'supervisor_name',
             'travel_assistant',
+            'travel_assistant_name',
             'section',
             'section_name',
             'purpose_of_travel',
@@ -282,10 +257,13 @@ class TripSerializer(serializers.ModelSerializer):
             'security_clearance_required',
             'ta_required',
             'budget_owner',
+            'budget_owner_name',
             'staff_responsible_ta',
             'international_travel',
             'representative',
+            'representative_name',
             'human_resources',
+            'human_resources_name',
             'approved_by_supervisor',
             'date_supervisor_approved',
             'approved_by_budget_owner',
@@ -301,6 +279,7 @@ class TripSerializer(serializers.ModelSerializer):
             'ta_drafted_date',
             'ta_reference',
             'vision_approver',
+            'vision_approver_name',
             'partners',
             'partnerships',
             'travelroutes_set',
