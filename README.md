@@ -1,4 +1,4 @@
-
+[![CircleCI](https://circleci.com/gh/unicef/etools/tree/master.svg?style=svg)](https://circleci.com/gh/unicef/etools/tree/master)
 
 <span class="c0 c2"></span>
 
