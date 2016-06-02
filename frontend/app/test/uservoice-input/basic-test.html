@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+
+    <script src="../../../bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <script src="../../../bower_components/web-component-tester/browser.js"></script>
+    <script src="../../../bower_components/test-fixture/test-fixture-mocha.js"></script>
+    <script src="../../../bower_components/lodash/lodash.js"></script>
+
+    <link rel="import" href="../../../bower_components/test-fixture/test-fixture.html">
+    <link rel="import" href="../../elements/common/uservoice-input/uservoice-input.html">
+  </head>
+  <body>
+
+    <test-fixture id="uservoice-input-default">
+      <template>
+        <uservoice-input></uservoice-input>
+      </template>
+    </test-fixture>
+
+    <test-fixture id="uservoice-input-api-key">
+      <template>
+        <uservoice-input api-key="123456789"></uservoice-input>
+      </template>
+    </test-fixture>
+
+    <test-fixture id="uservoice-input-enabled">
+      <template>
+        <uservoice-input api-key="123456789" enabled></uservoice-input>
+      </template>
+    </test-fixture>
+
+    <script>
+      suite('<uservoice-input>', function() {
+
+      suite('when making request for element', function() {
+        test('has a valid default element', function() {
+          var element = fixture('uservoice-input-default');
+          expect(element.enabled).to.be.equal(false);
+          expect(element.apiKey).to.be.equal('');
+          expect(element.isScriptLoaded).to.be.equal(false);
+        });
+
+        test('has a valid element when api key parameter set, but not enabled', function() {
+          var element = fixture('uservoice-input-api-key');
+          expect(element.enabled).to.be.equal(false);
+          expect(element.apiKey).to.have.length.greaterThan(1);
+          expect(isUserVoiceScriptLoaded()).to.be.equal(false);
+          expect(element.isScriptLoaded).to.be.equal(false);
+        });
+
+        test('has a valid element when api key and enabled parameters set', function() {
+          var element = fixture('uservoice-input-enabled');
+          expect(element.enabled).to.be.equal(true);
+          expect(element.apiKey).to.have.length.greaterThan(1);
+          expect(isUserVoiceScriptLoaded()).to.be.equal(false);
+          expect(element.isScriptLoaded).to.be.equal(false);
+        });
+
+        test('has a valid element when a link is clicked', function() {
+          var element = fixture('uservoice-input-enabled');
+          expect(element.isScriptLoaded).to.be.equal(false);
+          element.$.userVoiceContact.click();
+          expect(element.isScriptLoaded).to.be.equal(true);
+        });
+
+        function isUserVoiceScriptLoaded() {
+          var isScriptLoaded = false;
+          var scripts = document.getElementsByTagName('script');
+
+          _.each(scripts, function(script){
+            if (script.src.indexOf('widget.uservoice.com') >= 0) {
+              isScriptLoaded = true;
+            }
+          })
+
+          return isScriptLoaded;
+        }
+      });
+    });
+    </script>
+
+  </body>
+</html>

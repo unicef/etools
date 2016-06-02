@@ -2,24 +2,24 @@
 <html>
   <head>
     <meta name="viewport" content="width=400, minimum-scale=1.0, initial-scale=1.0, user-scalable=no">
-    <title>eTrips Polymer Elements Unit Tests</title>
+    <title>eTools Polymer Elements Unit Tests</title>
     <meta charset="UTF-8">
     <script>
       document.write('<script src="http://' + (location.host || '127.0.0.1').split(':')[0] +':35729/livereload.js?snipver=1"></' + 'script>')
     </script>
-    <script src="../../bower_components/webcomponentsjs/webcomponents.min.js"></script>
-    <script src="../../bower_components/web-component-tester/browser.js"></script>
+    <script src="../assets/bower_components/webcomponentsjs/webcomponents.min.js"></script>
+    <script src="../assets/bower_components/web-component-tester/browser.js"></script>
   </head>
 
   <body>
     <script>
       var suitesNames = [
-        'etools-ajax/basic-test',
-        'uservoice-input/basic-test'
+        'etools-dropdown-filter/basic-test'
       ];
 
       var suites = _.flatten(_.map(suitesNames, function(suiteName){
-        return [suiteName + '.html'];
+        return [
+          suiteName + '.html'];
       }));
 
       WCT.loadSuites(suites);
