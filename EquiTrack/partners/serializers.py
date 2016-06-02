@@ -118,6 +118,7 @@ class ResultChainSerializer(serializers.ModelSerializer):
     class Meta:
         model = ResultChain
 
+
 class LocationSerializer(serializers.Serializer):
 
     latitude = serializers.CharField(source='geo_point.y')
