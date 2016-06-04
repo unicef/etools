@@ -572,6 +572,21 @@ class Agreement(TimeStampedModel):
         if self.signed_by_unicef_date and not self.agreement_number:
             self.agreement_number = self.reference_number
 
+        # set start date to latest of signed by partner or unicef date
+        if self.signed_by_unicef_date and self.signed_by_partner_date and self.start is None:
+            if self.signed_by_unicef_date > self.signed_by_partner_date:
+                self.start = self.signed_by_unicef_date
+            else:
+                self.start = self.signed_by_partner_date
+
+        if self.signed_by_unicef_date and not self.signed_by_partner_date and self.start is None:
+            self.start = self.signed_by_unicef_date
+
+        if not self.signed_by_unicef_date and self.signed_by_partner_date and self.start is None:
+            self.start = self.signed_by_partner_date
+
+
+
         super(Agreement, self).save(**kwargs)
 
 
@@ -930,6 +945,26 @@ class PCA(AdminURLMixin, models.Model):
         # commit the referece number to the database once the intervention is signed
         if self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
+
+        # set start date to latest of signed by partner or unicef date
+        if self.partnership_type != self.PD:
+            if self.agreement.signed_by_unicef_date\
+                    and self.agreement.signed_by_partner_date and self.start_date is None:
+                if self.agreement.signed_by_unicef_date > self.agreement.signed_by_partner_date:
+                    self.start_date = self.agreement.signed_by_unicef_date
+                else:
+                    self.start_date = self.agreement.signed_by_partner_date
+
+            if self.agreement.signed_by_unicef_date\
+                    and not self.agreement.signed_by_partner_date and self.start_date is None:
+                self.start_date = self.agreement.signed_by_unicef_date
+
+            if not self.agreement.signed_by_unicef_date\
+                    and self.agreement.signed_by_partner_date and self.start_date is None:
+                self.start_date = self.agreement.signed_by_partner_date
+
+            if self.end_date is None and self.result_structure:
+                self.end_date = self.result_structure.to_date
 
         super(PCA, self).save(**kwargs)
 
