@@ -202,14 +202,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             programme_visits = 1
             spot_checks = 1
         elif 100000.00 < cash_transferred <= 350000.00:
-            if self.rating in [LOW, MEDIUM]:
+            if self.rating in ['Low', 'Moderate']:
                 programme_visits = 1
                 spot_checks = 1
             else:
                 programme_visits = 2
                 spot_checks = 2
         else:
-            if self.rating in [LOW, MEDIUM]:
+            if self.rating in ['Low', 'Moderate']:
                 programme_visits = 2
                 spot_checks = 2
             else:
@@ -281,29 +281,37 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return planned[planned.keys()[0]] or 0
 
     @property
-    def programmatic_visits(self):
+    def trips(self):
         year = datetime.date.today().year
         from trips.models import LinkedPartner, Trip
         trip_ids = LinkedPartner.objects.filter(
             partner=self).values_list('trip__id', flat=True)
 
-        trips = Trip.objects.filter(
+        return Trip.objects.filter(
             Q(id__in=trip_ids),
             Q(from_date__year=year),
             Q(status=Trip.COMPLETED),
-            Q(travel_type=Trip.PROGRAMME_MONITORING),
             ~Q(section__name='Drivers'),
         )
-        return trips.count()
+
+    @property
+    def programmatic_visits(self):
+        from trips.models import Trip
+        return self.trips.filter(travel_type=Trip.PROGRAMME_MONITORING).count()
 
     @property
     def spot_checks(self):
-        from trips.models import LinkedPartner
-        return LinkedPartner.objects.filter(
-            partner=self,
-            trip__status=u'completed',
-            trip__travel_type=u'spot_check'
-        ).count()
+        from trips.models import Trip
+        return self.trips.filter(travel_type=Trip.SPOT_CHECK).count()
+
+    @property
+    def follow_up_flags(self):
+        follow_ups = [
+            action for trip in self.trips
+            for action in trip.actionpoint_set.all()
+            if action.follow_up
+        ]
+        return len(follow_ups)
 
     def audits(self):
         return self.assessments.filter(type=u'Scheduled Audit report').count()
