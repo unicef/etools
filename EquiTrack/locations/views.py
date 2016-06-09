@@ -46,7 +46,9 @@ class LocationsViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
         queryset = super(LocationsViewSet, self).get_queryset()
         p_code = self.kwargs.get('p_code')
-        return queryset.filter(p_code=p_code)
+        if p_code:
+            return queryset.filter(p_code=p_code)
+        return queryset
 
 
 class LocationQuerySetView(ListAPIView):
