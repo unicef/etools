@@ -126,10 +126,10 @@ class TripSerializer(serializers.ModelSerializer):
     partners = serializers.SerializerMethodField()
     partnerships = serializers.SerializerMethodField()
 
-    travelroutes_set = TravelRoutesSerializer(many=True, read_only=True)
-    tripfunds_set = TripFundsSerializer(many=True, read_only=True)
-    triplocation_set = TripLocationSerializer(many=True, read_only=True)
-    actionpoint_set = ActionPointSerializer(many=True, read_only=True)
+    travelroutes_set = TravelRoutesSerializer(many=True)
+    tripfunds_set = TripFundsSerializer(many=True)
+    triplocation_set = TripLocationSerializer(many=True)
+    actionpoint_set = ActionPointSerializer(many=True)
     files = FileAttachmentSerializer(many=True, read_only=True)
 
     def get_partnerships(self, trip):
