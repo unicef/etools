@@ -182,7 +182,7 @@
                                      style="width: {% widthratio actual|sub:ind.indicator.current ind.indicator.sector_total 100 %}%; text-align: initial;">
                                 </span>
                                 <!-- setting the sector percentage text to be in the middle of 2 progress spans -->
-                                <span id="sector-percent" style="color: #fff; position: absolute; left:{{actual|div:ind.indicator.sector_total|mul:100|div:2|sub:1}}%;">{% widthratio actual ind.indicator.sector_total 100 %}%</span>
+                                <span id="sector-percent" style="color: #fff; position: absolute; left:{% if ind.indicator.sector_total %}{{actual|div:ind.indicator.sector_total|mul:100|div:2|sub:1}}{% else %}0{% endif %}%;">{% widthratio actual ind.indicator.sector_total 100 %}%</span>
                             </div>
                         {% endwith %}
                     </div>

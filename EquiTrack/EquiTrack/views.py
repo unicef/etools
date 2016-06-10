@@ -136,22 +136,26 @@ class PartnershipsView(DashboardView):
         # (1) Number and value of Active Partnerships for this year
         data['active_count'] = active_partnerships.count()
         data['active_value'] = sum([pd.planned_cash_transfers for pd in active_partnerships.all()])
-        data['active_percentage'] = "{0:.0f}%".format(active_partnerships.count()/active_partnerships.count() * 100)
+        data['active_percentage'] = "{0:.0f}%".format(active_partnerships.count()/active_partnerships.count() * 100) \
+                                    if active_partnerships.count() else 0
 
         # (2a) Number and value of Approved Partnerships this year
         data['active_this_year_count'] = active_this_year.count()
         data['active_this_year_value'] = sum([pd.planned_cash_transfers for pd in active_this_year.all()])
-        data['active_this_year_percentage'] = "{0:.0f}%".format(active_this_year.count()/active_partnerships.count() * 100)
+        data['active_this_year_percentage'] = "{0:.0f}%".format(active_this_year.count()/active_partnerships.count() * 100) \
+                                              if active_this_year.count() else 0
 
         # (2b) Number and value of Approved Partnerships last year
         data['active_last_year_count'] = active_last_year.count()
         data['active_last_year_value'] = sum([pd.planned_cash_transfers for pd in active_last_year.all()])
-        data['active_last_year_percentage'] = "{0:.0f}%".format(active_last_year.count()/active_partnerships.count() * 100)
+        data['active_last_year_percentage'] = "{0:.0f}%".format(active_last_year.count()/active_partnerships.count() * 100) \
+                                              if active_last_year.count() else 0
 
         # (3) Number and Value of Expiring Partnerships in next two months
         data['expire_in_two_months_count'] = expire_in_two_months.count()
         data['expire_in_two_months_value'] = sum([pd.planned_cash_transfers for pd in expire_in_two_months.all()])
-        data['expire_in_two_months_percentage'] = "{0:.0f}%".format(expire_in_two_months.count()/active_partnerships.count() * 100)
+        data['expire_in_two_months_percentage'] = "{0:.0f}%".format(expire_in_two_months.count()/active_partnerships.count() * 100) \
+                                                  if expire_in_two_months.count() else 0
 
         return data
 
