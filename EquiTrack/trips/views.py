@@ -446,6 +446,7 @@ class TripActionPointViewSet(mixins.RetrieveModelMixin,
     model = ActionPoint
     queryset = ActionPoint.objects.all()
     serializer_class = ActionPointSerializer
+    permission_classes = (permissions.IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -464,6 +465,11 @@ class TripActionPointViewSet(mixins.RetrieveModelMixin,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        instance.created_date = datetime.datetime.strptime(self.request.data['created_date'], '%Y-%m-%dT%H:%M:%S.%fZ')
+        instance.save()
 
     def get_queryset(self):
         trip_id = self.kwargs.get('trips_trip')
