@@ -167,6 +167,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
     @property
+    def get_last_agreement(self):
+        return Agreement.objects.filter(
+            partner=self
+        ).order_by('signed_by_unicef_date').last()
+
+    @property
     def micro_assessment_needed(self):
         """
         Returns Yes if:

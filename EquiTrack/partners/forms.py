@@ -312,15 +312,17 @@ class AgreementForm(UserGroupForm):
         end = cleaned_data.get(u'end')
 
         if partner and agreement_type == Agreement.PCA:
-            # Partnership can only have one PCA
-            pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
-            if (not self.instance.id and pca_ids) or \
-                    (self.instance.id and pca_ids and self.instance.id not in pca_ids):
-                err = u'This partnership can only have one {} agreement'.format(agreement_type)
-                raise ValidationError({'agreement_type': err})
+            # Partner can only have one active PCA
+            # pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
+            # if (not self.instance.id and pca_ids) or \
+            #         (self.instance.id and pca_ids and self.instance.id not in pca_ids):
+            if partner.get_last_agreement and partner.get_last_agreement != self.instance:
+                if not start > partner.get_last_agreement.start and not end > partner.get_last_agreement.end:
+                    err = u'This partner can only have one active {} agreement'.format(agreement_type)
+                    raise ValidationError({'agreement_type': err})
 
             # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.objects.order_by('to_date').last()
+            result_structure = ResultStructure.current()
             if result_structure and end and end > result_structure.to_date:
                 raise ValidationError(
                     {'end': u'This agreement cannot last longer than the current {} which ends on {}'.format(
