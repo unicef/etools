@@ -78,6 +78,7 @@ class PcaPDFView(PDFTemplateView):
             pagesize="Letter",
             title="Partnership",
             agreement=agreement,
+            bank_details=agreement.bank_details.all(),
             cp=ResultStructure.current(),
             auth_officers=officers_list,
             country=self.request.tenant.name,

@@ -413,14 +413,18 @@
                 <li>The Cash Transfer other than Direct Payments shall be made by UNICEF to the following bank account
                     of the IP:
                 </li>
-                <div style="padding-bottom: 0px; padding-top: 0px">Bank name: {{ agreement.bank_name }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Bank address: {{ agreement.bank_address }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Account title: {{ agreement.account_title }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Account No.: {{ agreement.account_number }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Routing Details, including SWIFT/IBAN (if
-                    applicable): {{ agreement.routing_details }}</div>
-                <div style="padding-bottom: 0px; padding-top: 0px">Bank contact
-                    person: {{ agreement.bank_contact_person }}</div>
+
+                {% for bank_detail in bank_details %}
+                        <div class="bank_details" style="border-top: solid 1px; padding-top: 10px">Bank name: {{ bank_detail.bank_name }}</div>
+                        <div class="bank_details">Bank address: {{ bank_detail.bank_address }}</div>
+                        <div class="bank_details">Account title: {{ bank_detail.account_title }}</div>
+                        <div class="bank_details">Account No.: {{ bank_detail.account_number }}</div>
+                        <div class="bank_details">Routing Details, including SWIFT/IBAN (if
+                            applicable): {{ bank_detail.routing_details }}</div>
+                        <div style=class="bank_details" style="padding-bottom: 20px">Bank contact
+                            person: {{ bank_detail.bank_contact_person }}</div>
+
+                {% endfor %}
                 <div><p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p></div>
                 <li>Supplies and equipment transferred to the IP by UNICEF will be used exclusively for the
                     implementation of the Programme Document, unless UNICEF agrees otherwise.
