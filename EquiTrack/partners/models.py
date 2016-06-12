@@ -947,7 +947,7 @@ class PCA(AdminURLMixin, models.Model):
             self.number = self.reference_number
 
         # set start date to latest of signed by partner or unicef date
-        if self.partnership_type != self.PD:
+        if self.partnership_type == self.PD:
             if self.agreement.signed_by_unicef_date\
                     and self.agreement.signed_by_partner_date and self.start_date is None:
                 if self.agreement.signed_by_unicef_date > self.agreement.signed_by_partner_date:
