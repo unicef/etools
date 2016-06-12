@@ -504,6 +504,9 @@ class TripLocation(models.Model):
 
         return desc
 
+    class Meta:
+        ordering = ['id']
+
 
 class TravelRoutes(models.Model):
 
