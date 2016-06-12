@@ -572,21 +572,6 @@ class Agreement(TimeStampedModel):
         if self.signed_by_unicef_date and not self.agreement_number:
             self.agreement_number = self.reference_number
 
-        # set start date to latest of signed by partner or unicef date
-        if self.signed_by_unicef_date and self.signed_by_partner_date and self.start is None:
-            if self.signed_by_unicef_date > self.signed_by_partner_date:
-                self.start = self.signed_by_unicef_date
-            else:
-                self.start = self.signed_by_partner_date
-
-        if self.signed_by_unicef_date and not self.signed_by_partner_date and self.start is None:
-            self.start = self.signed_by_unicef_date
-
-        if not self.signed_by_unicef_date and self.signed_by_partner_date and self.start is None:
-            self.start = self.signed_by_partner_date
-
-
-
         super(Agreement, self).save(**kwargs)
 
 
