@@ -40,6 +40,8 @@ class FundingSynchronizer(VisionDataSynchronizer):
         def bad_record(record):
             if record['GRANT_REF'] == 'Unknown':
                 return False
+            if not record['FR_DOC_NUMBER']:
+                return False
             return True
 
         return filter(bad_record, records)
@@ -59,9 +61,9 @@ class FundingSynchronizer(VisionDataSynchronizer):
                 try:
                     funding_commitment, created = FundingCommitment.objects.get_or_create(
                         grant=grant,
+                        fr_number=fc_line["FR_DOC_NUMBER"],
                         fc_ref=fc_line["COMMITMENT_REF"]
                     )
-                    funding_commitment.fr_number = fc_line["FR_DOC_NUMBER"]
                     funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
                     funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])
                     funding_commitment.wbs = fc_line["IR_WBS"]
