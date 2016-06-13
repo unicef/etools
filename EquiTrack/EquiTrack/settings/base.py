@@ -68,7 +68,7 @@ SUIT_CONFIG = {
 
         #{'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 
-        #{'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
+        {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
 
@@ -76,8 +76,6 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
-SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-
 
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
@@ -147,6 +145,7 @@ db_config = dj_database_url.config(
 )
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
+db_config['CONN_MAX_AGE'] = 0
 DATABASES = {
     'default': db_config
 }
@@ -190,11 +189,15 @@ COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
 
 MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')
 MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
+
+SESSION_ENGINE = 'redis_sessions_fork.session'
+SESSION_REDIS_URL = BROKER_URL
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 ########## END DATABASE CONFIGURATION
 
+VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
-VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 
 USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # ########## MANAGER CONFIGURATION

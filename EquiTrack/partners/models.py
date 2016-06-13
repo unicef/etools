@@ -314,7 +314,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def follow_up_flags(self):
         follow_ups = [
             action for trip in self.trips
-            for action in trip.actionpoint_set.all()
+            for action in trip.actionpoint_set.filter(
+                completed_date__isnull=True
+            )
             if action.follow_up
         ]
         return len(follow_ups)
@@ -940,12 +942,21 @@ class PCA(AdminURLMixin, models.Model):
 
     def save(self, **kwargs):
 
-        super(PCA, self).save(**kwargs)
-
         # commit the referece number to the database once the intervention is signed
         if self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
             self.save()
+
+        if not self.pk:
+            if self.partnership_type != self.PD:
+                self.signed_by_partner_date = self.agreement.signed_by_partner_date
+                self.partner_manager = self.agreement.partner_manager
+                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
+                self.unicef_manager = self.agreement.signed_by
+                self.start_date = self.agreement.start
+                self.end_date = self.agreement.end
+
+        super(PCA, self).save(**kwargs)
 
     @classmethod
     def get_active_partnerships(cls):
