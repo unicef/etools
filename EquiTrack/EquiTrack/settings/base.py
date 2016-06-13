@@ -291,7 +291,7 @@ RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN')
 ########## FIXTURE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-FIXTURE_DIRS
 FIXTURE_DIRS = (
-    normpath(join(SITE_ROOT, 'fixtures')),
+    normpath(join(SITE_ROOT, 'EquiTrack/data')),
 )
 ########## END FIXTURE CONFIGURATION
 
