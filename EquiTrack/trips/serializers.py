@@ -110,8 +110,7 @@ class FileAttachmentSerializer(serializers.ModelSerializer):
 
 class TripSerializer(serializers.ModelSerializer):
 
-    traveller = serializers.CharField(source='owner', read_only=True)
-    traveller_id = serializers.IntegerField(source='owner.id', read_only=True)
+    owner_name = serializers.CharField(source='owner', read_only=True)
     supervisor_name = serializers.CharField(source='supervisor', read_only=True)
     section_name = serializers.CharField(source='section.name', read_only=True)
     travel_type = serializers.CharField()
@@ -235,8 +234,7 @@ class TripSerializer(serializers.ModelSerializer):
             'id',
             'url',
             'owner',
-            'traveller',
-            'traveller_id',
+            'owner_name',
             'supervisor',
             'supervisor_name',
             'travel_assistant',
