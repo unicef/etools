@@ -216,6 +216,7 @@ class AgreementViewSet(
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     viewsets.GenericViewSet):
     """
     Returns a list of Agreements
@@ -274,6 +275,7 @@ class InterventionsViewSet(
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     viewsets.GenericViewSet):
     """
     Returns a list of all Interventions,
@@ -766,6 +768,7 @@ class PartnerOrganizationsViewSet(
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
     mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
     viewsets.GenericViewSet):
     """
     Returns a list of all Partner Organizations
