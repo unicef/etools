@@ -706,7 +706,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
     def download_url(self, obj):
         if obj and obj.agreement_type == Agreement.PCA:
             return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" >Download</a>'.format(
+                   u'href="{}" target="_blank" >Download</a>'.format(
                     reverse('pca_pdf', args=(obj.id,))
                     )
         return u''

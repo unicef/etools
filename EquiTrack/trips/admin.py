@@ -83,6 +83,7 @@ class ActionPointInlineAdmin(CountryUsersAdminMixin, admin.StackedInline):
         u'person_responsible',
         (u'actions_taken',),
         (u'completed_date', u'status'),
+        u'follow_up'
     )
 
 

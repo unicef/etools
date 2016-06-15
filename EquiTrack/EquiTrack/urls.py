@@ -23,6 +23,7 @@ from .views import (
     UserDashboardView,
     CmtDashboardView,
     HACTDashboardView,
+    PartnershipsView,
 )
 from locations.views import (
     LocationTypesViewSet,
@@ -98,6 +99,7 @@ urlpatterns = patterns(
     url(r'^$', staff_required(UserDashboardView.as_view()), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
+    url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
     url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
