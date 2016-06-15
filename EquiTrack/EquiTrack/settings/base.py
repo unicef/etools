@@ -190,8 +190,8 @@ COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
 MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')
 MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
 
-SESSION_ENGINE = 'redis_sessions_fork.session'
-SESSION_REDIS_URL = BROKER_URL
+# SESSION_ENGINE = 'redis_sessions_fork.session'
+# SESSION_REDIS_URL = BROKER_URL
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 ########## END DATABASE CONFIGURATION
 
