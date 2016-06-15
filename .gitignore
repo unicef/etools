@@ -95,3 +95,5 @@ templates/frontend/
 /env_prod
 
 deis
+
+env_dev
