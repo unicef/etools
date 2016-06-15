@@ -314,7 +314,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def follow_up_flags(self):
         follow_ups = [
             action for trip in self.trips
-            for action in trip.actionpoint_set.all()
+            for action in trip.actionpoint_set.filter(
+                completed_date__isnull=True
+            )
             if action.follow_up
         ]
         return len(follow_ups)
@@ -940,12 +942,41 @@ class PCA(AdminURLMixin, models.Model):
 
     def save(self, **kwargs):
 
-        super(PCA, self).save(**kwargs)
-
         # commit the referece number to the database once the intervention is signed
         if self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
             self.save()
+
+        if not self.pk:
+            if self.partnership_type != self.PD:
+                self.signed_by_partner_date = self.agreement.signed_by_partner_date
+                self.partner_manager = self.agreement.partner_manager
+                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
+                self.unicef_manager = self.agreement.signed_by
+                self.start_date = self.agreement.start
+                self.end_date = self.agreement.end
+
+        # set start date to latest of signed by partner or unicef date
+        if self.partnership_type == self.PD:
+            if self.agreement.signed_by_unicef_date\
+                    and self.agreement.signed_by_partner_date and self.start_date is None:
+                if self.agreement.signed_by_unicef_date > self.agreement.signed_by_partner_date:
+                    self.start_date = self.agreement.signed_by_unicef_date
+                else:
+                    self.start_date = self.agreement.signed_by_partner_date
+
+            if self.agreement.signed_by_unicef_date\
+                    and not self.agreement.signed_by_partner_date and self.start_date is None:
+                self.start_date = self.agreement.signed_by_unicef_date
+
+            if not self.agreement.signed_by_unicef_date\
+                    and self.agreement.signed_by_partner_date and self.start_date is None:
+                self.start_date = self.agreement.signed_by_partner_date
+
+            if self.end_date is None and self.result_structure:
+                self.end_date = self.result_structure.to_date
+
+        super(PCA, self).save(**kwargs)
 
     @classmethod
     def get_active_partnerships(cls):
