@@ -234,11 +234,16 @@
             var popupContent = '';
             var popupContentStart = '\
             <paper-input name="location_name" id="location_name" label="Location Name" value="' + location.location_name + '" readonly></paper-input>\
-            <paper-input name="location_type" id="location_type" label="Location Type" value="' + location.location_type + '" readonly></paper-input>\
-            <br /><div>Interventions</div><template is="dom-bind">';
+            <paper-input name="location_type" id="location_type" label="Location Type" value="' + location.location_type + '" readonly></paper-input>';
+
+            if (location.parterships.length > 0) {
+                popupContentStart = popupContentStart + '<br /><div>Interventions (' + location.parterships.length +')</div>';
+            }
+
+            popupContentStart = popupContentStart + '<template is="dom-bind">';
 
             // tabs
-            var popupContentTabs = '<div class="middle"><paper-tabs class="bottom self-end" selected="{{selected}}">';
+            var popupContentTabs = '<div class="middle"><paper-tabs scrollable fit-container class="bottom self-end" selected="{{selected}}">';
 
             _.each(location.parterships, function(partnership, partnershipIndex) {
                 popupContentTabs += '<paper-tab>' + partnership.pca_number + '</paper-tab>';
@@ -257,8 +262,6 @@
                 popupContentNavs += '<br><div>Distribution Plans</div>';
 
                 if (partnership.distribution_plans != null && partnership.distribution_plans.length > 0) {
-                    popupContentNavs += '<paper-input label="Item Type" value="Delivered" readonly style="padding-left: 10px;"></paper-input>';
-
                     _.each(partnership.distribution_plans, function(distributionPlan) {
                         if (location.location_name == distributionPlan.site) {
                             popupContentNavs += '<paper-input label="' + distributionPlan.item + '" value="' + distributionPlan.delivered + '" readonly style="padding-left: 10px;"></paper-input>';
