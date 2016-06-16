@@ -3,8 +3,13 @@ Development Environment Setup Instructions (OSX)
 
 Setup Server
 ------------
+Step 1. Install latest python
 
-Step 1. Install Postgres with brew, create Postgres database, and run the Postgres upon startup
+```bash
+$ brew install python
+```
+
+Step 2. Install Postgres with brew, create Postgres database, and run the Postgres upon startup
 
 ```bash
 $ brew install postgresql
@@ -14,14 +19,14 @@ $ ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
 $ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
 ```
 
-Step 2. Install PostGIS and connect to database:
+Step 3. Install PostGIS and connect to database:
 
 ```bash
 $ brew install postgis
 $ psql postgres
 ```
 
-Step 3. Create Postgres user and PostGIS required extensions:
+Step 4. Create Postgres user and PostGIS required extensions:
 
 ```bash
 # CREATE ROLE postgres WITH superuser login;
@@ -31,13 +36,13 @@ Step 3. Create Postgres user and PostGIS required extensions:
 # \q
 ```
 
-Step 4. Install Redis:
+Step 5. Install Redis:
 
 ```bash
 $ brew install redis
 ```
 
-Step 5. Clone EquiTrack repository
+Step 6. Clone EquiTrack repository
 
 ```bash
 $ git clone https://github.com/UNICEFLebanonInnovation/EquiTrack.git . 
@@ -50,6 +55,7 @@ Step 6. Install VirtualEnv and VirtualEnvWrapper, create Virtual Environment and
 $ pip install virtualenv
 $ pip install virtualenvwrapper
 $ export WORKON_HOME=~/Envs
+$ export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python2.7
 $ mkdir -p $WORKON_HOME
 $ source /usr/local/bin/virtualenvwrapper.sh
 $ mkvirtualenv env1
