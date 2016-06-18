@@ -965,6 +965,15 @@ class PCA(AdminURLMixin, models.Model):
         if self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
 
+        if not self.pk:
+            if self.partnership_type != self.PD:
+                self.signed_by_partner_date = self.agreement.signed_by_partner_date
+                self.partner_manager = self.agreement.partner_manager
+                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
+                self.unicef_manager = self.agreement.signed_by
+                self.start_date = self.agreement.start
+                self.end_date = self.agreement.end
+
         super(PCA, self).save(**kwargs)
 
     @classmethod
