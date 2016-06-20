@@ -13,7 +13,6 @@ type_mapping = {
     "CIVIL SOCIETY ORGANIZATION": u'Civil Society Organization',
     "GOVERNMENT": u'Government',
     "UN AGENCY": u'UN Agency',
-    None: None
 }
 
 
@@ -87,6 +86,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.address = partner["STREET_ADDRESS"]
                 partner_org.phone_number = partner["PHONE_NUMBER"]
                 partner_org.email = partner["EMAIL"]
+                partner_org.core_values_assessment_date = wcf_json_date_as_datetime(partner["CORE_VALUE_ASSESSMENT_DT"])
                 partner_org.vision_synced = True
                 partner_org.save()
                 processed += 1

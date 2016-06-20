@@ -167,6 +167,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
     @property
+    def get_last_agreement(self):
+        return Agreement.objects.filter(
+            partner=self
+        ).order_by('signed_by_unicef_date').last()
+
+    @property
     def micro_assessment_needed(self):
         """
         Returns Yes if:
@@ -202,14 +208,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             programme_visits = 1
             spot_checks = 1
         elif 100000.00 < cash_transferred <= 350000.00:
-            if self.rating in [LOW, MEDIUM]:
+            if self.rating in ['Low', 'Moderate']:
                 programme_visits = 1
                 spot_checks = 1
             else:
                 programme_visits = 2
                 spot_checks = 2
         else:
-            if self.rating in [LOW, MEDIUM]:
+            if self.rating in ['Low', 'Moderate']:
                 programme_visits = 2
                 spot_checks = 2
             else:
@@ -262,6 +268,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         Total cash transferred for the current CP cycle
         """
         cp = ResultStructure.current()
+        if not cp:
+            # if no current structure loaded return 0
+            return 0
         total = FundingCommitment.objects.filter(
             end__gte=cp.from_date,
             end__lte=cp.to_date,
@@ -281,29 +290,39 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return planned[planned.keys()[0]] or 0
 
     @property
-    def programmatic_visits(self):
+    def trips(self):
         year = datetime.date.today().year
         from trips.models import LinkedPartner, Trip
         trip_ids = LinkedPartner.objects.filter(
             partner=self).values_list('trip__id', flat=True)
 
-        trips = Trip.objects.filter(
+        return Trip.objects.filter(
             Q(id__in=trip_ids),
             Q(from_date__year=year),
             Q(status=Trip.COMPLETED),
-            Q(travel_type=Trip.PROGRAMME_MONITORING),
             ~Q(section__name='Drivers'),
         )
-        return trips.count()
+
+    @property
+    def programmatic_visits(self):
+        from trips.models import Trip
+        return self.trips.filter(travel_type=Trip.PROGRAMME_MONITORING).count()
 
     @property
     def spot_checks(self):
-        from trips.models import LinkedPartner
-        return LinkedPartner.objects.filter(
-            partner=self,
-            trip__status=u'completed',
-            trip__travel_type=u'spot_check'
-        ).count()
+        from trips.models import Trip
+        return self.trips.filter(travel_type=Trip.SPOT_CHECK).count()
+
+    @property
+    def follow_up_flags(self):
+        follow_ups = [
+            action for trip in self.trips
+            for action in trip.actionpoint_set.filter(
+                completed_date__isnull=True
+            )
+            if action.follow_up
+        ]
+        return len(follow_ups)
 
     def audits(self):
         return self.assessments.filter(type=u'Scheduled Audit report').count()
@@ -892,12 +911,13 @@ class PCA(AdminURLMixin, models.Model):
         Total cash transferred for the current CP cycle
         """
         cp = ResultStructure.current()
-        total = self.funding_commitments.filter(
-            end__gte=cp.from_date,
-            end__lte=cp.to_date,
-        ).aggregate(
-            models.Sum('expenditure_amount')
-        )
+        if cp:
+            total = self.funding_commitments.filter(
+                end__gte=cp.from_date,
+                end__lte=cp.to_date,
+            ).aggregate(
+                models.Sum('expenditure_amount')
+            )
         return total[total.keys()[0]] or 0
 
     @property
@@ -926,12 +946,50 @@ class PCA(AdminURLMixin, models.Model):
 
     def save(self, **kwargs):
 
-        super(PCA, self).save(**kwargs)
-
         # commit the referece number to the database once the intervention is signed
         if self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
             self.save()
+
+        if not self.pk:
+            if self.partnership_type != self.PD:
+                self.signed_by_partner_date = self.agreement.signed_by_partner_date
+                self.partner_manager = self.agreement.partner_manager
+                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
+                self.unicef_manager = self.agreement.signed_by
+                self.start_date = self.agreement.start
+                self.end_date = self.agreement.end
+
+        # set start date to latest of signed by partner or unicef date
+        if self.partnership_type == self.PD:
+            if self.agreement.signed_by_unicef_date\
+                    and self.agreement.signed_by_partner_date and self.start_date is None:
+                if self.agreement.signed_by_unicef_date > self.agreement.signed_by_partner_date:
+                    self.start_date = self.agreement.signed_by_unicef_date
+                else:
+                    self.start_date = self.agreement.signed_by_partner_date
+
+            if self.agreement.signed_by_unicef_date\
+                    and not self.agreement.signed_by_partner_date and self.start_date is None:
+                self.start_date = self.agreement.signed_by_unicef_date
+
+            if not self.agreement.signed_by_unicef_date\
+                    and self.agreement.signed_by_partner_date and self.start_date is None:
+                self.start_date = self.agreement.signed_by_partner_date
+
+            if self.end_date is None and self.result_structure:
+                self.end_date = self.result_structure.to_date
+
+        if not self.pk:
+            if self.partnership_type != self.PD:
+                self.signed_by_partner_date = self.agreement.signed_by_partner_date
+                self.partner_manager = self.agreement.partner_manager
+                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
+                self.unicef_manager = self.agreement.signed_by
+                self.start_date = self.agreement.start
+                self.end_date = self.agreement.end
+
+        super(PCA, self).save(**kwargs)
 
     @classmethod
     def get_active_partnerships(cls):

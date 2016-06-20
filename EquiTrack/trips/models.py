@@ -504,6 +504,9 @@ class TripLocation(models.Model):
 
         return desc
 
+    class Meta:
+        ordering = ['id']
+
 
 class TravelRoutes(models.Model):
 
@@ -537,6 +540,7 @@ class ActionPoint(models.Model):
     comments = models.TextField(blank=True, null=True)
     status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
     created_date = models.DateTimeField(auto_now_add=True)
+    follow_up = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.description

@@ -6,5 +6,5 @@ from .celery import app as celery_app
 
 
 __title__ = 'eTools Platform'
-__version__ = '1.9.0'
+__version__ = '2.0.1'
 __license__ = 'GNU AGPL v3'
