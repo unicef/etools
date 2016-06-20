@@ -671,7 +671,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                 (
                     u'partner',
                     u'agreement_type',
-                    u'reference_number',
+                    u'agreement_number',
                     u'attached_agreement',
                     (u'start', u'end',),
                     u'signed_by_partner_date',
@@ -694,8 +694,8 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         # })
     )
     readonly_fields = (
-        u'reference_number',
         u'download_url',
+        u'reference_number',
     )
     inlines = [
         AgreementAmendmentLogInlineAdmin,

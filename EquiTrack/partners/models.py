@@ -485,7 +485,7 @@ class Agreement(TimeStampedModel):
     agreement_number = models.CharField(
         max_length=45L,
         blank=True,
-        help_text=u'Reference Number'
+        verbose_name=u'Reference Number'
     )
     attached_agreement = models.FileField(
         upload_to=get_agreement_path,
@@ -1032,6 +1032,34 @@ class GovernmentIntervention(models.Model):
     result_structure = models.ForeignKey(
         ResultStructure,
     )
+    government_intervention_number = models.CharField(
+        max_length=45L,
+        blank=True,
+        help_text=u'Reference Number'
+    )
+
+    # @property
+    # def reference_number(self):
+    #     if self.number:
+    #         number = self.number
+    #     else:
+    #         objects = list(GovernmentIntervention.objects.filter(
+    #             partner=self.partner,
+    #             created_at__year=self.year,
+    #             partnership_type=self.partnership_type
+    #         ).order_by('created_at').values_list('id', flat=True))
+    #         sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+    #         number = u'{agreement}/{type}{year}{seq}'.format(
+    #             agreement=self.agreement.reference_number if self.id and self.agreement else '',
+    #             type=self.partnership_type,
+    #             year=self.year,
+    #             seq=sequence
+    #         )
+    #     return u'{}{}'.format(
+    #         number,
+    #         u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
+    #         if self.amendments_log.last() else ''
+    #     )
 
 
 class GovernmentInterventionResult(models.Model):
