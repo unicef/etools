@@ -245,7 +245,7 @@
     _locationSelectionDone: function() {
       // only if location is selected:
       if (!this.$.locationSelected){
-        window.alert('location is needed');
+        app.$.alert.showText('location is needed');
       }
       this._goToNextStep();
     },

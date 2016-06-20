@@ -10,6 +10,7 @@ from partners.models import (
     PartnerOrganization,
     FundingCommitment,
     DirectCashTransfer,
+    GovernmentIntervention,
 )
 from trips.models import Trip
 
@@ -28,14 +29,24 @@ def show_work_plan(value):
     data = tablib.Dataset()
     work_plan = SortedDict()
 
+    if results:
+        try:
+            tf_cols = next(x.disaggregation for x in results if x.result_type.name == 'Activity').keys()
+        except:
+            tf_cols = []
+
     for num, result in enumerate(results):
         row = SortedDict()
         row['Code'] = result.indicator.code if result.indicator else result.result.code
         row['Details'] = result.indicator.name if result.indicator else result.result.name
         row['Targets'] = result.target if result.target else ''
-        # temporarily remove disaggregations since the number of fields can vary
-        # if result.disaggregation:
-        #     row.update(result.disaggregation)
+
+        if result.result_type.name == 'Activity' and result.disaggregation:
+            row.update(result.disaggregation)
+        else:
+            row.update(dict.fromkeys(tf_cols, ''))
+
+
         row['Total'] = result.total if result.total else ''
         row['CSO'] = result.partner_contribution if result.partner_contribution else ''
         row['UNICEF Cash'] = result.unicef_cash if result.unicef_cash else ''
@@ -121,6 +132,37 @@ def show_fr_fc(value):
         return data.html
 
     return '<p>No FR Set</p>'
+
+
+@register.simple_tag
+def show_government_funding(value):
+
+    if not value:
+        return ''
+
+    # intervention = GovernmentIntervention.objects.get(id=int(value))
+    # outputs = list(intervention.results.values_list('result__wbs', flat=True))
+    # commitments = FundingCommitment.objects.filter(wbs__in=outputs)
+    data = tablib.Dataset()
+    fc_summary = []
+
+    # for commit in commitments:
+    row = SortedDict()
+    row['Output'] = ''
+    row['FC No.'] = ''
+    row['FC Amount'] = ''
+    row['Actual'] = ''
+    row['Outstanding'] = ''
+    fc_summary.append(row)
+
+    if fc_summary:
+        data.headers = fc_summary[0].keys()
+        for row in fc_summary:
+            data.append(row.values())
+
+        return data.html
+
+    return '<p>No FCs Found</p>'
 
 
 @register.simple_tag

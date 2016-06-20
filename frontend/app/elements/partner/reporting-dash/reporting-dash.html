@@ -6,6 +6,8 @@
 
 <link rel="import" href="../interventions-data/interventions-data.html">
 
+<link rel="import" href="../../common/etools-ajax/etools-ajax.html">
+<link rel="import" href="../../common/timeframe-picker/timeframe-picker.html">
 <link rel="import" href="../../common/locations-autocomplete/locations-autocomplete.html">
 
 <link rel="import" href="../../behaviors/common/utils.html">
@@ -108,11 +110,26 @@
           color: var(--default-primary-color); /* variable defined in default-theme.html */
       }
   }
-
+  paper-button.green {
+    background-color: var(--paper-green-500);
+    color: white;
+  }
+  paper-button.red {
+    background-color: var(--paper-red-500);
+    color: white;
+  }
+  .reportButtons {
+    margin-top: 10px;
+  }
    
   </style>
+  <etools-ajax
+          auto
+          id="ajaxPost"
+          on-response="handleSubmitResponse">
+    </etools-ajax>
   <!-- Add indicator toggle -->
-
+  
   <!-- Add indicator wizzard -->
   <div class="reportBtns">
     <paper-button raised on-tap="showNewIndicatorDialog">
@@ -144,6 +161,9 @@
   <!-- End Add indicator wizzard -->
 
   <!-- Display indicators founds in localstorage -->
+  <div hidden$="{{emptyTemplate}}">
+    <timeframe-picker label="Reporting Period" id="timeFrame"></timeframe-picker>
+  </div>
 
   <div class="emptyTemplate" hidden$="{{!emptyTemplate}}">
     <p class="title">You have not set up your template yet</p>
@@ -164,6 +184,10 @@
     </paper-material>
             
   </template>
+
+  <div hidden$="{{emptyTemplate}}" class="reportButtons">
+    <paper-button raised class="green" on-tap="_submitReport" disabled={{submitDisabled}}>Submit Report</paper-button>
+  </div>
 
   </template>
 
@@ -362,7 +386,7 @@
     _locationSelected: function() {
       // only if location is selected:
       if (!this.$.locationSelected){
-        window.alert('location is needed');
+        app.$.alert.showText('location is needed');
       }
       this._goToNextStep();
     },
@@ -374,7 +398,50 @@
     },
     _autocompleteUrl: function() {
       return this.getEp('locationsAutocomplete').url;
-    }
+    },
+    handleSubmitResponse: function(rsp){
+      app.$.alert.showSuccess('Report submitted');
+      console.log('handling submit', rsp.detail);
+    },
+    _submitReport: function() {
+      var error = false;
+      var myReq = this.$.ajaxPost;
+      var tf = this.$.timeFrame;
+      var body = [];
+      var inds = Array.from(this.querySelectorAll('etools-indicator'));
+      console.log(inds);
+
+      inds.forEach(function(el) {
+        // console.log('Checking indicator: ', el);
+        var valid = el.validReport();
+        // console.log(valid);
+        if (valid.status !== true){
+          error = valid;
+          return;
+        }
+        var rep = el.getReport();
+        body.push({
+          'result_chain': el.rc.id,
+          'report_status': rep.status,
+          'remarks': rep.remarks,
+          'disaggregation': rep.number.breakdown,
+          'total': rep.number.total,
+          'start': tf.from,
+          'end': tf.to,
+          'location': rep.location.id
+        });
+
+      });
+      if (error) {
+        app.$.alert.showText('One or more values selected is incomplete');
+        return;
+      }
+      // console.log(myRep);
+      myReq.body = body;
+      myReq.method = 'POST';
+      myReq.url = this.getEp('bulkIndicatorReport').url;
+      myReq.sendPostRequest();
+    },
   });
 })();
 

@@ -22,6 +22,8 @@ build
 *idea*
 
 EquiTrack/static/*
+EquiTrack/assets/bower_components/
+
 static/*
 media
 
@@ -42,10 +44,16 @@ packer_cache
 *.box
 
 Vagrantfile
+EquiTrack/EquiTrack/saml/FederationMetadata.xml
 
 *.tar
 
 *.gz
+
+# no keys
+*.key
+*.crt
+
 
 server_config.yaml
 robots/*.png
@@ -85,3 +93,7 @@ Icon
 assets/frontend/
 templates/frontend/
 /env_prod
+
+deis
+
+env_dev

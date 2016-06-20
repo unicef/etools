@@ -42,12 +42,14 @@ from .models import (
     GwPCALocation,
     ResultChain,
     AmendmentLog,
+    AgreementAmendmentLog,
     Agreement,
     AuthorizedOfficer,
     PartnerStaffMember,
     SupplyItem,
     DistributionPlan,
-    PartnershipBudget
+    PartnershipBudget,
+    GovernmentIntervention,
 )
 
 logger = logging.getLogger('partners.forms')
@@ -114,30 +116,23 @@ class AssessmentAdminForm(AutoSizeTextForm):
         return cleaned_data
 
 
-class ResultChainAdminForm(forms.ModelForm):
+class GovernmentInterventionAdminForm(forms.ModelForm):
 
     class Meta:
-        model = ResultChain
+        model = GovernmentIntervention
         fields = '__all__'
 
     def __init__(self, *args, **kwargs):
-        """
-        Filter linked results by sector and result structure
-        """
-        if 'parent_object' in kwargs:
-            self.parent_partnership = kwargs.pop('parent_object')
+        super(GovernmentInterventionAdminForm, self).__init__(*args, **kwargs)
 
-        super(ResultChainAdminForm, self).__init__(*args, **kwargs)
+        # by default add the previous 1 years and the next 2 years
+        current_year = date.today().year
+        years = range(current_year - 1, current_year + 2)
 
-        if hasattr(self, 'parent_partnership'):
-
-            results = Result.objects.filter(
-                result_structure=self.parent_partnership.result_structure
-            )
-            self.fields['result'].queryset = results
-
-            if self.instance.result_id:
-                self.fields['result'].queryset = results.filter(id=self.instance.result_id)
+        self.fields['year'] = forms.ChoiceField(
+            choices=[(year, year) for year in years]
+        )
+        self.fields['year'].empty_label = u'Select year'
 
 
 class AmendmentForm(forms.ModelForm):
@@ -158,6 +153,13 @@ class AmendmentForm(forms.ModelForm):
         self.fields['amendment'].queryset = self.parent_partnership.amendments_log \
             if hasattr(self, 'parent_partnership') else AmendmentLog.objects.none()
         self.fields['amendment'].empty_label = u'Original'
+
+
+class AgreementAmendmentForm(AmendmentForm):
+
+    class Meta:
+        model = AgreementAmendmentLog
+        fields = '__all__'
 
 
 class PartnerStaffMemberForm(forms.ModelForm):
@@ -230,6 +232,10 @@ class AuthorizedOfficersForm(forms.ModelForm):
             partner=self.parent_agreement.partner
         ) if hasattr(self, 'parent_agreement') \
             and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
+
+        self.fields['amendment'].queryset = self.parent_agreement.amendments_log \
+            if hasattr(self, 'parent_agreement') else AgreementAmendmentLog.objects.none()
+        self.fields['amendment'].empty_label = u'Original'
 
 
 class DistributionPlanForm(auto_forms.ModelForm):
@@ -306,15 +312,17 @@ class AgreementForm(UserGroupForm):
         end = cleaned_data.get(u'end')
 
         if partner and agreement_type == Agreement.PCA:
-            # Partnership can only have one PCA
-            pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
-            if (not self.instance.id and pca_ids) or \
-                    (self.instance.id and pca_ids and self.instance.id not in pca_ids):
-                err = u'This partnership can only have one {} agreement'.format(agreement_type)
-                raise ValidationError({'agreement_type': err})
+            # Partner can only have one active PCA
+            # pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
+            # if (not self.instance.id and pca_ids) or \
+            #         (self.instance.id and pca_ids and self.instance.id not in pca_ids):
+            if partner.get_last_agreement and partner.get_last_agreement != self.instance:
+                if not start > partner.get_last_agreement.start and not end > partner.get_last_agreement.end:
+                    err = u'This partner can only have one active {} agreement'.format(agreement_type)
+                    raise ValidationError({'agreement_type': err})
 
             # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.objects.order_by('to_date').last()
+            result_structure = ResultStructure.current()
             if result_structure and end and end > result_structure.to_date:
                 raise ValidationError(
                     {'end': u'This agreement cannot last longer than the current {} which ends on {}'.format(
@@ -432,7 +440,7 @@ class PartnershipForm(UserGroupForm):
 
         data.fillna('', inplace=True)
         current_output = None
-        result_structure = self.obj.result_structure or ResultStructure.objects.order_by('to_date').last()
+        result_structure = self.obj.result_structure or ResultStructure.current()
         imported = found = not_found = row_num = 0
         # TODO: make sure to check all the expected columns are in
 
@@ -442,8 +450,14 @@ class PartnershipForm(UserGroupForm):
             )
             row_num += 1
             row = series.to_dict()
-            # get the labels in order
-            labels = list(series.axes[0])
+            labels = list(series.axes[0])  # get the labels in order
+
+            # check if there are correct time frames set on activities:
+            at_least_one_tf = [x for x in labels if 'TF_' in x]
+            if not at_least_one_tf:
+                raise ValidationError('There are no valid time frames for the activities,'
+                                      'please prefix activities with "TF_')
+
             try:
                 type = label.split()[0].strip()
                 statement = row.pop('Details').strip()
@@ -453,9 +467,7 @@ class PartnershipForm(UserGroupForm):
                     )
                 except ResultType.DoesNotExist as exp:
                     # we can interpret the type we are dealing with by its label
-                    if 'indicator' in type and current_output:
-                        pass
-                    else:
+                    if 'indicator' not in type and current_output:
                         raise ValidationError(
                             _(u"The value of the first column must be one of: Output, Indicator or Activity."
                               u"The value received for row {} was: {}".format(row_num, type)))
@@ -481,7 +493,7 @@ class PartnershipForm(UserGroupForm):
                 create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, number=True)
                 create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, number=True)
                 target = check_and_return_value('Targets', row, number=True)
-                check_and_return_value('Total', row, number=True)
+                check_and_return_value('Total', row, number=True)  # ignore value as we calculate this
 
                 if 'indicator' in label:
                     indicator, created = Indicator.objects.get_or_create(
@@ -507,19 +519,14 @@ class PartnershipForm(UserGroupForm):
                         order = [e for e in labels if row.get(e)]
                         row['order'] = order
                         create_args['disaggregation'] = row.copy()
-
-                    # remove all contents of row
-                    row = {}
-
-                if row:
+                else:
+                    # this is an activity
                     for key in row.keys():
                         if 'Unnamed' in key or 'TF_' not in key:
                             del row[key]
                         elif pandas.isnull(row[key]):
                             row[key] = ''
 
-                # activity only
-                if row:
                     create_args['disaggregation'] = row.copy() if row else None
 
                 result_chain, new = ResultChain.objects.get_or_create(**create_args)
@@ -635,10 +642,18 @@ class PartnershipForm(UserGroupForm):
             self.add_locations(p_codes, location_sector)
 
         if work_plan:
+            # make sure the status of the intervention is in process
+            if self.instance.status != PCA.IN_PROCESS:
+                raise ValidationError(
+                    u'After the intervention is signed, the workplan cannot be changed'
+                )
             if result_structure is None:
                 raise ValidationError(
                     u'Please select a result structure from the man info tab to import results against'
                 )
+            # make sure another workplan has not been uploaded already:
+            if self.instance.results and self.instance.results.count() > 0:
+                self.instance.results.all().delete()
             self.import_results_from_work_plan(work_plan)
 
         return cleaned_data

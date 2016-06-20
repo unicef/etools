@@ -64,11 +64,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
   <span id="browser-sync-binding"></span>
   <template is="dom-bind" id="app">
   <global-data app-data="[[appData]]" user="{{user}}" permissions="{{permissions}}"></global-data>
+  <etools-loading id="loading"></etools-loading>
+  <etools-alert id="alert"></etools-alert>
 
   <template is="dom-if" if='{{permissions.interventionsMenu}}'>
     <interventions-data id="interventionData" interventions={{interventions}}></interventions-data>
   </template>
-      
+
     <paper-drawer-panel id="paperDrawerPanel">
       <!-- Drawer Scroll Header Panel -->
       <paper-scroll-header-panel drawer fixed>
@@ -84,13 +86,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
             <iron-icon icon="home"></iron-icon>
             <span>Home</span>
           </a>
-            
+
           <template is="dom-if" if='{{permissions.loggedInDefault}}'>
             <a data-route="myInfo" href="{{baseUrl}}myInfo">
               <iron-icon icon="account-circle"></iron-icon>
               <span>My Information</span>
             </a>
-          </template>   
+          </template>
 
           <template is="dom-if" if='{{permissions.interventionsMenu}}'>
             <a data-route="myInterventions" href="{{baseUrl}}myInterventions">
@@ -101,7 +103,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               <iron-icon icon="dashboard"></iron-icon>
               <span>Reporting Dashbord</span>
             </a>
-          </template> 
+          </template>
 
         </paper-menu>
       </paper-scroll-header-panel>
@@ -115,13 +117,12 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           <span class="flex"></span>
 
           <!-- Toolbar icons -->
-          <!-- <paper-icon-button icon="refresh"></paper-icon-button>
-          <paper-icon-button icon="search"></paper-icon-button> -->
           <template is="dom-if" if="{{user.id}}">
             <a href="[[appData.logoutEndpoint]]" style="color:white;"><paper-button>logout</paper-button></a>
           </template>
-          
+
           <paper-icon-button id="refresh" icon="refresh"></paper-icon-button>
+          <uservoice-input api-key="s74dylVlP3CUCbVw6famA" enabled></uservoice-input>
 
           <!-- Application name -->
           <div class="middle middle-container center horizontal layout">
@@ -139,7 +140,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         <!-- Main Content -->
         <div class="content">
           <iron-pages attr-for-selected="data-route" selected="{{route}}">
-             
+
             <section data-route="home">
               <paper-material elevation="1">
                 <h1>Welcome to the Partner Portal</h1>
@@ -157,14 +158,13 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                 <ul>
                     <li>Ability to report on indicators in bulk</li>
                     <li>Ability to report on fully flexible disaggregations as defined in the workplan</li>
-                    
                 </ul>
-                <p class="paper-font-body2">Thank you for choosing to make our children's lives better! </p>
+                <p class="paper-font-subhead">Thank you for choosing to make our children's lives better!</p>
               </paper-material>
-              
+
 
             </section>
-            
+
             <template is="dom-if" if='{{permissions.loggedInDefault}}'>
               <section data-route="myInfo">
                 <paper-material elevation="1">
@@ -172,17 +172,17 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
                     <user-page permissions='[[permissions]]' user='{{user}}'></user-page>
                 </paper-material>
               </section>
-            </template> 
+            </template>
 
             <template is="dom-if" if='{{permissions.interventionsMenu}}'>
               <section data-route="myInterventions">
-                  <interventions-page 
+                  <interventions-page
                       app-data="[[appData]]" interventions={{interventions}}>
                   </interventions-page>
               </section>
-            
+
               <section data-route="intervention">
-                  <intervention-details app-data="{{appData}}" interventions={{interventions}} intervention-id="[[params.intv]]"></intervention-details> 
+                  <intervention-details app-data="{{appData}}" interventions={{interventions}} intervention-id="[[params.intv]]"></intervention-details>
               </section>
 
               <section data-route="reportingDash">
@@ -190,26 +190,26 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
               </section>
 
               <section data-route="rcReport">
-                  <rc-report app-data="[[appData]]" 
-                    interventions="{{interventions}}" 
+                  <rc-report app-data="[[appData]]"
+                    interventions="{{interventions}}"
                     intervention-id="[[params.intvId]]"
-                    rc-id="[[params.rcId]]"></rc-report> 
+                    rc-id="[[params.rcId]]"></rc-report>
               </section>
-            </template> 
+            </template>
 
           </iron-pages>
         </div>
       </paper-scroll-header-panel>
     </paper-drawer-panel>
-      
 
 
 
-      <paper-toast id="toast" duration="0">
+
+    <paper-toast id="toast" duration="0">
       <span class="toast-hide-button" role="button" tabindex="0" onclick="app.$.toast.hide()">Ok</span>
     </paper-toast>
-    
-    
+
+
   </template>
 
   <!-- build:js /static/frontend/partner/scripts/app.js -->
