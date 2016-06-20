@@ -14,7 +14,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, generics
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
@@ -78,6 +78,7 @@ class PcaPDFView(PDFTemplateView):
             pagesize="Letter",
             title="Partnership",
             agreement=agreement,
+            bank_details=agreement.bank_details.all(),
             cp=ResultStructure.current(),
             auth_officers=officers_list,
             country=self.request.tenant.name,
@@ -147,9 +148,9 @@ class InterventionLocationView(ListAPIView):
             pcas = queryset.values_list('pca__id', flat=True)
             # get those that contain this donor
             pcas = PCAGrant.objects.filter(
-                pca__id__in=pcas,
+                partnership__id__in=pcas,
                 grant__donor__id=int(donor)
-            ).values_list('pca', flat=True)
+            ).values_list('partnership', flat=True)
             # now filter the current query by the selected ids
             queryset = queryset.filter(
                 pca__id__in=pcas
@@ -212,10 +213,12 @@ class PartnerStaffMemberPropertiesView(RetrieveAPIView):
         return obj
 
 
-class AgreementViewSet(mixins.RetrieveModelMixin,
-                       mixins.ListModelMixin,
-                       mixins.CreateModelMixin,
-                       viewsets.GenericViewSet):
+class AgreementViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of Agreements
     """
@@ -269,10 +272,12 @@ class AgreementViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class InterventionsViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+class InterventionsViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of all Interventions,
     """
@@ -343,9 +348,10 @@ class InterventionsViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class ResultChainViewSet(mixins.RetrieveModelMixin,
-                         mixins.ListModelMixin,
-                         viewsets.GenericViewSet):
+class ResultChainViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of all Result Chain for an Intervention
     """
@@ -375,10 +381,11 @@ class ResultChainViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class IndicatorReportViewSet(mixins.RetrieveModelMixin,
-                             mixins.CreateModelMixin,
-                             mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
+class IndicatorReportViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of all Indicator Reports for an Intervention and Result
     """
@@ -386,6 +393,15 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
     queryset = IndicatorReport.objects.all()
     serializer_class = IndicatorReportSerializer
     # permission_classes = (IndicatorReportPermission,)
+
+    def get_serializer(self, *args, **kwargs):
+        if "data" in kwargs:
+            data = kwargs["data"]
+
+            if isinstance(data, list):
+                kwargs["many"] = True
+
+        return super(IndicatorReportViewSet, self).get_serializer(*args, **kwargs)
 
     def perform_create(self, serializer):
         # add the user to the arguments
@@ -414,10 +430,11 @@ class IndicatorReportViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class PCASectorViewSet(mixins.RetrieveModelMixin,
-                             mixins.CreateModelMixin,
-                             mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
+class PCASectorViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of Sectors for an Interventions (PCA)
     """
@@ -466,10 +483,11 @@ class PCASectorViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
-                             mixins.CreateModelMixin,
-                             mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
+class PartnershipBudgetViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of partnership Budgets for an Intervention (PCA)
     """
@@ -521,10 +539,11 @@ class PartnershipBudgetViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class PCAFileViewSet(mixins.RetrieveModelMixin,
-                             mixins.CreateModelMixin,
-                             mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
+class PCAFileViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of files URL for an Intervention (PCA)
     """
@@ -581,10 +600,11 @@ class PCAFileViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class PCAGrantViewSet(mixins.RetrieveModelMixin,
-                             mixins.CreateModelMixin,
-                             mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
+class PCAGrantViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of Grants for a Intervention (PCA)
     """
@@ -636,10 +656,11 @@ class PCAGrantViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class GwPCALocationViewSet(mixins.RetrieveModelMixin,
-                             mixins.CreateModelMixin,
-                             mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
+class GwPCALocationViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of GW Locations for an Intervention (PCA)
     """
@@ -688,10 +709,11 @@ class GwPCALocationViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class AmendmentLogViewSet(mixins.RetrieveModelMixin,
-                             mixins.CreateModelMixin,
-                             mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
+class AmendmentLogViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of Amendment logs for an Intervention (PCA)
     """
@@ -743,10 +765,12 @@ class AmendmentLogViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+class PartnerOrganizationsViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of all Partner Organizations
     """
@@ -772,10 +796,11 @@ class PartnerOrganizationsViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+class PartnerStaffMembersViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of all Partner staff members
     """
@@ -809,10 +834,11 @@ class PartnerStaffMembersViewSet(mixins.RetrieveModelMixin,
         )
 
 
-class FileTypeViewSet(mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
-                           mixins.CreateModelMixin,
-                           viewsets.GenericViewSet):
+class FileTypeViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet):
     """
     Returns a list of all Partner file types
     """

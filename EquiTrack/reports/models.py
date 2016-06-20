@@ -175,7 +175,6 @@ class Indicator(models.Model):
     in_activity_info = models.BooleanField(default=False)
     activity_info_indicators = models.ManyToManyField(
         'activityinfo.Indicator',
-        blank=True, null=True
     )
 
     class Meta:
@@ -191,27 +190,27 @@ class Indicator(models.Model):
 
     def programmed_amounts(self):
         from partners.models import PCA
-        return self.indicatorprogress_set.filter(
-            pca_sector__pca__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
+        return self.resultchain_set.filter(
+            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
         )
 
     def programmed(self, result_structure=None):
         programmed = self.programmed_amounts()
         if result_structure:
             programmed = programmed.filter(
-                pca_sector__pca__result_structure=result_structure,
+                partnership__result_structure=result_structure,
 
             )
-        total = programmed.aggregate(models.Sum('programmed'))
+        total = programmed.aggregate(models.Sum('target'))
         return total[total.keys()[0]] or 0
 
     def progress(self, result_structure=None):
         programmed = self.programmed_amounts()
         if result_structure:
             programmed = programmed.filter(
-                pca_sector__pca__result_structure=result_structure,
+                partnership__result_structure=result_structure,
 
             )
-        total = programmed.aggregate(models.Sum('current'))
+        total = programmed.aggregate(models.Sum('current_progress'))
         return (total[total.keys()[0]] or 0) + self.current if self.current else 0
 

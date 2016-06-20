@@ -27,11 +27,11 @@ logger = get_task_logger(__name__)
 
 
 @app.task
-def sync(country_id=None):
+def sync(country_name=None):
     processed = []
     countries = Country.objects.filter(vision_sync_enabled=True)
-    if country_id is not None:
-        countries.filter(id=country_id)
+    if country_name is not None:
+        countries.filter(name=country_name)
     for country in countries:
         connection.set_tenant(country)
         for handler in SYNC_HANDLERS:

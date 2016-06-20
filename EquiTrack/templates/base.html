@@ -157,6 +157,9 @@
                                 <li>
                                     <a href="{% url 'hact_dashboard' %}">HACT</a>
                                 </li>
+                                <li>
+                                    <a href="{% url 'partnerships_dashboard' %}">Partners</a>
+                                </li>
                             </ul>
                         </li>
                         <li>
@@ -171,9 +174,9 @@
                         <li>
                             <a href="{% url 'admin:trips_trip_changelist' %}?q=&owner__id__exact={{ request.user.id }}"><i class="fa fa-road"></i><span>Trips</span></a>
                         </li>
-{#                        <li>#}
-{#                            <a href="{% url 'admin:tpm_tpmvisit_changelist' %}"><i class="fa fa-calendar"></i><span>TPM Portal</span></a>#}
-{#                        </li>#}
+                        <li>
+                            <a href="{% url 'admin:tpm_tpmvisit_changelist' %}"><i class="fa fa-calendar"></i><span>TPM Portal</span></a>
+                        </li>
 {#                        <li>#}
 {#                            <a href="{% url 'supplies_dashboard' %}"><i class="fa fa-gift"></i><span>Supplies</span></a>#}
 {#                        </li>#}

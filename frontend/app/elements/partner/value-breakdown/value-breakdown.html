@@ -124,10 +124,10 @@
       // console.log('total changed', (typeof totValue));
       var res = {
         total: this.mainTotal,
-        breakdown: this.breakdowns
+        breakdown: this.breakdowns ? this.breakdowns : {}
       };
-      if ((totValue !== 0) && (totValue)){
-        this.breakdowns.total = this.disLevel ? this.total : null;
+      if ((this.disLevel) && (totValue !== 0) && (totValue)){
+        this.breakdowns.total = this.total;
         res.breakdown = this.breakdowns;
       }
 

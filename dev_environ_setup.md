@@ -14,8 +14,8 @@ Step 2. Install Postgres with brew, create Postgres database, and run the Postgr
 ```bash
 $ brew install postgresql
 $ initdb /usr/local/var/postgres
-$ mkdir -p ~/Library/LaunchAgents 
-$ ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents 
+$ mkdir -p ~/Library/LaunchAgents
+$ ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
 $ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
 ```
 
@@ -30,9 +30,9 @@ Step 4. Create Postgres user and PostGIS required extensions:
 
 ```bash
 # CREATE ROLE postgres WITH superuser login;
-# CREATE EXTENSION postgis; 
-# CREATE EXTENSION postgis_topology; 
-# CREATE EXTENSION fuzzystrmatch; 
+# CREATE EXTENSION postgis;
+# CREATE EXTENSION postgis_topology;
+# CREATE EXTENSION fuzzystrmatch;
 # \q
 ```
 
@@ -45,7 +45,7 @@ $ brew install redis
 Step 6. Clone EquiTrack repository
 
 ```bash
-$ git clone https://github.com/UNICEFLebanonInnovation/EquiTrack.git . 
+$ git clone https://github.com/UNICEFLebanonInnovation/EquiTrack.git .
 $ git checkout etools
 ```
 
@@ -61,18 +61,18 @@ $ source /usr/local/bin/virtualenvwrapper.sh
 $ mkvirtualenv env1
 $ pip install -r EquiTrack/requirements/base.txt
 ```
- 
+
 Step 7. Set environment variables:
 
 ```bash
-$ export REDIS_URL=redis://localhost:6379/0 
+$ export REDIS_URL=redis://localhost:6379/0
 $ export DATABASE_URL=postgis://postgres:password@localhost:5432/postgres
 ```
 
 Step 8. Migrate database schemas and create database superuser
 
 ```bash
-$ python manage.py migrate_schemas --fake-initial
+$ python manage.py migrate_schemas --fake-initial --noinput
 $ python manage.py createsuperuser
 ```
 
@@ -111,7 +111,7 @@ Setup Debugger (PyCharm)
 
 Step 1:
 * Once the project is loaded in PyCharm go to menu -&gt; <code>PyCharm - &gt; Preferences -&gt; Project</code>
-* Make sure your project is chosen 
+* Make sure your project is chosen
 * Select the python interpreter present inside of the virtualenvironment
 
 Step 2:
@@ -123,10 +123,10 @@ Step 2:
     * add all of the previously mentioned environment vars
 
 Step 3:
-* Go to menu -&gt; <code>Run -&gt; Edit Configurations</code> 
+* Go to menu -&gt; <code>Run -&gt; Edit Configurations</code>
 * Add Django Server and name it.
-* In the Configuration make sure to add the environment variables again 
-* Choose the python interpreter (The interpreter inside of the virtual environment) 
+* In the Configuration make sure to add the environment variables again
+* Choose the python interpreter (The interpreter inside of the virtual environment)
 * Choose a working Directory
 
 Step 4:
@@ -134,7 +134,7 @@ Step 4:
 
 Resources
 ---------
-http://www.gotealeaf.com/blog/how-to-install-postgresql-on-a-mac 
+http://www.gotealeaf.com/blog/how-to-install-postgresql-on-a-mac
 
 http://jasdeep.ca/2012/05/installing-redis-on-mac-os-x/
 

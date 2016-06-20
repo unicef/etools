@@ -44,6 +44,7 @@ SUIT_CONFIG = {
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
             {'model': 'partners.agreement'},
             {'model': 'partners.pca'},
+            {'model': 'partners.governmentintervention', 'label': 'Government'},
         ]},
 
         {'app': 'trips', 'icon': 'icon-road', 'models': [
@@ -67,7 +68,7 @@ SUIT_CONFIG = {
 
         #{'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
 
-        #{'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
+        {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
 
@@ -75,9 +76,6 @@ LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
-
-REGISTRATION_OPEN = True
-ACCOUNT_ACTIVATION_DAYS = 7
 
 ########## EMAIL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
@@ -90,8 +88,12 @@ POST_OFFICE = {
     }
 }
 EMAIL_BACKEND = 'post_office.EmailBackend'  # Will send email via our template system
-CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', "djrill.mail.backends.djrill.DjrillBackend")  # Will send mail via mandrill service
-MANDRILL_API_KEY = os.environ.get("MANDRILL_KEY", 'notarealkey')
+CELERY_EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', '')
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
 ########## END EMAIL CONFIGURATION
 
 REST_FRAMEWORK = {
@@ -111,12 +113,12 @@ REST_FRAMEWORK = {
     )
 }
 
+CORS_ORIGIN_ALLOW_ALL = True
+
 SWAGGER_SETTINGS = {
     'is_authenticated': True,
     'is_superuser': True,
 }
-
-CORS_ORIGIN_ALLOW_ALL = True
 
 # Add our project to our pythonpath, this way we don't need to type our project
 # name in our dotted import paths:
@@ -143,6 +145,7 @@ db_config = dj_database_url.config(
 )
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
+db_config['CONN_MAX_AGE'] = 0
 DATABASES = {
     'default': db_config
 }
@@ -186,11 +189,15 @@ COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
 
 MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')
 MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
+
+# SESSION_ENGINE = 'redis_sessions_fork.session'
+# SESSION_REDIS_URL = BROKER_URL
+SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
 ########## END DATABASE CONFIGURATION
 
+VISION_URL = os.getenv('VISION_URL', 'invalid_vision_url')
 VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
-VISION_URL = 'https://devapis.unicef.org/BIService/BIWebService.svc'
 
 USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # ########## MANAGER CONFIGURATION
@@ -284,7 +291,7 @@ RAPIDPRO_TOKEN = os.environ.get('RAPIDPRO_TOKEN')
 ########## FIXTURE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#std:setting-FIXTURE_DIRS
 FIXTURE_DIRS = (
-    normpath(join(SITE_ROOT, 'fixtures')),
+    normpath(join(SITE_ROOT, 'EquiTrack/data')),
 )
 ########## END FIXTURE CONFIGURATION
 
@@ -395,11 +402,12 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
+    'django_hstore',
 
     'vision',
+    'management',
     # you must list the app where your tenant model resides in
     'users',
-    'management',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20

@@ -11,7 +11,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
 
-from filer.fields.file import FilerFileField
 from reversion.revisions import get_for_object
 from smart_selects.db_fields import ChainedForeignKey
 
@@ -20,7 +19,7 @@ from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
 from locations.models import Governorate, Locality, Location, Region
-from partners.models import PartnerOrganization, PCA, ResultChain
+from partners.models import PartnerOrganization, PCA, ResultChain, RAMIndicator
 from . import emails
 
 User = settings.AUTH_USER_MODEL
@@ -99,12 +98,12 @@ class Trip(AdminURLMixin, models.Model):
 
     pcas = models.ManyToManyField(
         u'partners.PCA',
-        blank=True, null=True,
+        blank=True,
         verbose_name=u"Related Interventions"
     )
     partners = models.ManyToManyField(
         u'partners.PartnerOrganization',
-        blank=True, null=True
+        blank=True
     )
     main_observations = models.TextField(
         blank=True, null=True
@@ -452,7 +451,7 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
     result = ChainedForeignKey(
-        ResultChain,
+        RAMIndicator,
         chained_field="intervention",
         chained_model_field="intervention",
         show_all=False,
@@ -498,12 +497,15 @@ class TripLocation(models.Model):
 
     def __unicode__(self):
         desc = u'{} -> {} ({})'.format(
-            self.location.parent.name if self.location.parent else u'',
-            self.location.name,
-            self.location.gateway.name
+            self.location.parent.name if (self.location and self.location.parent) else u'',
+            self.location.name if self.location else '',
+            self.location.gateway.name if (self.location and self.location.gateway) else ''
         )
 
         return desc
+
+    class Meta:
+        ordering = ['id']
 
 
 class TravelRoutes(models.Model):
@@ -538,6 +540,7 @@ class ActionPoint(models.Model):
     comments = models.TextField(blank=True, null=True)
     status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
     created_date = models.DateTimeField(auto_now_add=True)
+    follow_up = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.description
@@ -602,7 +605,6 @@ class FileAttachment(models.Model):
 
     trip = models.ForeignKey(Trip, null=True, blank=True, related_name=u'files')
     type = models.ForeignKey(u'partners.FileType')
-    file = FilerFileField(null=True, blank=True)
     caption = models.TextField(
         null=True,
         blank=True,
@@ -610,7 +612,8 @@ class FileAttachment(models.Model):
         help_text='Description of the file to upload: optional',
     )
     report = models.FileField(
-        upload_to=get_report_filename
+        upload_to=get_report_filename,
+        max_length=255,
     )
 
     content_type = models.ForeignKey(ContentType, null=True, blank=True)

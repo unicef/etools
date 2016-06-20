@@ -45,13 +45,16 @@ var config = {
     },
     interventions: {
       template: '/api/interventions/',
-      exp: 1*1000*60
+      exp: 1000 // cache for this amount of time (in milliseconds)
     },
     resultChainDetails: {
       template: '/api/interventions/<%=interventionId%>/results/<%=rcId%>/'
     },
     newIndicatorReport: {
-      template: '/api/interventions/<%=interventionId%>/results/<%=rcId%>/reports'
+      template: '/api/interventions/<%=interventionId%>/results/<%=rcId%>/reports/'
+    },
+    bulkIndicatorReport: {
+      template: '/api/bulk_reports/'
     }
   },
   paths: {

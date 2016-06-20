@@ -1,0 +1,55 @@
+
+{% extends "login_base.html" %}
+
+
+{% block extra_head %}
+
+<style>
+    body {
+        padding: 0;
+        margin: 0;
+    }
+    .unicefblue {
+      background-color: #42515A;
+    }
+
+    .medium-tall{
+        padding: 1%;
+        height: 100px;
+        background-color: #42515A;
+        color: #ffffff;
+    }
+
+    .bottom{
+        padding-top: 2%;
+    }
+    .errorContent{
+        margin: 0 auto;
+        display: block;
+        text-align: center;
+        padding-top: 3em;
+    }
+
+  </style>
+
+
+ {% endblock %}
+{% block toolbar %}
+        <div class="medium-tall">
+          <img src="{{ STATIC_URL }}images/unicefetools.svg" style="width:200px; max-width:80%;"></img>
+          <div class="bottom title">Country workspace not found on user</div>
+        </div>
+{% endblock toolbar %}
+
+{% block content %}
+    <div class="errorContent">
+        <h3> Hi {{ user }}, </h3>
+        <p>
+            Your user profile does not have a country workspace associated with it...
+            <br>
+            Please contact the eTools focal point within your organization to help you gain access.
+        </p>
+        <h3>Please <a href="{% url "saml2_logout" %}">Log Out</a> to reflect any updates in the future</h3>
+    </div>
+{% endblock content %}
+

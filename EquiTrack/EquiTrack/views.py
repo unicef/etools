@@ -5,7 +5,7 @@ from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
 
-from partners.models import PCA, PartnerOrganization
+from partners.models import PCA, PartnerOrganization, GwPCALocation
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
@@ -71,12 +71,10 @@ class DashboardView(TemplateView):
                 'active': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.ACTIVE,
-                    amendment_number=0,
                 ).count(),
                 'implemented': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.IMPLEMENTED,
-                    amendment_number=0,
                 ).count(),
                 'in_process': PCA.objects.filter(
                     result_structure=current_structure,
@@ -85,10 +83,81 @@ class DashboardView(TemplateView):
                 'cancelled': PCA.objects.filter(
                     result_structure=current_structure,
                     status=PCA.CANCELLED,
-                    amendment_number=0,
                 ).count(),
             }
         }
+
+
+class PartnershipsView(DashboardView):
+
+    template_name = 'partnerships/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        data = super(PartnershipsView, self).get_context_data(**kwargs)
+
+        active_partnerships = PCA.objects.filter(
+            status=PCA.ACTIVE,
+            start_date__isnull=False, end_date__isnull=False,
+            partnership_type__in=[PCA.PD, PCA.SHPD, PCA.SSFA, PCA.AWP]
+        )
+        today = datetime.datetime.today()
+
+        active_this_year = active_partnerships.filter(
+            start_date__year=today.year
+        )
+        last_years = datetime.date(today.year-1, 12, 31)
+
+        active_last_year = active_partnerships.filter(
+            start_date__lte=last_years
+        )
+        expire_in_two_months = active_partnerships.filter(
+            end_date__range=[today, today + datetime.timedelta(days=60)]
+        )
+
+        # govs = {}
+        # for gov in Governorate.objects.all():
+        #     govs[gov.name] = GwPCALocation.objects.filter(
+        #         governorate=gov,
+        #         pca__status=PCA.ACTIVE
+        #     ).distinct('pca').count()
+        # data['govs'] = govs
+
+        partners = {}
+        for p_type in [
+            u'Bilateral / Multilateral',
+            u'Civil Society Organization',
+            u'Government',
+            u'UN Agency',
+        ]:
+            partners[p_type] = active_partnerships.filter(
+                partner__partner_type=p_type).count()
+        data['partners'] = partners
+
+        # (1) Number and value of Active Partnerships for this year
+        data['active_count'] = active_partnerships.count()
+        data['active_value'] = sum([pd.planned_cash_transfers for pd in active_partnerships.all()])
+        data['active_percentage'] = "{0:.0f}%".format(active_partnerships.count()/active_partnerships.count() * 100) \
+                                    if active_partnerships.count() else 0
+
+        # (2a) Number and value of Approved Partnerships this year
+        data['active_this_year_count'] = active_this_year.count()
+        data['active_this_year_value'] = sum([pd.planned_cash_transfers for pd in active_this_year.all()])
+        data['active_this_year_percentage'] = "{0:.0f}%".format(active_this_year.count()/active_partnerships.count() * 100) \
+                                              if active_this_year.count() else 0
+
+        # (2b) Number and value of Approved Partnerships last year
+        data['active_last_year_count'] = active_last_year.count()
+        data['active_last_year_value'] = sum([pd.planned_cash_transfers for pd in active_last_year.all()])
+        data['active_last_year_percentage'] = "{0:.0f}%".format(active_last_year.count()/active_partnerships.count() * 100) \
+                                              if active_last_year.count() else 0
+
+        # (3) Number and Value of Expiring Partnerships in next two months
+        data['expire_in_two_months_count'] = expire_in_two_months.count()
+        data['expire_in_two_months_value'] = sum([pd.planned_cash_transfers for pd in expire_in_two_months.all()])
+        data['expire_in_two_months_percentage'] = "{0:.0f}%".format(expire_in_two_months.count()/active_partnerships.count() * 100) \
+                                                  if expire_in_two_months.count() else 0
+
+        return data
 
 
 class MapView(TemplateView):
@@ -136,7 +205,7 @@ class UserDashboardView(TemplateView):
                 user=self.request.user).order_by("-id")[:10],
             'pcas': PCA.objects.filter(unicef_managers=user).filter(
                 Q(status=PCA.ACTIVE) | Q(status=PCA.IN_PROCESS)
-            ).order_by("number", "-amendment_number")[:10],
+            ).order_by("number", "-created_at")[:10],
             'action_points': ActionPoint.objects.filter(
                 Q(status='open') | Q(status='ongoing'),
                 person_responsible=user).order_by("-due_date")[:10]
@@ -149,5 +218,10 @@ class HACTDashboardView(TemplateView):
 
     def get_context_data(self, **kwargs):
         return {
-            'partners': PartnerOrganization.objects.filter(documents__status=PCA.ACTIVE)
+            'partners': PartnerOrganization.objects.filter(
+                documents__status__in=[
+                    PCA.ACTIVE,
+                    PCA.IMPLEMENTED
+                ]
+            ).distinct()
         }
