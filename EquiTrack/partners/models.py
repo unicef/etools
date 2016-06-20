@@ -268,6 +268,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         Total cash transferred for the current CP cycle
         """
         cp = ResultStructure.current()
+        if not cp:
+            # if no current structure loaded return 0
+            return 0
         total = FundingCommitment.objects.filter(
             end__gte=cp.from_date,
             end__lte=cp.to_date,
@@ -908,12 +911,13 @@ class PCA(AdminURLMixin, models.Model):
         Total cash transferred for the current CP cycle
         """
         cp = ResultStructure.current()
-        total = self.funding_commitments.filter(
-            end__gte=cp.from_date,
-            end__lte=cp.to_date,
-        ).aggregate(
-            models.Sum('expenditure_amount')
-        )
+        if cp:
+            total = self.funding_commitments.filter(
+                end__gte=cp.from_date,
+                end__lte=cp.to_date,
+            ).aggregate(
+                models.Sum('expenditure_amount')
+            )
         return total[total.keys()[0]] or 0
 
     @property
