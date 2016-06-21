@@ -1032,35 +1032,39 @@ class GovernmentIntervention(models.Model):
     result_structure = models.ForeignKey(
         ResultStructure,
     )
-    government_intervention_number = models.CharField(
+    number = models.CharField(
         max_length=45L,
         blank=True,
-        help_text=u'Reference Number'
+        verbose_name='Reference Number',
     )
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    # @property
-    # def reference_number(self):
-    #     if self.number:
-    #         number = self.number
-    #     else:
-    #         objects = list(GovernmentIntervention.objects.filter(
-    #             partner=self.partner,
-    #             created_at__year=self.year,
-    #             partnership_type=self.partnership_type
-    #         ).order_by('created_at').values_list('id', flat=True))
-    #         sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-    #         number = u'{agreement}/{type}{year}{seq}'.format(
-    #             agreement=self.agreement.reference_number if self.id and self.agreement else '',
-    #             type=self.partnership_type,
-    #             year=self.year,
-    #             seq=sequence
-    #         )
-    #     return u'{}{}'.format(
-    #         number,
-    #         u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
-    #         if self.amendments_log.last() else ''
-    #     )
+    #country/partner/year/#
+    @property
+    def reference_number(self):
+        if self.number:
+            number = self.number
+        else:
+            objects = list(GovernmentIntervention.objects.filter(
+                partner=self.partner,
+                result_structure=self.result_structure,
+            ).order_by('created_at').values_list('id', flat=True))
+            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            number = u'{code}/{partner}/{year}{seq}'.format(
+                code=connection.tenant.country_short_code or '',
+                partner=self.partner.short_name,
+                year=self.result_structure.to_date.year,
+                seq=sequence
+            )
+        return number
 
+    def save(self, **kwargs):
+
+        # commit the reference number to the database once the agreement is signed
+        if not self.number:
+            self.number = self.reference_number
+
+        super(GovernmentIntervention, self).save(**kwargs)
 
 class GovernmentInterventionResult(models.Model):
 

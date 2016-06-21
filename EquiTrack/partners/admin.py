@@ -460,8 +460,14 @@ class GovernmentInterventionAdmin(admin.ModelAdmin):
         (_('Government Intervention Details'), {
             'fields':
                 ('partner',
-                 'result_structure',),
+                 'result_structure',
+                 'number'),
         }),
+    )
+    list_display = (
+        u'number',
+        u'partner',
+        u'result_structure',
     )
     inlines = [GovernmentInterventionResultAdminInline]
 
