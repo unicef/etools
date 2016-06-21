@@ -310,6 +310,8 @@ class AgreementForm(UserGroupForm):
         agreement_number = cleaned_data.get(u'agreement_number')
         start = cleaned_data.get(u'start')
         end = cleaned_data.get(u'end')
+        signed_by_partner_date = cleaned_data.get(u'signed_by_partner_date')
+        signed_by_unicef_date = cleaned_data.get(u'signed_by_unicef_date')
 
         if partner and agreement_type == Agreement.PCA:
             # Partner can only have one active PCA
@@ -340,6 +342,24 @@ class AgreementForm(UserGroupForm):
                 raise ValidationError(
                     _(u'SSFA can not be more than a year')
                 )
+
+        if start > end:
+            raise ValidationError(
+                _(u'End date must be greater than start date')
+            )
+
+        # check if start date is greater than or equal than greatest signed date
+        if signed_by_partner_date and signed_by_unicef_date:
+            if signed_by_partner_date > signed_by_unicef_date:
+                if start <= signed_by_partner_date:
+                    raise ValidationError(
+                        _(u'Start date must be greater than signed by partner date')
+                    )
+            else:
+                if start <= signed_by_unicef_date:
+                    raise ValidationError(
+                        _(u'Start date must be greater than signed by unicef date')
+                    )
 
         # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
