@@ -570,21 +570,11 @@ class Agreement(TimeStampedModel):
             if self.amendments_log.last() else ''
         )
 
-    def __init__(self, *args, **kwargs):
-        super(Agreement, self).__init__(*args, **kwargs)
-        self.__original_agreement_type = self.agreement_type
-
-
     def save(self, **kwargs):
 
         # commit the reference number to the database once the agreement is signed
         if self.signed_by_unicef_date and not self.agreement_number:
             self.agreement_number = self.reference_number
-
-        # dont allow change of agreement type once signed by partner and unicef
-        if self.__original_agreement_type != self.agreement_type and \
-            self.signed_by_unicef_date and self.signed_by_partner_date:
-            self.agreement_type = self.__original_agreement_type
 
         super(Agreement, self).save(**kwargs)
 

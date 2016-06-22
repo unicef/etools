@@ -361,6 +361,11 @@ class AgreementForm(UserGroupForm):
                         _(u'Start date must be greater than signed by unicef date')
                     )
 
+        if self.instance.agreement_type != agreement_type and signed_by_partner_date and signed_by_unicef_date:
+            raise ValidationError(
+                    _(u'Agreement type can not be changed once signed by unicef and partner ')
+                )
+
         # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
         #     partner=partner,
