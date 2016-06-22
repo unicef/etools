@@ -268,6 +268,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         Total cash transferred for the current CP cycle
         """
         cp = ResultStructure.current()
+        if not cp:
+            # if no current structure loaded return 0
+            return 0
         total = FundingCommitment.objects.filter(
             end__gte=cp.from_date,
             end__lte=cp.to_date,
@@ -908,12 +911,13 @@ class PCA(AdminURLMixin, models.Model):
         Total cash transferred for the current CP cycle
         """
         cp = ResultStructure.current()
-        total = self.funding_commitments.filter(
-            end__gte=cp.from_date,
-            end__lte=cp.to_date,
-        ).aggregate(
-            models.Sum('expenditure_amount')
-        )
+        if cp:
+            total = self.funding_commitments.filter(
+                end__gte=cp.from_date,
+                end__lte=cp.to_date,
+            ).aggregate(
+                models.Sum('expenditure_amount')
+            )
         return total[total.keys()[0]] or 0
 
     @property
@@ -975,6 +979,15 @@ class PCA(AdminURLMixin, models.Model):
 
             if self.end_date is None and self.result_structure:
                 self.end_date = self.result_structure.to_date
+
+        if not self.pk:
+            if self.partnership_type != self.PD:
+                self.signed_by_partner_date = self.agreement.signed_by_partner_date
+                self.partner_manager = self.agreement.partner_manager
+                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
+                self.unicef_manager = self.agreement.signed_by
+                self.start_date = self.agreement.start
+                self.end_date = self.agreement.end
 
         super(PCA, self).save(**kwargs)
 

@@ -205,7 +205,8 @@ def create_partner_user(sender, instance, created, **kwargs):
 
 def delete_partner_relationship(sender, instance, **kwargs):
     try:
-        profile = UserProfile.objects.filter(partner_staff_member=instance.id).get()
+        profile = UserProfile.objects.filter(partner_staff_member=instance.id,
+                                             user__email=instance.email).get()
         with transaction.atomic():
             profile.partner_staff_member = None
             profile.save()
