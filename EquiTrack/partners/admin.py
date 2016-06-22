@@ -248,10 +248,14 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
         return 0
 
     def get_readonly_fields(self, request, obj=None):
-
+        """
+        Prevent distributions being sent to partners before the intervention is saved
+        """
         fields = super(DistributionPlanInlineAdmin, self).get_readonly_fields(request, obj)
         if obj is None and u'send' not in fields:
             fields.append(u'send')
+        elif obj and u'send' in fields:
+            fields.remove(u'send')
 
         return fields
 
