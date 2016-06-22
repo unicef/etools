@@ -561,6 +561,10 @@ class PartnershipForm(UserGroupForm):
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
         end_date = cleaned_data[u'end_date']
+        initiation_date = cleaned_data[u'initiation_date']
+        submission_date = cleaned_data[u'submission_date']
+        review_date = cleaned_data[u'review_date']
+
 
         p_codes = cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
@@ -618,6 +622,21 @@ class PartnershipForm(UserGroupForm):
                 u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
+        if signed_by_partner_date and signed_by_partner_date < initiation_date:
+            raise ValidationError(
+                u'Signed by partner date must be later than submission date and submission date to PRC'
+            )
+
+        if signed_by_partner_date and not partner_manager:
+            raise ValidationError(
+                u'Please select a partner manager for the signed date'
+            )
+
+        if signed_by_unicef_date and not unicef_manager:
+            raise ValidationError(
+                u'Please select a unicef manager for the signed date'
+            )
+
         if signed_by_unicef_date and start_date and (start_date < signed_by_unicef_date):
             raise ValidationError(
                 u'The start date must be greater or equal to the singed by date'
@@ -637,6 +656,18 @@ class PartnershipForm(UserGroupForm):
         if start_date and end_date and start_date > end_date:
             err = u'The end date has to be after the start date'
             raise ValidationError({'end_date': err})
+
+        if submission_date and submission_date < initiation_date:
+            raise ValidationError(
+                u'Submition date to PRC must be later than submission date'
+            )
+
+        if review_date and review_date < submission_date and review_date < initiation_date:
+            raise ValidationError(
+                u'Review date by PRC must be later than submission date and submission date to PRC'
+            )
+
+
 
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
