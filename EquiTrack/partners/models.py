@@ -687,7 +687,7 @@ class PCA(AdminURLMixin, models.Model):
     number = models.CharField(
         max_length=45L,
         blank=True, null=True,
-        help_text=u'Document Reference Number'
+        verbose_name=u'Reference Number'
     )
     title = models.CharField(max_length=256L)
     project_type = models.CharField(
@@ -979,15 +979,6 @@ class PCA(AdminURLMixin, models.Model):
 
             if self.end_date is None and self.result_structure:
                 self.end_date = self.result_structure.to_date
-
-        if not self.pk:
-            if self.partnership_type != self.PD:
-                self.signed_by_partner_date = self.agreement.signed_by_partner_date
-                self.partner_manager = self.agreement.partner_manager
-                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
-                self.unicef_manager = self.agreement.signed_by
-                self.start_date = self.agreement.start
-                self.end_date = self.agreement.end
 
         super(PCA, self).save(**kwargs)
 
