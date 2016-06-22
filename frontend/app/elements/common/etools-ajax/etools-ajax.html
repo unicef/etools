@@ -1,31 +1,13 @@
-
-
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../../bower_components/iron-ajax/iron-ajax.html">
-
-
 <link rel="import" href="../../behaviors/common/utils.html">
 
-
-<!--
-An element providing a solution to no problem in particular.
-
-Example:
-
-    <my-customel></my-customel>
-
-@group Seed Elements
-@element my-customel
-@demo demo/index.html
-@hero hero.svg
--->
 <dom-module id="etools-ajax">
-
   <template>
     <iron-ajax
           auto
           id="customAjax"
-          handle-as="json"
+          handle-as="[[handleAs]]"
           on-response="handleResponse"
           on-error="handleError"
           method="[[method]]"
@@ -34,10 +16,7 @@ Example:
           loading="{{loading}}">
     </iron-ajax>
   </template>
-
 </dom-module>
-
-
 
 <script>
 (function() {
@@ -50,6 +29,10 @@ Example:
       authToken: {
         type: String,
         value: ''
+      },
+      handleAs: {
+        type: String,
+        value: 'json'
       },
       loading: {
         type: Boolean,
@@ -105,28 +88,31 @@ Example:
       }, {bubbles: false});
     },
 
-    handleResponse: function(rsp) {
-      this._stopLoading();
-      console.log(
-        rsp.srcElement.url,
-        'xhr response ',
-        rsp.detail.xhr,
-        rsp.detail.xhr.responseURL,
-        rsp.detail.xhr.location  
-      );
+    handleResponse: function(res) {
+      // TODO: check if endpoint should be in localstorage
+      // TODO: if true place response in localstorage + expiration time (expiration time should be taken based on each endpoint)      
+      
+      // set local storage
       if (this.ep && this.ep.exp){
         var localVal = {
-          detail: rsp.detail.xhr.response,
+          detail: res.detail.xhr.response,
           exp: this.ep.exp + Date.now(),
         };
-        window.localStorage.setItem(this.ep.url, 
-          JSON.stringify(localVal)
-        );
+
+        window.localStorage.setItem(this.ep.url, JSON.stringify(localVal));
       }
-      // TODO: check if endpoint should be in localstorage
-        // TODO: if true place response in localstorage + expiration time (expiration time should be taken based on each endpoint)
-      this.fire('response', rsp.detail.xhr.response, {bubbles: false});
+      
+      // set response object
+      var data = res.detail.xhr.response;
+
+      if (this.handleAs === 'json' && (typeof data === 'string')) {
+        data = JSON.parse(data);
+      }
+
+      this.fire('response', data, {bubbles: false});
+      this._stopLoading();
     },
+
     _getCSRFCookie: function() {
       var name = 'csrftoken';
       var cookieValue = null;
