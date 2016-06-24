@@ -51,6 +51,20 @@
 
 {% block body %}
     <body class="animated fadeIn">
+    <div id="testbar"
+     style="height:14px;
+     display:none;
+     position:relative;
+     background-color:indianred;
+     text-align:center;
+     font-family: 'Open Sans', sans-serif;
+     font-size:10px;
+     font-weight: bold;
+     color: #ffffff;
+     overflow:hidden;
+     width:100%;">Testing environment</div>
+
+
     <section id="container">
 
         {% block header %}
@@ -301,6 +315,16 @@
             }).fail(function(){window.alert('Country change failed')})
         });
     });
+    </script>
+<script>
+     $(document).ready(function () {
+         var cond = /localhost|etools-dev|etools-staging/g;
+        if (cond.test(window.location)) {
+            console.log('asd')
+            $('#testbar').show();
+        }
+    });
+
     </script>
 {% block extra_js %}
 {% endblock %}

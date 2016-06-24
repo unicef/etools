@@ -47,7 +47,7 @@
         text-transform: uppercase;
         padding: 8px 0 0 0px;
         display: inline-block;
-       font-family: 'Open Sans', sans-serif;
+        font-family: 'Open Sans', sans-serif;
     }
 
     #header .logoimg {
@@ -132,11 +132,38 @@
         });
     });
     </script>
+    <script>
+     $(document).ready(function () {
+         var cond = /localhost|etools-dev|etools-staging/g;
+        if (cond.test(window.location)) {
+            console.log('asd')
+            $('#testbar').show();
+        }
+    });
+
+    </script>
 {% endblock %}
 
 {% block title %}{{ title }} | eTools{% endblock %}
-
+{% block topheader %}
+    <div id="testbar"
+     style="height:14px;
+     display:none;
+     position:relative;
+     background-color:indianred;
+     text-align:center;
+     font-family: 'Open Sans', sans-serif;
+     font-size:10px;
+     font-weight: bold;
+     color: #ffffff;
+     overflow:hidden;
+     width:100%;">Testing environment</div>
+{% endblock %}
 {% block branding %}
+
+
+
+    <section id="container">
     <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools</span></a></div>
 {% endblock %}
 {% block usertools %}
