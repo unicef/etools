@@ -188,8 +188,9 @@ class RequireOneLocationFormSet(BaseInlineFormSet):
         new_locations = sorted([f.instance for f in self.forms if f.cleaned_data])
         if self.instance.approved_by_supervisor:
             old_locations = [i for i in self.instance.triplocation_set.all()]
-            if new_locations != old_locations:
-                raise ValidationError('You cannot modify the location after the trip has been approved')
+            for location in new_locations:
+                if location not in old_locations:
+                    raise ValidationError('You cannot modify the location after the trip has been approved')
 
         form_count = len(new_locations)
         if form_count < 1 and self.instance.international_travel is False and self.instance.status == Trip.PLANNED:

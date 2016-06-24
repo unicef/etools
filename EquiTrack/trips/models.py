@@ -402,7 +402,7 @@ class Trip(AdminURLMixin, models.Model):
                     instance.travel_assistant.email
                 )
 
-            if instance.ta_required and instance.programme_assistant and not instance.ta_drafted:
+            if instance.ta_required and instance.programme_assistant and instance.budget_owner and not instance.ta_drafted:
                 emails.TripTAEmail(instance).send(
                     instance.owner.email,
                     instance.programme_assistant.email
