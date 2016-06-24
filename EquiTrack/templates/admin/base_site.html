@@ -84,6 +84,20 @@
 
     }
 
+    #testbar {
+        height:14px;
+        display:none;
+        position:relative;
+        background-color:indianred;
+        text-align:center;
+        font-family: 'Open Sans', sans-serif;
+        font-size:10px;
+        font-weight: bold;
+        color: #ffffff;
+        overflow:hidden;
+        width:100%;
+    }
+
    /* ==========================================================================
       Django Suit Overrides
    ========================================================================== */
@@ -145,18 +159,7 @@
 
 {% block title %}{{ title }} | eTools{% endblock %}
 {% block topheader %}
-    <div id="testbar"
-     style="height:14px;
-     display:none;
-     position:relative;
-     background-color:indianred;
-     text-align:center;
-     font-family: 'Open Sans', sans-serif;
-     font-size:10px;
-     font-weight: bold;
-     color: #ffffff;
-     overflow:hidden;
-     width:100%;">Testing environment</div>
+    <div id="testbar">Testing environment</div>
 {% endblock %}
 {% block branding %}
 
