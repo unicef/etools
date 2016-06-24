@@ -14,6 +14,9 @@
      - if [[ -e ~/docker/base_image.tar ]]; then docker load -i ~/docker/base_image.tar; fi
      - docker build -t unicef/etools:base -f etools-base.docker .
      - mkdir -p ~/docker; docker save unicef/etools:base > ~/docker/base_image.tar
+     - if [[ -e ~/docker/buildbase_image.tar ]]; then docker load -i ~/docker/buildbase_image.tar; fi
+     - docker build -t unicef/etools:buildbase -f etools-build-base.docker .
+     - docker save unicef/etools:buildbase > ~/docker/buildbase_image.tar
      - docker build -t unicef/etools:builder -f etools-build.docker .
      - docker run --rm -v "$(pwd)":/application -v "$(pwd)"/wheelhouse:/wheelhouse unicef/etools:builder
      - docker build -t unicef/etools:$CIRCLE_BRANCH -f etools-run.docker .
