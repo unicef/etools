@@ -97,3 +97,5 @@ templates/frontend/
 deis
 
 env_dev
+
+.env
