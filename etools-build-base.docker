@@ -1,0 +1,11 @@
+FROM unicef/etools:base
+
+RUN \
+  cd /tmp && \
+  curl -sL https://deb.nodesource.com/setup_5.x | bash - && \
+  apt-get install --yes nodejs
+
+RUN \
+  npm install -g gulp && \
+  npm install -g bower
+
