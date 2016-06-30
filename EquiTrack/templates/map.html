@@ -117,7 +117,7 @@
             </div>
             <div class="row"">
                 <div class="col-md-12 text-right" style="margin-bottom: 10px; padding-right: 25px;">
-                    <paper-spinner-lite style="margin-right: 20px;"></paper-spinner-lite>
+                    <paper-spinner-lite style="margin-right: 20px;" id="loading-spinner"></paper-spinner-lite>
                     <span id="results_label"></span>
                 </div>
             </div>
@@ -147,7 +147,7 @@
     });
 
     function submitSearch(){
-        toggleSpinners();
+        toggleSpinner();
         var query = '';
 
         _.each(filterTypes, function(filterType) {
@@ -163,16 +163,13 @@
         $.getJSON(searchUrl, function(data) {
             updateMap(data);
             updateResultsLabel(data.length);
-            toggleSpinners();
+            toggleSpinner();
         });
     }
 
-    function toggleSpinners() {
-        var spinners = document.querySelectorAll('paper-spinner, paper-spinner-lite');
-
-        Array.prototype.forEach.call(spinners, function(spinner) {
-            spinner.active = !spinner.active;
-        });
+    function toggleSpinner() {
+        var spinner = document.getElementById('loading-spinner');
+        spinner.active = !spinner.active;        
     };
 
     function clearSearch() {
