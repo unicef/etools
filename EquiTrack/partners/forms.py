@@ -367,11 +367,12 @@ def check_and_return_value(column, row, row_num, number=False):
             # In case numbers are written in locale eg: u"6,000"
             if number and type(row[column]) in [str, unicode]:
                 try:
-                    int(row[column].replace(',', ''))
+                    value = int(row[column].replace(',', ''))
                 except ValueError:
                     raise ValidationError(u"The value {} received for row {} column {} is not numeric."
                                           .format(row[column], row_num, column))
-
+            elif 0.01 <= row[column] <= 0.99:
+                value = int(row[column] * 100)
             else:
                 value = row[column]
         row.pop(column)
