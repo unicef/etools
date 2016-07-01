@@ -124,7 +124,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         LinkedPartnerInlineAdmin,
         TravelRoutesInlineAdmin,
         TripLocationsInlineAdmin,
-        TripFundsInlineAdmin,
+        #TripFundsInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
