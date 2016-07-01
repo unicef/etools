@@ -384,6 +384,12 @@ def parse_disaggregate_val(csvs):
 
 
 class PartnershipForm(UserGroupForm):
+    ERROR_MESSAGES = {
+        'signed_by_partner': 'Signed by partner date must be later than submission date and submission date to PRC',
+        'partner_manager': 'Please select a partner manager for the signed date',
+        'submission_date': 'Submition date to PRC must be later than submission date',
+        'review_date': 'Review date by PRC must be later than submission date and submission date to PRC'
+    }
 
     user_field = u'unicef_manager'
     group_name = u'Senior Management Team'
@@ -629,14 +635,10 @@ class PartnershipForm(UserGroupForm):
             )
 
         if signed_by_partner_date and signed_by_partner_date < initiation_date:
-            raise ValidationError(
-                u'Signed by partner date must be later than submission date and submission date to PRC'
-            )
+            raise ValidationError({'signed_by_partner_date': self.ERROR_MESSAGES['signed_by_partner']})
 
         if signed_by_partner_date and not partner_manager:
-            raise ValidationError(
-                u'Please select a partner manager for the signed date'
-            )
+            raise ValidationError({'partner_manager': self.ERROR_MESSAGES['partner_manager']})
 
         if signed_by_unicef_date and not unicef_manager:
             raise ValidationError(
@@ -664,16 +666,10 @@ class PartnershipForm(UserGroupForm):
             raise ValidationError({'end_date': err})
 
         if submission_date and submission_date < initiation_date:
-            raise ValidationError(
-                u'Submition date to PRC must be later than submission date'
-            )
+            raise ValidationError({'submission_date': self.ERROR_MESSAGES['submission_date']})
 
         if review_date and review_date < submission_date and review_date < initiation_date:
-            raise ValidationError(
-                u'Review date by PRC must be later than submission date and submission date to PRC'
-            )
-
-
+            raise ValidationError({'review_date': self.ERROR_MESSAGES['review_date']})
 
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)
