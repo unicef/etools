@@ -1,21 +1,7 @@
-
-
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 <link rel="import" href="../etools-ajax/etools-ajax.html">
-
 <link rel="import" href="../../behaviors/common/utils.html">
-<!--
-An element providing a solution to no problem in particular.
 
-Example:
-
-    <my-customel></my-customel>
-
-@group Seed Elements
-@element my-customel
-@demo demo/index.html
-@hero hero.svg
--->
 <dom-module id="global-data">
   <template>
     
@@ -109,35 +95,34 @@ Example:
     },
 
     _setPermissions: function(user) {
-      var myPermisions = {};
+      var permissions = {};
       var allp  = this.allPermissions;
       // add all default permissions (while testing these are set to all permissions)
       var defaultPermissions = allp.defaultPermissions;
 
       defaultPermissions.forEach(function(perm){
-        myPermisions[perm] = true;
+        permissions[perm] = true;
       });
       // if partner: (!staff)
       if (!user.is_staff){
         allp.partnerOnlyPermissions.forEach(function(perm){
-          myPermisions[perm] = true;
+          permissions[perm] = true;
         });
       } else {
         // user is not partner but staff:
         allp.managementPermissions.forEach(function(perm){
-          myPermisions[perm] = true;
+          permissions[perm] = true;
         });
         if (user.profile.partner_staff_member){
         // staff that has faked partnership by setting partner_staff_member on their profile
           allp.partnerPermissions.forEach(function(perm){
-            myPermisions[perm] = true;
+            permissions[perm] = true;
           });
         }
       }
       
-      this.set('permissions', myPermisions);
-    }
-    
+      this.set('permissions', permissions);
+    }    
   });
 })();
 

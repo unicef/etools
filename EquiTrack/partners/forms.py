@@ -359,14 +359,20 @@ class AgreementForm(UserGroupForm):
         return cleaned_data
 
 
-def check_and_return_value(column, row, number=False):
+def check_and_return_value(column, row, row_num, number=False):
 
     value = 0
     if column in row:
         if not pandas.isnull(row[column]) and row[column]:
             # In case numbers are written in locale eg: u"6,000"
             if number and type(row[column]) in [str, unicode]:
-                value = int(row[column].replace(',', ''))
+                try:
+                    value = int(row[column].replace(',', ''))
+                except ValueError:
+                    raise ValidationError(u"The value {} received for row {} column {} is not numeric."
+                                          .format(row[column], row_num, column))
+            elif 0.01 <= row[column] <= 0.99:
+                value = int(row[column] * 100)
             else:
                 value = row[column]
         row.pop(column)
@@ -489,11 +495,11 @@ class PartnershipForm(UserGroupForm):
 
                 create_args['result'] = result
                 create_args['result_type'] = result.result_type
-                create_args['partner_contribution'] = check_and_return_value('CSO', row, number=True)
-                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, number=True)
-                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, number=True)
-                target = check_and_return_value('Targets', row, number=True)
-                check_and_return_value('Total', row, number=True)  # ignore value as we calculate this
+                create_args['partner_contribution'] = check_and_return_value('CSO', row, row_num, number=True)
+                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, row_num, number=True)
+                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, row_num, number=True)
+                target = check_and_return_value('Targets', row, row_num, number=True)
+                check_and_return_value('Total', row, row_num, number=True)  # ignore value as we calculate this
 
                 if 'indicator' in label:
                     indicator, created = Indicator.objects.get_or_create(

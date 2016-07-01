@@ -1,16 +1,6 @@
-/*
-Copyright (c) 2015 The Polymer Project Authors. All rights reserved.
-This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
-The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
-The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
-Code distributed by Google as part of the polymer project is also
-subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
-*/
-
 'use strict';
 
-// Include Gulp & tools we'll use
-var gulp = require('gulp');
+var gulp = require('gulp-help')(require('gulp'));
 var $ = require('gulp-load-plugins')();
 var del = require('del');
 var runSequence = require('run-sequence');
@@ -141,7 +131,7 @@ var optimizeHtmlTask = function(src, dest) {
     .pipe(assets)
     // Concatenate and minify JavaScript
     .pipe($.if('*.js', $.uglify({
-      preserveComments: 'some'
+      preserveComments: false
     })))
     // Concatenate and minify styles
     // In case you are still using useref build blocks
