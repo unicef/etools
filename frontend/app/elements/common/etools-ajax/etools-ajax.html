@@ -7,9 +7,9 @@
     <iron-ajax
           auto
           id="customAjax"
-          handle-as="[[handleAs]]"
           on-response="handleResponse"
           on-error="handleError"
+          handle-as="json"
           method="[[method]]"
           params="[[params]]"
           debounce-duration="300"
@@ -90,8 +90,8 @@
 
     handleResponse: function(res) {
       // TODO: check if endpoint should be in localstorage
-      // TODO: if true place response in localstorage + expiration time (expiration time should be taken based on each endpoint)      
-      
+      // TODO: if true place response in localstorage + expiration time (expiration time should be taken based on each endpoint)
+
       // set local storage
       if (this.ep && this.ep.exp){
         var localVal = {
@@ -101,7 +101,7 @@
 
         window.localStorage.setItem(this.ep.url, JSON.stringify(localVal));
       }
-      
+
       // set response object
       var data = res.detail.xhr.response;
 
@@ -164,7 +164,7 @@
       if (!Object.keys(newEndpoint)) {
         return;
       }
-      
+
       this.ep = this.getEp(newEndpoint.ep, newEndpoint.data);
       // Check if endpoint should be in localstorage,
       if (this.ep.exp){
@@ -185,7 +185,7 @@
       }
     }
 
-    
+
   });
 })();
 
