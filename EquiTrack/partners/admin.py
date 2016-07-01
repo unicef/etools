@@ -248,10 +248,14 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
         return 0
 
     def get_readonly_fields(self, request, obj=None):
-
+        """
+        Prevent distributions being sent to partners before the intervention is saved
+        """
         fields = super(DistributionPlanInlineAdmin, self).get_readonly_fields(request, obj)
         if obj is None and u'send' not in fields:
             fields.append(u'send')
+        elif obj and u'send' in fields:
+            fields.remove(u'send')
 
         return fields
 
@@ -314,7 +318,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
                 ('partner',
                  'agreement',
                  'partnership_type',
-                 'reference_number',
+                 'number',
                  'result_structure',
                  ('title', 'project_type',),
                  'status',
@@ -460,8 +464,14 @@ class GovernmentInterventionAdmin(admin.ModelAdmin):
         (_('Government Intervention Details'), {
             'fields':
                 ('partner',
-                 'result_structure',),
+                 'result_structure',
+                 'number'),
         }),
+    )
+    list_display = (
+        u'number',
+        u'partner',
+        u'result_structure',
     )
     inlines = [GovernmentInterventionResultAdminInline]
 
@@ -671,7 +681,7 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
                 (
                     u'partner',
                     u'agreement_type',
-                    u'reference_number',
+                    u'agreement_number',
                     u'attached_agreement',
                     (u'start', u'end',),
                     u'signed_by_partner_date',
@@ -694,8 +704,8 @@ class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
         # })
     )
     readonly_fields = (
-        u'reference_number',
         u'download_url',
+        u'reference_number',
     )
     inlines = [
         AgreementAmendmentLogInlineAdmin,
