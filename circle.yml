@@ -14,6 +14,9 @@
      - if [[ -e ~/docker/base_image.tar ]]; then docker load -i ~/docker/base_image.tar; fi
      - docker build -t unicef/etools:base -f etools-base.docker .
      - mkdir -p ~/docker; docker save unicef/etools:base > ~/docker/base_image.tar
+     - if [[ -e ~/docker/buildbase_image.tar ]]; then docker load -i ~/docker/buildbase_image.tar; fi
+     - docker build -t unicef/etools:buildbase -f etools-build-base.docker .
+     - docker save unicef/etools:buildbase > ~/docker/buildbase_image.tar
      - docker build -t unicef/etools:builder -f etools-build.docker .
      - docker run --rm -v "$(pwd)":/application -v "$(pwd)"/wheelhouse:/wheelhouse unicef/etools:builder
      - docker build -t unicef/etools:$CIRCLE_BRANCH -f etools-run.docker .
@@ -21,7 +24,7 @@
  test:
    pre: # bootstrap postgres to accept connections from our container
      - sudo bash -c "echo \"listen_addresses = '*'\" >>
-       /etc/postgresql/9.4/main/postgresql.conf"
+       /etc/postgresql/9.4/main/postgresql.conf" #9.4 works only on CI Ubuntu 12.04
      - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
        /etc/postgresql/9.4/main/pg_hba.conf"
      - sudo /etc/init.d/postgresql restart
@@ -33,7 +36,7 @@
 
  deployment:
    hub:
-     branch: [develop, master]
+     branch: [develop, staging, master]
      commands:
        - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
        - docker push unicef/etools

@@ -45,12 +45,31 @@
     <script src="{{STATIC_URL}}js/html5shiv.js"></script>
     <script src="{{STATIC_URL}}js/respond.min.js"></script>
     <![endif]-->
+    <style>
+        #testbar {
+            height:14px;
+            display:none;
+            position:relative;
+            background-color:indianred;
+            text-align:center;
+            font-family: 'Open Sans', sans-serif;
+            font-size:10px;
+            font-weight: bold;
+            color: #ffffff;
+            overflow:hidden;
+            width:100%;
+        }
+    </style>
     {% block extra_head %}
     {% endblock %}
+
 </head>
 
 {% block body %}
     <body class="animated fadeIn">
+    <div id="testbar">Testing environment</div>
+
+
     <section id="container">
 
         {% block header %}
@@ -301,6 +320,15 @@
             }).fail(function(){window.alert('Country change failed')})
         });
     });
+    </script>
+<script>
+     $(document).ready(function () {
+         var cond = /localhost|etools-dev|etools-staging/g;
+        if (cond.test(window.location)) {
+            $('#testbar').show();
+        }
+    });
+
     </script>
 {% block extra_js %}
 {% endblock %}
