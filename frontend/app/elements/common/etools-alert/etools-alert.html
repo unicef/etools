@@ -1,36 +1,26 @@
-
 <link rel="import" href="../../../bower_components/polymer/polymer.html">
 <link rel="import" href="../../../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../../../bower_components/paper-button/paper-button.html">
 
-
-
 <dom-module id="etools-alert">
-<style>
-
-</style>
-<template>
-
-  <paper-dialog id="dialog" class="" modal on-iron-overlay-closed="dismissDialog">
-    <paper-dialog-scrollable>
-      <div>
-        <h3>{{alertTitle}}</h1>
-        <hr>
-        <p>{{alertText}}</p>
+  <template>
+    <paper-dialog id="dialog" class="" modal on-iron-overlay-closed="dismissDialog">
+      <paper-dialog-scrollable>
+        <div>
+          <h3>{{alertTitle}}</h1>
+          <hr>
+          <p>{{alertText}}</p>
+        </div>
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss>Dismiss</paper-button>
       </div>
-    <paper-dialog-scrollable>
-    <div class="buttons">
-      <paper-button dialog-dismiss>Dismiss</paper-button>
-      <!-- <paper-button dialog-confirm>OK</paper-button> -->
-    </div>
-  </paper-dialog>
-
-</template>
-  
+    </paper-dialog>
+  </template>
 </dom-module>
 
 <script>
- // jscs:disable
+  // jscs:disable
   'use strict';
   Polymer({
     is: 'etools-alert',
@@ -64,9 +54,6 @@
       this.showText(alertText);
     },
     dismissDialog: function(event) {
-      // if (event.detail.confirmed) {
-      //   // do something if confirmed
-      // }
       this.hide();
       this.alertTitle = 'Warning';
       event.stopPropagation();
