@@ -1,4 +1,4 @@
-FROM unicef/etools:base
+FROM unicef/etools:buildbase
 
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
