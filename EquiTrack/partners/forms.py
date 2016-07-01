@@ -310,6 +310,9 @@ class AgreementForm(UserGroupForm):
         agreement_number = cleaned_data.get(u'agreement_number')
         start = cleaned_data.get(u'start')
         end = cleaned_data.get(u'end')
+        signed_by_partner_date = cleaned_data.get(u'signed_by_partner_date')
+        signed_by_unicef_date = cleaned_data.get(u'signed_by_unicef_date')
+
 
         if partner and agreement_type == Agreement.PCA:
             # Partner can only have one active PCA
@@ -340,6 +343,26 @@ class AgreementForm(UserGroupForm):
                 raise ValidationError(
                     _(u'SSFA can not be more than a year')
                 )
+
+        #  set start date to one of the signed dates
+        if start is None and agreement_type == Agreement.PCA:
+            # if both signed dates exist
+            if signed_by_partner_date and signed_by_unicef_date:
+                if signed_by_partner_date > signed_by_unicef_date:
+                    self.cleaned_data[u'start'] = signed_by_partner_date
+                else:
+                    self.cleaned_data[u'start'] = signed_by_unicef_date
+
+            if signed_by_partner_date and not signed_by_unicef_date:
+                self.cleaned_data[u'start'] = signed_by_partner_date
+
+            if signed_by_unicef_date and not signed_by_partner_date:
+                self.cleaned_data[u'start'] = signed_by_unicef_date
+
+        # set end date to result structure end date
+        if end is None:
+            result_structure = ResultStructure.objects.order_by('to_date').last()
+            self.cleaned_data[u'end'] = result_structure.to_date
 
         # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
