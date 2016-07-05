@@ -25784,17 +25784,12 @@ commonBv.globals = {
     },
     allPermissions: config.permissions
 };
-</script>
-<dom-module id="etools-ajax" assetpath="common/etools-ajax/">
-
+</script><dom-module id="etools-ajax" assetpath="common/etools-ajax/">
   <template>
-    <iron-ajax auto="" id="customAjax" handle-as="json" on-response="handleResponse" on-error="handleError" method="[[method]]" params="[[params]]" debounce-duration="300" loading="{{loading}}">
+    <iron-ajax auto="" id="customAjax" on-response="handleResponse" on-error="handleError" handle-as="json" method="[[method]]" params="[[params]]" debounce-duration="300" loading="{{loading}}">
     </iron-ajax>
   </template>
-
 </dom-module>
-
-
 
 <script>
 (function() {
@@ -25807,6 +25802,10 @@ commonBv.globals = {
       authToken: {
         type: String,
         value: ''
+      },
+      handleAs: {
+        type: String,
+        value: 'json'
       },
       loading: {
         type: Boolean,
@@ -25862,28 +25861,31 @@ commonBv.globals = {
       }, {bubbles: false});
     },
 
-    handleResponse: function(rsp) {
-      this._stopLoading();
-      console.log(
-        rsp.srcElement.url,
-        'xhr response ',
-        rsp.detail.xhr,
-        rsp.detail.xhr.responseURL,
-        rsp.detail.xhr.location  
-      );
+    handleResponse: function(res) {
+      // TODO: check if endpoint should be in localstorage
+      // TODO: if true place response in localstorage + expiration time (expiration time should be taken based on each endpoint)
+
+      // set local storage
       if (this.ep && this.ep.exp){
         var localVal = {
-          detail: rsp.detail.xhr.response,
+          detail: res.detail.xhr.response,
           exp: this.ep.exp + Date.now(),
         };
-        window.localStorage.setItem(this.ep.url, 
-          JSON.stringify(localVal)
-        );
+
+        window.localStorage.setItem(this.ep.url, JSON.stringify(localVal));
       }
-      // TODO: check if endpoint should be in localstorage
-        // TODO: if true place response in localstorage + expiration time (expiration time should be taken based on each endpoint)
-      this.fire('response', rsp.detail.xhr.response, {bubbles: false});
+
+      // set response object
+      var data = res.detail.xhr.response;
+
+      if (this.handleAs === 'json' && (typeof data === 'string')) {
+        data = JSON.parse(data);
+      }
+
+      this.fire('response', data, {bubbles: false});
+      this._stopLoading();
     },
+
     _getCSRFCookie: function() {
       var name = 'csrftoken';
       var cookieValue = null;
@@ -25935,7 +25937,7 @@ commonBv.globals = {
       if (!Object.keys(newEndpoint)) {
         return;
       }
-      
+
       this.ep = this.getEp(newEndpoint.ep, newEndpoint.data);
       // Check if endpoint should be in localstorage,
       if (this.ep.exp){
@@ -25956,7 +25958,7 @@ commonBv.globals = {
       }
     }
 
-    
+
   });
 })();
 
@@ -26489,31 +26491,24 @@ commonBv.globals = {
      
   });
 </script><dom-module id="etools-alert" assetpath="common/etools-alert/">
-<style>
-
-</style>
-<template>
-
-  <paper-dialog id="dialog" class="" modal="" on-iron-overlay-closed="dismissDialog">
-    <paper-dialog-scrollable>
-      <div>
-        <h3>{{alertTitle}}</h3>
-        <hr>
-        <p>{{alertText}}</p>
+  <template>
+    <paper-dialog id="dialog" class="" modal="" on-iron-overlay-closed="dismissDialog">
+      <paper-dialog-scrollable>
+        <div>
+          <h3>{{alertTitle}}</h3>
+          <hr>
+          <p>{{alertText}}</p>
+        </div>
+      </paper-dialog-scrollable>
+      <div class="buttons">
+        <paper-button dialog-dismiss="">Dismiss</paper-button>
       </div>
-    <paper-dialog-scrollable>
-    <div class="buttons">
-      <paper-button dialog-dismiss="">Dismiss</paper-button>
-      
-    </div>
-  </paper-dialog-scrollable></paper-dialog-scrollable></paper-dialog>
-
-</template>
-  
+    </paper-dialog>
+  </template>
 </dom-module>
 
 <script>
- // jscs:disable
+  // jscs:disable
   'use strict';
   Polymer({
     is: 'etools-alert',
@@ -26547,9 +26542,6 @@ commonBv.globals = {
       this.showText(alertText);
     },
     dismissDialog: function(event) {
-      // if (event.detail.confirmed) {
-      //   // do something if confirmed
-      // }
       this.hide();
       this.alertTitle = 'Warning';
       event.stopPropagation();
@@ -26605,8 +26597,7 @@ commonBv.globals = {
   });
 })();
 
-</script>
-<dom-module id="global-data" assetpath="common/global-data/">
+</script><dom-module id="global-data" assetpath="common/global-data/">
   <template>
     
 
@@ -26693,35 +26684,34 @@ commonBv.globals = {
     },
 
     _setPermissions: function(user) {
-      var myPermisions = {};
+      var permissions = {};
       var allp  = this.allPermissions;
       // add all default permissions (while testing these are set to all permissions)
       var defaultPermissions = allp.defaultPermissions;
 
       defaultPermissions.forEach(function(perm){
-        myPermisions[perm] = true;
+        permissions[perm] = true;
       });
       // if partner: (!staff)
       if (!user.is_staff){
         allp.partnerOnlyPermissions.forEach(function(perm){
-          myPermisions[perm] = true;
+          permissions[perm] = true;
         });
       } else {
         // user is not partner but staff:
         allp.managementPermissions.forEach(function(perm){
-          myPermisions[perm] = true;
+          permissions[perm] = true;
         });
         if (user.profile.partner_staff_member){
         // staff that has faked partnership by setting partner_staff_member on their profile
           allp.partnerPermissions.forEach(function(perm){
-            myPermisions[perm] = true;
+            permissions[perm] = true;
           });
         }
       }
       
-      this.set('permissions', myPermisions);
-    }
-    
+      this.set('permissions', permissions);
+    }    
   });
 })();
 
@@ -39925,7 +39915,58 @@ commonBv.globals = {
   });
 })();
 
-</script><style is="custom-style">
+</script><dom-module id="uservoice-input" assetpath="common/uservoice-input/">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+    </style>
+    <a id="userVoiceContact" data-uv-trigger="" style="color:white; cursor:pointer;" on-tap="loadUserVoice"><iron-icon icon="question-answer"></iron-icon></a>
+  </template>
+  <script>
+    Polymer({
+      is: 'uservoice-input',
+      properties: {
+        apiKey: {
+          type: String,
+          value: ''
+        },
+        enabled: {
+          type: Boolean,
+          value: false
+        },
+        isScriptLoaded: {
+          type: Boolean,
+          value: false
+        }
+      },
+      loadUserVoice: function() {
+        var userVoiceInterval;
+
+        function showUserVoiceWindow() {
+          if (window.UserVoice !== undefined) {
+            document.getElementById('userVoiceContact').click();
+            clearInterval(userVoiceInterval);
+          }
+        }
+
+        if (this.enabled === true && this.apiKey.length > 0 && this.isScriptLoaded === false) {
+          var uv = document.createElement('script');
+          uv.type = 'text/javascript';
+          uv.async = false;
+          uv.src = '//widget.uservoice.com/' + this.apiKey + '.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(uv, s);
+          this.isScriptLoaded = true;
+          Polymer.dom(this.$.userVoiceContact).removeAttribute('on-tap');
+
+          userVoiceInterval = setInterval(showUserVoiceWindow, 200);
+        }
+      }
+    });
+  </script>
+</dom-module><style is="custom-style">
   /*
    Polymer includes a shim for CSS Custom Properties that we can use for application theming.
    Below, you'll find the default palette for the Polymer Starter Kit layout. Feel free to play
@@ -40211,8 +40252,7 @@ commonBv.globals = {
   });
 })();
 
-</script>
-<dom-module id="interventions-page" assetpath="partner/interventions-page/">
+</script><dom-module id="interventions-page" assetpath="partner/interventions-page/">
 
   <template>
     <style>
