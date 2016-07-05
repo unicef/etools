@@ -101,11 +101,20 @@ class Result(MPTTModel):
     class Meta:
         ordering = ['name']
 
-    def __unicode__(self):
+    @property
+    def result_name(self):
         return u'{} {}: {}'.format(
             self.code if self.code else u'',
             self.result_type.name,
             self.name
+        )
+
+    def __unicode__(self):
+        return u'{} {}: {} ({})'.format(
+            self.code if self.code else u'',
+            self.result_type.name,
+            self.name,
+            self.wbs
         )
 
     def save(self, *args, **kwargs):
