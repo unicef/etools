@@ -10,4 +10,4 @@ VOLUME /wheelhouse
 VOLUME /application
 VOLUME /node_modules
 
-ENTRYPOINT cd /application; ./docker-build.sh
+ENTRYPOINT cd /application; sh docker-build.sh;
