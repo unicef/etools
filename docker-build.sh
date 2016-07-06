@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /application;
+
 pip wheel -r requirements.txt;
 rm -rf frontend;
 

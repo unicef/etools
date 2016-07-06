@@ -8,5 +8,6 @@ ENV PIP_FIND_LINKS=/wheelhouse
 
 VOLUME /wheelhouse
 VOLUME /application
+VOLUME /node_modules
 
-ENTRYPOINT ./docker-build.sh
+ENTRYPOINT cd /application; ./docker-build.sh
