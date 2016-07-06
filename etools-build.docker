@@ -9,4 +9,4 @@ ENV PIP_FIND_LINKS=/wheelhouse
 VOLUME /wheelhouse
 VOLUME /application
 
-ENTRYPOINT cd /application; pip wheel -r requirements.txt; git clone -b $CIRCLE_BRANCH https://github.com/unicef/etools-partner-portal.git frontend; cd frontend; ./build.sh; cd ../frontend_build; ./build.sh
+ENTRYPOINT ./docker-build.sh
