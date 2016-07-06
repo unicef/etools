@@ -4,9 +4,9 @@
 pip wheel -r requirements.txt;
 rm -rf frontend;
 
-if [ "$CIRCLE_BRANCH" != "develop" ] && [ "$CIRCLE_BRANCH" != "staging" ] && [ "$CIRCLE_BRANCH" != "master" ]; then
+if [ $CIRCLE_BRANCH != "develop" ] && [ $CIRCLE_BRANCH != "staging" ] && [ $CIRCLE_BRANCH != "master" ]; then
         CIRCLE_BRANCH="develop";
-fi
+fi;
 
 
 git clone -b $CIRCLE_BRANCH https://github.com/unicef/etools-partner-portal.git frontend;
