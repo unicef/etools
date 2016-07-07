@@ -10,7 +10,10 @@ from django.db import connection
 from requests.auth import HTTPBasicAuth
 
 from EquiTrack.celery import app
+from celery.utils.log import get_task_logger
 
+
+logger = get_task_logger(__name__)
 
 def set_docs(docs):
 
@@ -57,6 +60,8 @@ def set_unisupply_distribution(distribution_plan_id):
     from partners.models import DistributionPlan
     distribution_plan = DistributionPlan.objects.get(id=distribution_plan_id)
 
+    logger.debug('Unisupply: set_unisupply_distribution task initiated')
+
     doc = distribution_plan.document if distribution_plan.document else {
         "country": connection.schema_name,
         "distribution_id": distribution_plan.id,
@@ -92,7 +97,11 @@ def set_unisupply_distribution(distribution_plan_id):
         distribution_plan.sent = True
         distribution_plan.save()
 
-        return response.text
+    logger.info('Unisupply task completed'
+                'Status:{}, Sent:{}, Id:{}'.format(response.status_code,
+                                                distribution_plan.sent,
+                                                distribution_plan.id))
+    return response.text
 
 
 @app.task
