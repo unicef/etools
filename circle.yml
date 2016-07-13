@@ -8,7 +8,7 @@
    cache_directories:
      - "~/docker"
      - "wheelhouse"
-     - "frontend/node_modules"
+     - "node_modules"
 
    override:
      - if [[ -e ~/docker/base_image.tar ]]; then docker load -i ~/docker/base_image.tar; fi
@@ -18,7 +18,7 @@
      - docker build -t unicef/etools:buildbase -f etools-build-base.docker .
      - docker save unicef/etools:buildbase > ~/docker/buildbase_image.tar
      - docker build -t unicef/etools:builder -f etools-build.docker .
-     - docker run --rm -v "$(pwd)":/application -v "$(pwd)"/wheelhouse:/wheelhouse unicef/etools:builder
+     - docker run --rm -v "$(pwd)":/application -v "$(pwd)"/wheelhouse:/wheelhouse -v "$(pwd)"/node_modules:/node_modules -e "CIRCLE_BRANCH=$CIRCLE_BRANCH" unicef/etools:builder
      - docker build -t unicef/etools:$CIRCLE_BRANCH -f etools-run.docker .
 
  test:
