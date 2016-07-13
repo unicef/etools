@@ -359,14 +359,20 @@ class AgreementForm(UserGroupForm):
         return cleaned_data
 
 
-def check_and_return_value(column, row, number=False):
+def check_and_return_value(column, row, row_num, number=False):
 
     value = 0
     if column in row:
         if not pandas.isnull(row[column]) and row[column]:
             # In case numbers are written in locale eg: u"6,000"
             if number and type(row[column]) in [str, unicode]:
-                value = int(row[column].replace(',', ''))
+                try:
+                    value = int(row[column].replace(',', ''))
+                except ValueError:
+                    raise ValidationError(u"The value {} received for row {} column {} is not numeric."
+                                          .format(row[column], row_num, column))
+            elif 0.01 <= row[column] <= 0.99:
+                value = int(row[column] * 100)
             else:
                 value = row[column]
         row.pop(column)
@@ -378,6 +384,12 @@ def parse_disaggregate_val(csvs):
 
 
 class PartnershipForm(UserGroupForm):
+    ERROR_MESSAGES = {
+        'signed_by_partner': 'Signed by partner date must be later than submission date and submission date to PRC',
+        'partner_manager': 'Please select a partner manager for the signed date',
+        'submission_date': 'Submition date to PRC must be later than submission date',
+        'review_date': 'Review date by PRC must be later than submission date and submission date to PRC'
+    }
 
     user_field = u'unicef_manager'
     group_name = u'Senior Management Team'
@@ -489,11 +501,11 @@ class PartnershipForm(UserGroupForm):
 
                 create_args['result'] = result
                 create_args['result_type'] = result.result_type
-                create_args['partner_contribution'] = check_and_return_value('CSO', row, number=True)
-                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, number=True)
-                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, number=True)
-                target = check_and_return_value('Targets', row, number=True)
-                check_and_return_value('Total', row, number=True)  # ignore value as we calculate this
+                create_args['partner_contribution'] = check_and_return_value('CSO', row, row_num, number=True)
+                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, row_num, number=True)
+                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, row_num, number=True)
+                target = check_and_return_value('Targets', row, row_num, number=True)
+                check_and_return_value('Total', row, row_num, number=True)  # ignore value as we calculate this
 
                 if 'indicator' in label:
                     indicator, created = Indicator.objects.get_or_create(
@@ -561,6 +573,10 @@ class PartnershipForm(UserGroupForm):
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
         end_date = cleaned_data[u'end_date']
+        initiation_date = cleaned_data[u'initiation_date']
+        submission_date = cleaned_data[u'submission_date']
+        review_date = cleaned_data[u'review_date']
+
 
         p_codes = cleaned_data[u'p_codes']
         location_sector = cleaned_data[u'location_sector']
@@ -618,6 +634,17 @@ class PartnershipForm(UserGroupForm):
                 u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
+        if signed_by_partner_date and signed_by_partner_date < initiation_date:
+            raise ValidationError({'signed_by_partner_date': self.ERROR_MESSAGES['signed_by_partner']})
+
+        if signed_by_partner_date and not partner_manager:
+            raise ValidationError({'partner_manager': self.ERROR_MESSAGES['partner_manager']})
+
+        if signed_by_unicef_date and not unicef_manager:
+            raise ValidationError(
+                u'Please select a unicef manager for the signed date'
+            )
+
         if signed_by_unicef_date and start_date and (start_date < signed_by_unicef_date):
             raise ValidationError(
                 u'The start date must be greater or equal to the singed by date'
@@ -637,6 +664,12 @@ class PartnershipForm(UserGroupForm):
         if start_date and end_date and start_date > end_date:
             err = u'The end date has to be after the start date'
             raise ValidationError({'end_date': err})
+
+        if submission_date and submission_date < initiation_date:
+            raise ValidationError({'submission_date': self.ERROR_MESSAGES['submission_date']})
+
+        if review_date and review_date < submission_date and review_date < initiation_date:
+            raise ValidationError({'review_date': self.ERROR_MESSAGES['review_date']})
 
         if p_codes and location_sector:
             self.add_locations(p_codes, location_sector)

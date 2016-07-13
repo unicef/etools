@@ -1,4 +1,4 @@
-FROM unicef/etools:base
+FROM unicef/etools:buildbase
 
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
@@ -8,5 +8,6 @@ ENV PIP_FIND_LINKS=/wheelhouse
 
 VOLUME /wheelhouse
 VOLUME /application
+VOLUME /node_modules
 
-ENTRYPOINT cd /application; pip wheel -r requirements.txt; cd frontend; ./build.sh; cd ../frontend_build; ./build.sh
+ENTRYPOINT cd /application; sh docker-build.sh;

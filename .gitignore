@@ -81,9 +81,7 @@ config.json
 wheelhouse
 
 # Frontend
-frontend/node_modules/
-frontend/dist
-frontend/bower_components/
+.frontend/
 .tmp
 .editorconfig
 Icon
@@ -97,3 +95,5 @@ templates/frontend/
 deis
 
 env_dev
+
+.env
