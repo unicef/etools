@@ -31,7 +31,7 @@ def sync(country_name=None):
     processed = []
     countries = Country.objects.filter(vision_sync_enabled=True)
     if country_name is not None:
-        countries.filter(name=country_name)
+        countries = countries.filter(name=country_name)
     for country in countries:
         connection.set_tenant(country)
         for handler in SYNC_HANDLERS:
