@@ -9,6 +9,7 @@ from model_utils.models import (
     TimeStampedModel,
 )
 
+from django.utils.functional import cached_property
 
 # TODO: move to the global schema
 class ResultStructure(models.Model):
@@ -101,7 +102,7 @@ class Result(MPTTModel):
     class Meta:
         ordering = ['name']
 
-    @property
+    @cached_property
     def result_name(self):
         return u'{} {}: {}'.format(
             self.code if self.code else u'',
@@ -110,11 +111,10 @@ class Result(MPTTModel):
         )
 
     def __unicode__(self):
-        return u'{} {}: {} ({})'.format(
+        return u'{} {}: {}'.format(
             self.code if self.code else u'',
             self.result_type.name,
-            self.name,
-            self.wbs
+            self.name
         )
 
     def save(self, *args, **kwargs):
