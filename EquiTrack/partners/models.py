@@ -844,15 +844,15 @@ class PCA(AdminURLMixin, models.Model):
 
         total = 0
         if self.budget_log.exists():
-            total += self.budget_log.all().aggregate(
-                models.Sum('unicef_cash')
-            )['unicef_cash__sum']
-            total += self.budget_log.all().aggregate(
-                models.Sum('in_kind_amount')
-            )['in_kind_amount__sum']
-            total += self.budget_log.all().aggregate(
+            aggr = self.budget_log.all().aggregate(
+                models.Sum('unicef_cash'),
+                models.Sum('in_kind_amount'),
                 models.Sum('partner_contribution')
-            )['partner_contribution__sum']
+            )
+            total += aggr['unicef_cash__sum'] + \
+                aggr['in_kind_amount__sum'] + \
+                aggr['partner_contribution__sum']
+
         return total
 
     @property
