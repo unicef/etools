@@ -353,16 +353,9 @@ class AgreementForm(UserGroupForm):
                 else:
                     self.cleaned_data[u'start'] = signed_by_unicef_date
 
-            if signed_by_partner_date and not signed_by_unicef_date:
-                self.cleaned_data[u'start'] = signed_by_partner_date
-
-            if signed_by_unicef_date and not signed_by_partner_date:
-                self.cleaned_data[u'start'] = signed_by_unicef_date
-
         # set end date to result structure end date
         if end is None:
-            result_structure = ResultStructure.objects.order_by('to_date').last()
-            self.cleaned_data[u'end'] = result_structure.to_date
+            self.cleaned_data[u'end'] = ResultStructure.current().to_date
 
         # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
