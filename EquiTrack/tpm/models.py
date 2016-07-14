@@ -104,7 +104,7 @@ class TPMVisit(AdminURLMixin, models.Model):
                     instance.assigned_by.email,
                     template=template,
                     context={
-                        'url': 'http://{}{}'.format(
+                        'url': 'https://{}{}'.format(
                             current_site.domain,
                             instance.get_admin_url()
                         )
@@ -137,7 +137,7 @@ class TPMVisit(AdminURLMixin, models.Model):
                 template=template,
                 context={
                     'state': state,
-                    'url': 'http://{}{}'.format(
+                    'url': 'https://{}{}'.format(
                         current_site.domain,
                         instance.get_admin_url()
                     )

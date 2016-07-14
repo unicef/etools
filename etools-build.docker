@@ -8,5 +8,6 @@ ENV PIP_FIND_LINKS=/wheelhouse
 
 VOLUME /wheelhouse
 VOLUME /application
+VOLUME /node_modules
 
-ENTRYPOINT cd /application; pip wheel -r requirements.txt; cd frontend; ./build.sh; cd ../frontend_build; ./build.sh
+ENTRYPOINT cd /application; sh docker-build.sh;
