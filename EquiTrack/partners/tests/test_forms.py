@@ -84,4 +84,35 @@ class TestAgreementForm(TenantTestCase):
         self.assertEqual(agr.start, agr_dict['signed_by_unicef_date'])
         self.assertIsNotNone(agr.end)
 
+    def test_start_greater_than_end(self):
+        agr_dict = to_dict(self.agreement)
+        partner = PartnerOrganization.objects.get(id=self.agreement.partner.id)
+        partner.partner_type = u'Civil Society Organization'
+        partner.save()
+
+        agr_dict['start'] = self.date + timedelta(days=1)
+        agr_dict['end'] = self.date
+        form = self.create_form(data=agr_dict)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(
+            form.errors['end'][0],
+            AgreementForm.ERROR_MESSAGES['end_date']
+        )
+
+    def test_start_greater_than_signed_dates(self):
+        agr_dict = to_dict(self.agreement)
+        partner = PartnerOrganization.objects.get(id=self.agreement.partner.id)
+        partner.partner_type = u'Civil Society Organization'
+        partner.save()
+        agr_dict['start'] = self.date
+        agr_dict['end'] = self.date + timedelta(days=10)
+        agr_dict['signed_by_unicef_date'] = self.date
+        agr_dict['signed_by_partner_date'] = self.date + timedelta(days=1)
+        form = self.create_form(data=agr_dict)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(
+            form.errors['start'][0],
+            AgreementForm.ERROR_MESSAGES['start_date_val']
+        )
+
 
