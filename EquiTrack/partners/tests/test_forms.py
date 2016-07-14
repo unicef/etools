@@ -5,9 +5,9 @@ from tenant_schemas.test.cases import TenantTestCase
 
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import PartnershipFactory, AgreementFactory
-from reports.models import ResultStructure
+from EquiTrack.factories import PartnershipFactory, AgreementFactory, ResultStructureFactory
 from partners.models import (
+    PartnerOrganization,
     PCA,
     Agreement,
     AmendmentLog,
@@ -40,23 +40,48 @@ class TestAgreementForm(TenantTestCase):
         self.tenant.save()
         self.text = 'LEBA/{{}}{}01'.format(self.date.year)
         self.agreement = AgreementFactory()
+        self.result_structure = ResultStructureFactory()
 
     def create_form(self, data=None, instance=None, user=None):
-        trip_dict = to_dict(self.trip)
+        agr_dict = to_dict(self.agreement)
         if data:
             for k, v in data.iteritems():
-                trip_dict[k] = v
+                agr_dict[k] = v
 
         instance = instance if instance else self.agreement
-        form = AgreementForm(data=trip_dict, instance=instance)
+        form = AgreementForm(data=agr_dict, instance=instance)
         # form.request.user = user if user else self.agreement.owner
         return form
 
-    def test_form_start_end_date_autopopulate(self):
+    def test_form_start__date_signed_partner(self):
         agr_dict = to_dict(self.agreement)
+        partner = PartnerOrganization.objects.get(id=self.agreement.partner.id)
+        partner.partner_type = u'Civil Society Organization'
+        partner.save()
+
         agr_dict['agreement_type'] = Agreement.PCA
         agr_dict['signed_by_unicef_date'] = self.date - timedelta(days=1)
         agr_dict['signed_by_partner_date'] = self.date
+        # agr_dict['end'] = self.date + timedelta(days=50)
         form = self.create_form(data=agr_dict)
         self.assertTrue(form.is_valid())
-        self.assertEqual(form.start, self.date)
+        agr = form.save()
+        self.assertEqual(agr.start, agr_dict['signed_by_partner_date'])
+        self.assertIsNotNone(agr.end)
+
+    def test_form_start__date_signed_unicef(self):
+        agr_dict = to_dict(self.agreement)
+        partner = PartnerOrganization.objects.get(id=self.agreement.partner.id)
+        partner.partner_type = u'Civil Society Organization'
+        partner.save()
+
+        agr_dict['agreement_type'] = Agreement.PCA
+        agr_dict['signed_by_unicef_date'] = self.date
+        agr_dict['signed_by_partner_date'] = self.date - timedelta(days=1)
+        form = self.create_form(data=agr_dict)
+        self.assertTrue(form.is_valid())
+        agr = form.save()
+        self.assertEqual(agr.start, agr_dict['signed_by_unicef_date'])
+        self.assertIsNotNone(agr.end)
+
+
