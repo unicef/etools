@@ -291,6 +291,11 @@ class DistributionPlanFormSet(ParentInlineAdminFormSet):
 
 class AgreementForm(UserGroupForm):
 
+    ERROR_MESSAGES = {
+         'end_date': 'End date must be greater than start date',
+         'start_date_val': 'Start date must be greater than laatest of signed by partner/unicef date',
+     }
+
     user_field = u'signed_by'
     group_name = u'Senior Management Team'
 
@@ -310,6 +315,8 @@ class AgreementForm(UserGroupForm):
         agreement_number = cleaned_data.get(u'agreement_number')
         start = cleaned_data.get(u'start')
         end = cleaned_data.get(u'end')
+        signed_by_partner_date = cleaned_data.get(u'signed_by_partner_date')
+        signed_by_unicef_date = cleaned_data.get(u'signed_by_unicef_date')
 
         if partner and agreement_type == Agreement.PCA:
             # Partner can only have one active PCA
@@ -340,6 +347,36 @@ class AgreementForm(UserGroupForm):
                 raise ValidationError(
                     _(u'SSFA can not be more than a year')
                 )
+
+        if start > end:
+            raise ValidationError({'end': self.ERROR_MESSAGES['end_date']})
+
+        # check if start date is greater than or equal than greatest signed date
+        if signed_by_partner_date and signed_by_unicef_date and start:
+            if signed_by_partner_date > signed_by_unicef_date:
+                if start < signed_by_partner_date:
+                    raise ValidationError({'start': self.ERROR_MESSAGES['start_date_val']})
+            else:
+                if start < signed_by_unicef_date:
+                    raise ValidationError({'start': self.ERROR_MESSAGES['start_date_val']})
+
+        if self.instance.agreement_type != agreement_type and signed_by_partner_date and signed_by_unicef_date:
+            raise ValidationError(
+                    _(u'Agreement type can not be changed once signed by unicef and partner ')
+            )
+
+        #  set start date to one of the signed dates
+        if start is None and agreement_type == Agreement.PCA:
+            # if both signed dates exist
+            if signed_by_partner_date and signed_by_unicef_date:
+                if signed_by_partner_date > signed_by_unicef_date:
+                    self.cleaned_data[u'start'] = signed_by_partner_date
+                else:
+                    self.cleaned_data[u'start'] = signed_by_unicef_date
+
+        # set end date to result structure end date
+        if end is None:
+            self.cleaned_data[u'end'] = ResultStructure.current().to_date
 
         # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
