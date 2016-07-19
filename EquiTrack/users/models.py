@@ -150,6 +150,8 @@ class UserProfile(models.Model):
                 return False
 
         if new_country and new_country != sender.profile.country:
+            # TODO: add country to countries_available
+            # sender.profile.countries_available.add(new_country)
             sender.profile.country = new_country
             sender.profile.save()
             return True

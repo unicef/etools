@@ -18,6 +18,7 @@ from users.models import Office, Section
 from .models import (
     Trip,
     LinkedPartner,
+    LinkedGovernmentPartner,
     TripFunds,
     ActionPoint,
     TravelRoutes,
@@ -48,6 +49,21 @@ class LinkedPartnerInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-planning'
     extra = 1
 
+from partners.models import PartnerOrganization, GovernmentIntervention
+
+class LinkedGovernmentPartnerInlineAdmin(admin.TabularInline):
+    model = LinkedGovernmentPartner
+    suit_classes = u'suit-tab suit-tab-planning'
+    extra = 1
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.name == u'partner':
+            kwargs['queryset'] = PartnerOrganization.objects.filter(partner_type=u'Government')
+
+
+        return super(LinkedGovernmentPartnerInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
 
 class TravelRoutesInlineAdmin(admin.TabularInline):
     model = TravelRoutes
@@ -122,6 +138,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
     form = TripForm
     inlines = (
         LinkedPartnerInlineAdmin,
+        LinkedGovernmentPartnerInlineAdmin,
         TravelRoutesInlineAdmin,
         TripLocationsInlineAdmin,
         #TripFundsInlineAdmin,

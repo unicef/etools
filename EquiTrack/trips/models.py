@@ -459,6 +459,31 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
 
+from partners.models import GovernmentIntervention, GovernmentInterventionResult
+
+class LinkedGovernmentPartner(models.Model):
+    trip = models.ForeignKey(Trip)
+    partner = models.ForeignKey(
+        PartnerOrganization,
+    )
+    intervention = ChainedForeignKey(
+        GovernmentIntervention,
+        related_name='trips',
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=True,
+        blank=True, null=True,
+    )
+    result = ChainedForeignKey(
+        GovernmentInterventionResult,
+        chained_field="intervention",
+        chained_model_field="intervention",
+        show_all=False,
+        auto_choose=True,
+        blank=True, null=True,
+    )
+
 
 class TripFunds(models.Model):
 

@@ -156,6 +156,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
     vision_synced = models.BooleanField(default=False)
 
+
+
     class Meta:
         ordering = ['name']
         unique_together = ('name', 'vendor_number')
@@ -240,12 +242,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         Planned cash transfers for the current year
         """
         year = datetime.date.today().year
-        total = PartnershipBudget.objects.filter(
-            partnership__partner=self,
-            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
-            year=year).aggregate(
-            models.Sum('unicef_cash')
-        )
+        if self.partner_type == u'Government':
+            total = GovernmentInterventionResult.objects.filter(
+                intervention__partner=self,
+                year=year).aggregate(
+                models.Sum('planned_amount')
+            )
+        else:
+            total = PartnershipBudget.objects.filter(
+                partnership__partner=self,
+                partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
+                year=year).aggregate(
+                models.Sum('unicef_cash')
+            )
         return total[total.keys()[0]] or 0
 
     @property
@@ -274,9 +283,15 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         total = FundingCommitment.objects.filter(
             end__gte=cp.from_date,
             end__lte=cp.to_date,
+            # this or
             intervention__partner=self,
             intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
             models.Sum('expenditure_amount')
+            # government_intervention in
+            # gov_intervention__partner=self,
+            # gov_intervention__status__in=[GovernmentIntervention.ACTIVE, GovernmentIntervention.IMPLEMENTED]
+            # ).aggregate(
+            # models.Sum('expenditure_amount')
         )
         return total[total.keys()[0]] or 0
 
@@ -1034,6 +1049,11 @@ class GovernmentIntervention(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __unicode__(self):
+        return self.number if self.number else \
+            '{} : {}'.format(self.pk,
+                             self.reference_number)
+
     #country/partner/year/#
     @property
     def reference_number(self):
@@ -1132,6 +1152,11 @@ class GovernmentInterventionResult(models.Model):
 
         self.activities_list.all().delete()
         super(GovernmentInterventionResult, self).delete(using=using)
+
+    def __unicode__(self):
+        return '{}, {}'.format(self.intervention,
+                               self.result)
+
 
 
 class AmendmentLog(TimeStampedModel):
