@@ -297,7 +297,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         PCAGrantFilter,
     )
     search_fields = (
-        'reference_number',
+        'number',
         'title',
     )
     readonly_fields = (

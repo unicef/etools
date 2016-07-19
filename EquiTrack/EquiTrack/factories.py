@@ -3,7 +3,7 @@ Model factories used for generating models dynamically for tests
 """
 __author__ = 'jcranwellward'
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 
 import factory
@@ -126,7 +126,6 @@ class PartnerFactory(factory.django.DjangoModelFactory):
         model = partner_models.PartnerOrganization
 
     name = factory.Sequence(lambda n: 'Partner {}'.format(n))
-
     staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
@@ -138,6 +137,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     agreement_type = u'PCA'
 
 
+
 class PartnershipFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PCA
@@ -147,6 +147,15 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     partnership_type = u'PD'
     title = u'To save the galaxy from the Empire'
     initiation_date = datetime.today()
+
+
+class ResultStructureFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.ResultStructure
+
+    name = factory.Sequence(lambda n: 'RSSP {}'.format(n))
+    from_date = date(date.today().year, 1, 1)
+    to_date = date(date.today().year, 12, 31)
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
