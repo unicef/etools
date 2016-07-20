@@ -12,6 +12,7 @@ from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
+from django.utils.functional import cached_property
 
 from jsonfield import JSONField
 from django_hstore import hstore
@@ -298,12 +299,44 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @property
     def planned_visits(self):
-        planned = self.documents.filter(
-            status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
-        ).aggregate(
-            models.Sum('planned_visits')
-        )
-        return planned[planned.keys()[0]] or 0
+        from trips.models import Trip
+        # planned visits
+        pv = 0
+
+        if self.partner_type == u'Government':
+            # looking for trips within that start within the current programme cycle,
+            # are in status other than canceled or completed and have a linked partner self
+            pv = self.cp_cycle_trip_links.filter(
+                    trip__travel_type=Trip.PROGRAMME_MONITORING
+                ).exclude(
+                    trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
+                ).count() or 0
+        else:
+            #TODO: this needs to be rethought
+            planned = self.documents.filter(
+                status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
+            ).aggregate(
+                models.Sum('planned_visits')
+            )
+            pv = planned[planned.keys()[0]] or 0
+
+        return pv
+
+    @cached_property
+    def cp_cycle_trip_links(self):
+        from trips.models import Trip
+        crs = ResultStructure.current()
+        if self.partner_type == u'Government':
+            return self.linkedgovernmentpartner_set.filter(
+                        trip__from_date__lt=crs.to_date,
+                        trip__from_date__gte=crs.from_date
+                ).distinct('trip')
+        else:
+            return self.linkedpartner_set.filter(
+                    trip__from_date__lt=crs.to_date,
+                    trip__from_date__gte=crs.from_date
+                ).distinct('trip')
+
 
     @property
     def trips(self):
@@ -321,13 +354,24 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @property
     def programmatic_visits(self):
+        '''
+        :return: all done programmatic visits
+        '''
         from trips.models import Trip
+        if self.partner_type == u'Government':
+            return self.cp_cycle_trip_links.filter(
+                trip__travel_type=Trip.PROGRAMME_MONITORING,
+                trip__status__in=[Trip.COMPLETED]
+            ).count()
         return self.trips.filter(travel_type=Trip.PROGRAMME_MONITORING).count()
 
     @property
     def spot_checks(self):
         from trips.models import Trip
-        return self.trips.filter(travel_type=Trip.SPOT_CHECK).count()
+        return self.cp_cycle_trip_links.filter(
+            trip__travel_type=Trip.SPOT_CHECK,
+            trip__status__in=[Trip.COMPLETED]
+        ).count()
 
     @property
     def follow_up_flags(self):
