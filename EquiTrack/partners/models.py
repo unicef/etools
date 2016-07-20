@@ -488,7 +488,7 @@ class Agreement(TimeStampedModel):
     agreement_number = models.CharField(
         max_length=45L,
         blank=True,
-        help_text=u'Reference Number'
+        verbose_name=u'Reference Number'
     )
     attached_agreement = models.FileField(
         upload_to=get_agreement_path,
@@ -687,7 +687,7 @@ class PCA(AdminURLMixin, models.Model):
     number = models.CharField(
         max_length=45L,
         blank=True, null=True,
-        help_text=u'Document Reference Number'
+        verbose_name=u'Reference Number'
     )
     title = models.CharField(max_length=256L)
     project_type = models.CharField(
@@ -980,15 +980,6 @@ class PCA(AdminURLMixin, models.Model):
             if self.end_date is None and self.result_structure:
                 self.end_date = self.result_structure.to_date
 
-        if not self.pk:
-            if self.partnership_type != self.PD:
-                self.signed_by_partner_date = self.agreement.signed_by_partner_date
-                self.partner_manager = self.agreement.partner_manager
-                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
-                self.unicef_manager = self.agreement.signed_by
-                self.start_date = self.agreement.start
-                self.end_date = self.agreement.end
-
         super(PCA, self).save(**kwargs)
 
     @classmethod
@@ -1036,7 +1027,39 @@ class GovernmentIntervention(models.Model):
     result_structure = models.ForeignKey(
         ResultStructure,
     )
+    number = models.CharField(
+        max_length=45L,
+        blank=True,
+        verbose_name='Reference Number',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    #country/partner/year/#
+    @property
+    def reference_number(self):
+        if self.number:
+            number = self.number
+        else:
+            objects = list(GovernmentIntervention.objects.filter(
+                partner=self.partner,
+                result_structure=self.result_structure,
+            ).order_by('created_at').values_list('id', flat=True))
+            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            number = u'{code}/{partner}/{year}{seq}'.format(
+                code=connection.tenant.country_short_code or '',
+                partner=self.partner.short_name,
+                year=self.result_structure.to_date.year,
+                seq=sequence
+            )
+        return number
+
+    def save(self, **kwargs):
+
+        # commit the reference number to the database once the agreement is signed
+        if not self.number:
+            self.number = self.reference_number
+
+        super(GovernmentIntervention, self).save(**kwargs)
 
 class GovernmentInterventionResult(models.Model):
 

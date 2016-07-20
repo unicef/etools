@@ -23,7 +23,7 @@ class PartnershipCreatedEmail(BaseEmail):
         return {
             'number': self.object.__unicode__(),
             'state': 'Created',
-            'url': 'http://{}{}'.format(
+            'url': 'https://{}{}'.format(
                 self.get_current_site().domain,
                 self.object.get_admin_url()
             )

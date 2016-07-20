@@ -140,20 +140,32 @@ def show_government_funding(value):
     if not value:
         return ''
 
-    # intervention = GovernmentIntervention.objects.get(id=int(value))
-    # outputs = list(intervention.results.values_list('result__wbs', flat=True))
-    # commitments = FundingCommitment.objects.filter(wbs__in=outputs)
+    intervention = GovernmentIntervention.objects.get(id=int(value))
+
+    outputs = [r.result for r in intervention.results.prefetch_related('result', 'result__result_type').all()]
+    outputs_wbs = [o.wbs for o in outputs]
+
+    commitments = FundingCommitment.objects.filter(wbs__in=outputs_wbs).all()
+
+    #map all commitments (c.wbs) to int_outputs(io.wbs)
+
+    for out in outputs:
+        commits = [c for c in commitments if out.wbs == c.wbs]
+        setattr(out, 'commitments', commits)
+
+
     data = tablib.Dataset()
     fc_summary = []
 
-    # for commit in commitments:
-    row = SortedDict()
-    row['Output'] = ''
-    row['FC No.'] = ''
-    row['FC Amount'] = ''
-    row['Actual'] = ''
-    row['Outstanding'] = ''
-    fc_summary.append(row)
+    for out in outputs:
+        for commit in out.commitments:
+            row = SortedDict()
+            row['Output'] = out
+            row['FC No.'] = commit.fc_ref
+            row['FC Commit Amt'] = commit.commitment_amount
+            row['FC Agreement Amt'] = commit.agreement_amount
+            row['FC Exp Amt'] = commit.expenditure_amount
+            fc_summary.append(row)
 
     if fc_summary:
         data.headers = fc_summary[0].keys()
