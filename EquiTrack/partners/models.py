@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 
 from django.db.models import Q
 from django.conf import settings
-from django.db import models, connection
+from django.db import models, connection, transaction
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
@@ -21,6 +21,7 @@ from model_utils.models import (
     TimeStampedModel,
 )
 from model_utils import Choices
+
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
@@ -1051,7 +1052,7 @@ class GovernmentIntervention(models.Model):
 
     def __unicode__(self):
         return self.number if self.number else \
-            '{} : {}'.format(self.pk,
+            u'{}: {}'.format(self.pk,
                              self.reference_number)
 
     #country/partner/year/#
@@ -1080,6 +1081,7 @@ class GovernmentIntervention(models.Model):
             self.number = self.reference_number
 
         super(GovernmentIntervention, self).save(**kwargs)
+
 
 class GovernmentInterventionResult(models.Model):
 
@@ -1122,6 +1124,7 @@ class GovernmentInterventionResult(models.Model):
 
     objects = hstore.HStoreManager()
 
+    @transaction.atomic
     def save(self, **kwargs):
 
         super(GovernmentInterventionResult, self).save(**kwargs)
@@ -1148,15 +1151,15 @@ class GovernmentInterventionResult(models.Model):
             if ref_activity.code not in self.activities:
                 ref_activity.delete()
 
+    @transaction.atomic
     def delete(self, using=None):
 
         self.activities_list.all().delete()
         super(GovernmentInterventionResult, self).delete(using=using)
 
     def __unicode__(self):
-        return '{}, {}'.format(self.intervention,
-                               self.result)
-
+        return u'{}, {}'.format(self.intervention.number,
+                                self.result)
 
 
 class AmendmentLog(TimeStampedModel):
