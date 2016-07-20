@@ -12,6 +12,7 @@ from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
+from django.utils.functional import cached_property
 
 from jsonfield import JSONField
 from django_hstore import hstore
@@ -166,10 +167,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
-    @property
+    @cached_property
     def get_last_agreement(self):
+        # exclude Agreements that were not signed
         return Agreement.objects.filter(
-            partner=self
+            partner=self,
+        ).exclude(
+            signed_by_unicef_date__isnull=True,
+            signed_by_partner_date__isnull=True
         ).order_by('signed_by_unicef_date').last()
 
     @property

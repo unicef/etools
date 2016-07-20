@@ -323,8 +323,12 @@ class AgreementForm(UserGroupForm):
             # pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
             # if (not self.instance.id and pca_ids) or \
             #         (self.instance.id and pca_ids and self.instance.id not in pca_ids):
-            if partner.get_last_agreement and partner.get_last_agreement != self.instance:
-                if not start > partner.get_last_agreement.start and not end > partner.get_last_agreement.end:
+            if start and end and \
+                    partner.get_last_agreement and \
+                    partner.get_last_agreement != self.instance and \
+                    partner.get_last_agreement.agreement_type == Agreement.PCA:
+
+                if not start > partner.get_last_agreement.end:
                     err = u'This partner can only have one active {} agreement'.format(agreement_type)
                     raise ValidationError({'agreement_type': err})
 
@@ -348,7 +352,7 @@ class AgreementForm(UserGroupForm):
                     _(u'SSFA can not be more than a year')
                 )
 
-        if start > end:
+        if start and end and start > end:
             raise ValidationError({'end': self.ERROR_MESSAGES['end_date']})
 
         # check if start date is greater than or equal than greatest signed date
