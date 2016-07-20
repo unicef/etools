@@ -358,12 +358,10 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         :return: all done programmatic visits
         '''
         from trips.models import Trip
-        if self.partner_type == u'Government':
-            return self.cp_cycle_trip_links.filter(
-                trip__travel_type=Trip.PROGRAMME_MONITORING,
-                trip__status__in=[Trip.COMPLETED]
-            ).count()
-        return self.trips.filter(travel_type=Trip.PROGRAMME_MONITORING).count()
+        return self.cp_cycle_trip_links.filter(
+            trip__travel_type=Trip.PROGRAMME_MONITORING,
+            trip__status__in=[Trip.COMPLETED]
+        ).count()
 
     @property
     def spot_checks(self):
