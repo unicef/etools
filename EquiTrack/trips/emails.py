@@ -32,7 +32,8 @@ class TripCreatedEmail(BaseEmail):
                 self.get_current_site().domain,
                 self.object.get_admin_url()),
             'purpose_of_travel': self.object.purpose_of_travel,
-            'environment': self.get_environment()
+            'environment': self.get_environment(),
+            'action_points': ('\n'.join([action.__unicode__() for action in self.object.actionpoint_set.all()]))
         }
 
 
@@ -81,6 +82,10 @@ class TripCompletedEmail(TripCreatedEmail):
     The following trip has been completed: {{trip_reference}}
 
     {{url}}
+
+    Action Points:
+
+    {{action_points}}
 
     Thank you.
     """
