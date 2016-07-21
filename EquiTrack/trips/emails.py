@@ -28,11 +28,12 @@ class TripCreatedEmail(BaseEmail):
             'owner_name': self.object.owner.get_full_name(),
             'number': self.object.reference(),
             'state': 'Submitted',
-            'url': 'http://{}{}'.format(
+            'url': 'https://{}{}'.format(
                 self.get_current_site().domain,
                 self.object.get_admin_url()),
             'purpose_of_travel': self.object.purpose_of_travel,
-            'environment': self.get_environment()
+            'environment': self.get_environment(),
+            'action_points': ('\n'.join([action.__unicode__() for action in self.object.actionpoint_set.all()]))
         }
 
 
@@ -81,6 +82,10 @@ class TripCompletedEmail(TripCreatedEmail):
     The following trip has been completed: {{trip_reference}}
 
     {{url}}
+
+    Action Points:
+
+    {{action_points}}
 
     Thank you.
     """
@@ -191,7 +196,7 @@ class TripActionPointCreated(BaseEmail):
     def get_context(self):
         return {
             'trip_reference': self.object.reference(),
-            'url': 'http://{}{}#reporting'.format(
+            'url': 'https://{}{}#reporting'.format(
                 self.get_current_site().domain,
                 self.object.get_admin_url()
             ),
@@ -260,12 +265,12 @@ class TripSummaryEmail(BaseEmail):
         )
 
         for trip in trips_overdue:
-            trips_overdue_text[trip.purpose_of_travel] = ['http://{}{}'.format(
+            trips_overdue_text[trip.purpose_of_travel] = ['https://{}{}'.format(
                 self.get_current_site().domain,
                 trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
 
         for trip in trips_coming:
-            trips_coming_text[trip.purpose_of_travel] = ['http://{}{}'.format(
+            trips_coming_text[trip.purpose_of_travel] = ['https://{}{}'.format(
                 self.get_current_site().domain,
                 trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
 
