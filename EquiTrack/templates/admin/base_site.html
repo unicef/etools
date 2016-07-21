@@ -19,18 +19,18 @@
 
     .header #branding {
         border-right: 0px;
-        width: 280px;
+        width: auto;
+        white-space: nowrap;
     }
 
     .header #branding a {
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 700;
     }
 
     .header #branding h1 {
         text-shadow: none;
-        white-space: nowrap;
-        width:auto;
+        width: 300px;
     }
    .header a:link, a:visited {
         text-decoration: none;
@@ -60,8 +60,9 @@
     }
 
     #header .logo #test-text {
-        display:none;
-        color:#e6e600;
+        display: none;
+        color: #e6e600;
+        font-weight: 700;
     }
 
     .header #user-tools, #country-select {
@@ -149,7 +150,7 @@
          var cond = /localhost|etools-dev|etools-staging/g;
         if (cond.test(window.location)) {
             $('#header').css({'background': '#BE1A1A'});
-            $('#test-text').show().text(" " + host[window.location.hostname]);
+            $('#test-text').show().text(' ' + host[window.location.hostname]);
         }
     });
 
@@ -162,7 +163,7 @@
 
 
     <section id="container">
-    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools<span id="test-text"></span></span></a></div>
+    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools<span id="test-text">Testing Environment</span></span></a></div>
 {% endblock %}
 {% block usertools %}
         {% if has_permission %}
