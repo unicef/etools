@@ -8,7 +8,7 @@ import smart_selects.db_fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0060_auto_20160719_1929'),
+        ('partners', '0060_auto_20160721_2313'),
         ('trips', '0017_remove_linkedpartner_result'),
     ]
 
