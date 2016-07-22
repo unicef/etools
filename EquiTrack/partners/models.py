@@ -305,22 +305,13 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         # planned visits
         pv = 0
 
-        if self.partner_type == u'Government':
-            # looking for trips within that start within the current programme cycle,
-            # are in status other than canceled or completed and have a linked partner self
-            pv = self.cp_cycle_trip_links.filter(
-                    trip__travel_type=Trip.PROGRAMME_MONITORING
-                ).exclude(
-                    trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
-                ).count() or 0
-        else:
-            #TODO: this needs to be rethought
-            planned = self.documents.filter(
-                status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
-            ).aggregate(
-                models.Sum('planned_visits')
-            )
-            pv = planned[planned.keys()[0]] or 0
+
+        pv = self.cp_cycle_trip_links.filter(
+                trip__travel_type=Trip.PROGRAMME_MONITORING
+            ).exclude(
+                trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
+            ).count() or 0
+
 
         return pv
 
