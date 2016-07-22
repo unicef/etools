@@ -323,8 +323,11 @@ class AgreementForm(UserGroupForm):
             # pca_ids = partner.agreement_set.filter(agreement_type=Agreement.PCA).values_list('id', flat=True)
             # if (not self.instance.id and pca_ids) or \
             #         (self.instance.id and pca_ids and self.instance.id not in pca_ids):
-            if partner.get_last_agreement and partner.get_last_agreement != self.instance:
-                if not start > partner.get_last_agreement.start and not end > partner.get_last_agreement.end:
+            if start and end and \
+                    partner.get_last_pca and \
+                    partner.get_last_pca != self.instance:
+
+                if start < partner.get_last_pca.end:
                     err = u'This partner can only have one active {} agreement'.format(agreement_type)
                     raise ValidationError({'agreement_type': err})
 
@@ -348,7 +351,7 @@ class AgreementForm(UserGroupForm):
                     _(u'SSFA can not be more than a year')
                 )
 
-        if start > end:
+        if start and end and start > end:
             raise ValidationError({'end': self.ERROR_MESSAGES['end_date']})
 
         # check if start date is greater than or equal than greatest signed date
@@ -360,7 +363,8 @@ class AgreementForm(UserGroupForm):
                 if start < signed_by_unicef_date:
                     raise ValidationError({'start': self.ERROR_MESSAGES['start_date_val']})
 
-        if self.instance.agreement_type != agreement_type and signed_by_partner_date and signed_by_unicef_date:
+        if self.instance.id and self.instance.agreement_type != agreement_type \
+                and signed_by_partner_date and signed_by_unicef_date:
             raise ValidationError(
                     _(u'Agreement type can not be changed once signed by unicef and partner ')
             )
@@ -610,7 +614,7 @@ class PartnershipForm(UserGroupForm):
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
         end_date = cleaned_data[u'end_date']
-        initiation_date = cleaned_data[u'initiation_date']
+        initiation_date = cleaned_data.get(u'initiation_date')
         submission_date = cleaned_data[u'submission_date']
         review_date = cleaned_data[u'review_date']
 
