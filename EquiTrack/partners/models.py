@@ -168,10 +168,10 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
     @cached_property
-    def get_last_agreement(self):
+    def get_last_pca(self):
         # exclude Agreements that were not signed
-        return Agreement.objects.filter(
-            partner=self,
+        return self.agreement_set.filter(
+            agreement_type=Agreement.PCA
         ).exclude(
             signed_by_unicef_date__isnull=True,
             signed_by_partner_date__isnull=True

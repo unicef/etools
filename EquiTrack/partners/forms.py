@@ -324,11 +324,10 @@ class AgreementForm(UserGroupForm):
             # if (not self.instance.id and pca_ids) or \
             #         (self.instance.id and pca_ids and self.instance.id not in pca_ids):
             if start and end and \
-                    partner.get_last_agreement and \
-                    partner.get_last_agreement != self.instance and \
-                    partner.get_last_agreement.agreement_type == Agreement.PCA:
+                    partner.get_last_pca and \
+                    partner.get_last_pca != self.instance:
 
-                if not start > partner.get_last_agreement.end:
+                if start < partner.get_last_pca.end:
                     err = u'This partner can only have one active {} agreement'.format(agreement_type)
                     raise ValidationError({'agreement_type': err})
 
@@ -364,7 +363,8 @@ class AgreementForm(UserGroupForm):
                 if start < signed_by_unicef_date:
                     raise ValidationError({'start': self.ERROR_MESSAGES['start_date_val']})
 
-        if self.instance.agreement_type != agreement_type and signed_by_partner_date and signed_by_unicef_date:
+        if self.instance.id and self.instance.agreement_type != agreement_type \
+                and signed_by_partner_date and signed_by_unicef_date:
             raise ValidationError(
                     _(u'Agreement type can not be changed once signed by unicef and partner ')
             )
