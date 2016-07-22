@@ -249,15 +249,17 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 intervention__partner=self,
                 year=year).aggregate(
                 models.Sum('planned_amount')
-            )
+            )['planned_amount__sum'] or 0
         else:
-            total = PartnershipBudget.objects.filter(
-                partnership__partner=self,
-                partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
-                year=year).aggregate(
-                models.Sum('unicef_cash')
-            )
-        return total[total.keys()[0]] or 0
+            q = PartnershipBudget.objects.filter(partnership__partner=self,
+                                                 partnership__status__in=[PCA.ACTIVE,
+                                                                          PCA.IMPLEMENTED],
+                                                 year=year)
+            q = q.order_by("partnership__id", "-created").\
+                distinct('partnership__id').values_list('unicef_cash', flat=True)
+            total = sum(q)
+
+        return total
 
     @property
     def actual_cash_transferred(self):
