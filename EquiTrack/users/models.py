@@ -80,6 +80,11 @@ class Section(models.Model):
         return self.name
 
 
+class UserProfileManager(models.Manager):
+    def get_queryset(self):
+        return super(UserProfileManager, self).get_queryset().select_related('country')
+
+
 class UserProfile(models.Model):
 
     user = models.OneToOneField(User, related_name='profile')
@@ -112,6 +117,8 @@ class UserProfile(models.Model):
         return u'User profile for {}'.format(
             self.user.get_full_name()
         )
+
+    objects = UserProfileManager()
 
     @classmethod
     def create_user_profile(cls, sender, instance, created, **kwargs):

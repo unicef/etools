@@ -77,8 +77,8 @@ class TripFundsInlineAdmin(admin.TabularInline):
     model = TripFunds
     formset = TripFundsForm
     suit_classes = u'suit-tab suit-tab-planning'
-    extra = 3
-    max_num = 3
+    extra = 1
+    max_num = 1
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == u'result':
@@ -141,7 +141,7 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
         LinkedGovernmentPartnerInlineAdmin,
         TravelRoutesInlineAdmin,
         TripLocationsInlineAdmin,
-        #TripFundsInlineAdmin,
+        TripFundsInlineAdmin,
         ActionPointInlineAdmin,
         FileAttachmentInlineAdmin,
         LinksInlineAdmin,
