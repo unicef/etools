@@ -81,9 +81,8 @@ config.json
 wheelhouse
 
 # Frontend
-frontend/node_modules/
-frontend/dist
-frontend/bower_components/
+.frontend/
+.fe/
 .tmp
 .editorconfig
 Icon

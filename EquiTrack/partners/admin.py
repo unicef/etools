@@ -297,7 +297,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
         PCAGrantFilter,
     )
     search_fields = (
-        'reference_number',
+        'number',
         'title',
     )
     readonly_fields = (
@@ -475,9 +475,10 @@ class GovernmentInterventionAdmin(admin.ModelAdmin):
     )
     inlines = [GovernmentInterventionResultAdminInline]
 
-    suit_form_includes = (
-        ('admin/partners/government_funding.html', 'bottom'),
-    )
+    # government funding disabled temporarily. awaiting Vision API updates
+    # suit_form_includes = (
+    #     ('admin/partners/government_funding.html', 'bottom'),
+    # )
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.rel.to is PartnerOrganization:

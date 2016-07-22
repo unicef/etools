@@ -19,7 +19,14 @@ from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
 from locations.models import Governorate, Locality, Location, Region
-from partners.models import PartnerOrganization, PCA, ResultChain, RAMIndicator
+from partners.models import (
+    PartnerOrganization,
+    PCA,
+    ResultChain,
+    RAMIndicator,
+    GovernmentIntervention,
+    GovernmentInterventionResult
+)
 from . import emails
 
 User = settings.AUTH_USER_MODEL
@@ -451,7 +458,31 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
     result = ChainedForeignKey(
-        RAMIndicator,
+        ResultChain,
+        chained_field="intervention",
+        chained_model_field="partnership",
+        show_all=False,
+        auto_choose=True,
+        blank=True, null=True,
+    )
+
+
+class LinkedGovernmentPartner(models.Model):
+    trip = models.ForeignKey(Trip)
+    partner = models.ForeignKey(
+        PartnerOrganization,
+    )
+    intervention = ChainedForeignKey(
+        GovernmentIntervention,
+        related_name='trips',
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=True,
+        blank=True, null=True,
+    )
+    result = ChainedForeignKey(
+        GovernmentInterventionResult,
         chained_field="intervention",
         chained_model_field="intervention",
         show_all=False,
