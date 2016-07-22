@@ -610,7 +610,7 @@ class PartnershipForm(UserGroupForm):
         signed_by_partner_date = cleaned_data[u'signed_by_partner_date']
         start_date = cleaned_data[u'start_date']
         end_date = cleaned_data[u'end_date']
-        initiation_date = cleaned_data[u'initiation_date']
+        initiation_date = cleaned_data.get(u'initiation_date')
         submission_date = cleaned_data[u'submission_date']
         review_date = cleaned_data[u'review_date']
 

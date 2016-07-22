@@ -451,9 +451,9 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
     result = ChainedForeignKey(
-        RAMIndicator,
+        ResultChain,
         chained_field="intervention",
-        chained_model_field="intervention",
+        chained_model_field="partnership",
         show_all=False,
         auto_choose=True,
         blank=True, null=True,

@@ -8,7 +8,7 @@ import smart_selects.db_fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0060_auto_20160715_0157'),
+        ('partners', '0060_auto_20160721_2313'),
         ('trips', '0016_auto_20160607_2237'),
     ]
 
@@ -22,5 +22,9 @@ class Migration(migrations.Migration):
                 ('result', smart_selects.db_fields.ChainedForeignKey(chained_model_field=b'intervention', chained_field=b'intervention', blank=True, auto_choose=True, to='partners.GovernmentInterventionResult', null=True)),
                 ('trip', models.ForeignKey(to='trips.Trip')),
             ],
+        ),
+        migrations.RemoveField(
+            model_name='linkedpartner',
+            name='result',
         ),
     ]
