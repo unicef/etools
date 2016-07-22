@@ -222,6 +222,6 @@ class HACTDashboardView(TemplateView):
                 Q(documents__status__in=[
                     PCA.ACTIVE,
                     PCA.IMPLEMENTED
-                ]) | Q(partner_type=u'Government')
+                ]) | (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
             ).distinct()
         }
