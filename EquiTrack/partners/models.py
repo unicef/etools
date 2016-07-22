@@ -1086,7 +1086,7 @@ class GovernmentIntervention(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __unicode__(self):
-        return self.number if self.number else \
+        return u'Number: {}'.format(self.number) if self.number else \
             u'{}: {}'.format(self.pk,
                              self.reference_number)
 
