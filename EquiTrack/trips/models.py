@@ -19,7 +19,14 @@ from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
 from locations.models import Governorate, Locality, Location, Region
-from partners.models import PartnerOrganization, PCA, ResultChain, RAMIndicator
+from partners.models import (
+    PartnerOrganization,
+    PCA,
+    ResultChain,
+    RAMIndicator,
+    GovernmentIntervention,
+    GovernmentInterventionResult
+)
 from . import emails
 
 User = settings.AUTH_USER_MODEL
@@ -459,7 +466,6 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
 
-from partners.models import GovernmentIntervention, GovernmentInterventionResult
 
 class LinkedGovernmentPartner(models.Model):
     trip = models.ForeignKey(Trip)
