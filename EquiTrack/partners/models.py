@@ -7,11 +7,12 @@ from dateutil.relativedelta import relativedelta
 
 from django.db.models import Q
 from django.conf import settings
-from django.db import models, connection
+from django.db import models, connection, transaction
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
+from django.utils.functional import cached_property
 
 from jsonfield import JSONField
 from django_hstore import hstore
@@ -21,6 +22,7 @@ from model_utils.models import (
     TimeStampedModel,
 )
 from model_utils import Choices
+
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
@@ -156,6 +158,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
     vision_synced = models.BooleanField(default=False)
 
+
+
     class Meta:
         ordering = ['name']
         unique_together = ('name', 'vendor_number')
@@ -166,10 +170,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
-    @property
-    def get_last_agreement(self):
-        return Agreement.objects.filter(
-            partner=self
+    @cached_property
+    def get_last_pca(self):
+        # exclude Agreements that were not signed
+        return self.agreement_set.filter(
+            agreement_type=Agreement.PCA
+        ).exclude(
+            signed_by_unicef_date__isnull=True,
+            signed_by_partner_date__isnull=True
         ).order_by('signed_by_unicef_date').last()
 
     @property
@@ -240,13 +248,22 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         Planned cash transfers for the current year
         """
         year = datetime.date.today().year
-        total = PartnershipBudget.objects.filter(
-            partnership__partner=self,
-            partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
-            year=year).aggregate(
-            models.Sum('unicef_cash')
-        )
-        return total[total.keys()[0]] or 0
+        if self.partner_type == u'Government':
+            total = GovernmentInterventionResult.objects.filter(
+                intervention__partner=self,
+                year=year).aggregate(
+                models.Sum('planned_amount')
+            )['planned_amount__sum'] or 0
+        else:
+            q = PartnershipBudget.objects.filter(partnership__partner=self,
+                                                 partnership__status__in=[PCA.ACTIVE,
+                                                                          PCA.IMPLEMENTED],
+                                                 year=year)
+            q = q.order_by("partnership__id", "-created").\
+                distinct('partnership__id').values_list('unicef_cash', flat=True)
+            total = sum(q)
+
+        return total
 
     @property
     def actual_cash_transferred(self):
@@ -274,20 +291,49 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         total = FundingCommitment.objects.filter(
             end__gte=cp.from_date,
             end__lte=cp.to_date,
+            # this or
             intervention__partner=self,
             intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
             models.Sum('expenditure_amount')
+            # government_intervention in
+            # gov_intervention__partner=self,
+            # gov_intervention__status__in=[GovernmentIntervention.ACTIVE, GovernmentIntervention.IMPLEMENTED]
+            # ).aggregate(
+            # models.Sum('expenditure_amount')
         )
         return total[total.keys()[0]] or 0
 
     @property
     def planned_visits(self):
-        planned = self.documents.filter(
-            status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
-        ).aggregate(
-            models.Sum('planned_visits')
-        )
-        return planned[planned.keys()[0]] or 0
+        from trips.models import Trip
+        # planned visits
+        pv = 0
+
+
+        pv = self.cp_cycle_trip_links.filter(
+                trip__travel_type=Trip.PROGRAMME_MONITORING
+            ).exclude(
+                trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
+            ).count() or 0
+
+
+        return pv
+
+    @cached_property
+    def cp_cycle_trip_links(self):
+        from trips.models import Trip
+        crs = ResultStructure.current()
+        if self.partner_type == u'Government':
+            return self.linkedgovernmentpartner_set.filter(
+                        trip__from_date__lt=crs.to_date,
+                        trip__from_date__gte=crs.from_date
+                ).distinct('trip')
+        else:
+            return self.linkedpartner_set.filter(
+                    trip__from_date__lt=crs.to_date,
+                    trip__from_date__gte=crs.from_date
+                ).distinct('trip')
+
 
     @property
     def trips(self):
@@ -305,13 +351,22 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @property
     def programmatic_visits(self):
+        '''
+        :return: all done programmatic visits
+        '''
         from trips.models import Trip
-        return self.trips.filter(travel_type=Trip.PROGRAMME_MONITORING).count()
+        return self.cp_cycle_trip_links.filter(
+            trip__travel_type=Trip.PROGRAMME_MONITORING,
+            trip__status__in=[Trip.COMPLETED]
+        ).count()
 
     @property
     def spot_checks(self):
         from trips.models import Trip
-        return self.trips.filter(travel_type=Trip.SPOT_CHECK).count()
+        return self.cp_cycle_trip_links.filter(
+            trip__travel_type=Trip.SPOT_CHECK,
+            trip__status__in=[Trip.COMPLETED]
+        ).count()
 
     @property
     def follow_up_flags(self):
@@ -1041,6 +1096,11 @@ class GovernmentIntervention(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def __unicode__(self):
+        return u'Number: {}'.format(self.number) if self.number else \
+            u'{}: {}'.format(self.pk,
+                             self.reference_number)
+
     #country/partner/year/#
     @property
     def reference_number(self):
@@ -1067,6 +1127,7 @@ class GovernmentIntervention(models.Model):
             self.number = self.reference_number
 
         super(GovernmentIntervention, self).save(**kwargs)
+
 
 class GovernmentInterventionResult(models.Model):
 
@@ -1109,6 +1170,7 @@ class GovernmentInterventionResult(models.Model):
 
     objects = hstore.HStoreManager()
 
+    @transaction.atomic
     def save(self, **kwargs):
 
         super(GovernmentInterventionResult, self).save(**kwargs)
@@ -1135,10 +1197,15 @@ class GovernmentInterventionResult(models.Model):
             if ref_activity.code not in self.activities:
                 ref_activity.delete()
 
+    @transaction.atomic
     def delete(self, using=None):
 
         self.activities_list.all().delete()
         super(GovernmentInterventionResult, self).delete(using=using)
+
+    def __unicode__(self):
+        return u'{}, {}'.format(self.intervention.number,
+                                self.result)
 
 
 class AmendmentLog(TimeStampedModel):

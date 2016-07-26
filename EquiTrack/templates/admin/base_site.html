@@ -19,12 +19,13 @@
 
     .header #branding {
         border-right: 0px;
-        width: 280px;
+        width: auto;
+        white-space: nowrap;
     }
 
     .header #branding a {
         text-decoration: none;
-        font-weight: 600;
+        font-weight: 700;
     }
 
     .header #branding h1 {
@@ -58,10 +59,17 @@
         font-weight: 300;
     }
 
+    #header .logo #test-text {
+        display: none;
+        color: #e6e600;
+        font-weight: 700;
+    }
+
     .header #user-tools, #country-select {
         padding: 15px 20px 0 0;
         float: right;
     }
+
 
     /* Footer */
     #footer
@@ -82,20 +90,6 @@
         padding-top: 22px;
         padding-right: 40px;
 
-    }
-
-    #testbar {
-        height:14px;
-        display:none;
-        position:relative;
-        background-color:indianred;
-        text-align:center;
-        font-family: 'Open Sans', sans-serif;
-        font-size:10px;
-        font-weight: bold;
-        color: #ffffff;
-        overflow:hidden;
-        width:100%;
     }
 
    /* ==========================================================================
@@ -148,9 +142,15 @@
     </script>
     <script>
      $(document).ready(function () {
+         var host = {
+             'localhost'                : 'Local Testing Environment',
+             'etools-dev.unicef.org'    : 'Develop Testing Environment',
+             'etools-staging.unicef.org': 'Staging Testing Environment'
+         };
          var cond = /localhost|etools-dev|etools-staging/g;
         if (cond.test(window.location)) {
-            $('#testbar').show();
+            $('#header').css({'background': '#BE1A1A'});
+            $('#test-text').show().text(' ' + host[window.location.hostname]);
         }
     });
 
@@ -158,15 +158,12 @@
 {% endblock %}
 
 {% block title %}{{ title }} | eTools{% endblock %}
-{% block topheader %}
-    <div id="testbar">Testing environment</div>
-{% endblock %}
 {% block branding %}
 
 
 
     <section id="container">
-    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools</span></a></div>
+    <div id="site-name"><img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100" style="padding-right: 30px" ><a href="{% url 'admin:index' %}" class="logo">e<span>Tools<span id="test-text">Testing Environment</span></span></a></div>
 {% endblock %}
 {% block usertools %}
         {% if has_permission %}

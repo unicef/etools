@@ -101,6 +101,12 @@ class Locality(models.Model):
         ordering = ['name']
 
 
+class LocationManager(models.Manager):
+
+    def get_queryset(self):
+        return super(LocationManager, self).get_queryset().select_related('gateway', 'locality')
+
+
 class Location(MPTTModel):
 
     name = models.CharField(max_length=254L)
@@ -114,6 +120,8 @@ class Location(MPTTModel):
     geom = models.MultiPolygonField(null=True, blank=True)
     point = models.PointField(null=True, blank=True)
     objects = models.GeoManager()
+
+    objects = LocationManager()
 
     def __unicode__(self):
         #TODO: Make generic
