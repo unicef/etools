@@ -45,21 +45,6 @@
     <script src="{{STATIC_URL}}js/html5shiv.js"></script>
     <script src="{{STATIC_URL}}js/respond.min.js"></script>
     <![endif]-->
-    <style>
-        #testbar {
-            height:14px;
-            display:none;
-            position:relative;
-            background-color:indianred;
-            text-align:center;
-            font-family: 'Open Sans', sans-serif;
-            font-size:10px;
-            font-weight: bold;
-            color: #ffffff;
-            overflow:hidden;
-            width:100%;
-        }
-    </style>
     {% block extra_head %}
     {% endblock %}
 
@@ -67,7 +52,6 @@
 
 {% block body %}
     <body class="animated fadeIn">
-    <div id="testbar">Testing environment</div>
 
 
     <section id="container">
@@ -78,7 +62,7 @@
                 <div></div>
                 <div class="brand">
                     <img class="logoimg" src="{{ STATIC_URL }}img/UNICEF_logo_white.png" width="100px" >
-                    <a href="{% url 'dashboard' %}" class="logo"><span>e</span>Tools</a>
+                    <a href="{% url 'dashboard' %}" class="logo"><span>e</span>Tools<span id="test-text">Testing Environment</span></a>
                 </div>
                 <!--logo end-->
 
@@ -323,9 +307,15 @@
     </script>
 <script>
      $(document).ready(function () {
+         var host = {
+             'localhost'                : 'Local Testing Environment',
+             'etools-dev.unicef.org'    : 'Develop Testing Environment',
+             'etools-staging.unicef.org': 'Staging Testing Environment'
+         };
          var cond = /localhost|etools-dev|etools-staging/g;
         if (cond.test(window.location)) {
-            $('#testbar').show();
+            $('#header').css({'background': '#BE1A1A'});
+            $('#test-text').show().text(' ' + host[window.location.hostname]);
         }
     });
 

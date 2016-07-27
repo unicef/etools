@@ -68,6 +68,10 @@ class Sector(models.Model):
             self.name
         )
 
+class ResultManager(models.Manager):
+    def get_queryset(self):
+        return super(ResultManager, self).get_queryset().select_related('result_structure', 'result_type')
+
 
 class Result(MPTTModel):
 
@@ -98,6 +102,8 @@ class Result(MPTTModel):
 
     hidden = models.BooleanField(default=False)
     ram = models.BooleanField(default=False)
+
+    objects = ResultManager()
 
     class Meta:
         ordering = ['name']
