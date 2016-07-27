@@ -225,3 +225,6 @@ class HACTDashboardView(TemplateView):
                 ]
             ).distinct()
         }
+
+class OutdatedBrowserView(TemplateView):
+    template_name = 'outdated_browser.html'

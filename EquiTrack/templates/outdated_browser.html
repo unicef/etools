@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block body %}
+
+    <style>
+        #error-container {
+            position: fixed;
+            overflow: auto;
+            background-color: #E3E4EF !important;
+        }
+
+        #error-container .block-error {
+            width: 900px;
+        }
+
+        #error-container .row img {
+            width: 100px;
+            height: 100px;
+        }
+
+    </style>
+
+    <section id="error-container">
+
+        <div class="text-center block-error">
+
+            <header>
+                <h1 class="error primary-txt">Uh Oh...</h1>
+
+                <p class="primary-txt">Your browser is too old to use eTools!</p>
+            </header>
+
+            <p>Please use one of these</p>
+
+            <div class="row">
+                <div class="col-md-2 col-md-offset-1">
+                    <a href="https://www.google.com/chrome/browser/desktop/" class="thumbnail">
+                        <img src="http://i.imgur.com/UkgSxVi.png" alt="Update Chrome">
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="https://www.mozilla.org/en-US/firefox/new/" class="thumbnail">
+                        <img src="http://i.imgur.com/Hg5gWGa.png" alt="Update firefox">
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="https://www.microsoft.com/en-us/windows/microsoft-edge" class="thumbnail">
+                        <img src="http://i.imgur.com/gLHtFZc.png" alt="Update Edge">
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="https://support.microsoft.com/en-us/help/18520/download-internet-explorer-11-offline-installer" class="thumbnail">
+                        <img src="http://i.imgur.com/bFyQmug.png" alt="Update IE">
+                    </a>
+                </div>
+                <div class="col-md-2">
+                    <a href="http://www.opera.com/" class="thumbnail">
+                        <img src="http://i.imgur.com/2WW8Vm6.png" alt="Update Opera">
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </section>
+{% endblock %}
