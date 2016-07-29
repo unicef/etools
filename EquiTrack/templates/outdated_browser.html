@@ -27,7 +27,7 @@
             <header>
                 <h1 class="error primary-txt">Uh Oh...</h1>
 
-                <p class="primary-txt">Your browser is too old to use eTools!</p>
+                <p class="primary-txt">Your browser is too old to use eTools</p>
             </header>
 
             <p>Please use one of these</p>
@@ -35,30 +35,34 @@
             <div class="row">
                 <div class="col-md-2 col-md-offset-1">
                     <a href="https://www.google.com/chrome/browser/desktop/" class="thumbnail">
-                        <img src="http://i.imgur.com/UkgSxVi.png" alt="Update Chrome">
+                        <img src="{{ STATIC_URL }}img/chrome_logo.png" alt="Update Chrome">
                     </a>
                 </div>
                 <div class="col-md-2">
                     <a href="https://www.mozilla.org/en-US/firefox/new/" class="thumbnail">
-                        <img src="http://i.imgur.com/Hg5gWGa.png" alt="Update firefox">
+                        <img src="{{ STATIC_URL }}img/firefox_logo.png" alt="Update firefox">
                     </a>
                 </div>
                 <div class="col-md-2">
                     <a href="https://www.microsoft.com/en-us/windows/microsoft-edge" class="thumbnail">
-                        <img src="http://i.imgur.com/gLHtFZc.png" alt="Update Edge">
+                        <img src="{{ STATIC_URL }}img/edge_logo.png" alt="Update Edge">
                     </a>
                 </div>
                 <div class="col-md-2">
-                    <a href="https://support.microsoft.com/en-us/help/18520/download-internet-explorer-11-offline-installer" class="thumbnail">
-                        <img src="http://i.imgur.com/bFyQmug.png" alt="Update IE">
+                    <a href="https://support.microsoft.com/en-us/help/18520/download-internet-explorer-11-offline-installer"
+                       class="thumbnail">
+                        <img src="{{ STATIC_URL }}img/internet_explorer_logo.png" alt="Update IE">
                     </a>
                 </div>
                 <div class="col-md-2">
                     <a href="http://www.opera.com/" class="thumbnail">
-                        <img src="http://i.imgur.com/2WW8Vm6.png" alt="Update Opera">
+                        <img src="{{ STATIC_URL }}img/opera_logo.png" alt="Update Opera">
                     </a>
                 </div>
             </div>
+
+            <p>Hint: we prefer Chrome ;)</p>
+
         </div>
 
     </section>
