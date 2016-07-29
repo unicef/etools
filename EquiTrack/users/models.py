@@ -1,13 +1,10 @@
 import logging
 
 from django.conf import settings
-from django.db import models
-from django.contrib.auth.models import User
-from django.contrib.auth.models import Group
+from django.db import transaction, connection, models
+from django.contrib.auth.models import User, Group
 from django.db.models.signals import post_save, pre_delete
 from djangosaml2.signals import pre_user_save
-
-from django.db import transaction, connection
 
 from tenant_schemas.models import TenantMixin
 
