@@ -23,7 +23,7 @@ class Command(BaseCommand):
                 user.is_staff = True
                 user.save()
                 userp = UserProfile.objects.get(user=user)
-                country = Country.objects.get(name='uat')
+                country = Country.objects.get(name='UAT')
                 userp.country = country
                 userp.country_override = country
                 userp.save()
