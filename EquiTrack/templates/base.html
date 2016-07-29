@@ -320,6 +320,12 @@
     });
 
     </script>
+<script>
+    // Load the outdated_browser page if browser is IE < 11
+    if (window.navigator.userAgent.indexOf('MSIE') > 0)
+         $('html').load("outdated_browser");
+
+    </script>
 {% block extra_js %}
 {% endblock %}
 
