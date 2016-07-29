@@ -1,26 +1,25 @@
-import sys
+import os
 from django.core.management.base import BaseCommand, CommandError
 from users.models import UserProfile, Country, Office, Section
 from django.contrib.auth.models import User
 
+USERNAME = os.environ.get('TEST_USERNAME')
+PASSWORD = os.environ.get('TEST_PASSWORD')
 
 class Command(BaseCommand):
-    help = 'Creates new test users with '             \
-                'username: testuser_(num), '           \
-                'email:    testuser_(num)@unicef.org, ' \
-                'password: un1c3f, '                     \
-                'country: uat'
+    help = 'Creates new test users'
 
     def add_arguments(self, parser):
         parser.add_argument('num_users', type=int, help='Number of test users to create')
 
     def handle(self, *args, **options):
         try:
-            numTestUsers = User.objects.filter(username__startswith = 'testuser_').count()
+            numTestUsers = User.objects.filter(username__startswith = USERNAME).count()
             numNewUsers = options['num_users']
             for i in xrange(numTestUsers, numTestUsers + numNewUsers):
-                user = User.objects.create_user(username="testuser_" + str(i),
-                                                email="testuser_" + str(i) + "@unicef.org", password="un1c3f")
+                user = User.objects.create_user(username=USERNAME + str(i),
+                                                email=USERNAME + str(i) + "@unicef.org",
+                                                password=PASSWORD)
                 user.is_staff = True
                 user.save()
                 userp = UserProfile.objects.get(user=user)
