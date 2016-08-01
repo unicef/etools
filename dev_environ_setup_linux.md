@@ -25,7 +25,7 @@ $ sudo -u postgres psql postgres
 Step 3. Set Postgres user password to "postgres", and create PostGIS required extensions:
 
 ```bash
-# alter user postgres with password 'postgres';
+# ALTER USER postgres PASSWORD 'postgres';
 # CREATE EXTENSION postgis;
 # CREATE EXTENSION postgis_topology;
 # CREATE EXTENSION fuzzystrmatch;
@@ -61,14 +61,13 @@ $ sudo pip install virtualenvwrapper
 
 Step 7. Create Virtual Environment
 
+* Add `. /usr/local/bin/virtualenvwrapper.sh` to the end of ~/.bashrc
+
+* Restart the terminal
+
 ```bash
 $ mkdir ~/.virtualenvs
 $ export WORKON_HOME=~/.virtualenvs
-```
-
-* Add `. /usr/local/bin/virtualenvwrapper.sh` to the end of ~/.bashrc
-
-```bash
 $ mkvirtualenv env1
 ```
 
