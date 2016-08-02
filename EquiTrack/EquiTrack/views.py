@@ -225,3 +225,6 @@ class HACTDashboardView(TemplateView):
                 ]) | (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
             ).distinct()
         }
+
+class OutdatedBrowserView(TemplateView):
+    template_name = 'outdated_browser.html'
