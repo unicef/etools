@@ -1,10 +1,9 @@
 FROM unicef/etools:base
 
 RUN \
-  apt-get install --yes nodejs
-
-RUN \
-  apt-get install --yes npm
+  cd /tmp && \
+  curl -sL https://deb.nodesource.com/setup | sudo bash -
+  sudo apt-get install nodejs
 
 RUN \
   npm install -g gulp && \
