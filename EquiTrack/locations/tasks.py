@@ -15,6 +15,7 @@ def update_sites_from_cartodb(carto_table):
 
     sites_created = sites_updated = sites_not_added = 0
     try:
+        # query for cartodb
         sites = client.sql(
             'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
                 carto_table.name_col,
