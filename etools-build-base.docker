@@ -2,7 +2,7 @@ FROM unicef/etools:base
 
 RUN \
   cd /tmp && \
-  curl -sL https://deb.nodesource.com/setup | sudo bash -
+  curl -sL https://deb.nodesource.com/setup | bash -
   apt-get install nodejs
 
 RUN \
