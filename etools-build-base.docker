@@ -1,7 +1,7 @@
 FROM unicef/etools:base
 
 RUN \
-  sudo apt-get install --yes nodejs
+  apt-get install --yes nodejs
 
 RUN \
   npm install -g gulp && \
