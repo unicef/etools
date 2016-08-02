@@ -15,8 +15,12 @@ def update_sites_from_cartodb(carto_table):
 
     sites_created = sites_updated = sites_not_added = 0
     try:
+        # query for cartodb
         sites = client.sql(
-            'select * from {}'.format(carto_table.table_name)
+            'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
+                carto_table.name_col,
+                carto_table.pcode_col,
+                carto_table.table_name)
         )
     except CartoDBException as e:
         logging.exception("CartoDB exception occured", exc_info=True)
