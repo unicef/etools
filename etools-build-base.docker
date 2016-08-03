@@ -1,13 +1,11 @@
 FROM unicef/etools:base
 
-RUN NODE_VERSION="v6.2.2"
-RUN curl -LO http://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.gz
-RUN tar xzf node-$NODE_VERSION-linux-x64.tar.gz
-RUN cp -rp node-$NODE_VERSION-linux-x64 /usr/local/
-RUN ln -s /usr/local/node-$NODE_VERSION-linux-x64 /usr/local/node
-RUN export PATH=$PATH:/usr/local/node/bin
-
-RUN \
-  npm install -g gulp && \
-  npm install -g bower
+RUN NODE_VERSION="v6.2.2" && \
+    curl -LO http://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.gz && \
+    tar xzf node-$NODE_VERSION-linux-x64.tar.gz && \
+    cp -rp node-$NODE_VERSION-linux-x64 /usr/local/ && \
+    ln -s /usr/local/node-$NODE_VERSION-linux-x64 /usr/local/node && \
+    export PATH=$PATH:/usr/local/node/bin && \
+    npm install -g gulp && \
+    npm install -g bower
 
