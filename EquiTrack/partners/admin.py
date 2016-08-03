@@ -553,6 +553,26 @@ class DocumentInlineAdmin(admin.TabularInline):
     changeform_link.short_description = 'View Intervention Details'
 
 
+class HiddenPartnerFilter(admin.SimpleListFilter):
+
+    title = 'Show Hidden'
+    parameter_name = 'hidden'
+
+    def lookups(self, request, model_admin):
+
+        return [
+            (True, 'Yes'),
+            (False, 'No')
+        ]
+
+    def queryset(self, request, queryset):
+
+        value = self.value()
+        if value == 'True':
+            return queryset.filter(hidden=True)
+        return queryset.filter(hidden=False)
+
+
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
     resource_class = PartnerResource
@@ -562,6 +582,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     )
     list_filter = (
         u'partner_type',
+        HiddenPartnerFilter,
     )
     list_display = (
         u'name',
@@ -611,6 +632,29 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     suit_form_includes = (
         ('admin/partners/assurance_table.html', '', ''),
     )
+
+    actions = (
+        'hide_partners',
+        'show_partners'
+    )
+
+    def hide_partners(self, request, queryset):
+
+        partners = 0
+        for partner in queryset:
+            partner.hidden = True
+            partner.save()
+            partners += 1
+        self.message_user(request, '{} partners were hidden'.format(partners))
+
+    def show_partners(self, request, queryset):
+
+        partners = 0
+        for partner in queryset:
+            partner.hidden = False
+            partner.save()
+            partners += 1
+        self.message_user(request, '{} partners were shown'.format(partners))
 
 
 class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
