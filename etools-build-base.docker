@@ -7,7 +7,8 @@ RUN curl -LO http://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.t
     cp -rp node-$NODE_VERSION-linux-x64 /usr/local/ && \
     ln -s /usr/local/node-$NODE_VERSION-linux-x64 /usr/local/node && \
 
-RUN export PATH=$PATH:/usr/local/node/bin && \
-    npm install -g gulp && \
+ENV PATH=$PATH:/usr/local/node/bin
+
+RUN npm install -g gulp && \
     npm install -g bower
 
