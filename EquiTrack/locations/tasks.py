@@ -16,12 +16,20 @@ def update_sites_from_cartodb(carto_table):
     sites_created = sites_updated = sites_not_added = 0
     try:
         # query for cartodb
-        sites = client.sql(
-            'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
+        qry = ''
+        if carto_table.parent_code_col and carto_table.parent:
+            qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {}, {} from {}'.format(
+                carto_table.name_col,
+                carto_table.pcode_col,
+                carto_table.parent_code_col,
+                carto_table.table_name)
+        else:
+            qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
                 carto_table.name_col,
                 carto_table.pcode_col,
                 carto_table.table_name)
-        )
+
+        sites = client.sql(qry)
     except CartoDBException as e:
         logging.exception("CartoDB exception occured", exc_info=True)
     else:
@@ -45,11 +53,15 @@ def update_sites_from_cartodb(carto_table):
                     parent = carto_table.parent.__class__
                     parent_code = row[carto_table.parent_code_col]
                     parent_instance = Location.objects.get(p_code=parent_code)
-                except (parent.DoesNotExist, parent.MultipleObjectsReturned) as exp:
-                    msg = "{} locations found for parent code: {}".format(
-                        'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
-                        parent_code
-                    )
+                except Exception as exp:
+                    msg = ""
+                    if exp is parent.MultipleObjectsReturned:
+                        msg = "{} locations found for parent code: {}".format(
+                            'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
+                            parent_code
+                        )
+                    else:
+                        msg = exp.message
                     logger.warning(msg)
                     sites_not_added += 1
                     continue
