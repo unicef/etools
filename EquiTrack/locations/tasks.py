@@ -54,7 +54,7 @@ def update_sites_from_cartodb(carto_table):
                     parent_code = row[carto_table.parent_code_col]
                     parent_instance = Location.objects.get(p_code=parent_code)
                 except Exception as exp:
-                    msg = ""
+                    msg = " "
                     if exp is parent.MultipleObjectsReturned:
                         msg = "{} locations found for parent code: {}".format(
                             'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
