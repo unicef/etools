@@ -93,7 +93,7 @@ SAML_ATTRIBUTE_MAPPING = {
     'givenName': ('first_name',),
     'surname': ('last_name',),
 }
-SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
+# SAML_DJANGO_USER_MAIN_ATTRIBUTE = 'email'
 SAML_CREATE_UNKNOWN_USER = True
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
