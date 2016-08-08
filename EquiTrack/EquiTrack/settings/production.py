@@ -10,6 +10,8 @@ ALLOWED_HOSTS = [
 ]
 ########## END HOST CONFIGURATION
 
+ETRIPS_VERSION = environ.get('ETRIPS_VERSION', None)
+
 #Sentry config
 RAVEN_CONFIG = {
     'dsn': environ.get('SENTRY_DSN', None),
