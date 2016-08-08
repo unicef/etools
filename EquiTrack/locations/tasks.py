@@ -99,7 +99,7 @@ def update_sites_from_cartodb(carto_table):
 
                 try:
                     location.save()
-                except IntegrityError as e:
+                except Exception as e:
                     logger.exception('Error whilst saving location: {}'.format(site_name))
                     sites_not_added += 1
                     continue
