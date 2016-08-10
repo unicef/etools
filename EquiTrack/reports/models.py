@@ -1,8 +1,13 @@
 __author__ = 'jcranwellward'
 
 from django.db import models
+import django.contrib.postgres.fields as pgfields
+from jsonfield import JSONField
+import django.contrib.gis.db.models as gismodels
 
+from users.models import UserProfile
 from mptt.models import MPTTModel, TreeForeignKey
+from locations.models import Location
 from paintstore.fields import ColorPickerField
 from model_utils.models import (
     TimeFramedModel,
@@ -68,6 +73,12 @@ class Sector(models.Model):
         )
 
 
+class Milestone(models.Model):
+
+    description = models.TextField()
+    assumptions = models.TextField(null=True, blank=True)
+
+
 class Result(MPTTModel):
 
     result_structure = models.ForeignKey(ResultStructure)
@@ -83,6 +94,16 @@ class Result(MPTTModel):
         related_name='children',
         db_index=True
     )
+    assumptions = models.TextField(null=True, blank=True)
+    # Holds UserProfile ids. For tagging this solution is sufficient,
+    # but it lacks integrity checking. Switch to M2M field if needed.
+    users = pgfields.ArrayField(models.IntegerField(), default=list)
+    milestone = models.OneToOneField(
+        Milestone,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
     # activity level attributes
     humanitarian_tag = models.BooleanField(default=False)
@@ -94,6 +115,24 @@ class Result(MPTTModel):
     sic_name = models.CharField(max_length=255, null=True, blank=True)
     activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
     activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
+    sections = pgfields.ArrayField(models.CharField(
+        max_length=255, blank=True), default=list)
+    LABELS = (
+        ("label1","label1"),
+        ("label2","label2"),
+        ("label3","label3"),
+    )
+    labels = pgfields.ArrayField(models.CharField(
+        max_length=255, null=True, blank=True, choices=LABELS), default=list)
+    STATUS = (
+        ("on track","on track"),
+        ("constraint","constraint"),
+        ("status3","status3"),
+    )
+    status = models.CharField(max_length=255, null=True, blank=True, choices=STATUS)
+    geotag = models.ManyToManyField(Location)
+    prioritized = models.BooleanField(default=False)
+    metadata = JSONField(null=True, blank=True)
 
     hidden = models.BooleanField(default=False)
     ram = models.BooleanField(default=False)
@@ -213,4 +252,3 @@ class Indicator(models.Model):
             )
         total = programmed.aggregate(models.Sum('current_progress'))
         return (total[total.keys()[0]] or 0) + self.current if self.current else 0
-

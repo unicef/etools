@@ -56,8 +56,9 @@ sqlparse==0.1.19  # for django debug toolbar to not break admin
 
 # testing libs
 coverage==4.0
-factory_boy==2.5.2
+factory_boy==2.7.0
 django-debug-toolbar==1.4
+Faker==0.1.4
 
 git+https://github.com/robertavram/djangosaml2.git#egg=djangosaml2
 git+https://github.com/robertavram/django-storages.git#egg=django-storages

@@ -2,7 +2,7 @@ __author__ = 'achamseddine'
 
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory
+from EquiTrack.factories import UserFactory, ResultFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
@@ -10,6 +10,9 @@ class TestReportViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
+        self.location1 = LocationFactory()
+        self.location2 = LocationFactory()
+        self.result1 = ResultFactory(geotag=[self.location1, self.location2])
 
     def test_api_resultstructures_list(self):
         response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)
@@ -35,6 +38,7 @@ class TestReportViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/reports/results/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        print(response)
 
     def test_api_units_list(self):
         response = self.forced_auth_req('get', '/api/reports/units/', user=self.unicef_staff)
