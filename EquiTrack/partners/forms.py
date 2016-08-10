@@ -506,7 +506,7 @@ class PartnershipForm(UserGroupForm):
             labels = list(series.axes[0])  # get the labels in order
 
             # check if there are correct time frames set on activities:
-            at_least_one_tf = [x for x in labels if 'TF_' in x]
+            at_least_one_tf = [x for x in labels if 'TF_' in str(x)]
             if not at_least_one_tf:
                 raise ValidationError('There are no valid time frames for the activities,'
                                       'please prefix activities with "TF_')
