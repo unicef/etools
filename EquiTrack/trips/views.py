@@ -17,6 +17,7 @@ from rest_framework.exceptions import (
     PermissionDenied,
     ParseError,
 )
+from rest_framework.permissions import IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from users.models import UserProfile, Office, Section
@@ -179,6 +180,7 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
 
 
 class TripUploadPictureView(APIView):
+    permission_classes = (IsAdminUser,)
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request, **kwargs):
