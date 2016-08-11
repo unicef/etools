@@ -77,10 +77,9 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
 
 class MilestoneSerializer(serializers.ModelSerializer):
 
-    id = serializers.CharField(read_only=True)
-
     class Meta:
         model = Milestone
+        fields = ("id", "description", "assumptions",)
 
 
 class ResultSerializer(serializers.ModelSerializer):
