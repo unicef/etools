@@ -1,6 +1,7 @@
 __author__ = 'achamseddine'
 
 from rest_framework import viewsets, mixins
+from rest_framework.permissions import IsAdminUser
 from .models import (
     ResultStructure,
     ResultType,
@@ -67,6 +68,7 @@ class MilestoneViewSet(viewsets.ModelViewSet):
     """
     queryset = Milestone.objects.all()
     serializer_class = MilestoneSerializer
+    permission_classes = ("IsAdminUser",)
 
 
 class ResultViewSet(mixins.ListModelMixin,
