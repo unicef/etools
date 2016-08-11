@@ -12,7 +12,7 @@ class TestReportViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.location1 = LocationFactory()
         self.location2 = LocationFactory()
-        self.result1 = ResultFactory(geotag=[self.location1, self.location2])
+        self.result1 = ResultFactory(geotag=[self.location1, self.location2], users=[self.unicef_staff.profile.id])
 
     def test_api_resultstructures_list(self):
         response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)

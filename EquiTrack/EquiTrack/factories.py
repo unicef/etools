@@ -201,7 +201,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
     assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
-    users = [user_models.UserProfile.objects.all().first().id]
+    users = []
     milestone = factory.SubFactory(MilestoneFactory)
     sections = [fuzzy.FuzzyText().fuzz() for _ in xrange(3)]
     labels = ["label1", "label2"]
