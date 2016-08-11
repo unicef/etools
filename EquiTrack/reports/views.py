@@ -68,7 +68,7 @@ class MilestoneViewSet(viewsets.ModelViewSet):
     """
     queryset = Milestone.objects.all()
     serializer_class = MilestoneSerializer
-    permission_classes = ("IsAdminUser",)
+    permission_classes = (IsAdminUser,)
 
 
 class ResultViewSet(mixins.ListModelMixin,
@@ -78,6 +78,7 @@ class ResultViewSet(mixins.ListModelMixin,
     """
     queryset = Result.objects.all()
     serializer_class = ResultSerializer
+    permission_classes = (IsAdminUser,)
 
 
 class IndicatorViewSet(mixins.ListModelMixin,
