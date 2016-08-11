@@ -5,7 +5,7 @@ import django.contrib.postgres.fields as pgfields
 from jsonfield import JSONField
 import django.contrib.gis.db.models as gismodels
 
-from users.models import UserProfile
+from users.models import UserProfile, Section
 from mptt.models import MPTTModel, TreeForeignKey
 from locations.models import Location
 from paintstore.fields import ColorPickerField
@@ -115,8 +115,7 @@ class Result(MPTTModel):
     sic_name = models.CharField(max_length=255, null=True, blank=True)
     activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
     activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
-    sections = pgfields.ArrayField(models.CharField(
-        max_length=255, blank=True), default=list)
+    sections = models.ManyToManyField(Section)
     LABELS = (
         ("label1","label1"),
         ("label2","label2"),

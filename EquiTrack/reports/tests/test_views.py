@@ -2,7 +2,7 @@ __author__ = 'achamseddine'
 
 from rest_framework import status
 
-from EquiTrack.factories import UserFactory, ResultFactory, LocationFactory
+from EquiTrack.factories import UserFactory, ResultFactory, LocationFactory, SectionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
@@ -12,7 +12,13 @@ class TestReportViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.location1 = LocationFactory()
         self.location2 = LocationFactory()
-        self.result1 = ResultFactory(geotag=[self.location1, self.location2], users=[self.unicef_staff.profile.id])
+        self.section1 = SectionFactory()
+        self.section2 = SectionFactory()
+        self.result1 = ResultFactory(
+                            geotag=[self.location1,self.location2],
+                            users=[self.unicef_staff.profile.id],
+                            sections=[self.section1,self.section2]
+                        )
 
     def test_api_resultstructures_list(self):
         response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)

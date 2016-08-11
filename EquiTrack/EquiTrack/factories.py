@@ -203,7 +203,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
     users = []
     milestone = factory.SubFactory(MilestoneFactory)
-    sections = [fuzzy.FuzzyText().fuzz() for _ in xrange(3)]
+    sections = [factory.SubFactory(SectionFactory)]
     labels = ["label1", "label2"]
     geotag = [factory.SubFactory(LocationFactory)]
     status = "status"
@@ -218,6 +218,15 @@ class ResultFactory(factory.django.DjangoModelFactory):
         if extracted:
             for geotag in extracted:
                 self.geotag.add(geotag)
+
+    @factory.post_generation
+    def sections(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for sections in extracted:
+                self.sections.add(sections)
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
