@@ -22,7 +22,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
         "ITEM_DESC",         # VARCHAR2	FR Item Description
         "FR_DUE_DATE",            # DATE	    FR Due Dt
         "IR_WBS",               # VARCHAR2	IR WBS
-        "COMMITMENT_DOC_TYPE",  # VARCHAR2	Commitment Doc Type
+        "COMMITMENT_SUBTYPE_CODE",  # VARCHAR2	Commitment Doc Type
         "COMMITMENT_DESC",
         "COMMITMENT_REF",       # VARCHAR2	Commitment Reference
         "FR_ITEM_AMT",          # Number    Fr Item Amount
@@ -67,7 +67,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
                     funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
                     funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])
                     funding_commitment.wbs = fc_line["IR_WBS"]
-                    funding_commitment.fc_type = fc_line["COMMITMENT_DOC_TYPE"]
+                    funding_commitment.fc_type = fc_line["COMMITMENT_SUBTYPE_CODE"]
                     funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
                     funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
                     funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]
