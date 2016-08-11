@@ -185,7 +185,7 @@ class RequireOneLocationFormSet(BaseInlineFormSet):
             return
 
         # Locations cannot be changed if trip was approved by supervisor
-        # new_locations = set([f.instance for f in self.forms if f.cleaned_data])
+        new_locations = [f.instance for f in self.forms if f.cleaned_data]
         # if self.instance.approved_by_supervisor:
         #     old_locations = set(self.instance.triplocation_set.all())
         #     if old_locations != new_locations:
