@@ -171,8 +171,8 @@ class MilestoneFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Milestone
 
-    description = factory.Faker("text")
-    assumptions = factory.Faker("text")
+    description = factory.Sequence(lambda n: 'Description {}'.format(n))
+    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
@@ -200,7 +200,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
-    assumptions = factory.Faker("text")
+    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
     users = [user_models.UserProfile.objects.all().first().id]
     milestone = factory.SubFactory(MilestoneFactory)
     sections = [fuzzy.FuzzyText().fuzz() for _ in xrange(3)]

@@ -38,7 +38,6 @@ class TestReportViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/reports/results/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        print(response)
 
     def test_api_units_list(self):
         response = self.forced_auth_req('get', '/api/reports/units/', user=self.unicef_staff)
