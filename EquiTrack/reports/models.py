@@ -171,7 +171,7 @@ class Indicator(models.Model):
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=1024)
     code = models.CharField(max_length=50, null=True, blank=True)
     unit = models.ForeignKey(Unit, null=True, blank=True)
 
