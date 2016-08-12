@@ -3,7 +3,6 @@ __author__ = 'jcranwellward'
 from django.db import models
 import django.contrib.postgres.fields as pgfields
 from jsonfield import JSONField
-import django.contrib.gis.db.models as gismodels
 
 from users.models import UserProfile, Section
 from mptt.models import MPTTModel, TreeForeignKey
