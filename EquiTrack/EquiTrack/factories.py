@@ -8,7 +8,6 @@ from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
 
 import factory
-import factory.fuzzy as fuzzy
 
 from users import models as user_models
 from trips import models as trip_models
