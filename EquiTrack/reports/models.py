@@ -115,13 +115,6 @@ class Result(MPTTModel):
     activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
     activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
     sections = models.ManyToManyField(Section)
-    LABELS = (
-        ("label1","label1"),
-        ("label2","label2"),
-        ("label3","label3"),
-    )
-    labels = pgfields.ArrayField(models.CharField(
-        max_length=255, null=True, blank=True, choices=LABELS), default=list)
     STATUS = (
         ("On Track","On Track"),
         ("Constrained","Constrained"),

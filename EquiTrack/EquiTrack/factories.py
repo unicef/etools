@@ -203,7 +203,6 @@ class ResultFactory(factory.django.DjangoModelFactory):
     users = []
     milestone = factory.SubFactory(MilestoneFactory)
     sections = [factory.SubFactory(SectionFactory)]
-    labels = ["label1", "label2"]
     geotag = [factory.SubFactory(LocationFactory)]
     status = "Target Met"
     prioritized = False
