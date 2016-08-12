@@ -205,7 +205,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     sections = [factory.SubFactory(SectionFactory)]
     labels = ["label1", "label2"]
     geotag = [factory.SubFactory(LocationFactory)]
-    status = "status"
+    status = "Target Met"
     prioritized = False
     metadata = {"status_description": "some status"}
 

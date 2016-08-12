@@ -123,9 +123,10 @@ class Result(MPTTModel):
     labels = pgfields.ArrayField(models.CharField(
         max_length=255, null=True, blank=True, choices=LABELS), default=list)
     STATUS = (
-        ("on track","on track"),
-        ("constraint","constraint"),
-        ("status3","status3"),
+        ("On Track","On Track"),
+        ("Constrained","Constrained"),
+        ("No Progress","No Progress"),
+        ("Target Met","Target Met"),
     )
     status = models.CharField(max_length=255, null=True, blank=True, choices=STATUS)
     geotag = models.ManyToManyField(Location)
