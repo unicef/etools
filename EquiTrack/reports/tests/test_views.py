@@ -1,7 +1,10 @@
 __author__ = 'achamseddine'
 
+import random
+
 from rest_framework import status
 
+from reports.models import ResultType
 from EquiTrack.factories import UserFactory, ResultFactory, LocationFactory, SectionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
@@ -14,10 +17,12 @@ class TestReportViews(APITenantTestCase):
         self.location2 = LocationFactory()
         self.section1 = SectionFactory()
         self.section2 = SectionFactory()
+        self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
         self.result1 = ResultFactory(
                             geotag=[self.location1,self.location2],
                             users=[self.unicef_staff.profile.id],
-                            sections=[self.section1,self.section2]
+                            sections=[self.section1,self.section2],
+                            result_type=self.result_type
                         )
 
     def test_api_resultstructures_list(self):
