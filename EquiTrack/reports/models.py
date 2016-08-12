@@ -72,12 +72,6 @@ class Sector(models.Model):
         )
 
 
-class Milestone(models.Model):
-
-    description = models.TextField()
-    assumptions = models.TextField(null=True, blank=True)
-
-
 class Result(MPTTModel):
 
     result_structure = models.ForeignKey(ResultStructure)
@@ -97,12 +91,6 @@ class Result(MPTTModel):
     # Holds UserProfile ids. For tagging this solution is sufficient,
     # but it lacks integrity checking. Switch to M2M field if needed.
     users = pgfields.ArrayField(models.IntegerField(), default=list)
-    milestone = models.OneToOneField(
-        Milestone,
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-    )
 
     # activity level attributes
     humanitarian_tag = models.BooleanField(default=False)
@@ -147,6 +135,13 @@ class Result(MPTTModel):
             if node.hidden is not self.hidden:
                 node.hidden = self.hidden
                 node.save()
+
+
+class Milestone(models.Model):
+
+    result = models.ForeignKey(Result, related_name="milestones")
+    description = models.TextField()
+    assumptions = models.TextField(null=True, blank=True)
 
 
 class Goal(models.Model):

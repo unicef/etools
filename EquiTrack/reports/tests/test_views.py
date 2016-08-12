@@ -5,7 +5,8 @@ import random
 from rest_framework import status
 
 from reports.models import ResultType
-from EquiTrack.factories import UserFactory, ResultFactory, LocationFactory, SectionFactory
+from EquiTrack.factories import UserFactory, ResultFactory, LocationFactory
+from EquiTrack.factories import SectionFactory, MilestoneFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
@@ -24,6 +25,8 @@ class TestReportViews(APITenantTestCase):
                             sections=[self.section1,self.section2],
                             result_type=self.result_type
                         )
+        self.milestone1 = MilestoneFactory(result=self.result1)
+        self.milestone2 = MilestoneFactory(result=self.result1)
 
     def test_api_resultstructures_list(self):
         response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)

@@ -96,6 +96,7 @@ class ResultSerializer(serializers.ModelSerializer):
                 read_only=False,
                 queryset=Location.objects.all()
             )
+    milestones = MilestoneSerializer(many=True)
 
     class Meta:
         model = Result

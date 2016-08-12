@@ -166,14 +166,6 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     initiation_date = datetime.today()
 
 
-class MilestoneFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Milestone
-
-    description = factory.Sequence(lambda n: 'Description {}'.format(n))
-    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
-
-
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.ResultType
@@ -201,7 +193,6 @@ class ResultFactory(factory.django.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
     assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
     users = []
-    milestone = factory.SubFactory(MilestoneFactory)
     sections = [factory.SubFactory(SectionFactory)]
     geotag = [factory.SubFactory(LocationFactory)]
     status = "Target Met"
@@ -225,6 +216,15 @@ class ResultFactory(factory.django.DjangoModelFactory):
         if extracted:
             for sections in extracted:
                 self.sections.add(sections)
+
+
+class MilestoneFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Milestone
+
+    result = factory.SubFactory(ResultFactory)
+    description = factory.Sequence(lambda n: 'Description {}'.format(n))
+    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
