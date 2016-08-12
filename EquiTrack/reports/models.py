@@ -1,8 +1,12 @@
 __author__ = 'jcranwellward'
 
 from django.db import models
+import django.contrib.postgres.fields as pgfields
+from jsonfield import JSONField
 
+from users.models import UserProfile, Section
 from mptt.models import MPTTModel, TreeForeignKey
+from locations.models import Location
 from paintstore.fields import ColorPickerField
 from model_utils.models import (
     TimeFramedModel,
@@ -88,6 +92,10 @@ class Result(MPTTModel):
         related_name='children',
         db_index=True
     )
+    assumptions = models.TextField(null=True, blank=True)
+    # Holds UserProfile ids. For tagging this solution is sufficient,
+    # but it lacks integrity checking. Switch to M2M field if needed.
+    users = pgfields.ArrayField(models.IntegerField(), default=list)
 
     # activity level attributes
     humanitarian_tag = models.BooleanField(default=False)
@@ -99,6 +107,17 @@ class Result(MPTTModel):
     sic_name = models.CharField(max_length=255, null=True, blank=True)
     activity_focus_code = models.CharField(max_length=8, null=True, blank=True)
     activity_focus_name = models.CharField(max_length=255, null=True, blank=True)
+    sections = models.ManyToManyField(Section)
+    STATUS = (
+        ("On Track","On Track"),
+        ("Constrained","Constrained"),
+        ("No Progress","No Progress"),
+        ("Target Met","Target Met"),
+    )
+    status = models.CharField(max_length=255, null=True, blank=True, choices=STATUS)
+    geotag = models.ManyToManyField(Location)
+    prioritized = models.BooleanField(default=False)
+    metadata = JSONField(null=True, blank=True)
 
     hidden = models.BooleanField(default=False)
     ram = models.BooleanField(default=False)
@@ -131,6 +150,13 @@ class Result(MPTTModel):
             if node.hidden is not self.hidden:
                 node.hidden = self.hidden
                 node.save()
+
+
+class Milestone(models.Model):
+
+    result = models.ForeignKey(Result, related_name="milestones")
+    description = models.TextField()
+    assumptions = models.TextField(null=True, blank=True)
 
 
 class Goal(models.Model):
@@ -228,4 +254,3 @@ class Indicator(models.Model):
             )
         total = programmed.aggregate(models.Sum('current_progress'))
         return (total[total.keys()[0]] or 0) + self.current if self.current else 0
-

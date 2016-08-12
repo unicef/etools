@@ -3,20 +3,30 @@ Development Environment Setup Instructions (OSX)
 
 Setup Server
 ------------
-Step 1. Install latest python
+Step 1. Check python version, it should be 2.7.x
 
 ```bash
-$ brew install python
+$ python --version
+Python 2.7.10
 ```
 
-Step 2. Install Postgres with brew, create Postgres database, and run the Postgres upon startup
+Step 2. Install Postgres with brew, create Postgres database, and run the Postgres upon startup:
 
 ```bash
 $ brew install postgresql
-$ initdb /usr/local/var/postgres
-$ mkdir -p ~/Library/LaunchAgents
-$ ln -sfv /usr/local/opt/postgresql/*.plist ~/Library/LaunchAgents
-$ launchctl load ~/Library/LaunchAgents/homebrew.mxcl.postgresql.plist
+```
+
+In case of failing initdb during install, change the ownership of the postgres dir, and re-run postinstall to make initdb work:
+
+```bash
+$ sudo chown -R `whoami` /usr/local/var/postgres  
+$ brew postinstall postgresql
+```
+
+If all went fine, start the service:
+
+```bash
+$ brew services start postgresql
 ```
 
 Step 3. Install PostGIS and connect to database:
@@ -33,7 +43,14 @@ Step 4. Create Postgres user and PostGIS required extensions:
 # CREATE EXTENSION postgis;
 # CREATE EXTENSION postgis_topology;
 # CREATE EXTENSION fuzzystrmatch;
+# CREATE EXTENSION hstore;
 # \q
+```
+
+Modifiy the base template so all newly created test databases will have hstore extension:
+
+```bash
+$ psql -d template1 -c 'CREATE EXTENSION hstore;'
 ```
 
 Step 5. Install Redis:
@@ -52,6 +69,7 @@ $ git checkout etools
 Step 6. Install VirtualEnv and VirtualEnvWrapper, create Virtual Environment and load Python packages
 
 ```bash
+$ pip install --upgrade pip  # cryptography install fails due to openssl problems in case of pip 7.x
 $ pip install virtualenv
 $ pip install virtualenvwrapper
 $ export WORKON_HOME=~/Envs
@@ -71,9 +89,45 @@ $ export DATABASE_URL=postgis://postgres:password@localhost:5432/postgres
 
 Step 8. Migrate database schemas and create database superuser
 
+You may need to drop and recreate the database to start from scratch:
+
 ```bash
+$ dropdb -U postgres postgres
+$ createdb -U postgres postgres
+```
+
+Then migrate the database and add the user:
+
+```bash
+$ source ~/.virtualenvs/env1/bin/activate
 $ python manage.py migrate_schemas --fake-initial --noinput
-$ python manage.py createsuperuser
+$ python manage.py createsuperuser --username=etoolusr
+```
+
+Load Default Data
+-----------------
+
+Import the test data:
+
+```bash
+$ bzcat db_dumps/pg_backup1_27-07-16.bz2 | nice pg_restore --verbose -F c -d postgres
+```
+
+Assign the test country (UAT) to the user:
+
+```bash
+$ source ~/.virtualenvs/env1/bin/activate
+$ python manage.py shell
+Python 2.7.10 (default, Oct 23 2015, 19:19:21)
+
+>>> from users.models import UserProfile, Country, Office, Section
+>>> from django.contrib.auth.models import User
+>>> user = User.objects.get(id=1)
+>>> userp = UserProfile.objects.get(user=user)
+>>> country=Country.objects.get(name='UAT')
+>>> userp.country = country
+>>> userp.country_override = country
+>>> userp.save()
 ```
 
 Run Server
@@ -85,25 +139,10 @@ $ export DATABASE_URL=postgis://postgres:password@localhost:5432/postgres
 $ python EquiTrack/manage.py runserver 8080
 ```
 
-Load Default Data
------------------
+Login to the Admin Portal using the 'etoolusr' user:
 
-Step 1. Login to the Admin Portal using the super user account:
-
-```bash
+ ```bash
 http://127.0.0.1:8080/admin/login/
-```
-
-Step 2. In the Admin Portal, add a country (required for availability of other database tables)
-
-```bash
-http://127.0.0.1:8080/admin/users/country/add/
-```
-
-Step 3. Create a user profile with the previously created country:
-
-```bash
-http://127.0.0.1:8080/admin/users/userprofile/add/
 ```
 
 Setup Debugger (PyCharm)

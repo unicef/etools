@@ -40,6 +40,7 @@ from reports.views import (
     SectorViewSet,
     # GoalViewSet,
     IndicatorViewSet,
+    MilestoneViewSet,
     ResultViewSet,
     UnitViewSet
 )
@@ -87,6 +88,7 @@ api.register(r'reports/result-structures', ResultStructureViewSet, base_name='re
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
+api.register(r'reports/milestones', MilestoneViewSet, base_name='milestones')
 api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
