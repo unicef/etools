@@ -52,7 +52,7 @@ django-easy-pdf
 xhtml2pdf==0.0.6
 html5lib==0.9999999 #must be added after xhtml2pdf
 reportlab
-flower=0.9.1
+flower==0.9.1
 
 # testing libs
 coverage==4.0
