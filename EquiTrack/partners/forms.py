@@ -340,6 +340,10 @@ class AgreementForm(UserGroupForm):
                     )}
                 )
 
+            # set end date to result structure end date
+            if end is None:
+                self.cleaned_data[u'end'] = ResultStructure.current().to_date
+
         if agreement_type == Agreement.PCA and partner.partner_type != u'Civil Society Organization':
             raise ValidationError(
                 _(u'Only Civil Society Organizations can sign Programme Cooperation Agreements')
@@ -378,9 +382,7 @@ class AgreementForm(UserGroupForm):
                 else:
                     self.cleaned_data[u'start'] = signed_by_unicef_date
 
-        # set end date to result structure end date
-        if end is None:
-            self.cleaned_data[u'end'] = ResultStructure.current().to_date
+
 
         # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
