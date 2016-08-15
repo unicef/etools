@@ -219,9 +219,12 @@ class HACTDashboardView(TemplateView):
     def get_context_data(self, **kwargs):
         return {
             'partners': PartnerOrganization.objects.filter(
-                documents__status__in=[
+                Q(documents__status__in=[
                     PCA.ACTIVE,
                     PCA.IMPLEMENTED
-                ]
+                ]) | (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
             ).distinct()
         }
+
+class OutdatedBrowserView(TemplateView):
+    template_name = 'outdated_browser.html'
