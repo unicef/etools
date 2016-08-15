@@ -156,6 +156,8 @@ DATABASE_ROUTERS = (
 import djcelery
 djcelery.setup_loader()
 BROKER_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+BROKER_TRANSPORT_OPTIONS = {'visibility_timeout': 18000}  # 5 hours
+
 CELERY_RESULT_BACKEND = 'djcelery.backends.database:DatabaseBackend'
 CELERYBEAT_SCHEDULER = 'djcelery.schedulers.DatabaseScheduler'
 
