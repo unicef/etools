@@ -213,7 +213,8 @@ USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
-TIME_ZONE = 'EET'
+# TODO when migrating to 1.9 address this
+TIME_ZONE = 'UTC'
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
