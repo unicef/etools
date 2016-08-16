@@ -67,7 +67,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
                     funding_commitment.start = wcf_json_date_as_datetime(fc_line["FR_START_DATE"])
                     funding_commitment.end = wcf_json_date_as_datetime(fc_line["FR_END_DATE"])
                     funding_commitment.wbs = fc_line["IR_WBS"]
-                    funding_commitment.fc_type = fc_line["COMMITMENT_DOC_TYPE"]
+                    funding_commitment.fc_type = fc_line["COMMITMENT_DOC_TYPE"] or 'No Record'
                     funding_commitment.fr_item_amount_usd = fc_line["FR_ITEM_AMT"]
                     funding_commitment.agreement_amount = fc_line["AGREEMENT_AMT"]
                     funding_commitment.commitment_amount = fc_line["COMMITMENT_AMT"]
