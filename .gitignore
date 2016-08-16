@@ -98,3 +98,7 @@ deis
 env_dev
 
 .env
+
+frontend/
+
+pmp_frontend/
