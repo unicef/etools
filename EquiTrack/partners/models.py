@@ -157,7 +157,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         help_text=u'Only required for CSO partners'
     )
     vision_synced = models.BooleanField(default=False)
-
+    hidden = models.BooleanField(default=False)
 
 
     class Meta:
