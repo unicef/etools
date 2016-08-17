@@ -17,6 +17,7 @@ from rest_framework.exceptions import (
     PermissionDenied,
     ParseError,
 )
+from rest_framework.permissions import IsAdminUser
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 from users.models import UserProfile, Office, Section
@@ -62,6 +63,9 @@ class AppsIOSPlistView(View):
         # not serving this as a static file in case in the future we want to be able to change versions
         with open(settings.SITE_ROOT + '/templates/trips/apps/etrips.plist', 'r') as my_f:
             result = my_f.read()
+        etrips_version = settings.ETRIPS_VERSION or "2.9.1"
+        
+        result = result.format(request.get_host(), etrips_version)
 
         return HttpResponse(result, content_type="application/octet-stream")
 
@@ -140,6 +144,59 @@ class TripFileViewSet(mixins.RetrieveModelMixin,
 
         # get the trip id from the url
         trip = self.get_object()
+
+        # the file field automatically adds incremental numbers
+        mime_types = {"image/jpeg": "jpeg",
+                      "image/png": "png"}
+
+        if mime_types.get(file_obj.content_type):
+            ext = mime_types.get(file_obj.content_type)
+        else:
+            raise ParseError(detail="File type not supported")
+
+        # format it "picture_01.jpg" this way will be making the file easier to search
+        # if the file doesn't get auto_incremented use this:
+        # file_obj.name = "picture_"+ str(trip.files.count()) + "." + ext
+        file_obj.name = "picture." + ext
+
+        # get the picture type
+        picture_type, created = FileType.objects.get_or_create(name='Picture')
+
+        # create the FileAttachment object
+        # TODO: desperate need of validation here: need to check if file is indeed a valid picture type
+        # TODO: potentially process the image at this point to reduce size / create thumbnails
+        my_file_attachment = {
+            "report": file_obj,
+            "type": picture_type,
+            "trip": trip
+        }
+        if caption:
+            my_file_attachment['caption'] = caption
+
+        FileAttachment.objects.create(**my_file_attachment)
+
+        # TODO: return a more meaningful response
+        return Response(status=204)
+
+
+class TripUploadPictureView(APIView):
+    permission_classes = (IsAdminUser,)
+    parser_classes = (MultiPartParser, FormParser)
+
+    def post(self, request, **kwargs):
+
+        # get the file object
+        file_obj = request.data.get('file')
+        logging.info("File received: {}".format(file_obj))
+        if not file_obj:
+            raise ParseError(detail="No file was sent.")
+
+        caption = request.data.get('caption')
+        logging.info("Caption received :{}".format(caption))
+
+        # get the trip id from the url
+        trip_id = kwargs.get("trip")
+        trip = Trip.objects.filter(pk=trip_id).get()
 
         # the file field automatically adds incremental numbers
         mime_types = {"image/jpeg": "jpeg",
