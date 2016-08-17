@@ -158,7 +158,18 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
     vision_synced = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
+    deleted_flag = models.BooleanField(default=False)
 
+    total_ct_cp = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Total Cash Transferred for Country Programme'
+    )
+    total_ct_cy = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Total Cash Transferred per Current Year'
+    )
 
     class Meta:
         ordering = ['name']
