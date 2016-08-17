@@ -37,6 +37,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         "GRANT_DESC",
         "DONOR_NAME",
         "EXPIRY_DATE",
+        "DELETED_FLAG",
+        "TOTAL_CASH_TRANSFERRED_CP",
+        "TOTAL_CASH_TRANSFERRED_CY",
     )
 
     def _get_json(self, data):
@@ -87,6 +90,11 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 partner_org.phone_number = partner["PHONE_NUMBER"]
                 partner_org.email = partner["EMAIL"]
                 partner_org.core_values_assessment_date = wcf_json_date_as_datetime(partner["CORE_VALUE_ASSESSMENT_DT"])
+                partner_org.total_ct_cp = int(partner["TOTAL_CASH_TRANSFERRED_CP"]) or 0
+                partner_org.total_ct_cy = int(partner["TOTAL_CASH_TRANSFERRED_CY"]) or 0
+                partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
+                partner_org.hidden = partner_org.deleted_flag
+
                 partner_org.vision_synced = True
                 partner_org.save()
                 processed += 1
