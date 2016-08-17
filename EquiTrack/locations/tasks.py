@@ -8,6 +8,78 @@ from .models import Location
 logger = logging.getLogger('locations.models')
 
 
+def create_location(pcode, carto_table, parent, parent_instance,
+                    site_name, row,
+                    sites_not_added, sites_created, sites_updated):
+    try:
+        location = Location.objects.get(p_code=pcode)
+
+    except Location.MultipleObjectsReturned:
+        logger.warning("Multiple locations found for: {}, {} ({})".format(
+            carto_table.location_type, site_name, pcode
+        ))
+        sites_not_added += 1
+        return False, sites_not_added, sites_created, sites_updated
+
+    except Location.DoesNotExist:
+        # try to create the location
+        create_args = {
+            'p_code': pcode,
+            'gateway': carto_table.location_type,
+            'name': site_name
+        }
+        if parent and parent_instance:
+            create_args['parent'] = parent_instance
+
+        if not row['the_geom']:
+            return False, sites_not_added, sites_created, sites_updated
+
+        if 'Point' in row['the_geom']:
+            create_args['point'] = row['the_geom']
+        else:
+            create_args['geom'] = row['the_geom']
+
+        sites_created += 1
+        try:
+            location = Location.objects.create(**create_args)
+        except IntegrityError as e:
+            logger.info('Not Added: {}', e)
+
+        logger.info('{}: {} ({})'.format(
+            'Added',
+            location.name,
+            carto_table.location_type.name
+        ))
+        return True, sites_not_added, sites_created, sites_updated
+
+    else:
+
+        # names can be updated for existing locations with the same code
+        location.name = site_name
+        if not row['the_geom']:
+            return False, sites_not_added, sites_created, sites_updated
+
+        if 'Point' in row['the_geom']:
+            location.point = row['the_geom']
+        else:
+            location.geom = row['the_geom']
+
+        try:
+            location.save()
+        except IntegrityError as e:
+            logger.exception('Error whilst saving location: {}'.format(site_name))
+            return False, sites_not_added, sites_created, sites_updated
+
+        sites_updated += 1
+
+        logger.info('{}: {} ({})'.format(
+            'Updated',
+            location.name,
+            carto_table.location_type.name
+        ))
+        return True, sites_not_added, sites_created, sites_updated
+
+
 @app.task
 def update_sites_from_cartodb(carto_table):
 
@@ -16,24 +88,34 @@ def update_sites_from_cartodb(carto_table):
     sites_created = sites_updated = sites_not_added = 0
     try:
         # query for cartodb
-        sites = client.sql(
-            'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
+        qry = ''
+        if carto_table.parent_code_col and carto_table.parent:
+            qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {}, {} from {}'.format(
+                carto_table.name_col,
+                carto_table.pcode_col,
+                carto_table.parent_code_col,
+                carto_table.table_name)
+        else:
+            qry = 'select st_AsGeoJSON(the_geom) as the_geom, {}, {} from {}'.format(
                 carto_table.name_col,
                 carto_table.pcode_col,
                 carto_table.table_name)
-        )
+
+        sites = client.sql(qry)
     except CartoDBException as e:
         logging.exception("CartoDB exception occured", exc_info=True)
     else:
 
         for row in sites['rows']:
             pcode = str(row[carto_table.pcode_col]).strip()
-            site_name = row[carto_table.name_col].encode('UTF-8')
+            site_name = row[carto_table.name_col]
 
             if not site_name or site_name.isspace():
                 logger.warning("No name for location with PCode: {}".format(pcode))
                 sites_not_added += 1
                 continue
+
+            site_name = site_name.encode('UTF-8')
 
             parent = None
             parent_code = None
@@ -45,58 +127,25 @@ def update_sites_from_cartodb(carto_table):
                     parent = carto_table.parent.__class__
                     parent_code = row[carto_table.parent_code_col]
                     parent_instance = Location.objects.get(p_code=parent_code)
-                except (parent.DoesNotExist, parent.MultipleObjectsReturned) as exp:
-                    msg = "{} locations found for parent code: {}".format(
-                        'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
-                        parent_code
-                    )
+                except Exception as exp:
+                    msg = " "
+                    if exp is parent.MultipleObjectsReturned:
+                        msg = "{} locations found for parent code: {}".format(
+                            'Multiple' if exp is parent.MultipleObjectsReturned else 'No',
+                            parent_code
+                        )
+                    else:
+                        msg = exp.message
                     logger.warning(msg)
                     sites_not_added += 1
                     continue
 
             # create the actual location or retrieve existing based on type and code
-            try:
-                create_args = {
-                    'p_code': pcode,
-                    'gateway': carto_table.location_type
-                }
-                if parent and parent_instance:
-                    create_args['parent'] = parent_instance
-                location, created = Location.objects.get_or_create(**create_args)
-            except Location.MultipleObjectsReturned:
-                logger.warning("Multiple locations found for: {}, {} ({})".format(
-                    carto_table.location_type, site_name, pcode
-                ))
-                sites_not_added += 1
-                continue
-            else:
-                if created:
-                    sites_created += 1
-                else:
-                    sites_updated += 1
-
-                # names can be updated for existing locations with the same code
-                location.name = site_name
-
-                # figure out its geographic type
-                #TODO: a bit rudimentary, could be more robust
-                if 'Point' in row['the_geom']:
-                    location.point = row['the_geom']
-                else:
-                    location.geom = row['the_geom']
-
-                try:
-                    location.save()
-                except IntegrityError as e:
-                    logger.exception('Error whilst saving location: {}'.format(site_name))
-                    sites_not_added += 1
-                    continue
-
-            logger.info('{}: {} ({})'.format(
-                'Added' if created else 'Updated',
-                location.name,
-                carto_table.location_type.name
-            ))
+            succ, sites_not_added, sites_created, sites_updated = create_location(pcode, carto_table,
+                                          parent, parent_instance,
+                                          site_name, row,
+                                          sites_not_added, sites_created,
+                                          sites_updated)
 
     return "Table name {}: {} sites created, {} sites updated, {} sites skipped".format(
                 carto_table.table_name, sites_created, sites_updated, sites_not_added
