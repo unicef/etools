@@ -600,6 +600,9 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'type_of_assessment',
         u'last_assessment_date',
         u'core_values_assessment_date',
+        u'total_ct_cy',
+        u'total_ct_cp',
+        u'deleted_flag',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -616,7 +619,10 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'phone_number',
                  u'email',
                  u'core_values_assessment_date',
-                 u'core_values_assessment',)
+                 u'core_values_assessment',
+                 (u'total_ct_cy',u'total_ct_cp',),
+                 u'deleted_flag',
+                 )
         }),
         (_('Alternate Name'), {
             u'classes': (u'collapse', u'open'),
