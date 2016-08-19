@@ -11,8 +11,6 @@ FILER_DEBUG = DEBUG
 
 ALLOWED_HOSTS = ['127.0.0.1']
 
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#template-debug
-TEMPLATE_DEBUG = DEBUG
 ########## END DEBUG CONFIGURATION
 
 CELERY_ALWAYS_EAGER = True
