@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import viewsets, mixins, generics
+from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
@@ -93,6 +94,17 @@ class InterventionLocationView(ListAPIView):
     model = GwPCALocation
     serializer_class = LocationSerializer
 
+    def handle_exception(self, exc):
+        """
+        Handle any exception that occurs, by returning an appropriate
+        response,or re-raising the error.
+        """
+        if type(exc) == AttributeError:
+            r = Response(status='424')
+            return r
+
+        raise exc
+
     def get_queryset(self):
         """
         Return locations with GPS points only
@@ -157,9 +169,18 @@ class InterventionLocationView(ListAPIView):
             )
 
         pca_locs = queryset.values_list('location', flat=True)
+        empty_locs = Location.objects.filter(
+            id__in=pca_locs,
+            point__isnull=True,
+            geom__isnull=True
+        )
+
         locs = Location.objects.filter(
             id__in=pca_locs
         )
+
+        # if len(empty_locs) > 0:
+        #     return Response(status=status.HTTP_424_FAILED_DEPENDENCY)
         return locs
 
 

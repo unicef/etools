@@ -161,10 +161,18 @@
         var searchUrl = locationsUrl + query;
 
         $.getJSON(searchUrl, function(data) {
+
             updateMap(data);
             updateResultsLabel(data.length);
             toggleSpinner();
+        })
+        .fail(function(error) {
+            if (error.status == 424) {
+                alert("There are locations that do not have any coordinates, please update them accordingly!");
+                toggleSpinner();
+            }
         });
+
     }
 
     function toggleSpinner() {
