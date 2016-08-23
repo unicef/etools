@@ -1,4 +1,4 @@
-from local import *
+from local_base import *
 
 
 # This has to be set to this particular backend in order for django to grab email and expose in tests

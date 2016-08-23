@@ -41,6 +41,8 @@ django-mathfilters==0.3.0
 django-tenant-schemas==1.5.7
 django-allauth==0.24.1
 tenant-schemas-celery==0.1.5
+django-debug-toolbar==1.4
+sqlparse==0.1.19  # for django debug toolbar to not break admin
 drf-nested-routers==0.11.1
 azure-storage==0.20.2
 pandas==0.17.1
@@ -57,10 +59,8 @@ flower==0.9.1
 # testing libs
 coverage==4.0
 factory_boy==2.5.2
-django-debug-toolbar==1.4
 
 git+https://github.com/robertavram/djangosaml2.git#egg=djangosaml2
 git+https://github.com/robertavram/django-storages.git#egg=django-storages
 git+https://github.com/jamescw/django-paintstore.git
 git+https://github.com/UNICEFLebanonInnovation/ActvityInfoPython.git
-

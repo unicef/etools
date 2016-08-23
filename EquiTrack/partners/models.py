@@ -121,10 +121,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=32L,
         blank=True, null=True
     )
-    vendor_number = models.BigIntegerField(
+    vendor_number = models.CharField(
         blank=True,
         null=True,
         unique=True,
+        max_length=30
     )
     alternate_id = models.IntegerField(
         blank=True,
@@ -157,8 +158,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         help_text=u'Only required for CSO partners'
     )
     vision_synced = models.BooleanField(default=False)
+    hidden = models.BooleanField(default=False)
+    deleted_flag = models.BooleanField(default=False)
 
-
+    total_ct_cp = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Total Cash Transferred for Country Programme'
+    )
+    total_ct_cy = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text='Total Cash Transferred per Current Year'
+    )
 
     class Meta:
         ordering = ['name']
@@ -1158,7 +1170,7 @@ class GovernmentInterventionResult(models.Model):
     activities_list = models.ManyToManyField(
         Result,
         related_name='activities_list',
-        blank=True, null=True
+        blank=True
     )
 
     objects = hstore.HStoreManager()
@@ -1638,10 +1650,10 @@ class FundingCommitment(TimeFramedModel):
     wbs = models.CharField(max_length=50)
     fc_type = models.CharField(max_length=50)
     fc_ref = models.CharField(max_length=50, blank=True, null=True)
-    fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
-    agreement_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
-    commitment_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
-    expenditure_amount = models.DecimalField(decimal_places=2, max_digits=10, blank=True, null=True)
+    fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
+    agreement_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
+    commitment_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
+    expenditure_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
 
 
 class DirectCashTransfer(models.Model):

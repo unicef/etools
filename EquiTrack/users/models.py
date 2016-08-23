@@ -1,10 +1,13 @@
 import logging
 
+from decimal import Decimal
 from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 from djangosaml2.signals import pre_user_save
 
 from django.db import transaction, connection
@@ -29,11 +32,13 @@ class Country(TenantMixin):
     )
     latitude = models.DecimalField(
         null=True, blank=True,
-        max_digits=8, decimal_places=6
+        max_digits=8, decimal_places=5,
+        validators=[MinValueValidator(Decimal(-90)), MaxValueValidator(Decimal(90))]
     )
     longitude = models.DecimalField(
         null=True, blank=True,
-        max_digits=8, decimal_places=6
+        max_digits=8, decimal_places=5,
+        validators=[MinValueValidator(Decimal(-180)), MaxValueValidator(Decimal(180))]
     )
     initial_zoom = models.IntegerField(default=8)
     vision_sync_enabled = models.BooleanField(default=True)
