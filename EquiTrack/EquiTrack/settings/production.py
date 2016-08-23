@@ -155,7 +155,7 @@ SAML_CONFIG = {
     'debug': 1,
 
     # allow 30 seconds for time difference between adfs server and etools server
-    'accepted_time_diff': 30,  # in seconds
+    'accepted_time_diff': 300,  # in seconds
 
     # certificate
     'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
