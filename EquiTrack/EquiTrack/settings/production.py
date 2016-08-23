@@ -154,7 +154,7 @@ SAML_CONFIG = {
     # set to 1 to output debugging information
     'debug': 1,
 
-    # allow 30 seconds for time difference between adfs server and etools server
+    # allow 300 seconds for time difference between adfs server and etools server
     'accepted_time_diff': 300,  # in seconds
 
     # certificate
