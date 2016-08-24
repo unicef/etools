@@ -103,6 +103,7 @@ class TestTripModels(TenantTestCase):
         self.trip.approved_by_supervisor = True
         self.trip.date_supervisor_approved = datetime.now()
         self.trip.programme_assistant = UserFactory()
+        self.trip.budget_owner = UserFactory()
         self.trip.approved_email_sent = True
         self.trip.save()
         self.assertEqual(Trip.APPROVED, self.trip.status)

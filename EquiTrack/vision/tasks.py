@@ -1,4 +1,5 @@
 import datetime
+import time
 
 from django.db import connection
 
@@ -13,6 +14,8 @@ from vision.adapters.funding import (
     FundingSynchronizer,
     DCTSynchronizer,
 )
+from .models import VisionSyncLog
+
 
 SYNC_HANDLERS = [
     ProgrammeSynchronizer,
@@ -24,6 +27,31 @@ SYNC_HANDLERS = [
 
 
 logger = get_task_logger(__name__)
+
+
+@app.task
+def fake_task_delay():
+    country = Country.objects.get(name="UAT")
+    log = VisionSyncLog(
+        country=country,
+        handler_name="Fake Task Delay 300"
+    )
+    log.save()
+    time.sleep(300)
+    log.successful = True
+    log.save()
+
+
+@app.task
+def fake_task_no_delay():
+    country = Country.objects.get(name="UAT")
+    log = VisionSyncLog(
+        country=country,
+        handler_name="Fake Task NoDelay 2"
+    )
+    time.sleep(2)
+    log.successful = True
+    log.save()
 
 
 @app.task

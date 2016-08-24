@@ -77,7 +77,7 @@ $ export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python2.7
 $ mkdir -p $WORKON_HOME
 $ source /usr/local/bin/virtualenvwrapper.sh
 $ mkvirtualenv env1
-$ pip install -r EquiTrack/requirements/base.txt
+$ pip install -r EquiTrack/requirements/local.txt
 ```
 
 Step 7. Set environment variables:

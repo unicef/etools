@@ -10,6 +10,8 @@ ALLOWED_HOSTS = [
 ]
 ########## END HOST CONFIGURATION
 
+ETRIPS_VERSION = environ.get('ETRIPS_VERSION', None)
+
 #Sentry config
 RAVEN_CONFIG = {
     'dsn': environ.get('SENTRY_DSN', None),
@@ -152,8 +154,8 @@ SAML_CONFIG = {
     # set to 1 to output debugging information
     'debug': 1,
 
-    # allow 3 seconds for time difference between adfs server and etools server
-    'accepted_time_diff': 3,  # in seconds
+    # allow 300 seconds for time difference between adfs server and etools server
+    'accepted_time_diff': 300,  # in seconds
 
     # certificate
     'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part

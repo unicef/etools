@@ -76,11 +76,10 @@ img {
 }
 #header .brand {
   float: left;
-  width: 280px;
+  width: auto;
   min-height: 60px;
   padding: 0 0 0 10px;
   position: relative;
-  background: #0099ff;
 }
 
 #header .logo {
@@ -89,6 +88,11 @@ img {
   text-transform: uppercase;
   padding: 12px 0 0 25px;
   display: inline-block;
+}
+
+#header .logo #test-text {
+  display: none;
+  color: #e6e600;
 }
 
 #header .logoimg {

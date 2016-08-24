@@ -13,6 +13,7 @@ from model_utils.models import (
     TimeStampedModel,
 )
 
+from django.utils.functional import cached_property
 
 # TODO: move to the global schema
 class ResultStructure(models.Model):
@@ -71,6 +72,10 @@ class Sector(models.Model):
             self.name
         )
 
+class ResultManager(models.Manager):
+    def get_queryset(self):
+        return super(ResultManager, self).get_queryset().select_related('result_structure', 'result_type')
+
 
 class Result(MPTTModel):
 
@@ -117,8 +122,18 @@ class Result(MPTTModel):
     hidden = models.BooleanField(default=False)
     ram = models.BooleanField(default=False)
 
+    objects = ResultManager()
+
     class Meta:
         ordering = ['name']
+
+    @cached_property
+    def result_name(self):
+        return u'{} {}: {}'.format(
+            self.code if self.code else u'',
+            self.result_type.name,
+            self.name
+        )
 
     def __unicode__(self):
         return u'{} {}: {}'.format(
@@ -182,7 +197,7 @@ class Indicator(models.Model):
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=1024)
     code = models.CharField(max_length=50, null=True, blank=True)
     unit = models.ForeignKey(Unit, null=True, blank=True)
 

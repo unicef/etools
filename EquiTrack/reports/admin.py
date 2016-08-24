@@ -157,7 +157,7 @@ class HiddenResultFilter(admin.SimpleListFilter):
 
 class ResultAdmin(MPTTModelAdmin):
     form = AutoSizeTextForm
-    mptt_indent_field = '__unicode__'
+    mptt_indent_field = 'result_name'
     search_fields = (
         'wbs',
         'name',
@@ -169,7 +169,7 @@ class ResultAdmin(MPTTModelAdmin):
         HiddenResultFilter,
     )
     list_display = (
-        '__unicode__',
+        'result_name',
         'from_date',
         'to_date',
         'wbs',
