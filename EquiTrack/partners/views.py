@@ -169,18 +169,9 @@ class InterventionLocationView(ListAPIView):
             )
 
         pca_locs = queryset.values_list('location', flat=True)
-        empty_locs = Location.objects.filter(
-            id__in=pca_locs,
-            point__isnull=True,
-            geom__isnull=True
-        )
-
         locs = Location.objects.filter(
             id__in=pca_locs
         )
-
-        # if len(empty_locs) > 0:
-        #     return Response(status=status.HTTP_424_FAILED_DEPENDENCY)
         return locs
 
 
