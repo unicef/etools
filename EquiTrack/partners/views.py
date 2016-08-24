@@ -96,8 +96,7 @@ class InterventionLocationView(ListAPIView):
 
     def handle_exception(self, exc):
         """
-        Handle any exception that occurs, by returning an appropriate
-        response,or re-raising the error.
+        Handle any exception
         """
         if type(exc) == AttributeError:
             r = Response(status='424')
