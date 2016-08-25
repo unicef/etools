@@ -5,6 +5,7 @@ __author__ = 'jcranwellward'
 
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
+from django.contrib.gis.geos import GEOSGeometry
 
 import factory
 
@@ -102,6 +103,22 @@ class TripFactory(factory.django.DjangoModelFactory):
     to_date = from_date + timedelta(days=1)
 
 
+class GatewayTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = location_models.GatewayType
+
+    name = factory.Sequence(lambda n: 'GatewayType {}'.format(n))
+
+
+class LocationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = location_models.Location
+
+    name = factory.Sequence(lambda n: 'Location {}'.format(n))
+    gateway = factory.SubFactory(GatewayTypeFactory)
+    point = GEOSGeometry("POINT(20 20)")
+
+
 class LinkedLocationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = location_models.LinkedLocation
@@ -149,6 +166,13 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     initiation_date = datetime.today()
 
 
+class ResultTypeFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.ResultType
+
+    name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
+
+
 class ResultStructureFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.ResultStructure
@@ -156,6 +180,51 @@ class ResultStructureFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'RSSP {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
+
+
+class ResultFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Result
+
+    result_structure = factory.SubFactory(ResultStructureFactory)
+    result_type = factory.SubFactory(ResultTypeFactory)
+    name = factory.Sequence(lambda n: 'Result {}'.format(n))
+    from_date = date(date.today().year, 1, 1)
+    to_date = date(date.today().year, 12, 31)
+    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
+    users = []
+    sections = [factory.SubFactory(SectionFactory)]
+    geotag = [factory.SubFactory(LocationFactory)]
+    status = "Target Met"
+    prioritized = False
+    metadata = {"status_description": "some status"}
+
+    @factory.post_generation
+    def geotag(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for geotag in extracted:
+                self.geotag.add(geotag)
+
+    @factory.post_generation
+    def sections(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for sections in extracted:
+                self.sections.add(sections)
+
+
+class MilestoneFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = report_models.Milestone
+
+    result = factory.SubFactory(ResultFactory)
+    description = factory.Sequence(lambda n: 'Description {}'.format(n))
+    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
