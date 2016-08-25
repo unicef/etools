@@ -206,7 +206,7 @@ JWT_AUTH = {
     'JWT_ALGORITHM': 'RS256',
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
-    'JWT_LEEWAY': 0,
+    'JWT_LEEWAY': 60,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
     #'JWT_AUDIENCE': 'https://{}/API'.format(HOST),
     # TODO: FIX THIS, NEEDS SETUP WITH ADFS
