@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework import viewsets, mixins, generics
+from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
@@ -92,6 +93,16 @@ class InterventionLocationView(ListAPIView):
     """
     model = GwPCALocation
     serializer_class = LocationSerializer
+
+    def handle_exception(self, exc):
+        """
+        Handle 424 exception
+        """
+        if type(exc) == AttributeError:
+            r = Response(status='424')
+            return r
+
+        raise exc
 
     def get_queryset(self):
         """

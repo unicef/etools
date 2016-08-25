@@ -12,6 +12,17 @@ class TripResource(BaseExportResource):
     class Meta:
         model = Trip
 
+    def up_queryset(self, q):
+        return q.prefetch_related('travelroutes_set',
+                                  'pcas',
+                                  'partners',
+                                  'owner',
+                                  'supervisor',
+                                  'budget_owner',
+                                  'section',
+                                  'office',
+                                  )
+
     def fill_trip_routes(self, row, trip):
 
         self.insert_column(
@@ -59,7 +70,7 @@ class TripResource(BaseExportResource):
         self.insert_column(row, 'From Date', str(trip.from_date))
         self.insert_column(row, 'To Date', str(trip.to_date))
         self.insert_column(row, 'Report', 'Yes' if trip.main_observations else 'No')
-        self.insert_column(row, 'Attachments', trip.attachments())
+        # self.insert_column(row, 'Attachments', trip.attachments())
         self.insert_column(row, 'URL', 'https://{}{}'.format(settings.HOST, trip.get_admin_url()))
         return row
 
