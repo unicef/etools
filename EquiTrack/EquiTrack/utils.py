@@ -169,8 +169,7 @@ class BaseExportResource(ModelResource):
         if queryset is None:
             queryset = self.get_queryset()
 
-        if getattr(self, 'up_queryset'):
-            print "prefetching related"
+        if getattr(self, 'up_queryset', None):
             queryset = self.up_queryset(queryset)
 
 
