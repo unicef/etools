@@ -92,8 +92,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             partner_org.phone_number = partner["PHONE_NUMBER"]
             partner_org.email = partner["EMAIL"]
             partner_org.core_values_assessment_date = wcf_json_date_as_datetime(partner["CORE_VALUE_ASSESSMENT_DT"])
-            partner_org.total_ct_cp = int(partner["TOTAL_CASH_TRANSFERRED_CP"]) or 0
-            partner_org.total_ct_cy = int(partner["TOTAL_CASH_TRANSFERRED_CY"]) or 0
+            partner_org.total_ct_cp = partner["TOTAL_CASH_TRANSFERRED_CP"] or 0
+            partner_org.total_ct_cy = partner["TOTAL_CASH_TRANSFERRED_CY"] or 0
             partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
             partner_org.hidden = partner_org.deleted_flag
 
