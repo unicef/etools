@@ -38,5 +38,7 @@ class APITenantTestCase(TenantTestCase):
         user = user if user else self.user
         force_authenticate(request, user=user)
 
-        return view(request, *view_info.args, **view_info.kwargs)
+        response = view(request, *view_info.args, **view_info.kwargs)
+        response.render()
 
+        return response
