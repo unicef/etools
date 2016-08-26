@@ -161,14 +161,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     hidden = models.BooleanField(default=False)
     deleted_flag = models.BooleanField(default=False)
 
-    total_ct_cp = models.PositiveIntegerField(
-        null=True,
-        blank=True,
+    total_ct_cp = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True,
         help_text='Total Cash Transferred for Country Programme'
     )
-    total_ct_cy = models.PositiveIntegerField(
-        null=True,
-        blank=True,
+    total_ct_cy = models.DecimalField(
+        decimal_places=2, max_digits=12, blank=True, null=True,
         help_text='Total Cash Transferred per Current Year'
     )
 
