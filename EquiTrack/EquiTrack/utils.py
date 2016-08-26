@@ -161,33 +161,40 @@ class BaseExportResource(ModelResource):
         """
         Exports a resource.
         """
-        rows = []
+
+        #TODO quickly patched.. this whole code needs to be rewritten to for performance (streaming)
+
+
 
         if queryset is None:
             queryset = self.get_queryset()
 
+        if getattr(self, 'up_queryset', None):
+            queryset = self.up_queryset(queryset)
+
+
         fields = SortedDict()
+
+        data = tablib.Dataset(headers=fields.keys())
+
 
         for model in queryset.iterator():
             # first pass creates table shape
             self.fill_row(model, fields)
+            # run only once for the headers
+            break
 
         self.headers = fields
 
         # Iterate without the queryset cache, to avoid wasting memory when
         # exporting large datasets.
-        #TODO: review this and check performance
-        for model in queryset.iterator():
+
+        for model in queryset.all():
             # second pass creates rows from the known table shape
             row = fields.copy()
-
             self.fill_row(model, row)
-
-            rows.append(row)
-
-        data = tablib.Dataset(headers=fields.keys())
-        for row in rows:
             data.append(row.values())
+
         return data
 
 
