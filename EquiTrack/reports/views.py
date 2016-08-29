@@ -81,13 +81,13 @@ class ResultViewSet(mixins.ListModelMixin,
     permission_classes = (IsAdminUser,)
 
 
-class IndicatorViewSet(mixins.ListModelMixin,
-                       viewsets.GenericViewSet):
+class IndicatorViewSet(viewsets.ModelViewSet):
     """
-    Returns a list of all Indicators
+    CRUD api for Indicators
     """
     queryset = Indicator.objects.all()
     serializer_class = IndicatorCreateSerializer
+    permission_classes = (IsAdminUser,)
 
 
 class UnitViewSet(mixins.RetrieveModelMixin,
