@@ -118,6 +118,7 @@ class Result(MPTTModel):
     geotag = models.ManyToManyField(Location)
     prioritized = models.BooleanField(default=False)
     metadata = JSONField(null=True, blank=True)
+    responsible = models.ForeignKey(UserProfile, null=True, blank=True)
 
     hidden = models.BooleanField(default=False)
     ram = models.BooleanField(default=False)
