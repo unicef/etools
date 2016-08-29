@@ -71,8 +71,7 @@ class MilestoneViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdminUser,)
 
 
-class ResultViewSet(mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
+class ResultViewSet(viewsets.ModelViewSet):
     """
     Returns a list of all Results
     """
