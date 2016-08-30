@@ -206,6 +206,7 @@ class Indicator(models.Model):
     sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
     current = models.IntegerField(null=True, blank=True, default=0)
     sector_current = models.IntegerField(null=True, blank=True)
+    assumptions = models.TextField(null=True, blank=True)
 
     # RAM Info
     target = models.CharField(max_length=255, null=True, blank=True)
