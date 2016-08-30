@@ -1,10 +1,11 @@
 __author__ = 'jcranwellward'
 
 from django.db import models
+from django.contrib.auth.models import User
 import django.contrib.postgres.fields as pgfields
 from jsonfield import JSONField
 
-from users.models import UserProfile, Section
+from users.models import Section
 from mptt.models import MPTTModel, TreeForeignKey
 from locations.models import Location
 from paintstore.fields import ColorPickerField
@@ -118,7 +119,7 @@ class Result(MPTTModel):
     geotag = models.ManyToManyField(Location)
     prioritized = models.BooleanField(default=False)
     metadata = JSONField(null=True, blank=True)
-    responsible = models.ForeignKey(UserProfile, null=True, blank=True)
+    responsible = models.ForeignKey(User, null=True, blank=True)
 
     hidden = models.BooleanField(default=False)
     ram = models.BooleanField(default=False)
