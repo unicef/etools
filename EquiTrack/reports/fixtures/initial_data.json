@@ -17,6 +17,6 @@
     {
         "pk": 4,
         "model": "reports.resulttype",
-        "fields": {"name": "SubActivity"}
+        "fields": {"name": "Sub-activity"}
     }
 ]
