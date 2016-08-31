@@ -300,6 +300,21 @@ class Trip(AdminURLMixin, models.Model):
             driver_trip.status = Trip.COMPLETED
             driver_trip.save()
 
+        # update partner hact values
+        if self.travel_type in [Trip.PROGRAMME_MONITORING, Trip.SPOT_CHECK]:
+            if self.linkedgovernmentpartner_set:
+                for gov_partner in self.linkedpartner_set:
+                    gov_partner.partner.planned_visits(gov_partner.partner, self)
+                    gov_partner.partner.programmatic_visits(gov_partner.partner, self)
+                    gov_partner.partner.spot_checks(gov_partner.partner, self)
+
+            if self.linkedpartner_set:
+                for link_partner in self.linkedpartner_set:
+                    link_partner.partner.planned_visits(link_partner.partner, self)
+                    link_partner.partner.programmatic_visits(link_partner.partner, self)
+                    link_partner.partner.spot_checks(link_partner.partner, self)
+
+
         super(Trip, self).save(**kwargs)
 
     def create_driver_trip(self):
@@ -466,6 +481,14 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
 
+    def save(self, **kwargs):
+        # update partner hact values
+        if self.pk is None:
+            self.partner.planned_visits(self.partner, self.trip)
+            self.partner.programmatic_visits(self.partner, self.trip)
+            self.partner.spot_checks(self.partner, self.trip)
+        return super(LinkedPartner, self).save(**kwargs)
+
 
 class LinkedGovernmentPartner(models.Model):
     trip = models.ForeignKey(Trip)
@@ -489,6 +512,14 @@ class LinkedGovernmentPartner(models.Model):
         auto_choose=True,
         blank=True, null=True,
     )
+
+    def save(self, **kwargs):
+        # update partner hact values
+        if self.pk is None:
+            self.partner.planned_visits(self.partner, self.trip)
+            self.partner.programmatic_visits(self.partner, self.trip)
+            self.partner.spot_checks(self.partner, self.trip)
+        return super(LinkedGovernmentPartner, self).save(**kwargs)
 
 
 class TripFunds(models.Model):
@@ -618,6 +649,18 @@ class ActionPoint(models.Model):
                 instance.trip.owner.email,
                 *recipients
             )
+
+    def save(self, **kwargs):
+        # update hact values
+        if self.completed_date is None and self.follow_up:
+            if self.trip.linkedgovernmentpartner_set:
+                for gov_partner in self.linkedpartner_set:
+                    gov_partner.partner.follow_up_flags(gov_partner.partner, self.trip)
+
+            if self.trip.linkedpartner_set:
+                for link_partner in self.linkedpartner_set:
+                    link_partner.partner.follow_up_flags(link_partner.partner, self.trip)
+        return super(ActionPoint, self).save(**kwargs)
 
 
 post_save.connect(ActionPoint.send_action, sender=ActionPoint)

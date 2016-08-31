@@ -89,19 +89,19 @@
                                         <td><a href="{{ partner.get_admin_url }}">{{ partner.name }}</a></td>
                                         <td>{{ partner.partner_type }}</td>
                                         <td>{{ partner.shared_partner }}</td>
-                                        <td>{{ partner.planned_cash_transfers }}</td>
-                                        <td>{{ partner.micro_assessment_needed }}</td>
-                                        <td>{{ partner.total_cash_transferred }}</td>
-                                        <td>{{ partner.actual_cash_transferred }}</td>
+                                        <td>{{ partner.hact_values.planned_cash_transfers }}</td>
+                                        <td>{{ partner.hact_values.micro_assessment_needed }}</td>
+                                        <td>{{ partner.total_ct_cp }}</td>
+                                        <td>{{ partner.total_ct_cy }}</td>
                                         <td>{{ partner.rating }}</td>
-                                        <td>{{ partner.planned_visits }}</td>
+                                        <td>{{ partner.hact_values.planned_visits }}</td>
                                         <td>{{ reqs.programme_visits }}</td>
-                                        <td>{{ partner.programmatic_visits }}</td>
+                                        <td>{{ partner.hact_values.programmatic_visits }}</td>
                                         <td>{{ reqs.spot_checks }}</td>
-                                        <td>{{ partner.spot_checks }}</td>
-                                        <td>{{ reqs.audits }}</td>
+                                        <td>{{ partner.hact_values.spot_checks }}</td>
+                                        <td>{{ partner.hact_values.audits }}</td>
                                         <td>{{ partner.audits }}</td>
-                                        <td>{{ partner.follow_up_flags }}</td>
+                                        <td>{{ partner.partner.hact_values.follow_up_flags }}</td>
                                     </tr>
                                     {% endwith %}
                                 {% endfor %}
