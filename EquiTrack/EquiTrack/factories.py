@@ -235,6 +235,13 @@ class CommentFactory(factory.django.DjangoModelFactory):
     text = factory.Sequence(lambda n: 'Comment body {}'.format(n))
 
 
+class WorkplanFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Workplan
+
+    result_structure = factory.SubFactory(ResultStructureFactory)
+
+
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
 #     class Meta:
 #         model = partner_models.FundingCommitment
