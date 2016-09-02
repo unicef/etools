@@ -182,12 +182,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
     def update_hact_value(self, key, value):
-        # if self.hact_values:
-        values = self.hact_values
-        values[key] = value
-        self.hact_values = values
-        # else:
-        #     self.hact_values = {key: value}
+        if self.hact_values:
+            values = self.hact_values
+            values[key] = value
+            self.hact_values = values
+        else:
+            self.hact_values = {key: value}
         self.save()
 
     @cached_property
@@ -284,6 +284,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         Planned cash transfers for the current year
         """
         year = datetime.date.today().year
+        total = 0
         if partner.partner_type == u'Government':
             total = GovernmentInterventionResult.objects.filter(
                 intervention__partner=partner,
@@ -1405,7 +1406,7 @@ class PartnershipBudget(TimeStampedModel):
 
         super(PartnershipBudget, self).save(**kwargs)
 
-        if self.planned_amount:
+        if self.unicef_cash:
             if self.pk:
                 prev_result = PartnershipBudget.objects.get(id=self.id)
                 if prev_result.unicef_cash != self.unicef_cash:
