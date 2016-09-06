@@ -104,7 +104,7 @@ class ResultManager(models.Manager):
 class Result(MPTTModel):
 
     result_structure = models.ForeignKey(ResultStructure, null=True, blank=True)
-    country_programme = models.ForeignKey(CountryProgramme)
+    country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector, null=True, blank=True)
     name = models.TextField()
