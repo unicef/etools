@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import models, connection
+from django.db.models import Q
 from django.forms import Textarea
 
 from reversion.admin import VersionAdmin
@@ -39,6 +40,7 @@ from .filters import (
     OwnerFilter
 )
 from reports.models import Result
+from partners.models import PartnerOrganization, GovernmentIntervention
 from .exports import TripResource, ActionPointResource
 
 User = get_user_model()
@@ -49,7 +51,14 @@ class LinkedPartnerInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-planning'
     extra = 1
 
-from partners.models import PartnerOrganization, GovernmentIntervention
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.name == u'partner':
+            kwargs['queryset'] = PartnerOrganization.objects.filter(~Q(partner_type=u'Government') & Q(hidden=False))
+
+        return super(LinkedPartnerInlineAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs
+        )
+
 
 class LinkedGovernmentPartnerInlineAdmin(admin.TabularInline):
     model = LinkedGovernmentPartner
@@ -58,7 +67,7 @@ class LinkedGovernmentPartnerInlineAdmin(admin.TabularInline):
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == u'partner':
-            kwargs['queryset'] = PartnerOrganization.objects.filter(partner_type=u'Government')
+            kwargs['queryset'] = PartnerOrganization.objects.filter(partner_type=u'Government', hidden=False)
 
 
         return super(LinkedGovernmentPartnerInlineAdmin, self).formfield_for_foreignkey(
