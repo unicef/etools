@@ -398,7 +398,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             ).exclude(
                 trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
             ).count() or 0
-        if trip and trip.travel_type == Trip.PROGRAMME_MONITORING:
+        if trip and trip.travel_type == Trip.PROGRAMME_MONITORING\
+                and trip.status not in [Trip.CANCELLED, Trip.COMPLETED]:
             pv += 1
         partner.update_hact_value('planned_visits', pv)
 
