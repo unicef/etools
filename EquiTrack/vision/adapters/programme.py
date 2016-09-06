@@ -1,7 +1,7 @@
 import json
 import datetime
 
-from reports.models import ResultStructure, ResultType, Result, Indicator
+from reports.models import ResultStructure, ResultType, Result, Indicator, CountryProgramme
 from vision.utils import wcf_json_date_as_datetime
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
@@ -11,6 +11,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetProgrammeStructureList_JSON'
     REQUIRED_KEYS = (
         "COUNTRY_PROGRAMME_NAME",
+        "COUNTRY_PROGRAMME_WBS",
         "CP_START_DATE",
         "CP_END_DATE",
         "OUTCOME_AREA_CODE",
@@ -67,40 +68,65 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
         processed = 0
         filtered_records = self._filter_records(records)
         for result in filtered_records:
+            # Find the country programme:
             try:
-                result_structure, created = ResultStructure.objects.get_or_create(
+                country_programme, created = CountryProgramme.objects.get_or_create(
+                    wbs=result["COUNTRY_PROGRAMME_WBS"],
                     name=result['COUNTRY_PROGRAMME_NAME'],
                     from_date=wcf_json_date_as_datetime(result['CP_START_DATE']),
                     to_date=wcf_json_date_as_datetime(result['CP_END_DATE']),
                 )
-            except ResultStructure.MultipleObjectsReturned as exp:
+            except CountryProgramme.MultipleObjectsReturned as exp:
                 exp.message += 'Result Structure: ' + result['COUNTRY_PROGRAMME_NAME']
                 raise
 
+
             try:
                 outcome, created = Result.objects.get_or_create(
-                    result_structure=result_structure,
+                    country_programme=country_programme,
                     result_type=ResultType.objects.get_or_create(name='Outcome')[0],
                     wbs=result['OUTCOME_WBS'],
                 )
+                if not created:
+                    # check if any of the information on the result is changing...
+                    if outcome.name != result['OUTCOME_DESCRIPTION'] or \
+                            outcome.from_date != wcf_json_date_as_datetime(result['OUTCOME_START_DATE']) or \
+                            outcome.to_date != wcf_json_date_as_datetime(result['OUTCOME_END_DATE']):
+                        # TODO: this outcome has been updated ... make sure there are no conflicts with
+                        # the signed workplan
+                        pass
+
                 outcome.name = result['OUTCOME_DESCRIPTION']
                 outcome.from_date = wcf_json_date_as_datetime(result['OUTCOME_START_DATE'])
                 outcome.to_date = wcf_json_date_as_datetime(result['OUTCOME_END_DATE'])
+                if not outcome.valid_entry():
+                    raise Exception('Wbs of outcome does not map under country_programme')
                 outcome.save()
 
                 output, created = Result.objects.get_or_create(
-                    result_structure=result_structure,
+                    country_programme=country_programme,
                     result_type=ResultType.objects.get_or_create(name='Output')[0],
                     wbs=result['OUTPUT_WBS'],
                 )
-                output.name = result['OUTPUT_DESCRIPTION']
+                if not created:
+                    # check if any of the information on the result is changing...
+                    if output.name != result['OUTPUT_DESCRIPTION'] or \
+                           output.from_date != wcf_json_date_as_datetime(result['OUTPUT_START_DATE']) or \
+                           output.to_date != wcf_json_date_as_datetime(result['OUTPUT_END_DATE']) or \
+                           output.name != result['OUTPUT_DESCRIPTION']:
+                        # TODO: this output has been updated ... make sure there are no conflicts with
+                        # the signed workplan
+                        pass
+
                 output.from_date = wcf_json_date_as_datetime(result['OUTPUT_START_DATE'])
                 output.to_date = wcf_json_date_as_datetime(result['OUTPUT_END_DATE'])
                 output.parent = outcome
+                if not output.valid_entry():
+                    raise Exception('Wbs of output does not map under country_programme')
                 output.save()
 
                 activity, created = Result.objects.get_or_create(
-                    result_structure=result_structure,
+                    country_programme=country_programme,
                     result_type=ResultType.objects.get_or_create(name='Activity')[0],
                     wbs=result['ACTIVITY_WBS'],
                 )
@@ -115,6 +141,8 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 activity.gic_name = result['GIC_NAME']
                 activity.activity_focus_code = result['ACTIVITY_FOCUS_CODE']
                 activity.activity_focus_name = result['ACTIVITY_FOCUS_NAME']
+                if not activity.valid_entry():
+                    raise Exception('Wbs of activity does not map under country_programme')
                 activity.save()
                 processed += 1
             except Result.MultipleObjectsReturned as exp:
