@@ -154,8 +154,8 @@ SAML_CONFIG = {
     # set to 1 to output debugging information
     'debug': 1,
 
-    # allow 3 seconds for time difference between adfs server and etools server
-    'accepted_time_diff': 3,  # in seconds
+    # allow 300 seconds for time difference between adfs server and etools server
+    'accepted_time_diff': 300,  # in seconds
 
     # certificate
     'key_file': join(DJANGO_ROOT, 'saml/certs/saml.key'),  # private part
@@ -206,7 +206,7 @@ JWT_AUTH = {
     'JWT_ALGORITHM': 'RS256',
     'JWT_VERIFY': True,
     'JWT_VERIFY_EXPIRATION': True,
-    'JWT_LEEWAY': 0,
+    'JWT_LEEWAY': 60,
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
     #'JWT_AUDIENCE': 'https://{}/API'.format(HOST),
     # TODO: FIX THIS, NEEDS SETUP WITH ADFS

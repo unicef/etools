@@ -56,7 +56,7 @@ from .filters import (
     PCAGrantFilter,
     PCAGatewayTypeFilter,
 )
-from .mixins import ReadOnlyMixin, SectorMixin
+from .mixins import ReadOnlyMixin, SectorMixin, HiddenPartnerMixin
 from .forms import (
     PartnershipForm,
     PartnersAdminForm,
@@ -260,7 +260,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
         return fields
 
 
-class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
+class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
     form = PartnershipForm
     resource_class = PCAResource
     # Add custom exports
@@ -369,7 +369,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
 
     suit_form_tabs = (
         (u'info', u'Info'),
-        (u'results', u'Results'),
+        (u'results', u'IndicatorsInlineAdmin'),
         (u'locations', u'Locations'),
         (u'trips', u'Trips'),
         (u'supplies', u'Supplies'),
@@ -483,8 +483,7 @@ class GovernmentInterventionAdmin(admin.ModelAdmin):
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.rel.to is PartnerOrganization:
             kwargs['queryset'] = PartnerOrganization.objects.filter(
-                partner_type=u'Government',
-            )
+                partner_type=u'Government', hidden=False)
 
         return super(GovernmentInterventionAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
@@ -600,6 +599,9 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'type_of_assessment',
         u'last_assessment_date',
         u'core_values_assessment_date',
+        u'total_ct_cy',
+        u'total_ct_cp',
+        u'deleted_flag',
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -616,7 +618,10 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'phone_number',
                  u'email',
                  u'core_values_assessment_date',
-                 u'core_values_assessment',)
+                 u'core_values_assessment',
+                 (u'total_ct_cy',u'total_ct_cp',),
+                 u'deleted_flag',
+                 )
         }),
         (_('Alternate Name'), {
             u'classes': (u'collapse', u'open'),
@@ -707,7 +712,7 @@ class BankDetailsInlineAdmin(admin.StackedInline):
     extra = 1
 
 
-class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
+class AgreementAdmin(HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
     list_filter = (
         u'partner',

@@ -2,6 +2,9 @@ __author__ = 'jcranwellward'
 
 from rest_framework import serializers
 
+from users.serializers import UserProfileSerializer
+from locations.models import Location
+from users.models import Section
 from .models import (
     ResultStructure,
     ResultType,
@@ -9,7 +12,8 @@ from .models import (
     Sector,
     Goal,
     Indicator,
-    Result
+    Result,
+    Milestone
 )
 
 
@@ -72,9 +76,27 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
         model = Indicator
 
 
+class MilestoneSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Milestone
+        fields = ("id", "description", "assumptions",)
+
+
 class ResultSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
+    sections = serializers.PrimaryKeyRelatedField(
+                many=True,
+                read_only=False,
+                queryset=Section.objects.all()
+            )
+    geotag = serializers.PrimaryKeyRelatedField(
+                many=True,
+                read_only=False,
+                queryset=Location.objects.all()
+            )
+    milestones = MilestoneSerializer(many=True)
 
     class Meta:
         model = Result

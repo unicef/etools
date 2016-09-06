@@ -1,11 +1,21 @@
 __author__ = 'achamseddine'
 
 from rest_framework import viewsets, mixins
-from .models import ResultStructure, ResultType, Result, Sector, Indicator, Unit
+from rest_framework.permissions import IsAdminUser
+from .models import (
+    ResultStructure,
+    ResultType,
+    Result,
+    Milestone,
+    Sector,
+    Indicator,
+    Unit
+)
 from .serializers import (
     ResultStructureSerializer,
     ResultTypeSerializer,
     ResultSerializer,
+    MilestoneSerializer,
     SectorCreateSerializer,
     IndicatorCreateSerializer,
     UnitSerializer
@@ -52,22 +62,31 @@ class SectorViewSet(mixins.RetrieveModelMixin,
 #     serializer_class = GoalCreateSerializer
 
 
-class ResultViewSet(mixins.ListModelMixin,
-                    viewsets.GenericViewSet):
+class MilestoneViewSet(viewsets.ModelViewSet):
+    """
+    CRUD api for Milestones
+    """
+    queryset = Milestone.objects.all()
+    serializer_class = MilestoneSerializer
+    permission_classes = (IsAdminUser,)
+
+
+class ResultViewSet(viewsets.ModelViewSet):
     """
     Returns a list of all Results
     """
     queryset = Result.objects.all()
     serializer_class = ResultSerializer
+    permission_classes = (IsAdminUser,)
 
 
-class IndicatorViewSet(mixins.ListModelMixin,
-                       viewsets.GenericViewSet):
+class IndicatorViewSet(viewsets.ModelViewSet):
     """
-    Returns a list of all Indicators
+    CRUD api for Indicators
     """
     queryset = Indicator.objects.all()
     serializer_class = IndicatorCreateSerializer
+    permission_classes = (IsAdminUser,)
 
 
 class UnitViewSet(mixins.RetrieveModelMixin,
