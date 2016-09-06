@@ -72,8 +72,6 @@ $ export WORKON_HOME=~/.virtualenvs
 $ mkvirtualenv env1
 ```
 
-* Making the virtual enviornment also activates it. But just in case it isn't, activate it with `workon env1`
-
 Step 8. Install GDAL dependencies
 
 ```bash
@@ -92,14 +90,14 @@ $ sudp apt-get install libssl-dev
 Step 10. Load Python packages
 
 ```bash
-$ pip install -r path/to/etools/EquiTrack/requirements/base.txt
+$ pip install -r path/to/etools/EquiTrack/requirements/local.txt
 ```
 
 Step 11. Set environment variables:
 
 ```bash
 $ export REDIS_URL=redis://localhost:6379/0
-$ export DATABASE_URL=postgis://postgres:postgres@localhost:5432/postgres
+$ export DATABASE_URL=postgis://postgres:(your-password-here)@localhost:5432/postgres
 ```
 
 Step 12. Connect to database and create required hstore extension
@@ -110,13 +108,43 @@ $ sudo -u postgres psql postgres
 # \q
 ```
 
-Step 13. Migrate database schemas and create database superuser
+Step 13. Activate virtual env, migrate database schemas and create database superuser
 
 ```bash
+$ workon env1
 $ python path/to/etools/EquiTrack/manage.py migrate_schemas --fake-initial --noinput
-$ python path/to/etools/EquiTrack/manage.py createsuperuser
+$ python path/to/etools/EquiTrack/manage.py createsuperuser --username:etoolsusr
 ```
 
+Load Default Data
+-----------------
+
+Import the test data:
+
+```bash
+$ bzcat db_dumps/pg_backup1_27-07-16.bz2 | nice pg_restore --verbose -F c -d postgres
+
+```
+
+Assign the test country (UAT) to the user:
+
+```bash
+$ workon env1
+$ python manage.py shell
+```
+
+In the shell:
+
+```bash
+>>> from users.models import UserProfile, Country, Office, Section
+>>> from django.contrib.auth.models import User
+>>> user = User.objects.get(id=1)
+>>> userp = UserProfile.objects.get(user=user)
+>>> country=Country.objects.get(name='UAT')
+>>> userp.country = country
+>>> userp.country_override = country
+>>> userp.save()
+```
 
 Run Server
 ----------
@@ -125,27 +153,6 @@ Run Server
 $ workon env1
 $ export DATABASE_URL=postgis://postgres:(your-password-here)@localhost:5432/postgres
 $ python path/to/etools/EquiTrack/manage.py runserver 8080
-```
-
-Load Default Data
------------------
-
-Step 1. Login to the Admin Portal using the super user account:
-
-```bash
-http://127.0.0.1:8080/admin/login/
-```
-
-Step 2. In the Admin Portal, add a country (required for availability of other database tables)
-
-```bash
-http://127.0.0.1:8080/admin/users/country/add/
-```
-
-Step 3. Create a user profile with the previously created country:
-
-```bash
-http://127.0.0.1:8080/admin/users/userprofile/add/
 ```
 
 Setup Debugger (PyCharm)
