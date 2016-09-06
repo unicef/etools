@@ -174,7 +174,8 @@ class Result(MPTTModel):
 
     def save(self, *args, **kwargs):
         # TODO add a validator that makes sure that the current result wbs fits within the countryProgramme wbs
-
+        if not self.wbs:
+            self.wbs = None
         super(Result, self).save(*args, **kwargs)
         nodes = self.get_descendants()
         for node in nodes:
