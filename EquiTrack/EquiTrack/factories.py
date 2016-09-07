@@ -15,6 +15,7 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
+from workplan import models as workplan_models
 
 
 class GovernorateFactory(factory.django.DjangoModelFactory):
@@ -225,6 +226,20 @@ class MilestoneFactory(factory.django.DjangoModelFactory):
     result = factory.SubFactory(ResultFactory)
     description = factory.Sequence(lambda n: 'Description {}'.format(n))
     assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
+
+
+class CommentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Comment
+
+    text = factory.Sequence(lambda n: 'Comment body {}'.format(n))
+
+
+class WorkplanFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Workplan
+
+    result_structure = factory.SubFactory(ResultStructureFactory)
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
