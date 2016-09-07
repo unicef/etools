@@ -121,7 +121,7 @@ Load Default Data
 Import the test data:
 
 ```bash
-$ bzcat db_dumps/pg_backup1_27-07-16.bz2 | nice pg_restore --verbose -F c -d postgres
+$ bzcat db_dumps/pg_backup1_27-07-16.bz2 | sudo -u postgres nice pg_restore --verbose -F t -d postgres
 
 ```
 
