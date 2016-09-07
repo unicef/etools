@@ -25,7 +25,6 @@ $ sudo -u postgres psql postgres
 Step 3. Set Postgres user password to "postgres", and create PostGIS required extensions:
 
 ```bash
-# alter user postgres with password 'postgres';
 # ALTER USER postgres PASSWORD 'postgres';
 # CREATE EXTENSION postgis;
 # CREATE EXTENSION postgis_topology;
