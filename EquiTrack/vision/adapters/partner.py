@@ -1,4 +1,5 @@
 import json
+import decimal
 
 from django.db import IntegrityError
 
@@ -14,6 +15,13 @@ type_mapping = {
     "GOVERNMENT": u'Government',
     "UN AGENCY": u'UN Agency',
 }
+
+
+def comp_decimals(y, x):
+    def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+        return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+    return isclose(float(x), float(y))
 
 
 class PartnerSynchronizer(VisionDataSynchronizer):
@@ -41,15 +49,22 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         "TOTAL_CASH_TRANSFERRED_CP",
         "TOTAL_CASH_TRANSFERRED_CY",
     )
-    _pos = []
-    _donors = {}
-    _grants = {}
-    _totals_cy = {}
-    _totals_cp = {}
 
-    def _get_json(self, data):
-        return [] if data == self.NO_DATA_MESSAGE else data
 
+    MAPPING = {
+        'name': "VENDOR_NAME",
+        'cso_type': 'CSO_TYPE_NAME',
+        'rating': 'RISK_RATING_NAME',
+        'type_of_assessment': "TYPE_OF_ASSESSMENT",
+        'address': "STREET_ADDRESS",
+        'phone_number': 'PHONE_NUMBER',
+        'email': "EMAIL",
+        'deleted_flag': "DELETED_FLAG",
+        'last_assessment_date': "LAST_ASSESSMENT_DATE",
+        'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
+        'partner_type': "PARTNER_TYPE_DESC",
+        'deleted_flag': "DELETED_FLAG"
+    }
     def _convert_records(self, records):
         return json.loads(records)
 
@@ -63,125 +78,186 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
         return filter(bad_record, records)
 
-    def _process_po(self, po_api):
-        if po_api not in self._pos:
-            self._pos.append(po_api)
+    def _get_json(self, data):
+            return [] if data == self.NO_DATA_MESSAGE else data
 
-        if not self._donors.get(po_api["DONOR_NAME"], None):
-            temp_donor = Donor.objects.get_or_create(name=po_api["DONOR_NAME"])[0]
-            self._donors[po_api["DONOR_NAME"]] = temp_donor
+    def update_stuff(self, records):
+        _pos = []
+        _vendors = []
+        _donors = {}
+        _grants = {}
+        _totals_cy = {}
+        _totals_cp = {}
 
-        donor_grant_pair = po_api["DONOR_NAME"] + po_api["GRANT_REF"]
-        if not self._grants.get(donor_grant_pair, None):
-            temp_grant = Grant.objects.get_or_create(
-                name=po_api["GRANT_REF"],
-                donor=self._donors[po_api["DONOR_NAME"]]
-            )[0]
-            temp_grant.description = po_api["GRANT_DESC"]
-            if po_api["EXPIRY_DATE"] is not None:
-                temp_grant.expiry = wcf_json_date_as_datetime(po_api["EXPIRY_DATE"])
-            temp_grant.save()
-            self._grants[donor_grant_pair] = temp_grant
 
-        if not po_api["TOTAL_CASH_TRANSFERRED_CP"]:
-            po_api["TOTAL_CASH_TRANSFERRED_CP"] = 0
-        if not po_api["TOTAL_CASH_TRANSFERRED_CY"]:
-            po_api["TOTAL_CASH_TRANSFERRED_CY"] = 0
+        def _changed_fields( fields, local_obj, api_obj):
+            for field in fields:
+                apiobj_field = api_obj[self.MAPPING[field]]
 
-        if not self._totals_cp.get(po_api['VENDOR_CODE']):
-            self._totals_cp[po_api['VENDOR_CODE']] = po_api["TOTAL_CASH_TRANSFERRED_CP"]
-        else:
-            self._totals_cp[po_api['VENDOR_CODE']] += po_api["TOTAL_CASH_TRANSFERRED_CP"]
+                if field.endswith('date'):
+                    if not wcf_json_date_as_datetime(api_obj[self.MAPPING[field]]):
+                        apiobj_field = None
+                    else:
+                        apiobj_field = wcf_json_date_as_datetime(api_obj[self.MAPPING[field]]).date()
 
-        if not self._totals_cy.get(po_api['VENDOR_CODE']):
-            self._totals_cy[po_api['VENDOR_CODE']] = po_api["TOTAL_CASH_TRANSFERRED_CY"]
-        else:
-            self._totals_cy[po_api['VENDOR_CODE']] += po_api["TOTAL_CASH_TRANSFERRED_CY"]
+                if field == 'partner_type':
+                    apiobj_field = type_mapping[api_obj[self.MAPPING[field]]]
+
+                if field == 'deleted_flag':
+                    apiobj_field = True if api_obj[self.MAPPING[field]] else False
+
+                if getattr(local_obj, field) != apiobj_field:
+                    print "field changed", field
+                    return True
+            return False
 
 
 
 
 
-    @transaction.atomic
-    def _transactional_save(self, processed, partner):
+        def _process_po(po_api):
+            if po_api['VENDOR_CODE'] not in _vendors:
+                _pos.append(po_api)
+                _vendors.append(po_api['VENDOR_CODE'])
+
+            if not _donors.get(po_api["DONOR_NAME"], None):
+                temp_donor = Donor.objects.get_or_create(name=po_api["DONOR_NAME"])[0]
+                _donors[po_api["DONOR_NAME"]] = temp_donor
+
+            donor_grant_pair = po_api["DONOR_NAME"] + po_api["GRANT_REF"]
+            if not _grants.get(donor_grant_pair, None):
+                try:
+                    temp_grant = Grant.objects.get(name=po_api["GRANT_REF"])
+                except Grant.DoesNotExist:
+                    temp_grant = Grant.objects.create(
+                        name=po_api["GRANT_REF"],
+                        donor=_donors[po_api["DONOR_NAME"]]
+                    )
+
+                temp_grant.description = po_api["GRANT_DESC"]
+                if po_api["EXPIRY_DATE"] is not None:
+                    temp_grant.expiry = wcf_json_date_as_datetime(po_api["EXPIRY_DATE"])
+                temp_grant.save()
+                _grants[donor_grant_pair] = temp_grant
+
+            if not po_api["TOTAL_CASH_TRANSFERRED_CP"]:
+                po_api["TOTAL_CASH_TRANSFERRED_CP"] = 0
+            if not po_api["TOTAL_CASH_TRANSFERRED_CY"]:
+                po_api["TOTAL_CASH_TRANSFERRED_CY"] = 0
+
+            if not _totals_cp.get(po_api['VENDOR_CODE']):
+                _totals_cp[po_api['VENDOR_CODE']] = po_api["TOTAL_CASH_TRANSFERRED_CP"]
+            else:
+                _totals_cp[po_api['VENDOR_CODE']] += po_api["TOTAL_CASH_TRANSFERRED_CP"]
+
+            if not _totals_cy.get(po_api['VENDOR_CODE']):
+                _totals_cy[po_api['VENDOR_CODE']] = po_api["TOTAL_CASH_TRANSFERRED_CY"]
+            else:
+                _totals_cy[po_api['VENDOR_CODE']] += po_api["TOTAL_CASH_TRANSFERRED_CY"]
 
 
-        try:
-            # # Populate grants during import
-            # donor = Donor.objects.get_or_crzeate(name=partner["DONOR_NAME"])[0]
-            # try:
-            #     grant = Grant.objects.get(name=partner["GRANT_REF"])
-            # except Grant.DoesNotExist:
-            #     grant = Grant.objects.create(name=partner["GRANT_REF"], donor=donor)
-            # else:
-            #     grant.donor = donor
-            #     grant.description = partner["GRANT_DESC"]
-            #
-            #
-            # if partner["EXPIRY_DATE"] is not None:
-            #     grant.expiry = wcf_json_date_as_datetime(partner["EXPIRY_DATE"])
-            # grant.save()
+
+
+
+
+        def _partner_save(processed, partner):
+
 
             try:
-                partner_org = PartnerOrganization.objects.get(vendor_number=partner["VENDOR_CODE"])
-            except PartnerOrganization.DoesNotExist:
-                partner_org = PartnerOrganization(vendor_number=partner["VENDOR_CODE"])
+                new = False
+                saving = False
+                try:
+                    partner_org = PartnerOrganization.objects.get(vendor_number=partner["VENDOR_CODE"])
+                except PartnerOrganization.DoesNotExist:
+                    partner_org = PartnerOrganization(vendor_number=partner["VENDOR_CODE"])
+                    new = True
 
-            # partner_org, created = PartnerOrganization.objects.get_or_create(
-            #     vendor_number=partner["VENDOR_CODE"]
-            # )
-            partner_org.name = partner["VENDOR_NAME"]
-            partner_org.partner_type = type_mapping[partner["PARTNER_TYPE_DESC"]]
-            partner_org.cso_type = partner["CSO_TYPE_NAME"]
-            partner_org.rating = partner["RISK_RATING_NAME"]
-            partner_org.type_of_assessment = partner["TYPE_OF_ASSESSMENT"]
-            partner_org.last_assessment_date = wcf_json_date_as_datetime(partner["LAST_ASSESSMENT_DATE"])
-            partner_org.address = partner["STREET_ADDRESS"]
-            partner_org.phone_number = partner["PHONE_NUMBER"]
-            partner_org.email = partner["EMAIL"]
-            partner_org.core_values_assessment_date = wcf_json_date_as_datetime(partner["CORE_VALUE_ASSESSMENT_DT"])
+                try:
+                    type_mapping[partner["PARTNER_TYPE_DESC"]]
+                except KeyError as exp:
+                    print "Partner {} skipped, because PartnerType ={}".format(
+                        partner['VENDOR_NAME'], exp
+                        )
+                    # if partner organization exists in etools db (these are nameless)
+                    if partner_org.id:
+                        partner_org.name = ""# leaving the name blank on purpose (invalid record)
+                        partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
+                        partner_org.hidden = True
+                        partner_org.save()
+                    return processed
 
 
-            partner_org.total_ct_cp = self._totals_cp[partner["VENDOR_CODE"]]
-            partner_org.total_ct_cy = self._totals_cy[partner["VENDOR_CODE"]]
+                if new or _changed_fields(['name', 'cso_type', 'rating', 'type_of_assessment',
+                                                'address', 'phone_number', 'email', 'deleted_flag',
+                                                'last_assessment_date', 'core_values_assessment_date'],
+                                               partner_org, partner):
+                    partner_org.name = partner["VENDOR_NAME"]
+                    partner_org.cso_type = partner["CSO_TYPE_NAME"]
+                    partner_org.rating = partner["RISK_RATING_NAME"]
+                    partner_org.type_of_assessment = partner["TYPE_OF_ASSESSMENT"]
+                    partner_org.address = partner["STREET_ADDRESS"]
+                    partner_org.phone_number = partner["PHONE_NUMBER"]
+                    partner_org.email = partner["EMAIL"]
+                    partner_org.core_values_assessment_date = wcf_json_date_as_datetime(partner["CORE_VALUE_ASSESSMENT_DT"])
+                    partner_org.last_assessment_date = wcf_json_date_as_datetime(partner["LAST_ASSESSMENT_DATE"])
+                    partner_org.partner_type = type_mapping[partner["PARTNER_TYPE_DESC"]]
+                    partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
+                    partner_org.hidden = partner_org.deleted_flag
+                    partner_org.vision_synced = True
+                    saving = True
 
-            partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
-            partner_org.hidden = partner_org.deleted_flag
+                if not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner["VENDOR_CODE"]]) or \
+                      not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner["VENDOR_CODE"]]):
 
-            partner_org.vision_synced = True
-            partner_org.save()
-            processed += 1
+                    partner_org.total_ct_cy = _totals_cy[partner["VENDOR_CODE"]]
+                    partner_org.total_ct_cp = _totals_cp[partner["VENDOR_CODE"]]
 
-        except KeyError as exp:
-            print "Partner {} skipped, because PartnerType ={}".format(
-                partner['VENDOR_NAME'], exp
-                )
-            # if partner organization exists in etools db (these are nameless)
-            if partner_org.id:
-                partner_org.name = ""# leaving the name blank on purpose (invalid record)
-                partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
-                partner_org.hidden = True
-                partner_org.save()
-        except Exception as exp:
-            print "Exception message: {} " \
-                  "Exception type: {} " \
-                  "Exception args: {} ".format(
-                    exp.message, type(exp).__name__, exp.args
-                )
-        return processed
 
-    def _save_records(self, records):
+
+                    saving = True
+                    print "sums changed", partner_org
+
+                if saving:
+                    print "Updating Partner", partner_org
+                    partner_org.save()
+                del _totals_cy[partner["VENDOR_CODE"]]
+                del _totals_cp[partner["VENDOR_CODE"]]
+
+                processed += 1
+
+            except Exception as exp:
+                print "Exception message: {} " \
+                      "Exception type: {} " \
+                      "Exception args: {} ".format(
+                        exp.message, type(exp).__name__, exp.args
+                    )
+            return processed
+
 
         processed = 0
         filtered_records = self._filter_records(records)
 
-
-
         for partner in filtered_records:
-            self._process_po(partner)
+            _process_po(partner)
 
 
-        for partner in self._pos:
-            processed = self._transactional_save(processed, partner)
+        for partner in _pos:
+            processed = _partner_save(processed, partner)
+
+        self._pos = []
+        self._vendors = []
+        self._donors = {}
+        self._grants = {}
+        self._totals_cy = {}
+        self._totals_cp = {}
+        return processed
+
+
+    def _save_records(self, records):
+
+
+
+        processed = self.update_stuff(records)
+
 
         return processed
