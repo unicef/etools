@@ -72,13 +72,19 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
             try:
                 country_programme, created = CountryProgramme.objects.get_or_create(
                     wbs=result["COUNTRY_PROGRAMME_WBS"],
-                    name=result['COUNTRY_PROGRAMME_NAME'],
-                    from_date=wcf_json_date_as_datetime(result['CP_START_DATE']),
-                    to_date=wcf_json_date_as_datetime(result['CP_END_DATE']),
                 )
             except CountryProgramme.MultipleObjectsReturned as exp:
                 exp.message += 'Result Structure: ' + result['COUNTRY_PROGRAMME_NAME']
                 raise
+
+            if (country_programme.name != result['COUNTRY_PROGRAMME_NAME']) or \
+                    country_programme.from_date != wcf_json_date_as_datetime(result['CP_START_DATE']) or \
+                    country_programme.to_date != wcf_json_date_as_datetime(result['CP_END_DATE']):
+
+                country_programme.name = result['COUNTRY_PROGRAMME_NAME']
+                country_programme.from_date = wcf_json_date_as_datetime(result['CP_START_DATE'])
+                country_programme.to_date = wcf_json_date_as_datetime(result['CP_END_DATE'])
+                country_programme.save()
 
 
             try:
