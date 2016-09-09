@@ -5,7 +5,7 @@ from users.models import Section
 from partners.models import PartnerOrganization
 from locations.models import Location
 
-from .models import Comment, Workplan, ResultWorkplanProperty
+from .models import Comment, Workplan, ResultWorkplanProperty, Label
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -16,6 +16,11 @@ class CommentSerializer(serializers.ModelSerializer):
 class WorkplanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workplan
+
+
+class LabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Label
 
 
 class ResultWorkplanPropertySerializer(serializers.ModelSerializer):

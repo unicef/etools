@@ -228,6 +228,13 @@ class WorkplanFactory(factory.django.DjangoModelFactory):
     result_structure = factory.SubFactory(ResultStructureFactory)
 
 
+class LabelFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Label
+
+    name = factory.Sequence(lambda n: 'Label {}'.format(n))
+
+
 class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = workplan_models.ResultWorkplanProperty
@@ -246,6 +253,7 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
     geotag = [factory.SubFactory(LocationFactory)]
     partners = [factory.SubFactory(PartnerFactory)]
     responsible_persons = [factory.SubFactory(UserFactory)]
+    labels = [factory.SubFactory(LabelFactory)]
 
     @factory.post_generation
     def sections(self, create, extracted, **kwargs):
@@ -282,6 +290,15 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
         if extracted:
             for responsible_person in extracted:
                 self.responsible_persons.add(responsible_person)
+
+    @factory.post_generation
+    def labels(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for label in extracted:
+                self.labels.add(label)
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
