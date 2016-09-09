@@ -1,9 +1,9 @@
-
 from rest_framework import mixins, viewsets
+from rest_framework.permissions import IsAdminUser
 
 from workplan.models import Workplan
-from workplan.serializers import WorkplanSerializer
-from .models import Comment
+from workplan.serializers import WorkplanSerializer, ResultWorkplanPropertySerializer
+from .models import Comment, ResultWorkplanProperty
 from .serializers import CommentSerializer
 
 
@@ -24,3 +24,12 @@ class WorkplanViewSet(mixins.RetrieveModelMixin,
                       viewsets.GenericViewSet):
     queryset = Workplan.objects.all()
     serializer_class = WorkplanSerializer
+
+
+class ResultWorkplanPropertyViewSet(viewsets.ModelViewSet):
+    """
+    CRUD for ResultWorkplanProperty
+    """
+    queryset = ResultWorkplanProperty.objects.all()
+    serializer_class = ResultWorkplanPropertySerializer
+    permission_classes = (IsAdminUser,)
