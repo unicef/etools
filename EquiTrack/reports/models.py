@@ -21,6 +21,10 @@ class CountryProgramme(models.Model):
     from_date = models.DateField()
     to_date = models.DateField()
 
+
+    def __unicode__(self):
+        return ' '.join([self.name, self.wbs])
+
     @classmethod
     def current(cls):
         today = datetime.now()

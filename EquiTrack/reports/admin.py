@@ -16,6 +16,7 @@ from reports.models import (
     ResultStructure,
     ResultType,
     Result,
+    CountryProgramme
 )
 from .forms import IndicatorAdminForm
 
@@ -55,12 +56,6 @@ class SectorAdmin(admin.ModelAdmin):
     form = AutoSizeTextForm
     list_display = ('name', 'color', 'dashboard',)
     list_editable = ('color', 'dashboard',)
-
-
-class ResultStructureAdmin(admin.ModelAdmin):
-    search_fields = ('name',)
-    list_filter = ('result_structure', SectorListFilter,)
-    list_display = ('name', 'sector', 'result_structure',)
 
 
 class GoalAdmin(admin.ModelAdmin):
@@ -163,6 +158,7 @@ class ResultAdmin(MPTTModelAdmin):
         'name',
     )
     list_filter = (
+        'country_programme',
         'result_structure',
         'sector',
         'result_type',
@@ -201,6 +197,7 @@ class ResultAdmin(MPTTModelAdmin):
 
 admin.site.register(Result, ResultAdmin)
 admin.site.register(ResultStructure)
+admin.site.register(CountryProgramme)
 admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
