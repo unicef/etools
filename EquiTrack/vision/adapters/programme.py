@@ -170,9 +170,22 @@ class RAMSynchronizer(VisionDataSynchronizer):
         "BASELINE",
         "TARGET",
     )
+    MAPPING = {
+        'name': 'INDICATOR_DESCRIPTION',
+        'baseline': 'BASELINE',
+        'target': 'TARGET',
+        'code': 'INDICATOR_CODE',
+    }
 
     def _convert_records(self, records):
         return json.loads(records)
+
+    def _changed_fields(self, fields, local_obj, api_obj):
+        for field in fields:
+            if getattr(local_obj, field) != api_obj[self.MAPPING[field]]:
+                return True
+        return False
+
 
     def _save_records(self, records):
 
@@ -195,13 +208,15 @@ class RAMSynchronizer(VisionDataSynchronizer):
                     result=result,
                     ram_indicator=True,
                 )
-                indicator.name = ram_indicator['INDICATOR_DESCRIPTION']
-                indicator.baseline = ram_indicator['BASELINE']
-                indicator.target = ram_indicator['TARGET']
-                indicator.save()
+                if created or self._changed_fields(['name', 'baseline', 'target'], indicator, ram_indicator):
+                    indicator.name = ram_indicator['INDICATOR_DESCRIPTION']
+                    indicator.baseline = ram_indicator['BASELINE']
+                    indicator.target = ram_indicator['TARGET']
+                    indicator.save()
 
-                result.ram = True
-                result.save()
+                if not result.ram:
+                    result.ram = True
+                    result.save()
                 processed += 1
 
         return processed

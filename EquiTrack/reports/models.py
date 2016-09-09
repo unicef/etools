@@ -253,11 +253,12 @@ class Indicator(models.Model):
     in_activity_info = models.BooleanField(default=False)
     activity_info_indicators = models.ManyToManyField(
         'activityinfo.Indicator',
+        blank=True
     )
 
     class Meta:
         ordering = ['name']
-        unique_together = (("name", "result", "sector"),)
+        unique_together = (("name", "result", "sector"), ('code', 'result'))
 
     def __unicode__(self):
         return u'{} {} {}'.format(
@@ -291,3 +292,9 @@ class Indicator(models.Model):
             )
         total = programmed.aggregate(models.Sum('current_progress'))
         return (total[total.keys()[0]] or 0) + self.current if self.current else 0
+
+    def save(self, *args, **kwargs):
+        # Prevent from saving empty strings as code because of the unique together constraint
+        if not self.code:
+            self.code = None
+        super(Indicator, self).save(*args, **kwargs)

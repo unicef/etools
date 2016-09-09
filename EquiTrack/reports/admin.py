@@ -106,7 +106,7 @@ class GoalAdmin(admin.ModelAdmin):
 
 class IndicatorAdmin(admin.ModelAdmin):
     form = IndicatorAdminForm
-    search_fields = ('name',)
+    search_fields = ('name','code')
     list_editable = (
         'view_on_dashboard',
     )

@@ -4,7 +4,8 @@ from django.db.models import Count, Q
 import time
 from datetime import datetime, timedelta
 from users.models import Country
-from reports.models import ResultType, Result, CountryProgramme
+from reports.models import ResultType, Result, CountryProgramme, Indicator
+
 
 
 
@@ -18,19 +19,72 @@ def printtf(*args):
 def set_country(name):
     connection.set_tenant(Country.objects.get(name=name))
 
-def up_all(n):
-    if not n:
-        print('add a number greater than 100 for all')
-        return
-    for cntry in Country.objects.all():
-        n-=1
-        if n==0:
-            break
-        if cntry.name == 'Global':
-            continue
-        printtf("Updating results for {}".format(cntry.name))
-        fix_duplicate_results(cntry.name)
+
+def fix_duplicate_indicators(country_name):
+    if not country_name:
+        printtf("country name required /n")
+    set_country(country_name)
+
+    fattrs = ["ramindicator_set"]
+
+    def fix_indicator_code():
+        printtf('cleaning codes of indicators for country ', country_name)
+        indicators = Indicator.objects.filter(code__exact='').all()
+        for ind in indicators:
+            ind.code = None
+            ind.save()
+        time.sleep(3)
+    fix_indicator_code()
+
+    def relates_to_anything(cobj):
+        for a in fattrs:
+            if getattr(cobj, a).count():
+                printtf(cobj.id, cobj, "relates to ", a)
+                return True
+        return False
+    def update_relationships(dpres, keep):
+        for a in fattrs:
+            objs = getattr(dpres, a).all()
+            if len(objs):
+                for obj in objs:
+                    obj.indicator = keep
+                    obj.save()
+                    printtf("saved obj.id={} obj {} with keepid{} keep {}".format(obj.id, obj, keep.id, keep))
+
+    def _run_clean(dupes):
+        printtf(len(dupes), dupes)
+        for dup in dupes:
+            dupresults = Indicator.objects.filter(code=dup['code'], result=dup['result']).all()
+            delq = []
+            keep = None
+            for dpres in dupresults:
+                if not keep:
+                    keep = dpres
+                    continue
+                else:
+                    error = False
+                    if relates_to_anything(dpres):
+                        try:
+                            update_relationships(dpres, keep)
+                        except Exception as exp:
+                            printtf('Cannot remove Object {}, id={}'.format(dpres, dpres.id))
+                            error = True
+                    if error:
+                        printtf("ERROR OCCURED ON RECORD", dpres.id, dpres)
+                        continue
+                    delq.append(dpres)
+            if not len(delq):
+                printtf("Nothing is getting removed for {}".format(dupes))
+            else:
+                # delete everyting in the queue
+                [i.delete() for i in delq]
+                printtf("deleting: ", delq)
+
+    dupes = Indicator.objects.values('code', 'result').order_by('code', 'result').annotate(Count('pk')).filter(pk__count__gt=1).all()
+    _run_clean(dupes)
+
 def fix_duplicate_results(country_name):
+
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
@@ -47,6 +101,13 @@ def fix_duplicate_results(country_name):
         "resultchain_set": "result",
         "tripfunds_set": "wbs"
     }
+    def fix_string_wbs():
+        results = Result.objects.filter(wbs__exact='').all()
+        for res in results:
+            res.wbs = None
+            res.save()
+    fix_string_wbs()
+
     def reparent_children(current_object, new_parent):
         for child in current_object.get_children():
             child.parent = new_parent
@@ -122,6 +183,14 @@ def fix_string_wbs():
         res.wbs = None
         res.save()
 
+def fix_indicator_code():
+    indicators = Indicator.objects.filter(code__exact='').all()
+    for ind in indicators:
+        ind.code = None
+        ind.save()
+
+    time.sleep(3)
+
 
 
 
@@ -157,19 +226,56 @@ def cp_fix(country_name):
 
 
 
-def up_all_first(n):
+def up_cp_first(n):
     if not n:
         print('add a number greater than 100 for all')
         return
-    for cntry in Country.objects.all():
+    for cntry in Country.objects.order_by('name').all():
         n-=1
         if n==0:
             break
-        if cntry.name == 'Global':
+        if cntry.name in ['Global']:
             continue
-        printtf("Updating results for {}".format(cntry.name))
+        printtf("Updating  CPs for {}".format(cntry.name))
         cp_fix(cntry.name)
 
+
+def up_indicators(n):
+    if not n:
+        print('add a number greater than 100 for all')
+        return
+    for cntry in Country.objects.order_by('name').all():
+        n-=1
+        if n==0:
+            break
+        if cntry.name in ['Global']:
+            continue
+        printtf("Updating results for {}".format(cntry.name))
+        fix_duplicate_indicators(cntry.name)
+
+def up_results(n):
+    if not n:
+        print('add a number greater than 100 for all')
+        return
+    for cntry in Country.objects.order_by('name').all():
+        n-=1
+        if n==0:
+            break
+        if cntry.name in ['Global']:
+            continue
+        printtf("Updating results for {}".format(cntry.name))
+        fix_duplicate_results(cntry.name)
+
+
+def clean_all():
+    # Cleaning results for all countries
+    up_results(100)
+
+    # Adding country progrmmes in each country based on results
+    up_cp_first(100)
+
+    # clean Indicators
+    up_indicators(100)
 
 
 
