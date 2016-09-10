@@ -791,10 +791,10 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
         u'intervention',
     )
     list_display = (
+        u'fc_ref',
         u'grant',
         u'intervention',
         u'fr_number',
-        u'fc_ref',
         u'fr_item_amount_usd',
         u'agreement_amount',
         u'commitment_amount',

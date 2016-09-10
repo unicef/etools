@@ -5,7 +5,7 @@ from django.db import IntegrityError
 
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 from django.db import transaction
-from vision.utils import wcf_json_date_as_datetime
+from vision.utils import wcf_json_date_as_datetime, comp_decimals
 from funds.models import Grant, Donor
 from partners.models import PartnerOrganization
 
@@ -15,13 +15,6 @@ type_mapping = {
     "GOVERNMENT": u'Government',
     "UN AGENCY": u'UN Agency',
 }
-
-
-def comp_decimals(y, x):
-    def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
-        return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
-
-    return isclose(float(x), float(y))
 
 
 class PartnerSynchronizer(VisionDataSynchronizer):

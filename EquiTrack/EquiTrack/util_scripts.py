@@ -5,6 +5,7 @@ import time
 from datetime import datetime, timedelta
 from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator
+from partners.models import FundingCommitment
 
 
 
@@ -265,6 +266,20 @@ def up_results(n):
             continue
         printtf("Updating results for {}".format(cntry.name))
         fix_duplicate_results(cntry.name)
+
+def delete_all_fcs(country_name):
+    if not country_name:
+        printtf("country name required /n")
+    set_country(country_name)
+    fcs = FundingCommitment.objects.all()
+    fcs.delete()
+
+def del_all_fcs_global():
+    for cntry in Country.objects.order_by('name').all():
+        if cntry.name in ['Global']:
+            continue
+        printtf("Deleting fcs for {}".format(cntry.name))
+        delete_all_fcs(cntry.name)
 
 
 def clean_all():

@@ -849,7 +849,7 @@ class PCA(AdminURLMixin, models.Model):
     def __unicode__(self):
         return u'{}: {}'.format(
             self.partner.name,
-            self.reference_number
+            self.number if self.number else self.reference_number
         )
 
     @property
@@ -1640,19 +1640,25 @@ class DistributionPlan(models.Model):
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
+class FCManager(models.Manager):
+    def get_queryset(self):
+        return super(FCManager, self).get_queryset().select_related('grant__donor__name', 'intervention__number', 'intervention__partner__name')
+
+
 class FundingCommitment(TimeFramedModel):
 
-    grant = models.ForeignKey(Grant)
+    grant = models.ForeignKey(Grant, null=True, blank=True)
     intervention = models.ForeignKey(PCA, null=True, related_name='funding_commitments')
     fr_number = models.CharField(max_length=50)
     wbs = models.CharField(max_length=50)
     fc_type = models.CharField(max_length=50)
-    fc_ref = models.CharField(max_length=50, blank=True, null=True)
+    fc_ref = models.CharField(max_length=50, blank=True, null=True, unique=True)
     fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
     agreement_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
     commitment_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
     expenditure_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
 
+    objects = FCManager()
 
 class DirectCashTransfer(models.Model):
 
