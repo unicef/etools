@@ -788,12 +788,10 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
     )
     list_filter = (
         u'grant',
-        u'intervention',
     )
     list_display = (
         u'fc_ref',
         u'grant',
-        u'intervention',
         u'fr_number',
         u'fr_item_amount_usd',
         u'agreement_amount',

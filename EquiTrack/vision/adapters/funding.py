@@ -123,15 +123,6 @@ class FundingSynchronizer(VisionDataSynchronizer):
                     exp.message += 'FC Ref ' + fc_line["COMMITMENT_REF"]
                     raise
 
-            try:
-                intervention = PCA.objects.get(fr_number=fc_line["FR_DOC_NUMBER"])
-                if fc.intervention != intervention:
-                    fc.intervention = intervention
-                    saving = True
-            except PCA.DoesNotExist:
-                pass
-
-
             fc_fields = ['start', 'end', 'wbs', 'fc_type', 'fr_item_amount_usd',
                          'agreement_amount', 'commitment_amount', 'expenditure_amount']
             if saving or _changed_fields(fc_fields, fc, fc_line):
