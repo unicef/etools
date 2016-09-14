@@ -56,7 +56,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         'last_assessment_date': "LAST_ASSESSMENT_DATE",
         'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
         'partner_type': "PARTNER_TYPE_DESC",
-        'deleted_flag': "DELETED_FLAG"
     }
     def _convert_records(self, records):
         return json.loads(records)
@@ -199,8 +198,9 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.vision_synced = True
                     saving = True
 
-                if not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner["VENDOR_CODE"]]) or \
-                      not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner["VENDOR_CODE"]]):
+                if partner_org.total_ct_cp == None or partner_org.total_ct_cy == None or \
+                        not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner["VENDOR_CODE"]]) or \
+                        not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner["VENDOR_CODE"]]):
 
                     partner_org.total_ct_cy = _totals_cy[partner["VENDOR_CODE"]]
                     partner_org.total_ct_cp = _totals_cp[partner["VENDOR_CODE"]]
