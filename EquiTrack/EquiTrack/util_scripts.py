@@ -307,7 +307,7 @@ def clean_result_structures(country_name):
             objs = getattr(dpres, a).all()
             if len(objs):
                 for obj in objs:
-                    obj.name = keep.name
+                    obj.result_structure = keep
                     obj.save()
                     printtf("saved obj.id={} obj {} with keepid{} keep {}".format(obj.id, obj, keep.id, keep))
 

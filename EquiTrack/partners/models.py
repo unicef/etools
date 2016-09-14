@@ -1642,13 +1642,12 @@ post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 class FCManager(models.Manager):
     def get_queryset(self):
-        return super(FCManager, self).get_queryset().select_related('grant__donor__name', 'intervention__number', 'intervention__partner__name')
+        return super(FCManager, self).get_queryset().select_related('grant__donor__name')
 
 
 class FundingCommitment(TimeFramedModel):
 
     grant = models.ForeignKey(Grant, null=True, blank=True)
-    intervention = models.ForeignKey(PCA, null=True, related_name='funding_commitments')
     fr_number = models.CharField(max_length=50)
     wbs = models.CharField(max_length=50)
     fc_type = models.CharField(max_length=50)
