@@ -280,6 +280,71 @@ def clean_result_types(country_name):
     _run_clean(dupes)
 
 
+def clean_result_structures(country_name):
+    if not country_name:
+        printtf("country name required /n")
+        set_country(country_name)
+    if not country_name:
+        printtf("country name required /n")
+
+    set_country(country_name)
+
+    fattrs = ["result_set",
+              "indicator_set",
+              "goal_set",
+              "pca_set",
+              "governmentintervention_set", ]
+
+    def relates_to_anything(cobj):
+        for a in fattrs:
+            if getattr(cobj, a).count():
+                printtf(cobj.id, cobj, "relates to ", a)
+                return True
+        return False
+
+    def update_relationships(dpres, keep):
+        for a in fattrs:
+            objs = getattr(dpres, a).all()
+            if len(objs):
+                for obj in objs:
+                    obj.name = keep.name
+                    obj.save()
+                    printtf("saved obj.id={} obj {} with keepid{} keep {}".format(obj.id, obj, keep.id, keep))
+
+    def _run_clean(dupes):
+        printtf(len(dupes), dupes)
+        for dup in dupes:
+            dupresults = ResultStructure.objects.filter(name=dup['name']).all()
+            delq = []
+            keep = None
+            for dpres in dupresults:
+                if not keep:
+                    keep = dpres
+                    continue
+                else:
+                    error = False
+                    if relates_to_anything(dpres):
+                        try:
+                            update_relationships(dpres, keep)
+                        except Exception as exp:
+                            printtf('Cannot remove Object {}, id={}'.format(dpres, dpres.id))
+                            error = True
+                    if error:
+                        printtf("ERROR OCCURED ON RECORD", dpres.id, dpres)
+                        continue
+                    delq.append(dpres)
+            if not len(delq):
+                printtf("Nothing is getting removed for {}".format(dupes))
+            else:
+                # delete everyting in the queue
+                [i.delete() for i in delq]
+                printtf("deleting: ", delq)
+
+    # get all duplicates that have the same name
+    dupes = ResultStructure.objects.values('name', 'from_date', 'to_date').order_by('name', 'from_date', 'to_date').annotate(Count('pk')).filter(pk__count__gt=1).all()
+    _run_clean(dupes)
+
+
 def up_cp_first(n):
     if not n:
         print('add a number greater than 100 for all')
@@ -349,7 +414,7 @@ def clean_all():
 def before_code_merge():
     # Clean results
     # Clean results structure
-    # Clean resulttypes
+    # clean result types
     # Clean indicators
     # Delete all fcs
     pass
@@ -358,5 +423,6 @@ def after_code_merge(): #and after migrations
     # set up country programme
     # sync
     pass
+
 
 
