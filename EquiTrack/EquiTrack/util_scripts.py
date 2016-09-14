@@ -9,8 +9,6 @@ from partners.models import FundingCommitment
 
 
 
-
-
 def printtf(*args):
     print([arg for arg in args])
     f = open('mylogs.txt','a')
@@ -347,5 +345,18 @@ def clean_all():
     # clean Indicators
     up_indicators(100)
 
+
+def before_code_merge():
+    # Clean results
+    # Clean results structure
+    # Clean resulttypes
+    # Clean indicators
+    # Delete all fcs
+    pass
+
+def after_code_merge(): #and after migrations
+    # set up country programme
+    # sync
+    pass
 
 
