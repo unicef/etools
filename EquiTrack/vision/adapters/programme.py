@@ -206,7 +206,6 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 if not output.valid_entry():
                     # we need to skip this record since the wbs's don;t match
                     # TODO in these cases... send an email with the record and make the country aware
-                    print 'Skipping output because of wbs missmatch: ', output
                     continue
                     #raise Exception('Wbs of output does not map under country_programme')
                 output.save()
@@ -301,9 +300,9 @@ class RAMSynchronizer(VisionDataSynchronizer):
                     ram_indicator=True,
                 )
                 if created or self._changed_fields(['name', 'baseline', 'target'], indicator, ram_indicator):
-                    indicator.name = ram_indicator['INDICATOR_DESCRIPTION']
-                    indicator.baseline = ram_indicator['BASELINE']
-                    indicator.target = ram_indicator['TARGET']
+                    indicator.name = ram_indicator['INDICATOR_DESCRIPTION'][:1024]
+                    indicator.baseline = ram_indicator['BASELINE'][:255]
+                    indicator.target = ram_indicator['TARGET'][:255]
                     indicator.save()
 
                 if not result.ram:
