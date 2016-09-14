@@ -1,6 +1,6 @@
 from __future__ import print_function
 from django.db import connection
-from django.db.models import Count, Q
+from django.db.models import Count
 import time
 from datetime import datetime, timedelta
 from users.models import Country
@@ -400,6 +400,9 @@ def del_all_fcs_global():
         delete_all_fcs(cntry.name)
 
 
+def dissasociate_result_structures():
+    pass
+
 def clean_all():
     # Cleaning results for all countries
     up_results(100)
@@ -409,6 +412,7 @@ def clean_all():
 
     # clean Indicators
     up_indicators(100)
+
 
 
 def before_code_merge():
@@ -426,3 +430,4 @@ def after_code_merge(): #and after migrations
 
 
 
+d
