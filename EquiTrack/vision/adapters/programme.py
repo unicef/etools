@@ -173,8 +173,10 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 outcome.from_date = wcf_json_date_as_datetime(result['OUTCOME_START_DATE'])
                 outcome.to_date = wcf_json_date_as_datetime(result['OUTCOME_END_DATE'])
                 if not outcome.valid_entry():
-                    print outcome.wbs, outcome.name, country_programme
-                    raise Exception('Wbs of outcome does not map under country_programme')
+                    # we need to skip this record since the wbs's don;t match
+                    # TODO in these cases... send an email with the record and make the country aware
+                    continue
+                    # raise Exception('Wbs of outcome does not map under country_programme')
                 outcome.save()
 
             updating_output = False
@@ -201,7 +203,10 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                 output.to_date = wcf_json_date_as_datetime(result['OUTPUT_END_DATE'])
                 output.parent = outcome
                 if not output.valid_entry():
-                    raise Exception('Wbs of output does not map under country_programme')
+                    # we need to skip this record since the wbs's don;t match
+                    # TODO in these cases... send an email with the record and make the country aware
+                    continue
+                    #raise Exception('Wbs of output does not map under country_programme')
                 output.save()
 
             try:

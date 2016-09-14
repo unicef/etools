@@ -4,7 +4,7 @@ from django.db.models import Count, Q
 import time
 from datetime import datetime, timedelta
 from users.models import Country
-from reports.models import ResultType, Result, Indicator, ResultStructure
+from reports.models import ResultType, Result, CountryProgramme, Indicator
 from partners.models import FundingCommitment
 
 
