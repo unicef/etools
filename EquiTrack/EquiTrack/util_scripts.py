@@ -400,8 +400,16 @@ def del_all_fcs_global():
         delete_all_fcs(cntry.name)
 
 
-def dissasociate_result_structures():
-    pass
+def dissasociate_result_structures(country_name):
+    if not country_name:
+        printtf("country name required /n")
+    set_country(country_name)
+    results = Result.objects.all()
+    for result in results:
+        if result.wbs and result.result_structure:
+            result.result_structure = None
+            result.save()
+
 
 def clean_all():
     # Cleaning results for all countries
@@ -427,7 +435,3 @@ def after_code_merge(): #and after migrations
     # set up country programme
     # sync
     pass
-
-
-
-d
