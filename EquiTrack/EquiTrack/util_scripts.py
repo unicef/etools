@@ -77,7 +77,7 @@ def fix_duplicate_indicators(country_name):
                 [i.delete() for i in delq]
                 printtf("deleting: ", delq)
 
-    dupes = Indicator.objects.values('code', 'result').order_by('code', 'result').annotate(Count('pk')).filter(pk__count__gt=1).all()
+    dupes = Indicator.objects.values('code', 'result').order_by('code', 'result').annotate(Count('pk')).filter(pk__count__gt=1, ram_indicator=True).all()
     _run_clean(dupes)
 
 def fix_duplicate_results(country_name):
