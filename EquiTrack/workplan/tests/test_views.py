@@ -11,8 +11,8 @@ class TestWorkplanViews(APITenantTestCase):
     def setUp(self):
         self.user = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.comment = CommentFactory(author=self.user)
         self.workplan = WorkplanFactory()
+        self.comment = CommentFactory(author=self.user, workplan=self.workplan)
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan)
 
     def test_view_comments_list(self):

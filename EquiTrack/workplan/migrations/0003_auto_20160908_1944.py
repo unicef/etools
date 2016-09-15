@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('reports', '0021_auto_20160908_1944'),
         ('locations', '0006_auto_20160229_1545'),
-        ('workplan', '0002_workplan'),
+        ('workplan', '0002_auto_20160915_1821'),
     ]
 
     operations = [
