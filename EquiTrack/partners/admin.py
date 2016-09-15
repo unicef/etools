@@ -201,6 +201,7 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     verbose_name = 'RAM Result'
     verbose_name_plural = 'RAM Results'
     extra = 1
+    fields = ('result',)
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
 

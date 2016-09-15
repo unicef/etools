@@ -1475,6 +1475,15 @@ class RAMIndicator(models.Model):
 
     intervention = models.ForeignKey(PCA, related_name='indicators')
     result = models.ForeignKey(Result)
+    indicator = ChainedForeignKey(
+        Indicator,
+        chained_field="result",
+        chained_model_field="result",
+        show_all=False,
+        auto_choose=True,
+        blank=True,
+        null=True
+    )
 
     @property
     def baseline(self):
@@ -1485,8 +1494,7 @@ class RAMIndicator(models.Model):
         return self.indicator.target
 
     def __unicode__(self):
-        return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name,
+        return u'{} -> {}'.format(
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
@@ -1527,7 +1535,7 @@ class ResultChain(models.Model):
 
     def __unicode__(self):
         return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name,
+            self.result.result_structure.name if self.result.result_structure else '',
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
