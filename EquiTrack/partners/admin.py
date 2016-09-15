@@ -198,11 +198,9 @@ class LinksInlineAdmin(GenericLinkStackedInline):
 class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
     model = RAMIndicator
+    verbose_name = 'RAM Result'
+    verbose_name_plural = 'RAM Results'
     extra = 1
-    readonly_fields = (
-        u'baseline',
-        u'target'
-    )
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
 

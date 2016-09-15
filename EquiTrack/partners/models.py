@@ -1475,13 +1475,6 @@ class RAMIndicator(models.Model):
 
     intervention = models.ForeignKey(PCA, related_name='indicators')
     result = models.ForeignKey(Result)
-    indicator = ChainedForeignKey(
-        Indicator,
-        chained_field="result",
-        chained_model_field="result",
-        show_all=False,
-        auto_choose=True,
-    )
 
     @property
     def baseline(self):
