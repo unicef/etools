@@ -240,7 +240,6 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
         model = workplan_models.ResultWorkplanProperty
 
     workplan = factory.SubFactory(WorkplanFactory)
-    result_type = factory.SubFactory(ResultTypeFactory)
     assumptions = fuzzy.FuzzyText(length=50)
     status = fuzzy.FuzzyChoice(["On Track", "Constrained", "No Progress", "Target Met"])
     prioritized = fuzzy.FuzzyChoice([False, True])

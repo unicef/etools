@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization
-from reports.models import ResultStructure, ResultType
+from reports.models import ResultStructure
 
 
 class Comment(models.Model):
@@ -39,7 +39,6 @@ class Label(models.Model):
 
 class ResultWorkplanProperty(models.Model):
     workplan = models.ForeignKey(Workplan)
-    result_type = models.ForeignKey(ResultType)
     assumptions = models.TextField(null=True, blank=True)
     STATUS = (
         ("On Track","On Track"),
