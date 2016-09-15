@@ -4,7 +4,7 @@ from django.db.models import Count
 import time
 from datetime import datetime, timedelta
 from users.models import Country
-from reports.models import ResultType, Result, Indicator, ResultStructure
+from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure
 from partners.models import FundingCommitment
 
 def printtf(*args):
@@ -349,7 +349,6 @@ def all_countries_do(function, name):
             continue
         printtf("CALLING {} for all countries".format(name))
         function(cntry.name)
-
 
 
 
