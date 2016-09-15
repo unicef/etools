@@ -16,8 +16,4 @@ class Migration(migrations.Migration):
             name='activity_info_indicators',
             field=models.ManyToManyField(to='activityinfo.Indicator', blank=True),
         ),
-        migrations.AlterUniqueTogether(
-            name='indicator',
-            unique_together=set([('name', 'result', 'sector'), ('code', 'result')]),
-        ),
     ]
