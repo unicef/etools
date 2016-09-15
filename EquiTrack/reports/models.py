@@ -258,7 +258,7 @@ class Indicator(models.Model):
 
     class Meta:
         ordering = ['name']
-        unique_together = (("name", "result", "sector"), ('code', 'result'))
+        unique_together = (("name", "result", "sector"),)
 
     def __unicode__(self):
         return u'{} {} {}'.format(
