@@ -746,7 +746,7 @@ class PCA(AdminURLMixin, models.Model):
     )
     result_structure = models.ForeignKey(
         ResultStructure,
-        blank=True, null=True,
+        blank=True, null=True, on_delete=models.DO_NOTHING,
         help_text=u'Which result structure does this partnership report under?'
     )
     number = models.CharField(
@@ -1090,7 +1090,7 @@ class GovernmentIntervention(models.Model):
         related_name='work_plans',
     )
     result_structure = models.ForeignKey(
-        ResultStructure,
+        ResultStructure, on_delete=models.DO_NOTHING
     )
     number = models.CharField(
         max_length=45L,
