@@ -352,7 +352,6 @@ def all_countries_do(function, name):
 
 
 
-
 def before_code_merge():
     # Clean results
     all_countries_do(fix_duplicate_results, 'Result Cleaning')
