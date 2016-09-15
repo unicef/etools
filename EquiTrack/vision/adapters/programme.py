@@ -274,7 +274,10 @@ class RAMSynchronizer(VisionDataSynchronizer):
 
     def _changed_fields(self, fields, local_obj, api_obj):
         for field in fields:
-            if getattr(local_obj, field) != api_obj[self.MAPPING[field]]:
+            obj_value = api_obj[self.MAPPING[field]][:255]
+            if field in ['name']:
+                obj_value = api_obj[self.MAPPING[field]][:1024]
+            if getattr(local_obj, field) != obj_value:
                 return True
         return False
 

@@ -7,8 +7,6 @@ from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure
 from partners.models import FundingCommitment
 
-
-
 def printtf(*args):
     print([arg for arg in args])
     f = open('mylogs.txt','a')
@@ -23,7 +21,7 @@ def fix_duplicate_indicators(country_name):
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
-
+    printtf("Fixing duplicate indicators for {}".format(country_name))
     fattrs = ["ramindicator_set"]
 
     def fix_indicator_code():
@@ -79,7 +77,7 @@ def fix_duplicate_indicators(country_name):
                 [i.delete() for i in delq]
                 printtf("deleting: ", delq)
 
-    dupes = Indicator.objects.values('code', 'result').order_by('code', 'result').annotate(Count('pk')).filter(pk__count__gt=1).all()
+    dupes = Indicator.objects.values('code', 'result').order_by('code', 'result').annotate(Count('pk')).filter(pk__count__gt=1, ram_indicator=True).all()
     _run_clean(dupes)
 
 def fix_duplicate_results(country_name):
@@ -87,6 +85,7 @@ def fix_duplicate_results(country_name):
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
+    printtf("Fixing duplicate Results for {}".format(country_name))
     # foreign attributes
     fattrs = ["governmentinterventionresult_set",
             "indicator_set",
@@ -170,34 +169,14 @@ def fix_duplicate_results(country_name):
     dupes = sorted(dupes, key=lambda x: x['wbs'].count('/'), reverse=True)
     _run_clean('wbs', dupes)
 
-
-#execute first
-def fix_string_wbs():
-    results = Result.objects.filter(wbs__exact='').all()
-    for res in results:
-        res.wbs = None
-        res.save()
-
-def fix_indicator_code():
-    indicators = Indicator.objects.filter(code__exact='').all()
-    for ind in indicators:
-        ind.code = None
-        ind.save()
-
-    time.sleep(3)
-
-
-
-
-def get_cpwbs(wbs):
-    grp = wbs.split('/')
-    return '/'.join(grp[:3])
-
-
 def cp_fix(country_name):
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
+    printtf("Fixing Country Programme for {}".format(country_name))
+    def get_cpwbs(wbs):
+        grp = wbs.split('/')
+        return '/'.join(grp[:3])
 
     results = Result.objects.filter(wbs__isnull=False).exclude(wbs__exact='')
     locpwbs = []
@@ -227,7 +206,7 @@ def clean_result_types(country_name):
         printtf("country name required /n")
 
     set_country(country_name)
-
+    printtf("Fixing duplicate Result Types for {}".format(country_name))
     fattrs = ["result_set"]
 
     def relates_to_anything(cobj):
@@ -279,7 +258,6 @@ def clean_result_types(country_name):
     dupes = ResultType.objects.values('name').annotate(Count('name')).order_by().filter(name__count__gt=1).all()
     _run_clean(dupes)
 
-
 def clean_result_structures(country_name):
     if not country_name:
         printtf("country name required /n")
@@ -288,7 +266,7 @@ def clean_result_structures(country_name):
         printtf("country name required /n")
 
     set_country(country_name)
-
+    printtf("Fixing duplicate Result Structures for {}".format(country_name))
     fattrs = ["result_set",
               "indicator_set",
               "goal_set",
@@ -345,65 +323,19 @@ def clean_result_structures(country_name):
     _run_clean(dupes)
 
 
-def up_cp_first(n):
-    if not n:
-        print('add a number greater than 100 for all')
-        return
-    for cntry in Country.objects.order_by('name').all():
-        n-=1
-        if n==0:
-            break
-        if cntry.name in ['Global']:
-            continue
-        printtf("Updating  CPs for {}".format(cntry.name))
-        cp_fix(cntry.name)
-
-
-def up_indicators(n):
-    if not n:
-        print('add a number greater than 100 for all')
-        return
-    for cntry in Country.objects.order_by('name').all():
-        n-=1
-        if n==0:
-            break
-        if cntry.name in ['Global']:
-            continue
-        printtf("Updating results for {}".format(cntry.name))
-        fix_duplicate_indicators(cntry.name)
-
-def up_results(n):
-    if not n:
-        print('add a number greater than 100 for all')
-        return
-    for cntry in Country.objects.order_by('name').all():
-        n-=1
-        if n==0:
-            break
-        if cntry.name in ['Global']:
-            continue
-        printtf("Updating results for {}".format(cntry.name))
-        fix_duplicate_results(cntry.name)
-
 def delete_all_fcs(country_name):
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
+    printtf("Deleting all FCs for {}".format(country_name))
     fcs = FundingCommitment.objects.all()
     fcs.delete()
-
-def del_all_fcs_global():
-    for cntry in Country.objects.order_by('name').all():
-        if cntry.name in ['Global']:
-            continue
-        printtf("Deleting fcs for {}".format(cntry.name))
-        delete_all_fcs(cntry.name)
-
 
 def dissasociate_result_structures(country_name):
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
+    printtf("Dissasociating result structures for {}".format(country_name))
     results = Result.objects.all()
     for result in results:
         if result.wbs and result.result_structure:
@@ -411,27 +343,40 @@ def dissasociate_result_structures(country_name):
             result.save()
 
 
-def clean_all():
-    # Cleaning results for all countries
-    up_results(100)
+def all_countries_do(function, name):
+    for cntry in Country.objects.order_by('name').all():
+        if cntry.name in ['Global']:
+            continue
+        printtf("CALLING {} for all countries".format(name))
+        function(cntry.name)
 
-    # Adding country progrmmes in each country based on results
-    up_cp_first(100)
-
-    # clean Indicators
-    up_indicators(100)
 
 
 
 def before_code_merge():
     # Clean results
+    all_countries_do(fix_duplicate_results, 'Result Cleaning')
+
     # Clean results structure
+    all_countries_do(clean_result_structures, 'Result Structure Cleaning')
+
     # clean result types
+    all_countries_do(clean_result_types, 'Result Types Cleaning')
+
     # Clean indicators
+    all_countries_do(fix_duplicate_indicators, 'Indicators Cleaning')
+
     # Delete all fcs
-    pass
+    all_countries_do(delete_all_fcs, 'Deleting FCs')
+
+    print('FINISHED WITH BEFORE MERGE')
 
 def after_code_merge(): #and after migrations
+
     # set up country programme
-    # sync
-    pass
+    all_countries_do(cp_fix, 'Country Programme setup')
+
+    # disassociate result structures
+    all_countries_do(dissasociate_result_structures, 'Dissasociate Result Structure')
+
+    print("don't forget to sync")
