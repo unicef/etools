@@ -207,7 +207,7 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
 
         if db_field.name == u'result':
-            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output', ram=True)
+            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output', ram=True, hidden=False)
 
         return super(IndicatorsInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
@@ -369,7 +369,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
     suit_form_tabs = (
         (u'info', u'Info'),
-        (u'results', u'IndicatorsInlineAdmin'),
+        (u'results', u'Results'),
         (u'locations', u'Locations'),
         (u'trips', u'Trips'),
         (u'supplies', u'Supplies'),
