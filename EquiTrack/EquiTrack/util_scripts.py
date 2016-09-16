@@ -197,6 +197,7 @@ def cp_fix(country_name):
         cp = CountryProgramme.objects.get(wbs=get_cpwbs(res.wbs))
         res.country_programme = cp
         res.save()
+        print(res.name)
 
 def clean_result_types(country_name):
     if not country_name:
