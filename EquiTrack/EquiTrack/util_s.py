@@ -162,6 +162,7 @@ def fix_duplicate_results(country_name):
                 printtf("Nothing is getting removed for {}".format(dupes))
             else:
                 # delete everyting in the queue
+                
                 [i.delete() for i in delq]
                 printtf("deleting: ", delq)
     # get all duplicates that have the same wbs
