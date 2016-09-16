@@ -19,6 +19,10 @@ class GrantManager(models.Manager):
         return super(GrantManager, self).get_queryset().select_related('donor')
 
 
+class GrantManager(models.Manager):
+    def get_queryset(self):
+        return super(GrantManager, self).get_queryset().select_related('donor')
+
 class Grant(models.Model):
 
     donor = models.ForeignKey(Donor)
@@ -26,10 +30,10 @@ class Grant(models.Model):
     description = models.CharField(max_length=255, null=True, blank=True)
     expiry = models.DateField(null=True, blank=True)
 
+    objects = GrantManager()
+
     class Meta:
         ordering = ['donor']
-
-    objects = GrantManager()
 
     def __unicode__(self):
         return u"{}: {}".format(
