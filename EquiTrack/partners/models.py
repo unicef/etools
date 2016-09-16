@@ -35,6 +35,7 @@ from reports.models import (
     Goal,
     ResultType,
     Result,
+    CountryProgramme,
 )
 from locations.models import (
     Governorate,
@@ -182,12 +183,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
     def update_hact_value(self, key, value):
-        if self.hact_values:
-            values = self.hact_values
-            values[key] = value
-            self.hact_values = values
-        else:
-            self.hact_values = {key: value}
+        self.hact_values[key] = value
         self.save()
 
     @cached_property
@@ -217,18 +213,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             if assessment.completed_date > micro_assessment.completed_date:
                 micro_assessment = assessment
         if partner.type_of_assessment == 'High Risk Assumed':
-            partner.update_hact_value('micro_assessment_needed', 'Yes')
+            partner.hact_values['micro_assessment_needed'] = 'Yes'
         elif partner.planned_cash_transfers > 100000.00 \
             and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
-            partner.update_hact_value('micro_assessment_needed', 'Yes')
+            partner.hact_values['micro_assessment_needed'] = 'Yes'
         elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
             and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
             and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
-            partner.update_hact_value('micro_assessment_needed', 'Yes')
+            partner.hact_values['micro_assessment_needed'] = 'Yes'
         elif micro_assessment is None:
-            partner.update_hact_value('micro_assessment_needed', 'Missing')
+            partner.hact_values['micro_assessment_needed'] = 'Missing'
         else:
-            partner.update_hact_value('micro_assessment_needed', 'No')
+            partner.hact_values['micro_assessment_needed'] = 'No'
+        partner.save()
 
 
     @classmethod
@@ -236,7 +233,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         audits = 0
         if partner.total_ct_cp > 500000.00:
             audits = 1
-            current_cycle = ResultStructure.current()
+            current_cycle = CountryProgramme.current()
             last_audit = partner.latest_assessment(u'Scheduled Audit report')
             if assesment:
                 if last_audit:
@@ -247,7 +244,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
             if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
                 audits = 0
-        partner.update_hact_value('audits', audits)
+        partner.hact_values['audits'] = audits
+        partner.save()
 
     @property
     def hact_min_requirements(self):
@@ -294,17 +292,26 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             if budget_record:
                 total += budget_record.planned_amount
         else:
-            q = PartnershipBudget.objects.filter(partnership__partner=partner,
-                                                 partnership__status__in=[PCA.ACTIVE,
-                                                                          PCA.IMPLEMENTED],
-                                                 year=year)
-            q = q.order_by("partnership__id", "-created").\
-                distinct('partnership__id').values_list('unicef_cash', flat=True)
-            total = sum(q)
             if budget_record:
+                q = PartnershipBudget.objects.filter(partnership__partner=partner,
+                                                     partnership__status__in=[PCA.ACTIVE,
+                                                                              PCA.IMPLEMENTED],
+                                                     year=year).exclude(partnership__id=budget_record.partnership.id)
+                q = q.order_by("partnership__id", "-created").\
+                    distinct('partnership__id').values_list('unicef_cash', flat=True)
+                total = sum(q)
                 total += budget_record.unicef_cash
+            else:
+                q = PartnershipBudget.objects.filter(partnership__partner=partner,
+                                                     partnership__status__in=[PCA.ACTIVE,
+                                                                              PCA.IMPLEMENTED],
+                                                     year=year)
+                q = q.order_by("partnership__id", "-created").\
+                    distinct('partnership__id').values_list('unicef_cash', flat=True)
+                total = sum(q)
 
-        partner.update_hact_value('planned_cash_transfer', total)
+        partner.hact_values['planned_cash_transfer'] = total
+        partner.save()
 
     # total_ct_cy
     # @property
@@ -401,7 +408,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         if trip and trip.travel_type == Trip.PROGRAMME_MONITORING\
                 and trip.status not in [Trip.CANCELLED, Trip.COMPLETED]:
             pv += 1
-        partner.update_hact_value('planned_visits', pv)
+        partner.hact_values['planned_visits'] = pv
+        partner.save()
 
     @classmethod
     def programmatic_visits(cls, partner, trip=None):
@@ -416,7 +424,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         if trip and trip.travel_type == Trip.PROGRAMME_MONITORING \
                 and trip.status in [Trip.COMPLETED]:
             pv += 1
-        partner.update_hact_value('programmatic_visits', pv)
+        partner.hact_values['programmatic_visits'] = pv
+        partner.save()
 
     @classmethod
     def spot_checks(cls, partner, trip=None):
@@ -429,7 +438,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         if trip and trip.travel_type == Trip.SPOT_CHECK \
                 and trip.status in [Trip.COMPLETED]:
             sc += 1
-        partner.update_hact_value('spot_checks', sc)
+        partner.hact_values['spot_checks'] = sc
+        partner.save()
 
     @classmethod
     def follow_up_flags(cls, partner, tr=None):
@@ -440,7 +450,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             )
             if action.follow_up
         ]
-        partner.update_hact_value('follow_up_flags', len(follow_ups))
+        partner.hact_values['follow_up_flags'] = len(follow_ups)
+        partner.save()
 
     # def audits(self):
     #     return self.assessments.filter(type=u'Scheduled Audit report').count()
@@ -579,17 +590,17 @@ class Assessment(models.Model):
             if self.pk:
                 prev_assessment = Assessment.objects.get(id=self.id)
                 if prev_assessment.completed_date and prev_assessment.completed_date != self.completed_date:
-                    self.partner.micro_assessment_needed(self.partner)
+                    self.partner.micro_assessment_needed(self.partner, self)
             else:
-                self.partner.micro_assessment_needed(self.partner)
+                self.partner.micro_assessment_needed(self.partner, self)
 
         elif self.type == u'Scheduled Audit report' and self.completed_date:
             if self.pk:
                 prev_assessment = Assessment.objects.get(id=self.id)
                 if prev_assessment.completed_date and prev_assessment.completed_date != self.completed_date:
-                    self.partner.audit_needed(self.partner)
+                    self.partner.audit_needed(self.partner, self)
             else:
-                self.partner.audit_needed(self.partner)
+                self.partner.audit_needed(self.partner, self)
 
         super(Assessment, self).save(**kwargs)
 
@@ -1405,15 +1416,15 @@ class PartnershipBudget(TimeStampedModel):
             self.total_unicef_contribution() \
             + self.partner_contribution
 
-        super(PartnershipBudget, self).save(**kwargs)
-
         if self.unicef_cash:
             if self.pk:
                 prev_result = PartnershipBudget.objects.get(id=self.id)
                 if prev_result.unicef_cash != self.unicef_cash:
-                    planned_cash_transfers(self.partnership.partner, self)
+                    self.partnership.partner.planned_cash_transfers(self.partnership.partner, self)
             else:
-                planned_cash_transfers(self.partnership.partner, self)
+                self.partnership.partner.planned_cash_transfers(self.partnership.partner, self)
+
+        super(PartnershipBudget, self).save(**kwargs)
 
     def __unicode__(self):
         return u'{}: {}'.format(

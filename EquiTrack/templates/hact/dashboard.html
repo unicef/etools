@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block extra_head %}
 
@@ -89,10 +90,20 @@
                                         <td><a href="{{ partner.get_admin_url }}">{{ partner.name }}</a></td>
                                         <td>{{ partner.partner_type }}</td>
                                         <td>{{ partner.shared_partner }}</td>
-                                        <td>{{ partner.hact_values.planned_cash_transfers }}</td>
+                                        <td>{{ partner.hact_values.planned_cash_transfer|floatformat:"0"|intcomma }}</td>
                                         <td>{{ partner.hact_values.micro_assessment_needed }}</td>
-                                        <td>{{ partner.total_ct_cp }}</td>
-                                        <td>{{ partner.total_ct_cy }}</td>
+                                        <td>{% if partner.total_ct_cp %}
+                                                {{ partner.total_ct_cp|floatformat:"0"|intcomma }}
+                                            {% else %}
+                                                0
+                                            {% endif %}
+                                        </td>
+                                        <td>{% if partner.total_ct_cp %}
+                                                {{ partner.total_ct_cp|floatformat:"0"|intcomma }}
+                                            {% else %}
+                                                0
+                                            {% endif %}
+                                        </td>
                                         <td>{{ partner.rating }}</td>
                                         <td>{{ partner.hact_values.planned_visits }}</td>
                                         <td>{{ reqs.programme_visits }}</td>

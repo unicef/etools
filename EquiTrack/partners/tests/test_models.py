@@ -149,3 +149,7 @@ class TestHACTCalculations(TenantTestCase):
 
         self.intervention.partner.planned_cash_transfers(self.intervention.partner)
         self.assertEqual(self.intervention.partner.hact_values['planned_cash_transfer'], 60000)
+
+        total = self.intervention.partner.planned_cash_transfers
+        self.assertEqual(total, 60000)
+

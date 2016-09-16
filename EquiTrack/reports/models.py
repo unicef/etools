@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db import models
+from django.db.models import Max, F
 import django.contrib.postgres.fields as pgfields
 from jsonfield import JSONField
 
@@ -28,7 +29,10 @@ class CountryProgramme(models.Model):
     @classmethod
     def current(cls):
         today = datetime.now()
-        return cls.objects.get(to_date__gte=today, from_date__lt=today)
+        cps = cls.objects.filter(to_date__gte=today, from_date__lt=today).\
+            annotate(range=F('to_date') - F('from_date'))\
+            .order_by('-range')
+        return cps[0]
 
 
 class ResultStructure(models.Model):
