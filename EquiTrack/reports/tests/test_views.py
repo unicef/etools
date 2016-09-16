@@ -18,6 +18,10 @@ class TestReportViews(APITenantTestCase):
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
         self.result1 = ResultFactory(result_type=self.result_type)
 
+        # Additional data to use in tests
+        self.location3 = LocationFactory()
+        self.section3 = SectionFactory()
+
     def test_api_resultstructures_list(self):
         response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)
 
@@ -49,6 +53,17 @@ class TestReportViews(APITenantTestCase):
         response = self.forced_auth_req('patch', url, user=self.unicef_staff, data=data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["name"], "patched name")
+
+    def test_api_results_update_m2m(self):
+        url = '/api/reports/results/{}/'.format(self.result1.id)
+        data = {
+            "geotag": [self.location1.id, self.location3.id],
+            "sections": [self.section1.id, self.section3.id]
+            }
+        response = self.forced_auth_req('patch', url, user=self.unicef_staff, data=data)
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertItemsEqual(response.data["geotag"], (self.location1.id, self.location3.id,))
+        self.assertItemsEqual(response.data["sections"], [self.section1.id, self.section3.id])
 
     def test_api_units_list(self):
         response = self.forced_auth_req('get', '/api/reports/units/', user=self.unicef_staff)

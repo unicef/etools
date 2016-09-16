@@ -57,3 +57,23 @@ class ResultWorkplanProperty(models.Model):
         """
         self.total_funds = self.rr_funds + self.or_funds + self.ore_funds
         super(ResultWorkplanProperty, self).save(*args, **kwargs)
+
+
+class CoverPage(models.Model):
+    # TODO if the workplan project model will be added, uncomment this and finish the args
+    # workplan_project = models.OneToOneField('WorkplanProject', related_name='cover_page')
+
+    national_priority = models.CharField(max_length=255)
+    responsible_government_entity = models.CharField(max_length=255)
+    planning_assumptions = models.TextField()
+
+    logo = models.ImageField()
+
+
+class CoverPageBudget(models.Model):
+    cover_page = models.ForeignKey('CoverPage', related_name='budgets')
+
+    date = models.CharField(max_length=64)
+    total_amount = models.CharField(max_length=64)
+    funded_amount = models.CharField(max_length=64)
+    unfunded_amount = models.CharField(max_length=64)

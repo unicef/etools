@@ -13,5 +13,10 @@
         "pk": 3,
         "model": "reports.resulttype",
         "fields": {"name": "Activity"}
+    },
+    {
+        "pk": 4,
+        "model": "reports.resulttype",
+        "fields": {"name": "Sub-activity"}
     }
 ]
