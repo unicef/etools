@@ -30,7 +30,7 @@ def fix_duplicate_indicators(country_name):
         for ind in indicators:
             ind.code = None
             ind.save()
-        time.sleep(3)
+        time.sleep(1)
     fix_indicator_code()
 
     def relates_to_anything(cobj):
@@ -157,11 +157,12 @@ def fix_duplicate_results(country_name):
                         printtf("ERROR OCCURED ON RECORD", dpres.id, dpres)
                         continue
                     delq.append(dpres)
-            time.sleep(0.3)
+            time.sleep(0.1)
             if not len(delq):
                 printtf("Nothing is getting removed for {}".format(dupes))
             else:
                 # delete everyting in the queue
+                
                 [i.delete() for i in delq]
                 printtf("deleting: ", delq)
     # get all duplicates that have the same wbs
@@ -191,7 +192,7 @@ def cp_fix(country_name):
         tomorrow = today + timedelta(days=365)
         cp, created = CountryProgramme.objects.get_or_create(wbs=locpwbs[i], name='Country Programme '+str(i), from_date=today, to_date=tomorrow)
 
-    time.sleep(5)
+    time.sleep(1)
 
     for res in results:
         cp = CountryProgramme.objects.get(wbs=get_cpwbs(res.wbs))
