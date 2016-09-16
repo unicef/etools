@@ -56,7 +56,7 @@ from .filters import (
     PCAGrantFilter,
     PCAGatewayTypeFilter,
 )
-from .mixins import ReadOnlyMixin, SectorMixin
+from .mixins import ReadOnlyMixin, SectorMixin, HiddenPartnerMixin
 from .forms import (
     PartnershipForm,
     PartnersAdminForm,
@@ -198,16 +198,15 @@ class LinksInlineAdmin(GenericLinkStackedInline):
 class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
     model = RAMIndicator
+    verbose_name = 'RAM Result'
+    verbose_name_plural = 'RAM Results'
     extra = 1
-    readonly_fields = (
-        u'baseline',
-        u'target'
-    )
+    fields = ('result',)
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
 
         if db_field.name == u'result':
-            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output', ram=True)
+            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output', ram=True, hidden=False)
 
         return super(IndicatorsInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
@@ -260,7 +259,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
         return fields
 
 
-class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, VersionAdmin):
+class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
     form = PartnershipForm
     resource_class = PCAResource
     # Add custom exports
@@ -483,8 +482,7 @@ class GovernmentInterventionAdmin(admin.ModelAdmin):
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.rel.to is PartnerOrganization:
             kwargs['queryset'] = PartnerOrganization.objects.filter(
-                partner_type=u'Government',
-            )
+                partner_type=u'Government', hidden=False)
 
         return super(GovernmentInterventionAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
@@ -710,7 +708,7 @@ class BankDetailsInlineAdmin(admin.StackedInline):
     extra = 1
 
 
-class AgreementAdmin(CountryUsersAdminMixin, admin.ModelAdmin):
+class AgreementAdmin(HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
     form = AgreementForm
     list_filter = (
         u'partner',
@@ -786,13 +784,11 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
     )
     list_filter = (
         u'grant',
-        u'intervention',
     )
     list_display = (
-        u'grant',
-        u'intervention',
-        u'fr_number',
         u'fc_ref',
+        u'grant',
+        u'fr_number',
         u'fr_item_amount_usd',
         u'agreement_amount',
         u'commitment_amount',
