@@ -205,7 +205,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         3. risk rating is 'low, medium, significant, high', type of assessment is 'ma' or 'negative audit results'
             and date is older than 54 months.
         return 'missing' if ma is not attached in the Assessment and Audit record in the Partner screen.
-        Displays No in all other instances.
+        Displays No in all other instances .
         :return:
         """
         micro_assessment = partner.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
