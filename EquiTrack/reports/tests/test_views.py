@@ -1,13 +1,12 @@
 __author__ = 'achamseddine'
 
 import random
-import factory
 
 from rest_framework import status
 
 from reports.models import ResultType
 from EquiTrack.factories import UserFactory, ResultFactory
-from EquiTrack.factories import SectionFactory, MilestoneFactory
+from EquiTrack.factories import SectionFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
@@ -19,7 +18,9 @@ class TestReportViews(APITenantTestCase):
         self.result1 = ResultFactory(result_type=self.result_type)
 
         # Additional data to use in tests
+        self.location1 = LocationFactory()
         self.location3 = LocationFactory()
+        self.section1 = SectionFactory()
         self.section3 = SectionFactory()
 
     def test_api_resultstructures_list(self):

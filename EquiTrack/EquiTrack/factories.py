@@ -1,6 +1,8 @@
 """
 Model factories used for generating models dynamically for tests
 """
+from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
+
 __author__ = 'jcranwellward'
 
 from datetime import datetime, timedelta, date
@@ -283,6 +285,40 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
         if extracted:
             for responsible_person in extracted:
                 self.responsible_persons.add(responsible_person)
+
+
+class CoverPageBudgetFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = CoverPageBudget
+
+    date = factory.LazyAttribute(lambda o: datetime.now())
+    total_amount = fuzzy.FuzzyText(length=50)
+    funded_amount = fuzzy.FuzzyText(length=50)
+    unfunded_amount = fuzzy.FuzzyText(length=50)
+
+
+class CoverPageFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = CoverPage
+
+    national_priority = fuzzy.FuzzyText(length=50)
+    responsible_government_entity = fuzzy.FuzzyText(length=255)
+    planning_assumptions = fuzzy.FuzzyText(length=255)
+    budgets = [factory.SubFactory(CoverPageBudgetFactory),
+               factory.SubFactory(CoverPageBudgetFactory)]
+
+    @factory.post_generation
+    def budgets(self, create, extracted, **kwargs):
+        if create and extracted:
+            self.budgets.add(*extracted)
+
+
+class WorkplanProjectFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = WorkplanProject
+
+    workplan = factory.SubFactory(WorkplanFactory)
+    cover_page = factory.RelatedFactory(CoverPageFactory, 'workplan_project')
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):

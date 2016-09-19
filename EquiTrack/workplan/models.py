@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization
-from reports.models import ResultStructure, ResultType
+from reports.models import ResultType
 
 
 class Comment(models.Model):
@@ -25,7 +25,11 @@ class Workplan(models.Model):
         ("Target Met", "Target Met"),
     )
     status = models.CharField(max_length=32, null=True, blank=True, choices=STATUS)
-    result_structure = models.ForeignKey(ResultStructure)
+    result_structure = models.ForeignKey('reports.ResultStructure')
+
+
+class WorkplanProject(models.Model):
+    workplan = models.ForeignKey('Workplan', related_name='workplan_projects')
 
 
 class ResultWorkplanProperty(models.Model):
@@ -60,14 +64,15 @@ class ResultWorkplanProperty(models.Model):
 
 
 class CoverPage(models.Model):
-    # TODO if the workplan project model will be added, uncomment this and finish the args
-    # workplan_project = models.OneToOneField('WorkplanProject', related_name='cover_page')
+    workplan_project = models.OneToOneField('WorkplanProject', related_name='cover_page')
 
     national_priority = models.CharField(max_length=255)
     responsible_government_entity = models.CharField(max_length=255)
     planning_assumptions = models.TextField()
 
-    logo = models.ImageField()
+    logo_width = models.IntegerField(null=True, blank=True)
+    logo_height = models.IntegerField(null=True, blank=True)
+    logo = models.ImageField(width_field='logo_width', height_field='logo_height', null=True, blank=True)
 
 
 class CoverPageBudget(models.Model):
