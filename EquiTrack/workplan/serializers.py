@@ -6,7 +6,7 @@ from users.models import Section
 from partners.models import PartnerOrganization
 from locations.models import Location
 
-from .models import Comment, Workplan, ResultWorkplanProperty, WorkplanProject, CoverPage, CoverPageBudget
+from .models import Comment, Workplan, ResultWorkplanProperty, WorkplanProject, CoverPage, CoverPageBudget, Label
 
 
 
@@ -22,6 +22,11 @@ class WorkplanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Workplan
         fields = ('id', 'status', 'result_structure', 'workplan_projects', 'comments')
+
+
+class LabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Label
 
 
 class ResultWorkplanPropertySerializer(serializers.ModelSerializer):

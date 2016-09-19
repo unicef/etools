@@ -1,12 +1,12 @@
+import signals
 from jsonfield import JSONField
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.db.models.signals import m2m_changed
 
 from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization
-from reports.models import ResultType
 
 
 class Comment(models.Model):
@@ -15,6 +15,8 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
     workplan = models.ForeignKey('Workplan', related_name='comments')
+
+m2m_changed.connect(signals.notify_comment_tagged_users, sender=Comment.tagged_users.through)
 
 
 class Workplan(models.Model):
@@ -32,9 +34,12 @@ class WorkplanProject(models.Model):
     workplan = models.ForeignKey('Workplan', related_name='workplan_projects')
 
 
+class Label(models.Model):
+    name = models.CharField(max_length=32)
+
+
 class ResultWorkplanProperty(models.Model):
     workplan = models.ForeignKey(Workplan)
-    result_type = models.ForeignKey(ResultType)
     assumptions = models.TextField(null=True, blank=True)
     STATUS = (
         ("On Track","On Track"),
@@ -54,6 +59,7 @@ class ResultWorkplanProperty(models.Model):
     geotag = models.ManyToManyField(Location)
     partners = models.ManyToManyField(PartnerOrganization)
     responsible_persons = models.ManyToManyField(User)
+    labels = models.ManyToManyField(Label)
 
     def save(self, *args, **kwargs):
         """
@@ -61,6 +67,20 @@ class ResultWorkplanProperty(models.Model):
         """
         self.total_funds = self.rr_funds + self.or_funds + self.ore_funds
         super(ResultWorkplanProperty, self).save(*args, **kwargs)
+
+    @classmethod
+    def has_label(cls, label_id):
+        """
+        Determines if a given Label is used across ResultWorkplanProperty instances.
+
+        Args:
+            label_id: id of the given Label
+
+        Return:
+            bool: True if used, False if not
+        """
+        return cls.objects.filter(labels__id=label_id).exists()
+
 
 
 class CoverPage(models.Model):
