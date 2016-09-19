@@ -63,6 +63,7 @@ class TestReportViews(APITenantTestCase):
             }
         response = self.forced_auth_req('patch', url, user=self.unicef_staff, data=data)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data, {})
         self.assertItemsEqual(response.data["geotag"], (self.location1.id, self.location3.id,))
         self.assertItemsEqual(response.data["sections"], [self.section1.id, self.section3.id])
 

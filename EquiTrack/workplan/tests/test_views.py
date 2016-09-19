@@ -13,9 +13,10 @@ class TestWorkplanViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.workplan = WorkplanFactory()
         self.comment = CommentFactory(author=self.user, workplan=self.workplan)
-        self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan)
+
         self.workplan_project = WorkplanProjectFactory(workplan=self.workplan)
         self.labels = [LabelFactory() for x in xrange(3)]
+
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
                                             workplan=self.workplan,
                                             labels=self.labels
@@ -23,13 +24,10 @@ class TestWorkplanViews(APITenantTestCase):
         self.extra_label = LabelFactory()
         self.user2 = UserFactory()
 
-        data = {
-            "author": self.user.id,
-            "tagged_users": [self.user.id],
-            "text": "foobar",
-            "workplan": self.workplan.id
-        }
-        response = self.forced_auth_req('post', '/api/comments/', data=data)
+        self.comment2_obj = CommentFactory(author=self.user, text='foobar', workplan=self.workplan)
+        data = {'tagged_users': [self.user.id]}
+        response = self.forced_auth_req('patch', '/api/comments/{}/'.format(self.comment2_obj.id), data=data,
+                                        user=self.unicef_staff)
         self.comment2 = response.data
 
     def test_view_comments_list(self):
@@ -46,7 +44,8 @@ class TestWorkplanViews(APITenantTestCase):
         payload = response.data[0]
 
         comment_timestamp = DateTimeField().to_representation(self.comment.timestamp)
-        self.assertEqual(payload,
+        comment2_timestamp = DateTimeField().to_representation(self.comment2_obj.timestamp)
+        self.assertEqual(dict(payload),
                          {'id': self.workplan.id,
                           'status': None,
                           'result_structure': self.workplan.result_structure.id,
@@ -54,7 +53,12 @@ class TestWorkplanViews(APITenantTestCase):
                                         'author': self.comment.author.id,
                                         'tagged_users': [],
                                         'text': self.comment.text,
-                                        'timestamp': comment_timestamp}],
+                                        'timestamp': comment_timestamp},
+                                       {'id': self.comment2_obj.id,
+                                        'author': self.comment2_obj.author.id,
+                                        'tagged_users': [self.user.id],
+                                        'text': self.comment2_obj.text,
+                                        'timestamp': comment2_timestamp}],
                           'workplan_projects': [self.workplan_project.id]})
 
     def test_view_resultworkplanproperties_list(self):
@@ -105,7 +109,7 @@ class TestWorkplanViews(APITenantTestCase):
             "text": "foobar",
             "workplan": self.workplan.id
         }
-        response = self.forced_auth_req('post', '/api/comments/', data=data)
+        response = self.forced_auth_req('post', '/api/comments/', data=data, user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -116,7 +120,8 @@ class TestWorkplanViews(APITenantTestCase):
             "text": "foobar",
             "workplan": self.workplan.id
         }
-        response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data)
+        response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data,
+                                        user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -127,7 +132,8 @@ class TestWorkplanViews(APITenantTestCase):
             "text": "foobar",
             "workplan": self.workplan.id
         }
-        response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data)
+        response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data,
+                                        user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(mail.outbox[1].subject, "You are tagged on a comment")
@@ -139,14 +145,16 @@ class TestWorkplanViews(APITenantTestCase):
             "text": "foobar",
             "workplan": self.workplan.id
         }
-        response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data)
+        response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data,
+                                        user=self.unicef_staff)
         data = {
             "author": self.user.id,
             "tagged_users": [self.user2.id],
             "text": "foobar",
             "workplan": self.workplan.id
         }
-        response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data)
+        response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data,
+                                        user=self.unicef_staff)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(mail.outbox), 2)
