@@ -195,16 +195,6 @@ class ResultFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
-    sections = [factory.SubFactory(SectionFactory)]
-
-    @factory.post_generation
-    def sections(self, create, extracted, **kwargs):
-        # Handle M2M relationships
-        if not create:
-            return
-        if extracted:
-            for sections in extracted:
-                self.sections.add(sections)
 
 
 class MilestoneFactory(factory.django.DjangoModelFactory):

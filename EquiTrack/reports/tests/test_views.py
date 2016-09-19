@@ -55,18 +55,6 @@ class TestReportViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["name"], "patched name")
 
-    def test_api_results_update_m2m(self):
-        url = '/api/reports/results/{}/'.format(self.result1.id)
-        data = {
-            "geotag": [self.location1.id, self.location3.id],
-            "sections": [self.section1.id, self.section3.id]
-            }
-        response = self.forced_auth_req('patch', url, user=self.unicef_staff, data=data)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {})
-        self.assertItemsEqual(response.data["geotag"], (self.location1.id, self.location3.id,))
-        self.assertItemsEqual(response.data["sections"], [self.section1.id, self.section3.id])
-
     def test_api_units_list(self):
         response = self.forced_auth_req('get', '/api/reports/units/', user=self.unicef_staff)
 
