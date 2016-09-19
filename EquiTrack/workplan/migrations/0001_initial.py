@@ -28,6 +28,13 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Label',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('name', models.CharField(max_length=32)),
+            ],
+        ),
+        migrations.CreateModel(
             name='ResultWorkplanProperty',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
@@ -41,9 +48,9 @@ class Migration(migrations.Migration):
                 ('ore_funds', models.PositiveIntegerField(null=True, blank=True)),
                 ('total_funds', models.PositiveIntegerField(null=True, blank=True)),
                 ('geotag', models.ManyToManyField(to='locations.Location')),
+                ('labels', models.ManyToManyField(to='workplan.Label')),
                 ('partners', models.ManyToManyField(to='partners.PartnerOrganization')),
                 ('responsible_persons', models.ManyToManyField(to=settings.AUTH_USER_MODEL)),
-                ('result_type', models.ForeignKey(to='reports.ResultType')),
                 ('sections', models.ManyToManyField(to='users.Section')),
             ],
         ),
