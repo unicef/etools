@@ -8,6 +8,7 @@ from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
 
 import factory
+from factory import fuzzy
 
 from users import models as user_models
 from trips import models as trip_models
@@ -15,6 +16,7 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
+from workplan import models as workplan_models
 
 
 class GovernorateFactory(factory.django.DjangoModelFactory):
@@ -191,22 +193,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
-    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
-    users = []
     sections = [factory.SubFactory(SectionFactory)]
-    geotag = [factory.SubFactory(LocationFactory)]
-    status = "Target Met"
-    prioritized = False
-    metadata = {"status_description": "some status"}
-
-    @factory.post_generation
-    def geotag(self, create, extracted, **kwargs):
-        # Handle M2M relationships
-        if not create:
-            return
-        if extracted:
-            for geotag in extracted:
-                self.geotag.add(geotag)
 
     @factory.post_generation
     def sections(self, create, extracted, **kwargs):
@@ -225,6 +212,92 @@ class MilestoneFactory(factory.django.DjangoModelFactory):
     result = factory.SubFactory(ResultFactory)
     description = factory.Sequence(lambda n: 'Description {}'.format(n))
     assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
+
+
+class CommentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Comment
+
+    text = factory.Sequence(lambda n: 'Comment body {}'.format(n))
+
+
+class WorkplanFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Workplan
+
+    result_structure = factory.SubFactory(ResultStructureFactory)
+
+
+class LabelFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Label
+
+    name = factory.Sequence(lambda n: 'Label {}'.format(n))
+
+
+class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.ResultWorkplanProperty
+
+    workplan = factory.SubFactory(WorkplanFactory)
+    assumptions = fuzzy.FuzzyText(length=50)
+    status = fuzzy.FuzzyChoice(["On Track", "Constrained", "No Progress", "Target Met"])
+    prioritized = fuzzy.FuzzyChoice([False, True])
+    metadata = {"metadata1": "foo"}
+    other_partners = factory.Sequence(lambda n: 'Other Partners {}'.format(n))
+    rr_funds = fuzzy.FuzzyInteger(1000)
+    or_funds = fuzzy.FuzzyInteger(1000)
+    ore_funds = fuzzy.FuzzyInteger(1000)
+    sections = [factory.SubFactory(SectionFactory)]
+    geotag = [factory.SubFactory(LocationFactory)]
+    partners = [factory.SubFactory(PartnerFactory)]
+    responsible_persons = [factory.SubFactory(UserFactory)]
+    labels = [factory.SubFactory(LabelFactory)]
+
+    @factory.post_generation
+    def sections(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for section in extracted:
+                self.sections.add(section)
+
+    @factory.post_generation
+    def geotag(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for geotag in extracted:
+                self.geotag.add(geotag)
+
+    @factory.post_generation
+    def partners(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for partner in extracted:
+                self.partners.add(partner)
+
+    @factory.post_generation
+    def responsible_persons(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for responsible_person in extracted:
+                self.responsible_persons.add(responsible_person)
+
+    @factory.post_generation
+    def labels(self, create, extracted, **kwargs):
+        # Handle M2M relationships
+        if not create:
+            return
+        if extracted:
+            for label in extracted:
+                self.labels.add(label)
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
