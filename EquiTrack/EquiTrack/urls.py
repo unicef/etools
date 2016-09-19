@@ -67,6 +67,7 @@ from workplan.views import (
     CommentViewSet,
     WorkplanViewSet,
     ResultWorkplanPropertyViewSet,
+    LabelViewSet,
 )
 
 api = routers.SimpleRouter()
@@ -104,6 +105,7 @@ api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes'
 api.register(r'comments', CommentViewSet, base_name='comments')
 api.register(r'workplans', WorkplanViewSet, base_name='workplans')
 api.register(r'resultworkplanproperties', ResultWorkplanPropertyViewSet, base_name='resultworkplanproperties')
+api.register(r'labels', LabelViewSet, base_name='labels')
 
 
 urlpatterns = patterns(

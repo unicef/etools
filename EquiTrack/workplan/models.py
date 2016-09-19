@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization
-from reports.models import ResultStructure, ResultType
+from reports.models import ResultStructure
 
 
 class Comment(models.Model):
@@ -28,9 +28,12 @@ class Workplan(models.Model):
     result_structure = models.ForeignKey(ResultStructure)
 
 
+class Label(models.Model):
+    name = models.CharField(max_length=32)
+
+
 class ResultWorkplanProperty(models.Model):
     workplan = models.ForeignKey(Workplan)
-    result_type = models.ForeignKey(ResultType)
     assumptions = models.TextField(null=True, blank=True)
     STATUS = (
         ("On Track","On Track"),
@@ -50,6 +53,7 @@ class ResultWorkplanProperty(models.Model):
     geotag = models.ManyToManyField(Location)
     partners = models.ManyToManyField(PartnerOrganization)
     responsible_persons = models.ManyToManyField(User)
+    labels = models.ManyToManyField(Label)
 
     def save(self, *args, **kwargs):
         """
@@ -57,3 +61,16 @@ class ResultWorkplanProperty(models.Model):
         """
         self.total_funds = self.rr_funds + self.or_funds + self.ore_funds
         super(ResultWorkplanProperty, self).save(*args, **kwargs)
+
+    @classmethod
+    def has_label(cls, label_id):
+        """
+        Determines if a given Label is used across ResultWorkplanProperty instances.
+
+        Args:
+            label_id: id of the given Label
+
+        Return:
+            bool: True if used, False if not
+        """
+        return cls.objects.filter(labels__id=label_id).exists()
