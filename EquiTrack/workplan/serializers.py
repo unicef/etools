@@ -13,7 +13,7 @@ from .models import Comment, Workplan, ResultWorkplanProperty, WorkplanProject, 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'tagged_users', 'text', 'timestamp')
+        fields = ('id', 'author', 'tagged_users', 'text', 'timestamp', 'workplan')
 
 
 class WorkplanSerializer(serializers.ModelSerializer):
@@ -67,7 +67,7 @@ class CoverPageSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoverPage
         fields = ('id', 'workplan_project', 'national_priority', 'responsible_government_entity', 'planning_assumptions',
-                  'budgets')
+                  'budgets', 'logo')
 
 
 class WorkplanProjectSerializer(serializers.ModelSerializer):

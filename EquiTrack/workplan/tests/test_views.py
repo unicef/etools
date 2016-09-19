@@ -53,12 +53,14 @@ class TestWorkplanViews(APITenantTestCase):
                                         'author': self.comment.author.id,
                                         'tagged_users': [],
                                         'text': self.comment.text,
-                                        'timestamp': comment_timestamp},
+                                        'timestamp': comment_timestamp,
+                                        'workplan': self.workplan.id},
                                        {'id': self.comment2_obj.id,
                                         'author': self.comment2_obj.author.id,
                                         'tagged_users': [self.user.id],
                                         'text': self.comment2_obj.text,
-                                        'timestamp': comment2_timestamp}],
+                                        'timestamp': comment2_timestamp,
+                                        'workplan': self.workplan.id}],
                           'workplan_projects': [self.workplan_project.id]})
 
     def test_view_resultworkplanproperties_list(self):
@@ -75,6 +77,7 @@ class TestWorkplanViews(APITenantTestCase):
         payload = response.data[0]
 
         cover_page = self.workplan_project.cover_page
+        payload['cover_page'] = dict(payload['cover_page'])
         self.assertEqual(dict(payload),
                          {'id': self.workplan_project.id,
                           'workplan': self.workplan.id,
@@ -82,7 +85,9 @@ class TestWorkplanViews(APITenantTestCase):
                                          'national_priority': cover_page.national_priority,
                                          'responsible_government_entity': cover_page.responsible_government_entity,
                                          'planning_assumptions': cover_page.planning_assumptions,
-                                         'logo': None}})
+                                         'logo': None,
+                                         'budgets': [],
+                                         'workplan_project': self.workplan_project.id}})
 
     def test_view_labels_list(self):
         response = self.forced_auth_req('get', '/api/labels/', user=self.unicef_staff)
