@@ -1,8 +1,10 @@
-
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.db.models.signals import m2m_changed
+
+import signals
 
 
 class Comment(models.Model):
@@ -15,3 +17,5 @@ class Comment(models.Model):
     content_type = models.ForeignKey(ContentType, null=True, blank=True, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
+
+m2m_changed.connect(signals.notify_comment_tagged_users, sender=Comment.tagged_users.through)
