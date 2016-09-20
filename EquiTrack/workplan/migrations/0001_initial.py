@@ -28,6 +28,30 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='CoverPage',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('national_priority', models.CharField(max_length=255)),
+                ('responsible_government_entity', models.CharField(max_length=255)),
+                ('planning_assumptions', models.TextField()),
+                ('logo_width', models.IntegerField(null=True, blank=True)),
+                ('logo_height', models.IntegerField(null=True, blank=True)),
+                ('logo', models.ImageField(height_field=b'logo_height', width_field=b'logo_width', null=True, upload_to=b'', blank=True)),
+            ],
+        ),
+        migrations.CreateModel(
+            name='CoverPageBudget',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('from_date', models.DateField()),
+                ('to_date', models.DateField()),
+                ('total_amount', models.CharField(max_length=64)),
+                ('funded_amount', models.CharField(max_length=64)),
+                ('unfunded_amount', models.CharField(max_length=64)),
+                ('cover_page', models.ForeignKey(related_name='budgets', to='workplan.CoverPage')),
+            ],
+        ),
+        migrations.CreateModel(
             name='Label',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
@@ -62,10 +86,22 @@ class Migration(migrations.Migration):
                 ('result_structure', models.ForeignKey(to='reports.ResultStructure')),
             ],
         ),
+        migrations.CreateModel(
+            name='WorkplanProject',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('workplan', models.ForeignKey(related_name='workplan_projects', to='workplan.Workplan')),
+            ],
+        ),
         migrations.AddField(
             model_name='resultworkplanproperty',
             name='workplan',
             field=models.ForeignKey(to='workplan.Workplan'),
+        ),
+        migrations.AddField(
+            model_name='coverpage',
+            name='workplan_project',
+            field=models.OneToOneField(related_name='cover_page', to='workplan.WorkplanProject'),
         ),
         migrations.AddField(
             model_name='comment',

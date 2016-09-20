@@ -98,7 +98,8 @@ class CoverPage(models.Model):
 class CoverPageBudget(models.Model):
     cover_page = models.ForeignKey('CoverPage', related_name='budgets')
 
-    date = models.CharField(max_length=64)
+    from_date = models.DateField()
+    to_date = models.DateField()
     total_amount = models.CharField(max_length=64)
     funded_amount = models.CharField(max_length=64)
     unfunded_amount = models.CharField(max_length=64)

@@ -417,10 +417,6 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # Apps specific for this project go here.
 TENANT_APPS = (
-    # The following Django contrib apps must be in TENANT_APPS
-    # https://django-tenant-schemas.readthedocs.io/en/latest/install.html#configure-tenant-and-shared-applications
-    'django.contrib.contenttypes',
-
     'logentry_admin',
     'reversion',
     'funds',
@@ -443,7 +439,7 @@ LEAFLET_CONFIG = {
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
-INSTALLED_APPS = SHARED_APPS + tuple(app for app in TENANT_APPS if app not in SHARED_APPS) + ('tenant_schemas',)
+INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 TENANT_MODEL = "users.Country"  # app.Model
 ########## END APP CONFIGURATION
 
