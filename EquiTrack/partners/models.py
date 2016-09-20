@@ -284,13 +284,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         year = datetime.date.today().year
         total = 0
         if partner.partner_type == u'Government':
-            total = GovernmentInterventionResult.objects.filter(
-                intervention__partner=partner,
-                year=year).aggregate(
-                models.Sum('planned_amount')
-            )['planned_amount__sum'] or 0
             if budget_record:
+                total = GovernmentInterventionResult.objects.filter(
+                    intervention__partner=partner,
+                    year=year).exclude(intervention__id=budget_record.intervention.id).aggregate(
+                    models.Sum('planned_amount')
+                )['planned_amount__sum'] or 0
                 total += budget_record.planned_amount
+            else:
+               total = GovernmentInterventionResult.objects.filter(
+                    intervention__partner=partner,
+                    year=year).aggregate(
+                    models.Sum('planned_amount')
+                )['planned_amount__sum'] or 0
         else:
             if budget_record:
                 q = PartnershipBudget.objects.filter(partnership__partner=partner,
@@ -1265,9 +1271,9 @@ class GovernmentInterventionResult(models.Model):
             if self.pk:
                 prev_result = GovernmentInterventionResult.objects.get(id=self.id)
                 if prev_result.planned_amount != self.planned_amount:
-                    planned_cash_transfers(self.partner, self)
+                    self.intervention.partner.planned_cash_transfers(self.intervention.partner, self)
             else:
-                planned_cash_transfers(self.partner, self)
+                self.intervention.partner.planned_cash_transfers(self.intervention.partner, self)
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
