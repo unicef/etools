@@ -2,8 +2,9 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-from django.conf import settings
 import jsonfield.fields
+from django.conf import settings
+import tenant_schemas.postgresql_backend.base
 
 
 class Migration(migrations.Migration):
@@ -21,16 +22,23 @@ class Migration(migrations.Migration):
             name='Comment',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('domain_url', models.CharField(unique=True, max_length=128)),
+                ('schema_name', models.CharField(unique=True, max_length=63, validators=[tenant_schemas.postgresql_backend.base._check_schema_name])),
                 ('timestamp', models.DateTimeField(auto_now_add=True)),
                 ('text', models.TextField()),
                 ('author', models.ForeignKey(related_name='comments', to=settings.AUTH_USER_MODEL)),
                 ('tagged_users', models.ManyToManyField(related_name='_comment_tagged_users_+', to=settings.AUTH_USER_MODEL, blank=True)),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='CoverPage',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('domain_url', models.CharField(unique=True, max_length=128)),
+                ('schema_name', models.CharField(unique=True, max_length=63, validators=[tenant_schemas.postgresql_backend.base._check_schema_name])),
                 ('national_priority', models.CharField(max_length=255)),
                 ('responsible_government_entity', models.CharField(max_length=255)),
                 ('planning_assumptions', models.TextField()),
@@ -38,11 +46,16 @@ class Migration(migrations.Migration):
                 ('logo_height', models.IntegerField(null=True, blank=True)),
                 ('logo', models.ImageField(height_field=b'logo_height', width_field=b'logo_width', null=True, upload_to=b'', blank=True)),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='CoverPageBudget',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('domain_url', models.CharField(unique=True, max_length=128)),
+                ('schema_name', models.CharField(unique=True, max_length=63, validators=[tenant_schemas.postgresql_backend.base._check_schema_name])),
                 ('from_date', models.DateField()),
                 ('to_date', models.DateField()),
                 ('total_amount', models.CharField(max_length=64)),
@@ -50,18 +63,28 @@ class Migration(migrations.Migration):
                 ('unfunded_amount', models.CharField(max_length=64)),
                 ('cover_page', models.ForeignKey(related_name='budgets', to='workplan.CoverPage')),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='Label',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('domain_url', models.CharField(unique=True, max_length=128)),
+                ('schema_name', models.CharField(unique=True, max_length=63, validators=[tenant_schemas.postgresql_backend.base._check_schema_name])),
                 ('name', models.CharField(max_length=32)),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='ResultWorkplanProperty',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('domain_url', models.CharField(unique=True, max_length=128)),
+                ('schema_name', models.CharField(unique=True, max_length=63, validators=[tenant_schemas.postgresql_backend.base._check_schema_name])),
                 ('assumptions', models.TextField(null=True, blank=True)),
                 ('status', models.CharField(blank=True, max_length=255, null=True, choices=[(b'On Track', b'On Track'), (b'Constrained', b'Constrained'), (b'No Progress', b'No Progress'), (b'Target Met', b'Target Met')])),
                 ('prioritized', models.BooleanField(default=False)),
@@ -77,21 +100,34 @@ class Migration(migrations.Migration):
                 ('responsible_persons', models.ManyToManyField(to=settings.AUTH_USER_MODEL)),
                 ('sections', models.ManyToManyField(to='users.Section')),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='Workplan',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('domain_url', models.CharField(unique=True, max_length=128)),
+                ('schema_name', models.CharField(unique=True, max_length=63, validators=[tenant_schemas.postgresql_backend.base._check_schema_name])),
                 ('status', models.CharField(blank=True, max_length=32, null=True, choices=[(b'On Track', b'On Track'), (b'Constrained', b'Constrained'), (b'No Progress', b'No Progress'), (b'Target Met', b'Target Met')])),
                 ('result_structure', models.ForeignKey(to='reports.ResultStructure')),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='WorkplanProject',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('domain_url', models.CharField(unique=True, max_length=128)),
+                ('schema_name', models.CharField(unique=True, max_length=63, validators=[tenant_schemas.postgresql_backend.base._check_schema_name])),
                 ('workplan', models.ForeignKey(related_name='workplan_projects', to='workplan.Workplan')),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.AddField(
             model_name='resultworkplanproperty',

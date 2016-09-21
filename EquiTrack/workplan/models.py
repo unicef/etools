@@ -4,12 +4,14 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import m2m_changed
 
+from tenant_schemas.models import TenantMixin
+
 from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization
 
 
-class Comment(models.Model):
+class Comment(TenantMixin):
     author = models.ForeignKey(User, related_name='comments')
     tagged_users = models.ManyToManyField(User, blank=True, related_name='+')
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -19,7 +21,7 @@ class Comment(models.Model):
 m2m_changed.connect(signals.notify_comment_tagged_users, sender=Comment.tagged_users.through)
 
 
-class Workplan(models.Model):
+class Workplan(TenantMixin):
     STATUS = (
         ("On Track", "On Track"),
         ("Constrained", "Constrained"),
@@ -30,15 +32,15 @@ class Workplan(models.Model):
     result_structure = models.ForeignKey('reports.ResultStructure')
 
 
-class WorkplanProject(models.Model):
+class WorkplanProject(TenantMixin):
     workplan = models.ForeignKey('Workplan', related_name='workplan_projects')
 
 
-class Label(models.Model):
+class Label(TenantMixin):
     name = models.CharField(max_length=32)
 
 
-class ResultWorkplanProperty(models.Model):
+class ResultWorkplanProperty(TenantMixin):
     workplan = models.ForeignKey(Workplan)
     assumptions = models.TextField(null=True, blank=True)
     STATUS = (
@@ -82,8 +84,7 @@ class ResultWorkplanProperty(models.Model):
         return cls.objects.filter(labels__id=label_id).exists()
 
 
-
-class CoverPage(models.Model):
+class CoverPage(TenantMixin):
     workplan_project = models.OneToOneField('WorkplanProject', related_name='cover_page')
 
     national_priority = models.CharField(max_length=255)
@@ -95,7 +96,7 @@ class CoverPage(models.Model):
     logo = models.ImageField(width_field='logo_width', height_field='logo_height', null=True, blank=True)
 
 
-class CoverPageBudget(models.Model):
+class CoverPageBudget(TenantMixin):
     cover_page = models.ForeignKey('CoverPage', related_name='budgets')
 
     from_date = models.DateField()
