@@ -28,6 +28,7 @@ class Grant(models.Model):
 
     class Meta:
         ordering = ['donor']
+        unique_together = (('donor', 'name'),)
 
     objects = GrantManager()
 

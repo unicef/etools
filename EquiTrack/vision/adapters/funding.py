@@ -132,3 +132,5 @@ class DCTSynchronizer(VisionDataSynchronizer):
             processed += 1
 
         return processed
+
+
