@@ -1,9 +1,9 @@
 
 from rest_framework import mixins, viewsets
 
-from EquiTrack import notification
 from .models import Comment
 from .serializers import CommentSerializer
+from .tasks import notify_comment_tagged_users
 
 
 class TaggedNotificationMixin(object):
@@ -19,14 +19,14 @@ class TaggedNotificationMixin(object):
         users_to_notify = list(tagged_users_new & set(tagged_users_new ^ tagged_users_old))
 
         # Trigger notification
-        notification.notify_comment_tagged_users(users_to_notify, instance)
+        notify_comment_tagged_users.delay(users_to_notify, instance.id)
 
     def perform_create(self, serializer):
         instance = serializer.save()
         tagged_users_new = {x.id for x in instance.tagged_users.all()}
 
         # Trigger notification
-        notification.notify_comment_tagged_users(tagged_users_new, instance)
+        notify_comment_tagged_users.delay(tagged_users_new, instance.id)
 
 
 class CommentViewSet(TaggedNotificationMixin,

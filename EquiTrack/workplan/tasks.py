@@ -1,11 +1,16 @@
 from django.core import mail
 from django.contrib.auth.models import User
 
+from EquiTrack.celery import app
+from .models import Comment
 
-def notify_comment_tagged_users(user_ids, comment):
+
+@app.task
+def notify_comment_tagged_users(user_ids, comment_id):
     """
     Notify users about being tagged on comments.
     """
+    comment = Comment.objects.get(id=comment_id)
     users = User.objects.filter(id__in=user_ids)
     subject = "You are tagged on a comment"
     text = "You are tagged on the following comment:\n\n{}".format(comment.text)

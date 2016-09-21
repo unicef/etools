@@ -3,7 +3,7 @@ from rest_framework import status
 
 from EquiTrack.factories import TripFactory, UserFactory, CommentFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-
+from workplan.tasks import notify_comment_tagged_users
 
 class TestWorkplanViews(APITenantTestCase):
     def setUp(self):
@@ -52,6 +52,7 @@ class TestWorkplanViews(APITenantTestCase):
             "text": "foobar"
         }
         response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data)
+        notify_comment_tagged_users([self.user.id, self.user2.id], self.comment2["id"])
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(mail.outbox[1].subject, "You are tagged on a comment")
