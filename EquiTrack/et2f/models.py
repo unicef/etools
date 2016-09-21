@@ -3,6 +3,11 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+class Currency(models.Model):
+    name = models.CharField(max_length=128)
+    iso_4217 = models.CharField(max_length=3)
+
+
 class AirlineCompany(models.Model):
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=12)
