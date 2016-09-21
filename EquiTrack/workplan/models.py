@@ -36,8 +36,8 @@ class WorkplanProject(TenantMixin):
     workplan = models.ForeignKey('Workplan', related_name='workplan_projects')
 
 
-class Label(TenantMixin):
-    name = models.CharField(max_length=32)
+class Label(models.Model):
+    name = models.CharField(max_length=32, unique=True)
 
 
 class ResultWorkplanProperty(TenantMixin):
