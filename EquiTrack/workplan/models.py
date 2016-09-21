@@ -35,7 +35,7 @@ class WorkplanProject(models.Model):
 
 
 class Label(models.Model):
-    name = models.CharField(max_length=32)
+    name = models.CharField(max_length=32, unique=True)
 
 
 class ResultWorkplanProperty(models.Model):

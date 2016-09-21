@@ -89,6 +89,22 @@ class TestWorkplanViews(APITenantTestCase):
                                          'budgets': [],
                                          'workplan_project': self.workplan_project.id}})
 
+    def test_view_labels_create(self):
+        data = {
+            "name": "Label somethingelse"
+        }
+        response = self.forced_auth_req('post', '/api/labels/', data=data, user=self.unicef_staff)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_view_labels_unique(self):
+        data = {
+            "name": self.labels[0].name
+        }
+        response = self.forced_auth_req('post', '/api/labels/', data=data, user=self.unicef_staff)
+
+        self.assertEqual(response.data["name"][0], "Label with this name already exists.")
+
     def test_view_labels_list(self):
         response = self.forced_auth_req('get', '/api/labels/', user=self.unicef_staff)
 
