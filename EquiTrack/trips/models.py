@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 import datetime
 from copy import deepcopy
 
-from django.db import models, connection
+from django.db import models, connection, transaction
 from django.db.models import Q
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -650,16 +650,17 @@ class ActionPoint(models.Model):
                 *recipients
             )
 
+    @transaction.atomic
     def save(self, **kwargs):
         # update hact values
         if self.completed_date is None and self.follow_up:
             if self.trip.linkedgovernmentpartner_set:
-                for gov_partner in self.linkedpartner_set:
-                    gov_partner.partner.follow_up_flags(gov_partner.partner, self.trip)
+                for gov_partner in self.trip.linkedgovernmentpartner_set.all():
+                    gov_partner.partner.follow_up_flags(gov_partner.partner, self)
 
             if self.trip.linkedpartner_set:
-                for link_partner in self.linkedpartner_set:
-                    link_partner.partner.follow_up_flags(link_partner.partner, self.trip)
+                for link_partner in self.trip.linkedpartner_set.all():
+                    link_partner.partner.follow_up_flags(link_partner.partner, self)
         return super(ActionPoint, self).save(**kwargs)
 
 

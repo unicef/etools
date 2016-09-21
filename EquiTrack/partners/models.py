@@ -240,12 +240,23 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                     if assesment.completed_date > last_audit.completed_date:
                         last_audit = assesment
                 else:
-                    last_audit = assessment
+                    last_audit = assesment
 
             if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
                 audits = 0
-        partner.hact_values['audits'] = audits
+        partner.hact_values['audits_mr'] = audits
         partner.save()
+
+
+    @classmethod
+    def audit_done(cls, partner, assesment=None):
+        audits = 0
+        audits = partner.assessments.filter(type=u'Scheduled Audit report').count()
+        if assesment:
+            audits += 1
+        partner.hact_values['audits_done'] = audits
+        partner.save()
+
 
     @property
     def hact_min_requirements(self):
@@ -319,58 +330,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.hact_values['planned_cash_transfer'] = total
         partner.save()
 
-    # total_ct_cy
-    # @property
-    # def actual_cash_transferred(self):
-    #     """
-    #     Actual cash transferred for the current year
-    #     """
-    #     year = datetime.date.today().year
-    #     total = FundingCommitment.objects.filter(
-    #         intervention__partner=self,
-    #         intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED],
-    #         end__year=year).aggregate(
-    #         models.Sum('expenditure_amount')
-    #     )
-    #     return total[total.keys()[0]] or 0
-
-    # total_ct_cp
-    # @property
-    # def total_cash_transferred(self):
-    #     """
-    #     Total cash transferred for the current CP cycle
-    #     """
-    #     cp = ResultStructure.current()
-    #     if not cp:
-    #         # if no current structure loaded return 0
-    #         return 0
-    #     total = FundingCommitment.objects.filter(
-    #         end__gte=cp.from_date,
-    #         end__lte=cp.to_date,
-    #         # this or
-    #         intervention__partner=self,
-    #         intervention__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
-    #         models.Sum('expenditure_amount')
-    #         # government_intervention in
-    #         # gov_intervention__partner=self,
-    #         # gov_intervention__status__in=[GovernmentIntervention.ACTIVE, GovernmentIntervention.IMPLEMENTED]
-    #         # ).aggregate(
-    #         # models.Sum('expenditure_amount')
-    #     )
-    #     return total[total.keys()[0]] or 0
-
-    # @property
-    # def planned_visits2(self):
-    #     from trips.models import Trip
-    #     # planned visits
-    #     pv = 0
-    #     pv = self.cp_cycle_trip_links.filter(
-    #             trip__travel_type=Trip.PROGRAMME_MONITORING
-    #         ).exclude(
-    #             trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
-    #         ).count() or 0
-    #     return pv
-
     @cached_property
     def cp_cycle_trip_links(self):
         from trips.models import Trip
@@ -385,7 +344,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                     trip__from_date__lt=crs.to_date,
                     trip__from_date__gte=crs.from_date
                 ).distinct('trip')
-
 
     @property
     def trips(self):
@@ -448,17 +406,21 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def follow_up_flags(cls, partner, tr=None):
-        follow_ups = [
+    def follow_up_flags(cls, partner, action_point=None):
+        follow_ups = len([
             action for trip in partner.trips
             for action in trip.actionpoint_set.filter(
                 completed_date__isnull=True
             )
             if action.follow_up
-        ]
-        partner.hact_values['follow_up_flags'] = len(follow_ups)
+        ])
+        if action_point and action_point.completed_date is None and action_point.follow_up:
+            follow_ups += 1
+
+        partner.hact_values['follow_up_flags'] = follow_ups
         partner.save()
 
+    # @property
     # def audits(self):
     #     return self.assessments.filter(type=u'Scheduled Audit report').count()
 
@@ -607,6 +569,8 @@ class Assessment(models.Model):
                     self.partner.audit_needed(self.partner, self)
             else:
                 self.partner.audit_needed(self.partner, self)
+            self.partner.aduit_done(self.partner, self)
+
 
         super(Assessment, self).save(**kwargs)
 
