@@ -18,17 +18,19 @@ class TaggedNotificationMixin(object):
         instance = serializer.save()
         tagged_users_new = {x.id for x in instance.tagged_users.all()}
         # Compare newly added to the old set
-        users_to_notify = list(tagged_users_new & set(tagged_users_new ^ tagged_users_old))
+        users_to_notify = list(tagged_users_new - tagged_users_old)
 
         # Trigger notification
-        notify_comment_tagged_users.delay(users_to_notify, instance.id)
+        if users_to_notify:
+            notify_comment_tagged_users.delay(users_to_notify, instance.id)
 
     def perform_create(self, serializer):
         instance = serializer.save()
         tagged_users_new = {x.id for x in instance.tagged_users.all()}
 
         # Trigger notification
-        notify_comment_tagged_users.delay(tagged_users_new, instance.id)
+        if tagged_users_new:
+            notify_comment_tagged_users.delay(tagged_users_new, instance.id)
 
 
 class CommentViewSet(TaggedNotificationMixin, viewsets.ModelViewSet):
