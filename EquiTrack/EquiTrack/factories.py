@@ -197,6 +197,16 @@ class ResultFactory(factory.django.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
+class CountryProgrammeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = report_models.CountryProgramme
+
+    name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
+    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    from_date = date(date.today().year, 1, 1)
+    to_date = date(date.today().year, 12, 31)
+
+
 class MilestoneFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Milestone
@@ -210,7 +220,7 @@ class WorkplanFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = workplan_models.Workplan
 
-    result_structure = factory.SubFactory(ResultStructureFactory)
+    result_structure = factory.SubFactory(CountryProgrammeFactory)
 
 
 class CommentFactory(factory.django.DjangoModelFactory):
