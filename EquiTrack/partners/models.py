@@ -159,7 +159,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
     vision_synced = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
-    deleted_flag = models.BooleanField(default=False)
+    deleted_flag = models.BooleanField(default=False, verbose_name=u'Marked for deletion')
 
     total_ct_cp = models.DecimalField(
         decimal_places=2, max_digits=12, blank=True, null=True,
