@@ -34,6 +34,13 @@ class WorkplanProject(models.Model):
     workplan = models.ForeignKey('Workplan', related_name='workplan_projects')
 
 
+class Quarter(models.Model):
+    workplan = models.ForeignKey('Workplan', related_name='quarters')
+    name = models.CharField(max_length=64)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+
 class Label(models.Model):
     name = models.CharField(max_length=32, unique=True)
 
