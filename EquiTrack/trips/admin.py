@@ -87,7 +87,7 @@ class TripFundsInlineAdmin(admin.TabularInline):
     formset = TripFundsForm
     suit_classes = u'suit-tab suit-tab-planning'
     extra = 1
-    max_num = 1
+    max_num = 10
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == u'result':

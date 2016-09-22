@@ -159,7 +159,6 @@ class ResultAdmin(MPTTModelAdmin):
     )
     list_filter = (
         'country_programme',
-        'result_structure',
         'sector',
         'result_type',
         HiddenResultFilter,

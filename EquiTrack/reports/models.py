@@ -1,5 +1,6 @@
 from datetime import datetime
 from django.db import models
+from django.db.models import Max, F
 import django.contrib.postgres.fields as pgfields
 
 from users.models import UserProfile
@@ -26,7 +27,8 @@ class CountryProgramme(models.Model):
     @classmethod
     def current(cls):
         today = datetime.now()
-        return cls.objects.get(to_date__gte=today, from_date__lt=today)
+        cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
+        return cps.first()
 
 
 class ResultStructure(models.Model):
@@ -105,7 +107,7 @@ class ResultManager(models.Manager):
 
 class Result(MPTTModel):
 
-    result_structure = models.ForeignKey(ResultStructure, null=True, blank=True)
+    result_structure = models.ForeignKey(ResultStructure, null=True, blank=True, on_delete=models.DO_NOTHING)
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector, null=True, blank=True)
@@ -181,7 +183,7 @@ class Milestone(models.Model):
 class Goal(models.Model):
 
     result_structure = models.ForeignKey(
-        ResultStructure, blank=True, null=True)
+        ResultStructure, blank=True, null=True, on_delete=models.DO_NOTHING)
     sector = models.ForeignKey(Sector, related_name='goals')
     name = models.CharField(max_length=512L, unique=True)
     description = models.CharField(max_length=512L, blank=True)
@@ -212,7 +214,7 @@ class Indicator(models.Model):
     )
     result_structure = models.ForeignKey(
         ResultStructure,
-        blank=True, null=True
+        blank=True, null=True, on_delete=models.DO_NOTHING
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)
@@ -241,7 +243,7 @@ class Indicator(models.Model):
 
     class Meta:
         ordering = ['name']
-        unique_together = (("name", "result", "sector"), ('code', 'result'))
+        unique_together = (("name", "result", "sector"),)
 
     def __unicode__(self):
         return u'{} {} {}'.format(

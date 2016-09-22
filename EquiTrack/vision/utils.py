@@ -17,3 +17,9 @@ def wcf_json_date_as_datetime(jd):
         millisecs += (hh * 60 + mm) * 60000
     return datetime.datetime(1970, 1, 1) \
         + datetime.timedelta(microseconds=millisecs * 1000)
+
+def comp_decimals(y, x):
+    def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+        return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+    return isclose(float(x), float(y))

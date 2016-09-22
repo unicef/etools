@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reports', '0022_auto_20160906_1927'),
+        ('partners', '0070_auto_20160915_2340'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='indicator',
-            name='activity_info_indicators',
-            field=models.ManyToManyField(to='activityinfo.Indicator', blank=True),
+            model_name='partnerorganization',
+            name='deleted_flag',
+            field=models.BooleanField(default=False, verbose_name='Marked for deletion'),
         ),
     ]

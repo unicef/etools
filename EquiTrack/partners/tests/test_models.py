@@ -12,6 +12,7 @@ from partners.models import (
     FundingCommitment,
     PartnershipBudget,
     AgreementAmendmentLog,
+    PartnerOrganization,
 )
 
 
@@ -130,7 +131,6 @@ class TestHACTCalculations(TenantTestCase):
             start=current_cp.from_date,
             end=current_cp.from_date+datetime.timedelta(days=200),
             grant=grant,
-            intervention=self.intervention,
             fr_number='0123456789',
             wbs='Test',
             fc_type='PCA',
@@ -140,7 +140,6 @@ class TestHACTCalculations(TenantTestCase):
             start=current_cp.from_date+datetime.timedelta(days=200),
             end=current_cp.to_date,
             grant=grant,
-            intervention=self.intervention,
             fr_number='0123456789',
             wbs='Test',
             fc_type='PCA',
@@ -149,13 +148,6 @@ class TestHACTCalculations(TenantTestCase):
 
     def test_planned_cash_transfers(self):
 
-        total = self.intervention.partner.planned_cash_transfers
-        self.assertEqual(total, 60000)
+        PartnerOrganization.planned_cash_transfers(self.intervention.partner)
+        self.assertEqual(self.intervention.partner.hact_values['planned_cash_transfer'], 60000)
 
-    def test_actual_cash_transferred(self):
-        total = self.intervention.partner.actual_cash_transferred
-        self.assertEqual(total, 40000)
-
-    def test_total_cash_transferred(self):
-        total = self.intervention.partner.total_cash_transferred
-        self.assertEqual(total, 80000)
