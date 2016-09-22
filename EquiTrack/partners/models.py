@@ -210,7 +210,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 micro_assessment = assessment
         if partner.type_of_assessment == 'High Risk Assumed':
             partner.hact_values['micro_assessment_needed'] = 'Yes'
-        elif partner.planned_cash_transfers > 100000.00 \
+        elif partner.hact_values['planned_cash_transfer'] > 100000.00 \
             and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
             partner.hact_values['micro_assessment_needed'] = 'Yes'
         elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \

@@ -29,10 +29,8 @@ class CountryProgramme(models.Model):
     @classmethod
     def current(cls):
         today = datetime.now()
-        cps = cls.objects.filter(to_date__gte=today, from_date__lt=today).\
-            annotate(range=F('to_date') - F('from_date'))\
-            .order_by('-range')
-        return cps[0]
+        cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
+        return cps.first()
 
 
 class ResultStructure(models.Model):
