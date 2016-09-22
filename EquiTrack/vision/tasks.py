@@ -87,6 +87,7 @@ def sync(country_name=None):
 
 @app.task
 def update_partners(country_name=None):
+    print 'Starting update HACT values for partners'
     countries = Country.objects.filter(vision_sync_enabled=True)
     if country_name is not None:
         countries = countries.filter(name=country_name)

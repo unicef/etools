@@ -8,13 +8,13 @@ import jsonfield.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0070_auto_20160915_2340'),
+        ('partners', '0071_auto_20160917_0142'),
     ]
 
     operations = [
         migrations.AddField(
             model_name='partnerorganization',
             name='hact_values',
-            field=jsonfield.fields.JSONField(null=True, blank=True),
+            field=jsonfield.fields.JSONField(default={}, null=True, blank=True),
         ),
     ]

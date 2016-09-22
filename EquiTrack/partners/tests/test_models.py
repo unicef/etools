@@ -12,6 +12,7 @@ from partners.models import (
     FundingCommitment,
     PartnershipBudget,
     AgreementAmendmentLog,
+    PartnerOrganization,
 )
 
 
@@ -147,9 +148,6 @@ class TestHACTCalculations(TenantTestCase):
 
     def test_planned_cash_transfers(self):
 
-        self.intervention.partner.planned_cash_transfers(self.intervention.partner)
+        PartnerOrganization.planned_cash_transfers(self.intervention.partner)
         self.assertEqual(self.intervention.partner.hact_values['planned_cash_transfer'], 60000)
-
-        total = self.intervention.partner.planned_cash_transfers
-        self.assertEqual(total, 60000)
 
