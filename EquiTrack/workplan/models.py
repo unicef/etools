@@ -27,7 +27,7 @@ class Workplan(models.Model):
         ("Target Met", "Target Met"),
     )
     status = models.CharField(max_length=32, null=True, blank=True, choices=STATUS)
-    result_structure = models.ForeignKey('reports.ResultStructure')
+    result_structure = models.ForeignKey('reports.CountryProgramme')
 
 
 class WorkplanProject(models.Model):
