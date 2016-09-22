@@ -9,7 +9,6 @@ class Currency(models.Model):
 
 
 class AirlineCompany(models.Model):
-    # Is this ok like this?
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=12)
 
@@ -19,10 +18,9 @@ class Travel(models.Model):
     supervisor = models.ForeignKey(User, related_name='+')
     office = models.ForeignKey('users.Office', related_name='+')
     section = models.ForeignKey('users.Section', related_name='+')
-    # start_date = models.DateTimeField()       # Should we have these here or just get from itenerary?
-    # end_date = models.DateTimeField()         # -||-
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
     purpose = models.CharField(max_length=120)
-    # mode =
     international_travel = models.BooleanField(default=False)
     ta_required = models.BooleanField(default=True)
     reference_number = models.CharField(max_length=12)
@@ -32,10 +30,9 @@ class TravelActivity(models.Model):
     travel = models.ForeignKey('Travel', related_name='activities')
     travel_type = models.CharField(max_length=64)
     partner = models.ForeignKey('partners.PartnerOrganization', related_name='+')
-    # partnership = models.ForeignKey()     # No idea what is the related model
+    partnership = models.ForeignKey('partners.PCA')
     result = models.ForeignKey('reports.Result', related_name='+')
     location = models.ForeignKey('locations.Location', related_name='+')
-    # secondary_traveler = models.BooleanField(default=False)       # Do we need this or just determine if there are multiple reference usage
 
 
 class IteneraryItem(models.Model):
@@ -47,14 +44,14 @@ class IteneraryItem(models.Model):
     dsa_region = models.CharField(max_length=255)
     overnight_travel = models.BooleanField(default=False)
     mode_of_travel = models.CharField(max_length=255)
-    airline = models.ManyToManyField('AirlineCompany')
+    airline = models.ForeignKey('AirlineCompany')
 
 
 class Expense(models.Model):
-    # Should we have 2 currencties here?
     travel = models.ForeignKey('Travel', related_name='expenses')
     type = models.CharField(max_length=64)
-    currency = models.ForeignKey('Currency')
+    document_currency = models.ForeignKey('Currency')
+    account_currency = models.ForeignKey('Currency')
     amount = models.DecimalField(max_digits=10, decimal_places=4)
 
 
@@ -69,13 +66,12 @@ class Deduction(models.Model):
 
     @property
     def day_of_the_week(self):
-        # Should this be calculated or stored?
-        return 'Mon'
+        return self.date.strftime('%a')
 
 
 class CostAssignment(models.Model):
     travel = models.ForeignKey('Travel', related_name='cost_assignments')
-    # wbs = models.ForeignKey()     # No idea where to connect
+    wbs = models.ForeignKey('reports.Result', related_name='+')
     share = models.PositiveIntegerField()
     grant = models.ForeignKey('funds.Grant')
     # fund = models.ForeignKey()    # No idea where to connect

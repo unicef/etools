@@ -63,6 +63,8 @@ from partners.urls import (
     agreement_api,
 )
 
+from et2f.views import TravelViewSet
+
 api = routers.SimpleRouter()
 
 trips_api = routers.SimpleRouter()
@@ -94,6 +96,8 @@ api.register(r'reports/units', UnitViewSet, base_name='units')
 
 api.register(r'locations', LocationsViewSet, base_name='locations')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
+
+api.register(r'travels', TravelViewSet, base_name='travels')
 
 
 urlpatterns = patterns(

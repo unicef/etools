@@ -1,6 +1,7 @@
 """
 Model factories used for generating models dynamically for tests
 """
+
 __author__ = 'jcranwellward'
 
 from datetime import datetime, timedelta, date
@@ -8,6 +9,7 @@ from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
 
 import factory
+from factory import  fuzzy
 
 from users import models as user_models
 from trips import models as trip_models
@@ -15,6 +17,7 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
+from funds.models import Grant, Donor
 
 
 class GovernorateFactory(factory.django.DjangoModelFactory):
@@ -225,6 +228,21 @@ class MilestoneFactory(factory.django.DjangoModelFactory):
     result = factory.SubFactory(ResultFactory)
     description = factory.Sequence(lambda n: 'Description {}'.format(n))
     assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
+
+
+class DonorFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=45)
+
+    class Meta:
+        model = Donor
+
+
+class GrantFactory(factory.DjangoModelFactory):
+    donor = factory.SubFactory(DonorFactory)
+    name = fuzzy.FuzzyText(length=32)
+
+    class Meta:
+        model = Grant
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
