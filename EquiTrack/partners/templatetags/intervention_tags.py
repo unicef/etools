@@ -108,7 +108,7 @@ def show_fr_fc(value):
         return ''
 
     intervention = PCA.objects.get(id=int(value))
-    commitments = FundingCommitment.objects.filter(intervention=intervention)
+    commitments = FundingCommitment.objects.filter(fr_number=intervention.fr_number)
     data = tablib.Dataset()
     fr_fc_summary = []
 
