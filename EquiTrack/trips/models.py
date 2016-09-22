@@ -280,6 +280,7 @@ class Trip(AdminURLMixin, models.Model):
             return False
         return True
 
+    @transaction.atomic
     def save(self, **kwargs):
         # check if trip can be approved
         if self.can_be_approved:
@@ -304,16 +305,15 @@ class Trip(AdminURLMixin, models.Model):
         if self.travel_type in [Trip.PROGRAMME_MONITORING, Trip.SPOT_CHECK]:
             if self.linkedgovernmentpartner_set:
                 for gov_partner in self.linkedpartner_set.all():
-                    gov_partner.partner.planned_visits(gov_partner.partner, self)
-                    gov_partner.partner.programmatic_visits(gov_partner.partner, self)
-                    gov_partner.partner.spot_checks(gov_partner.partner, self)
+                    PartnerOrganization.planned_visits(gov_partner.partner, self)
+                    PartnerOrganization.programmatic_visits(gov_partner.partner, self)
+                    PartnerOrganization.spot_checks(gov_partner.partner, self)
 
             if self.linkedpartner_set:
                 for link_partner in self.linkedpartner_set.all():
-                    link_partner.partner.planned_visits(link_partner.partner, self)
-                    link_partner.partner.programmatic_visits(link_partner.partner, self)
-                    link_partner.partner.spot_checks(link_partner.partner, self)
-
+                    PartnerOrganization.planned_visits(link_partner.partner, self)
+                    PartnerOrganization.programmatic_visits(link_partner.partner, self)
+                    PartnerOrganization.spot_checks(link_partner.partner, self)
 
         super(Trip, self).save(**kwargs)
 
@@ -481,12 +481,13 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
 
+    @transaction.atomic
     def save(self, **kwargs):
         # update partner hact values
         if self.pk is None:
-            self.partner.planned_visits(self.partner, self.trip)
-            self.partner.programmatic_visits(self.partner, self.trip)
-            self.partner.spot_checks(self.partner, self.trip)
+            PartnerOrganization.planned_visits(self.partner, self.trip)
+            PartnerOrganization.programmatic_visits(self.partner, self.trip)
+            PartnerOrganization.spot_checks(self.partner, self.trip)
         return super(LinkedPartner, self).save(**kwargs)
 
 
@@ -513,12 +514,13 @@ class LinkedGovernmentPartner(models.Model):
         blank=True, null=True,
     )
 
+    @transaction.atomic
     def save(self, **kwargs):
         # update partner hact values
         if self.pk is None:
-            self.partner.planned_visits(self.partner, self.trip)
-            self.partner.programmatic_visits(self.partner, self.trip)
-            self.partner.spot_checks(self.partner, self.trip)
+            PartnerOrganization.planned_visits(self.partner, self.trip)
+            PartnerOrganization.programmatic_visits(self.partner, self.trip)
+            PartnerOrganization.spot_checks(self.partner, self.trip)
         return super(LinkedGovernmentPartner, self).save(**kwargs)
 
 
@@ -656,13 +658,12 @@ class ActionPoint(models.Model):
         if self.completed_date is None and self.follow_up:
             if self.trip.linkedgovernmentpartner_set:
                 for gov_partner in self.trip.linkedgovernmentpartner_set.all():
-                    gov_partner.partner.follow_up_flags(gov_partner.partner, self)
+                    PartnerOrganization.follow_up_flags(gov_partner.partner, self)
 
             if self.trip.linkedpartner_set:
                 for link_partner in self.trip.linkedpartner_set.all():
-                    link_partner.partner.follow_up_flags(link_partner.partner, self)
+                    PartnerOrganization.follow_up_flags(link_partner.partner, self)
         return super(ActionPoint, self).save(**kwargs)
-
 
 post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 

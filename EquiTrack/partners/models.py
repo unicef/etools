@@ -170,7 +170,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         decimal_places=2, max_digits=12, blank=True, null=True,
         help_text='Total Cash Transferred per Current Year'
     )
-    hact_values = JSONField(blank=True, null=True)
+    hact_values = JSONField(blank=True, null=True, default={})
 
     class Meta:
         ordering = ['name']
@@ -181,10 +181,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
-
-    def update_hact_value(self, key, value):
-        self.hact_values[key] = value
-        self.save()
 
     @cached_property
     def get_last_pca(self):
@@ -420,10 +416,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.hact_values['follow_up_flags'] = follow_ups
         partner.save()
 
-    # @property
-    # def audits(self):
-    #     return self.assessments.filter(type=u'Scheduled Audit report').count()
-
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
 
@@ -558,18 +550,18 @@ class Assessment(models.Model):
             if self.pk:
                 prev_assessment = Assessment.objects.get(id=self.id)
                 if prev_assessment.completed_date and prev_assessment.completed_date != self.completed_date:
-                    self.partner.micro_assessment_needed(self.partner, self)
+                    PartnerOrganization.micro_assessment_needed(self.partner, self)
             else:
-                self.partner.micro_assessment_needed(self.partner, self)
+                PartnerOrganization.micro_assessment_needed(self.partner, self)
 
         elif self.type == u'Scheduled Audit report' and self.completed_date:
             if self.pk:
                 prev_assessment = Assessment.objects.get(id=self.id)
                 if prev_assessment.completed_date and prev_assessment.completed_date != self.completed_date:
-                    self.partner.audit_needed(self.partner, self)
+                    PartnerOrganization.audit_needed(self.partner, self)
             else:
                 self.partner.audit_needed(self.partner, self)
-            self.partner.aduit_done(self.partner, self)
+            PartnerOrganization.aduit_done(self.partner, self)
 
 
         super(Assessment, self).save(**kwargs)
@@ -1235,9 +1227,9 @@ class GovernmentInterventionResult(models.Model):
             if self.pk:
                 prev_result = GovernmentInterventionResult.objects.get(id=self.id)
                 if prev_result.planned_amount != self.planned_amount:
-                    self.intervention.partner.planned_cash_transfers(self.intervention.partner, self)
+                    PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
             else:
-                self.intervention.partner.planned_cash_transfers(self.intervention.partner, self)
+                PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
@@ -1378,6 +1370,7 @@ class PartnershipBudget(TimeStampedModel):
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
 
+    @transaction.atomic
     def save(self, **kwargs):
         """
         Calculate total budget on save
@@ -1390,9 +1383,9 @@ class PartnershipBudget(TimeStampedModel):
             if self.pk:
                 prev_result = PartnershipBudget.objects.get(id=self.id)
                 if prev_result.unicef_cash != self.unicef_cash:
-                    self.partnership.partner.planned_cash_transfers(self.partnership.partner, self)
+                    PartnerOrganization.planned_cash_transfers(self.partnership.partner, self)
             else:
-                self.partnership.partner.planned_cash_transfers(self.partnership.partner, self)
+                PartnerOrganization.planned_cash_transfers(self.partnership.partner, self)
 
         super(PartnershipBudget, self).save(**kwargs)
 

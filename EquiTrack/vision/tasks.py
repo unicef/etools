@@ -6,6 +6,7 @@ from django.db import connection
 from celery.utils.log import get_task_logger
 
 from EquiTrack.celery import app, send_to_slack
+from partners.models import PartnerOrganization
 from users.models import Country
 from vision_data_synchronizer import VisionException
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
@@ -83,3 +84,27 @@ def sync(country_name=None):
     )
     send_to_slack(text)
     logger.info(text)
+
+@app.task
+def update_partners(country_name=None):
+    countries = Country.objects.filter(vision_sync_enabled=True)
+    if country_name is not None:
+        countries = countries.filter(name=country_name)
+    for country in countries:
+        connection.set_tenant(country)
+        print country.name
+        partners = PartnerOrganization.objects.all()
+        for partner in partners:
+            try:
+                PartnerOrganization.planned_cash_transfers(partner)
+                PartnerOrganization.micro_assessment_needed(partner)
+                PartnerOrganization.audit_needed(partner)
+                PartnerOrganization.planned_cash_transfers(partner)
+                PartnerOrganization.planned_visits(partner)
+                PartnerOrganization.programmatic_visits(partner)
+                PartnerOrganization.spot_checks(partner)
+                PartnerOrganization.follow_up_flags(partner)
+            except Exception as e:
+                print partner.name
+                print partner.hact_values
+                print e.message
