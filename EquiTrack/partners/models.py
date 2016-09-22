@@ -159,7 +159,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     )
     vision_synced = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
-    deleted_flag = models.BooleanField(default=False)
+    deleted_flag = models.BooleanField(default=False, verbose_name=u'Marked for deletion')
 
     total_ct_cp = models.DecimalField(
         decimal_places=2, max_digits=12, blank=True, null=True,
@@ -746,7 +746,7 @@ class PCA(AdminURLMixin, models.Model):
     )
     result_structure = models.ForeignKey(
         ResultStructure,
-        blank=True, null=True,
+        blank=True, null=True, on_delete=models.DO_NOTHING,
         help_text=u'Which result structure does this partnership report under?'
     )
     number = models.CharField(
@@ -849,7 +849,7 @@ class PCA(AdminURLMixin, models.Model):
     def __unicode__(self):
         return u'{}: {}'.format(
             self.partner.name,
-            self.reference_number
+            self.number if self.number else self.reference_number
         )
 
     @property
@@ -1090,7 +1090,7 @@ class GovernmentIntervention(models.Model):
         related_name='work_plans',
     )
     result_structure = models.ForeignKey(
-        ResultStructure,
+        ResultStructure, on_delete=models.DO_NOTHING
     )
     number = models.CharField(
         max_length=45L,
@@ -1481,6 +1481,8 @@ class RAMIndicator(models.Model):
         chained_model_field="result",
         show_all=False,
         auto_choose=True,
+        blank=True,
+        null=True
     )
 
     @property
@@ -1492,8 +1494,7 @@ class RAMIndicator(models.Model):
         return self.indicator.target
 
     def __unicode__(self):
-        return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name,
+        return u'{} -> {}'.format(
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
@@ -1534,7 +1535,7 @@ class ResultChain(models.Model):
 
     def __unicode__(self):
         return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name,
+            self.result.result_structure.name if self.result.result_structure else '',
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )
@@ -1640,19 +1641,24 @@ class DistributionPlan(models.Model):
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 
+class FCManager(models.Manager):
+    def get_queryset(self):
+        return super(FCManager, self).get_queryset().select_related('grant__donor__name')
+
+
 class FundingCommitment(TimeFramedModel):
 
-    grant = models.ForeignKey(Grant)
-    intervention = models.ForeignKey(PCA, null=True, related_name='funding_commitments')
+    grant = models.ForeignKey(Grant, null=True, blank=True)
     fr_number = models.CharField(max_length=50)
     wbs = models.CharField(max_length=50)
     fc_type = models.CharField(max_length=50)
-    fc_ref = models.CharField(max_length=50, blank=True, null=True)
+    fc_ref = models.CharField(max_length=50, blank=True, null=True, unique=True)
     fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
     agreement_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
     commitment_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
     expenditure_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
 
+    objects = FCManager()
 
 class DirectCashTransfer(models.Model):
 
