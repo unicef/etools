@@ -86,7 +86,7 @@ class ResultSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
     milestones = MilestoneSerializer(many=True)
-    workplan_properties = ResultWorkplanPropertySerializer()
+    workplan_properties = ResultWorkplanPropertySerializer(many=True)
 
     class Meta:
         model = Result
