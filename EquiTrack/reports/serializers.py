@@ -4,6 +4,7 @@ from rest_framework import serializers
 
 from users.serializers import UserProfileSerializer
 from workplan.serializers import ResultWorkplanPropertySerializer
+from workplan.models import ResultWorkplanProperty
 from .models import (
     ResultStructure,
     ResultType,
@@ -90,6 +91,13 @@ class ResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Result
+
+    def create(self, validated_data):
+        workplan_properties = validated_data.pop("workplan_properties")
+        result = Result.objects.create(**validated_data)
+        for workplan_property in workplan_properties:
+            ResultWorkplanProperty.objects.create(result=result, **workplan_property)
+        return result
 
 
 class ResultStructureSerializer(serializers.ModelSerializer):
