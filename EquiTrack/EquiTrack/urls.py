@@ -30,6 +30,7 @@ from locations.views import (
     LocationTypesViewSet,
     LocationsViewSet
 )
+from tpm.views import TPMVisitViewSet
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
 from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
@@ -74,6 +75,7 @@ tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
 actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
 actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
 
+api.register(r'tpm-visit', TPMVisitViewSet, base_name='tpmvisit')
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 
 api.register(r'users', UserViewSet, base_name='users')

@@ -213,22 +213,6 @@ class DistributionPlanSerializer(serializers.ModelSerializer):
         fields = ('item', 'site', 'quantity', 'delivered')
 
 
-class InterventionSerializer(serializers.ModelSerializer):
-
-    pca_id = serializers.CharField(source='id', read_only=True)
-    pca_title = serializers.CharField(source='title')
-    pca_number = serializers.CharField(source='reference_number')
-    partner_name = serializers.CharField(source='partner.name')
-    partner_id = serializers.CharField(source='partner.id')
-    pcasector_set = PCASectorSerializer(many=True, read_only=True)
-    results = ResultChainSerializer(many=True, read_only=True)
-    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
-    total_budget = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = PCA
-
-
 class GWLocationSerializer(serializers.ModelSerializer):
 
     pca_title = serializers.CharField(source='pca.title', read_only=True)
@@ -246,6 +230,23 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GwPCALocation
+
+
+class InterventionSerializer(serializers.ModelSerializer):
+
+    pca_id = serializers.CharField(source='id', read_only=True)
+    pca_title = serializers.CharField(source='title')
+    pca_number = serializers.CharField(source='reference_number')
+    partner_name = serializers.CharField(source='partner.name')
+    partner_id = serializers.CharField(source='partner.id')
+    pcasector_set = PCASectorSerializer(many=True, read_only=True)
+    locations = GWLocationSerializer(many=True, read_only=True)
+    results = ResultChainSerializer(many=True, read_only=True)
+    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
+    total_budget = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = PCA
 
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
