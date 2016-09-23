@@ -639,12 +639,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         'show_partners'
     )
 
-    def get_fields(self, request, obj=None, **kwargs):
-        #if request.user.is_superuser:
-
-        self.exclude = self.superuser_fields
-        return super(PartnerAdmin, self).get_fields(request, obj, **kwargs)
-
     def hide_partners(self, request, queryset):
 
         partners = 0
