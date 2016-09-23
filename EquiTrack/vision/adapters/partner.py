@@ -194,7 +194,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.last_assessment_date = wcf_json_date_as_datetime(partner["LAST_ASSESSMENT_DATE"])
                     partner_org.partner_type = type_mapping[partner["PARTNER_TYPE_DESC"]]
                     partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
-                    partner_org.hidden = partner_org.deleted_flag
+                    if not partner_org.hidden:
+                        partner_org.hidden = partner_org.deleted_flag
                     partner_org.vision_synced = True
                     saving = True
 
