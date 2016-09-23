@@ -39,61 +39,61 @@
                 {% with reqs=original.hact_min_requirements %}
                 <tr>
                     <td>
-                        <u>{{ original.actual_cash_transferred }}</u>
-                        <br/>{{ original.planned_cash_transfers }}
+                        <u>{{ original.total_ct_cy }}</u>
+                        <br/>{{ original.hact_values.planned_cash_transfer }}
                     </td>
-                    <td>{{ original.total_cash_transferred }}</td>
+                    <td>{{ original.total_ct_cp }}</td>
                     <td>
                         <u>{{ original.rating }}</u>
-                        <br/>{{ original.latest_assessment }}
+                        <br/>{{ original.type_of_assessment }}
                     </td>
                     <td>
-                        <u>{{ original.programmatic_visits }}</u>
+                        <u>{{ original.hact_values.programmatic_visits }}</u>
                         <br/>{{ reqs.programme_visits }}
                     </td>
                     <td>
-                        <u>{{ original.spot_checks }}</u>
+                        <u>{{ original.hact_values.spot_checks }}</u>
                         <br/>{{ reqs.spot_checks }}
                     </td>
                     <td>
-                        <u>{{ original.audits }}</u>
-                        <br/>{{ reqs.audits }}
+                        <u>{{ original.hact_values.audits_done }}</u>
+                        <br/>{{ original.hact_values.audits_mr }}
                     </td>
                 </tr>
                 {% endwith %}
             </tbody>
         </table>
 
-                <table class="table">
-            <thead>
-            <tr>
-                <th>Intervention</th>
-                <th colspan="2">Cash transfers</th>
-                <th>Programmatic monitoring visits</th>
-                <th>Spot-Checks</th>
-            </tr>
-            </thead>
-            <tbody>
-                {% for intervention in original.documents.all %}
-                    <tr>
-                        <td>{{ intervention.reference_number }}</td>
-                        <td>
-                            <u>{{ intervention.actual_cash_transferred }}</u>
-                            <br/>{{ intervention.planned_cash_transfers }}
-                        </td>
-                        <td>
-                            {{ intervention.total_cash_transferred }}
-                        </td>
-                        <td>
-                            {{ intervention.programmatic_visits }}
-                        </td>
-                        <td>
-                            {{ intervention.spot_checks }}
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+{#                <table class="table">#}
+{#            <thead>#}
+{#            <tr>#}
+{#                <th>Intervention</th>#}
+{#                <th colspan="2">Cash transfers</th>#}
+{#                <th>Programmatic monitoring visits</th>#}
+{#                <th>Spot-Checks</th>#}
+{#            </tr>#}
+{#            </thead>#}
+{#            <tbody>#}
+{#                {% for intervention in original.documents.all %}#}
+{#                    <tr>#}
+{#                        <td>{{ intervention.reference_number }}</td>#}
+{#                        <td>#}
+{#                            <u>{{ intervention.actual_cash_transferred }}</u>#}
+{#                            <br/>{{ intervention.planned_cash_transfers }}#}
+{#                        </td>#}
+{#                        <td>#}
+{#                            {{ intervention.total_cash_transferred }}#}
+{#                        </td>#}
+{#                        <td>#}
+{#                            {{ intervention.programmatic_visits }}#}
+{#                        </td>#}
+{#                        <td>#}
+{#                            {{ intervention.spot_checks }}#}
+{#                        </td>#}
+{#                    </tr>#}
+{#                {% endfor %}#}
+{#            </tbody>#}
+{#        </table>#}
 
     </div>
 
