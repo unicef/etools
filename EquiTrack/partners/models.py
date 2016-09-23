@@ -946,7 +946,10 @@ class PCA(AdminURLMixin, models.Model):
 
         total = 0
         if self.budget_log.exists():
-            total = self.budget_log.latest('created').unicef_cash
+            sum([b['unicef_cash'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
         return total
 
     @property
@@ -954,10 +957,9 @@ class PCA(AdminURLMixin, models.Model):
 
         total = 0
         if self.budget_log.exists():
-            budget = self.budget_log.latest('created')
-            total += budget.unicef_cash
-            total += budget.in_kind_amount
-            total += budget.partner_contribution
+            sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount', 'partner_contribution').
+                 order_by('year','-created').distinct('year').all()])
         return total
 
     @property
