@@ -5,8 +5,8 @@ import random
 from rest_framework import status
 
 from reports.models import ResultType
-from EquiTrack.factories import UserFactory, ResultFactory
-from EquiTrack.factories import SectionFactory, LocationFactory
+from EquiTrack.factories import UserFactory, ResultFactory, ResultWorkplanPropertyFactory
+from EquiTrack.factories import SectionFactory, LocationFactory, WorkplanFactory, ResultStructureFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
@@ -15,7 +15,9 @@ class TestReportViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
-        self.result1 = ResultFactory(result_type=self.result_type)
+        self.workplan = WorkplanFactory()
+        self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan)
+        self.result1 = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
 
         # Additional data to use in tests
         self.location1 = LocationFactory()

@@ -21,7 +21,7 @@ class WorkplanSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Workplan
-        fields = ('id', 'status', 'result_structure', 'workplan_projects', 'comments')
+        fields = ('id', 'status', 'country_programme', 'workplan_projects', 'comments')
 
 
 class LabelSerializer(serializers.ModelSerializer):

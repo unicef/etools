@@ -48,7 +48,7 @@ class TestWorkplanViews(APITenantTestCase):
         self.assertEqual(dict(payload),
                          {'id': self.workplan.id,
                           'status': None,
-                          'result_structure': self.workplan.result_structure.id,
+                          'country_programme': self.workplan.country_programme.id,
                           'comments': [{'id': self.comment.id,
                                         'author': self.comment.author.id,
                                         'tagged_users': [],
@@ -62,12 +62,6 @@ class TestWorkplanViews(APITenantTestCase):
                                         'timestamp': comment2_timestamp,
                                         'workplan': self.workplan.id}],
                           'workplan_projects': [self.workplan_project.id]})
-
-    def test_view_resultworkplanproperties_list(self):
-        response = self.forced_auth_req('get', '/api/resultworkplanproperties/', user=self.unicef_staff)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 1)
 
     def test_view_workplanprojects_list(self):
         response = self.forced_auth_req('get', '/api/workplan_projects/', user=self.unicef_staff)

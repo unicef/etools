@@ -220,7 +220,7 @@ class WorkplanFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = workplan_models.Workplan
 
-    result_structure = factory.SubFactory(CountryProgrammeFactory)
+    country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
 class CommentFactory(factory.django.DjangoModelFactory):
