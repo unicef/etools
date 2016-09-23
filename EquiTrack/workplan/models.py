@@ -7,6 +7,7 @@ from django.db.models.signals import m2m_changed
 from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization
+from reports.models import Result
 
 
 class Comment(models.Model):
@@ -47,6 +48,7 @@ class Label(models.Model):
 
 class ResultWorkplanProperty(models.Model):
     workplan = models.ForeignKey(Workplan)
+    result = models.ForeignKey(Result, related_name='workplan_properties')
     assumptions = models.TextField(null=True, blank=True)
     STATUS = (
         ("On Track","On Track"),
@@ -67,6 +69,9 @@ class ResultWorkplanProperty(models.Model):
     partners = models.ManyToManyField(PartnerOrganization)
     responsible_persons = models.ManyToManyField(User)
     labels = models.ManyToManyField(Label)
+
+    class Meta:
+        unique_together = ("workplan", "result",)
 
     def save(self, *args, **kwargs):
         """

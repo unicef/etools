@@ -16,8 +16,8 @@ class TestReportViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
         self.workplan = WorkplanFactory()
-        self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan)
         self.result1 = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan, result=self.result1)
 
         # Additional data to use in tests
         self.location1 = LocationFactory()
@@ -47,6 +47,7 @@ class TestReportViews(APITenantTestCase):
 
     def test_api_results_list(self):
         response = self.forced_auth_req('get', '/api/reports/results/', user=self.unicef_staff)
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["id"]), self.result1.id)
 

@@ -3,6 +3,7 @@ __author__ = 'jcranwellward'
 from rest_framework import serializers
 
 from users.serializers import UserProfileSerializer
+from workplan.serializers import ResultWorkplanPropertySerializer
 from .models import (
     ResultStructure,
     ResultType,
@@ -85,7 +86,7 @@ class ResultSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
     milestones = MilestoneSerializer(many=True)
-    # workplan_properties = None
+    workplan_properties = ResultWorkplanPropertySerializer()
 
     class Meta:
         model = Result
