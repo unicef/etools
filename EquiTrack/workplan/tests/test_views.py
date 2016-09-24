@@ -9,6 +9,7 @@ from EquiTrack.factories import UserFactory, CommentFactory, WorkplanFactory, \
     ResultStructureFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType
+from workplan.tasks import notify_comment_tagged_users
 
 
 class TestWorkplanViews(APITenantTestCase):
@@ -158,6 +159,7 @@ class TestWorkplanViews(APITenantTestCase):
         }
         response = self.forced_auth_req('put', '/api/comments/{}/'.format(self.comment2["id"]), data=data,
                                         user=self.unicef_staff)
+        notify_comment_tagged_users([self.user.id, self.user2.id], self.comment2["id"])
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(mail.outbox[1].subject, "You are tagged on a comment")

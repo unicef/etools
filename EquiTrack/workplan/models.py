@@ -2,7 +2,6 @@ import signals
 from jsonfield import JSONField
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models.signals import m2m_changed
 
 from users.models import Section
 from locations.models import Location
@@ -16,8 +15,6 @@ class Comment(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
     workplan = models.ForeignKey('Workplan', related_name='comments')
-
-m2m_changed.connect(signals.notify_comment_tagged_users, sender=Comment.tagged_users.through)
 
 
 class Workplan(models.Model):
