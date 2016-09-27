@@ -304,7 +304,7 @@ class Trip(AdminURLMixin, models.Model):
         # update partner hact values
         if self.travel_type in [Trip.PROGRAMME_MONITORING, Trip.SPOT_CHECK]:
             if self.linkedgovernmentpartner_set:
-                for gov_partner in self.linkedpartner_set.all():
+                for gov_partner in self.linkedgovernmentpartner_set.all():
                     PartnerOrganization.planned_visits(gov_partner.partner, self)
                     PartnerOrganization.programmatic_visits(gov_partner.partner, self)
                     PartnerOrganization.spot_checks(gov_partner.partner, self)
