@@ -55,7 +55,7 @@ from .models import (
     ResultChain,
     IndicatorReport
 )
-from reports.models import ResultStructure
+from reports.models import CountryProgramme
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -80,7 +80,7 @@ class PcaPDFView(PDFTemplateView):
             title="Partnership",
             agreement=agreement,
             bank_details=agreement.bank_details.all(),
-            cp=ResultStructure.current(),
+            cp=CountryProgramme.current(),
             auth_officers=officers_list,
             country=self.request.tenant.name,
             **kwargs
