@@ -43,3 +43,10 @@ class TravelSerializer(serializers.ModelSerializer):
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
                   'traveller', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
                   'cost_assignments', 'clearances')
+
+
+class TravelListViewSerializer(TravelSerializer):
+    traveler = serializers.CharField(source='traveller.get_full_name')
+
+    class Meta(TravelSerializer.Meta):
+        fields = ('id', 'reference_number', 'traveler', 'purpose', 'start_date', 'end_date', 'status')

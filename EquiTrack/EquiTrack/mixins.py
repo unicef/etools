@@ -130,7 +130,11 @@ class EToolsTenantMiddleware(TenantMiddleware):
 class EtoolsTokenAuthentication(TokenAuthentication):
 
     def authenticate(self, request):
-        user, token = super(EtoolsTokenAuthentication, self).authenticate(request)
+        super_return = super(EtoolsTokenAuthentication, self).authenticate(request)
+        if super_return is None:
+            return None
+
+        user, token = super_return
         set_country(user, request)
         return user, token
 
