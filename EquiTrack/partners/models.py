@@ -557,11 +557,12 @@ class Assessment(models.Model):
         elif self.type == u'Scheduled Audit report' and self.completed_date:
             if self.pk:
                 prev_assessment = Assessment.objects.get(id=self.id)
-                if prev_assessment.completed_date and prev_assessment.completed_date != self.completed_date:
+                if prev_assessment.type != self.type:
                     PartnerOrganization.audit_needed(self.partner, self)
+                    PartnerOrganization.audit_done(self.partner, self)
             else:
-                self.partner.audit_needed(self.partner, self)
-            PartnerOrganization.aduit_done(self.partner, self)
+                PartnerOrganization.audit_needed(self.partner, self)
+                PartnerOrganization.audit_done(self.partner, self)
 
 
         super(Assessment, self).save(**kwargs)
