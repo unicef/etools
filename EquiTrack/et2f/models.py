@@ -16,17 +16,18 @@ class AirlineCompany(models.Model):
 
 
 class Travel(models.Model):
-    status = models.CharField(max_length=10, choices=TripStatus.CHOICES)
-    traveller = models.ForeignKey(User, related_name='travels')
-    supervisor = models.ForeignKey(User, related_name='+')
-    office = models.ForeignKey('users.Office', related_name='+')
-    section = models.ForeignKey('users.Section', related_name='+')
-    start_date = models.DateTimeField()
-    end_date = models.DateTimeField()
-    purpose = models.CharField(max_length=120)
-    international_travel = models.BooleanField(default=False)
-    ta_required = models.BooleanField(default=True)
-    reference_number = models.CharField(max_length=12)
+    created = models.DateTimeField(auto_now_add=True, db_index=True)
+    status = models.CharField(max_length=10, null=True, blank=True, choices=TripStatus.CHOICES)
+    traveller = models.ForeignKey(User, null=True, blank=True, related_name='travels')
+    supervisor = models.ForeignKey(User, null=True, blank=True, related_name='+')
+    office = models.ForeignKey('users.Office', null=True, blank=True, related_name='+')
+    section = models.ForeignKey('users.Section', null=True, blank=True, related_name='+')
+    start_date = models.DateTimeField(null=True, blank=True)
+    end_date = models.DateTimeField(null=True, blank=True)
+    purpose = models.CharField(max_length=120, null=True, blank=True)
+    international_travel = models.NullBooleanField(default=False, null=True, blank=True)
+    ta_required = models.NullBooleanField(default=True, null=True, blank=True)
+    reference_number = models.CharField(max_length=12, null=True, blank=True)
 
 
 class TravelActivity(models.Model):
@@ -53,8 +54,8 @@ class IteneraryItem(models.Model):
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')
     type = models.CharField(max_length=64)
-    document_currency = models.ForeignKey('Currency')
-    account_currency = models.ForeignKey('Currency')
+    document_currency = models.ForeignKey('Currency', related_name='+')
+    account_currency = models.ForeignKey('Currency', related_name='+')
     amount = models.DecimalField(max_digits=10, decimal_places=4)
 
 
