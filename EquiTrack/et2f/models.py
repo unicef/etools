@@ -1,19 +1,22 @@
 
 from django.db import models
 from django.contrib.auth.models import User
-
+from . import BooleanChoice, TripStatus
 
 class Currency(models.Model):
+    # This will be populated from vision
     name = models.CharField(max_length=128)
     iso_4217 = models.CharField(max_length=3)
 
 
 class AirlineCompany(models.Model):
+    # This will be populated from vision
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=12)
 
 
 class Travel(models.Model):
+    status = models.CharField(max_length=10, choices=TripStatus.CHOICES)
     traveller = models.ForeignKey(User, related_name='travels')
     supervisor = models.ForeignKey(User, related_name='+')
     office = models.ForeignKey('users.Office', related_name='+')
@@ -79,6 +82,6 @@ class CostAssignment(models.Model):
 
 class Clearances(models.Model):
     travel = models.OneToOneField('Travel', related_name='clearances')
-    medical_clearance = models.BooleanField(default=False)
-    security_clearance = models.BooleanField(default=False)
-    security_course = models.BooleanField(default=False)
+    medical_clearance = models.NullBooleanField(default=None, choices=BooleanChoice.CHOICES)
+    security_clearance = models.NullBooleanField(default=None, choices=BooleanChoice.CHOICES)
+    security_course = models.NullBooleanField(default=None, choices=BooleanChoice.CHOICES)
