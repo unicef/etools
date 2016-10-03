@@ -557,11 +557,12 @@ class Assessment(models.Model):
         elif self.type == u'Scheduled Audit report' and self.completed_date:
             if self.pk:
                 prev_assessment = Assessment.objects.get(id=self.id)
-                if prev_assessment.completed_date and prev_assessment.completed_date != self.completed_date:
+                if prev_assessment.type != self.type:
                     PartnerOrganization.audit_needed(self.partner, self)
+                    PartnerOrganization.audit_done(self.partner, self)
             else:
-                self.partner.audit_needed(self.partner, self)
-            PartnerOrganization.aduit_done(self.partner, self)
+                PartnerOrganization.audit_needed(self.partner, self)
+                PartnerOrganization.audit_done(self.partner, self)
 
 
         super(Assessment, self).save(**kwargs)
@@ -944,21 +945,21 @@ class PCA(AdminURLMixin, models.Model):
     @property
     def total_unicef_cash(self):
 
-        total = 0
         if self.budget_log.exists():
-            total = self.budget_log.latest('created').unicef_cash
-        return total
+            return sum([b['unicef_cash'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
+        return 0
 
     @property
     def total_budget(self):
 
-        total = 0
         if self.budget_log.exists():
-            budget = self.budget_log.latest('created')
-            total += budget.unicef_cash
-            total += budget.in_kind_amount
-            total += budget.partner_contribution
-        return total
+            return sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount', 'partner_contribution').
+                 order_by('year','-created').distinct('year').all()])
+        return 0
 
     @property
     def year(self):
@@ -1000,37 +1001,11 @@ class PCA(AdminURLMixin, models.Model):
         """
         Planned cash transfers for the current year
         """
+        if not self.budget_log.exists():
+            return 0
         year = datetime.date.today().year
-        total = self.budget_log.filter(year=year).aggregate(
-            models.Sum('unicef_cash')
-        )
-        return total[total.keys()[0]] or 0
-
-    @property
-    def actual_cash_transferred(self):
-        """
-        Actual cash transferred for the current year
-        """
-        year = datetime.date.today().year
-        total = self.funding_commitments.filter(end__year=year).aggregate(
-            models.Sum('expenditure_amount')
-        )
-        return total[total.keys()[0]] or 0
-
-    @property
-    def total_cash_transferred(self):
-        """
-        Total cash transferred for the current CP cycle
-        """
-        cp = ResultStructure.current()
-        if cp:
-            total = self.funding_commitments.filter(
-                end__gte=cp.from_date,
-                end__lte=cp.to_date,
-            ).aggregate(
-                models.Sum('expenditure_amount')
-            )
-        return total[total.keys()[0]] or 0
+        total = self.budget_log.filter(year=year).order_by('-created').first()
+        return total.unicef_cash or 0
 
     @property
     def programmatic_visits(self):
