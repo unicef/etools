@@ -356,18 +356,35 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         )
 
     @classmethod
-    def planned_visits(cls, partner, trip=None):
+    def planned_visits(cls, partner, trip_pca=None):
+        year = datetime.date.today().year
         from trips.models import Trip
         # planned visits
         pv = 0
-        pv = partner.cp_cycle_trip_links.filter(
-                trip__travel_type=Trip.PROGRAMME_MONITORING
-            ).exclude(
-                trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
-            ).count() or 0
-        if trip and trip.travel_type == Trip.PROGRAMME_MONITORING\
-                and trip.status not in [Trip.CANCELLED, Trip.COMPLETED]:
-            pv += 1
+        if partner.partner_type == u'Government':
+            pv = partner.cp_cycle_trip_links.filter(
+                    trip__travel_type=Trip.PROGRAMME_MONITORING
+                ).exclude(
+                    trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
+                ).count() or 0
+            if trip_pca and trip_pca.travel_type == Trip.PROGRAMME_MONITORING\
+                    and trip_pca.status not in [Trip.CANCELLED, Trip.COMPLETED]:
+                pv += 1
+        else:
+            if trip_pca:
+                if trip_pca.id:
+                    pv = PCA.objects.filter(
+                    partner=partner,
+                    end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).exclude(id=trip_pca.id).aggregate(
+                    models.Sum('planned_visits'))['planned_visits__sum'] or 0
+                pv += trip_pca.planned_visits
+            else:
+                pv = PCA.objects.filter(
+                    partner=partner,
+                    end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
+                    models.Sum('planned_visits'))['planned_visits__sum'] or 0
+
+
         partner.hact_values['planned_visits'] = pv
         partner.save()
 
@@ -1005,7 +1022,10 @@ class PCA(AdminURLMixin, models.Model):
             return 0
         year = datetime.date.today().year
         total = self.budget_log.filter(year=year).order_by('-created').first()
-        return total.unicef_cash or 0
+        if total:
+            return total.unicef_cash
+        else:
+            return 0
 
     @property
     def programmatic_visits(self):
@@ -1046,6 +1066,11 @@ class PCA(AdminURLMixin, models.Model):
                 self.unicef_manager = self.agreement.signed_by
                 self.start_date = self.agreement.start
                 self.end_date = self.agreement.end
+        else:
+            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+                prev_pca = PCA.objects.filter(id=self.id)[0]
+                if self.planned_visits != prev_pca.planned_visits:
+                    PartnerOrganization.planned_visits(self.partner, self)
 
         # set start date to latest of signed by partner or unicef date
         if self.partnership_type == self.PD:
@@ -1068,6 +1093,8 @@ class PCA(AdminURLMixin, models.Model):
                 self.end_date = self.result_structure.to_date
 
         super(PCA, self).save(**kwargs)
+
+
 
     @classmethod
     def get_active_partnerships(cls):
