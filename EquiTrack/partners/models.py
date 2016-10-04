@@ -371,19 +371,21 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                     and trip_pca.status not in [Trip.CANCELLED, Trip.COMPLETED]:
                 pv += 1
         else:
+            qs = PCA.objects.filter(
+                partner=partner,
+                end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED])
+            pv = 0
             if trip_pca:
-                if trip_pca.id:
-                    pv = PCA.objects.filter(
-                    partner=partner,
-                    end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).exclude(id=trip_pca.id).aggregate(
-                    models.Sum('planned_visits'))['planned_visits__sum'] or 0
                 pv += trip_pca.planned_visits
+                if trip_pca.id:
+                    qs = qs.exclude(id=trip_pca.id)
+
+                pv += qs.aggregate(models.Sum('planned_visits'))['planned_visits__sum'] or 0
             else:
                 pv = PCA.objects.filter(
-                    partner=partner,
-                    end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
-                    models.Sum('planned_visits'))['planned_visits__sum'] or 0
-
+                     partner=partner,
+                     end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
+                     models.Sum('planned_visits'))['planned_visits__sum'] or 0
 
         partner.hact_values['planned_visits'] = pv
         partner.save()
@@ -1063,6 +1065,9 @@ class PCA(AdminURLMixin, models.Model):
                 self.unicef_manager = self.agreement.signed_by
                 self.start_date = self.agreement.start
                 self.end_date = self.agreement.end
+
+            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+                PartnerOrganization.planned_visits(self.partner, self)
         else:
             if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
                 prev_pca = PCA.objects.filter(id=self.id)[0]
