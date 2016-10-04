@@ -1022,10 +1022,7 @@ class PCA(AdminURLMixin, models.Model):
             return 0
         year = datetime.date.today().year
         total = self.budget_log.filter(year=year).order_by('-created').first()
-        if total:
-            return total.unicef_cash
-        else:
-            return 0
+        return total.unicef_cash if total else 0
 
     @property
     def programmatic_visits(self):
