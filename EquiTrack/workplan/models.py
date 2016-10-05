@@ -1,7 +1,7 @@
-import signals
 from jsonfield import JSONField
 from django.db import models
 from django.contrib.auth.models import User
+from model_utils.models import TimeStampedModel
 
 from users.models import Section
 from locations.models import Location
@@ -9,10 +9,9 @@ from partners.models import PartnerOrganization
 from reports.models import Result
 
 
-class Comment(models.Model):
+class Comment(TimeStampedModel):
     author = models.ForeignKey(User, related_name='comments')
     tagged_users = models.ManyToManyField(User, blank=True, related_name='+')
-    timestamp = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
     workplan = models.ForeignKey('Workplan', related_name='comments')
 

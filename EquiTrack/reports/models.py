@@ -1,15 +1,7 @@
 from datetime import datetime
 from django.db import models
-from django.db.models import Max, F
-import django.contrib.postgres.fields as pgfields
-
-from users.models import UserProfile
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
-from model_utils.models import (
-    TimeFramedModel,
-    TimeStampedModel,
-)
 
 from django.utils.functional import cached_property
 
