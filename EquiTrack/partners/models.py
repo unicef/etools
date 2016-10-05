@@ -206,7 +206,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         """
         micro_assessment = partner.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
         if assessment:
-            if assessment.completed_date > micro_assessment.completed_date:
+            if micro_assessment:
+                if assessment.completed_date and micro_assessment.completed_date and \
+                                assessment.completed_date > micro_assessment.completed_date:
+                    micro_assessment = assessment
+            else:
                 micro_assessment = assessment
         if partner.type_of_assessment == 'High Risk Assumed':
             partner.hact_values['micro_assessment_needed'] = 'Yes'
@@ -292,9 +296,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         total = 0
         if partner.partner_type == u'Government':
             if budget_record:
+                qs= GovernmentInterventionResult.objects.filter(
+                    intervention__partner=partner,
+                    year=year).exclude(id=budget_record.id)
                 total = GovernmentInterventionResult.objects.filter(
                     intervention__partner=partner,
-                    year=year).exclude(intervention__id=budget_record.intervention.id).aggregate(
+                    year=year).exclude(id=budget_record.id).aggregate(
                     models.Sum('planned_amount')
                 )['planned_amount__sum'] or 0
                 total += budget_record.planned_amount
