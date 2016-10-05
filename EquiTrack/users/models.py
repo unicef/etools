@@ -171,7 +171,8 @@ class UserProfile(models.Model):
         return mods_made
 
     def save(self, **kwargs):
-        if self.country != self.country_override:
+
+        if self.country_override and self.country != self.country_override:
             self.country = self.country_override
         super(UserProfile, self).save(**kwargs)
 
