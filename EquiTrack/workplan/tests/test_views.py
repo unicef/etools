@@ -53,8 +53,8 @@ class TestWorkplanViews(APITenantTestCase):
         self.assertEqual(len(response.data), 1)
         payload = response.data[0]
 
-        comment_timestamp = DateTimeField().to_representation(self.comment.timestamp)
-        comment2_timestamp = DateTimeField().to_representation(self.comment2_obj.timestamp)
+        comment_timestamp = DateTimeField().to_representation(self.comment.modified)
+        comment2_timestamp = DateTimeField().to_representation(self.comment2_obj.modified)
         self.assertEqual(dict(payload),
                          {'id': self.workplan.id,
                           'status': None,
@@ -63,13 +63,13 @@ class TestWorkplanViews(APITenantTestCase):
                                         'author': self.comment.author.id,
                                         'tagged_users': [],
                                         'text': self.comment.text,
-                                        'timestamp': comment_timestamp,
+                                        'modified': comment_timestamp,
                                         'workplan': self.workplan.id},
                                        {'id': self.comment2_obj.id,
                                         'author': self.comment2_obj.author.id,
                                         'tagged_users': [self.user.id],
                                         'text': self.comment2_obj.text,
-                                        'timestamp': comment2_timestamp,
+                                        'modified': comment2_timestamp,
                                         'workplan': self.workplan.id}],
                           'workplan_projects': [self.workplan_project.id]})
 
