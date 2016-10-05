@@ -173,8 +173,16 @@ class UserProfile(models.Model):
     def save(self, **kwargs):
         if self.country != self.country_override:
             self.country = self.country_override
-            self.countries_available.add(self.country_override)
-
+            print self.country.accessible_by.all()
+            print self.countries_available.all()
+            print self.countries_available
+            super(UserProfile, self).save(**kwargs)
+            if self.country_override not in self.countries_available.all():
+                print self.country_override.id
+                cty = Country.objects.get(name='Menaro')
+                self.countries_available.remove(cty.id)
+                self.country.accessible_by.add(self)
+                print self.countries_available.add(self.country_override.id)
         super(UserProfile, self).save(**kwargs)
 
 
