@@ -9,7 +9,7 @@ from .tasks import notify_comment_tagged_users
 
 
 class TaggedNotificationMixin(object):
-
+    # TODO: rethink this
     def perform_update(self, serializer):
         # Caches the original set of tagged users on the instance to be able to
         # determine new ones after update.
@@ -33,7 +33,7 @@ class TaggedNotificationMixin(object):
             notify_comment_tagged_users.delay(tagged_users_new, instance.id)
 
 
-class CommentViewSet(TaggedNotificationMixin, viewsets.ModelViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (IsAdminUser,)

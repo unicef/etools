@@ -12,24 +12,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='goal',
-            name='result_structure',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, blank=True,
-                                    to='reports.ResultStructure', null=True),
-        ),
-        migrations.AlterField(
-            model_name='indicator',
-            name='result_structure',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, blank=True,
-                                    to='reports.ResultStructure', null=True),
-        ),
-        migrations.AlterField(
-            model_name='result',
-            name='result_structure',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, blank=True,
-                                    to='reports.ResultStructure', null=True),
-        ),
         migrations.RemoveField(
             model_name='result',
             name='assumptions',
@@ -57,5 +39,20 @@ class Migration(migrations.Migration):
         migrations.RemoveField(
             model_name='result',
             name='users',
+        ),
+        migrations.AlterField(
+            model_name='goal',
+            name='result_structure',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, blank=True, to='reports.ResultStructure', null=True),
+        ),
+        migrations.AlterField(
+            model_name='indicator',
+            name='result_structure',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, blank=True, to='reports.ResultStructure', null=True),
+        ),
+        migrations.AlterField(
+            model_name='result',
+            name='result_structure',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, blank=True, to='reports.ResultStructure', null=True),
         ),
     ]

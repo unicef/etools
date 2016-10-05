@@ -13,7 +13,7 @@ from .models import Comment, Workplan, ResultWorkplanProperty, WorkplanProject, 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'tagged_users', 'text', 'timestamp', 'workplan')
+        fields = ('id', 'author', 'tagged_users', 'text', 'modified', 'workplan')
 
 
 class WorkplanSerializer(serializers.ModelSerializer):

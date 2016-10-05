@@ -2,8 +2,10 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-from django.conf import settings
 import jsonfield.fields
+import django.utils.timezone
+from django.conf import settings
+import model_utils.fields
 
 
 class Migration(migrations.Migration):
@@ -11,7 +13,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('users', '0014_auto_20160816_2228'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('reports', '0024_auto_20160919_1449'),
+        ('reports', '0024_auto_20161005_2137'),
         ('partners', '0072_partnerorganization_hact_values'),
         ('locations', '0006_auto_20160229_1545'),
     ]
@@ -21,11 +23,15 @@ class Migration(migrations.Migration):
             name='Comment',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
+                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, verbose_name='created', editable=False)),
+                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, verbose_name='modified', editable=False)),
                 ('text', models.TextField()),
                 ('author', models.ForeignKey(related_name='comments', to=settings.AUTH_USER_MODEL)),
                 ('tagged_users', models.ManyToManyField(related_name='_comment_tagged_users_+', to=settings.AUTH_USER_MODEL, blank=True)),
             ],
+            options={
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='CoverPage',
@@ -34,8 +40,6 @@ class Migration(migrations.Migration):
                 ('national_priority', models.CharField(max_length=255)),
                 ('responsible_government_entity', models.CharField(max_length=255)),
                 ('planning_assumptions', models.TextField()),
-                ('logo_width', models.IntegerField(null=True, blank=True)),
-                ('logo_height', models.IntegerField(null=True, blank=True)),
                 ('logo', models.ImageField(height_field=b'logo_height', width_field=b'logo_width', null=True, upload_to=b'', blank=True)),
             ],
         ),
@@ -80,11 +84,12 @@ class Migration(migrations.Migration):
                 ('or_funds', models.PositiveIntegerField(null=True, blank=True)),
                 ('ore_funds', models.PositiveIntegerField(null=True, blank=True)),
                 ('total_funds', models.PositiveIntegerField(null=True, blank=True)),
-                ('geotag', models.ManyToManyField(to='locations.Location')),
+                ('geotag', models.ManyToManyField(related_name='_resultworkplanproperty_geotag_+', to='locations.Location')),
                 ('labels', models.ManyToManyField(to='workplan.Label')),
-                ('partners', models.ManyToManyField(to='partners.PartnerOrganization')),
-                ('responsible_persons', models.ManyToManyField(to=settings.AUTH_USER_MODEL)),
-                ('sections', models.ManyToManyField(to='users.Section')),
+                ('partners', models.ManyToManyField(related_name='_resultworkplanproperty_partners_+', to='partners.PartnerOrganization')),
+                ('responsible_persons', models.ManyToManyField(related_name='_resultworkplanproperty_responsible_persons_+', to=settings.AUTH_USER_MODEL)),
+                ('result', models.ForeignKey(related_name='workplan_properties', to='reports.Result')),
+                ('sections', models.ManyToManyField(related_name='_resultworkplanproperty_sections_+', to='users.Section')),
             ],
         ),
         migrations.CreateModel(
@@ -105,7 +110,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='resultworkplanproperty',
             name='workplan',
-            field=models.ForeignKey(to='workplan.Workplan'),
+            field=models.OneToOneField(to='workplan.Workplan'),
         ),
         migrations.AddField(
             model_name='quarter',

@@ -1,7 +1,7 @@
-import signals
 from jsonfield import JSONField
 from django.db import models
 from django.contrib.auth.models import User
+from model_utils.models import TimeStampedModel
 
 from users.models import Section
 from locations.models import Location
@@ -9,10 +9,9 @@ from partners.models import PartnerOrganization
 from reports.models import Result
 
 
-class Comment(models.Model):
+class Comment(TimeStampedModel):
     author = models.ForeignKey(User, related_name='comments')
     tagged_users = models.ManyToManyField(User, blank=True, related_name='+')
-    timestamp = models.DateTimeField(auto_now_add=True)
     text = models.TextField()
     workplan = models.ForeignKey('Workplan', related_name='comments')
 
@@ -30,6 +29,7 @@ class Workplan(models.Model):
 
 class WorkplanProject(models.Model):
     workplan = models.ForeignKey('Workplan', related_name='workplan_projects')
+    # TODO: add all results that belong to this workplan project
 
 
 class Quarter(models.Model):
@@ -44,7 +44,7 @@ class Label(models.Model):
 
 
 class ResultWorkplanProperty(models.Model):
-    workplan = models.ForeignKey(Workplan)
+    workplan = models.OneToOneField(Workplan)
     result = models.ForeignKey(Result, related_name='workplan_properties')
     assumptions = models.TextField(null=True, blank=True)
     STATUS = (
@@ -61,20 +61,24 @@ class ResultWorkplanProperty(models.Model):
     or_funds = models.PositiveIntegerField(null=True, blank=True)
     ore_funds = models.PositiveIntegerField(null=True, blank=True)
     total_funds = models.PositiveIntegerField(null=True, blank=True)
-    sections = models.ManyToManyField(Section)
-    geotag = models.ManyToManyField(Location)
-    partners = models.ManyToManyField(PartnerOrganization)
-    responsible_persons = models.ManyToManyField(User)
+    sections = models.ManyToManyField(Section, related_name="sections+")
+    geotag = models.ManyToManyField(Location, related_name="geotag+")
+    partners = models.ManyToManyField(PartnerOrganization, related_name="partners+")
+    responsible_persons = models.ManyToManyField(User, related_name="responsible_persons+")
     labels = models.ManyToManyField(Label)
-
-    class Meta:
-        unique_together = ("workplan", "result",)
 
     def save(self, *args, **kwargs):
         """
         Override save to calculate field total
         """
-        self.total_funds = self.rr_funds + self.or_funds + self.ore_funds
+        if not(self.rr_funds is None and
+               self.or_funds is None and
+               self.ore_funds is None):
+
+            rr_f = self.rr_funds or 0
+            or_f = self.or_funds or 0
+            ore_f = self.ore_funds or 0
+            self.total_funds = rr_f + or_f + ore_f
         super(ResultWorkplanProperty, self).save(*args, **kwargs)
 
     @classmethod
@@ -97,9 +101,6 @@ class CoverPage(models.Model):
     national_priority = models.CharField(max_length=255)
     responsible_government_entity = models.CharField(max_length=255)
     planning_assumptions = models.TextField()
-
-    logo_width = models.IntegerField(null=True, blank=True)
-    logo_height = models.IntegerField(null=True, blank=True)
     logo = models.ImageField(width_field='logo_width', height_field='logo_height', null=True, blank=True)
 
 
