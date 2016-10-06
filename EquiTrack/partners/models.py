@@ -688,7 +688,7 @@ class Agreement(TimeStampedModel):
             return datetime.date.today().year
 
     @property
-    def reference_number(self):
+    def reference_number(self, number=''):
         if self.agreement_number:
             number = self.agreement_number
         else:
@@ -703,6 +703,15 @@ class Agreement(TimeStampedModel):
                 year=self.year,
                 seq=sequence,
             )
+            # check if reference number already exists
+            if Agreement.objects.filter(agreement_number=number).count() > 0:
+                number = u'{code}/{type}{year}{seq}'.format(
+                    code=connection.tenant.country_short_code or '',
+                    type=self.agreement_type,
+                    year=self.year,
+                    seq=int(sequence)+1,
+                )
+
         return u'{}{}'.format(
             number,
             u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
@@ -1016,6 +1025,15 @@ class PCA(AdminURLMixin, models.Model):
                 year=self.year,
                 seq=sequence
             )
+            # check if reference number already exists
+            if PCA.objects.filter(number=number).count() > 0:
+                sequence = '{0:02d}'.format(len(objects) + 1)
+                number = u'{agreement}/{type}{year}{seq}'.format(
+                    agreement=self.agreement.reference_number if self.id and self.agreement else '',
+                    type=self.partnership_type,
+                    year=self.year,
+                    seq=sequence,
+                )
         return u'{}{}'.format(
             number,
             u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
