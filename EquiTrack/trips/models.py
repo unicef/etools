@@ -514,8 +514,9 @@ class LinkedGovernmentPartner(models.Model):
     @transaction.atomic
     def save(self, **kwargs):
         # update partner hact values
-        PartnerOrganization.programmatic_visits(self.partner, self.trip)
-        PartnerOrganization.spot_checks(self.partner, self.trip)
+        if self.pk is None:
+            PartnerOrganization.programmatic_visits(self.partner, self.trip)
+            PartnerOrganization.spot_checks(self.partner, self.trip)
 
         return super(LinkedGovernmentPartner, self).save(**kwargs)
 
