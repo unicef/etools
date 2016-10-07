@@ -437,6 +437,7 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
     fields = (
         'result',
         ('year', 'planned_amount',),
+        'planned_visits',
         'activities',
         'unicef_managers',
         'sector',

@@ -12,6 +12,34 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RemoveField(
+            model_name='result',
+            name='assumptions',
+        ),
+        migrations.RemoveField(
+            model_name='result',
+            name='geotag',
+        ),
+        migrations.RemoveField(
+            model_name='result',
+            name='metadata',
+        ),
+        migrations.RemoveField(
+            model_name='result',
+            name='prioritized',
+        ),
+        migrations.RemoveField(
+            model_name='result',
+            name='sections',
+        ),
+        migrations.RemoveField(
+            model_name='result',
+            name='status',
+        ),
+        migrations.RemoveField(
+            model_name='result',
+            name='users',
+        ),
         migrations.AlterField(
             model_name='goal',
             name='result_structure',
