@@ -165,6 +165,27 @@ class Result(MPTTModel):
                 node.save()
 
 
+class LowerResult(MPTTModel):
+
+    result_structure = models.ForeignKey(ResultStructure, null=True, blank=True, on_delete=models.DO_NOTHING)
+    country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
+    result_type = models.ForeignKey(ResultType)
+    sector = models.ForeignKey(Sector, null=True, blank=True)
+    name = models.TextField()
+    code = models.CharField(max_length=50, null=True, blank=True)
+    from_date = models.DateField(null=True, blank=True)
+    to_date = models.DateField(null=True, blank=True)
+    parent = TreeForeignKey(
+        'self',
+        null=True, blank=True,
+        related_name='children',
+        db_index=True
+    )
+    hidden = models.BooleanField(default=False)
+
+    objects = ResultManager()
+
+
 class Milestone(models.Model):
 
     result = models.ForeignKey(Result, related_name="milestones")

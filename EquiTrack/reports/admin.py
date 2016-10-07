@@ -16,7 +16,8 @@ from reports.models import (
     ResultStructure,
     ResultType,
     Result,
-    CountryProgramme
+    CountryProgramme,
+    LowerResult,
 )
 from .forms import IndicatorAdminForm
 
@@ -201,5 +202,6 @@ admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-#admin.site.register(ResultChain)
+admin.site.register(ResultChain)
+admin.site.register(LowerResult)
 #admin.site.register(ResultType)

@@ -36,6 +36,7 @@ from reports.models import (
     ResultType,
     Result,
     CountryProgramme,
+    LowerResult,
 )
 from locations.models import (
     Governorate,
@@ -1591,7 +1592,7 @@ class ResultChain(models.Model):
     code = models.CharField(max_length=50, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     result = models.ForeignKey(
-        Result,
+        LowerResult,
     )
     indicator = models.ForeignKey(
         Indicator,

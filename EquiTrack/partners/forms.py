@@ -34,7 +34,7 @@ from reports.models import (
     ResultStructure,
 )
 from locations.models import Location
-from reports.models import Sector, Result, ResultType, Indicator
+from reports.models import Sector, Result, ResultType, Indicator, LowerResult
 from .models import (
     PCA,
     PartnerOrganization,
@@ -531,7 +531,7 @@ class PartnershipForm(UserGroupForm):
                 else:
                     # we are dealing with a result statement
                     # now we try to look up the result based on the statement
-                    result, created = Result.objects.get_or_create(
+                    result, created = LowerResult.objects.get_or_create(
                         result_structure=result_structure,
                         result_type=result_type,
                         name=statement,
@@ -554,7 +554,6 @@ class PartnershipForm(UserGroupForm):
 
                 if 'indicator' in label:
                     indicator, created = Indicator.objects.get_or_create(
-                        result=result,
                         code=label,
                         name=statement
                     )
