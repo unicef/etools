@@ -1,10 +1,14 @@
 __author__ = 'jcranwellward'
 
 import random
+import uuid
 
 import logging
 
 from django.db import IntegrityError
+from django.db.models.signals import post_delete, post_save
+from django.dispatch.dispatcher import receiver
+from django.core.cache import cache
 from django.contrib.gis.db import models
 from django.contrib.contenttypes.models import ContentType
 
@@ -151,6 +155,15 @@ class Location(MPTTModel):
         ordering = ['name']
 
 
+@receiver(post_delete, sender=Location)
+@receiver(post_save, sender=Location)
+def refresh_locations_etag(sender, instance, **kwargs):
+    """
+    Refreshes the locations etag in the cache on every change.
+    """
+    cache.set("locations-etag", uuid.uuid4().hex)
+
+
 class LinkedLocation(models.Model):
     """
     Generic model for linking locations to anything
@@ -218,4 +231,3 @@ class CartoDBTable(MPTTModel):
 
     def __unicode__(self):
         return self.table_name
-
