@@ -13,6 +13,7 @@ class VerboseFieldRepresentationMixin(serializers.Serializer):
 
     def to_representation(self, instance):
         representation = super(VerboseFieldRepresentationMixin, self).to_representation(instance)
+        return representation
 
 
 class IteneraryItemSerializer(serializers.ModelSerializer):

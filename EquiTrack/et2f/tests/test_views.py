@@ -18,6 +18,9 @@ class TravelViews(APITenantTestCase):
                                     supervisor=self.unicef_staff)
 
     def test_list_view(self):
-        response = self.forced_auth_req('get', '/api/travels/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/et2f/travels/', user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, [])
+        self.assertIn('data', response_json)
+        self.assertEqual(len(response_json['data']), 1)
+        self.assertIn('page_count', response_json)
+        self.assertEqual(response_json['page_count'], 1)
