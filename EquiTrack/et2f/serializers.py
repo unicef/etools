@@ -1,5 +1,6 @@
-
+from django.utils.functional import cached_property
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances
 
@@ -66,3 +67,16 @@ class TravelListSerializer(TravelDetailsSerializer):
 
     class Meta(TravelDetailsSerializer.Meta):
         fields = ('id', 'reference_number', 'traveler', 'purpose', 'start_date', 'end_date', 'status')
+
+
+class TravelListParameterSerializer(serializers.Serializer):
+    _SORTABLE_FIELDS = tuple(TravelListSerializer.Meta.fields)
+
+    sort_by = serializers.CharField(default=_SORTABLE_FIELDS[0])
+    reverse = serializers.BooleanField(required=False, default=False)
+
+    def validate_sort_by(self, value):
+        if value not in self._SORTABLE_FIELDS:
+            valid_values = ', '.join(self._SORTABLE_FIELDS)
+            raise ValidationError('Invalid sorting option. Valid values are {}'.format(valid_values))
+        return value

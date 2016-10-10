@@ -14,7 +14,8 @@ class TravelViews(APITenantTestCase):
         super(TravelViews, self).setUp()
         self.traveller = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(traveller=self.traveller,
+        self.travel = TravelFactory(reference_number='REF1',
+                                    traveller=self.traveller,
                                     supervisor=self.unicef_staff)
 
     def test_list_view(self):
@@ -42,3 +43,23 @@ class TravelViews(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIn('data', response_json)
         self.assertEqual(len(response_json['data']), 1)
+
+    def test_sorting(self):
+        TravelFactory(reference_number='REF2', traveller=self.traveller, supervisor=self.unicef_staff)
+        TravelFactory(reference_number='REF3', traveller=self.traveller, supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'sort_by': 'reference_number',
+                                                                           'reverse': False},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertIn('data', response_json)
+        reference_numbers = [e['reference_number'] for e in response_json['data']]
+        self.assertEqual(reference_numbers, ['REF1', 'REF2', 'REF3'])
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'sort_by': 'reference_number',
+                                                                           'reverse': True},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertIn('data', response_json)
+        reference_numbers = [e['reference_number'] for e in response_json['data']]
+        self.assertEqual(reference_numbers, ['REF3', 'REF2', 'REF1'])

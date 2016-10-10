@@ -6,7 +6,7 @@ from rest_framework.pagination import PageNumberPagination as _PageNumberPaginat
 from rest_framework.response import Response
 
 from .models import Travel
-from .serializers import TravelListSerializer, TravelDetailsSerializer
+from .serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer
 
 
 class PageNumberPagination(_PageNumberPagination):
@@ -27,6 +27,16 @@ class TravelViewSet(mixins.ListModelMixin,
     serializer_class = TravelListSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminUser,)
+
+    def get_queryset(self):
+        queryset = super(TravelViewSet, self).get_queryset()
+        parameter_serializer = TravelListParameterSerializer(data=self.request.GET)
+        if not parameter_serializer.is_valid():
+            return queryset
+
+        prefix = '-' if parameter_serializer.data['reverse'] else ''
+        sort_by = '{}{}'.format(prefix, parameter_serializer.data['sort_by'])
+        return queryset.order_by(sort_by)
 
 
 class TravelDetailsViewSet(mixins.RetrieveModelMixin,
