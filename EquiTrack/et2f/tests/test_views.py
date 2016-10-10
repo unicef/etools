@@ -24,3 +24,21 @@ class TravelViews(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
         self.assertIn('page_count', response_json)
         self.assertEqual(response_json['page_count'], 1)
+
+    def test_pagination(self):
+        TravelFactory(traveller=self.traveller, supervisor=self.unicef_staff)
+        TravelFactory(traveller=self.traveller, supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'page': 1, 'page_size': 2},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertIn('data', response_json)
+        self.assertEqual(len(response_json['data']), 2)
+        self.assertIn('page_count', response_json)
+        self.assertEqual(response_json['page_count'], 2)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'page': 2, 'page_size': 2},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertIn('data', response_json)
+        self.assertEqual(len(response_json['data']), 1)

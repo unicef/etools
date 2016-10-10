@@ -10,12 +10,14 @@ from .serializers import TravelListSerializer, TravelDetailsSerializer
 
 
 class PageNumberPagination(_PageNumberPagination):
-    page_size = 50
+    page_size = 10
+    page_size_query_param = 'page_size'
 
     def get_paginated_response(self, data):
         return Response(OrderedDict([
-            ('page_count', self.page.paginator.count),
-            ('data', data)
+            ('page_count', self.page.paginator.num_pages),
+            ('data', data),
+            ('total_count', self.page.paginator.object_list.count()),
         ]))
 
 
