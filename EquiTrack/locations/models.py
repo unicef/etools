@@ -1,7 +1,6 @@
 __author__ = 'jcranwellward'
 
 import random
-import uuid
 
 import logging
 
@@ -157,11 +156,11 @@ class Location(MPTTModel):
 
 @receiver(post_delete, sender=Location)
 @receiver(post_save, sender=Location)
-def refresh_locations_etag(sender, instance, **kwargs):
+def invalidate_locations_etag(sender, instance, **kwargs):
     """
-    Refreshes the locations etag in the cache on every change.
+    Invalidate the locations etag in the cache on every change.
     """
-    cache.set("locations-etag", uuid.uuid4().hex)
+    cache.delete("locations-etag")
 
 
 class LinkedLocation(models.Model):
