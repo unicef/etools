@@ -66,7 +66,7 @@ class TravelListSerializer(TravelDetailsSerializer):
     use_verbose_fields = False
 
     class Meta(TravelDetailsSerializer.Meta):
-        fields = ('id', 'reference_number', 'traveler', 'purpose', 'start_date', 'end_date', 'status')
+        fields = ('id', 'reference_number', 'traveller', 'purpose', 'start_date', 'end_date', 'status')
 
 
 class TravelListParameterSerializer(serializers.Serializer):
