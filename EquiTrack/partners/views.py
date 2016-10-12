@@ -1,11 +1,10 @@
 from __future__ import absolute_import
 
-import datetime
-
-from rest_framework.decorators import detail_route
+from partners.exports import PartnerExport
 
 __author__ = 'jcranwellward'
 
+import datetime
 
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -13,8 +12,10 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
+from rest_framework import status
+from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework import viewsets, mixins, generics
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
@@ -37,7 +38,6 @@ from .serializers import (
     PCAFileSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
-from rest_framework.parsers import MultiPartParser, FormParser
 
 from .models import (
     FileType,
@@ -56,8 +56,6 @@ from .models import (
     IndicatorReport
 )
 from reports.models import CountryProgramme
-from rest_framework import status
-from rest_framework.response import Response
 
 
 class PcaPDFView(PDFTemplateView):
@@ -805,6 +803,24 @@ class PartnerOrganizationsViewSet(
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+
+    # Search vendor number or partner short / full name(sb)
+    # Partner Type(dd)
+    # CSO Type(dd)
+    # Risk Rating(dd)
+    # Flagged(dd: Blocked and Marked for Deletion) Show hidden(tb)
+    #   (by default blocked and marked for deletion are hidden - important for exporting)
+
+    @list_route(methods=['get'])
+    def export(self, request, pk=None):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        dataset = PartnerExport().export(queryset)
+
+        response = HttpResponse('application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportPartners.xlsx"'
+        response.write(dataset.xlsx)
+        return response
 
 
 class PartnerStaffMembersViewSet(

@@ -1,3 +1,5 @@
+from partners.models import RISK_RATINGS, CSO_TYPES, PARTNER_TYPES
+
 __author__ = 'jcranwellward'
 
 import json
@@ -295,3 +297,12 @@ class RapidProRequest(serializers.Serializer):
         if restored_data['values']:
             restored_data['values'] = json.loads(restored_data['values'])
         return restored_data
+
+
+class PartnershipExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField()
+    partner_type = serializers.ChoiceField(PARTNER_TYPES)
+    cso_type = serializers.ChoiceField(CSO_TYPES)
+    risk_rating = serializers.ChoiceField(RISK_RATINGS)
+    flagged = serializers.ChoiceField(('blocked', 'marked_for_deletion'))
+    show_hidden = serializers.BooleanField()
