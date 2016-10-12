@@ -34,7 +34,7 @@ from reports.models import (
     ResultStructure,
 )
 from locations.models import Location
-from reports.models import Sector, Result, ResultType, Indicator, LowerResult
+from reports.models import Sector, Result, ResultType, Indicator, LowerResult, LowerIndicator
 from .models import (
     PCA,
     PartnerOrganization,
@@ -383,9 +383,6 @@ class AgreementForm(UserGroupForm):
             )
 
 
-
-
-
         # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
         #     partner=partner,
@@ -536,7 +533,6 @@ class PartnershipForm(UserGroupForm):
                         result_type=result_type,
                         name=statement,
                         code=label,
-                        hidden=True,
                     )
                     if result_type.name == 'Output':
                         current_output = result
@@ -553,7 +549,7 @@ class PartnershipForm(UserGroupForm):
                 check_and_return_value('Total', row, row_num, number=True)  # ignore value as we calculate this
 
                 if 'indicator' in label:
-                    indicator, created = Indicator.objects.get_or_create(
+                    indicator, created = LowerIndicator.objects.get_or_create(
                         code=label,
                         name=statement
                     )

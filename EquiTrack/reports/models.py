@@ -182,8 +182,20 @@ class LowerResult(MPTTModel):
         db_index=True
     )
     hidden = models.BooleanField(default=False)
-
     objects = ResultManager()
+
+    @cached_property
+    def result_name(self):
+        return u'{}: {}'.format(
+            self.code if self.code else self.result_type.name,
+            self.name
+        )
+
+    def __unicode__(self):
+        return u'{}: {}'.format(
+            self.code if self.code else self.result_type.name,
+            self.name
+        )
 
 
 class Milestone(models.Model):
@@ -296,3 +308,36 @@ class Indicator(models.Model):
         if not self.code:
             self.code = None
         super(Indicator, self).save(*args, **kwargs)
+
+
+class LowerIndicator(models.Model):
+
+    sector = models.ForeignKey(
+        Sector,
+        blank=True, null=True
+    )
+    result_structure = models.ForeignKey(
+        ResultStructure,
+        blank=True, null=True, on_delete=models.DO_NOTHING
+    )
+
+    result = models.ForeignKey(LowerResult, null=True, blank=True)
+    name = models.CharField(max_length=1024)
+    code = models.CharField(max_length=50, null=True, blank=True)
+    unit = models.ForeignKey(Unit, null=True, blank=True)
+
+    total = models.IntegerField(verbose_name='UNICEF Target', null=True, blank=True)
+    sector_total = models.IntegerField(verbose_name='Sector Target', null=True, blank=True)
+    current = models.IntegerField(null=True, blank=True, default=0)
+    sector_current = models.IntegerField(null=True, blank=True)
+    assumptions = models.TextField(null=True, blank=True)
+
+    target = models.CharField(max_length=255, null=True, blank=True)
+    baseline = models.CharField(max_length=255, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'{} {} {}'.format(
+            self.name,
+            u'Baseline: {}'.format(self.baseline) if self.baseline else u'',
+            u'Target: {}'.format(self.target) if self.target else u''
+        )

@@ -37,6 +37,7 @@ from reports.models import (
     Result,
     CountryProgramme,
     LowerResult,
+    LowerIndicator,
 )
 from locations.models import (
     Governorate,
@@ -1592,12 +1593,14 @@ class ResultChain(models.Model):
     code = models.CharField(max_length=50, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     result = models.ForeignKey(
-        LowerResult,
+        Result,
     )
     indicator = models.ForeignKey(
         Indicator,
         blank=True, null=True
     )
+    lower_result = models.ForeignKey(LowerResult, blank=True, null=True)
+    lower_indicator = models.ForeignKey(LowerIndicator, blank=True, null=True)
 
     # fixed columns
     target = models.PositiveIntegerField(

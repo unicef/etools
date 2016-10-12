@@ -4,8 +4,8 @@ from django.db.models import Count
 import time
 from datetime import datetime, timedelta
 from users.models import Country
-from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure
-from partners.models import FundingCommitment
+from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult, LowerIndicator
+from partners.models import FundingCommitment, ResultChain
 
 def printtf(*args):
     print([arg for arg in args])
@@ -380,3 +380,28 @@ def after_code_merge(): #and after migrations
     all_countries_do(dissasociate_result_structures, 'Dissasociate Result Structure')
 
     print("don't forget to sync")
+
+
+def result_chain_associate(country_name=None):
+    set_country(country_name)
+    for rc in ResultChain.objects.all():
+        rs = Result.objects.get(id=rc.result.id)
+        if(rs.parent):
+            create_lower_result(rs.parent)
+        else:
+            create_lower_result(rs)
+
+
+def create_lower_result(rs=None):
+    lrs, created = LowerResult.objects.get_or_create(
+        result_structure=rs.result_structure,
+        result_type=rs.result_type,
+        country_programme=rs.country_programme,
+        sector=rs.sector,
+        name=rs.name,
+        code=rs.code,
+        from_date=rs.from_date,
+        to_date=rs.to_date
+    )
+
+
