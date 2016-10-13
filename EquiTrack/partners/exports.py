@@ -1,3 +1,5 @@
+from partners.models import GovernmentIntervention
+
 __author__ = 'jcranwellward'
 
 try:
@@ -14,7 +16,9 @@ from .models import (
     PCA,
     PartnerOrganization,
     PartnershipBudget,
-    AmendmentLog
+    AmendmentLog,
+    PartnerType,
+    Agreement
 )
 
 class PartnerResource(resources.ModelResource):
@@ -213,6 +217,8 @@ class PCAResource(BaseExportResource):
         #     self.fill_sector_activities(row, sector)
 
 
+# ---- NEW EXPORTS STARTS HERE ----
+
 class PartnerExport(resources.ModelResource):
     agreement_count = resources.Field()
     intervention_count = resources.Field()
@@ -228,11 +234,98 @@ class PartnerExport(resources.ModelResource):
                   'risk_rating', 'type_of_assessment', 'last_assessment_date', 'total_ct_cp', 'total_ct_cy',
                   'agreement_count', 'intervention_count', 'active_staff_members')
 
-    def dehydrate_active_staff_members(self, partner_organization):
-        return ', '.join([sm.get_full_name() for sm in partner_organization.staff_members])
-
     def dehydrate_agreement_count(self, partner_organization):
         return partner_organization.agreements.count()
 
     def dehydrate_intervention_count(self, partner_organization):
-        return partner_organization.work_plans.count()
+        if partner_organization.partner_type == PartnerType.GOVERNMENT:
+            return partner_organization.work_plans.count()
+        return partner_organization.documents.count()
+
+    def dehydrate_active_staff_members(self, partner_organization):
+        return ', '.join([sm.get_full_name() for sm in partner_organization.staff_members.all()])
+
+
+class AgreementExport(resources.ModelResource):
+    signed_by_partner = resources.Field()
+    signed_by_unicef = resources.Field()
+    authorized_officers = resources.Field()
+
+    class Meta:
+        model = Agreement
+        # TODO add missing fields:
+        #   Attached Signed Agreement Link
+        #   Amendments (comma separated list of amended fields)
+        fields = ('reference_number', 'partner__vendor_number', 'partner__name', 'partner__short_name', 'agreement',
+                  'start_date', 'end_date', 'signed_by_partner', 'signed_by_partner_date',
+                  'signed_by_unicef', 'signed_by_unicef_date', 'authorized_officers')
+
+    def dehydrate_signed_by_partner(self, agreement):
+        if agreement.partner_manager:
+            return agreement.partner_manager.get_full_name()
+        return None
+
+    def dehydrate_signed_by_unicef(self, agreement):
+        if agreement.signed_by:
+            return agreement.signed_by.get_full_name()
+        return ''
+
+    def dehydrate_authorized_officers(self, agreement):
+        names = [ao.officer.get_full_name() for ao in agreement.authorized_officers.all()]
+        return ', '.join(names)
+
+
+class InterventionExport(resources.ModelResource):
+    locations = resources.Field()
+    sectors = resources.Field()
+    partner_manager_name = resources.Field()
+    unicef_manager_name = resources.Field()
+    supplies = resources.Field()
+
+    class Meta:
+        model = PCA
+        # TODO add missin fields:
+        #   UNICEF Office (new property)
+        #   Document Title
+        #   Completed Visits (# of completed trips)
+        #   FR Numbers (comma separated)
+        #   Number of Active Action Points
+        fields = ('reference_number', 'status', 'partner__name', 'partnership_type', 'sectors', 'start_date',
+                  'end_date', 'result_structure__name', 'locations', 'initiation_date', 'submission_date',
+                  'review_date', 'days_from_submission_to_signed', 'days_from_review_to_signed',
+                  'signed_by_partner_date', 'partner_manager_name', 'signed_by_unicef_date', 'unicef_manager_name',
+                  'total_unicef_cash', 'supplies', 'total_budget', 'planned_visits')
+
+    def dehydrate_locations(self, intervention):
+        location_names = [l.location.name for l in intervention.locations.all()]
+        return ', '.join(location_names)
+
+    def dehydrate_sectors(self, intervention):
+        sector_names = [s.sector.name for s in intervention.sectors.all()]
+        return ', '.join(sector_names)
+
+    def dehydrate_partner_manager_name(self, intervention):
+        if intervention.partner_manager:
+            return intervention.partner_manager.get_full_name()
+        return ''
+
+    def dehydrate_unicef_manager_name(self, intervention):
+        if intervention.unicef_manager:
+            return intervention.unicef_manager.get_full_name()
+        return ''
+
+    def dehydrate_supplies(self, intervention):
+        supply_names = [sp.item.name for sp in intervention.supply_plans.all()]
+        return ', '.join(supply_names)
+
+
+class GovernmentExport(resources.ModelResource):
+    cash_transfer = resources.Field()
+
+    class Meta:
+        model = GovernmentIntervention
+        fields = ('number', 'partner__name', 'result_structure__name', 'sectors', 'cash_transfer',
+                  'result_structure__to_date__year')
+
+    def dehydrate_cash_transfer(self, government):
+        return sum([r.planned_amount for r in government.results.all()])

@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 
-from partners.exports import PartnerExport
+from partners.exports import PartnerExport, AgreementExport, InterventionExport
+from partners.filters import PartnerOrganizationExportFilter, AgreementExportFilter, InterventionExportFilter, \
+    AgreementScopeFilter
 
 __author__ = 'jcranwellward'
 
@@ -234,6 +236,7 @@ class AgreementViewSet(
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
+    filter_backends = (AgreementScopeFilter, AgreementExportFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -280,6 +283,17 @@ class AgreementViewSet(
             status=status.HTTP_200_OK
         )
 
+    @list_route(methods=['get'])
+    def export(self, request, partner_pk):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        dataset = AgreementExport().export(queryset)
+
+        response = HttpResponse('application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportAgreements.xlsx"'
+        response.write(dataset.xlsx)
+        return response
+
 
 class InterventionsViewSet(
     mixins.RetrieveModelMixin,
@@ -293,6 +307,7 @@ class InterventionsViewSet(
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
+    filter_backends = (InterventionExportFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -355,6 +370,17 @@ class InterventionsViewSet(
             data,
             status=status.HTTP_200_OK
         )
+
+    @list_route(methods=['get'])
+    def export(self, request, pk=None):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        dataset = InterventionExport().export(queryset)
+
+        response = HttpResponse('application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportInterventions.xlsx"'
+        response.write(dataset.xlsx)
+        return response
 
 
 class ResultChainViewSet(
@@ -786,6 +812,7 @@ class PartnerOrganizationsViewSet(
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationSerializer
     permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerOrganizationExportFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -804,15 +831,8 @@ class PartnerOrganizationsViewSet(
             headers=headers
         )
 
-    # Search vendor number or partner short / full name(sb)
-    # Partner Type(dd)
-    # CSO Type(dd)
-    # Risk Rating(dd)
-    # Flagged(dd: Blocked and Marked for Deletion) Show hidden(tb)
-    #   (by default blocked and marked for deletion are hidden - important for exporting)
-
     @list_route(methods=['get'])
-    def export(self, request, pk=None):
+    def export(self, request):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         dataset = PartnerExport().export(queryset)

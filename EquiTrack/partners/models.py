@@ -63,12 +63,18 @@ RISK_RATINGS = (
     (LOW, u'Low'),
 )
 
-PARTNER_TYPES = Choices(
-    u'Bilateral / Multilateral',
-    u'Civil Society Organization',
-    u'Government',
-    u'UN Agency',
-)
+
+class PartnerType(object):
+    BILATERAL_MULTILATERAL = u'Bilateral / Multilateral'
+    CIVIL_SOCIETY_ORGANIZATION = u'Civil Society Organization'
+    GOVERNMENT = u'Government'
+    UN_AGENCY = u'UN Agency'
+
+    CHOICES = Choices(BILATERAL_MULTILATERAL,
+                      CIVIL_SOCIETY_ORGANIZATION,
+                      GOVERNMENT,
+                      UN_AGENCY)
+
 
 CSO_TYPES = Choices(
     u'International',
@@ -82,7 +88,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     partner_type = models.CharField(
         max_length=50,
-        choices=PARTNER_TYPES
+        choices=PartnerType.CHOICES
     )
     cso_type = models.CharField(
         max_length=50,
@@ -1497,7 +1503,7 @@ class PCASector(TimeStampedModel):
     Links a sector to a partnership
     Many-to-many cardinality
     """
-    pca = models.ForeignKey(PCA)
+    pca = models.ForeignKey(PCA, related_name='sectors')
     sector = models.ForeignKey(Sector)
     amendment = models.ForeignKey(
         AmendmentLog,
