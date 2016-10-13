@@ -430,5 +430,14 @@ def result_chain_associate(country_name=None):
             rc.lower_result.save()
 
 
+def result_chain_dis_associate(country_name=None):
+    set_country(country_name)
+    #delete all result in result-chain
+    for rc in ResultChain.objects.all():
+        rc.result.delete()
+
+
+
+
 
 
