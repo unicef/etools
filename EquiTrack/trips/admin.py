@@ -434,7 +434,7 @@ class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
         u'status',
     )
     search_fields = (
-        u'trip__name',
+        u'trip__purpose_of_travel',
         u'description',
         u'actions_taken',
     )

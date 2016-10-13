@@ -174,13 +174,12 @@ class BaseExportResource(ModelResource):
 
 
         fields = SortedDict()
-
         data = tablib.Dataset(headers=fields.keys())
-
 
         for model in queryset.iterator():
             # first pass creates table shape
             self.fill_row(model, fields)
+            data.append(fields.keys())
             # run only once for the headers
             break
 

@@ -63,6 +63,13 @@ from partners.urls import (
     agreement_api,
 )
 
+from workplan.views import (
+    CommentViewSet,
+    WorkplanViewSet,
+    WorkplanProjectViewSet,
+    LabelViewSet,
+)
+
 api = routers.SimpleRouter()
 
 trips_api = routers.SimpleRouter()
@@ -95,6 +102,11 @@ api.register(r'reports/units', UnitViewSet, base_name='units')
 api.register(r'locations', LocationsViewSet, base_name='locations')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
+api.register(r'comments', CommentViewSet, base_name='comments')
+api.register(r'workplans', WorkplanViewSet, base_name='workplans')
+api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
+api.register(r'labels', LabelViewSet, base_name='labels')
+
 
 urlpatterns = patterns(
     '',
@@ -105,7 +117,7 @@ urlpatterns = patterns(
     url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
-    #url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
+    url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),

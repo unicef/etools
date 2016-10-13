@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block extra_head %}
 
@@ -48,7 +49,7 @@
                             <thead>
                                 <tr>
                                     <th rowspan="2">#</th>
-                                    <th rowspan="2">Implementing Partner (IP) name</th>
+                                    <th rowspan="2">Implementing Partner (IP)</th>
                                     <th rowspan="2">Partner Type</th>
                                     <th rowspan="2">Shared IP?</th>
 
@@ -65,17 +66,17 @@
                                         <th>Planned cash transfers (current year)</th>
                                         <th>To be done?</th>
 
-                                        <th>Total (current CP cycle, USS$</th>
-                                        <th>Actual, USS$</th>
+                                        <th>Total (current CP cycle), USD</th>
+                                        <th>Actual( current Year ), USD</th>
 
                                         <th>Planned</th>
-                                        <th>MR adjusted</th>
+                                        <th>Minimum Req</th>
                                         <th>Done</th>
 
-                                        <th>MR adjusted</th>
+                                        <th>Minimum Req</th>
                                         <th>Done</th>
 
-                                        <th>MR</th>
+                                        <th>Minimum Req</th>
                                         <th>Done</th>
                                     </tr>
                             </thead>
@@ -89,19 +90,29 @@
                                         <td><a href="{{ partner.get_admin_url }}">{{ partner.name }}</a></td>
                                         <td>{{ partner.partner_type }}</td>
                                         <td>{{ partner.shared_partner }}</td>
-                                        <td>{{ partner.planned_cash_transfers }}</td>
-                                        <td>{{ partner.micro_assessment_needed }}</td>
-                                        <td>{{ partner.total_cash_transferred }}</td>
-                                        <td>{{ partner.actual_cash_transferred }}</td>
+                                        <td>{{ partner.hact_values.planned_cash_transfer|floatformat:"0"|intcomma }}</td>
+                                        <td>{{ partner.hact_values.micro_assessment_needed }}</td>
+                                        <td>{% if partner.total_ct_cp %}
+                                                {{ partner.total_ct_cp|floatformat:"0"|intcomma }}
+                                            {% else %}
+                                                0
+                                            {% endif %}
+                                        </td>
+                                        <td>{% if partner.total_ct_cy %}
+                                                {{ partner.total_ct_cy|floatformat:"0"|intcomma }}
+                                            {% else %}
+                                                0
+                                            {% endif %}
+                                        </td>
                                         <td>{{ partner.rating }}</td>
-                                        <td>{{ partner.planned_visits }}</td>
+                                        <td>{{ partner.hact_values.planned_visits }}</td>
                                         <td>{{ reqs.programme_visits }}</td>
-                                        <td>{{ partner.programmatic_visits }}</td>
+                                        <td>{{ partner.hact_values.programmatic_visits }}</td>
                                         <td>{{ reqs.spot_checks }}</td>
-                                        <td>{{ partner.spot_checks }}</td>
-                                        <td>{{ reqs.audits }}</td>
-                                        <td>{{ partner.audits }}</td>
-                                        <td>{{ partner.follow_up_flags }}</td>
+                                        <td>{{ partner.hact_values.spot_checks }}</td>
+                                        <td>{{ partner.hact_values.audits_mr }}</td>
+                                        <td>{{ partner.hact_values.audits_done }}</td>
+                                        <td>{{ partner.hact_values.follow_up_flags }}</td>
                                     </tr>
                                     {% endwith %}
                                 {% endfor %}

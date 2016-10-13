@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 import datetime
 from copy import deepcopy
 
-from django.db import models, connection
+from django.db import models, connection, transaction
 from django.db.models import Q
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -280,6 +280,7 @@ class Trip(AdminURLMixin, models.Model):
             return False
         return True
 
+    @transaction.atomic
     def save(self, **kwargs):
         # check if trip can be approved
         if self.can_be_approved:
@@ -299,6 +300,18 @@ class Trip(AdminURLMixin, models.Model):
             driver_trip = Trip.objects.get(id=self.driver_trip.id)
             driver_trip.status = Trip.COMPLETED
             driver_trip.save()
+
+        # update partner hact values
+        if self.travel_type in [Trip.PROGRAMME_MONITORING, Trip.SPOT_CHECK]:
+            if self.linkedgovernmentpartner_set:
+                for gov_partner in self.linkedgovernmentpartner_set.all():
+                    PartnerOrganization.programmatic_visits(gov_partner.partner, self)
+                    PartnerOrganization.spot_checks(gov_partner.partner, self)
+
+            if self.linkedpartner_set:
+                for link_partner in self.linkedpartner_set.all():
+                    PartnerOrganization.programmatic_visits(link_partner.partner, self)
+                    PartnerOrganization.spot_checks(link_partner.partner, self)
 
         super(Trip, self).save(**kwargs)
 
@@ -466,6 +479,14 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
 
+    @transaction.atomic
+    def save(self, **kwargs):
+        # update partner hact values
+        if self.pk is None:
+            PartnerOrganization.programmatic_visits(self.partner, self.trip)
+            PartnerOrganization.spot_checks(self.partner, self.trip)
+        return super(LinkedPartner, self).save(**kwargs)
+
 
 class LinkedGovernmentPartner(models.Model):
     trip = models.ForeignKey(Trip)
@@ -489,6 +510,14 @@ class LinkedGovernmentPartner(models.Model):
         auto_choose=True,
         blank=True, null=True,
     )
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        # update partner hact values
+        PartnerOrganization.programmatic_visits(self.partner, self.trip)
+        PartnerOrganization.spot_checks(self.partner, self.trip)
+
+        return super(LinkedGovernmentPartner, self).save(**kwargs)
 
 
 class TripFunds(models.Model):
@@ -619,6 +648,18 @@ class ActionPoint(models.Model):
                 *recipients
             )
 
+    @transaction.atomic
+    def save(self, **kwargs):
+        # update hact values
+        if self.completed_date is None and self.follow_up:
+            if self.trip.linkedgovernmentpartner_set:
+                for gov_partner in self.trip.linkedgovernmentpartner_set.all():
+                    PartnerOrganization.follow_up_flags(gov_partner.partner, self)
+
+            if self.trip.linkedpartner_set:
+                for link_partner in self.trip.linkedpartner_set.all():
+                    PartnerOrganization.follow_up_flags(link_partner.partner, self)
+        return super(ActionPoint, self).save(**kwargs)
 
 post_save.connect(ActionPoint.send_action, sender=ActionPoint)
 

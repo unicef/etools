@@ -437,6 +437,7 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
     fields = (
         'result',
         ('year', 'planned_amount',),
+        'planned_visits',
         'activities',
         'unicef_managers',
         'sector',
@@ -598,8 +599,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'type_of_assessment',
         u'last_assessment_date',
         u'core_values_assessment_date',
-        u'total_ct_cy',
-        u'total_ct_cp',
         u'deleted_flag',
     )
     fieldsets = (
@@ -618,7 +617,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'email',
                  u'core_values_assessment_date',
                  u'core_values_assessment',
-                 (u'total_ct_cy',u'total_ct_cp',),
                  u'deleted_flag',
                  )
         }),

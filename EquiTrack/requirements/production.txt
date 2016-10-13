@@ -2,6 +2,6 @@
 #	production that isn't in development.
 -r base.txt
 
-raven==4.0.2
+raven==5.27.1
 newrelic==2.24.0.21
-honcho==0.5.0
+#honcho==0.5.0
