@@ -315,3 +315,24 @@ class AgreementExportFilterSerializer(serializers.Serializer):
     agreement_type = serializers.ChoiceField(Agreement.AGREEMENT_TYPES, required=False)
     starts_after = serializers.DateField(required=False)
     ends_before = serializers.DateField(required=False)
+
+
+class InterventionExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    document_type = serializers.ChoiceField(PCA.PARTNERSHIP_TYPES, required=False)
+    country_programme = serializers.CharField(required=False)
+    result_structure = serializers.CharField(required=False)
+    sector = serializers.CharField(required=False)
+    status = serializers.ChoiceField(PCA.PCA_STATUS, required=False)
+    unicef_focal_point = serializers.CharField(required=False)
+    donor = serializers.CharField(required=False)
+    grant = serializers.CharField(required=False)
+    starts_after = serializers.DateField(required=False)
+    ends_before = serializers.DateField(required=False)
+
+
+class GovernmentInterventionExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    result_structure = serializers.CharField(required=False)
+    country_programme = serializers.CharField(required=False)
+    year = serializers.IntegerField(required=False)

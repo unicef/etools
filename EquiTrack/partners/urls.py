@@ -12,6 +12,7 @@ from .views import (
     PortalLoginFailedView,
     PartnerStaffMemberPropertiesView,
     InterventionsViewSet,
+    GovernmentInterventionsViewSet,
     PartnershipBudgetViewSet,
     PCASectorViewSet,
     PCAFileViewSet,
@@ -38,6 +39,9 @@ agreement_api.register(r'agreements', AgreementViewSet, base_name='agreements')
 # interventions_api = routers.SimpleRouter()
 interventions_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
 interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')
+
+government_interventions_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
+government_interventions_api.register(r'government_interventions', GovernmentInterventionsViewSet, base_name='government_interventions')
 
 simple_interventions_api = routers.SimpleRouter()
 simple_interventions_api.register(r'interventions', InterventionsViewSet, base_name='interventions')

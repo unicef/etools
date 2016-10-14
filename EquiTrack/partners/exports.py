@@ -321,11 +321,15 @@ class InterventionExport(resources.ModelResource):
 
 class GovernmentExport(resources.ModelResource):
     cash_transfer = resources.Field()
+    year = resources.Field()
 
     class Meta:
         model = GovernmentIntervention
         fields = ('number', 'partner__name', 'result_structure__name', 'sectors', 'cash_transfer',
-                  'result_structure__to_date__year')
+                  'year')
 
     def dehydrate_cash_transfer(self, government):
         return sum([r.planned_amount for r in government.results.all()])
+
+    def dehydrate_year(self, government):
+        return government.result_structure.to_date.year

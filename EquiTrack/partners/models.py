@@ -1433,7 +1433,7 @@ class PCAGrant(TimeStampedModel):
     """
     Links a grant to a partnership with a specified amount
     """
-    partnership = models.ForeignKey(PCA)
+    partnership = models.ForeignKey(PCA, related_name='grants')
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
     # TODO: Add multi-currency support

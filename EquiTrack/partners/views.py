@@ -1,8 +1,9 @@
 from __future__ import absolute_import
 
-from partners.exports import PartnerExport, AgreementExport, InterventionExport
+from partners.exports import PartnerExport, AgreementExport, InterventionExport, GovernmentExport
 from partners.filters import PartnerOrganizationExportFilter, AgreementExportFilter, InterventionExportFilter, \
-    AgreementScopeFilter
+    GovernmentInterventionExportFilter, PartnerScopeFilter
+from partners.models import GovernmentIntervention
 
 __author__ = 'jcranwellward'
 
@@ -236,7 +237,7 @@ class AgreementViewSet(
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
-    filter_backends = (AgreementScopeFilter, AgreementExportFilter,)
+    filter_backends = (PartnerScopeFilter, AgreementExportFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -295,6 +296,22 @@ class AgreementViewSet(
         return response
 
 
+class GovernmentInterventionsViewSet(viewsets.GenericViewSet):
+    queryset = GovernmentIntervention.objects.all()
+    permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter, GovernmentInterventionExportFilter,)
+
+    @list_route(methods=['get'])
+    def export(self, request, partner_pk):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        dataset = GovernmentExport().export(queryset)
+
+        response = HttpResponse('application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportGovernmentInterventions.xlsx"'
+        response.write(dataset.xlsx)
+        return response
+
 class InterventionsViewSet(
     mixins.RetrieveModelMixin,
     mixins.ListModelMixin,
@@ -307,7 +324,7 @@ class InterventionsViewSet(
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
-    filter_backends = (InterventionExportFilter,)
+    filter_backends = (PartnerScopeFilter, InterventionExportFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -372,7 +389,7 @@ class InterventionsViewSet(
         )
 
     @list_route(methods=['get'])
-    def export(self, request, pk=None):
+    def export(self, request, partner_pk):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         dataset = InterventionExport().export(queryset)
