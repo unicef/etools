@@ -5,7 +5,7 @@ from tenant_schemas.test.cases import TenantTestCase
 
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import PartnershipFactory, AgreementFactory, ResultStructureFactory
+from EquiTrack.factories import PartnershipFactory, AgreementFactory, ResponsePlanFactory
 from partners.models import (
     PartnerOrganization,
     PCA,
@@ -40,7 +40,7 @@ class TestAgreementForm(TenantTestCase):
         self.tenant.save()
         self.text = 'LEBA/{{}}{}01'.format(self.date.year)
         self.agreement = AgreementFactory()
-        self.result_structure = ResultStructureFactory()
+        self.humanitarian_response_plan = ResponsePlanFactory()
 
     def create_form(self, data=None, instance=None, user=None):
         agr_dict = to_dict(self.agreement)

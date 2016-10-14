@@ -4,7 +4,7 @@ from tenant_schemas.test.cases import TenantTestCase
 
 from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
 from funds.models import Donor, Grant
-from reports.models import ResultStructure
+from reports.models import ResponsePlan
 from partners.models import (
     PCA,
     Agreement,
@@ -104,7 +104,7 @@ class TestHACTCalculations(TenantTestCase):
         self.intervention = PartnershipFactory(
             status=u'active'
         )
-        current_cp = ResultStructure.objects.create(
+        current_cp = ResponsePlan.objects.create(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year+1, 12, 31)

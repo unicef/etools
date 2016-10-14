@@ -31,7 +31,7 @@ from EquiTrack.forms import (
 from django.contrib.auth.models import User
 
 from reports.models import (
-    ResultStructure,
+    ResponsePlan,
 )
 from locations.models import Location
 from reports.models import Sector, Result, ResultType, Indicator
@@ -332,17 +332,17 @@ class AgreementForm(UserGroupForm):
                     raise ValidationError({'agreement_type': err})
 
             # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.current()
-            if result_structure and end and end > result_structure.to_date:
+            humanitarian_response_plan = ResponsePlan.current()
+            if humanitarian_response_plan and end and end > humanitarian_response_plan.to_date:
                 raise ValidationError(
                     {'end': u'This agreement cannot last longer than the current {} which ends on {}'.format(
-                        result_structure.name, result_structure.to_date
+                        humanitarian_response_plan.name, humanitarian_response_plan.to_date
                     )}
                 )
 
             # set end date to result structure end date
             if end is None:
-                self.cleaned_data[u'end'] = ResultStructure.current().to_date
+                self.cleaned_data[u'end'] = ResponsePlan.current().to_date
 
             #  set start date to one of the signed dates
             if start is None:
@@ -497,7 +497,7 @@ class PartnershipForm(UserGroupForm):
 
         data.fillna('', inplace=True)
         current_output = None
-        result_structure = self.obj.result_structure or ResultStructure.current()
+        humanitarian_response_plan = self.obj.humanitarian_response_plan or ResponsePlan.current()
         imported = found = not_found = row_num = 0
         # TODO: make sure to check all the expected columns are in
 
@@ -532,7 +532,7 @@ class PartnershipForm(UserGroupForm):
                     # we are dealing with a result statement
                     # now we try to look up the result based on the statement
                     result, created = Result.objects.get_or_create(
-                        result_structure=result_structure,
+                        humanitarian_response_plan=humanitarian_response_plan,
                         result_type=result_type,
                         name=statement,
                         code=label,
@@ -610,7 +610,7 @@ class PartnershipForm(UserGroupForm):
         cleaned_data = super(PartnershipForm, self).clean()
 
         partnership_type = cleaned_data[u'partnership_type']
-        result_structure = cleaned_data.get(u'result_structure')
+        humanitarian_response_plan = cleaned_data.get(u'humanitarian_response_plan')
         agreement = cleaned_data[u'agreement']
         unicef_manager = cleaned_data[u'unicef_manager']
         signed_by_unicef_date = cleaned_data[u'signed_by_unicef_date']
@@ -725,7 +725,7 @@ class PartnershipForm(UserGroupForm):
                 raise ValidationError(
                     u'After the intervention is signed, the workplan cannot be changed'
                 )
-            if result_structure is None:
+            if humanitarian_response_plan is None:
                 raise ValidationError(
                     u'Please select a result structure from the man info tab to import results against'
                 )

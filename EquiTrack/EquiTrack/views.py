@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.contrib.admin.models import LogEntry
 
 from partners.models import PCA, PartnerOrganization, GwPCALocation
-from reports.models import Sector, ResultStructure, Indicator
+from reports.models import Sector, ResponsePlan, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
 from trips.models import Trip, ActionPoint
@@ -27,14 +27,14 @@ class DashboardView(TemplateView):
         sectors = {}
         now = datetime.datetime.now()
         structure_id = self.request.GET.get('structure')
-        if structure_id is None and ResultStructure.objects.count():
-            structure_id = ResultStructure.objects.filter(
+        if structure_id is None and ResponsePlan.objects.count():
+            structure_id = ResponsePlan.objects.filter(
                 from_date__lte=now,
                 to_date__gte=now
             ).values_list('id',  flat=True).first()
         try:
-            current_structure = ResultStructure.objects.get(id=structure_id)
-        except ResultStructure.DoesNotExist:
+            current_structure = ResponsePlan.objects.get(id=structure_id)
+        except ResponsePlan.DoesNotExist:
             current_structure = None
         for sector in Sector.objects.all():
             indicators = sector.indicator_set.filter(
@@ -42,7 +42,7 @@ class DashboardView(TemplateView):
             )
             if current_structure:
                 indicators = indicators.filter(
-                    result_structure=current_structure
+                    humanitarian_response_plan=current_structure
                 )
             if not indicators:
                 continue
@@ -50,10 +50,10 @@ class DashboardView(TemplateView):
             sectors[sector.name] = []
             for indicator in indicators:
                 programmed = indicator.programmed(
-                    result_structure=current_structure
+                    humanitarian_response_plan=current_structure
                 )
                 current = indicator.progress(
-                    result_structure=current_structure
+                    humanitarian_response_plan=current_structure
                 )
                 sectors[sector.name].append(
                     {
@@ -66,22 +66,22 @@ class DashboardView(TemplateView):
         return {
             'sectors': sectors,
             'current_structure': current_structure,
-            'structures': ResultStructure.objects.all(),
+            'structures': ResponsePlan.objects.all(),
             'pcas': {
                 'active': PCA.objects.filter(
-                    result_structure=current_structure,
+                    humanitarian_response_plan=current_structure,
                     status=PCA.ACTIVE,
                 ).count(),
                 'implemented': PCA.objects.filter(
-                    result_structure=current_structure,
+                    humanitarian_response_plan=current_structure,
                     status=PCA.IMPLEMENTED,
                 ).count(),
                 'in_process': PCA.objects.filter(
-                    result_structure=current_structure,
+                    humanitarian_response_plan=current_structure,
                     status=PCA.IN_PROCESS,
                 ).count(),
                 'cancelled': PCA.objects.filter(
-                    result_structure=current_structure,
+                    humanitarian_response_plan=current_structure,
                     status=PCA.CANCELLED,
                 ).count(),
             }
@@ -170,7 +170,7 @@ class MapView(TemplateView):
             'gateway_list': GatewayType.objects.all(),
             'governorate_list': Governorate.objects.all(),
             'sectors_list': Sector.objects.all(),
-            'result_structure_list': ResultStructure.objects.all(),
+            'humanitarian_response_plan_list': ResponsePlan.objects.all(),
             'region_list': Region.objects.all(),
             'partner_list': PartnerOrganization.objects.all(),
             'indicator_list': Indicator.objects.all(),

@@ -278,7 +278,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         'start_date',
         'end_date',
         'partner',
-        'result_structure',
+        'humanitarian_response_plan',
         'sector_names',
         'title',
         'total_unicef_cash',
@@ -286,7 +286,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
     list_filter = (
         'partnership_type',
-        'result_structure',
+        'humanitarian_response_plan',
         PCASectorFilter,
         'status',
         'current',
@@ -318,7 +318,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                  'agreement',
                  'partnership_type',
                  'number',
-                 'result_structure',
+                 'humanitarian_response_plan',
                  ('title', 'project_type',),
                  'status',
                  'initiation_date',)
@@ -464,14 +464,14 @@ class GovernmentInterventionAdmin(admin.ModelAdmin):
         (_('Government Intervention Details'), {
             'fields':
                 ('partner',
-                 'result_structure',
+                 'humanitarian_response_plan',
                  'number'),
         }),
     )
     list_display = (
         u'number',
         u'partner',
-        u'result_structure',
+        u'humanitarian_response_plan',
     )
     inlines = [GovernmentInterventionResultAdminInline]
 
@@ -534,7 +534,7 @@ class DocumentInlineAdmin(admin.TabularInline):
         'status',
         'start_date',
         'end_date',
-        'result_structure',
+        'humanitarian_response_plan',
         'sector_names',
         'title',
         'total_budget',

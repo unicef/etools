@@ -13,7 +13,7 @@ from reports.models import (
     Goal,
     Unit,
     Indicator,
-    ResultStructure,
+    ResponsePlan,
     ResultType,
     Result,
     CountryProgramme
@@ -71,7 +71,7 @@ class GoalAdmin(admin.ModelAdmin):
 #     fields = (
 #         'pca_sector',
 #         'pca_status',
-#         'result_structure',
+#         'humanitarian_response_plan',
 #         'amendment_number',
 #         'programmed',
 #         'changeform_link',
@@ -79,7 +79,7 @@ class GoalAdmin(admin.ModelAdmin):
 #     readonly_fields = (
 #         'pca_sector',
 #         'pca_status',
-#         'result_structure',
+#         'humanitarian_response_plan',
 #         'amendment_number',
 #         'programmed',
 #         'changeform_link',
@@ -88,8 +88,8 @@ class GoalAdmin(admin.ModelAdmin):
 #     def has_add_permission(self, request):
 #         return False
 #
-#     def result_structure(self, obj):
-#         return obj.pca_sector.pca.result_structure
+#     def humanitarian_response_plan(self, obj):
+#         return obj.pca_sector.pca.humanitarian_response_plan
 #
 #     def amendment_number(self, obj):
 #         return obj.pca_sector.pca.amendment_number
@@ -112,7 +112,7 @@ class IndicatorAdmin(admin.ModelAdmin):
     )
     list_filter = (
         SectorListFilter,
-        'result__result_structure',
+        'result__humanitarian_response_plan',
         'result__result_type',
         'ram_indicator',
     )
@@ -195,7 +195,7 @@ class ResultAdmin(MPTTModelAdmin):
 
 
 admin.site.register(Result, ResultAdmin)
-admin.site.register(ResultStructure)
+admin.site.register(ResponsePlan)
 admin.site.register(CountryProgramme)
 admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)

@@ -3,7 +3,7 @@ __author__ = 'achamseddine'
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAdminUser
 from .models import (
-    ResultStructure,
+    ResponsePlan,
     ResultType,
     Result,
     Milestone,
@@ -12,7 +12,7 @@ from .models import (
     Unit
 )
 from .serializers import (
-    ResultStructureSerializer,
+    ResponsePlanSerializer,
     ResultTypeSerializer,
     ResultSerializer,
     MilestoneSerializer,
@@ -22,13 +22,13 @@ from .serializers import (
 )
 
 
-class ResultStructureViewSet(mixins.ListModelMixin,
+class ResponsePlanViewSet(mixins.ListModelMixin,
                              viewsets.GenericViewSet):
     """
     Returns a list of all Result Structures
     """
-    queryset = ResultStructure.objects.all()
-    serializer_class = ResultStructureSerializer
+    queryset = ResponsePlan.objects.all()
+    serializer_class = ResponsePlanSerializer
 
 
 class ResultTypeViewSet(mixins.ListModelMixin,

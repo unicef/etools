@@ -17,7 +17,7 @@
       <template>
         <etools-dropdown-filter
             url="/responds_to_get_with_json"
-            filter-id="result_structure"
+            filter-id="humanitarian_response_plan"
             label="Result structures"
             all-label="All result structures">
         </etools-dropdown-filter>
@@ -112,7 +112,7 @@
           server.respond();
 
           expect(element.url).to.be.equal(window.location.protocol + '//' + window.location.host + '/responds_to_get_with_json');
-          expect(element.filterId).to.be.equal('result_structure');
+          expect(element.filterId).to.be.equal('humanitarian_response_plan');
           expect(element.label).to.be.equal('Result structures');
           expect(element.allLabel).to.be.equal('All result structures');
         });

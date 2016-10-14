@@ -35,7 +35,7 @@ from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, Partne
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
 from reports.views import (
-    ResultStructureViewSet,
+    ResponsePlanViewSet,
     ResultTypeViewSet,
     SectorViewSet,
     # GoalViewSet,
@@ -91,7 +91,7 @@ api.register(r'sections', SectionViewSet, base_name='sections')
 api.register(r'funds/donors', DonorViewSet, base_name='donors')
 api.register(r'funds/grants', GrantViewSet, base_name='grants')
 
-api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
+api.register(r'reports/result-structures', ResponsePlanViewSet, base_name='ResponsePlans')
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')

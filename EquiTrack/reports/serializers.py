@@ -6,7 +6,7 @@ from users.serializers import UserProfileSerializer
 from workplan.serializers import ResultWorkplanPropertySerializer
 from workplan.models import ResultWorkplanProperty
 from .models import (
-    ResultStructure,
+    ResponsePlan,
     ResultType,
     Unit,
     Sector,
@@ -100,12 +100,12 @@ class ResultSerializer(serializers.ModelSerializer):
         return result
 
 
-class ResultStructureSerializer(serializers.ModelSerializer):
+class ResponsePlanSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
 
     class Meta:
-        model = ResultStructure
+        model = ResponsePlan
 
 
 class ResultTypeSerializer(serializers.ModelSerializer):

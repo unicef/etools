@@ -143,7 +143,7 @@
                 {% for ind in indicators %}
                 <div class="row panel-body" style="margin-top: 10px; background-color: #ffffff;">
                     <a href="{% url 'admin:reports_indicator_change' ind.indicator.id %}">
-                        <span class="sublabel">{{ ind.indicator.name }} ({{ ind.indicator.result_structure }})</span>
+                        <span class="sublabel">{{ ind.indicator.name }} ({{ ind.indicator.humanitarian_response_plan }})</span>
                     </a>
                     {% with actual=ind.indicator.current %}
                     <div>

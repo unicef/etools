@@ -6,7 +6,7 @@ from rest_framework.fields import DateTimeField
 
 from EquiTrack.factories import UserFactory, CommentFactory, WorkplanFactory, \
     ResultWorkplanPropertyFactory, WorkplanProjectFactory, LabelFactory, ResultFactory, \
-    ResultStructureFactory
+    ResponsePlanFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType
 from workplan.tasks import notify_comment_tagged_users
@@ -24,7 +24,7 @@ class TestWorkplanViews(APITenantTestCase):
         self.labels = [LabelFactory() for x in xrange(3)]
 
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
-        self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.result = ResultFactory(result_type=self.result_type, humanitarian_response_plan=ResponsePlanFactory())
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
                                             workplan=self.workplan,

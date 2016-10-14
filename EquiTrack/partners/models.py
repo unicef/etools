@@ -29,7 +29,7 @@ from EquiTrack.mixins import AdminURLMixin
 
 from funds.models import Grant
 from reports.models import (
-    ResultStructure,
+    ResponsePlan,
     Indicator,
     Sector,
     Goal,
@@ -336,7 +336,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def cp_cycle_trip_links(self):
         from trips.models import Trip
-        crs = ResultStructure.current()
+        crs = ResponsePlan.current()
         if self.partner_type == u'Government':
             return self.linkedgovernmentpartner_set.filter(
                         trip__from_date__lt=crs.to_date,
@@ -824,8 +824,8 @@ class PCA(AdminURLMixin, models.Model):
         max_length=255,
         verbose_name=u'Document type'
     )
-    result_structure = models.ForeignKey(
-        ResultStructure,
+    humanitarian_response_plan = models.ForeignKey(
+        ResponsePlan,
         blank=True, null=True, on_delete=models.DO_NOTHING,
         help_text=u'Which result structure does this partnership report under?'
     )
@@ -1104,8 +1104,8 @@ class PCA(AdminURLMixin, models.Model):
                     and self.agreement.signed_by_partner_date and self.start_date is None:
                 self.start_date = self.agreement.signed_by_partner_date
 
-            if self.end_date is None and self.result_structure:
-                self.end_date = self.result_structure.to_date
+            if self.end_date is None and self.humanitarian_response_plan:
+                self.end_date = self.humanitarian_response_plan.to_date
 
         super(PCA, self).save(**kwargs)
 
@@ -1153,8 +1153,8 @@ class GovernmentIntervention(models.Model):
         PartnerOrganization,
         related_name='work_plans',
     )
-    result_structure = models.ForeignKey(
-        ResultStructure, on_delete=models.DO_NOTHING
+    humanitarian_response_plan = models.ForeignKey(
+        ResponsePlan, on_delete=models.DO_NOTHING
     )
     number = models.CharField(
         max_length=45L,
@@ -1176,13 +1176,13 @@ class GovernmentIntervention(models.Model):
         else:
             objects = list(GovernmentIntervention.objects.filter(
                 partner=self.partner,
-                result_structure=self.result_structure,
+                humanitarian_response_plan=self.humanitarian_response_plan,
             ).order_by('created_at').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
             number = u'{code}/{partner}/{year}{seq}'.format(
                 code=connection.tenant.country_short_code or '',
                 partner=self.partner.short_name,
-                year=self.result_structure.to_date.year,
+                year=self.humanitarian_response_plan.to_date.year,
                 seq=sequence
             )
         return number
@@ -1261,7 +1261,7 @@ class GovernmentInterventionResult(models.Model):
 
             except Result.DoesNotExist:
                 referenced_activity = Result.objects.create(
-                    result_structure=self.intervention.result_structure,
+                    humanitarian_response_plan=self.intervention.humanitarian_response_plan,
                     result_type=ResultType.objects.get(name='Activity'),
                     parent=self.result,
                     code=activity[0],
@@ -1620,7 +1620,7 @@ class ResultChain(models.Model):
 
     def __unicode__(self):
         return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name if self.result.result_structure else '',
+            self.result.humanitarian_response_plan.name if self.result.humanitarian_response_plan else '',
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )

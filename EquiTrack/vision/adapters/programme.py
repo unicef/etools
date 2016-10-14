@@ -1,7 +1,7 @@
 import json
 import datetime
 
-from reports.models import ResultStructure, ResultType, Result, Indicator, CountryProgramme
+from reports.models import ResponsePlan, ResultType, Result, Indicator, CountryProgramme
 from vision.utils import wcf_json_date_as_datetime
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
