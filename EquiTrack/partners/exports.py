@@ -235,7 +235,7 @@ class PartnerExport(resources.ModelResource):
                   'agreement_count', 'intervention_count', 'active_staff_members')
 
     def dehydrate_agreement_count(self, partner_organization):
-        return partner_organization.agreements.count()
+        return partner_organization.agreement_set.count()
 
     def dehydrate_intervention_count(self, partner_organization):
         if partner_organization.partner_type == PartnerType.GOVERNMENT:
@@ -301,7 +301,7 @@ class InterventionExport(resources.ModelResource):
         return ', '.join(location_names)
 
     def dehydrate_sectors(self, intervention):
-        sector_names = [s.sector.name for s in intervention.sectors.all()]
+        sector_names = [s.sector.name for s in intervention.sector_set.all()]
         return ', '.join(sector_names)
 
     def dehydrate_partner_manager_name(self, intervention):

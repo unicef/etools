@@ -49,8 +49,8 @@ class TestPartnershipViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/partners/'+str(self.intervention.partner.id)+'/agreements/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # the length of this list should be 1
-        self.assertEquals(len(response.data), 1)
+        # the length of this list should be 0
+        self.assertEquals(len(response.data), 0)
 
     def test_api_interventions_list(self):
 

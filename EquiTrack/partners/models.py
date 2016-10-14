@@ -639,7 +639,7 @@ class Agreement(TimeStampedModel):
         (AWP, u"Work Plan"),
     )
 
-    partner = models.ForeignKey(PartnerOrganization, related_name='agreements')
+    partner = models.ForeignKey(PartnerOrganization)
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES
@@ -1503,7 +1503,7 @@ class PCASector(TimeStampedModel):
     Links a sector to a partnership
     Many-to-many cardinality
     """
-    pca = models.ForeignKey(PCA, related_name='sectors')
+    pca = models.ForeignKey(PCA)
     sector = models.ForeignKey(Sector)
     amendment = models.ForeignKey(
         AmendmentLog,
