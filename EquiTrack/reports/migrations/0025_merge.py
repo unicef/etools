@@ -2,15 +2,14 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('reports', '0023_auto_20160909_2203'),
+        ('reports', '0024_auto_20160915_2222'),
+        ('reports', '0024_auto_20161005_2137'),
     ]
 
     operations = [
-
     ]
