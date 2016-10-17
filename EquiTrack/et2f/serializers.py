@@ -61,7 +61,7 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
 
 
 class TravelListSerializer(TravelDetailsSerializer):
-    traveler = serializers.CharField(source='traveller.get_full_name')
+    traveller = serializers.CharField(source='traveller.get_full_name')
 
     use_verbose_fields = False
 
