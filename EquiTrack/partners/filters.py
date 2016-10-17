@@ -1,3 +1,5 @@
+from rest_framework.filters import BaseFilterBackend
+
 __author__ = 'jcranwellward'
 
 from django.contrib import admin
@@ -188,3 +190,9 @@ class PCAOutputFilter(admin.SimpleListFilter):
                 pca_ids.append(ip.pca.id)
             return queryset.filter(id__in=pca_ids)
         return queryset
+
+
+class PartnerScopeFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        partner_pk = request.parser_context['kwargs']['partner_pk']
+        return queryset.filter(partner__pk=partner_pk)
