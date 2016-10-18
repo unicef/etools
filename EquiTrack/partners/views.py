@@ -303,7 +303,6 @@ class GovernmentInterventionsViewSet(viewsets.GenericViewSet):
     filter_backends = (PartnerScopeFilter, GovernmentInterventionExportFilter,)
 
     def get_queryset(self):
-
         queryset = super(GovernmentInterventionsViewSet, self).get_queryset()
         if not self.request.user.is_staff:
             # This must be a partner
