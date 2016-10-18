@@ -38,7 +38,8 @@ from .serializers import (
     PartnerStaffMemberSerializer,
     AgreementSerializer,
     PartnershipBudgetSerializer,
-    PCAFileSerializer
+    PCAFileSerializer,
+    GovernmentInterventionSerializer,
 )
 from .permissions import PartnerPermission, ResultChainPermission
 from .filters import PartnerScopeFilter
@@ -297,27 +298,13 @@ class AgreementViewSet(
         return response
 
 
-class GovernmentInterventionsViewSet(viewsets.GenericViewSet):
+class GovernmentInterventionsViewSet(viewsets.GenericViewSet,
+                                    mixins.RetrieveModelMixin,
+                                    mixins.ListModelMixin,):
     queryset = GovernmentIntervention.objects.all()
+    serializer_class = GovernmentInterventionSerializer
     permission_classes = (PartnerPermission,)
     filter_backends = (PartnerScopeFilter, GovernmentInterventionExportFilter,)
-
-    def get_queryset(self):
-        queryset = super(GovernmentInterventionsViewSet, self).get_queryset()
-        if not self.request.user.is_staff:
-            # This must be a partner
-            try:
-                # TODO: Promote this to a permissions class
-                current_member = PartnerStaffMember.objects.get(
-                    id=self.request.user.profile.partner_staff_member
-                )
-            except PartnerStaffMember.DoesNotExist:
-                # This is an authenticated user with no access to interventions
-                return queryset.none()
-            else:
-                # Return all interventions this partner has
-                return queryset.filter(partner=current_member.partner)
-        return queryset
 
     @list_route(methods=['get'])
     def export(self, request, partner_pk):

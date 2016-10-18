@@ -26,7 +26,8 @@ from .models import (
     DistributionPlan,
     RISK_RATINGS,
     CSO_TYPES,
-    PartnerType
+    PartnerType,
+    GovernmentIntervention,
 )
 
 class PCASectorGoalSerializer(serializers.ModelSerializer):
@@ -230,6 +231,12 @@ class InterventionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
+
+
+class GovernmentInterventionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GovernmentIntervention
 
 
 class GWLocationSerializer(serializers.ModelSerializer):
