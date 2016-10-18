@@ -41,6 +41,7 @@ from .serializers import (
     PCAFileSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
+from .filters import PartnerScopeFilter
 
 from .models import (
     FileType,

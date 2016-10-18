@@ -63,6 +63,7 @@ from partners.urls import (
     partners_api,
     staffm_api,
     agreement_api,
+    simple_agreements_api,
 )
 
 from workplan.views import (
@@ -132,6 +133,7 @@ urlpatterns = patterns(
     url(r'^api/', include(partners_api.urls)),
     url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(agreement_api.urls)),
+    url(r'^api/', include(simple_agreements_api.urls)),
     url(r'^api/', include(interventions_api.urls)),
     url(r'^api/', include(government_interventions_api.urls)),
     url(r'^api/', include(simple_government_interventions_api.urls)),

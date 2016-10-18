@@ -33,6 +33,9 @@ partners_api.register(r'partners', PartnerOrganizationsViewSet, base_name='partn
 staffm_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
 staffm_api.register(r'staff-members', PartnerStaffMembersViewSet, base_name='partnerstaffmembers')
 
+simple_agreements_api = routers.SimpleRouter()
+simple_agreements_api.register(r'agreements', AgreementViewSet, base_name='agreements')
+
 agreement_api = routers.NestedSimpleRouter(partners_api, r'partners', lookup='partner')
 agreement_api.register(r'agreements', AgreementViewSet, base_name='agreements')
 
