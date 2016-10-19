@@ -287,7 +287,7 @@ class AgreementViewSet(
         )
 
     @list_route(methods=['get'])
-    def export(self, request, partner_pk):
+    def export(self, request, partner_pk=None):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         dataset = AgreementExport().export(queryset)
@@ -307,7 +307,7 @@ class GovernmentInterventionsViewSet(viewsets.GenericViewSet,
     filter_backends = (PartnerScopeFilter, GovernmentInterventionExportFilter,)
 
     @list_route(methods=['get'])
-    def export(self, request, partner_pk):
+    def export(self, request, partner_pk=None):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         dataset = GovernmentExport().export(queryset)
@@ -394,7 +394,7 @@ class InterventionsViewSet(
         )
 
     @list_route(methods=['get'])
-    def export(self, request, partner_pk):
+    def export(self, request, partner_pk=None):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(queryset)
         dataset = InterventionExport().export(queryset)
