@@ -233,6 +233,7 @@ class PartnerExport(resources.ModelResource):
                   'alternate_name', 'partner_type', 'cso_type', 'shared_partner', 'address', 'email', 'phone_number',
                   'risk_rating', 'type_of_assessment', 'last_assessment_date', 'total_ct_cp', 'total_ct_cy',
                   'agreement_count', 'intervention_count', 'active_staff_members')
+        export_order = fields
 
     def dehydrate_agreement_count(self, partner_organization):
         return partner_organization.agreement_set.count()
@@ -259,6 +260,7 @@ class AgreementExport(resources.ModelResource):
         fields = ('reference_number', 'partner__vendor_number', 'partner__name', 'partner__short_name', 'agreement',
                   'start_date', 'end_date', 'signed_by_partner', 'signed_by_partner_date',
                   'signed_by_unicef', 'signed_by_unicef_date', 'authorized_officers')
+        export_order = fields
 
     def dehydrate_signed_by_partner(self, agreement):
         if agreement.partner_manager:
@@ -286,23 +288,22 @@ class InterventionExport(resources.ModelResource):
         model = PCA
         # TODO add missin fields:
         #   UNICEF Office (new property)
-        #   Document Title
         #   Completed Visits (# of completed trips)
         #   FR Numbers (comma separated)
         #   Number of Active Action Points
-        fields = ('reference_number', 'status', 'partner__name', 'partnership_type', 'sectors', 'start_date',
+        fields = ('title', 'reference_number', 'status', 'partner__name', 'partnership_type', 'sectors', 'start_date',
                   'end_date', 'result_structure__name', 'locations', 'initiation_date', 'submission_date',
                   'review_date', 'days_from_submission_to_signed', 'days_from_review_to_signed',
                   'signed_by_partner_date', 'partner_manager_name', 'signed_by_unicef_date', 'unicef_manager_name',
                   'total_unicef_cash', 'supplies', 'total_budget', 'planned_visits')
+        export_order = fields
 
     def dehydrate_locations(self, intervention):
         location_names = [l.location.name for l in intervention.locations.all()]
         return ', '.join(location_names)
 
     def dehydrate_sectors(self, intervention):
-        sector_names = [s.sector.name for s in intervention.sector_set.all()]
-        return ', '.join(sector_names)
+        return intervention.sector_names
 
     def dehydrate_partner_manager_name(self, intervention):
         if intervention.partner_manager:
@@ -327,6 +328,7 @@ class GovernmentExport(resources.ModelResource):
         model = GovernmentIntervention
         fields = ('number', 'partner__name', 'result_structure__name', 'sectors', 'cash_transfer',
                   'year')
+        export_order = fields
 
     def dehydrate_cash_transfer(self, government):
         return sum([r.planned_amount for r in government.results.all()])

@@ -5,8 +5,6 @@ from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
 
-from rest_framework.views import APIView
-
 from partners.models import PCA, PartnerOrganization, GwPCALocation
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
@@ -230,10 +228,3 @@ class HACTDashboardView(TemplateView):
 
 class OutdatedBrowserView(TemplateView):
     template_name = 'outdated_browser.html'
-
-
-class ModelExportView(APIView):
-    exporter_class = None
-
-    def get(self, request):
-        pass
