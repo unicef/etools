@@ -293,8 +293,8 @@ class AgreementViewSet(
         dataset = AgreementExport().export(queryset)
 
         response = HttpResponse(content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportAgreements.xlsx"'
-        response.write(dataset.xlsx)
+        response['Content-Disposition'] = 'attachment; filename="ModelExportAgreements.xls"'
+        response.write(dataset.xls)
         return response
 
 
@@ -313,8 +313,8 @@ class GovernmentInterventionsViewSet(viewsets.GenericViewSet,
         dataset = GovernmentExport().export(queryset)
 
         response = HttpResponse(content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportGovernmentInterventions.xlsx"'
-        response.write(dataset.xlsx)
+        response['Content-Disposition'] = 'attachment; filename="ModelExportGovernmentInterventions.xls"'
+        response.write(dataset.xls)
         return response
 
 class InterventionsViewSet(
@@ -400,8 +400,8 @@ class InterventionsViewSet(
         dataset = InterventionExport().export(queryset)
 
         response = HttpResponse(content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportInterventions.xlsx"'
-        response.write(dataset.xlsx)
+        response['Content-Disposition'] = 'attachment; filename="ModelExportInterventions.xls"'
+        response.write(dataset.xls)
         return response
 
 
@@ -860,8 +860,8 @@ class PartnerOrganizationsViewSet(
         dataset = PartnerExport().export(queryset)
 
         response = HttpResponse(content_type='application/vnd.ms-excel')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportPartners.xlsx"'
-        response.write(dataset.xlsx)
+        response['Content-Disposition'] = 'attachment; filename="ModelExportPartners.xls"'
+        response.write(dataset.xls)
         return response
 
 
