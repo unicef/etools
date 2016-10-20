@@ -4,7 +4,7 @@ import xlrd
 from datetime import datetime
 
 from rest_framework import status
-from tablib.core import Databook
+from tablib.core import Dataset
 
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, PartnershipFactory, \
     GovernmentInterventionFactory
@@ -29,8 +29,7 @@ class TestModelExport(APITenantTestCase):
                                         user=self.unicef_staff)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        databook = Databook().load('xlsx', response.content)
-        dataset = databook.sheets()[0]
+        dataset = Dataset().load(response.content, 'csv')
 
         self.assertEqual(dataset.height, 2)
         self.assertEqual(dataset._get_headers(),
@@ -56,26 +55,26 @@ class TestModelExport(APITenantTestCase):
                           'intervention_count',
                           'active_staff_members'])
         self.assertEqual(dataset[0],
-                         (None,
-                          0,
-                          0,
+                         ('',
+                          '0',
+                          '0',
                           self.partner.name,
-                          None,
-                          None,
-                          None,
-                          None,
-                          None,
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
                           'No',
-                          None,
-                          None,
-                          None,
-                          'None',
-                          None,
-                          None,
-                          None,
-                          None,
-                          1,
-                          1,
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
+                          '1',
+                          '1',
                           'Mace Windu'))
 
     def test_agreement_export_api(self):
@@ -84,8 +83,7 @@ class TestModelExport(APITenantTestCase):
                                         user=self.unicef_staff)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        databook = Databook().load('xlsx', response.content)
-        dataset = databook.sheets()[0]
+        dataset = Dataset().load(response.content, 'csv')
 
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(),
@@ -102,16 +100,16 @@ class TestModelExport(APITenantTestCase):
                           'authorized_officers'])
         self.assertEqual(dataset[0],
                          (self.agreement.reference_number,
-                          None,
+                          '',
                           self.partner.name,
-                          None,
-                          'None',
-                          'None',
-                          'None',
-                          None,
-                          None,
-                          None,
-                          None))
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
+                          ''))
 
     def test_intervention_export_api(self):
         response = self.forced_auth_req('get',
@@ -119,8 +117,7 @@ class TestModelExport(APITenantTestCase):
                                         user=self.unicef_staff)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-        databook = Databook().load('xlsx', response.content)
-        dataset = databook.sheets()[0]
+        dataset = Dataset().load(response.content, 'csv')
 
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(),
@@ -153,24 +150,24 @@ class TestModelExport(APITenantTestCase):
                           'in_process',
                           self.partner.name,
                           'PD',
-                          None,
-                          None,
-                          None,
-                          None,
-                          None,
+                          '',
+                          '',
+                          '',
+                          '',
+                          '',
                           self.intervention.initiation_date.strftime('%Y-%m-%d'),
-                          None,
-                          None,
+                          '',
+                          '',
                           'Not Submitted',
                           'Not Reviewed',
-                          None,
-                          None,
-                          None,
-                          None,
-                          0.0,
-                          None,
-                          0.0,
-                          0.0))
+                          '',
+                          '',
+                          '',
+                          '',
+                          '0',
+                          '',
+                          '0',
+                          '0'))
 
     def test_government_export_api(self):
         response = self.forced_auth_req('get',
@@ -178,8 +175,7 @@ class TestModelExport(APITenantTestCase):
                                         user=self.unicef_staff)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response.content)
 
-        databook = Databook().load('xlsx', response.content)
-        dataset = databook.sheets()[0]
+        dataset = Dataset().load(response.content, 'csv')
 
         self.assertEqual(dataset.height, 1)
         self.assertEqual(dataset._get_headers(),
@@ -193,6 +189,6 @@ class TestModelExport(APITenantTestCase):
                          ('RefNumber',
                           self.partner.name,
                           self.government_intervention.result_structure.name,
-                          None,
-                          0.0,
-                          datetime.now().year))
+                          '',
+                          '0',
+                          datetime.now().strftime('%Y')))
