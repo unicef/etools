@@ -4,6 +4,7 @@ import xlrd
 from datetime import datetime
 
 from rest_framework import status
+from tablib.core import Databook
 
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, PartnershipFactory, \
     GovernmentInterventionFactory
@@ -27,10 +28,12 @@ class TestModelExport(APITenantTestCase):
                                         '/api/partners/export/',
                                         user=self.unicef_staff)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        workbook = xlrd.open_workbook(file_contents=response.content)
-        sheet = workbook.sheet_by_index(0)
-        self.assertEqual(sheet.nrows, 3)
-        self.assertEqual([c.value for c in sheet.row(0)],
+
+        databook = Databook().load('xlsx', response.content)
+        dataset = databook.sheets()[0]
+
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset._get_headers(),
                          ['vendor_number',
                           'vision_synced',
                           'deleted_flag',
@@ -52,38 +55,40 @@ class TestModelExport(APITenantTestCase):
                           'agreement_count',
                           'intervention_count',
                           'active_staff_members'])
-        self.assertEqual([c.value for c in sheet.row(1)],
-                         ['',
-                          '0',
-                          '0',
+        self.assertEqual(dataset[0],
+                         (None,
+                          0,
+                          0,
                           self.partner.name,
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
+                          None,
+                          None,
+                          None,
+                          None,
+                          None,
                           'No',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
+                          None,
+                          None,
+                          None,
+                          'None',
+                          None,
+                          None,
+                          None,
+                          None,
                           1,
                           1,
-                          'Mace Windu'])
+                          'Mace Windu'))
 
     def test_agreement_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/agreements/export/'.format(self.partner.id),
                                         user=self.unicef_staff)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        workbook = xlrd.open_workbook(file_contents=response.content)
-        sheet = workbook.sheet_by_index(0)
-        self.assertEqual(sheet.nrows, 2)
-        self.assertEqual([c.value for c in sheet.row(0)],
+
+        databook = Databook().load('xlsx', response.content)
+        dataset = databook.sheets()[0]
+
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(),
                          ['reference_number',
                           'partner__vendor_number',
                           'partner__name',
@@ -95,28 +100,30 @@ class TestModelExport(APITenantTestCase):
                           'signed_by_unicef',
                           'signed_by_unicef_date',
                           'authorized_officers'])
-        self.assertEqual([c.value for c in sheet.row(1)],
-                         [self.agreement.reference_number,
-                          '',
+        self.assertEqual(dataset[0],
+                         (self.agreement.reference_number,
+                          None,
                           self.partner.name,
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          ''])
+                          None,
+                          'None',
+                          'None',
+                          'None',
+                          None,
+                          None,
+                          None,
+                          None))
 
     def test_intervention_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/interventions/export/'.format(self.partner.id),
                                         user=self.unicef_staff)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        workbook = xlrd.open_workbook(file_contents=response.content)
-        sheet = workbook.sheet_by_index(0)
-        self.assertEqual(sheet.nrows, 2)
-        self.assertEqual([c.value for c in sheet.row(0)],
+
+        databook = Databook().load('xlsx', response.content)
+        dataset = databook.sheets()[0]
+
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(),
                          ['title',
                           'reference_number',
                           'status',
@@ -140,50 +147,52 @@ class TestModelExport(APITenantTestCase):
                           'supplies',
                           'total_budget',
                           'planned_visits'])
-        self.assertEqual([c.value for c in sheet.row(1)],
-                         ['To save the galaxy from the Empire',
+        self.assertEqual(dataset[0],
+                         ('To save the galaxy from the Empire',
                           self.intervention.reference_number,
                           'in_process',
                           self.partner.name,
                           'PD',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
+                          None,
+                          None,
+                          None,
+                          None,
+                          None,
                           self.intervention.initiation_date.strftime('%Y-%m-%d'),
-                          '',
-                          '',
+                          None,
+                          None,
                           'Not Submitted',
                           'Not Reviewed',
-                          '',
-                          '',
-                          '',
-                          '',
+                          None,
+                          None,
+                          None,
+                          None,
                           0.0,
-                          '',
+                          None,
                           0.0,
-                          0.0])
+                          0.0))
 
     def test_government_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/government_interventions/export/'.format(self.partner.id),
                                         user=self.unicef_staff)
         self.assertEquals(response.status_code, status.HTTP_200_OK, response.content)
-        workbook = xlrd.open_workbook(file_contents=response.content)
-        sheet = workbook.sheet_by_index(0)
-        self.assertEqual(sheet.nrows, 2)
-        self.assertEqual([c.value for c in sheet.row(0)],
+
+        databook = Databook().load('xlsx', response.content)
+        dataset = databook.sheets()[0]
+
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(),
                          ['number',
                           'partner__name',
                           'result_structure__name',
                           'sectors',
                           'cash_transfer',
                           'year'])
-        self.assertEqual([c.value for c in sheet.row(1)],
-                         ['RefNumber',
+        self.assertEqual(dataset[0],
+                         ('RefNumber',
                           self.partner.name,
                           self.government_intervention.result_structure.name,
-                          '',
+                          None,
                           0.0,
-                          datetime.now().year])
+                          datetime.now().year))
