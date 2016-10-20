@@ -37,7 +37,7 @@ from .serializers import (
     PCAFileSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
-from rest_framework.parsers import MultiPartParser, FormParser
+from .filters import PartnerScopeFilter
 
 from .models import (
     FileType,
@@ -236,6 +236,7 @@ class AgreementViewSet(
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -295,6 +296,7 @@ class InterventionsViewSet(
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter,)
 
     def create(self, request, *args, **kwargs):
         """
