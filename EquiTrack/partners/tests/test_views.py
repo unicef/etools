@@ -170,3 +170,31 @@ class TestPartnershipViews(APITenantTestCase):
                                         ]), user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+
+class TestPartnerOrganizationViews(APITenantTestCase):
+
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.partner = PartnerFactory()
+
+    def test_api_partners_list(self):
+        response = self.forced_auth_req('get', '/api/partners/', user=self.unicef_staff)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+
+    def test_api_partners_create(self):
+        data = {
+            "name": "PO 1",
+            "partner_type": "Government",
+            "vendor_number": "AAA",
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/partners/',
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
