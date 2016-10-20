@@ -323,7 +323,7 @@ class InterventionExport(resources.ModelResource):
         return intervention.reference_number
 
     def dehydrate_locations(self, intervention):
-        location_names = [l.location.name for l in intervention.locations.all()]
+        location_names = [l.location.name for l in intervention.locations.all() if l.location]
         return ', '.join(location_names)
 
     def dehydrate_sectors(self, intervention):
