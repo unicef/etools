@@ -11,6 +11,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunSQL("CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA pg_catalog"),
-        migrations.RunSQL("CREATE INDEX IF NOT EXISTS index_locations_on_name_trigram on locations_location USING gin (name gin_trgm_ops)"),
+        migrations.RunSQL(
+            sql="CREATE EXTENSION IF NOT EXISTS pg_trgm WITH SCHEMA pg_catalog",
+            reverse_sql="DROP EXTENSION IF EXISTS pg_trgm CASCADE",
+        ),
+        migrations.RunSQL(
+            sql="CREATE INDEX IF NOT EXISTS index_locations_on_name_trigram on locations_location USING gin (name gin_trgm_ops)",
+            reverse_sql="DROP INDEX IF EXISTS index_locations_on_name_trigram"
+        ),
     ]
