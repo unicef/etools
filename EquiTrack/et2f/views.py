@@ -1,6 +1,8 @@
+from __future__ import unicode_literals
+
 from collections import OrderedDict
 
-from rest_framework import viewsets, mixins
+from rest_framework import viewsets, mixins, generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
@@ -22,6 +24,7 @@ class PageNumberPagination(_PageNumberPagination):
 
 
 class TravelViewSet(mixins.ListModelMixin,
+                    mixins.RetrieveModelMixin,
                     viewsets.GenericViewSet):
     queryset = Travel.objects.all()
     serializer_class = TravelListSerializer
@@ -38,9 +41,12 @@ class TravelViewSet(mixins.ListModelMixin,
         sort_by = '{}{}'.format(prefix, parameter_serializer.data['sort_by'])
         return queryset.order_by(sort_by)
 
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = TravelDetailsSerializer(instance)
+        return Response(serializer.data, status.HTTP_200_OK)
 
-class TravelDetailsViewSet(mixins.RetrieveModelMixin,
-                           mixins.UpdateModelMixin,
-                           viewsets.GenericViewSet):
+
+class TravelDetailsView(generics.GenericAPIView):
     queryset = Travel.objects.all()
     serializer_class = TravelDetailsSerializer

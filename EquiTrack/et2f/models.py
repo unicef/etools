@@ -29,6 +29,22 @@ class Travel(models.Model):
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, null=True, blank=True)
 
+    @property
+    def attachments(self):
+        return 0
+
+    @property
+    def is_driver(self):
+        return False
+
+    @property
+    def ta_reference_number(self):
+        return ''
+
+    @property
+    def approval_date(self):
+        return None
+
 
 class TravelActivity(models.Model):
     travel = models.ForeignKey('Travel', related_name='activities')

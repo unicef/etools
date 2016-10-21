@@ -6,40 +6,72 @@ from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, C
 
 
 class VerboseFieldRepresentationMixin(serializers.Serializer):
-    use_verbose_fields = True
+    SECTION_PREFIX = 'SECTION'
 
     @property
-    def _verbose_fields(self):
-        return self.use_verbose_fields
+    def _use_verbose_fields(self):
+        parent = self
+        while True:
+            if parent.parent is None:
+                break
+            parent = parent.parent
+
+        return getattr(parent.Meta, 'use_verbose_fields', True)
+
+    def _get_self_field_name(self):
+        if self.parent is None:
+            return None
+
+        if not self.field_name:
+            return self.parent.field_name
+        return self.field_name
+
+    def _get_field_permission_name(self, field):
+        field_name = field.field_name
+
+        if isinstance(field, serializers.BaseSerializer):
+            return '{}:{}'.format(self.SECTION_PREFIX, field_name)
+
+        self_field_name = self._get_self_field_name()
+        if self_field_name:
+            return '{}:{}'.format(self_field_name, field.field_name)
+        return field.field_name
 
     def to_representation(self, instance):
-        representation = super(VerboseFieldRepresentationMixin, self).to_representation(instance)
-        return representation
+        ret = super(VerboseFieldRepresentationMixin, self).to_representation(instance)
+        if not self._use_verbose_fields:
+            return ret
+
+        for field_name, value in ret.items():
+            ret[field_name] = {'value': value,
+                               'read_only': False,
+                               'permission': self._get_field_permission_name(self.fields[field_name])}
+        return ret
 
 
-class IteneraryItemSerializer(serializers.ModelSerializer):
+class IteneraryItemSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     class Meta:
         model = IteneraryItem
 
 
-class ExpenseSerializer(serializers.ModelSerializer):
+class ExpenseSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     class Meta:
         model = Expense
 
 
-class DeductionSerializer(serializers.ModelSerializer):
+class DeductionSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     day_of_the_week = serializers.CharField(read_only=True)
 
     class Meta:
         model = Deduction
 
 
-class CostAssignmentSerializer(serializers.ModelSerializer):
+class CostAssignmentSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     class Meta:
         model = CostAssignment
 
 
-class ClearancesSerializer(serializers.ModelSerializer):
+class ClearancesSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     class Meta:
         model = Clearances
 
@@ -62,11 +94,15 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
 
 class TravelListSerializer(TravelDetailsSerializer):
     traveller = serializers.CharField(source='traveller.get_full_name')
-
-    use_verbose_fields = False
+    # attachment_count = serializers.IntegerField(source='attachments.count')
+    attachment_count = serializers.IntegerField(source='attachments')
 
     class Meta(TravelDetailsSerializer.Meta):
-        fields = ('id', 'reference_number', 'traveller', 'purpose', 'start_date', 'end_date', 'status')
+        fields = ('id', 'reference_number', 'traveller', 'purpose', 'start_date', 'end_date', 'status', 'created',
+                  'section', 'office', 'supervisor', 'ta_required', 'ta_reference_number', 'approval_date', 'is_driver',
+                  )
+        use_verbose_fields = False
+
 
 
 class TravelListParameterSerializer(serializers.Serializer):
