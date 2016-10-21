@@ -8,15 +8,10 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('partners', '0073_governmentinterventionresult_planned_visits'),
+        ('reports', '0027_auto_20161014_2132'),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='governmentintervention',
-            name='result_structure',
-        ),
-        migrations.RemoveField(
-            model_name='pca',
-            name='result_structure',
-        ),
+        migrations.RenameField('GovernmentIntervention', 'result_structure', 'humanitarian_response_plan'),
+        migrations.RenameField('PCA', 'result_structure', 'humanitarian_response_plan')
     ]
