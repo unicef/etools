@@ -3,8 +3,8 @@ __author__ = 'jcranwellward'
 from rest_framework import serializers
 
 from users.serializers import UserProfileSerializer
-from locations.models import Location
-from users.models import Section
+from workplan.serializers import ResultWorkplanPropertySerializer
+from workplan.models import ResultWorkplanProperty
 from .models import (
     ResultStructure,
     ResultType,
@@ -86,20 +86,18 @@ class MilestoneSerializer(serializers.ModelSerializer):
 class ResultSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-    sections = serializers.PrimaryKeyRelatedField(
-                many=True,
-                read_only=False,
-                queryset=Section.objects.all()
-            )
-    geotag = serializers.PrimaryKeyRelatedField(
-                many=True,
-                read_only=False,
-                queryset=Location.objects.all()
-            )
     milestones = MilestoneSerializer(many=True)
+    workplan_properties = ResultWorkplanPropertySerializer(many=True)
 
     class Meta:
         model = Result
+
+    def create(self, validated_data):
+        workplan_properties = validated_data.pop("workplan_properties")
+        result = Result.objects.create(**validated_data)
+        for workplan_property in workplan_properties:
+            ResultWorkplanProperty.objects.create(result=result, **workplan_property)
+        return result
 
 
 class ResultStructureSerializer(serializers.ModelSerializer):

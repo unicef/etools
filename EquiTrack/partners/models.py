@@ -206,7 +206,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         """
         micro_assessment = partner.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
         if assessment:
-            if assessment.completed_date > micro_assessment.completed_date:
+            if micro_assessment:
+                if assessment.completed_date and micro_assessment.completed_date and \
+                                assessment.completed_date > micro_assessment.completed_date:
+                    micro_assessment = assessment
+            else:
                 micro_assessment = assessment
         if partner.type_of_assessment == 'High Risk Assumed':
             partner.hact_values['micro_assessment_needed'] = 'Yes'
@@ -292,9 +296,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         total = 0
         if partner.partner_type == u'Government':
             if budget_record:
+                qs= GovernmentInterventionResult.objects.filter(
+                    intervention__partner=partner,
+                    year=year).exclude(id=budget_record.id)
                 total = GovernmentInterventionResult.objects.filter(
                     intervention__partner=partner,
-                    year=year).exclude(intervention__id=budget_record.intervention.id).aggregate(
+                    year=year).exclude(id=budget_record.id).aggregate(
                     models.Sum('planned_amount')
                 )['planned_amount__sum'] or 0
                 total += budget_record.planned_amount
@@ -356,18 +363,43 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         )
 
     @classmethod
-    def planned_visits(cls, partner, trip=None):
+    def planned_visits(cls, partner, intervention=None):
+        year = datetime.date.today().year
         from trips.models import Trip
         # planned visits
         pv = 0
-        pv = partner.cp_cycle_trip_links.filter(
-                trip__travel_type=Trip.PROGRAMME_MONITORING
-            ).exclude(
-                trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
-            ).count() or 0
-        if trip and trip.travel_type == Trip.PROGRAMME_MONITORING\
-                and trip.status not in [Trip.CANCELLED, Trip.COMPLETED]:
-            pv += 1
+        if partner.partner_type == u'Government':
+
+            if intervention:
+                pv = GovernmentInterventionResult.objects.filter(
+                    intervention__partner=partner,
+                    year=year).exclude(id=intervention.id).aggregate(
+                    models.Sum('planned_visits')
+                )['planned_visits__sum'] or 0
+                pv += intervention.planned_visits
+            else:
+               pv = GovernmentInterventionResult.objects.filter(
+                    intervention__partner=partner,
+                    year=year).aggregate(
+                    models.Sum('planned_visits')
+                )['planned_visits__sum'] or 0
+        else:
+            qs = PCA.objects.filter(
+                partner=partner,
+                end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED])
+            pv = 0
+            if intervention:
+                pv += intervention.planned_visits
+                if intervention.id:
+                    qs = qs.exclude(id=intervention.id)
+
+                pv += qs.aggregate(models.Sum('planned_visits'))['planned_visits__sum'] or 0
+            else:
+                pv = PCA.objects.filter(
+                     partner=partner,
+                     end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
+                     models.Sum('planned_visits'))['planned_visits__sum'] or 0
+
         partner.hact_values['planned_visits'] = pv
         partner.save()
 
@@ -1005,7 +1037,7 @@ class PCA(AdminURLMixin, models.Model):
             return 0
         year = datetime.date.today().year
         total = self.budget_log.filter(year=year).order_by('-created').first()
-        return total.unicef_cash or 0
+        return total.unicef_cash if total else 0
 
     @property
     def programmatic_visits(self):
@@ -1047,6 +1079,14 @@ class PCA(AdminURLMixin, models.Model):
                 self.start_date = self.agreement.start
                 self.end_date = self.agreement.end
 
+            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+                PartnerOrganization.planned_visits(self.partner, self)
+        else:
+            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+                prev_pca = PCA.objects.filter(id=self.id)[0]
+                if self.planned_visits != prev_pca.planned_visits:
+                    PartnerOrganization.planned_visits(self.partner, self)
+
         # set start date to latest of signed by partner or unicef date
         if self.partnership_type == self.PD:
             if self.agreement.signed_by_unicef_date\
@@ -1068,6 +1108,8 @@ class PCA(AdminURLMixin, models.Model):
                 self.end_date = self.result_structure.to_date
 
         super(PCA, self).save(**kwargs)
+
+
 
     @classmethod
     def get_active_partnerships(cls):
@@ -1192,19 +1234,21 @@ class GovernmentInterventionResult(models.Model):
         related_name='activities_list',
         blank=True
     )
+    planned_visits = models.IntegerField(default=0)
 
     objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
-
-        if self.planned_amount:
-            if self.pk:
-                prev_result = GovernmentInterventionResult.objects.get(id=self.id)
-                if prev_result.planned_amount != self.planned_amount:
-                    PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
-            else:
+        if self.pk:
+            prev_result = GovernmentInterventionResult.objects.get(id=self.id)
+            if prev_result.planned_amount != self.planned_amount:
                 PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            if prev_result.planned_visits != self.planned_visits:
+                PartnerOrganization.planned_visits(self.intervention.partner, self)
+        else:
+            PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            PartnerOrganization.planned_visits(self.intervention.partner, self)
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
