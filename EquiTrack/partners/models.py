@@ -363,29 +363,35 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         )
 
     @classmethod
-    def planned_visits(cls, partner, trip_pca=None):
+    def planned_visits(cls, partner, intervention=None):
         year = datetime.date.today().year
         from trips.models import Trip
         # planned visits
         pv = 0
         if partner.partner_type == u'Government':
-            pv = partner.cp_cycle_trip_links.filter(
-                    trip__travel_type=Trip.PROGRAMME_MONITORING
-                ).exclude(
-                    trip__status__in=[Trip.CANCELLED, Trip.COMPLETED]
-                ).count() or 0
-            if trip_pca and trip_pca.travel_type == Trip.PROGRAMME_MONITORING\
-                    and trip_pca.status not in [Trip.CANCELLED, Trip.COMPLETED]:
-                pv += 1
+
+            if intervention:
+                pv = GovernmentInterventionResult.objects.filter(
+                    intervention__partner=partner,
+                    year=year).exclude(id=intervention.id).aggregate(
+                    models.Sum('planned_visits')
+                )['planned_visits__sum'] or 0
+                pv += intervention.planned_visits
+            else:
+               pv = GovernmentInterventionResult.objects.filter(
+                    intervention__partner=partner,
+                    year=year).aggregate(
+                    models.Sum('planned_visits')
+                )['planned_visits__sum'] or 0
         else:
             qs = PCA.objects.filter(
                 partner=partner,
                 end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED])
             pv = 0
-            if trip_pca:
-                pv += trip_pca.planned_visits
-                if trip_pca.id:
-                    qs = qs.exclude(id=trip_pca.id)
+            if intervention:
+                pv += intervention.planned_visits
+                if intervention.id:
+                    qs = qs.exclude(id=intervention.id)
 
                 pv += qs.aggregate(models.Sum('planned_visits'))['planned_visits__sum'] or 0
             else:
@@ -1228,19 +1234,21 @@ class GovernmentInterventionResult(models.Model):
         related_name='activities_list',
         blank=True
     )
+    planned_visits = models.IntegerField(default=0)
 
     objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
-
-        if self.planned_amount:
-            if self.pk:
-                prev_result = GovernmentInterventionResult.objects.get(id=self.id)
-                if prev_result.planned_amount != self.planned_amount:
-                    PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
-            else:
+        if self.pk:
+            prev_result = GovernmentInterventionResult.objects.get(id=self.id)
+            if prev_result.planned_amount != self.planned_amount:
                 PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            if prev_result.planned_visits != self.planned_visits:
+                PartnerOrganization.planned_visits(self.intervention.partner, self)
+        else:
+            PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            PartnerOrganization.planned_visits(self.intervention.partner, self)
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 

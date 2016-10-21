@@ -4,7 +4,7 @@ import json
 
 from rest_framework import status
 
-from EquiTrack.factories import PartnershipFactory, PartnerFactory, UserFactory
+from EquiTrack.factories import PartnershipFactory, PartnerFactory, UserFactory, AgreementFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 from partners.models import PCA, Agreement
@@ -14,8 +14,11 @@ class TestPartnershipViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = PartnershipFactory()
         self.partner = PartnerFactory()
+        agreement = AgreementFactory(partner=self.partner)
+        self.intervention = PartnershipFactory(partner=self.partner, agreement=agreement)
+
+        assert self.partner == self.intervention.partner
 
         # self.client.login(
         #     username=self.unicef_staff.username,
