@@ -10,13 +10,16 @@ class VerboseFieldRepresentationMixin(serializers.Serializer):
 
     @property
     def _use_verbose_fields(self):
-        parent = self
+        current = self
         while True:
-            if parent.parent is None:
+            if isinstance(current.parent, serializers.ListSerializer) and current.parent.parent is None:
                 break
-            parent = parent.parent
+            if current.parent is None:
+                break
+            current = current.parent
 
-        return getattr(parent.Meta, 'use_verbose_fields', True)
+        meta = getattr(current, 'Meta', None)
+        return getattr(meta, 'use_verbose_fields', True)
 
     def _get_self_field_name(self):
         if self.parent is None:
