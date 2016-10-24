@@ -4,10 +4,28 @@ import json
 
 from rest_framework import status
 
-from EquiTrack.factories import PartnershipFactory, PartnerFactory, UserFactory
+from EquiTrack.factories import (
+    PartnershipFactory,
+    PartnerFactory,
+    UserFactory,
+    ResultFactory,
+    ResultStructureFactory,
+    LocationFactory,
+)
 from EquiTrack.tests.mixins import APITenantTestCase
-
-from partners.models import PCA, Agreement
+from reports.models import ResultType, Sector
+from funds.models import Grant, Donor
+from partners.models import (
+    PCA,
+    Agreement,
+    PartnerOrganization,
+    ResultChain,
+    PCASector,
+    PartnershipBudget,
+    PCAGrant,
+    AmendmentLog,
+    GwPCALocation,
+)
 
 
 class TestPartnershipViews(APITenantTestCase):
@@ -16,18 +34,48 @@ class TestPartnershipViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.intervention = PartnershipFactory()
         self.partner = PartnerFactory()
+        self.result_type = ResultType.objects.get(id=1)
+        self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.resultchain = ResultChain.objects.create(
+            result=self.result,
+            result_type=self.result_type,
+            partnership=self.intervention,
+        )
+        self.pcasector = PCASector.objects.create(
+            pca=self.intervention,
+            sector=Sector.objects.create(name="Sector 1")
+        )
+        self.partnership_budget = PartnershipBudget.objects.create(
+            partnership=self.intervention,
+            unicef_cash=100
+        )
+        self.grant = Grant.objects.create(
+            donor=Donor.objects.create(
+                name="Donor 1"
+            ),
+            name="Grant 1"
+        )
+        self.pcagrant = PCAGrant.objects.create(
+            partnership=self.intervention,
+            grant=self.grant,
+            funds=100
+        )
+        self.amendment = AmendmentLog.objects.create(
+            partnership=self.intervention,
+            type="Cost",
+        )
+        self.location = GwPCALocation.objects.create(
+            pca=self.intervention,
+            location=LocationFactory()
+        )
 
-        # self.client.login(
-        #     username=self.unicef_staff.username,
-        #     password='test'
-        # )
 
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/partners/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # the length of this list should be 1
-        # self.assertEquals(len(response.data), 1)
+        self.assertEquals(len(response.data), 3)
+        self.assertIn("Partner", response.data[0]["name"])
 
     def test_api_agreements_create(self):
 
@@ -49,16 +97,19 @@ class TestPartnershipViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/partners/'+str(self.intervention.partner.id)+'/agreements/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # the length of this list should be 1
         self.assertEquals(len(response.data), 1)
+        self.assertIn("PCA", response.data[0]["agreement_type"])
 
     def test_api_interventions_list(self):
 
         response = self.forced_auth_req('get', '/api/partners/'+str(self.intervention.partner.id)+'/interventions/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # the length of this list should be 1
         self.assertEquals(len(response.data), 1)
+        self.assertIn("galaxy", response.data[0]["pca_title"])
+        self.assertIn("galaxy", response.data[0]["title"])
+        self.assertIn("in_process", response.data[0]["status"])
+        self.assertIn("PD", response.data[0]["partnership_type"])
 
     def test_api_agreement_interventions_list(self):
 
@@ -72,6 +123,9 @@ class TestPartnershipViews(APITenantTestCase):
                                         ]), user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertIn("galaxy", response.data[0]["title"])
+        self.assertIn("in_process", response.data[0]["status"])
 
     def test_api_staffmembers_list(self):
         response = self.forced_auth_req('get',
@@ -79,6 +133,11 @@ class TestPartnershipViews(APITenantTestCase):
                                         user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 3)
+        self.assertIn("Jedi Master", response.data[0]["title"])
+        self.assertIn("Mace", response.data[0]["first_name"])
+        self.assertIn("Windu", response.data[0]["last_name"])
+        self.assertEqual(True, response.data[0]["active"])
 
     def test_api_interventions_results_list(self):
 
@@ -92,6 +151,8 @@ class TestPartnershipViews(APITenantTestCase):
                                         ]), user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertIn("Result", response.data[0]["result"]["name"])
 
     def test_api_interventions_sectors_list(self):
 
@@ -105,6 +166,8 @@ class TestPartnershipViews(APITenantTestCase):
                                         ]), user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertIn("Sector", response.data[0]["sector_name"])
 
     def test_api_interventions_budgets_list(self):
 
@@ -118,6 +181,9 @@ class TestPartnershipViews(APITenantTestCase):
                                         ]), user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["unicef_cash"], 100)
+        self.assertEquals(response.data[0]["total"], 100)
 
     def test_api_interventions_files_list(self):
 
@@ -144,6 +210,9 @@ class TestPartnershipViews(APITenantTestCase):
                                         ]), user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["grant"], self.grant.id)
+        self.assertEquals(response.data[0]["funds"], 100)
 
     def test_api_interventions_amendments_list(self):
 
@@ -157,6 +226,8 @@ class TestPartnershipViews(APITenantTestCase):
                                         ]), user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["type"], "Cost")
 
     def test_api_interventions_locations_list(self):
 
@@ -170,6 +241,8 @@ class TestPartnershipViews(APITenantTestCase):
                                         ]), user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertIn("Location", response.data[0]["location_name"])
 
 
 class TestPartnerOrganizationViews(APITenantTestCase):
