@@ -11,6 +11,7 @@ from EquiTrack.factories import (
     ResultFactory,
     ResultStructureFactory,
     LocationFactory,
+    AgreementFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
@@ -32,8 +33,11 @@ class TestPartnershipViews(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.intervention = PartnershipFactory()
         self.partner = PartnerFactory()
+        agreement = AgreementFactory(partner=self.partner)
+        self.intervention = PartnershipFactory(partner=self.partner, agreement=agreement)
+        assert self.partner == self.intervention.partner
+
         self.result_type = ResultType.objects.get(id=1)
         self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
         self.resultchain = ResultChain.objects.create(
@@ -74,7 +78,7 @@ class TestPartnershipViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/partners/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 3)
+        self.assertEquals(len(response.data), 1)
         self.assertIn("Partner", response.data[0]["name"])
 
     def test_api_agreements_create(self):
@@ -133,7 +137,7 @@ class TestPartnershipViews(APITenantTestCase):
                                         user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 3)
+        self.assertEquals(len(response.data), 1)
         self.assertIn("Jedi Master", response.data[0]["title"])
         self.assertIn("Mace", response.data[0]["first_name"])
         self.assertIn("Windu", response.data[0]["last_name"])

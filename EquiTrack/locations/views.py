@@ -1,6 +1,9 @@
 __author__ = 'unicef-leb-inn'
+import uuid
 
-from rest_framework import viewsets, mixins, permissions
+from django.core.cache import cache
+from rest_framework import viewsets, mixins, permissions, status
+from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 
 from .models import CartoDBTable, GatewayType, Location
@@ -43,6 +46,28 @@ class LocationsViewSet(mixins.RetrieveModelMixin,
     lookup_field = 'p_code'
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
+
+    def list(self, *args, **kwargs):
+        """
+        Returns list of instances only if there's a new ETag, and it does not
+        match the one sent along with the request.
+        Otherwise it returns 304 NOT MODIFIED.
+        """
+        cache_etag = cache.get("locations-etag")
+        if not cache_etag:
+            new_etag = uuid.uuid4().hex
+            response = super(LocationsViewSet, self).list(*args, **kwargs)
+            response["ETag"] = new_etag
+            cache.set("locations-etag", new_etag)
+            return response
+
+        request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
+        if cache_etag == request_etag:
+            return Response(status=status.HTTP_304_NOT_MODIFIED)
+        else:
+            response = super(LocationsViewSet, self).list(*args, **kwargs)
+            response["ETag"] = cache_etag
+            return response
 
     def get_queryset(self):
         queryset = super(LocationsViewSet, self).get_queryset()

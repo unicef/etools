@@ -18,7 +18,7 @@ class APITenantTestCase(TenantTestCase):
     """
     client_class = APIClient
 
-    def forced_auth_req(self, method, url, user=None, data=None):
+    def forced_auth_req(self, method, url, user=None, data=None, **kwargs):
         """
         Function that allows api methods to be called with forced authentication
 
@@ -37,7 +37,7 @@ class APITenantTestCase(TenantTestCase):
         data = data or {}
         view = view_info.func
         req_to_call = getattr(factory, method)
-        request = req_to_call(url, data, format='json')
+        request = req_to_call(url, data, format='json', **kwargs)
 
         user = user or self.user
         force_authenticate(request, user=user)
