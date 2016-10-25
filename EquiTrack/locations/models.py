@@ -161,7 +161,7 @@ def invalidate_locations_etag(sender, instance, **kwargs):
     Invalidate the locations etag in the cache on every change.
     """
     schema_name = connection.schema_name
-    cache.delete("[{}]-locations-etag".format(schema_name))
+    cache.delete("{}-locations-etag".format(schema_name))
 
 
 class LinkedLocation(models.Model):

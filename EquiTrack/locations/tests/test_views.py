@@ -44,7 +44,7 @@ class TestLocationViews(APITenantTestCase):
         # Activate cache-aside with a request.
         response = self.forced_auth_req('get', '/api/locations/', user=self.unicef_staff)
         schema_name = connection.schema_name
-        etag_before = cache.get("[{}]-locations-etag".format(schema_name))
+        etag_before = cache.get("{}-locations-etag".format(schema_name))
         Location.objects.all().delete()
-        etag_after = cache.get("[{}]-locations-etag".format(schema_name))
+        etag_after = cache.get("{}-locations-etag".format(schema_name))
         assert etag_before != etag_after

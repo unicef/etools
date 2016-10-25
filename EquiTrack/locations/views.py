@@ -55,12 +55,12 @@ class LocationsViewSet(mixins.RetrieveModelMixin,
         Otherwise it returns 304 NOT MODIFIED.
         """
         schema_name = connection.schema_name
-        cache_etag = cache.get("[{}]-locations-etag".format(schema_name))
+        cache_etag = cache.get("{}-locations-etag".format(schema_name))
         if not cache_etag:
             new_etag = uuid.uuid4().hex
             response = super(LocationsViewSet, self).list(*args, **kwargs)
             response["ETag"] = new_etag
-            cache.set("[{}]-locations-etag".format(schema_name), new_etag)
+            cache.set("{}-locations-etag".format(schema_name), new_etag)
             return response
 
         request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
