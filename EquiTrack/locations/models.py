@@ -4,7 +4,7 @@ import random
 
 import logging
 
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
 from django.db.models.signals import post_delete, post_save
 from django.dispatch.dispatcher import receiver
 from django.core.cache import cache
@@ -160,7 +160,8 @@ def invalidate_locations_etag(sender, instance, **kwargs):
     """
     Invalidate the locations etag in the cache on every change.
     """
-    cache.delete("locations-etag")
+    schema_name = connection.schema_name
+    cache.delete("[{}]-locations-etag".format(schema_name))
 
 
 class LinkedLocation(models.Model):

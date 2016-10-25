@@ -1,6 +1,7 @@
 __author__ = 'unicef-leb-inn'
 import uuid
 
+from django.db import connection
 from django.core.cache import cache
 from rest_framework import viewsets, mixins, permissions, status
 from rest_framework.response import Response
@@ -53,12 +54,13 @@ class LocationsViewSet(mixins.RetrieveModelMixin,
         match the one sent along with the request.
         Otherwise it returns 304 NOT MODIFIED.
         """
-        cache_etag = cache.get("locations-etag")
+        schema_name = connection.schema_name
+        cache_etag = cache.get("[{}]-locations-etag".format(schema_name))
         if not cache_etag:
             new_etag = uuid.uuid4().hex
             response = super(LocationsViewSet, self).list(*args, **kwargs)
             response["ETag"] = new_etag
-            cache.set("locations-etag", new_etag)
+            cache.set("[{}]-locations-etag".format(schema_name), new_etag)
             return response
 
         request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
