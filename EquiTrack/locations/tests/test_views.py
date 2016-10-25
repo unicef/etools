@@ -1,4 +1,5 @@
 __author__ = 'achamseddine'
+from django.db import connection
 from django.core.cache import cache
 from rest_framework import status
 
@@ -40,12 +41,10 @@ class TestLocationViews(APITenantTestCase):
         self.assertEquals(len(response.data), 6)
 
     def test_location_delete_etag(self):
-        etag_before = cache.get("locations-etag")
+        # Activate cache-aside with a request.
+        response = self.forced_auth_req('get', '/api/locations/', user=self.unicef_staff)
+        schema_name = connection.schema_name
+        etag_before = cache.get("{}-locations-etag".format(schema_name))
         Location.objects.all().delete()
-        etag_after = cache.get("locations-etag")
+        etag_after = cache.get("{}-locations-etag".format(schema_name))
         assert etag_before != etag_after
-
-    # def test_api_location_detail(self):
-    #     response = self.forced_auth_req('get', '/api/locations/454545/', user=self.unicef_staff)
-    #
-    #     self.assertEquals(response.status_code, status.HTTP_200_OK)
