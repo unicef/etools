@@ -33,6 +33,7 @@ class WorkplanProject(models.Model):
 
 
 class Quarter(models.Model):
+    # TODO: refactor this to use the country Quarters
     workplan = models.ForeignKey('Workplan', related_name='quarters')
     name = models.CharField(max_length=64)
     start_date = models.DateTimeField()
@@ -94,6 +95,12 @@ class ResultWorkplanProperty(models.Model):
         """
         return cls.objects.filter(labels__id=label_id).exists()
 
+
+class Milestone(models.Model):
+
+    result_wp_property = models.ForeignKey(ResultWorkplanProperty, related_name="milestones")
+    description = models.TextField()
+    assumptions = models.TextField(null=True, blank=True)
 
 class CoverPage(models.Model):
     workplan_project = models.OneToOneField('WorkplanProject', related_name='cover_page')

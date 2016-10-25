@@ -37,7 +37,7 @@ from reports.models import (
     Result,
     CountryProgramme,
     LowerResult,
-    LowerIndicator,
+    AppliedIndicator
 )
 from locations.models import (
     Governorate,
@@ -1655,8 +1655,8 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     )
 
     # FOR WHOM / Beneficiary
-    #  -  ResultChain
-    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
+    #  -  AppliedIndicator
+    indicator = models.ForeignKey(AppliedIndicator, related_name='indicator_reports')
 
     # WHO
     #  -  Implementing Partner
