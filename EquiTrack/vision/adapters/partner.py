@@ -148,10 +148,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 _totals_cy[po_api['VENDOR_CODE']] += po_api["TOTAL_CASH_TRANSFERRED_CY"]
 
 
-
-
-
-
         def _partner_save(processed, partner):
 
 
