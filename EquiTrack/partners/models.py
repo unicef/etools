@@ -1469,7 +1469,6 @@ class GwPCALocation(models.Model):
 
     class Meta:
         verbose_name = 'Partnership Location'
-        unique_together = ('pca', 'location')
 
     def __unicode__(self):
         return u'{} -> {}{}{}'.format(
