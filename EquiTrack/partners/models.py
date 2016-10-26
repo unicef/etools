@@ -182,6 +182,21 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
 
+    @transaction.atomic
+    def save(self, **kwargs):
+        # for new Partner run HACT calculations
+        if not self.pk:
+            super(PartnerOrganization, self).save(**kwargs)
+            PartnerOrganization.planned_cash_transfers(self)
+            PartnerOrganization.micro_assessment_needed(self)
+            PartnerOrganization.audit_needed(self)
+            PartnerOrganization.planned_visits(self)
+            PartnerOrganization.programmatic_visits(self)
+            PartnerOrganization.spot_checks(self)
+            PartnerOrganization.follow_up_flags(self)
+            PartnerOrganization.audit_done(self)
+
+
     @cached_property
     def get_last_pca(self):
         # exclude Agreements that were not signed
@@ -1469,6 +1484,7 @@ class GwPCALocation(models.Model):
 
     class Meta:
         verbose_name = 'Partnership Location'
+        unique_together = ('pca', 'location')
 
     def __unicode__(self):
         return u'{} -> {}{}{}'.format(

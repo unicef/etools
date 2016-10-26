@@ -126,7 +126,6 @@ def update_all_partners(country_name=None):
                 PartnerOrganization.spot_checks(partner)
                 PartnerOrganization.follow_up_flags(partner)
                 PartnerOrganization.audit_done(partner)
-
             except Exception as e:
                 print partner.name
                 print partner.hact_values
