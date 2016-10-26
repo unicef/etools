@@ -28,6 +28,7 @@ class Travel(models.Model):
     international_travel = models.NullBooleanField(default=False, null=True, blank=True)
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, null=True, blank=True)
+    hidden = models.BooleanField(default=False)
 
     @property
     def attachments(self):

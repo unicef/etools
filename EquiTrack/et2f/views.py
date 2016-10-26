@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 
+from django.db.models.query_utils import Q
 from rest_framework import viewsets, mixins, generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
@@ -31,12 +32,30 @@ class TravelViewSet(mixins.ListModelMixin,
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminUser,)
 
+    _search_fields = ('id', 'reference_number', 'traveller__first_name', 'traveller__last_name', 'purpose',
+                      'section__name', 'office__name', 'supervisor__first_name', 'supervisor__last_name')
+
     def get_queryset(self):
         queryset = super(TravelViewSet, self).get_queryset()
         parameter_serializer = TravelListParameterSerializer(data=self.request.GET)
         if not parameter_serializer.is_valid():
             return queryset
 
+        # Searching
+        search_str = parameter_serializer.data['search']
+        if search_str:
+            q = Q()
+            for field_name in self._search_fields:
+                constructed_field_name = '{}__iexact'.format(field_name)
+                q |= Q(**{constructed_field_name: search_str})
+            queryset = queryset.filter(q)
+
+        # Hide hidden travels
+        show_hidden = parameter_serializer.data['show_hidden']
+        if not show_hidden:
+            queryset = queryset.filter(hidden=False)
+
+        # Sorting
         prefix = '-' if parameter_serializer.data['reverse'] else ''
         sort_by = '{}{}'.format(prefix, parameter_serializer.data['sort_by'])
         return queryset.order_by(sort_by)
