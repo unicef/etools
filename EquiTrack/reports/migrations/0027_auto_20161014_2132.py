@@ -30,8 +30,8 @@ class Migration(migrations.Migration):
         #     name='country_programme',
         # ),
 
-        migrations.AlterUniqueTogether(
-            name='responseplan',
-            unique_together=set([('name', 'from_date', 'to_date')]),
-        ),
+        # migrations.AlterUniqueTogether(
+        #     name='responseplan',
+        #     unique_together=set([('name', 'from_date', 'to_date')]),
+        # ),
     ]
