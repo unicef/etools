@@ -28,7 +28,8 @@ from .views import (
 )
 from locations.views import (
     LocationTypesViewSet,
-    LocationsViewSet
+    LocationsViewSet,
+    LocationsLightViewSet,
 )
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
 from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
@@ -101,6 +102,7 @@ api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
 api.register(r'locations', LocationsViewSet, base_name='locations')
+api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
 api.register(r'comments', CommentViewSet, base_name='comments')
