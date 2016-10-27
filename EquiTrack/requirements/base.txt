@@ -38,7 +38,7 @@ django-geojson==2.9.0
 django-post_office==2.0.5
 django-cors-headers==1.1.0
 django-mathfilters==0.3.0
-django-tenant-schemas==1.5.7
+django-tenant-schemas==1.6.4
 django-allauth==0.24.1
 tenant-schemas-celery==0.1.5
 django-debug-toolbar==1.4

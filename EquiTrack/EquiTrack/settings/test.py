@@ -1,6 +1,6 @@
-from local_base import *
+from base import *
 
-
+ALLOWED_HOSTS = ['127.0.0.1']
 # This has to be set to this particular backend in order for django to grab email and expose in tests
 POST_OFFICE['BACKENDS']['default'] = 'django.core.mail.backends.locmem.EmailBackend'
 
@@ -20,6 +20,7 @@ class DisableMigrations(object):
 # MIGRATION_MODULES = DisableMigrations()
 
 # MIGRATION_MODULES = dict((app, '%s.fake_migrations' % app) for app in INSTALLED_APPS)
+# MIGRATION_MODULES = dict((app, None) for app in INSTALLED_APPS)
 
 
 TEST_RUNNER = 'EquiTrack.tests.runners.TestRunner'

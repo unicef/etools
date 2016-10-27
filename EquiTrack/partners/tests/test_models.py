@@ -1,7 +1,7 @@
 import datetime
 
-from tenant_schemas.test.cases import TenantTestCase
-
+#from tenant_schemas.test.cases import TenantTestCase
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
 from funds.models import Donor, Grant
 from reports.models import (
@@ -30,6 +30,7 @@ from partners.models import (
 
 
 class TestRefNumberGeneration(TenantTestCase):
+    fixtures = ['initial_data.json']
 
     def setUp(self):
         self.date = datetime.date.today()
@@ -111,7 +112,7 @@ class TestRefNumberGeneration(TenantTestCase):
 
 
 class TestHACTCalculations(TenantTestCase):
-
+    fixtures = ['initial_data.json']
     def setUp(self):
         year = datetime.date.today().year
         self.intervention = PartnershipFactory(
@@ -166,7 +167,7 @@ class TestHACTCalculations(TenantTestCase):
 
 
 class TestPartnerOrganizationModel(TenantTestCase):
-
+    fixtures = ['reports.initial_data.json']
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
@@ -547,7 +548,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
 
 class TestAgreementModel(TenantTestCase):
-
+    fixtures = ['reports.initial_data.json']
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
@@ -562,7 +563,7 @@ class TestAgreementModel(TenantTestCase):
         self.assertEqual(self.agreement.reference_number, "/PCA{}01".format(year))
 
 class TestPCAModel(TenantTestCase):
-
+    fixtures = ['reports.initial_data.json']
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
