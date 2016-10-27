@@ -1,4 +1,4 @@
-Django==1.8.9
+Django==1.9.10
 django-braces==1.8.1
 django-model-utils==2.3.1
 logutils==0.3.3
