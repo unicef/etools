@@ -206,8 +206,7 @@ class Indicator(models.Model):
         blank=True, null=True
     )
     humanitarian_response_plan = models.ForeignKey(
-        ResponsePlan,
-        blank=True, null=True, on_delete=models.DO_NOTHING
+        ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)

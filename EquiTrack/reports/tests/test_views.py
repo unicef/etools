@@ -26,7 +26,7 @@ class TestReportViews(APITenantTestCase):
         self.section3 = SectionFactory()
 
     def test_api_ResponsePlans_list(self):
-        response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/reports/hrps/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 

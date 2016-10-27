@@ -92,7 +92,7 @@ api.register(r'sections', SectionViewSet, base_name='sections')
 api.register(r'funds/donors', DonorViewSet, base_name='donors')
 api.register(r'funds/grants', GrantViewSet, base_name='grants')
 
-api.register(r'reports/result-structures', ResponsePlanViewSet, base_name='ResponsePlans')
+api.register(r'reports/hrps', ResponsePlanViewSet, base_name='ResponsePlans')
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')

@@ -9,7 +9,7 @@ from EquiTrack.factories import (
     PartnerFactory,
     UserFactory,
     ResultFactory,
-    ResultStructureFactory,
+    ResponsePlanFactory,
     LocationFactory,
     AgreementFactory,
 )
@@ -39,7 +39,7 @@ class TestPartnershipViews(APITenantTestCase):
         assert self.partner == self.intervention.partner
 
         self.result_type = ResultType.objects.get(id=1)
-        self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.result = ResultFactory(result_type=self.result_type, humanitarian_response_plan=ResponsePlanFactory())
         self.resultchain = ResultChain.objects.create(
             result=self.result,
             result_type=self.result_type,

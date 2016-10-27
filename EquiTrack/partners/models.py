@@ -825,8 +825,7 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name=u'Document type'
     )
     humanitarian_response_plan = models.ForeignKey(
-        ResponsePlan,
-        blank=True, null=True, on_delete=models.DO_NOTHING,
+        ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING,
         help_text=u'Which result structure does this partnership report under?'
     )
     number = models.CharField(
@@ -1153,8 +1152,7 @@ class GovernmentIntervention(models.Model):
         PartnerOrganization,
         related_name='work_plans',
     )
-    humanitarian_response_plan = models.ForeignKey(
-        ResponsePlan, on_delete=models.DO_NOTHING
+    humanitarian_response_plan = models.ForeignKey(ResponsePlan
     )
     number = models.CharField(
         max_length=45L,
