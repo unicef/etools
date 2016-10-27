@@ -1,6 +1,5 @@
 import datetime
 
-#from tenant_schemas.test.cases import TenantTestCase
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
 from funds.models import Donor, Grant

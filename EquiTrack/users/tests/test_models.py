@@ -1,6 +1,6 @@
 __author__ = 'jcranwellward'
 
-from tenant_schemas.test.cases import TenantTestCase
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
 from EquiTrack.factories import UserFactory
 
