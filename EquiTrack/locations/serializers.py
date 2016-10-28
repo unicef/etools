@@ -44,7 +44,8 @@ class LocationSerializer(serializers.ModelSerializer):
             'point',
             'latitude',
             'longitude',
-            'parent'
+            'parent',
+            'geom',
         )
 
 

@@ -149,6 +149,7 @@ urlpatterns = patterns(
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
+    url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
 
     # Uncomment the next line to enable the admin:
