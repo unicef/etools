@@ -2,8 +2,35 @@ from datetime import datetime
 from django.db import models
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
+from jsonfield import JSONField
 
 from django.utils.functional import cached_property
+
+
+class Quarter(models.Model):
+
+    Q1 = 'Q1'
+    Q2 = 'Q2'
+    Q3 = 'Q3'
+    Q4 = 'Q4'
+
+    QUARTER_CHOICES = (
+        (Q1, 'Quarter 1'),
+        (Q2, 'Quarter 2'),
+        (Q3, 'Quarter 3'),
+        (Q4, 'Quarter 4'),
+    )
+
+    name = models.CharField(max_length=64, choices=QUARTER_CHOICES)
+    year = models.CharField(max_length=4)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    def __repr__(self):
+        return '{}-{}'.format(self.name, self.year)
+
+    def save(self, *args, **kwargs):
+        super(Quarter, self).save(*args, **kwargs)
 
 
 class CountryProgramme(models.Model):
@@ -165,11 +192,31 @@ class Result(MPTTModel):
                 node.save()
 
 
-class Milestone(models.Model):
+class LowerResult(MPTTModel):
 
-    result = models.ForeignKey(Result, related_name="milestones")
-    description = models.TextField()
-    assumptions = models.TextField(null=True, blank=True)
+    intervention = models.ForeignKey(to="partners.PCA")
+    result_type = models.ForeignKey(ResultType)
+    sector = models.ForeignKey(Sector, null=True, blank=True)
+    name = models.TextField()
+    code = models.CharField(max_length=50, null=True, blank=True)
+    quarters = models.ManyToManyField(Quarter, related_name="lowerresults+", blank=True)
+    parent = TreeForeignKey(
+        'self',
+        null=True, blank=True,
+        related_name='children',
+        db_index=True
+    )
+
+    # Lower Activity level attributes
+    partner_contribution = models.IntegerField(default=0, null=True, blank=True)
+    unicef_cash = models.IntegerField(default=0, null=True, blank=True)
+    in_kind_amount = models.IntegerField(default=0, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'{}: {}'.format(
+            self.code if self.code else self.result_type.name,
+            self.name
+        )
 
 
 class Goal(models.Model):
@@ -196,6 +243,53 @@ class Unit(models.Model):
 
     def __unicode__(self):
         return self.type
+
+
+class IndicatorNormalized(models.Model):
+    name = models.CharField(max_length=1024)
+    unit = models.ForeignKey(Unit, null=True, blank=True)
+    description = models.CharField(max_length=3072, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True, unique=True)
+    subdomain = models.CharField(max_length=255, null=True, blank=True)
+    disaggregatable = models.BooleanField(default=False)
+
+    # TODO: add:
+    # siblings (similar inidcators to this indicator)
+    # other_representation (exact copies with different names for some random reason)
+    # children (indicators that aggregate up to this or contribute to this indicator through a formula)
+    # aggregation_types (potential aggregation types: geographic, time-periods ?)
+    # calculation_formula (how the children totals add up to this indicator's total value)
+    # aggregation_formulas (how the total value is aggregated from the reports if possible)
+
+    def save(self, *args, **kwargs):
+        # Prevent from saving empty strings as code because of the unique together constraint
+        if not self.code:
+            self.code = None
+        super(IndicatorNormalized, self).save(*args, **kwargs)
+
+
+class AppliedIndicator(models.Model):
+
+    indicator = models.ForeignKey(IndicatorNormalized)
+    lower_result = models.ForeignKey(LowerResult)
+
+    context_code = models.CharField(max_length=50, null=True, blank=True,
+                                    verbose_name="Code in current context")
+
+    target = models.CharField(max_length=255, null=True, blank=True)
+    baseline = models.CharField(max_length=255, null=True, blank=True)
+    assumptions = models.TextField(null=True, blank=True)
+
+    total = models.IntegerField(null=True, blank=True, default=0,
+                                verbose_name="Current Total")
+    sector_total = models.IntegerField(null=True, blank=True,
+                                       verbose_name="Current Sector Total")
+
+    # variable disaggregation's that may be present in the work plan
+    disaggregation_logic = JSONField(null=True)
+
+    class Meta:
+        unique_together = (("indicator", "lower_result"),)
 
 
 class Indicator(models.Model):

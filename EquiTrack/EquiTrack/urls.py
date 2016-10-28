@@ -31,7 +31,12 @@ from locations.views import (
     LocationsViewSet
 )
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
-from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
+from partners.views import (
+    PartnerOrganizationsViewSet,
+    AgreementViewSet,
+    PartnerStaffMembersViewSet,
+    FileTypeViewSet,
+)
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
 from reports.views import (
@@ -40,7 +45,6 @@ from reports.views import (
     SectorViewSet,
     # GoalViewSet,
     IndicatorViewSet,
-    MilestoneViewSet,
     ResultViewSet,
     UnitViewSet
 )
@@ -69,6 +73,7 @@ from workplan.views import (
     WorkplanViewSet,
     WorkplanProjectViewSet,
     LabelViewSet,
+    MilestoneViewSet
 )
 
 api = routers.SimpleRouter()
@@ -96,7 +101,6 @@ api.register(r'reports/result-structures', ResultStructureViewSet, base_name='re
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
-api.register(r'reports/milestones', MilestoneViewSet, base_name='milestones')
 api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
@@ -105,6 +109,7 @@ api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes'
 
 api.register(r'comments', CommentViewSet, base_name='comments')
 api.register(r'workplans', WorkplanViewSet, base_name='workplans')
+api.register(r'workplans/milestones', MilestoneViewSet, base_name='milestones')
 api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
 api.register(r'labels', LabelViewSet, base_name='labels')
 

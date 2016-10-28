@@ -12,8 +12,7 @@ from .models import (
     Sector,
     Goal,
     Indicator,
-    Result,
-    Milestone
+    Result
 )
 
 
@@ -76,17 +75,9 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
         model = Indicator
 
 
-class MilestoneSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Milestone
-        fields = ("id", "description", "assumptions",)
-
-
 class ResultSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-    milestones = MilestoneSerializer(many=True)
     workplan_properties = ResultWorkplanPropertySerializer(many=True)
 
     class Meta:

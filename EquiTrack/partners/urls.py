@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-__author__ = 'jcranwellward'
-
 from django.conf.urls import patterns, url, include
 
 from rest_framework_nested import routers

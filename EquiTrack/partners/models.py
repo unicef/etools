@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-__author__ = 'jcranwellward'
-
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -14,7 +12,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from jsonfield import JSONField
+from django.contrib.postgres.fields import JSONField
 from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
@@ -36,6 +34,8 @@ from reports.models import (
     ResultType,
     Result,
     CountryProgramme,
+    LowerResult,
+    AppliedIndicator
 )
 from locations.models import (
     Governorate,
@@ -1597,7 +1597,6 @@ class ResultChain(models.Model):
         Indicator,
         blank=True, null=True
     )
-
     # fixed columns
     target = models.PositiveIntegerField(
         blank=True, null=True
@@ -1651,8 +1650,8 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     )
 
     # FOR WHOM / Beneficiary
-    #  -  ResultChain
-    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
+    #  -  AppliedIndicator
+    indicator = models.ForeignKey(AppliedIndicator, related_name='indicator_reports')
 
     # WHO
     #  -  Implementing Partner

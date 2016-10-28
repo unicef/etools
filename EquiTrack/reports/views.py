@@ -6,7 +6,6 @@ from .models import (
     ResultStructure,
     ResultType,
     Result,
-    Milestone,
     Sector,
     Indicator,
     Unit
@@ -15,7 +14,6 @@ from .serializers import (
     ResultStructureSerializer,
     ResultTypeSerializer,
     ResultSerializer,
-    MilestoneSerializer,
     SectorCreateSerializer,
     IndicatorCreateSerializer,
     UnitSerializer
@@ -60,15 +58,6 @@ class SectorViewSet(mixins.RetrieveModelMixin,
 #     """
 #     queryset = Goal.objects.all()
 #     serializer_class = GoalCreateSerializer
-
-
-class MilestoneViewSet(viewsets.ModelViewSet):
-    """
-    CRUD api for Milestones
-    """
-    queryset = Milestone.objects.all()
-    serializer_class = MilestoneSerializer
-    permission_classes = (IsAdminUser,)
 
 
 class ResultViewSet(viewsets.ModelViewSet):
