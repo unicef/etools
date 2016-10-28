@@ -32,6 +32,11 @@ class LocationAdmin(LeafletGeoAdmin, MPTTModelAdmin):
     )
     search_fields = ('name', 'p_code',)
 
+    def get_form(self, request, obj=None, **kwargs):
+        self.readonly_fields = [] if request.user.is_superuser else ['p_code', 'geom', 'point', 'gateway']
+
+        return super(LocationAdmin, self).get_form(request, obj, **kwargs)
+
     # def get_fields(self, request, obj=None):
     #
     #     fields = super(LocationAdmin, self).get_fields(request, obj)
@@ -42,6 +47,7 @@ class LocationAdmin(LeafletGeoAdmin, MPTTModelAdmin):
     #             fields.append('geom')
     #
     #     return fields
+
 
 
 class GovernorateAdmin(LeafletGeoAdmin):
