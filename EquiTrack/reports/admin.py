@@ -207,22 +207,22 @@ class ResultAdmin(MPTTModelAdmin):
             results += 1
         self.message_user(request, '{} results were shown'.format(results))
 
-
-class LowerResultAdmin(MPTTModelAdmin):
-    form = AutoSizeTextForm
-    mptt_indent_field = 'result_name'
-    search_fields = (
-        'name',
-    )
-    list_filter = (
-        'country_programme',
-        'sector',
-        'result_type',
-    )
-    list_display = (
-        'result_name',
-        'result_structure'
-    )
+#
+# class LowerResultAdmin(MPTTModelAdmin):
+#     form = AutoSizeTextForm
+#     mptt_indent_field = 'result_name'
+#     search_fields = (
+#         'name',
+#     )
+#     list_filter = (
+#         'country_programme',
+#         'sector',
+#         'result_type',
+#     )
+#     list_display = (
+#         'result_name',
+#         'result_structure'
+#     )
 
 
 admin.site.register(Result, ResultAdmin)
@@ -233,5 +233,5 @@ admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)
-admin.site.register(LowerResult, LowerResultAdmin)
+admin.site.register(LowerResult)
 #admin.site.register(ResultType)

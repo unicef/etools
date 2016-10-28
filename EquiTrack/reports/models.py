@@ -251,7 +251,7 @@ class IndicatorNormalized(models.Model):
     description = models.CharField(max_length=3072, null=True, blank=True)
     code = models.CharField(max_length=50, null=True, blank=True, unique=True)
     subdomain = models.CharField(max_length=255, null=True, blank=True)
-    disaggregatable = models.BooleanField(null=True, blank=True)
+    disaggregatable = models.BooleanField(default=False)
 
     # TODO: add:
     # siblings (similar inidcators to this indicator)
