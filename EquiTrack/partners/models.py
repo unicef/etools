@@ -1597,9 +1597,6 @@ class ResultChain(models.Model):
         Indicator,
         blank=True, null=True
     )
-    lower_result = models.ForeignKey(LowerResult, blank=True, null=True)
-    lower_indicator = models.ForeignKey(LowerIndicator, blank=True, null=True)
-
     # fixed columns
     target = models.PositiveIntegerField(
         blank=True, null=True

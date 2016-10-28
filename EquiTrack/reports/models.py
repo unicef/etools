@@ -199,7 +199,7 @@ class LowerResult(MPTTModel):
     sector = models.ForeignKey(Sector, null=True, blank=True)
     name = models.TextField()
     code = models.CharField(max_length=50, null=True, blank=True)
-    quarters = models.ManyToManyField(Quarter, result_name="lowerresults+", blank=True)
+    quarters = models.ManyToManyField(Quarter, related_name="lowerresults+", blank=True)
     parent = TreeForeignKey(
         'self',
         null=True, blank=True,

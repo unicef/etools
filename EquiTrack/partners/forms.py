@@ -34,7 +34,7 @@ from reports.models import (
     ResultStructure,
 )
 from locations.models import Location
-from reports.models import Sector, Result, ResultType, Indicator, LowerResult, LowerIndicator
+from reports.models import Sector, Result, ResultType, Indicator, LowerResult
 from .models import (
     PCA,
     PartnerOrganization,
