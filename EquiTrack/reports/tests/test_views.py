@@ -11,7 +11,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 
 
 class TestReportViews(APITenantTestCase):
-
+    fixtures = ['initial_data.json']
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))

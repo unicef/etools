@@ -1,8 +1,8 @@
 import datetime
 from datetime import timedelta
 
-from tenant_schemas.test.cases import TenantTestCase
-
+#from tenant_schemas.test.cases import TenantTestCase
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from django.db.models.fields.related import ManyToManyField
 
 from EquiTrack.factories import PartnershipFactory, AgreementFactory, ResultStructureFactory, CountryProgrammeFactory
@@ -33,7 +33,7 @@ def to_dict(instance):
 
 
 class TestAgreementForm(TenantTestCase):
-
+    fixtures = ['initial_data.json']
     def setUp(self):
         self.date = datetime.date.today()
         self.tenant.country_short_code = 'LEBA'

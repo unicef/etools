@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-__author__ = 'jcranwellward'
-
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -14,7 +12,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from jsonfield import JSONField
+from django.contrib.postgres.fields import JSONField
 from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
