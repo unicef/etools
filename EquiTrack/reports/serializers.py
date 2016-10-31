@@ -59,12 +59,7 @@ class SectorCreateSerializer(serializers.ModelSerializer):
         model = Sector
 
 
-# class GoalCreateSerializer(serializers.ModelSerializer):
-#
-#     id = serializers.CharField(read_only=True)
-#
-#     class Meta:
-#         model = Goal
+
 
 
 class IndicatorCreateSerializer(serializers.ModelSerializer):

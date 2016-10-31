@@ -119,6 +119,7 @@ class ResultChainSerializer(serializers.ModelSerializer):
         model = ResultChain
 
 
+
 class LocationSerializer(serializers.Serializer):
 
     latitude = serializers.CharField(source='geo_point.y')
@@ -140,7 +141,56 @@ class LocationSerializer(serializers.Serializer):
         model = Location
 
 
+class ResultChainDetailsSerializer(serializers.ModelSerializer):
+    indicator = IndicatorSerializer()
+    disaggregation = serializers.JSONField()
+    result = OutputSerializer()
+    #indicator_reports = IndicatorReportSerializer(many=True)
+
+    class Meta:
+        model = ResultChain
+
+
+class DistributionPlanSerializer(serializers.ModelSerializer):
+    item = serializers.CharField(source='item.name')
+    site = serializers.CharField(source='site.name')
+    quantity = serializers.IntegerField()
+    delivered = serializers.IntegerField()
+
+    class Meta:
+        model = DistributionPlan
+        fields = ('item', 'site', 'quantity', 'delivered')
+
+
+from reports.models import LowerResult
+
+
+class LowerOutputStructuredSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LowerResult
+        queryset = LowerResult.objects.filter(result_type__name="Output")
+        fields = ('name', 'indicators')
+
+
+class InterventionSerializer(serializers.ModelSerializer):
+
+    pca_id = serializers.CharField(source='id', read_only=True)
+    pca_title = serializers.CharField(source='title')
+    pca_number = serializers.CharField(source='reference_number')
+    partner_name = serializers.CharField(source='partner.name')
+    partner_id = serializers.CharField(source='partner.id')
+    pcasector_set = PCASectorSerializer(many=True, read_only=True)
+    results = LowerOutputStructuredSerializer(many=True, read_only=True)
+    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
+    total_budget = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = PCA
+
+
+
 class IndicatorReportSerializer(serializers.ModelSerializer):
+
     disaggregated = serializers.BooleanField(read_only=True)
     partner_staff_member = serializers.SerializerMethodField(read_only=True)
     indicator = serializers.SerializerMethodField(read_only=True)
@@ -191,42 +241,6 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         # TODO: update value on resultchain (atomic)
         raise serializers.ValidationError({'result_chain': "Creation halted for now"})
 
-
-class ResultChainDetailsSerializer(serializers.ModelSerializer):
-    indicator = IndicatorSerializer()
-    disaggregation = serializers.JSONField()
-    result = OutputSerializer()
-    indicator_reports = IndicatorReportSerializer(many=True)
-
-    class Meta:
-        model = ResultChain
-
-
-class DistributionPlanSerializer(serializers.ModelSerializer):
-    item = serializers.CharField(source='item.name')
-    site = serializers.CharField(source='site.name')
-    quantity = serializers.IntegerField()
-    delivered = serializers.IntegerField()
-
-    class Meta:
-        model = DistributionPlan
-        fields = ('item', 'site', 'quantity', 'delivered')
-
-
-class InterventionSerializer(serializers.ModelSerializer):
-
-    pca_id = serializers.CharField(source='id', read_only=True)
-    pca_title = serializers.CharField(source='title')
-    pca_number = serializers.CharField(source='reference_number')
-    partner_name = serializers.CharField(source='partner.name')
-    partner_id = serializers.CharField(source='partner.id')
-    pcasector_set = PCASectorSerializer(many=True, read_only=True)
-    results = ResultChainSerializer(many=True, read_only=True)
-    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
-    total_budget = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = PCA
 
 
 class GWLocationSerializer(serializers.ModelSerializer):

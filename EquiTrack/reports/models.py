@@ -1,10 +1,20 @@
 from datetime import datetime
 from django.db import models
-from mptt.models import MPTTModel, TreeForeignKey
-from paintstore.fields import ColorPickerField
 from jsonfield import JSONField
 
 from django.utils.functional import cached_property
+from django.utils.translation import ugettext as _
+
+from mptt.models import MPTTModel, TreeForeignKey
+from paintstore.fields import ColorPickerField
+
+from model_utils import Choices
+from model_utils.models import (
+    TimeFramedModel,
+    TimeStampedModel,
+)
+
+
 
 
 class Quarter(models.Model):
@@ -271,7 +281,7 @@ class IndicatorNormalized(models.Model):
 class AppliedIndicator(models.Model):
 
     indicator = models.ForeignKey(IndicatorNormalized)
-    lower_result = models.ForeignKey(LowerResult)
+    lower_result = models.ForeignKey(LowerResult, related_name='indicators')
 
     context_code = models.CharField(max_length=50, null=True, blank=True,
                                     verbose_name="Code in current context")
@@ -282,14 +292,15 @@ class AppliedIndicator(models.Model):
 
     total = models.IntegerField(null=True, blank=True, default=0,
                                 verbose_name="Current Total")
-    sector_total = models.IntegerField(null=True, blank=True,
-                                       verbose_name="Current Sector Total")
 
     # variable disaggregation's that may be present in the work plan
     disaggregation_logic = JSONField(null=True)
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
+
+
+
 
 
 class Indicator(models.Model):

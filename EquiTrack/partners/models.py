@@ -1640,6 +1640,18 @@ class IndicatorDueDates(models.Model):
         ordering = ['-due_date']
 
 
+class SupplyPlan(models.Model):
+
+    partnership = models.ForeignKey(
+        PCA,
+        related_name='supply_plans'
+    )
+    item = models.ForeignKey(SupplyItem)
+    quantity = models.PositiveIntegerField(
+        help_text=u'Total quantity needed for this intervention'
+    )
+    
+
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
 
     STATUS_CHOICES = Choices(
@@ -1651,39 +1663,26 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 
     # FOR WHOM / Beneficiary
     #  -  AppliedIndicator
-    indicator = models.ForeignKey(AppliedIndicator, related_name='indicator_reports')
+    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
 
     # WHO
     #  -  Implementing Partner
-    partner_staff_member = models.ForeignKey(PartnerStaffMember, related_name='indicator_reports')
+    partner_staff_member = models.ForeignKey('partners.PartnerStaffMember', related_name='indicator_reports')
 
     # WHAT
     #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
-    indicator = models.ForeignKey(Indicator, related_name='reports')  # this should always be computed from result_chain
     total = models.PositiveIntegerField()
-    disaggregated = models.BooleanField(default=False)
-    disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
+    disaggregated = models.BooleanField(default=False)  # is this a disaggregated report?
+    disaggregation = JSONField(default=dict)  # the structure should always be computed from applied_indicator
 
     # WHERE
     #  -  Location
-    location = models.ForeignKey(Location, blank=True, null=True)
+    location = models.ForeignKey('locations.Location', blank=True, null=True)
 
     # Metadata
     #  - Remarks, Report Status
     remarks = models.TextField(blank=True, null=True)  # TODO: set max_length property
     report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
-
-
-class SupplyPlan(models.Model):
-
-    partnership = models.ForeignKey(
-        PCA,
-        related_name='supply_plans'
-    )
-    item = models.ForeignKey(SupplyItem)
-    quantity = models.PositiveIntegerField(
-        help_text=u'Total quantity needed for this intervention'
-    )
 
 
 class DistributionPlan(models.Model):
