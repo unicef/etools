@@ -7,7 +7,7 @@ from django.db import connection
 from django.db.transaction import atomic
 
 from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD
-from et2f.models import Currency
+from et2f.models import Currency, AirlineCompany
 from users.models import Country
 
 
@@ -110,6 +110,32 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('User found: {} ({})'.format(full_name, username))
 
+    def _load_airlines(self):
+        airlines = ('Emirates', 'Qatar Airways', 'Singapore Airlines', 'Cathay Pacific', 'ANAs', 'Etihad Airways',
+                    'Turkish Airlines', 'EVA Air', 'Qantas Airways', 'Lufthansa', 'Garuda Indonesia', 'Hainan Airlines',
+                    'Thai Airways', 'Air France', 'Swiss Int\'l Air Lines', 'Asiana Airlines ', 'Air New Zealand',
+                    'Virgin Australia', 'Austrian', 'Bangkok Airways', 'Japan Airlines', 'Dragonair', 'AirAsia', 'KLM',
+                    'Virgin America', 'British Airways', 'Finnair', 'Virgin Atlantic', 'Hong Kong Airlines',
+                    'Norwegian', 'Air Canada', 'China Southern', 'Aegean Airlines', 'Malaysia Airlines',
+                    'Delta Air Lines', 'Korean Air', 'China Airlines', 'easyJet', 'SilkAir', 'Aeroflot',
+                    'South African Airways', 'Oman Air', 'Air Astana', 'Vietnam Airlines', 'LAN Airlines',
+                    'Jetstar Airways', 'Porter Airlines', 'AirAsiaX', 'Aer Lingus', 'WestJet', 'Indigo', 'Iberia',
+                    'jetBlue Airways', 'Jetstar Asia', 'Azul Airlines', 'Avianca', 'TAM Airlines', 'Alitalia',
+                    'Brussels Airlines', 'Alaska Airlines', 'Scoot', 'SAS Scandinavian', 'Air Seychelles',
+                    'TAP Air Portugal', 'Thomson Airways', 'Southwest Airlines', 'SriLankan Airlines',
+                    'United Airlines', 'Copa Airlines', 'Azerbaijan Airlines', 'Jet Airways', 'Hawaiian Airlines ',
+                    'Air Mauritius', 'Air Berlin', 'Eurowings', 'Ethiopian Airlines', 'American Airlines', 'Peach',
+                    'China Eastern', 'Gulf Air', 'Icelandair', 'Saudi Arabian Airlines', 'Philippine Airlines',
+                    'American Eagle ', 'Kenya Airways', 'TAAG Angola ', 'Air China', 'Air Transat', 'Air Nostrum',
+                    'Juneyao Airlines', 'Fiji Airways', 'LOT Polish', 'Kulula', 'Aeromexico', 'Royal Brunei Airlines',
+                    'Tianjin Airlines', 'Tiger Airways ', 'Mango ', 'Royal Jordanian', 'SpiceJet ')
+
+        for airline_name in airlines:
+            a, created = AirlineCompany.objects.get_or_create(name=airline_name, defaults={'code': '-'})
+            if created:
+                self.stdout.write('Airline created: {}'.format(airline_name))
+            else:
+                self.stdout.write('Airline found: {}'.format(airline_name))
 # a = {
 #     "partner": [
 #         {

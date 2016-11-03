@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from et2f.models import AirlineCompany
 from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances, Currency
 
 
@@ -124,6 +125,8 @@ class TravelListParameterSerializer(serializers.Serializer):
         return value
 
 
+# SERIALIZERS FOR STATIC DATA
+
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name')
 
@@ -138,6 +141,13 @@ class CurrencySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'iso_4217')
 
 
+class AirlineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AirlineCompany
+        fields = ('id', 'name', 'code')
+
+
 class StaticDataSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     currencies = CurrencySerializer(many=True)
+    airlines = AirlineSerializer(many=True)

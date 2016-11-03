@@ -1,7 +1,7 @@
 
 from rest_framework import routers
 
-from .views import TravelViewSet, TravelDetailsView, StaticDataViewSet
+from .views import TravelViewSet, StaticDataViewSet
 
 
 api = routers.SimpleRouter()

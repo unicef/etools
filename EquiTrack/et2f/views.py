@@ -5,13 +5,14 @@ from collections import OrderedDict
 from django.contrib.auth import get_user_model
 from django.db.models.query_utils import Q
 from django.http.response import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import viewsets, mixins, generics, status
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
-from et2f.models import Currency
+from et2f.models import Currency, AirlineCompany
 from et2f.serializers import StaticDataSerializer
 from .exports import TravelListExporter
 from .models import Travel
@@ -31,10 +32,12 @@ class PageNumberPagination(_PageNumberPagination):
 
 
 class TravelViewSet(mixins.ListModelMixin,
+                    mixins.CreateModelMixin,
                     mixins.RetrieveModelMixin,
+                    mixins.UpdateModelMixin,
                     viewsets.GenericViewSet):
     queryset = Travel.objects.all()
-    serializer_class = TravelListSerializer
+    serializer_class = TravelDetailsSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminUser,)
 
@@ -66,6 +69,17 @@ class TravelViewSet(mixins.ListModelMixin,
         sort_by = '{}{}'.format(prefix, parameter_serializer.data['sort_by'])
         return queryset.order_by(sort_by)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        serializer = TravelListSerializer(page, many=True)
+        return self.get_paginated_response(serializer.data)
+
+    @csrf_exempt
+    def create(self, request, *args, **kwargs):
+        return super(TravelViewSet, self).create(request, *args, **kwargs)
+
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = TravelDetailsSerializer(instance)
@@ -83,14 +97,6 @@ class TravelViewSet(mixins.ListModelMixin,
         return response
 
 
-class TravelDetailsView(mixins.RetrieveModelMixin,
-                        mixins.UpdateModelMixin,
-                        mixins.DestroyModelMixin,
-                        viewsets.GenericViewSet):
-    queryset = Travel.objects.all()
-    serializer_class = TravelDetailsSerializer
-
-
 class StaticDataViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = StaticDataSerializer
@@ -98,7 +104,8 @@ class StaticDataViewSet(mixins.ListModelMixin,
     def list(self, request, *args, **kwargs):
         User = get_user_model()
         data = {'users': User.objects.exclude(first_name='', last_name=''),
-                'currencies': Currency.objects.all()}
+                'currencies': Currency.objects.all(),
+                'airlines': AirlineCompany.objects.all()}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)
