@@ -84,3 +84,8 @@ class TravelViews(APITenantTestCase):
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEquals(len(response_json['data']), 1)
+
+    def test_static_data_endpoint(self):
+        response = self.forced_auth_req('get', '/api/et2f/static_data/', user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEquals(response_json, {})

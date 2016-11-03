@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from collections import OrderedDict
 
+from django.contrib.auth import get_user_model
 from django.db.models.query_utils import Q
 from django.http.response import HttpResponse
 from rest_framework import viewsets, mixins, generics, status
@@ -10,6 +11,8 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
+from et2f.models import Currency
+from et2f.serializers import StaticDataSerializer
 from .exports import TravelListExporter
 from .models import Travel
 from .serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer
@@ -83,6 +86,19 @@ class TravelViewSet(mixins.ListModelMixin,
 class TravelDetailsView(mixins.RetrieveModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin,
-                        generics.GenericAPIView):
+                        viewsets.GenericViewSet):
     queryset = Travel.objects.all()
     serializer_class = TravelDetailsSerializer
+
+
+class StaticDataViewSet(mixins.ListModelMixin,
+                        viewsets.GenericViewSet):
+    serializer_class = StaticDataSerializer
+
+    def list(self, request, *args, **kwargs):
+        User = get_user_model()
+        data = {'users': User.objects.all(),
+                'currencies': Currency.objects.all()}
+
+        serializer = self.get_serializer(data)
+        return Response(serializer.data, status.HTTP_200_OK)

@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances
+from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances, Currency
 
 
 class VerboseFieldRepresentationMixin(serializers.Serializer):
@@ -121,3 +122,18 @@ class TravelListParameterSerializer(serializers.Serializer):
             valid_values = ', '.join(self._SORTABLE_FIELDS)
             raise ValidationError('Invalid sorting option. Valid values are {}'.format(valid_values))
         return value
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+
+
+class CurrencySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Currency
+
+
+class StaticDataSerializer(serializers.Serializer):
+    users = UserSerializer(many=True)
+    currencies = CurrencySerializer(many=True)

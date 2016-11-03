@@ -1,10 +1,10 @@
 
 from rest_framework import routers
 
-from .views import TravelViewSet, TravelDetailsView
+from .views import TravelViewSet, TravelDetailsView, StaticDataViewSet
 
 
 api = routers.SimpleRouter()
 
 api.register(r'travels', TravelViewSet, base_name='travels')
-# api.register(r'travels/(?P<travel_pk>[0-9]+)/', TravelDetailsView.as_view(), base_name='travel_details')
+api.register(r'static_data', StaticDataViewSet, base_name='static_data')
