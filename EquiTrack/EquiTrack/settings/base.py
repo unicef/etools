@@ -333,6 +333,7 @@ TEMPLATES = [
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#middleware-classes
 MIDDLEWARE_CLASSES = (
     # Default Django middleware.
+    'et2f.middlewares.FixRestFrameworkFuckupMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -340,7 +341,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'et2f.mixins.TestingAuthMixin',
+    'et2f.middlewares.TestingAuthMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION

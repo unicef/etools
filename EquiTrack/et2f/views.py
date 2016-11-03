@@ -5,8 +5,7 @@ from collections import OrderedDict
 from django.contrib.auth import get_user_model
 from django.db.models.query_utils import Q
 from django.http.response import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework import viewsets, mixins, generics, status
+from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
@@ -76,7 +75,6 @@ class TravelViewSet(mixins.ListModelMixin,
         serializer = TravelListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
-    @csrf_exempt
     def create(self, request, *args, **kwargs):
         return super(TravelViewSet, self).create(request, *args, **kwargs)
 

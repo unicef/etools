@@ -70,7 +70,7 @@ class TravelViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/et2f/travels/', data={'search': 'REF2'},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEquals(len(response_json['data']), 1)
+        self.assertEqual(len(response_json['data']), 1)
 
     def test_show_hidden(self):
         TravelFactory(reference_number='REF2', traveller=self.traveller, supervisor=self.unicef_staff, hidden=True)
@@ -78,14 +78,20 @@ class TravelViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/et2f/travels/', data={'show_hidden': True},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEquals(len(response_json['data']), 2)
+        self.assertEqual(len(response_json['data']), 2)
 
         response = self.forced_auth_req('get', '/api/et2f/travels/', data={'show_hidden': False},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEquals(len(response_json['data']), 1)
+        self.assertEqual(len(response_json['data']), 1)
+
+    def test_travel_creation(self):
+        response = self.forced_auth_req('post', '/api/et2f/travels/', data={},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {})
 
     def test_static_data_endpoint(self):
         response = self.forced_auth_req('get', '/api/et2f/static_data/', user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEquals(response_json, {})
+        self.assertEqual(response_json, {})
