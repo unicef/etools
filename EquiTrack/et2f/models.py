@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from . import BooleanChoice, TripStatus
+from django_fsm import FSMField, transition
 
 class Currency(models.Model):
     # This will be populated from vision
@@ -17,7 +18,7 @@ class AirlineCompany(models.Model):
 
 class Travel(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
-    status = models.CharField(max_length=10, null=True, blank=True, choices=TripStatus.CHOICES)
+    status = FSMField(default=TripStatus.PLANNED, choices=TripStatus.CHOICES, protected=True)
     traveller = models.ForeignKey(User, null=True, blank=True, related_name='travels')
     supervisor = models.ForeignKey(User, null=True, blank=True, related_name='+')
     office = models.ForeignKey('users.Office', null=True, blank=True, related_name='+')
@@ -45,6 +46,60 @@ class Travel(models.Model):
     @property
     def approval_date(self):
         return None
+
+    # State machine transitions
+    @transition(status, source=[TripStatus.PLANNED], target=TripStatus.SUBMITTED)
+    def submit_for_approval(self):
+        pass
+
+    @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.APPROVED)
+    def approve(self):
+        pass
+
+    @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.REJECTED)
+    def reject(self):
+        pass
+
+    @transition(status, source=[TripStatus.PLANNED,
+                                TripStatus.REJECTED,
+                                TripStatus.APPROVED,
+                                TripStatus.SENT_FOR_PAYMENT],
+                target=TripStatus.CANCELLED)
+    def cancel(self):
+        pass
+
+    @transition(status, source=[TripStatus.CANCELLED], target=TripStatus.PLANNED)
+    def restore(self):
+        pass
+
+    @transition(status, source=[TripStatus.APPROVED], target=TripStatus.SENT_FOR_PAYMENT)
+    def send_for_payment(self):
+        pass
+
+    @transition(status, source=[TripStatus.SENT_FOR_PAYMENT, TripStatus.APPROVED, TripStatus.CERTIFICATION_REJECTED],
+                target=TripStatus.DONE)
+    def mark_as_done(self):
+        pass
+
+    @transition(status, source=[TripStatus.DONE], target=TripStatus.CERTIFICATION_SUBMITTED)
+    def submit_certificate(self):
+        pass
+
+    @transition(status, source=[TripStatus.CERTIFICATION_SUBMITTED], target=TripStatus.CERTIFICATION_APPROVED)
+    def approve_cetificate(self):
+        pass
+
+    @transition(status, source=[TripStatus.CERTIFICATION_APPROVED], target=TripStatus.CERTIFICATION_REJECTED)
+    def reject_certificate(self):
+        pass
+
+    @transition(status, source=[TripStatus.DONE, TripStatus.CERTIFICATION_APPROVED], target=TripStatus.CERTIFIED)
+    def mark_as_certified(self):
+        pass
+
+    @transition(status, source=[TripStatus.CERTIFIED], target=TripStatus.COMPLETED)
+    def mark_as_completed(self):
+        pass
 
 
 class TravelActivity(models.Model):

@@ -386,6 +386,7 @@ SHARED_APPS = (
     'generic_links',
     'gunicorn',
     'post_office',
+    'django_fsm',
     'djrill',
     'djcelery',
     'djcelery_email',

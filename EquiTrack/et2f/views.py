@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 
 from django.db.models.query_utils import Q
+from django.http.response import HttpResponse
 from rest_framework import viewsets, mixins, generics, status
+from rest_framework.decorators import list_route
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
+from .exports import TravelListExporter
 from .models import Travel
 from .serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer
 
@@ -65,7 +68,21 @@ class TravelViewSet(mixins.ListModelMixin,
         serializer = TravelDetailsSerializer(instance)
         return Response(serializer.data, status.HTTP_200_OK)
 
+    @list_route(methods=['get'])
+    def export(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        dataset = TravelListExporter().export(queryset)
 
-class TravelDetailsView(generics.GenericAPIView):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportPartners.csv"'
+        response.write(dataset.csv)
+
+        return response
+
+
+class TravelDetailsView(mixins.RetrieveModelMixin,
+                        mixins.UpdateModelMixin,
+                        mixins.DestroyModelMixin,
+                        generics.GenericAPIView):
     queryset = Travel.objects.all()
     serializer_class = TravelDetailsSerializer
