@@ -125,13 +125,17 @@ class TravelListParameterSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='get_full_name')
+
     class Meta:
         model = get_user_model()
+        fields = ('id', 'full_name')
 
 
 class CurrencySerializer(serializers.ModelSerializer):
     class Meta:
         model = Currency
+        fields = ('id', 'name', 'iso_4217')
 
 
 class StaticDataSerializer(serializers.Serializer):

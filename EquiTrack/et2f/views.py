@@ -97,7 +97,7 @@ class StaticDataViewSet(mixins.ListModelMixin,
 
     def list(self, request, *args, **kwargs):
         User = get_user_model()
-        data = {'users': User.objects.all(),
+        data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all()}
 
         serializer = self.get_serializer(data)
