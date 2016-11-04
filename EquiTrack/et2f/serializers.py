@@ -121,45 +121,43 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
         expenses = validated_data.pop('expenses', [])
         deductions = validated_data.pop('deductions', [])
         cost_assignments = validated_data.pop('cost_assignments', [])
-        clearances = validated_data.pop('clearances', [])
+        clearances = validated_data.pop('clearances', {})
         activities = validated_data.pop('activities', [])
 
         instance = super(TravelDetailsSerializer, self).create(validated_data)
 
-        def add_travel(data):
-            data['travel'] = instance
-            return data
+        def create_related_models(model, data):
+            instances = []
+            for d in data:
+                d['travel'] = instance
+                instances.append(model(**d))
 
-        itinerary = [IteneraryItem(**d) for d in map(add_travel, itinerary)]
-        IteneraryItem.objects.bulk_create(itinerary)
+            model.objects.bulk_create(itinerary)
 
-        expenses = [Expense(**d) for d in map(add_travel, expenses)]
-        Expense.objects.bulk_create(expenses)
+        # Reverse FK and M2M relations
+        create_related_models(IteneraryItem, itinerary)
+        create_related_models(Expense, expenses)
+        create_related_models(Deduction, deductions)
+        create_related_models(CostAssignment, cost_assignments)
+        create_related_models(TravelActivity, activities)
+        create_related_models(IteneraryItem, itinerary)
 
-        deductions = [Deduction(**d) for d in map(add_travel, deductions)]
-        Deduction.objects.bulk_create(deductions)
-
-        cost_assignments = [CostAssignment(**d) for d in map(add_travel, cost_assignments)]
-        CostAssignment.objects.bulk_create(cost_assignments)
-
-        clearances = [Clearances(**d) for d in map(add_travel, clearances)]
-        Clearances.objects.bulk_create(clearances)
-
-        activities = [TravelActivity(**d) for d in map(add_travel, activities)]
-        TravelActivity.objects.bulk_create(activities)
+        # O2O relations
+        clearances['travel'] = instance
+        Clearances.objects.create(**clearances)
 
         return instance
 
-    # def update(self, instance, validated_data):
-    #     itinerary = validated_data.pop('itinerary', [])
-    #     expenses = validated_data.pop('expenses', [])
-    #     deductions = validated_data.pop('deductions', [])
-    #     cost_assignments = validated_data.pop('cost_assignments', [])
-    #     clearances = validated_data.pop('clearances', [])
-    #
-    #     instance = super(TravelDetailsSerializer, self).update(instance)
-    #
-    #     return instance
+    def update(self, instance, validated_data):
+        itinerary = validated_data.pop('itinerary', [])
+        expenses = validated_data.pop('expenses', [])
+        deductions = validated_data.pop('deductions', [])
+        cost_assignments = validated_data.pop('cost_assignments', [])
+        clearances = validated_data.pop('clearances', [])
+
+        instance = super(TravelDetailsSerializer, self).update(instance)
+
+        return instance
 
 
 class TravelListSerializer(TravelDetailsSerializer):
