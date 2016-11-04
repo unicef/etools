@@ -112,7 +112,7 @@ class TravelActivity(models.Model):
     travel = models.ForeignKey('Travel', related_name='activities')
     travel_type = models.CharField(max_length=64)
     partner = models.ForeignKey('partners.PartnerOrganization', related_name='+')
-    partnership = models.ForeignKey('partners.PCA')
+    partnership = models.ForeignKey('partners.PCA', related_name='+')
     result = models.ForeignKey('reports.Result', related_name='+')
     location = models.ForeignKey('locations.Location', related_name='+')
 
@@ -126,7 +126,7 @@ class IteneraryItem(models.Model):
     dsa_region = models.CharField(max_length=255)
     overnight_travel = models.BooleanField(default=False)
     mode_of_travel = models.CharField(max_length=255)
-    airline = models.ForeignKey('AirlineCompany')
+    airline = models.ForeignKey('AirlineCompany', related_name='+')
 
 
 class Expense(models.Model):
@@ -155,7 +155,7 @@ class CostAssignment(models.Model):
     travel = models.ForeignKey('Travel', related_name='cost_assignments')
     wbs = models.ForeignKey('reports.Result', related_name='+')
     share = models.PositiveIntegerField()
-    grant = models.ForeignKey('funds.Grant')
+    grant = models.ForeignKey('funds.Grant', related_name='+')
     # fund = models.ForeignKey()    # No idea where to connect
 
 
