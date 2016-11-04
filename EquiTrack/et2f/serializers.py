@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from et2f.models import AirlineCompany
+from et2f.models import AirlineCompany, TravelActivity
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -96,18 +96,25 @@ class ClearancesSerializer(VerboseFieldRepresentationMixin, serializers.ModelSer
         fields = ('medical_clearance', 'security_clearance', 'security_course')
 
 
+class TravelActivitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TravelActivity
+        fields = ('travel_type', 'partner', 'partnership', 'result', 'location')
+
+
 class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     itinerary = IteneraryItemSerializer(many=True)
     expenses = ExpenseSerializer(many=True)
     deductions = DeductionSerializer(many=True)
     cost_assignments = CostAssignmentSerializer(many=True)
     clearances = ClearancesSerializer(required=False)
+    activities = TravelActivitySerializer(required=True)
 
     class Meta:
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
                   'traveller', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
-                  'cost_assignments', 'clearances')
+                  'cost_assignments', 'clearances', 'status', 'activities')
 
     def create(self, validated_data):
         itinerary = validated_data.pop('itinerary', [])
@@ -115,6 +122,7 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
         deductions = validated_data.pop('deductions', [])
         cost_assignments = validated_data.pop('cost_assignments', [])
         clearances = validated_data.pop('clearances', [])
+        activities = validated_data.pop('activities', [])
 
         instance = super(TravelDetailsSerializer, self).create(validated_data)
 
@@ -137,7 +145,21 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
         clearances = [Clearances(**d) for d in map(add_travel, clearances)]
         Clearances.objects.bulk_create(clearances)
 
+        activities = [TravelActivity(**d) for d in map(add_travel, activities)]
+        TravelActivity.objects.bulk_create(activities)
+
         return instance
+
+    # def update(self, instance, validated_data):
+    #     itinerary = validated_data.pop('itinerary', [])
+    #     expenses = validated_data.pop('expenses', [])
+    #     deductions = validated_data.pop('deductions', [])
+    #     cost_assignments = validated_data.pop('cost_assignments', [])
+    #     clearances = validated_data.pop('clearances', [])
+    #
+    #     instance = super(TravelDetailsSerializer, self).update(instance)
+    #
+    #     return instance
 
 
 class TravelListSerializer(TravelDetailsSerializer):
