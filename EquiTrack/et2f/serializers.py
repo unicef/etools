@@ -155,7 +155,7 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
         cost_assignments = validated_data.pop('cost_assignments', [])
         clearances = validated_data.pop('clearances', [])
 
-        instance = super(TravelDetailsSerializer, self).update(instance)
+        instance = super(TravelDetailsSerializer, self).update(instance, validated_data)
 
         return instance
 
