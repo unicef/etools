@@ -47,6 +47,7 @@ class Command(BaseCommand):
         profile.save()
 
         self.stdout.write('User was successfully created.')
+        return user
 
     def _load_currencies(self):
         data = [('United States dollar', 'USD'),
