@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.db.models.query_utils import Q
 from django.http.response import HttpResponse
 from rest_framework import viewsets, mixins, status
-from rest_framework.decorators import list_route
+from rest_framework.decorators import list_route, detail_route
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
@@ -32,6 +32,15 @@ class PageNumberPagination(_PageNumberPagination):
             ('data', data),
             ('total_count', self.page.paginator.object_list.count()),
         ]))
+
+
+def state_transition(transition_name):
+    @detail_route(methods=['post'])
+    def func(self, request, *args, **kwargs):
+        kwargs['transition_name'] = transition_name
+        return self.update(request, *args, **kwargs)
+    func.__name__ = str(transition_name)
+    return func
 
 
 class TravelViewSet(mixins.ListModelMixin,
@@ -86,6 +95,24 @@ class TravelViewSet(mixins.ListModelMixin,
         instance = self.get_object()
         serializer = TravelDetailsSerializer(instance)
         return Response(serializer.data, status.HTTP_200_OK)
+    
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        transition_name = kwargs.pop('transition_name', None)
+        
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        
+        self.perform_update(serializer, transition_name)
+        
+        return Response(serializer.data)
+    
+    def perform_update(self, serializer, transition_name=None):
+        super(TravelViewSet, self).perform_update(serializer)
+        if transition_name:
+            transition = getattr(serializer.instance, transition_name)
+            transition()
 
     @list_route(methods=['get'])
     def export(self, request, *args, **kwargs):
@@ -97,6 +124,20 @@ class TravelViewSet(mixins.ListModelMixin,
         response.write(dataset.csv)
 
         return response
+
+    # State changes
+    submit_for_approval = state_transition('submit_for_approval')
+    approve = state_transition('approve')
+    reject = state_transition('reject')
+    cancel = state_transition('cancel')
+    restore = state_transition('restore')
+    send_for_payment = state_transition('send_for_payment')
+    mark_as_done = state_transition('mark_as_done')
+    submit_certificate = state_transition('submit_certificate')
+    approve_cetificate = state_transition('approve_cetificate')
+    reject_certificate = state_transition('reject_certificate')
+    mark_as_certified = state_transition('submit_for_approval')
+    mark_as_completed = state_transition('mark_as_completed')
 
 
 class StaticDataViewSet(mixins.ListModelMixin,
