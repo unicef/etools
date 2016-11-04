@@ -108,7 +108,7 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
     deductions = DeductionSerializer(many=True)
     cost_assignments = CostAssignmentSerializer(many=True)
     clearances = ClearancesSerializer(required=False)
-    activities = TravelActivitySerializer(required=True)
+    activities = TravelActivitySerializer(many=True)
 
     class Meta:
         model = Travel
