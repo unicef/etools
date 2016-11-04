@@ -5,6 +5,7 @@ from collections import OrderedDict
 from django.contrib.auth import get_user_model
 from django.db.models.query_utils import Q
 from django.http.response import HttpResponse
+from django.utils.functional import cached_property
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.permissions import IsAdminUser
@@ -144,7 +145,8 @@ class StaticDataViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = StaticDataSerializer
 
-    def list(self, request, *args, **kwargs):
+    @cached_property
+    def _serialized_data(self):
         User = get_user_model()
         data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all(),
@@ -157,4 +159,8 @@ class StaticDataViewSet(mixins.ListModelMixin,
                 'locations': Location.objects.all()}
 
         serializer = self.get_serializer(data)
-        return Response(serializer.data, status.HTTP_200_OK)
+        return serializer.data
+
+    def list(self, request, *args, **kwargs):
+
+        return Response(self._serialized_data, status.HTTP_200_OK)
