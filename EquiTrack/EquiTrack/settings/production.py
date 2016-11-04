@@ -180,7 +180,7 @@ SAML_CONFIG = {
 SAML_SIGNED_LOGOUT = True
 
 ########## JWT AUTH CONFIGURATION
-certificate_text = open(join(DJANGO_ROOT, 'saml/stspem.cer'), 'r').read()
+certificate_text = open(join(DJANGO_ROOT, 'saml/etripspub.cer'), 'r').read()
 certificate = load_pem_x509_certificate(certificate_text, default_backend())
 JWT_SECRET_KEY = certificate.public_key()
 JWT_AUTH = {
@@ -210,7 +210,7 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
     #'JWT_AUDIENCE': 'https://{}/API'.format(HOST),
     # TODO: FIX THIS, NEEDS SETUP WITH ADFS
-    'JWT_AUDIENCE': 'https://etools-staging.unicef.org/API',  # Hotfix to enable etrips login into prod
+    'JWT_AUDIENCE': 'https://etools.unicef.org/API',
     'JWT_ISSUER': None,
 
     'JWT_ALLOW_REFRESH': False,
