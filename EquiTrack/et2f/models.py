@@ -1,8 +1,10 @@
+from datetime import datetime
 
 from django.db import models
 from django.contrib.auth.models import User
-from . import BooleanChoice, TripStatus
 from django_fsm import FSMField, transition
+
+from et2f import BooleanChoice, TripStatus
 
 class Currency(models.Model):
     # This will be populated from vision
@@ -14,6 +16,10 @@ class AirlineCompany(models.Model):
     # This will be populated from vision
     name = models.CharField(max_length=255)
     code = models.CharField(max_length=12)
+
+
+def make_reference_number():
+    return datetime.now().strftime('%H/%M/%S')
 
 
 class Travel(models.Model):
@@ -28,7 +34,7 @@ class Travel(models.Model):
     purpose = models.CharField(max_length=120, null=True, blank=True)
     international_travel = models.NullBooleanField(default=False, null=True, blank=True)
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
-    reference_number = models.CharField(max_length=12, null=True, blank=True)
+    reference_number = models.CharField(max_length=12, default=make_reference_number)
     hidden = models.BooleanField(default=False)
 
     @property
