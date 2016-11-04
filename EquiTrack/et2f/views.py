@@ -35,7 +35,7 @@ class PageNumberPagination(_PageNumberPagination):
 
 
 def state_transition(transition_name):
-    @detail_route(methods=['post'])
+    @detail_route(methods=['post', 'put', 'patch'])
     def func(self, request, *args, **kwargs):
         kwargs['transition_name'] = transition_name
         return self.update(request, *args, **kwargs)
