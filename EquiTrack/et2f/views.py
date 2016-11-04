@@ -111,9 +111,12 @@ class TravelViewSet(mixins.ListModelMixin,
     
     def perform_update(self, serializer, transition_name=None):
         super(TravelViewSet, self).perform_update(serializer)
+
+        instance = serializer.instance
         if transition_name:
-            transition = getattr(serializer.instance, transition_name)
+            transition = getattr(instance, transition_name)
             transition()
+            instance.save()
 
     @list_route(methods=['get'])
     def export(self, request, *args, **kwargs):
