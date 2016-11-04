@@ -54,7 +54,7 @@ class Travel(models.Model):
         return None
 
     # State machine transitions
-    @transition(status, source=[TripStatus.PLANNED], target=TripStatus.SUBMITTED)
+    @transition(status, source=[TripStatus.PLANNED, TripStatus.REJECTED], target=TripStatus.SUBMITTED)
     def submit_for_approval(self):
         pass
 
