@@ -74,6 +74,7 @@ class DeductionSerializer(VerboseFieldRepresentationMixin, serializers.ModelSeri
 
     class Meta:
         model = Deduction
+        fields = ('date', 'breakfast', 'lunch', 'dinner', 'accomodation', 'no_dsa', 'day_of_the_week')
 
 
 class CostAssignmentSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
@@ -98,6 +99,36 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
                   'traveller', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
                   'cost_assignments', 'clearances')
+
+    def create(self, validated_data):
+        itinerary = validated_data.pop('itinerary', [])
+        expenses = validated_data.pop('expenses', [])
+        deductions = validated_data.pop('deductions', [])
+        cost_assignments = validated_data.pop('cost_assignments', [])
+        clearances = validated_data.pop('clearances', [])
+
+        instance = super(TravelDetailsSerializer, self).create(validated_data)
+
+        def add_travel(data):
+            data['travel'] = instance
+            return data
+
+        itinerary = [IteneraryItem(**d) for d in map(add_travel, itinerary)]
+        IteneraryItem.objects.bulk_create(itinerary)
+
+        expenses = [Expense(**d) for d in map(add_travel, expenses)]
+        Expense.objects.bulk_create(expenses)
+
+        deductions = [Deduction(**d) for d in map(add_travel, deductions)]
+        Deduction.objects.bulk_create(deductions)
+
+        cost_assignments = [CostAssignment(**d) for d in map(add_travel, cost_assignments)]
+        CostAssignment.objects.bulk_create(cost_assignments)
+
+        clearances = [Clearances(**d) for d in map(add_travel, clearances)]
+        Clearances.objects.bulk_create(clearances)
+
+        return instance
 
 
 class TravelListSerializer(TravelDetailsSerializer):
