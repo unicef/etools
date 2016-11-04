@@ -5,6 +5,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from et2f.models import AirlineCompany
+from locations.models import Location
+from partners.models import PartnerOrganization, PCA
+from reports.models import Result
 from users.models import Office, Section
 from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances, Currency
 
@@ -196,9 +199,39 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
+class PartnerOrganizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PartnerOrganization
+        fields = ('id', 'name')
+
+
+class PartnershipSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='title')
+
+    class Meta:
+        model = PCA
+        fields = ('id', 'name')
+
+
+class ResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Result
+        fields = ('id', 'name')
+
+
+class LocationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Location
+        fields = ('id', 'name')
+
+
 class StaticDataSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     currencies = CurrencySerializer(many=True)
     airlines = AirlineSerializer(many=True)
     offices = OfficeSerializer(many=True)
     sections = SectionSerializer(many=True)
+    partners = PartnerOrganizationSerializer(many=True)
+    partnerships = PartnershipSerializer(many=True)
+    results = ResultSerializer(many=True)
+    locations = LocationSerializer(many=True)

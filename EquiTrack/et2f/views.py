@@ -13,6 +13,9 @@ from rest_framework.response import Response
 
 from et2f.models import Currency, AirlineCompany
 from et2f.serializers import StaticDataSerializer
+from locations.models import Location
+from partners.models import PartnerOrganization, PCA
+from reports.models import Result
 from users.models import Office, Section
 from .exports import TravelListExporter
 from .models import Travel
@@ -106,7 +109,11 @@ class StaticDataViewSet(mixins.ListModelMixin,
                 'currencies': Currency.objects.all(),
                 'airlines': AirlineCompany.objects.all(),
                 'offices': Office.objects.all(),
-                'sections': Section.objects.all()}
+                'sections': Section.objects.all(),
+                'partners': PartnerOrganization.objects.all(),
+                'partnerships': PCA.objects.all(),
+                'results': Result.objects.all(),
+                'locations': Location.objects.all()}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)

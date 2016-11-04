@@ -8,6 +8,7 @@ from django.db.transaction import atomic
 
 from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD
 from et2f.models import Currency, AirlineCompany
+from partners.models import PartnerOrganization
 from users.models import Country, Office
 
 
@@ -21,6 +22,7 @@ class Command(BaseCommand):
         self._load_users()
         self._load_airlines()
         self._load_offices()
+        self._load_partners()
 
     def _create_admin_user(self):
         User = get_user_model()
@@ -144,208 +146,18 @@ class Command(BaseCommand):
                 self.stdout.write('Office created: {}'.format(office_name))
             else:
                 self.stdout.write('Office found: {}'.format(office_name))
-# a = {
-#     "partner": [
-#         {
-#             "value": 0,
-#             "label": "Dynazzy"
-#         },
-#         {
-#             "value": 1,
-#             "label": "Yodoo"
-#         },
-#         {
-#             "value": 2,
-#             "label": "Omba"
-#         },
-#         {
-#             "value": 3,
-#             "label": "Eazzy"
-#         },
-#         {
-#             "value": 4,
-#             "label": "Avamba"
-#         },
-#         {
-#             "value": 5,
-#             "label": "Jaxworks"
-#         },
-#         {
-#             "value": 6,
-#             "label": "Thoughtmix"
-#         },
-#         {
-#             "value": 7,
-#             "label": "Bubbletube"
-#         },
-#         {
-#             "value": 8,
-#             "label": "Mydo"
-#         },
-#         {
-#             "value": 9,
-#             "label": "Photolist"
-#         },
-#         {
-#             "value": 10,
-#             "label": "Gevee"
-#         },
-#         {
-#             "value": 11,
-#             "label": "Buzzdog"
-#         },
-#         {
-#             "value": 12,
-#             "label": "Quinu"
-#         },
-#         {
-#             "value": 13,
-#             "label": "Edgewire"
-#         },
-#         {
-#             "value": 14,
-#             "label": "Yambee"
-#         },
-#         {
-#             "value": 15,
-#             "label": "Ntag"
-#         },
-#         {
-#             "value": 16,
-#             "label": "Muxo"
-#         },
-#         {
-#             "value": 17,
-#             "label": "Edgetag"
-#         },
-#         {
-#             "value": 18,
-#             "label": "Tagfeed"
-#         },
-#         {
-#             "value": 19,
-#             "label": "BlogXS"
-#         },
-#         {
-#             "value": 20,
-#             "label": "Feedbug"
-#         },
-#         {
-#             "value": 21,
-#             "label": "Babblestorm"
-#         },
-#         {
-#             "value": 22,
-#             "label": "Skimia"
-#         },
-#         {
-#             "value": 23,
-#             "label": "Linkbridge"
-#         },
-#         {
-#             "value": 24,
-#             "label": "Fatz"
-#         },
-#         {
-#             "value": 25,
-#             "label": "Kwimbee"
-#         },
-#         {
-#             "value": 26,
-#             "label": "Yodo"
-#         },
-#         {
-#             "value": 27,
-#             "label": "Skibox"
-#         },
-#         {
-#             "value": 28,
-#             "label": "Zoomzone"
-#         },
-#         {
-#             "value": 29,
-#             "label": "Meemm"
-#         },
-#         {
-#             "value": 30,
-#             "label": "Twitterlist"
-#         },
-#         {
-#             "value": 31,
-#             "label": "Kwilith"
-#         },
-#         {
-#             "value": 32,
-#             "label": "Skipfire"
-#         },
-#         {
-#             "value": 33,
-#             "label": "Wikivu"
-#         },
-#         {
-#             "value": 34,
-#             "label": "Topicblab"
-#         },
-#         {
-#             "value": 35,
-#             "label": "BlogXS"
-#         },
-#         {
-#             "value": 36,
-#             "label": "Brightbean"
-#         },
-#         {
-#             "value": 37,
-#             "label": "Skimia"
-#         },
-#         {
-#             "value": 38,
-#             "label": "Mycat"
-#         },
-#         {
-#             "value": 39,
-#             "label": "Tagcat"
-#         },
-#         {
-#             "value": 40,
-#             "label": "Meedoo"
-#         },
-#         {
-#             "value": 41,
-#             "label": "Vitz"
-#         },
-#         {
-#             "value": 42,
-#             "label": "Realblab"
-#         },
-#         {
-#             "value": 43,
-#             "label": "Babbleopia"
-#         },
-#         {
-#             "value": 44,
-#             "label": "Pixonyx"
-#         },
-#         {
-#             "value": 45,
-#             "label": "Dabshots"
-#         },
-#         {
-#             "value": 46,
-#             "label": "Gabcube"
-#         },
-#         {
-#             "value": 47,
-#             "label": "Yoveo"
-#         },
-#         {
-#             "value": 48,
-#             "label": "Realblab"
-#         },
-#         {
-#             "value": 49,
-#             "label": "Tagcat"
-#         }
-#     ],
-# 
-# }
+
+    def _load_partners(self):
+        partners = ['Dynazzy', 'Yodoo', 'Omba', 'Eazzy', 'Avamba', 'Jaxworks', 'Thoughtmix', 'Bubbletube', 'Mydo',
+                    'Photolist', 'Gevee', 'Buzzdog', 'Quinu', 'Edgewire', 'Yambee', 'Ntag', 'Muxo',
+                    'Edgetag', 'Tagfeed', 'BlogXS', 'Feedbug', 'Babblestorm', 'Skimia', 'Linkbridge', 'Fatz', 'Kwimbee',
+                    'Yodo', 'Skibox', 'Zoomzone', 'Meemm', 'Twitterlist', 'Kwilith', 'Skipfire', 'Wikivu', 'Topicblab',
+                    'BlogXS', 'Brightbean', 'Skimia', 'Mycat', 'Tagcat', 'Meedoo', 'Vitz', 'Realblab', 'Babbleopia',
+                    'Pixonyx', 'Dabshots', 'Gabcube', 'Yoveo', 'Realblab', 'Tagcat']
+
+        for partner_name in partners:
+            p, created = PartnerOrganization.objects.get_or_create(name=partner_name)
+            if created:
+                self.stdout.write('Partner created: {}'.format(partner_name))
+            else:
+                self.stdout.write('Partner found: {}'.format(partner_name))
