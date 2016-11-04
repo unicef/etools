@@ -8,7 +8,7 @@ from django.db.transaction import atomic
 
 from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD
 from et2f.models import Currency, AirlineCompany
-from users.models import Country
+from users.models import Country, Office
 
 
 class Command(BaseCommand):
@@ -19,6 +19,8 @@ class Command(BaseCommand):
 
         self._load_currencies()
         self._load_users()
+        self._load_airlines()
+        self._load_offices()
 
     def _create_admin_user(self):
         User = get_user_model()
@@ -43,10 +45,6 @@ class Command(BaseCommand):
         profile.save()
 
         self.stdout.write('User was successfully created.')
-
-    def _load_travel_types(self):
-        # "Plane", "Boat", "Car", "Train"
-        pass
 
     def _load_currencies(self):
         data = [('United States dollar', 'USD'),
@@ -136,6 +134,16 @@ class Command(BaseCommand):
                 self.stdout.write('Airline created: {}'.format(airline_name))
             else:
                 self.stdout.write('Airline found: {}'.format(airline_name))
+
+    def _load_offices(self):
+        offices = ('Pulilab', 'Unicef HQ')
+
+        for office_name in offices:
+            o, created = Office.objects.get_or_create(name=office_name)
+            if created:
+                self.stdout.write('Office created: {}'.format(office_name))
+            else:
+                self.stdout.write('Office found: {}'.format(office_name))
 # a = {
 #     "partner": [
 #         {
