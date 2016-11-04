@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from et2f.models import Currency, AirlineCompany
 from et2f.serializers import StaticDataSerializer
+from users.models import Office, Section
 from .exports import TravelListExporter
 from .models import Travel
 from .serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer
@@ -103,7 +104,9 @@ class StaticDataViewSet(mixins.ListModelMixin,
         User = get_user_model()
         data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all(),
-                'airlines': AirlineCompany.objects.all()}
+                'airlines': AirlineCompany.objects.all(),
+                'offices': Office.objects.all(),
+                'sections': Section.objects.all()}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)

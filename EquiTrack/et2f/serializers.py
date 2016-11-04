@@ -5,6 +5,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from et2f.models import AirlineCompany
+from users.models import Office, Section
 from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances, Currency
 
 
@@ -178,7 +179,21 @@ class AirlineSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'code')
 
 
+class OfficeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = ('id', 'name')
+
+
+class SectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Section
+        fields = ('id', 'name')
+
+
 class StaticDataSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     currencies = CurrencySerializer(many=True)
     airlines = AirlineSerializer(many=True)
+    offices = OfficeSerializer(many=True)
+    sections = SectionSerializer(many=True)
