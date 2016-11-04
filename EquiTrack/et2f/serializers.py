@@ -63,11 +63,14 @@ class VerboseFieldRepresentationMixin(serializers.Serializer):
 class IteneraryItemSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     class Meta:
         model = IteneraryItem
+        fields = ('origin', 'destination', 'departure_date', 'arrival_date', 'dsa_region', 'overnight_travel',
+                  'mode_of_travel', 'airline')
 
 
 class ExpenseSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     class Meta:
         model = Expense
+        fields = ('type', 'document_currency', 'account_currency', 'amount')
 
 
 class DeductionSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
@@ -81,11 +84,13 @@ class DeductionSerializer(VerboseFieldRepresentationMixin, serializers.ModelSeri
 class CostAssignmentSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     class Meta:
         model = CostAssignment
+        fields = ('wbs', 'share', 'grant')
 
 
 class ClearancesSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
     class Meta:
         model = Clearances
+        fields = ('medical_clearance', 'security_clearance', 'security_course')
 
 
 class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
