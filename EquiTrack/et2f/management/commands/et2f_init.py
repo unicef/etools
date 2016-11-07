@@ -11,7 +11,7 @@ from et2f.models import Currency, AirlineCompany
 from partners.models import PartnerOrganization
 from users.models import Country, Office
 
-
+# DEVELOPMENT CODE -
 class Command(BaseCommand):
     @atomic
     def handle(self, *args, **options):
@@ -162,3 +162,4 @@ class Command(BaseCommand):
                 self.stdout.write('Partner created: {}'.format(partner_name))
             else:
                 self.stdout.write('Partner found: {}'.format(partner_name))
+# DEVELOPMENT CODE - END

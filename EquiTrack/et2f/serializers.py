@@ -12,71 +12,20 @@ from users.models import Office, Section
 from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances, Currency
 
 
-class VerboseFieldRepresentationMixin(serializers.Serializer):
-    SECTION_PREFIX = 'SECTION'
-
-    # @property
-    # def _use_verbose_fields(self):
-    #     current = self
-    #     while True:
-    #         # In case of root serializer many=True
-    #         if isinstance(current.parent, serializers.ListSerializer) and current.parent.parent is None:
-    #             break
-    #
-    #         # Root serializer
-    #         if current.parent is None:
-    #             break
-    #
-    #         current = current.parent
-    #
-    #     meta = getattr(current, 'Meta', None)
-    #     return getattr(meta, 'use_verbose_fields', True)
-    #
-    # def _get_self_field_name(self):
-    #     if self.parent is None:
-    #         return None
-    #
-    #     if not self.field_name:
-    #         return self.parent.field_name
-    #     return self.field_name
-    #
-    # def _get_field_permission_name(self, field):
-    #     field_name = field.field_name
-    #
-    #     if isinstance(field, serializers.BaseSerializer):
-    #         return '{}:{}'.format(self.SECTION_PREFIX, field_name)
-    #
-    #     self_field_name = self._get_self_field_name()
-    #     if self_field_name:
-    #         return '{}:{}'.format(self_field_name, field.field_name)
-    #     return field.field_name
-    #
-    # def to_representation(self, instance):
-    #     ret = super(VerboseFieldRepresentationMixin, self).to_representation(instance)
-    #     if not self._use_verbose_fields:
-    #         return ret
-    #
-    #     for field_name, value in ret.items():
-    #         ret[field_name] = {'value': value,
-    #                            'read_only': False,
-    #                            'permission': self._get_field_permission_name(self.fields[field_name])}
-    #     return ret
-
-
-class IteneraryItemSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
+class IteneraryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = IteneraryItem
         fields = ('origin', 'destination', 'departure_date', 'arrival_date', 'dsa_region', 'overnight_travel',
                   'mode_of_travel', 'airline')
 
 
-class ExpenseSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
+class ExpenseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Expense
         fields = ('type', 'document_currency', 'account_currency', 'amount')
 
 
-class DeductionSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
+class DeductionSerializer(serializers.ModelSerializer):
     day_of_the_week = serializers.CharField(read_only=True)
 
     class Meta:
@@ -84,13 +33,13 @@ class DeductionSerializer(VerboseFieldRepresentationMixin, serializers.ModelSeri
         fields = ('date', 'breakfast', 'lunch', 'dinner', 'accomodation', 'no_dsa', 'day_of_the_week')
 
 
-class CostAssignmentSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
+class CostAssignmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CostAssignment
         fields = ('wbs', 'share', 'grant')
 
 
-class ClearancesSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
+class ClearancesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Clearances
         fields = ('medical_clearance', 'security_clearance', 'security_course')
@@ -102,7 +51,7 @@ class TravelActivitySerializer(serializers.ModelSerializer):
         fields = ('travel_type', 'partner', 'partnership', 'result', 'location')
 
 
-class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.ModelSerializer):
+class TravelDetailsSerializer(serializers.ModelSerializer):
     itinerary = IteneraryItemSerializer(many=True)
     expenses = ExpenseSerializer(many=True)
     deductions = DeductionSerializer(many=True)
@@ -153,7 +102,7 @@ class TravelDetailsSerializer(VerboseFieldRepresentationMixin, serializers.Model
         expenses = validated_data.pop('expenses', [])
         deductions = validated_data.pop('deductions', [])
         cost_assignments = validated_data.pop('cost_assignments', [])
-        clearances = validated_data.pop('clearances', [])
+        clearances = validated_data.pop('clearances', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

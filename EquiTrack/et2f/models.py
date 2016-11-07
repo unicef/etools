@@ -67,6 +67,8 @@ class Travel(models.Model):
         pass
 
     @transition(status, source=[TripStatus.PLANNED,
+
+
                                 TripStatus.REJECTED,
                                 TripStatus.APPROVED,
                                 TripStatus.SENT_FOR_PAYMENT],

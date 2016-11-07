@@ -5,7 +5,6 @@ from collections import OrderedDict
 from django.contrib.auth import get_user_model
 from django.db.models.query_utils import Q
 from django.http.response import HttpResponse
-from django.utils.functional import cached_property
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.permissions import IsAdminUser
@@ -91,9 +90,6 @@ class TravelViewSet(mixins.ListModelMixin,
         serializer = TravelListSerializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
-    def create(self, request, *args, **kwargs):
-        return super(TravelViewSet, self).create(request, *args, **kwargs)
-
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = TravelDetailsSerializer(instance)
@@ -150,8 +146,7 @@ class StaticDataViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     serializer_class = StaticDataSerializer
 
-    @cached_property
-    def _serialized_data(self):
+    def list(self, request, *args, **kwargs):
         User = get_user_model()
         data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all(),
@@ -164,8 +159,4 @@ class StaticDataViewSet(mixins.ListModelMixin,
                 'locations': Location.objects.all()}
 
         serializer = self.get_serializer(data)
-        return serializer.data
-
-    def list(self, request, *args, **kwargs):
-
-        return Response(self._serialized_data, status.HTTP_200_OK)
+        return Response(serializer.data, status.HTTP_200_OK)
