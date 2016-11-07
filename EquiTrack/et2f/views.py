@@ -12,6 +12,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
+from et2f import TripStatus
 from et2f.models import Currency, AirlineCompany
 from et2f.serializers import StaticDataSerializer
 from locations.models import Location
@@ -75,7 +76,8 @@ class TravelViewSet(mixins.ListModelMixin,
         # Hide hidden travels
         show_hidden = parameter_serializer.data['show_hidden']
         if not show_hidden:
-            queryset = queryset.filter(hidden=False)
+            q = Q(hidden=False) | Q(status=TripStatus.CANCELLED)
+            queryset = queryset.filter(q)
 
         # Sorting
         prefix = '-' if parameter_serializer.data['reverse'] else ''
