@@ -4,7 +4,10 @@ import random
 
 import logging
 
-from django.db import IntegrityError
+from django.db import IntegrityError, connection
+from django.db.models.signals import post_delete, post_save
+from django.dispatch.dispatcher import receiver
+from django.core.cache import cache
 from django.contrib.gis.db import models
 from django.contrib.contenttypes.models import ContentType
 
@@ -151,6 +154,16 @@ class Location(MPTTModel):
         ordering = ['name']
 
 
+@receiver(post_delete, sender=Location)
+@receiver(post_save, sender=Location)
+def invalidate_locations_etag(sender, instance, **kwargs):
+    """
+    Invalidate the locations etag in the cache on every change.
+    """
+    schema_name = connection.schema_name
+    cache.delete("{}-locations-etag".format(schema_name))
+
+
 class LinkedLocation(models.Model):
     """
     Generic model for linking locations to anything
@@ -218,4 +231,3 @@ class CartoDBTable(MPTTModel):
 
     def __unicode__(self):
         return self.table_name
-

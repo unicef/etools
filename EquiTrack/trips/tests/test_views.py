@@ -5,7 +5,6 @@ from rest_framework import status
 from EquiTrack.factories import TripFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from trips.models import Trip
-from trips.serializers import TripSerializer
 
 
 class TestTripViews(APITenantTestCase):
