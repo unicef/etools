@@ -679,7 +679,7 @@ class PartnershipForm(UserGroupForm):
                 u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
-        if signed_by_partner_date and signed_by_partner_date < initiation_date:
+        if signed_by_partner_date and initiation_date and signed_by_partner_date < initiation_date:
             raise ValidationError({'signed_by_partner_date': self.ERROR_MESSAGES['signed_by_partner']})
 
         if signed_by_partner_date and not partner_manager:

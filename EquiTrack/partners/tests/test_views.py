@@ -30,7 +30,7 @@ from partners.models import (
 
 
 class TestPartnershipViews(APITenantTestCase):
-
+    fixtures = ['initial_data.json']
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory()
