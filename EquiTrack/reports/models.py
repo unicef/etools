@@ -100,7 +100,8 @@ class ResultManager(models.Manager):
 
 class Result(MPTTModel):
 
-    hrp = models.ForeignKey(ResponsePlan, null=True, blank=True, on_delete=models.DO_NOTHING)
+    hrp = models.ForeignKey(ResponsePlan, null=True, blank=True,
+                            on_delete=models.DO_NOTHING, verbose_name='Humanitarian response plan')
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector, null=True, blank=True)
@@ -176,7 +177,7 @@ class Milestone(models.Model):
 class Goal(models.Model):
 
     hrp = models.ForeignKey(
-        ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING)
+        ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name='Humanitarian response plan')
     sector = models.ForeignKey(Sector, related_name='goals')
     name = models.CharField(max_length=512L, unique=True)
     description = models.CharField(max_length=512L, blank=True)
@@ -206,7 +207,7 @@ class Indicator(models.Model):
         blank=True, null=True
     )
     hrp = models.ForeignKey(
-        ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING
+        ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name='Humanitarian response plan',
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)

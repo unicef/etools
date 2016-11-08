@@ -1151,7 +1151,7 @@ class GovernmentIntervention(models.Model):
         PartnerOrganization,
         related_name='work_plans',
     )
-    hrp = models.ForeignKey(ResponsePlan
+    hrp = models.ForeignKey(ResponsePlan, verbose_name='Humanitarian response plan',
     )
     number = models.CharField(
         max_length=45L,
