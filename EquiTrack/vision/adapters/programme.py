@@ -135,7 +135,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                     )
                     updating_cp = True
                 except CountryProgramme.MultipleObjectsReturned as exp:
-                    exp.message += 'Result Structure: ' + result['COUNTRY_PROGRAMME_NAME']
+                    exp.message += 'response plan: ' + result['COUNTRY_PROGRAMME_NAME']
                     raise
                 else:
                     cps[result["COUNTRY_PROGRAMME_WBS"]] = country_programme

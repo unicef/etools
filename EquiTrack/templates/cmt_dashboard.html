@@ -50,14 +50,14 @@
             <div class="col-md-2">
                 <div class="btn-group btn-block">
                     <button id="btn-hrp" type="button" class="col-md-10 btn btn-info">
-                       Result Structure
+                       Response Plan
                     </button>
 
                     <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu">
-                        <li><a href="javascript:void(0);" id="hrp999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
+                        <li><a href="javascript:void(0);" id="hrp999" onclick="DropdownSelect(this.id);" itemid="999">All Response Plans</a></li>
                         {% for hrp in hrp_list %}
                             <li><a href="javascript:void(0);" id="hrp{{ hrp.id }}" onclick="DropdownSelect(this.id);" itemid="{{ hrp.id }}">{{ hrp.name }}</a></li>
                         {% endfor %}
@@ -323,7 +323,7 @@
                 $('#' + btnId).html(selectVal);
            // }
             //else{ //all is clicked
-                 //$('#' + btnId).html('Result Structure');
+                 //$('#' + btnId).html('response plan');
             //}
 
             //get the current color class and set the background of selected item
@@ -356,7 +356,7 @@
             var to_date = $("#to_date").text();
 
             var query='';
-            if(!ResponsePlan.includes('Result Structure'))
+            if(!ResponsePlan.includes('Response Plan'))
                 query += 'hrp=' + $("a:contains(" + ResponsePlan + ")").attr("itemid") + '&';
 
             if(!sector.includes('Sector'))

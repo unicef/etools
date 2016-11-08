@@ -267,7 +267,7 @@ def clean_hrps(country_name):
         printtf("country name required /n")
 
     set_country(country_name)
-    printtf("Fixing duplicate Result Structures for {}".format(country_name))
+    printtf("Fixing duplicate response plans for {}".format(country_name))
     fattrs = ["result_set",
               "indicator_set",
               "goal_set",
@@ -336,7 +336,7 @@ def dissasociate_hrps(country_name):
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
-    printtf("Dissasociating result structures for {}".format(country_name))
+    printtf("Dissasociating response plans for {}".format(country_name))
     results = Result.objects.all()
     for result in results:
         if result.wbs and result.hrp:
@@ -358,7 +358,7 @@ def before_code_merge():
     all_countries_do(fix_duplicate_results, 'Result Cleaning')
 
     # Clean results structure
-    all_countries_do(clean_hrps, 'Result Structure Cleaning')
+    all_countries_do(clean_hrps, 'Response Plan Cleaning')
 
     # clean result types
     all_countries_do(clean_result_types, 'Result Types Cleaning')
@@ -376,7 +376,7 @@ def after_code_merge(): #and after migrations
     # set up country programme
     all_countries_do(cp_fix, 'Country Programme setup')
 
-    # disassociate result structures
-    all_countries_do(dissasociate_hrps, 'Dissasociate Result Structure')
+    # disassociate response plans
+    all_countries_do(dissasociate_hrps, 'Dissasociate Response Plan')
 
     print("don't forget to sync")

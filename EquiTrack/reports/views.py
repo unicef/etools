@@ -25,7 +25,7 @@ from .serializers import (
 class ResponsePlanViewSet(mixins.ListModelMixin,
                              viewsets.GenericViewSet):
     """
-    Returns a list of all Result Structures
+    Returns a list of all response plans
     """
     queryset = ResponsePlan.objects.all()
     serializer_class = ResponsePlanSerializer

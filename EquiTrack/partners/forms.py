@@ -94,7 +94,7 @@ class AssessmentAdminForm(AutoSizeTextForm):
 
     def __init__(self, *args, **kwargs):
         """
-        Filter linked results by sector and result structure
+        Filter linked results by sector and response plan
         """
         if 'parent_object' in kwargs:
             self.parent_partnership = kwargs.pop('parent_object')
@@ -340,7 +340,7 @@ class AgreementForm(UserGroupForm):
                     )}
                 )
 
-            # set end date to result structure end date
+            # set end date to response plan end date
             if end is None:
                 self.cleaned_data[u'end'] = ResponsePlan.current().to_date
 
@@ -486,7 +486,7 @@ class PartnershipForm(UserGroupForm):
 
     def import_results_from_work_plan(self, work_plan):
         """
-        Matches results from the work plan to country result structure.
+        Matches results from the work plan to country response plan.
         Will try to match indicators one to one or by name, this can be ran
         multiple times to continually update the work plan
         """
@@ -727,7 +727,7 @@ class PartnershipForm(UserGroupForm):
                 )
             if hrp is None:
                 raise ValidationError(
-                    u'Please select a result structure from the man info tab to import results against'
+                    u'Please select a response plan from the man info tab to import results against'
                 )
             # make sure another workplan has not been uploaded already:
             if self.instance.results and self.instance.results.count() > 0:
