@@ -24,7 +24,7 @@ class TestWorkplanViews(APITenantTestCase):
         self.labels = [LabelFactory() for x in xrange(3)]
 
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
-        self.result = ResultFactory(result_type=self.result_type, humanitarian_response_plan=ResponsePlanFactory())
+        self.result = ResultFactory(result_type=self.result_type, hrp=ResponsePlanFactory())
 
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(
                                             workplan=self.workplan,

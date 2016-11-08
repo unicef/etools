@@ -190,7 +190,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Result
 
-    humanitarian_response_plan = factory.SubFactory(ResponsePlanFactory)
+    hrp = factory.SubFactory(ResponsePlanFactory)
     result_type = factory.SubFactory(ResultTypeFactory)
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)

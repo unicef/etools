@@ -438,12 +438,12 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         gi = GovernmentIntervention.objects.create(
             partner=self.partner_organization,
-            result_structure=rs,
+            hrp=rs,
         )
         rt = ResultType.objects.get(id=1)
         r = Result.objects.create(
             result_type=rt,
-            result_structure=rs
+            hrp=rs
         )
         GovernmentInterventionResult.objects.create(
             intervention=gi,
@@ -496,12 +496,12 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         gi = GovernmentIntervention.objects.create(
             partner=self.partner_organization,
-            result_structure=rs,
+            hrp=rs,
         )
         rt = ResultType.objects.get(id=1)
         r = Result.objects.create(
             result_type=rt,
-            result_structure=rs
+            hrp=rs
         )
         GovernmentInterventionResult.objects.create(
             intervention=gi,

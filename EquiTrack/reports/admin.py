@@ -71,7 +71,7 @@ class GoalAdmin(admin.ModelAdmin):
 #     fields = (
 #         'pca_sector',
 #         'pca_status',
-#         'humanitarian_response_plan',
+#         'hrp',
 #         'amendment_number',
 #         'programmed',
 #         'changeform_link',
@@ -79,7 +79,7 @@ class GoalAdmin(admin.ModelAdmin):
 #     readonly_fields = (
 #         'pca_sector',
 #         'pca_status',
-#         'humanitarian_response_plan',
+#         'hrp',
 #         'amendment_number',
 #         'programmed',
 #         'changeform_link',
@@ -88,8 +88,8 @@ class GoalAdmin(admin.ModelAdmin):
 #     def has_add_permission(self, request):
 #         return False
 #
-#     def humanitarian_response_plan(self, obj):
-#         return obj.pca_sector.pca.humanitarian_response_plan
+#     def hrp(self, obj):
+#         return obj.pca_sector.pca.hrp
 #
 #     def amendment_number(self, obj):
 #         return obj.pca_sector.pca.amendment_number
@@ -112,7 +112,7 @@ class IndicatorAdmin(admin.ModelAdmin):
     )
     list_filter = (
         SectorListFilter,
-        'result__humanitarian_response_plan',
+        'result__hrp',
         'result__result_type',
         'ram_indicator',
     )

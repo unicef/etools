@@ -822,7 +822,7 @@ class PCA(AdminURLMixin, models.Model):
         max_length=255,
         verbose_name=u'Document type'
     )
-    humanitarian_response_plan = models.ForeignKey(
+    hrp = models.ForeignKey(
         ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING,
         help_text=u'Which result structure does this partnership report under?'
     )
@@ -1101,8 +1101,8 @@ class PCA(AdminURLMixin, models.Model):
                     and self.agreement.signed_by_partner_date and self.start_date is None:
                 self.start_date = self.agreement.signed_by_partner_date
 
-            if self.end_date is None and self.humanitarian_response_plan:
-                self.end_date = self.humanitarian_response_plan.to_date
+            if self.end_date is None and self.hrp:
+                self.end_date = self.hrp.to_date
 
         super(PCA, self).save(**kwargs)
 
@@ -1150,7 +1150,7 @@ class GovernmentIntervention(models.Model):
         PartnerOrganization,
         related_name='work_plans',
     )
-    humanitarian_response_plan = models.ForeignKey(ResponsePlan
+    hrp = models.ForeignKey(ResponsePlan
     )
     number = models.CharField(
         max_length=45L,
@@ -1172,13 +1172,13 @@ class GovernmentIntervention(models.Model):
         else:
             objects = list(GovernmentIntervention.objects.filter(
                 partner=self.partner,
-                humanitarian_response_plan=self.humanitarian_response_plan,
+                hrp=self.hrp,
             ).order_by('created_at').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
             number = u'{code}/{partner}/{year}{seq}'.format(
                 code=connection.tenant.country_short_code or '',
                 partner=self.partner.short_name,
-                year=self.humanitarian_response_plan.to_date.year,
+                year=self.hrp.to_date.year,
                 seq=sequence
             )
         return number
@@ -1257,7 +1257,7 @@ class GovernmentInterventionResult(models.Model):
 
             except Result.DoesNotExist:
                 referenced_activity = Result.objects.create(
-                    humanitarian_response_plan=self.intervention.humanitarian_response_plan,
+                    hrp=self.intervention.hrp,
                     result_type=ResultType.objects.get(name='Activity'),
                     parent=self.result,
                     code=activity[0],
@@ -1616,7 +1616,7 @@ class ResultChain(models.Model):
 
     def __unicode__(self):
         return u'{} -> {} -> {}'.format(
-            self.result.humanitarian_response_plan.name if self.result.humanitarian_response_plan else '',
+            self.result.hrp.name if self.result.hrp else '',
             self.result.sector.name if self.result.sector else '',
             self.result.__unicode__(),
         )

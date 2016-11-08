@@ -16,7 +16,7 @@ class TestReportViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
         self.workplan = WorkplanFactory()
-        self.result1 = ResultFactory(result_type=self.result_type, humanitarian_response_plan=ResponsePlanFactory())
+        self.result1 = ResultFactory(result_type=self.result_type, hrp=ResponsePlanFactory())
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan, result=self.result1)
 
         # Additional data to use in tests

@@ -49,7 +49,7 @@
            <div class="row" style=" padding-top: 10px;">
             <div class="col-md-2">
                 <div class="btn-group btn-block">
-                    <button id="btn-result_structure" type="button" class="col-md-10 btn btn-info">
+                    <button id="btn-hrp" type="button" class="col-md-10 btn btn-info">
                        Result Structure
                     </button>
 
@@ -57,9 +57,9 @@
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu">
-                        <li><a href="javascript:void(0);" id="result_structure999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
-                        {% for humanitarian_response_plan in humanitarian_response_plan_list %}
-                            <li><a href="javascript:void(0);" id="humanitarian_response_plan{{ humanitarian_response_plan.id }}" onclick="DropdownSelect(this.id);" itemid="{{ humanitarian_response_plan.id }}">{{ humanitarian_response_plan.name }}</a></li>
+                        <li><a href="javascript:void(0);" id="hrp999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
+                        {% for hrp in hrp_list %}
+                            <li><a href="javascript:void(0);" id="hrp{{ hrp.id }}" onclick="DropdownSelect(this.id);" itemid="{{ hrp.id }}">{{ hrp.name }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -344,7 +344,7 @@
         }
 
         function SubmitSearch(){
-            var ResponsePlan = $('#btn-result_structure').html();
+            var ResponsePlan = $('#btn-hrp').html();
             var sector = $('#btn-sector').html();
             var gateway = $('#btn-gateway').html();
             var governorate = $('#btn-governorate').html();
@@ -357,7 +357,7 @@
 
             var query='';
             if(!ResponsePlan.includes('Result Structure'))
-                query += 'humanitarian_response_plan=' + $("a:contains(" + ResponsePlan + ")").attr("itemid") + '&';
+                query += 'hrp=' + $("a:contains(" + ResponsePlan + ")").attr("itemid") + '&';
 
             if(!sector.includes('Sector'))
                 query += 'sector=' + $("a:contains(" + sector + ")").attr("itemid") + '&';

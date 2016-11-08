@@ -25,8 +25,8 @@ class IndicatorAdminForm(forms.ModelForm):
             results = Result.objects.filter(
                 sector=self.instance.sector
             )
-            if self.instance.humanitarian_response_plan:
+            if self.instance.hrp:
                 results = results.filter(
-                    humanitarian_response_plan=self.instance.humanitarian_response_plan
+                    hrp=self.instance.hrp
                 )
             self.fields['result'].queryset = results

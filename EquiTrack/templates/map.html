@@ -67,7 +67,7 @@
                 <div class="col-xs-10">
                     <etools-dropdown-filter
                         url="/api/reports/hrps/"
-                        filter-id="humanitarian_response_plan"
+                        filter-id="hrp"
                         label="Result structures"
                         all-label="All result structures">
                     </etools-dropdown-filter>
@@ -132,7 +132,7 @@
 {% endverbatim %}
 
 <script type="text/javascript">
-    var filterTypes = ['humanitarian_response_plan', 'sector', 'gateway', 'status', 'donor', 'partner'];
+    var filterTypes = ['hrp', 'sector', 'gateway', 'status', 'donor', 'partner'];
     var locationsUrl = "{% url 'locations' %}?";
     var base = 'map';
     var mapDefaultValues = {

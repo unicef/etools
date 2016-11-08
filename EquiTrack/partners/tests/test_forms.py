@@ -40,7 +40,7 @@ class TestAgreementForm(TenantTestCase):
         self.tenant.save()
         self.text = 'LEBA/{{}}{}01'.format(self.date.year)
         self.agreement = AgreementFactory()
-        self.result_structure = ResultStructureFactory()
+        self.hrp = ResultStructureFactory()
         self.country_programme = CountryProgrammeFactory()
 
     def create_form(self, data=None, instance=None, user=None):

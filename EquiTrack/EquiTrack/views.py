@@ -42,7 +42,7 @@ class DashboardView(TemplateView):
             )
             if current_structure:
                 indicators = indicators.filter(
-                    humanitarian_response_plan=current_structure
+                    hrp=current_structure
                 )
             if not indicators:
                 continue
@@ -50,10 +50,10 @@ class DashboardView(TemplateView):
             sectors[sector.name] = []
             for indicator in indicators:
                 programmed = indicator.programmed(
-                    humanitarian_response_plan=current_structure
+                    hrp=current_structure
                 )
                 current = indicator.progress(
-                    humanitarian_response_plan=current_structure
+                    hrp=current_structure
                 )
                 sectors[sector.name].append(
                     {
@@ -69,19 +69,19 @@ class DashboardView(TemplateView):
             'structures': ResponsePlan.objects.all(),
             'pcas': {
                 'active': PCA.objects.filter(
-                    humanitarian_response_plan=current_structure,
+                    hrp=current_structure,
                     status=PCA.ACTIVE,
                 ).count(),
                 'implemented': PCA.objects.filter(
-                    humanitarian_response_plan=current_structure,
+                    hrp=current_structure,
                     status=PCA.IMPLEMENTED,
                 ).count(),
                 'in_process': PCA.objects.filter(
-                    humanitarian_response_plan=current_structure,
+                    hrp=current_structure,
                     status=PCA.IN_PROCESS,
                 ).count(),
                 'cancelled': PCA.objects.filter(
-                    humanitarian_response_plan=current_structure,
+                    hrp=current_structure,
                     status=PCA.CANCELLED,
                 ).count(),
             }
@@ -170,7 +170,7 @@ class MapView(TemplateView):
             'gateway_list': GatewayType.objects.all(),
             'governorate_list': Governorate.objects.all(),
             'sectors_list': Sector.objects.all(),
-            'humanitarian_response_plan_list': ResponsePlan.objects.all(),
+            'hrp_list': ResponsePlan.objects.all(),
             'region_list': Region.objects.all(),
             'partner_list': PartnerOrganization.objects.all(),
             'indicator_list': Indicator.objects.all(),

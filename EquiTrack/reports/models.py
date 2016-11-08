@@ -95,12 +95,12 @@ class Sector(models.Model):
 class ResultManager(models.Manager):
     def get_queryset(self):
         return super(ResultManager, self).get_queryset().select_related('country_programme',
-                                                                        'humanitarian_response_plan',
+                                                                        'hrp',
                                                                         'result_type')
 
 class Result(MPTTModel):
 
-    humanitarian_response_plan = models.ForeignKey(ResponsePlan, null=True, blank=True, on_delete=models.DO_NOTHING)
+    hrp = models.ForeignKey(ResponsePlan, null=True, blank=True, on_delete=models.DO_NOTHING)
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector, null=True, blank=True)
@@ -175,7 +175,7 @@ class Milestone(models.Model):
 
 class Goal(models.Model):
 
-    humanitarian_response_plan = models.ForeignKey(
+    hrp = models.ForeignKey(
         ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING)
     sector = models.ForeignKey(Sector, related_name='goals')
     name = models.CharField(max_length=512L, unique=True)
@@ -205,7 +205,7 @@ class Indicator(models.Model):
         Sector,
         blank=True, null=True
     )
-    humanitarian_response_plan = models.ForeignKey(
+    hrp = models.ForeignKey(
         ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING
     )
 
@@ -250,21 +250,21 @@ class Indicator(models.Model):
             partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
         )
 
-    def programmed(self, humanitarian_response_plan=None):
+    def programmed(self, hrp=None):
         programmed = self.programmed_amounts()
-        if humanitarian_response_plan:
+        if hrp:
             programmed = programmed.filter(
-                partnership__humanitarian_response_plan=humanitarian_response_plan,
+                partnership__hrp=hrp,
 
             )
         total = programmed.aggregate(models.Sum('target'))
         return total[total.keys()[0]] or 0
 
-    def progress(self, humanitarian_response_plan=None):
+    def progress(self, hrp=None):
         programmed = self.programmed_amounts()
-        if humanitarian_response_plan:
+        if hrp:
             programmed = programmed.filter(
-                partnership__humanitarian_response_plan=humanitarian_response_plan,
+                partnership__hrp=hrp,
 
             )
         total = programmed.aggregate(models.Sum('current_progress'))

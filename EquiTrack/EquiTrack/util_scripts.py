@@ -259,7 +259,7 @@ def clean_result_types(country_name):
     dupes = ResultType.objects.values('name').annotate(Count('name')).order_by().filter(name__count__gt=1).all()
     _run_clean(dupes)
 
-def clean_humanitarian_response_plans(country_name):
+def clean_hrps(country_name):
     if not country_name:
         printtf("country name required /n")
         set_country(country_name)
@@ -286,7 +286,7 @@ def clean_humanitarian_response_plans(country_name):
             objs = getattr(dpres, a).all()
             if len(objs):
                 for obj in objs:
-                    obj.humanitarian_response_plan = keep
+                    obj.hrp = keep
                     obj.save()
                     printtf("saved obj.id={} obj {} with keepid{} keep {}".format(obj.id, obj, keep.id, keep))
 
@@ -332,15 +332,15 @@ def delete_all_fcs(country_name):
     fcs = FundingCommitment.objects.all()
     fcs.delete()
 
-def dissasociate_humanitarian_response_plans(country_name):
+def dissasociate_hrps(country_name):
     if not country_name:
         printtf("country name required /n")
     set_country(country_name)
     printtf("Dissasociating result structures for {}".format(country_name))
     results = Result.objects.all()
     for result in results:
-        if result.wbs and result.humanitarian_response_plan:
-            result.humanitarian_response_plan = None
+        if result.wbs and result.hrp:
+            result.hrp = None
             result.save()
 
 
@@ -358,7 +358,7 @@ def before_code_merge():
     all_countries_do(fix_duplicate_results, 'Result Cleaning')
 
     # Clean results structure
-    all_countries_do(clean_humanitarian_response_plans, 'Result Structure Cleaning')
+    all_countries_do(clean_hrps, 'Result Structure Cleaning')
 
     # clean result types
     all_countries_do(clean_result_types, 'Result Types Cleaning')
@@ -377,6 +377,6 @@ def after_code_merge(): #and after migrations
     all_countries_do(cp_fix, 'Country Programme setup')
 
     # disassociate result structures
-    all_countries_do(dissasociate_humanitarian_response_plans, 'Dissasociate Result Structure')
+    all_countries_do(dissasociate_hrps, 'Dissasociate Result Structure')
 
     print("don't forget to sync")

@@ -109,7 +109,7 @@ class InterventionLocationView(ListAPIView):
         Return locations with GPS points only
         """
         status = self.request.query_params.get('status', PCA.ACTIVE)
-        humanitarian_response_plan = self.request.query_params.get('humanitarian_response_plan', None)
+        hrp = self.request.query_params.get('hrp', None)
         sector = self.request.query_params.get('sector', None)
         gateway = self.request.query_params.get('gateway', None)
         governorate = self.request.query_params.get('governorate', None)
@@ -133,9 +133,9 @@ class InterventionLocationView(ListAPIView):
             queryset = queryset.filter(
                 region__id=int(district)
             )
-        if humanitarian_response_plan is not None:
+        if hrp is not None:
             queryset = queryset.filter(
-                pca__humanitarian_response_plan__id=int(humanitarian_response_plan)
+                pca__hrp__id=int(hrp)
             )
         if partner is not None:
             queryset = queryset.filter(
