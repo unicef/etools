@@ -4,12 +4,11 @@ from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
 from funds.models import Donor, Grant
 from reports.models import (
-    ResultStructure,
+    ResponsePlan,
     CountryProgramme,
     ResultType,
     Result,
-    ResultStructure,
-    Sector
+    Sector,
 )
 from partners.models import (
     PCA,
@@ -22,7 +21,6 @@ from partners.models import (
     PartnerOrganization,
     Assessment,
     Result,
-    ResultStructure,
     GovernmentIntervention,
     GovernmentInterventionResult,
 )
@@ -117,7 +115,7 @@ class TestHACTCalculations(TenantTestCase):
         self.intervention = PartnershipFactory(
             status=u'active'
         )
-        current_cp = ResultStructure.objects.create(
+        current_cp = CountryProgramme.objects.create(
             name='Current Country Programme',
             from_date=datetime.date(year, 1, 1),
             to_date=datetime.date(year+1, 12, 31)
@@ -430,7 +428,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             from_date=datetime.date(datetime.date.today().year-1, 1, 1),
             to_date=datetime.date(datetime.date.today().year+1, 1, 1),
         )
-        rs = ResultStructure.objects.create(
+        rs = ResponsePlan.objects.create(
             name="RS 1",
             country_programme=cp,
             from_date=datetime.date(datetime.date.today().year-1, 1, 1),
@@ -488,7 +486,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
             from_date=datetime.date(datetime.date.today().year-1, 1, 1),
             to_date=datetime.date(datetime.date.today().year+1, 1, 1),
         )
-        rs = ResultStructure.objects.create(
+        rs = ResponsePlan.objects.create(
             name="RS 1",
             country_programme=cp,
             from_date=datetime.date(datetime.date.today().year-1, 1, 1),
