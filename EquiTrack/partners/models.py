@@ -824,7 +824,8 @@ class PCA(AdminURLMixin, models.Model):
     )
     hrp = models.ForeignKey(
         ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING,
-        help_text=u'Which result structure does this partnership report under?'
+        help_text=u'Which result structure does this partnership report under?',
+        verbose_name='Humanitarian response plan',
     )
     number = models.CharField(
         max_length=45L,
