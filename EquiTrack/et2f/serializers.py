@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth import get_user_model
+from django.db.models.fields.related import ManyToManyField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -18,7 +19,7 @@ class IteneraryItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = IteneraryItem
         fields = ('id', 'origin', 'destination', 'departure_date', 'arrival_date', 'dsa_region', 'overnight_travel',
-                  'mode_of_travel', 'airline')
+                  'mode_of_travel', 'airlines')
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
@@ -91,13 +92,15 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         instance = super(TravelDetailsSerializer, self).create(validated_data)
 
-        def create_related_models(model, data):
-            instances = []
-            for d in data:
-                d['travel'] = instance
-                instances.append(model(**d))
-
-            model.objects.bulk_create(instances)
+        def create_related_models(model, related_data):
+            for data in related_data:
+                m2m_fields = {k: data.pop(k, []) for k in data
+                              if isinstance(model._meta.get_field_by_name(k)[0], ManyToManyField)}
+                data['travel'] = instance
+                related_instance = model.objects.create(**data)
+                for field_name, value in m2m_fields.items():
+                    related_manager = getattr(related_instance, field_name)
+                    related_manager.add(*value)
 
         # Reverse FK and M2M relations
         create_related_models(IteneraryItem, itinerary)
@@ -132,9 +135,15 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         return instance
 
     def update_object(self, obj, data):
+        m2m_fields = {k: data.pop(k, []) for k in data
+                      if isinstance(obj._meta.get_field_by_name(k)[0], ManyToManyField)}
         for attr, value in data.items():
             setattr(obj, attr, value)
         obj.save()
+
+        for field_name, value in m2m_fields.items():
+            related_manager = getattr(obj, field_name)
+            related_manager.add(*value)
 
     def update_related_objects(self, attr_name, related_data):
         many = isinstance(self._fields[attr_name], serializers.ListSerializer)

@@ -39,7 +39,7 @@ class Travel(models.Model):
     hidden = models.BooleanField(default=False)
     mode_of_travel = ArrayField(models.CharField(max_length=255), default=[])
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
-    currency = models.ForeignKey('Currency', related_name='+')
+    currency = models.ForeignKey('Currency', null=True, blank=True, related_name='+')
 
     @property
     def attachments(self):
@@ -134,7 +134,7 @@ class IteneraryItem(models.Model):
     dsa_region = models.CharField(max_length=255)
     overnight_travel = models.BooleanField(default=False)
     mode_of_travel = models.CharField(max_length=255)
-    airline = models.ForeignKey('AirlineCompany', related_name='+')
+    airlines = models.ManyToManyField('AirlineCompany', related_name='+')
 
 
 class Expense(models.Model):
