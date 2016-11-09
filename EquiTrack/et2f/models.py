@@ -36,6 +36,7 @@ class Travel(models.Model):
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_reference_number)
     hidden = models.BooleanField(default=False)
+    mode_of_travel = models.CharField(max_length=255)
 
     @property
     def attachments(self):

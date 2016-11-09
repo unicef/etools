@@ -76,7 +76,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
                   'traveller', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
-                  'cost_assignments', 'clearances', 'status', 'activities')
+                  'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel')
         # Review this, as a developer could be confusing why the status field is not saved during an update
         read_only_fields = ('status',)
 
