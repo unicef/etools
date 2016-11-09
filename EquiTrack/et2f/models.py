@@ -117,6 +117,8 @@ class TravelActivity(models.Model):
     partnership = models.ForeignKey('partners.PCA', related_name='+')
     result = models.ForeignKey('reports.Result', related_name='+')
     location = models.ForeignKey('locations.Location', related_name='+')
+    primary_traveler = models.BooleanField(default=True)
+    date = models.DateField()
 
 
 class IteneraryItem(models.Model):

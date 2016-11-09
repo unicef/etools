@@ -61,7 +61,7 @@ class TravelActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TravelActivity
-        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'location')
+        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'location', 'primary_traveler', 'date')
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):
