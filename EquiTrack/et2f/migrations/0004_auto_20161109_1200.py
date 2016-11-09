@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from datetime import date
 from django.db import migrations, models
 import et2f.models
 
@@ -15,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='travelactivity',
             name='date',
-            field=models.DateField(default=0),
+            field=models.DateField(default=date(2016, 11, 9)),
             preserve_default=False,
         ),
         migrations.AddField(
