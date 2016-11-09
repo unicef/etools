@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import django.contrib.postgres.fields
 
 
 class Migration(migrations.Migration):
@@ -15,6 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='travel',
             name='mode_of_travel',
-            field=django.contrib.postgres.fields.ArrayField(default=[], base_field=models.CharField(max_length=255), size=None),
+            field=models.CharField(default='', max_length=255),
+            preserve_default=False,
         ),
     ]
