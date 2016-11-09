@@ -38,6 +38,8 @@ class Travel(models.Model):
     reference_number = models.CharField(max_length=12, default=make_reference_number)
     hidden = models.BooleanField(default=False)
     mode_of_travel = ArrayField(models.CharField(max_length=255), default=[])
+    estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
+    currency = models.ForeignKey('Currency', related_name='+')
 
     @property
     def attachments(self):
@@ -118,7 +120,7 @@ class TravelActivity(models.Model):
     partner = models.ForeignKey('partners.PartnerOrganization', related_name='+')
     partnership = models.ForeignKey('partners.PCA', related_name='+')
     result = models.ForeignKey('reports.Result', related_name='+')
-    location = models.ForeignKey('locations.Location', related_name='+')
+    locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.BooleanField(default=True)
     date = models.DateField()
 

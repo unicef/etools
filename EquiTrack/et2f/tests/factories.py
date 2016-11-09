@@ -34,11 +34,15 @@ class TravelActivityFactory(factory.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
     partnership = factory.SubFactory(PartnershipFactory)
     result = factory.SubFactory(ResultFactory)
-    location = factory.SubFactory(LocationFactory)
     date = factory.LazyAttribute(lambda o: datetime.now().date())
 
     class Meta:
         model = TravelActivity
+
+    @factory.post_generation
+    def populate_locations(self, create, extracted, **kwargs):
+        location = LocationFactory()
+        self.locations.add(location)
 
 
 class IteneraryItemFactory(factory.DjangoModelFactory):
@@ -106,6 +110,7 @@ class TravelFactory(factory.DjangoModelFactory):
     international_travel = False
     ta_required = True
     reference_number = fuzzy.FuzzyText()
+    currency = factory.SubFactory(CurrencyFactory)
 
     activites = factory.RelatedFactory(TravelActivityFactory, 'travel')
     itinerary = factory.RelatedFactory(IteneraryItemFactory, 'travel')

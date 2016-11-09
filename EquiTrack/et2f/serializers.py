@@ -61,7 +61,7 @@ class TravelActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = TravelActivity
-        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'location', 'primary_traveler', 'date')
+        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date')
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):
@@ -76,7 +76,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
                   'traveller', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
-                  'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel')
+                  'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
+                  'currency')
         # Review this, as a developer could be confusing why the status field is not saved during an update
         read_only_fields = ('status',)
 
