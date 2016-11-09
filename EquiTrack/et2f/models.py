@@ -122,7 +122,7 @@ class TravelActivity(models.Model):
     result = models.ForeignKey('reports.Result', related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.BooleanField(default=True)
-    date = models.DateField()
+    date = models.DateTimeField()
 
 
 class IteneraryItem(models.Model):

@@ -34,7 +34,7 @@ class TravelActivityFactory(factory.DjangoModelFactory):
     partner = factory.SubFactory(PartnerFactory)
     partnership = factory.SubFactory(PartnershipFactory)
     result = factory.SubFactory(ResultFactory)
-    date = factory.LazyAttribute(lambda o: datetime.now().date())
+    date = factory.LazyAttribute(lambda o: datetime.now())
 
     class Meta:
         model = TravelActivity
