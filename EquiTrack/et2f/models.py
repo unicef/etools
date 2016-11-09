@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from django.contrib.postgres.fields.array import ArrayField
 from django.db import models
 from django.contrib.auth.models import User
 from django_fsm import FSMField, transition
@@ -36,7 +37,7 @@ class Travel(models.Model):
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_reference_number)
     hidden = models.BooleanField(default=False)
-    mode_of_travel = models.CharField(max_length=255)
+    mode_of_travel = ArrayField(models.CharField(max_length=255), default=[])
 
     @property
     def attachments(self):
