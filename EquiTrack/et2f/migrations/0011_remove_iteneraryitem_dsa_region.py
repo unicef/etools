@@ -11,9 +11,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.RemoveField(
             model_name='iteneraryitem',
             name='dsa_region',
-            field=models.ForeignKey(related_name='+', to='et2f.DSARegion'),
+        ),
+        migrations.AddField(
+            model_name='iteneraryitem',
+            name='dsa_region',
+            field=models.ForeignKey(related_name='+', default=1, to='et2f.DSARegion'),
+            preserve_default=False,
         ),
     ]
