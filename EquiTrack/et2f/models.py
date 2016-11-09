@@ -19,6 +19,15 @@ class AirlineCompany(models.Model):
     code = models.CharField(max_length=12)
 
 
+class DSARegion(models.Model):
+    name = models.CharField(max_length=255)
+    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
+    room_rate = models.DecimalField(max_digits=20, decimal_places=4)
+
+
 def make_reference_number():
     return datetime.now().strftime('%H/%M/%S')
 
@@ -131,7 +140,7 @@ class IteneraryItem(models.Model):
     destination = models.CharField(max_length=255)
     departure_date = models.DateTimeField()
     arrival_date = models.DateTimeField()
-    dsa_region = models.CharField(max_length=255)
+    dsa_region = models.ForeignKey('DSARegion', related_name='+')
     overnight_travel = models.BooleanField(default=False)
     mode_of_travel = models.CharField(max_length=255)
     airlines = models.ManyToManyField('AirlineCompany', related_name='+')

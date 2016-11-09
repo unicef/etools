@@ -12,7 +12,7 @@ from rest_framework.pagination import PageNumberPagination as _PageNumberPaginat
 from rest_framework.response import Response
 
 from et2f import TripStatus
-from et2f.models import Currency, AirlineCompany
+from et2f.models import Currency, AirlineCompany, DSARegion
 from et2f.serializers import StaticDataSerializer
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
@@ -156,7 +156,8 @@ class StaticDataViewSet(mixins.ListModelMixin,
                 'partners': PartnerOrganization.objects.all(),
                 'partnerships': PCA.objects.all(),
                 'results': Result.objects.all(),
-                'locations': Location.objects.all()}
+                'locations': Location.objects.all(),
+                'dsa_regions': DSARegion.objects.all()}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)

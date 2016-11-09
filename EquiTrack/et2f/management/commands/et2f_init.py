@@ -7,7 +7,7 @@ from django.db import connection
 from django.db.transaction import atomic
 
 from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD
-from et2f.models import Currency, AirlineCompany
+from et2f.models import Currency, AirlineCompany, DSARegion
 from partners.models import PartnerOrganization
 from users.models import Country, Office
 
@@ -23,6 +23,7 @@ class Command(BaseCommand):
         self._load_airlines()
         self._load_offices()
         self._load_partners()
+        self._load_dsa_regions()
 
     def _create_admin_user(self):
         User = get_user_model()
@@ -162,4 +163,26 @@ class Command(BaseCommand):
                 self.stdout.write('Partner created: {}'.format(partner_name))
             else:
                 self.stdout.write('Partner found: {}'.format(partner_name))
+
+
+    def _load_dsa_regions(self):
+        dsa_region_data = [{'dsa_amount_usd': 300,
+                            'name': 'Hungary',
+                            'room_rate': 120,
+                            'dsa_amount_60plus_usd': 200,
+                            'dsa_amount_60plus_local': 56000,
+                            'dsa_amount_local': 84000},
+                           {'dsa_amount_usd': 400,
+                            'name': 'Germany',
+                            'room_rate': 150,
+                            'dsa_amount_60plus_usd': 260,
+                            'dsa_amount_60plus_local': 238.68,
+                            'dsa_amount_local': 367.21}]
+        for data in dsa_region_data:
+            name = data.pop('name')
+            d, created = DSARegion.objects.get_or_create(name=name, defaults=data)
+            if created:
+                self.stdout.write('DSA Region created: {}'.format(name))
+            else:
+                self.stdout.write('DSA Region found: {}'.format(name))
 # DEVELOPMENT CODE - END

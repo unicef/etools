@@ -5,7 +5,7 @@ from django.db.models.fields.related import ManyToManyField
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from et2f.models import AirlineCompany, TravelActivity
+from et2f.models import AirlineCompany, TravelActivity, DSARegion
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -264,6 +264,12 @@ class LocationSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
+class DSARegionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DSARegion
+        fields = ('id', 'name', 'dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local',
+                  'dsa_amount_60plus_local', 'room_rate')
+
 class StaticDataSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     currencies = CurrencySerializer(many=True)
@@ -274,3 +280,4 @@ class StaticDataSerializer(serializers.Serializer):
     partnerships = PartnershipSerializer(many=True)
     results = ResultSerializer(many=True)
     locations = LocationSerializer(many=True)
+    dsa_regions = DSARegionSerializer(many=True)
