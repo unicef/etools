@@ -619,8 +619,6 @@ class Agreement(TimeStampedModel):
         (PCA, u"Programme Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
-        (IC, u'Institutional Contract'),
-        (AWP, u"Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
@@ -657,6 +655,14 @@ class Agreement(TimeStampedModel):
         auto_choose=False,
         blank=True, null=True,
     )
+    STATUS_CHOICES = (
+        ("draft", "Draft"),
+        ("active", "Active"),
+        ("ended", "Ended"),
+        ("suspended", "Suspended"),
+        ("terminated", "Terminated"),
+    )
+    status = models.CharField(max_length=255, choices=STATUS_CHOICES)
 
     # bank information
     bank_name = models.CharField(max_length=255, null=True, blank=True)

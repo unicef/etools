@@ -156,6 +156,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
+    status = 'active'
 
 
 
