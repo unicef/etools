@@ -19,5 +19,8 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by_unicef_date",
             "signed_by_partner_date",
             "status",
+            "partner_manager",
+            "signed_by",
+            "attached_agreement",
         )
         read_only_fields = ("id",)
