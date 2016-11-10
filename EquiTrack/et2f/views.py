@@ -65,7 +65,7 @@ class TravelViewSet(mixins.ListModelMixin,
         try:
             obj = self.get_object()
             context['permission_matrix'] = PermissionMatrix(obj, self.request.user)
-        except Http404:
+        except AssertionError:
             pass
 
         return context

@@ -53,6 +53,11 @@ def make_reference_number():
 
 class Travel(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
+    completed_at = models.DateTimeField(null=True)
+    canceled_at = models.DateTimeField(null=True)
+
+    rejection_note = models.TextField(null=True)
+
     status = FSMField(default=TripStatus.PLANNED, choices=TripStatus.CHOICES, protected=True)
     traveller = models.ForeignKey(User, null=True, blank=True, related_name='travels')
     supervisor = models.ForeignKey(User, null=True, blank=True, related_name='+')
