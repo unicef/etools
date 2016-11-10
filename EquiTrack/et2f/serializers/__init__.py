@@ -1,19 +1,43 @@
 from __future__ import unicode_literals
 
-from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
+from django.utils.functional import cached_property
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from et2f.models import AirlineCompany, TravelActivity, DSARegion
-from locations.models import Location
-from partners.models import PartnerOrganization, PCA
-from reports.models import Result
-from users.models import Office, Section
-from .models import Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances, Currency
+from et2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
+    TravelPermission
 
 
-class IteneraryItemSerializer(serializers.ModelSerializer):
+class PermissionBasedModelSerializer(serializers.ModelSerializer):
+    @cached_property
+    def _writable_fields(self):
+        fields = super(PermissionBasedModelSerializer, self)._writable_fields
+        return [f for f in fields if self._can_write_field(f)]
+
+    @cached_property
+    def _readable_fields(self):
+        fields = super(PermissionBasedModelSerializer, self)._readable_fields
+        return [f for f in fields if self._can_read_field(f)]
+
+    def _check_permission(self, permission_code):
+        permission_matrix = self.context.get('permission_matrix')
+        if permission_matrix is None:
+            return True
+        return permission_matrix.has_permission(permission_code)
+
+    def _can_read_field(self, field):
+        model_name = self.Meta.model.__name__.lower()
+        permission_code = '{}_{}_{}'.format(TravelPermission.VIEW_PREFIX, model_name, field.field_name)
+        return self._check_permission(permission_code)
+
+    def _can_write_field(self, field):
+        model_name = self.Meta.model.__name__.lower()
+        permission_code = '{}_{}_{}'.format(TravelPermission.EDIT_PREFIX, model_name, field.field_name)
+        return self._check_permission(permission_code)
+
+
+class IteneraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -22,7 +46,7 @@ class IteneraryItemSerializer(serializers.ModelSerializer):
                   'mode_of_travel', 'airlines')
 
 
-class ExpenseSerializer(serializers.ModelSerializer):
+class ExpenseSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -30,7 +54,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
         fields = ('id', 'type', 'document_currency', 'account_currency', 'amount')
 
 
-class DeductionSerializer(serializers.ModelSerializer):
+class DeductionSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     day_of_the_week = serializers.CharField(read_only=True)
 
@@ -39,7 +63,7 @@ class DeductionSerializer(serializers.ModelSerializer):
         fields = ('id', 'date', 'breakfast', 'lunch', 'dinner', 'accomodation', 'no_dsa', 'day_of_the_week')
 
 
-class CostAssignmentSerializer(serializers.ModelSerializer):
+class CostAssignmentSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -47,7 +71,7 @@ class CostAssignmentSerializer(serializers.ModelSerializer):
         fields = ('id', 'wbs', 'share', 'grant')
 
 
-class ClearancesSerializer(serializers.ModelSerializer):
+class ClearancesSerializer(PermissionBasedModelSerializer):
     medical_clearance = serializers.NullBooleanField()
     security_clearance = serializers.NullBooleanField()
     security_course = serializers.NullBooleanField()
@@ -57,7 +81,7 @@ class ClearancesSerializer(serializers.ModelSerializer):
         fields = ('id', 'medical_clearance', 'security_clearance', 'security_course')
 
 
-class TravelActivitySerializer(serializers.ModelSerializer):
+class TravelActivitySerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
 
     class Meta:
@@ -202,82 +226,3 @@ class TravelListParameterSerializer(serializers.Serializer):
             valid_values = ', '.join(self._SORTABLE_FIELDS)
             raise ValidationError('Invalid sorting option. Valid values are {}'.format(valid_values))
         return value
-
-
-# SERIALIZERS FOR STATIC DATA
-
-class UserSerializer(serializers.ModelSerializer):
-    full_name = serializers.CharField(source='get_full_name')
-
-    class Meta:
-        model = get_user_model()
-        fields = ('id', 'full_name')
-
-
-class CurrencySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Currency
-        fields = ('id', 'name', 'iso_4217')
-
-
-class AirlineSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AirlineCompany
-        fields = ('id', 'name', 'code')
-
-
-class OfficeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Office
-        fields = ('id', 'name')
-
-
-class SectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Section
-        fields = ('id', 'name')
-
-
-class PartnerOrganizationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = PartnerOrganization
-        fields = ('id', 'name')
-
-
-class PartnershipSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='title')
-
-    class Meta:
-        model = PCA
-        fields = ('id', 'name')
-
-
-class ResultSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Result
-        fields = ('id', 'name')
-
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = ('id', 'name')
-
-
-class DSARegionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = DSARegion
-        fields = ('id', 'name', 'dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local',
-                  'dsa_amount_60plus_local', 'room_rate')
-
-class StaticDataSerializer(serializers.Serializer):
-    users = UserSerializer(many=True)
-    currencies = CurrencySerializer(many=True)
-    airlines = AirlineSerializer(many=True)
-    offices = OfficeSerializer(many=True)
-    sections = SectionSerializer(many=True)
-    partners = PartnerOrganizationSerializer(many=True)
-    partnerships = PartnershipSerializer(many=True)
-    results = ResultSerializer(many=True)
-    locations = LocationSerializer(many=True)
-    dsa_regions = DSARegionSerializer(many=True)

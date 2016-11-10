@@ -6,8 +6,8 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD
-from et2f.models import Currency, AirlineCompany, DSARegion
+from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD, UserTypes, TripStatus
+from et2f.models import Currency, AirlineCompany, DSARegion, TravelPermission
 from partners.models import PartnerOrganization
 from users.models import Country, Office
 
@@ -24,6 +24,7 @@ class Command(BaseCommand):
         self._load_offices()
         self._load_partners()
         self._load_dsa_regions()
+        self._load_permission_matrix()
 
     def _create_admin_user(self):
         User = get_user_model()
@@ -185,4 +186,135 @@ class Command(BaseCommand):
                 self.stdout.write('DSA Region created: {}'.format(name))
             else:
                 self.stdout.write('DSA Region found: {}'.format(name))
+
+
+    def _load_permission_matrix(self):
+        perm_codes = ['can_see_iteneraryitem_id',
+                      'can_edit_iteneraryitem_id',
+                      'can_see_iteneraryitem_origin',
+                      'can_edit_iteneraryitem_origin',
+                      'can_see_iteneraryitem_destination',
+                      'can_edit_iteneraryitem_destination',
+                      'can_see_iteneraryitem_departure_date',
+                      'can_edit_iteneraryitem_departure_date',
+                      'can_see_iteneraryitem_arrival_date',
+                      'can_edit_iteneraryitem_arrival_date',
+                      'can_see_iteneraryitem_dsa_region',
+                      'can_edit_iteneraryitem_dsa_region',
+                      'can_see_iteneraryitem_overnight_travel',
+                      'can_edit_iteneraryitem_overnight_travel',
+                      'can_see_iteneraryitem_mode_of_travel',
+                      'can_edit_iteneraryitem_mode_of_travel',
+                      'can_see_iteneraryitem_airlines',
+                      'can_edit_iteneraryitem_airlines',
+                      'can_see_expense_id',
+                      'can_edit_expense_id',
+                      'can_see_expense_type',
+                      'can_edit_expense_type',
+                      'can_see_expense_document_currency',
+                      'can_edit_expense_document_currency',
+                      'can_see_expense_account_currency',
+                      'can_edit_expense_account_currency',
+                      'can_see_expense_amount',
+                      'can_edit_expense_amount',
+                      'can_see_deduction_id',
+                      'can_edit_deduction_id',
+                      'can_see_deduction_date',
+                      'can_edit_deduction_date',
+                      'can_see_deduction_breakfast',
+                      'can_edit_deduction_breakfast',
+                      'can_see_deduction_lunch',
+                      'can_edit_deduction_lunch',
+                      'can_see_deduction_dinner',
+                      'can_edit_deduction_dinner',
+                      'can_see_deduction_accomodation',
+                      'can_edit_deduction_accomodation',
+                      'can_see_deduction_no_dsa',
+                      'can_edit_deduction_no_dsa',
+                      'can_see_deduction_day_of_the_week',
+                      'can_edit_deduction_day_of_the_week',
+                      'can_see_costassignment_id',
+                      'can_edit_costassignment_id',
+                      'can_see_costassignment_wbs',
+                      'can_edit_costassignment_wbs',
+                      'can_see_costassignment_share',
+                      'can_edit_costassignment_share',
+                      'can_see_costassignment_grant',
+                      'can_edit_costassignment_grant',
+                      'can_see_clearances_id',
+                      'can_edit_clearances_id',
+                      'can_see_clearances_medical_clearance',
+                      'can_edit_clearances_medical_clearance',
+                      'can_see_clearances_security_clearance',
+                      'can_edit_clearances_security_clearance',
+                      'can_see_clearances_security_course',
+                      'can_edit_clearances_security_course',
+                      'can_see_travelactivity_id',
+                      'can_edit_travelactivity_id',
+                      'can_see_travelactivity_travel_type',
+                      'can_edit_travelactivity_travel_type',
+                      'can_see_travelactivity_partner',
+                      'can_edit_travelactivity_partner',
+                      'can_see_travelactivity_partnership',
+                      'can_edit_travelactivity_partnership',
+                      'can_see_travelactivity_result',
+                      'can_edit_travelactivity_result',
+                      'can_see_travelactivity_locations',
+                      'can_edit_travelactivity_locations',
+                      'can_see_travelactivity_primary_traveler',
+                      'can_edit_travelactivity_primary_traveler',
+                      'can_see_travelactivity_date',
+                      'can_edit_travelactivity_date',
+                      'can_see_travel_reference_number',
+                      'can_edit_travel_reference_number',
+                      'can_see_travel_supervisor',
+                      'can_edit_travel_supervisor',
+                      'can_see_travel_office',
+                      'can_edit_travel_office',
+                      'can_see_travel_end_date',
+                      'can_edit_travel_end_date',
+                      'can_see_travel_section',
+                      'can_edit_travel_section',
+                      'can_see_travel_international_travel',
+                      'can_edit_travel_international_travel',
+                      'can_see_travel_traveller',
+                      'can_edit_travel_traveller',
+                      'can_see_travel_start_date',
+                      'can_edit_travel_start_date',
+                      'can_see_travel_ta_required',
+                      'can_edit_travel_ta_required',
+                      'can_see_travel_purpose',
+                      'can_edit_travel_purpose',
+                      'can_see_travel_id',
+                      'can_edit_travel_id',
+                      'can_see_travel_itinerary',
+                      'can_edit_travel_itinerary',
+                      'can_see_travel_expenses',
+                      'can_edit_travel_expenses',
+                      'can_see_travel_deductions',
+                      'can_edit_travel_deductions',
+                      'can_see_travel_cost_assignments',
+                      'can_edit_travel_cost_assignments',
+                      'can_see_travel_clearances',
+                      'can_edit_travel_clearances',
+                      'can_see_travel_status',
+                      'can_edit_travel_status',
+                      'can_see_travel_activities',
+                      'can_edit_travel_activities',
+                      'can_see_travel_mode_of_travel',
+                      'can_edit_travel_mode_of_travel',
+                      'can_see_travel_estimated_travel_cost',
+                      'can_edit_travel_estimated_travel_cost',
+                      'can_see_travel_currency',
+                      'can_edit_travel_currency']
+
+        permissions = []
+        for user_type in UserTypes.CHOICES:
+            for status in TripStatus.CHOICES:
+                for pc in perm_codes:
+
+                    kwargs = dict(name='afd', code=pc, user_type=user_type[0], status=status[0], value=True)
+                    permissions.append(TravelPermission(**kwargs))
+
+        TravelPermission.objects.bulk_create(permissions)
 # DEVELOPMENT CODE - END

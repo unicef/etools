@@ -23,6 +23,7 @@ class GrantManager(models.Manager):
     def get_queryset(self):
         return super(GrantManager, self).get_queryset().select_related('donor')
 
+
 class Grant(models.Model):
 
     donor = models.ForeignKey(Donor)

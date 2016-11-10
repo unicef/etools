@@ -6,7 +6,7 @@ from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, GrantFactory, \
     PartnerFactory, PartnershipFactory, ResultFactory, LocationFactory
-from ..models import Currency, AirlineCompany, Travel, TravelActivity, IteneraryItem, Expense, Deduction,\
+from et2f.models import DSARegion, Currency, AirlineCompany, Travel, TravelActivity, IteneraryItem, Expense, Deduction,\
     CostAssignment, Clearances
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
@@ -27,6 +27,18 @@ class AirlineCompanyFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = AirlineCompany
+
+
+class DSARegionFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=32)
+    dsa_amount_usd = 100
+    dsa_amount_60plus_usd = 80
+    dsa_amount_local = 200
+    dsa_amount_60plus_local = 160
+    room_rate = 150
+
+    class Meta:
+        model = DSARegion
 
 
 class TravelActivityFactory(factory.DjangoModelFactory):
@@ -50,10 +62,14 @@ class IteneraryItemFactory(factory.DjangoModelFactory):
     destination = fuzzy.FuzzyText(length=32)
     departure_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
     arrival_date = fuzzy.FuzzyNaiveDateTime(start_dt=datetime.now(), end_dt=_FUZZY_END_DATE)
-    dsa_region = fuzzy.FuzzyText(length=32)
+    dsa_region = factory.SubFactory(DSARegionFactory)
     overnight_travel = False
     mode_of_travel = fuzzy.FuzzyText(length=32)
-    airline = factory.SubFactory(AirlineCompanyFactory)
+
+    @factory.post_generation
+    def populate_airlines(self, create, extracted, **kwargs):
+        airline = AirlineCompanyFactory()
+        self.airlines.add(airline)
 
     class Meta:
         model = IteneraryItem

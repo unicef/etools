@@ -5,7 +5,19 @@ from django.db import models
 from django.contrib.auth.models import User
 from django_fsm import FSMField, transition
 
-from et2f import BooleanChoice, TripStatus
+from et2f import BooleanChoice, TripStatus, UserTypes
+
+
+class TravelPermission(models.Model):
+    EDIT_PREFIX = 'can_edit'
+    VIEW_PREFIX = 'can_see'
+
+    name = models.CharField(max_length=128)
+    code = models.CharField(max_length=128)
+    status = models.CharField(max_length=50, choices=TripStatus.CHOICES)
+    user_type = models.CharField(max_length=25, choices=UserTypes.CHOICES)
+    value = models.BooleanField(default=False)
+
 
 class Currency(models.Model):
     # This will be populated from vision

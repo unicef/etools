@@ -4,23 +4,25 @@ from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
 from django.db.models.query_utils import Q
-from django.http.response import HttpResponse
+from django.http.response import HttpResponse, Http404
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import list_route, detail_route
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
-from et2f import TripStatus
-from et2f.models import Currency, AirlineCompany, DSARegion
-from et2f.serializers import StaticDataSerializer
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
 from users.models import Office, Section
-from .exports import TravelListExporter
-from .models import Travel
-from .serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer
+
+from et2f import TripStatus
+from et2f.exports import TravelListExporter
+from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission
+from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer
+from et2f.serializers.static_data import StaticDataSerializer
+from et2f.serializers.permission_matrix import PermissionMatrixSerializer
+from et2f.helpers import PermissionMatrix
 
 
 class PageNumberPagination(_PageNumberPagination):
@@ -57,6 +59,16 @@ class TravelViewSet(mixins.ListModelMixin,
     _search_fields = ('id', 'reference_number', 'traveller__first_name', 'traveller__last_name', 'purpose',
                       'section__name', 'office__name', 'supervisor__first_name', 'supervisor__last_name')
 
+    def get_serializer_context(self):
+        context = super(TravelViewSet, self).get_serializer_context()
+        try:
+            obj = self.get_object()
+            context['permission_matrix'] = PermissionMatrix(obj, self.request.user)
+        except Http404:
+            pass
+
+        return context
+
     def get_queryset(self):
         queryset = super(TravelViewSet, self).get_queryset()
         parameter_serializer = TravelListParameterSerializer(data=self.request.GET)
@@ -92,7 +104,7 @@ class TravelViewSet(mixins.ListModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
-        serializer = TravelDetailsSerializer(instance)
+        serializer = self.get_serializer(instance)
         return Response(serializer.data, status.HTTP_200_OK)
     
     def update(self, request, *args, **kwargs):
@@ -160,4 +172,14 @@ class StaticDataViewSet(mixins.ListModelMixin,
                 'dsa_regions': DSARegion.objects.all()}
 
         serializer = self.get_serializer(data)
+        return Response(serializer.data, status.HTTP_200_OK)
+
+
+class PermissionMatrixViewSet(mixins.ListModelMixin,
+                              viewsets.GenericViewSet):
+    serializer_class = PermissionMatrixSerializer
+
+    def list(self, request, *args, **kwargs):
+        permissions = TravelPermission.objects.all()
+        serializer = self.get_serializer(permissions)
         return Response(serializer.data, status.HTTP_200_OK)

@@ -53,3 +53,25 @@ class TripStatus(object):
         (CERTIFIED, _('Certified')),
         (COMPLETED, _('Completed')),
     )
+
+
+class UserTypes(object):
+    GOD = 'God'
+    ANYONE = 'Anyone'
+    TRAVELER = 'Traveler'
+    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
+    SUPERVISOR = 'Supervisor'
+    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
+    FINANCE_FOCAL_POINT = 'Finance Focal Point'
+    REPRESENTATIVE = 'Representative'
+
+    CHOICES = (
+        (GOD, 'God'),
+        (ANYONE, _('Anyone')),
+        (TRAVELER, _('Traveler')),
+        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
+        (SUPERVISOR, _('Supervisor')),
+        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
+        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
+        (REPRESENTATIVE, _('Representative')),
+    )
