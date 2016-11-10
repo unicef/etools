@@ -13,7 +13,7 @@ from rest_framework.generics import (
 from .models import Agreement, PCA
 from .serializers import AgreementSerializer, InterventionSerializer
 from .serializers_v2 import AgreementListSerializer
-from .permissions import PartnerPermission
+from .permissions import PartnerManagerPermission
 from .filters import PartnerScopeFilter
 
 
@@ -25,7 +25,7 @@ class AgreementListAPIView(ListCreateAPIView):
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
-    permission_classes = (PartnerPermission,)
+    permission_classes = (PartnerManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self):
@@ -82,7 +82,7 @@ class AgreementListAPIView(ListCreateAPIView):
 class AgreementInterventionsListAPIView(ListAPIView):
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
-    permission_classes = (PartnerPermission,)
+    permission_classes = (PartnerManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def list(self, request, partner_pk=None, pk=None):
@@ -103,7 +103,7 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
-    permission_classes = (PartnerPermission,)
+    permission_classes = (PartnerManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def retrieve(self, request, partner_pk=None, pk=None):

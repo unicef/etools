@@ -12,6 +12,7 @@ from EquiTrack.factories import (
     ResultStructureFactory,
     LocationFactory,
     AgreementFactory,
+    PartnerStaffFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
@@ -283,6 +284,10 @@ class TestAgreementAPIView(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory()
+        self.partner_staff = PartnerStaffFactory(partner=self.partner)
+        self.partner_staff_user = UserFactory(is_staff=True)
+        self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
+        self.partner_staff_user.save()
         self.agreement = AgreementFactory(partner=self.partner)
         self.agreement2 = AgreementFactory(
                                 partner=self.partner,
@@ -312,7 +317,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/partners/{}/agreements/'.format(self.partner.id),
-            user=self.unicef_staff,
+            user=self.partner_staff_user,
             data=data
         )
 
@@ -325,7 +330,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/partners/{}/agreements/{}/'.format(self.partner.id, self.agreement.id),
-            user=self.unicef_staff,
+            user=self.partner_staff_user,
             data=data
         )
 
@@ -363,7 +368,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/',
-            user=self.unicef_staff,
+            user=self.partner_staff_user,
             data=data
         )
 
@@ -376,12 +381,25 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.unicef_staff,
+            user=self.partner_staff_user,
             data=data
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "active")
+
+    def test_agreements_update_no_perm(self):
+        data = {
+            "status":"active",
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -397,10 +415,19 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'delete',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.unicef_staff
+            user=self.partner_staff_user
         )
 
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_agreements_delete_no_perm(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_agreements_list_filter_type(self):
         params = {"agreement_type": "PCA"}

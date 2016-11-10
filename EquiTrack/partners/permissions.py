@@ -20,6 +20,23 @@ class PartnerPermission(permissions.BasePermission):
             return self._has_access_permissions(request.user, obj)
 
 
+class PartnerManagerPermission(permissions.BasePermission):
+    message = 'Accessing this Intervention is not allowed.'
+
+    def has_permission(self, request, view):
+        if request.user.profile.partner_staff_member:
+            return True
+        if request.user.is_staff and request.method in permissions.SAFE_METHODS:
+            return True
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.profile.partner_staff_member in \
+                obj.partner.partnerstaffmember_set.values_list('id', flat=True):
+            return True
+        if request.user.is_staff and request.method in permissions.SAFE_METHODS:
+            return True
+
+
 class ResultChainPermission(permissions.BasePermission):
     message = 'Accessing this ResultChain is not allowed.'
 
