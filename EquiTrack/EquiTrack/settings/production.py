@@ -219,3 +219,12 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
 ######## END JWT AUTH CONFIGURATION
+
+########## CACHE CONFIGURATION
+CACHES = {
+    'default': {
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': environ.get('REDIS_CACHE_ADDRESS', 'localhost:6379'),
+    }
+}
+########## END CACHE CONFIGURATION
