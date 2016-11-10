@@ -23,8 +23,12 @@ class PermissionMatrixSerializer(serializers.Serializer):
                 matrix[user_type[0]][status[0]] = defaultdict(dict)
 
         for permission in instance:
-            model_dict = matrix[permission.user_type][permission.status][permission.model]
-            field_dict = model_dict.setdefault(permission.field, {})
-            field_dict[permission.permission_type] = True
+            if permission.model == 'travel':
+                model_dict = matrix[permission.user_type][permission.status][permission.field]
+                model_dict[permission.permission_type] = True
+            else:
+                model_dict = matrix[permission.user_type][permission.status][permission.model]
+                field_dict = model_dict.setdefault(permission.field, {})
+                field_dict[permission.permission_type] = True
 
         return matrix
