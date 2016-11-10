@@ -66,12 +66,12 @@ class TravelActivitySerializer(serializers.ModelSerializer):
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):
-    itinerary = IteneraryItemSerializer(many=True)
-    expenses = ExpenseSerializer(many=True)
-    deductions = DeductionSerializer(many=True)
-    cost_assignments = CostAssignmentSerializer(many=True)
+    itinerary = IteneraryItemSerializer(many=True, required=False)
+    expenses = ExpenseSerializer(many=True, required=False)
+    deductions = DeductionSerializer(many=True, required=False)
+    cost_assignments = CostAssignmentSerializer(many=True, required=False)
     clearances = ClearancesSerializer(required=False)
-    activities = TravelActivitySerializer(many=True)
+    activities = TravelActivitySerializer(many=True, required=False)
 
     class Meta:
         model = Travel
