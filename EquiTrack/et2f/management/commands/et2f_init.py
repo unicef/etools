@@ -8,7 +8,9 @@ from django.db.transaction import atomic
 
 from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD, UserTypes, TripStatus
 from et2f.models import Currency, AirlineCompany, DSARegion, TravelPermission
+from funds.models import Donor, Grant
 from partners.models import PartnerOrganization
+from reports.models import Result, ResultType
 from users.models import Country, Office
 
 
@@ -26,6 +28,7 @@ class Command(BaseCommand):
         self._load_partners()
         self._load_dsa_regions()
         self._load_permission_matrix()
+        self._add_wbs()
 
     def _create_admin_user(self):
         User = get_user_model()
@@ -188,6 +191,7 @@ class Command(BaseCommand):
                 self.stdout.write('DSA Region found: {}'.format(name))
 
     def _load_permission_matrix(self):
+        self.stdout.write('Delting old permission matrix')
         TravelPermission.objects.all().delete()
 
         model_field_mapping = {'clearances': {'id': None,
@@ -271,6 +275,7 @@ class Command(BaseCommand):
                     permissions.extend(make_permissions_for_model(user_type, status, field_name, value))
             return permissions
 
+        self.stdout.write('Regenerating permission matrix')
         new_permissions = []
         for user_type in UserTypes.CHOICES:
             for status in TripStatus.CHOICES:
@@ -280,4 +285,54 @@ class Command(BaseCommand):
                                                                   model_field_mapping))
 
         TravelPermission.objects.bulk_create(new_permissions)
-        # DEVELOPMENT CODE - END
+        self.stdout.write('Permission matrix saved')
+
+    def _add_wbs(self):
+        Result.objects.all().delete()
+
+        result_type = ResultType.objects.get(name=ResultType.ACTIVITY)
+
+        wbs_data_list = [
+            {'name': 'WBS #1',
+             'wbs': 'wbs_1',
+             'result_type': result_type},
+            {'name': 'WBS #2',
+             'wbs': 'wbs_2',
+             'result_type': result_type},
+            {'name': 'WBS #3',
+             'wbs': 'wbs_3',
+             'result_type': result_type},
+        ]
+
+        for data in wbs_data_list:
+            wbs = data.pop('wbs')
+            r, created = Result.objects.get_or_create(wbs=wbs, defaults=data)
+            if created:
+                self.stdout.write('WBS created: {}'.format(data['name']))
+            else:
+                self.stdout.write('WBS found: {}'.format(data['name']))
+
+    def _add_grants(self):
+        donor, c = Donor.objects.get_or_create(name='Donor')
+
+        grant_data_list = [
+            {'name': 'Grant #1',
+             'donor': donor},
+            {'name': 'Grant #2',
+             'donor': donor},
+            {'name': 'Grant #3',
+             'donor': donor},
+            {'name': 'Grant #4',
+             'donor': donor},
+            {'name': 'Grant #5',
+             'donor': donor}
+        ]
+
+        for data in grant_data_list:
+            name = data.pop('name')
+            g, created = Grant.objects.get_or_create(name=name, defaults=data)
+            if created:
+                self.stdout.write('Grant created: {}'.format(name))
+            else:
+                self.stdout.write('Grant found: {}'.format(name))
+# DEVELOPMENT CODE - END

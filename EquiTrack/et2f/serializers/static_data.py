@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from et2f.models import AirlineCompany, DSARegion, Currency
+from funds.models import Grant
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -75,6 +76,12 @@ class DSARegionSerializer(serializers.ModelSerializer):
                   'dsa_amount_60plus_local', 'room_rate')
 
 
+class GrantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Grant
+        fields = ('id', 'name')
+
+
 class StaticDataSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     currencies = CurrencySerializer(many=True)
@@ -86,3 +93,5 @@ class StaticDataSerializer(serializers.Serializer):
     results = ResultSerializer(many=True)
     locations = LocationSerializer(many=True)
     dsa_regions = DSARegionSerializer(many=True)
+    wbs = ResultSerializer(many=True)
+    grants = GrantSerializer(many=True)

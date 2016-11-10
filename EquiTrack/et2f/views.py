@@ -11,9 +11,10 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
+from funds.models import Grant
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
-from reports.models import Result
+from reports.models import Result, ResultType
 from users.models import Office, Section
 
 from et2f import TripStatus
@@ -160,6 +161,9 @@ class StaticDataViewSet(mixins.ListModelMixin,
 
     def list(self, request, *args, **kwargs):
         User = get_user_model()
+
+        wbs_qs = Result.objects.filter(result_type__name=ResultType.ACTIVITY, hidden=False)
+
         data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all(),
                 'airlines': AirlineCompany.objects.all(),
@@ -169,7 +173,9 @@ class StaticDataViewSet(mixins.ListModelMixin,
                 'partnerships': PCA.objects.all(),
                 'results': Result.objects.all(),
                 'locations': Location.objects.all(),
-                'dsa_regions': DSARegion.objects.all()}
+                'dsa_regions': DSARegion.objects.all(),
+                'wbs': wbs_qs,
+                'grants': Grant.objects.all()}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)
