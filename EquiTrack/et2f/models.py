@@ -9,13 +9,20 @@ from et2f import BooleanChoice, TripStatus, UserTypes
 
 
 class TravelPermission(models.Model):
-    EDIT_PREFIX = 'can_edit'
-    VIEW_PREFIX = 'can_see'
+    EDIT = 'edit'
+    VIEW = 'view'
+    CHOICES = (
+        (EDIT, 'Edit'),
+        (VIEW, 'View'),
+    )
 
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=128)
     status = models.CharField(max_length=50, choices=TripStatus.CHOICES)
     user_type = models.CharField(max_length=25, choices=UserTypes.CHOICES)
+    model = models.CharField(max_length=128)
+    field = models.CharField(max_length=64)
+    permission_type = models.CharField(max_length=5, choices=CHOICES)
     value = models.BooleanField(default=False)
 
 
