@@ -224,7 +224,7 @@ JWT_AUTH = {
 CACHES = {
     'default': {
         'BACKEND': 'redis_cache.RedisCache',
-        'LOCATION': environ.get('REDIS_CACHE_ADDRESS', 'localhost:6379'),
+        'LOCATION': environ.get('REDIS_URL', 'redis://localhost:6379/0')
     }
 }
 ########## END CACHE CONFIGURATION
