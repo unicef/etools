@@ -431,7 +431,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.data[0]["status"], "active")
 
     def test_agreements_list_filter_partner_name(self):
-        params = {"partner_name": "Partner"}
+        params = {"partner_name": self.partner.name}
         response = self.forced_auth_req(
             'get',
             '/api/v2/partners/{}/agreements/'.format(self.partner.id),
@@ -441,7 +441,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
-        self.assertIn("Partner", response.data[0]["partner_name"])
+        self.assertEquals(self.partner.name, response.data[0]["partner_name"])
 
     def test_agreements_list_filter_search(self):
         params = {"search": "Partner"}

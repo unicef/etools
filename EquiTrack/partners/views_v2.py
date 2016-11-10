@@ -75,7 +75,7 @@ class AgreementListAPIView(ListCreateAPIView):
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "partner_name" in query_params.keys():
-                queries.append(Q(partner__name__icontains=query_params.get("partner_name")))
+                queries.append(Q(partner__name=query_params.get("partner_name")))
             if "start" in query_params.keys():
                 queries.append(Q(start__gt=query_params.get("start")))
             if "end" in query_params.keys():
