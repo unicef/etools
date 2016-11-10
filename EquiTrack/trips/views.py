@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 import datetime
 import logging
 

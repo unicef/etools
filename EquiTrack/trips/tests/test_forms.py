@@ -3,7 +3,7 @@ __author__ = 'unicef-leb-inn'
 from datetime import timedelta, datetime
 from django.db.models.fields.related import ManyToManyField
 
-from tenant_schemas.test.cases import TenantTestCase
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
 from EquiTrack.factories import TripFactory, UserFactory, PartnershipFactory
 from trips.forms import TripForm, TravelRoutesForm
