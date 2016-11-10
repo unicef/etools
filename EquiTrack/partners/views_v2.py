@@ -4,11 +4,14 @@ import functools
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.decorators import detail_route
+from rest_framework.generics import (
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+)
 
 from .models import Agreement, PCA
-from .serializers import AgreementSerializer
+from .serializers import AgreementSerializer, InterventionSerializer
 from .serializers_v2 import AgreementListSerializer
 from .permissions import PartnerPermission
 from .filters import PartnerScopeFilter
@@ -51,19 +54,6 @@ class AgreementListAPIView(ListCreateAPIView):
             headers=headers
         )
 
-    @detail_route(methods=['get'], url_path='interventions')
-    def interventions(self, request, partner_pk=None, pk =None):
-        """
-        Return All Interventions for Partner and Agreement
-        """
-        data = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk).values()
-        headers = self.get_success_headers(data)
-        return Response(
-            data,
-            status=status.HTTP_200_OK,
-            headers=headers
-        )
-
     def get_queryset(self):
         query_params = self.request.query_params
 
@@ -87,6 +77,24 @@ class AgreementListAPIView(ListCreateAPIView):
             return Agreement.objects.filter(expression)
         else:
             return super(AgreementListAPIView, self).get_queryset()
+
+
+class AgreementInterventionsListAPIView(ListAPIView):
+    queryset = PCA.objects.all()
+    serializer_class = InterventionSerializer
+    permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+
+    def list(self, request, partner_pk=None, pk=None):
+        """
+        Return All Interventions for Partner and Agreement
+        """
+        interventions = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk)
+        serializer = InterventionSerializer(interventions, many=True)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
 
 class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):

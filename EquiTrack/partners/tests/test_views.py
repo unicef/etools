@@ -455,3 +455,18 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
+
+    def test_api_agreement_interventions_list(self):
+
+        response = self.forced_auth_req('get',
+                                        '/'.join([
+                                            '/api/v2/partners',
+                                            str(self.intervention.partner.id),
+                                            'agreements',
+                                            str(self.intervention.agreement.id),
+                                            'interventions/'
+                                        ]), user=self.unicef_staff)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertIn("galaxy", response.data[0]["pca_title"])
