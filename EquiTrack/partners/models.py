@@ -619,6 +619,9 @@ class Agreement(TimeStampedModel):
         (PCA, u"Programme Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
+        # TODO Remove these two with data migration
+        (IC, u'Institutional Contract'),
+        (AWP, u"Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
