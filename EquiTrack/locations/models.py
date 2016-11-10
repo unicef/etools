@@ -25,6 +25,10 @@ def get_random_color():
 
 
 class GatewayType(models.Model):
+    """
+    Represents GatewayType in location-related models.
+    """
+
     name = models.CharField(max_length=64L, unique=True)
 
     class Meta:
@@ -36,6 +40,12 @@ class GatewayType(models.Model):
 
 
 class Governorate(models.Model):
+    """
+    Represents Governorate as a geospatial boundary
+
+    Relates to :model:`locations.GatewayType`
+    """
+
     name = models.CharField(max_length=45L)
     p_code = models.CharField(max_length=32L, blank=True, null=True)
     gateway = models.ForeignKey(
@@ -56,6 +66,13 @@ class Governorate(models.Model):
 
 
 class Region(models.Model):
+    """
+    Represents Region, a part of Governorate area as a geospatial boundary
+
+    Relates to :model:`locations.GatewayType`
+    Relates to :model:`locations.Governorate`
+    """
+
     governorate = models.ForeignKey(Governorate)
     name = models.CharField(max_length=45L)
     p_code = models.CharField(max_length=32L, blank=True, null=True)
@@ -78,6 +95,13 @@ class Region(models.Model):
 
 
 class Locality(models.Model):
+    """
+    Represents Locality, a part of Region area as a geospatial boundary
+
+    Relates to :model:`locations.GatewayType`
+    Relates to :model:`locations.Region`
+    """
+
     region = models.ForeignKey(Region)
     cad_code = models.CharField(max_length=11L)
     cas_code = models.CharField(max_length=11L)
@@ -111,6 +135,12 @@ class LocationManager(models.Manager):
 
 
 class Location(MPTTModel):
+    """
+    Represents Location, a part of Locality area as a geospatial boundary
+
+    Relates to :model:`locations.GatewayType`
+    Relates to :model:`locations.Locality`
+    """
 
     name = models.CharField(max_length=254L)
     locality = models.ForeignKey(Locality, null=True, blank=True)
@@ -166,7 +196,12 @@ def invalidate_locations_etag(sender, instance, **kwargs):
 
 class LinkedLocation(models.Model):
     """
-    Generic model for linking locations to anything
+    Represents Generic model for linking locations to anything
+
+    Relates to :model:`locations.Governorate`
+    Relates to :model:`locations.Region`
+    Relates to :model:`locations.Locality`
+    Relates to :model:`locations.Location`
     """
     governorate = models.ForeignKey(Governorate)
     region = ChainedForeignKey(
@@ -217,6 +252,11 @@ class LinkedLocation(models.Model):
 
 
 class CartoDBTable(MPTTModel):
+    """
+    Represents a record of CartoDB table
+
+    Relates to :model:`locations.GatewayType`
+    """
 
     domain = models.CharField(max_length=254)
     api_key = models.CharField(max_length=254)

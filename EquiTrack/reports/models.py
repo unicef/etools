@@ -7,6 +7,10 @@ from django.utils.functional import cached_property
 
 
 class CountryProgramme(models.Model):
+    """
+    Represents a country programme
+    """
+
     name = models.CharField(max_length=150)
     wbs = models.CharField(max_length=30, unique=True)
     from_date = models.DateField()
@@ -24,6 +28,11 @@ class CountryProgramme(models.Model):
 
 
 class ResultStructure(models.Model):
+    """
+    Represents a result structure for the country programme
+
+    Relates to :model:`reports.CountryProgramme`
+    """
 
     name = models.CharField(max_length=150)
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
@@ -44,6 +53,10 @@ class ResultStructure(models.Model):
 
 
 class ResultType(models.Model):
+    """
+    Represents a result type
+    """
+
     OUTCOME = 'Outcome'
     OUTPUT = 'Output'
     ACTIVITY = 'Activity'
@@ -62,6 +75,9 @@ class ResultType(models.Model):
 
 
 class Sector(models.Model):
+    """
+    Represents a sector
+    """
 
     name = models.CharField(max_length=45L, unique=True)
     description = models.CharField(
@@ -98,6 +114,13 @@ class ResultManager(models.Manager):
 
 
 class Result(MPTTModel):
+    """
+    Represents a result for its result structure and the country programme
+
+    Relates to :model:`reports.CountryProgramme`
+    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.ResultType`
+    """
 
     result_structure = models.ForeignKey(ResultStructure, null=True, blank=True, on_delete=models.DO_NOTHING)
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
@@ -166,6 +189,11 @@ class Result(MPTTModel):
 
 
 class Milestone(models.Model):
+    """
+    Represents a milestone for the result
+
+    Relates to :model:`reports.Result`
+    """
 
     result = models.ForeignKey(Result, related_name="milestones")
     description = models.TextField()
@@ -173,6 +201,12 @@ class Milestone(models.Model):
 
 
 class Goal(models.Model):
+    """
+    Represents a goal for the result structure
+
+    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.Sector`
+    """
 
     result_structure = models.ForeignKey(
         ResultStructure, blank=True, null=True, on_delete=models.DO_NOTHING)
@@ -189,6 +223,9 @@ class Goal(models.Model):
 
 
 class Unit(models.Model):
+    """
+    Represents an unit
+    """
     type = models.CharField(max_length=45L, unique=True)
 
     class Meta:
@@ -199,6 +236,14 @@ class Unit(models.Model):
 
 
 class Indicator(models.Model):
+    """
+    Represents an indicator on the result for the result structure
+
+    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.Sector`
+    Relates to :model:`reports.Result`
+    Relates to :model:`activityinfo.Indicator`
+    """
 
     sector = models.ForeignKey(
         Sector,

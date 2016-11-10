@@ -21,6 +21,13 @@ logger = logging.getLogger('users.models')
 
 
 class Country(TenantMixin):
+    """
+    Represents a country which has many offices and sections
+
+    Relates to :model:`users.Office`
+    Relates to :model:`users.Section`
+    """
+
     name = models.CharField(max_length=100)
     country_short_code = models.CharField(
         max_length=10,
@@ -57,6 +64,12 @@ class CountryOfficeManager(models.Manager):
 
 
 class Office(models.Model):
+    """
+    Represents an office for the country
+
+    Relates to :model:`auth.User`
+    """
+
     name = models.CharField(max_length=254)
     zonal_chief = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -77,6 +90,10 @@ class CountrySectionManager(models.Manager):
 
 
 class Section(models.Model):
+    """
+    Represents a section of the country
+    """
+
     name = models.CharField(max_length=50, unique=True)
 
     objects = CountrySectionManager()
@@ -91,6 +108,14 @@ class UserProfileManager(models.Manager):
 
 
 class UserProfile(models.Model):
+    """
+    Represents an user profile that can belong to many Countries but to one active Country at a time
+
+    Relates to :model:`auth.User`
+    Relates to :model:`users.Country`
+    Relates to :model:`users.Section`
+    Relates to :model:`users.Office`
+    """
 
     user = models.OneToOneField(User, related_name='profile')
     partner_staff_member = models.IntegerField(

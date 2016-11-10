@@ -39,6 +39,15 @@ BOOL_CHOICES = (
 
 
 class Trip(AdminURLMixin, models.Model):
+    """
+    Represents a trip for UNICEF officer
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`auth.User`
+    Relates to :model:`users.Office`
+    Relates to :model:`users.Section`
+    """
 
     PLANNED = u'planned'
     SUBMITTED = u'submitted'
@@ -456,6 +465,14 @@ post_save.connect(Trip.send_trip_request, sender=Trip)
 
 
 class LinkedPartner(models.Model):
+    """
+    Represents a partner involving in a trip
+
+    Relates to :model:`trips.Trip`
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`partners.PCA`
+    Relates to :model:`reports.ResultChain`
+    """
 
     trip = models.ForeignKey(Trip)
     partner = models.ForeignKey(
@@ -481,6 +498,15 @@ class LinkedPartner(models.Model):
 
 
 class LinkedGovernmentPartner(models.Model):
+    """
+    Represents a government as a partner, involving in a trip
+
+    Relates to :model:`trips.Trip`
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`partners.GovernmentIntervention`
+    Relates to :model:`partners.GovernmentInterventionResult`
+    """
+
     trip = models.ForeignKey(Trip)
     partner = models.ForeignKey(
         PartnerOrganization,
@@ -505,6 +531,13 @@ class LinkedGovernmentPartner(models.Model):
 
 
 class TripFunds(models.Model):
+    """
+    Represents a fund for the trip
+
+    Relates to :model:`trips.Trip`
+    Relates to :model:`results.Result`
+    Relates to :model:`funds.Grant`
+    """
 
     trip = models.ForeignKey(Trip)
     wbs = models.ForeignKey(
@@ -521,6 +554,16 @@ class TripFunds(models.Model):
 
 
 class TripLocation(models.Model):
+    """
+    Represents a location for the trip
+
+    Relates to :model:`trips.Trip`
+    Relates to :model:`locations.Governorate`
+    Relates to :model:`locations.Region`
+    Relates to :model:`loctions.Locality`
+    Relates to :model:`loctions.Location`
+    """
+
     trip = models.ForeignKey(Trip)
     governorate = models.ForeignKey(
         Governorate,
@@ -553,6 +596,11 @@ class TripLocation(models.Model):
 
 
 class TravelRoutes(models.Model):
+    """
+    Represents a travel route for the trip
+
+    Relates to :model:`trips.Trip`
+    """
 
     trip = models.ForeignKey(Trip)
     origin = models.CharField(max_length=254)
@@ -567,6 +615,12 @@ class TravelRoutes(models.Model):
 
 
 class ActionPoint(models.Model):
+    """
+    Represents an action point for the trip
+
+    Relates to :model:`trips.Trip`
+    Relates to :model:`auth.User`
+    """
 
     STATUS = (
         ('closed', 'Closed'),
@@ -658,6 +712,12 @@ def get_report_filename(instance, filename):
 
 
 class FileAttachment(models.Model):
+    """
+    Represents a file attachment for the trip
+
+    Relates to :model:`trips.Trip`
+    Relates to :model:`partners.FileType`
+    """
 
     trip = models.ForeignKey(Trip, null=True, blank=True, related_name=u'files')
     type = models.ForeignKey(u'partners.FileType')
