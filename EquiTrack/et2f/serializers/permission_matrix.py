@@ -17,18 +17,32 @@ class PermissionMatrixSerializer(serializers.Serializer):
         :return: permission matrix dict
         :rtype: dict
         """
+        # To have better naming
+        permissions_qs = instance
+
+        model_names = {p.model for p in permissions_qs}
+        # Travel is the main, it's special
+        model_names.remove('travel')
+
+        models_dict = {mn: defaultdict(dict) for mn in model_names}
+
         matrix = defaultdict(dict)
         for user_type in UserTypes.CHOICES:
             for status in TripStatus.CHOICES:
-                matrix[user_type[0]][status[0]] = defaultdict(dict)
+                matrix[user_type[0]][status[0]] = models_dict.copy()
 
         for permission in instance:
             if permission.model == 'travel':
-                model_dict = matrix[permission.user_type][permission.status][permission.field]
+                field_name = permission.field.replace('_', '')
+
+                # Related field, nothing to do
+                if field_name in model_names:
+                    continue
+
+                model_dict = matrix[permission.user_type][permission.status].setdefault(permission.field, {})
                 model_dict[permission.permission_type] = True
             else:
                 model_dict = matrix[permission.user_type][permission.status][permission.model]
-                field_dict = model_dict.setdefault(permission.field, {})
-                field_dict[permission.permission_type] = True
+                model_dict[permission.field][permission.permission_type] = True
 
         return matrix
