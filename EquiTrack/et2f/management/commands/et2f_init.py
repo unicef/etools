@@ -252,11 +252,23 @@ class Command(BaseCommand):
             for status in TripStatus.CHOICES:
                 for model_name, fields in model_field_mapping.items():
                     for field_name in fields:
-                        kwargs = dict(name='afd',
+                        name = '_'.join((user_type[0], status[0], model_name, field_name, TravelPermission.EDIT))
+                        kwargs = dict(name=name,
                                       user_type=user_type[0],
                                       status=status[0],
                                       model=model_name,
                                       field=field_name,
+                                      permission_type=TravelPermission.EDIT,
+                                      value=True)
+                        permissions.append(TravelPermission(**kwargs))
+
+                        name = '_'.join((user_type[0], status[0], model_name, field_name, TravelPermission.VIEW))
+                        kwargs = dict(name=name,
+                                      user_type=user_type[0],
+                                      status=status[0],
+                                      model=model_name,
+                                      field=field_name,
+                                      permission_type=TravelPermission.VIEW,
                                       value=True)
                         permissions.append(TravelPermission(**kwargs))
 

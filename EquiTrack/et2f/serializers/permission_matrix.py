@@ -25,6 +25,6 @@ class PermissionMatrixSerializer(serializers.Serializer):
         for permission in instance:
             model_dict = matrix[permission.user_type][permission.status][permission.model]
             field_dict = model_dict.setdefault(permission.field, {})
-            field_dict[permission.type] = True
+            field_dict[permission.permission_type] = True
 
         return matrix
