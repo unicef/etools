@@ -33,10 +33,8 @@ class PermissionMatrixSerializer(serializers.Serializer):
 
         for permission in instance:
             if permission.model == 'travel':
-                field_name = permission.field.replace('_', '')
-
                 # Related field, nothing to do
-                if field_name in model_names:
+                if permission.field in model_names:
                     continue
 
                 model_dict = matrix[permission.user_type][permission.status].setdefault(permission.field, {})

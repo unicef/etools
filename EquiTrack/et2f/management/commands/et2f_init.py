@@ -11,6 +11,7 @@ from et2f.models import Currency, AirlineCompany, DSARegion, TravelPermission
 from partners.models import PartnerOrganization
 from users.models import Country, Office
 
+
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
     @atomic
@@ -165,7 +166,6 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('Partner found: {}'.format(partner_name))
 
-
     def _load_dsa_regions(self):
         dsa_region_data = [{'dsa_amount_usd': 300,
                             'name': 'Hungary',
@@ -187,35 +187,34 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('DSA Region found: {}'.format(name))
 
-
     def _load_permission_matrix(self):
         model_field_mapping = {'clearances': ('id',
                                               'medical_clearance',
                                               'security_clearance',
                                               'security_course'),
-                               'costassignment': ('id', 'wbs', 'share', 'grant'),
-                               'deduction': ('id',
-                                             'date',
-                                             'breakfast',
-                                             'lunch',
-                                             'dinner',
-                                             'accomodation',
-                                             'no_dsa',
-                                             'day_of_the_week'),
-                               'expense': ('id',
-                                           'type',
-                                           'document_currency',
-                                           'account_currency',
-                                           'amount'),
-                               'iteneraryitem': ('id',
-                                                 'origin',
-                                                 'destination',
-                                                 'departure_date',
-                                                 'arrival_date',
-                                                 'dsa_region',
-                                                 'overnight_travel',
-                                                 'mode_of_travel',
-                                                 'airlines'),
+                               'cost_assignments': ('id', 'wbs', 'share', 'grant'),
+                               'deductions': ('id',
+                                              'date',
+                                              'breakfast',
+                                              'lunch',
+                                              'dinner',
+                                              'accomodation',
+                                              'no_dsa',
+                                              'day_of_the_week'),
+                               'expenses': ('id',
+                                            'type',
+                                            'document_currency',
+                                            'account_currency',
+                                            'amount'),
+                               'itinerary': ('id',
+                                             'origin',
+                                             'destination',
+                                             'departure_date',
+                                             'arrival_date',
+                                             'dsa_region',
+                                             'overnight_travel',
+                                             'mode_of_travel',
+                                             'airlines'),
                                'travel': ('reference_number',
                                           'supervisor',
                                           'office',
@@ -237,15 +236,14 @@ class Command(BaseCommand):
                                           'mode_of_travel',
                                           'estimated_travel_cost',
                                           'currency'),
-                               'travelactivity': ('id',
-                                                  'travel_type',
-                                                  'partner',
-                                                  'partnership',
-                                                  'result',
-                                                  'locations',
-                                                  'primary_traveler',
-                                                  'date')}
-
+                               'activities': ('id',
+                                              'travel_type',
+                                              'partner',
+                                              'partnership',
+                                              'result',
+                                              'locations',
+                                              'primary_traveler',
+                                              'date')}
 
         permissions = []
         for user_type in UserTypes.CHOICES:
@@ -273,4 +271,4 @@ class Command(BaseCommand):
                         permissions.append(TravelPermission(**kwargs))
 
         TravelPermission.objects.bulk_create(permissions)
-# DEVELOPMENT CODE - END
+        # DEVELOPMENT CODE - END
