@@ -291,7 +291,7 @@ class TestAgreementAPIView(APITenantTestCase):
                             )
         self.intervention = PartnershipFactory(partner=self.partner, agreement=self.agreement)
 
-    def test_agreements_list(self):
+    def test_partner_agreements_list(self):
         response = self.forced_auth_req(
             'get',
             '/api/v2/partners/{}/agreements/'.format(self.partner.id),
@@ -303,7 +303,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertIn("Partner", response.data[0]["partner_name"])
         self.assertEquals(response.data[0]["agreement_type"], Agreement.AGREEMENT_TYPES[2][0])
 
-    def test_agreements_create(self):
+    def test_partner_agreements_create(self):
         data = {
             "agreement_type":"PCA",
             "partner": self.partner.id,
@@ -318,7 +318,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
-    def test_agreements_update(self):
+    def test_partner_agreements_update(self):
         data = {
             "status":"active",
         }
@@ -332,7 +332,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "active")
 
-    def test_agreements_retrieve(self):
+    def test_partner_agreements_retrieve(self):
         response = self.forced_auth_req(
             'get',
             '/api/v2/partners/{}/agreements/{}/'.format(self.partner.id, self.agreement.id),
@@ -342,6 +342,65 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
 
+    def test_agreements_list(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/',
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+        self.assertIn("Partner", response.data[0]["partner_name"])
+        self.assertEquals(response.data[0]["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
+
+    def test_agreements_create(self):
+        data = {
+            "agreement_type":"PCA",
+            "partner": self.partner.id,
+            "status": "draft"
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/',
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_agreements_update(self):
+        data = {
+            "status":"active",
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["status"], "active")
+
+    def test_agreements_retrieve(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
+
+    def test_agreements_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
 
     def test_agreements_list_filter_type(self):
         params = {"agreement_type": "PCA"}

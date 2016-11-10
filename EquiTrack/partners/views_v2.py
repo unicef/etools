@@ -4,7 +4,7 @@ import functools
 from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.decorators import detail_route
 
 from .models import Agreement, PCA
@@ -89,7 +89,7 @@ class AgreementListAPIView(ListCreateAPIView):
             return super(AgreementListAPIView, self).get_queryset()
 
 
-class AgreementDetailAPIView(RetrieveUpdateAPIView):
+class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
@@ -103,7 +103,10 @@ class AgreementDetailAPIView(RetrieveUpdateAPIView):
         Returns an Agreement object for this Agreement PK and partner
         """
         try:
-            queryset = self.queryset.get(partner=partner_pk, id=pk)
+            if partner_pk:
+                queryset = self.queryset.get(partner=partner_pk, id=pk)
+            else:
+                queryset = self.queryset.get(id=pk)
             serializer = self.serializer_class(queryset)
             data = serializer.data
         except Agreement.DoesNotExist:
