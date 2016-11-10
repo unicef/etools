@@ -20,21 +20,21 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
         fields = super(PermissionBasedModelSerializer, self)._readable_fields
         return [f for f in fields if self._can_read_field(f)]
 
-    def _check_permission(self, permission_code):
+    def _check_permission(self, permission_type, field_name):
+        model_name = model_name = self.Meta.model.__name__.lower()
+
         permission_matrix = self.context.get('permission_matrix')
+
         if permission_matrix is None:
             return True
-        return permission_matrix.has_permission(permission_code)
+
+        return permission_matrix.has_permission(permission_type, model_name, field_name)
 
     def _can_read_field(self, field):
-        model_name = self.Meta.model.__name__.lower()
-        permission_code = '{}_{}_{}'.format(TravelPermission.VIEW_PREFIX, model_name, field.field_name)
-        return self._check_permission(permission_code)
+        return self._check_permission(TravelPermission.VIEW, field.field_name)
 
     def _can_write_field(self, field):
-        model_name = self.Meta.model.__name__.lower()
-        permission_code = '{}_{}_{}'.format(TravelPermission.EDIT_PREFIX, model_name, field.field_name)
-        return self._check_permission(permission_code)
+        return self._check_permission(TravelPermission.EDIT, field.field_name)
 
 
 class IteneraryItemSerializer(PermissionBasedModelSerializer):

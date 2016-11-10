@@ -16,7 +16,7 @@ class PermissionMatrix(object):
 
     def get_permission_dict(self):
         permissions = TravelPermission.objects.filter(status=self.travel.status, user_type=self._user_type)
-        return {p.code: p.value for p in permissions}
+        return {(p.model, p.field, p.permission_type): p.value for p in permissions}
 
-    def has_permission(self, code):
-        return self._permission_dict.get(code, True)
+    def has_permission(self, permission_type, model_name, field_name):
+        return self._permission_dict.get((permission_type, model_name, field_name), True)
