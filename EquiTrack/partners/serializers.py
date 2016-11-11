@@ -64,6 +64,7 @@ class PCASectorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCASector
+        fields = '__all__'
 
 
 class PCAFileSerializer(serializers.ModelSerializer):
@@ -87,24 +88,28 @@ class FileTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileType
+        fields = '__all__'
 
 
 class PCAGrantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCAGrant
+        fields = '__all__'
 
 
 class PartnershipBudgetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnershipBudget
+        fields = '__all__'
 
 
 class AmendmentLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AmendmentLog
+        fields = '__all__'
 
 
 class ResultChainSerializer(serializers.ModelSerializer):
@@ -117,6 +122,7 @@ class ResultChainSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultChain
+        fields = '__all__'
 
 
 class LocationSerializer(serializers.Serializer):
@@ -138,6 +144,7 @@ class LocationSerializer(serializers.Serializer):
 
     class Meta:
         model = Location
+        fields = '__all__'
 
 
 class IndicatorReportSerializer(serializers.ModelSerializer):
@@ -149,6 +156,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IndicatorReport
+        fields = '__all__'
 
     def get_indicator(self, obj):
         return obj.indicator.id
@@ -200,6 +208,7 @@ class ResultChainDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultChain
+        fields = '__all__'
 
 
 class DistributionPlanSerializer(serializers.ModelSerializer):
@@ -227,6 +236,7 @@ class InterventionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
+        fields = '__all__'
 
 
 class GWLocationSerializer(serializers.ModelSerializer):
@@ -246,6 +256,7 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GwPCALocation
+        fields = '__all__'
 
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
@@ -254,18 +265,21 @@ class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerOrganization
+        fields = '__all__'
 
 
 class AgreementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Agreement
+        fields = '__all__'
 
 
 class PartnerStaffMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerStaffMember
+        fields = '__all__'
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
@@ -275,6 +289,7 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerStaffMember
+        fields = '__all__'
         # fields = (
         # )
 
