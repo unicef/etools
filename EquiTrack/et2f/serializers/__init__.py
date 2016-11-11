@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
 from rest_framework import serializers
@@ -226,3 +227,11 @@ class TravelListParameterSerializer(serializers.Serializer):
             valid_values = ', '.join(self._SORTABLE_FIELDS)
             raise ValidationError('Invalid sorting option. Valid values are {}'.format(valid_values))
         return value
+
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    full_name = serializers.CharField(source='get_full_name')
+
+    class Meta:
+        model = get_user_model()
+        fields = ('id', 'full_name')

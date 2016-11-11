@@ -20,7 +20,8 @@ from users.models import Office, Section
 from et2f import TripStatus
 from et2f.exports import TravelListExporter
 from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission
-from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer
+from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer, \
+    CurrentUserSerializer
 from et2f.serializers.static_data import StaticDataSerializer
 from et2f.serializers.permission_matrix import PermissionMatrixSerializer
 from et2f.helpers import PermissionMatrix
@@ -188,4 +189,13 @@ class PermissionMatrixViewSet(mixins.ListModelMixin,
     def list(self, request, *args, **kwargs):
         permissions = TravelPermission.objects.all()
         serializer = self.get_serializer(permissions)
+        return Response(serializer.data, status.HTTP_200_OK)
+
+
+class CurrentUserViewSet(mixins.ListModelMixin,
+                         viewsets.GenericViewSet):
+    serializer_class = CurrentUserSerializer
+
+    def list(self, request, *args, **kwargs):
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data, status.HTTP_200_OK)
