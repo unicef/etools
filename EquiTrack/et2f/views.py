@@ -19,7 +19,7 @@ from users.models import Office, Section
 
 from et2f import TripStatus
 from et2f.exports import TravelListExporter
-from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission
+from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType
 from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer, \
     CurrentUserSerializer
 from et2f.serializers.static_data import StaticDataSerializer
@@ -176,7 +176,9 @@ class StaticDataViewSet(mixins.ListModelMixin,
                 'locations': Location.objects.all(),
                 'dsa_regions': DSARegion.objects.all(),
                 'wbs': wbs_qs,
-                'grants': Grant.objects.all()}
+                'grants': Grant.objects.all(),
+                'funds': Fund.objects.all(),
+                'expense_types': ExpenseType.objects.all()}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)

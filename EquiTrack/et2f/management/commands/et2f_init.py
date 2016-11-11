@@ -7,7 +7,7 @@ from django.db import connection
 from django.db.transaction import atomic
 
 from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD, UserTypes, TripStatus
-from et2f.models import Currency, AirlineCompany, DSARegion, TravelPermission
+from et2f.models import Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType
 from funds.models import Donor, Grant
 from partners.models import PartnerOrganization
 from reports.models import Result, ResultType
@@ -335,4 +335,39 @@ class Command(BaseCommand):
                 self.stdout.write('Grant created: {}'.format(name))
             else:
                 self.stdout.write('Grant found: {}'.format(name))
+
+    def _add_funds(self):
+        fund_data_list = [
+            {'name': 'Fund #1'},
+            {'name': 'Fund #2'},
+            {'name': 'Fund #3'},
+            {'name': 'Fund #4'},
+        ]
+
+        for data in fund_data_list:
+            name = data.pop('name')
+            f, created = Fund.objects.get_or_create(name=name, defaults=data)
+            if created:
+                self.stdout.write('Fund created: {}'.format(name))
+            else:
+                self.stdout.write('Fund found: {}'.format(name))
+
+    def _add_expense_types(self):
+        expense_type_data = [
+            {'title': 'Food',
+             'code': 'food'},
+            {'title': 'Tickets',
+             'code': 'tickets'},
+            {'title': 'Fees',
+             'code': 'fees'}
+        ]
+
+        for data in expense_type_data:
+            title = data.pop('title')
+            e, created = ExpenseType.objects.get_or_create(title=title, defaults=data)
+            if created:
+                self.stdout.write('Expense type created: {}'.format(title))
+            else:
+                self.stdout.write('Expense type found: {}'.format(title))
+
 # DEVELOPMENT CODE - END

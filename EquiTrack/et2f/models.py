@@ -8,6 +8,15 @@ from django_fsm import FSMField, transition
 from et2f import BooleanChoice, TripStatus, UserTypes
 
 
+class Fund(models.Model):
+    name = models.CharField(max_length=25)
+
+
+class ExpenseType(models.Model):
+    title = models.CharField(max_length=32)
+    code = models.CharField(max_length=16)
+
+
 class TravelPermission(models.Model):
     EDIT = 'edit'
     VIEW = 'view'
@@ -172,7 +181,7 @@ class IteneraryItem(models.Model):
 
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')
-    type = models.CharField(max_length=64)
+    type = models.ForeignKey('ExpenseType', related_name='+')
     document_currency = models.ForeignKey('Currency', related_name='+')
     account_currency = models.ForeignKey('Currency', related_name='+')
     amount = models.DecimalField(max_digits=10, decimal_places=4)
@@ -197,7 +206,7 @@ class CostAssignment(models.Model):
     wbs = models.ForeignKey('reports.Result', related_name='+')
     share = models.PositiveIntegerField()
     grant = models.ForeignKey('funds.Grant', related_name='+')
-    # fund = models.ForeignKey()    # No idea where to connect
+    fund = models.ForeignKey('Fund')    # Still no idea where to connect
 
 
 class Clearances(models.Model):

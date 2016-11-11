@@ -1,8 +1,9 @@
-
 import json
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from et2f import TripStatus, UserTypes
+from et2f.models import TravelPermission
 
 from .factories import TravelFactory
 
@@ -86,7 +87,27 @@ class TravelViews(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_travel_creation(self):
-        response = self.forced_auth_req('post', '/api/et2f/travels/', data={},
+        data = {'cost_assignments': [],
+                'deductions': [{'date': '2016-11-03',
+                                'breakfast': True,
+                                'lunch': True,
+                                'dinner': False,
+                                'accomodation': True}],
+                'expenses': [],
+                'itinerary': [],
+                'activities': []}
+        response = self.forced_auth_req('post', '/api/et2f/travels/', data=data,
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        # self.assertEqual(response_json, {})
+
+        response_json['deductions'].append({'date': '2016-12-12',
+                                            'dinner': True,
+                                            'lunch': True,
+                                            'no_dsa': False})
+
+        response = self.forced_auth_req('patch', '/api/et2f/travels/{}/'.format(response_json['id']),
+                                        data=response_json,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {})
@@ -95,3 +116,130 @@ class TravelViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/et2f/static_data/', user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {})
+
+    def test_curent_user_endpoint(self):
+        response = self.forced_auth_req('get', '/api/et2f/me/', user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {})
+
+
+    def test_payload(self):
+        TravelPermission.objects.create(name='afds', code='can_see_travel_status', user_type='God', status='planned')
+
+        travel = TravelFactory()
+        response = self.forced_auth_req('get', '/api/et2f/travels/{}/'.format(travel.id), user=self.unicef_staff)
+        self.assertEqual(json.loads(response.rendered_content), {})
+
+    def test_permission_matrix(self):
+        model_field_mapping = {'clearances': ('id',
+                                              'medical_clearance',
+                                              'security_clearance',
+                                              'security_course'),
+                               'cost_assignments': ('id', 'wbs', 'share', 'grant'),
+                               'deductions': ('id',
+                                             'date',
+                                             'breakfast',
+                                             'lunch',
+                                             'dinner',
+                                             'accomodation',
+                                             'no_dsa',
+                                             'day_of_the_week'),
+                               'expenses': ('id',
+                                           'type',
+                                           'document_currency',
+                                           'account_currency',
+                                           'amount'),
+                               'itinerary': ('id',
+                                                 'origin',
+                                                 'destination',
+                                                 'departure_date',
+                                                 'arrival_date',
+                                                 'dsa_region',
+                                                 'overnight_travel',
+                                                 'mode_of_travel',
+                                                 'airlines'),
+                               'travel': ('reference_number',
+                                          'supervisor',
+                                          'office',
+                                          'end_date',
+                                          'section',
+                                          'international_travel',
+                                          'traveller',
+                                          'start_date',
+                                          'ta_required',
+                                          'purpose',
+                                          'id',
+                                          'itinerary',
+                                          'expenses',
+                                          'deductions',
+                                          'cost_assignments',
+                                          'clearances',
+                                          'status',
+                                          'activities',
+                                          'mode_of_travel',
+                                          'estimated_travel_cost',
+                                          'currency'),
+                               'activities': ('id',
+                                                  'travel_type',
+                                                  'partner',
+                                                  'partnership',
+                                                  'result',
+                                                  'locations',
+                                                  'primary_traveler',
+                                                  'date')}
+
+
+        permissions = []
+        for user_type in UserTypes.CHOICES:
+            for status in TripStatus.CHOICES:
+                for model_name, fields in model_field_mapping.items():
+                    for field_name in fields:
+                        name = '_'.join((user_type[0], status[0], model_name, field_name, TravelPermission.EDIT))
+                        kwargs = dict(name=name,
+                                      user_type=user_type[0],
+                                      status=status[0],
+                                      model=model_name,
+                                      field=field_name,
+                                      permission_type=TravelPermission.EDIT,
+                                      value=True)
+                        permissions.append(TravelPermission(**kwargs))
+
+                        name = '_'.join((user_type[0], status[0], model_name, field_name, TravelPermission.VIEW))
+                        kwargs = dict(name=name,
+                                      user_type=user_type[0],
+                                      status=status[0],
+                                      model=model_name,
+                                      field=field_name,
+                                      permission_type=TravelPermission.VIEW,
+                                      value=True)
+                        permissions.append(TravelPermission(**kwargs))
+
+        TravelPermission.objects.bulk_create(permissions)
+
+        response = self.forced_auth_req('get', '/api/et2f/permission_matrix/', user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        from pprint import pformat
+
+        with open('ki.json', 'w') as out:
+            out.write(pformat(response_json))
+
+    # def test_permission_matrix(self):
+    #     from et2f.serializers import IteneraryItemSerializer, ExpenseSerializer, DeductionSerializer, \
+    #         CostAssignmentSerializer, ClearancesSerializer, TravelActivitySerializer, TravelDetailsSerializer
+    #
+    #     serializers = (
+    #         IteneraryItemSerializer,
+    #         ExpenseSerializer,
+    #         DeductionSerializer,
+    #         CostAssignmentSerializer,
+    #         ClearancesSerializer,
+    #         TravelActivitySerializer,
+    #         TravelDetailsSerializer)
+    #
+    #     permnames = {}
+    #     for s in serializers:
+    #         model_name = s.Meta.model.__name__.lower()
+    #         fields = s.Meta.fields
+    #         permnames[model_name] = fields
+    #
+    #     self.assertEqual(permnames, {})
