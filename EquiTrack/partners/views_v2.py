@@ -11,8 +11,8 @@ from rest_framework.generics import (
 )
 
 from .models import Agreement, PCA
-from .serializers import AgreementSerializer, InterventionSerializer
-from .serializers_v2 import AgreementListSerializer
+from .serializers import InterventionSerializer
+from .serializers_v2 import AgreementListSerializer, AgreementSerializer
 from .permissions import PartnerManagerPermission
 from .filters import PartnerScopeFilter
 

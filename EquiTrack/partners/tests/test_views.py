@@ -2,6 +2,7 @@ __author__ = 'unicef-leb-inn'
 
 import json
 import datetime
+from datetime import date
 
 from rest_framework import status
 
@@ -14,6 +15,7 @@ from EquiTrack.factories import (
     LocationFactory,
     AgreementFactory,
     PartnerStaffFactory,
+    CountryProgrammeFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
@@ -284,7 +286,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory()
+        self.partner = PartnerFactory(partner_type="Civil Society Organization")
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
@@ -296,6 +298,15 @@ class TestAgreementAPIView(APITenantTestCase):
                                 status="draft"
                             )
         self.intervention = PartnershipFactory(partner=self.partner, agreement=self.agreement)
+        self.result_type = ResultType.objects.get(id=1)
+        self.country_programme = CountryProgrammeFactory()
+        self.result_structure=ResultStructureFactory(country_programme=self.country_programme)
+        self.result = ResultFactory(result_type=self.result_type, result_structure=self.result_structure)
+        self.resultchain = ResultChain.objects.create(
+            result=self.result,
+            result_type=self.result_type,
+            partnership=self.intervention,
+        )
 
     def test_partner_agreements_list(self):
         response = self.forced_auth_req(
@@ -508,3 +519,114 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
         self.assertIn("galaxy", response.data[0]["pca_title"])
+
+    def test_agreements_update_validation_signed_by(self):
+        data = {
+            "end": datetime.date.today(),
+            "signed_by_partner_date": datetime.date.today(),
+            "signed_by_unicef_date": datetime.date.today(),
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager are both must be provided."])
+        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date are both must be provided."])
+        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by are both must be provided."])
+        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date are both must be provided."])
+        self.assertEquals(response.data["start"], ["Start date must be provided along with end date."])
+
+    def test_agreements_update_validation_signed_date(self):
+        data = {
+            "signed_by": self.unicef_staff.id,
+            "partner_manager": self.partner_staff.id,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager are both must be provided."])
+        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date are both must be provided."])
+        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by are both must be provided."])
+        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date are both must be provided."])
+
+    def test_agreements_update_validation_end_date_pca(self):
+        data = {
+            "start": datetime.date.today(),
+            "end": datetime.date.today(),
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        # self.assertEquals(response.data["end"], str(self.country_programme.to_date))
+
+    def test_agreements_update_start_set_to_max_signed(self):
+        today = datetime.date.today()
+        data = {
+            "start": date(today.year, 1, 1),
+            "end": date(today.year, 6, 1),
+            "signed_by": self.unicef_staff.id,
+            "partner_manager": self.partner_staff.id,
+            "signed_by_partner_date": date(today.year, 2, 1),
+            "signed_by_unicef_date": date(today.year, 3, 1),
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["start"], response.data["signed_by_unicef_date"])
+
+    def test_agreements_create_PCA_must_be_CSO(self):
+        self.partner.partner_type = "Government"
+        self.partner.save()
+        data = {
+            "agreement_type":"PCA",
+            "partner": self.partner.id,
+            "status": "draft"
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/',
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data["partner"], ["Partner type must be CSO for PCA or SSFA agreement types."])
+
+    def test_agreements_update_set_to_active_on_save(self):
+        today = datetime.date.today()
+        data = {
+            "start": date(today.year, 1, 1),
+            "end": date(today.year, 6, 1),
+            "signed_by": self.unicef_staff.id,
+            "partner_manager": self.partner_staff.id,
+            "signed_by_partner_date": date(today.year, 2, 1),
+            "signed_by_unicef_date": date(today.year, 3, 1),
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["status"], Agreement.ACTIVE)

@@ -282,6 +282,7 @@ class AgreementSerializer(serializers.ModelSerializer):
             "year",
             "reference_number",
         )
+        read_only_fields = ("id",)
 
 
 class PartnerStaffMemberSerializer(serializers.ModelSerializer):
