@@ -658,12 +658,17 @@ class Agreement(TimeStampedModel):
         auto_choose=False,
         blank=True, null=True,
     )
+    DRAFT = "draft"
+    ACTIVE = "active"
+    ENDED = "ended"
+    SUSPENDED = "suspended"
+    TERMINATED = "terminated"
     STATUS_CHOICES = (
-        ("draft", "Draft"),
-        ("active", "Active"),
-        ("ended", "Ended"),
-        ("suspended", "Suspended"),
-        ("terminated", "Terminated"),
+        (DRAFT, "Draft"),
+        (ACTIVE, "Active"),
+        (ENDED, "Ended"),
+        (SUSPENDED, "Suspended"),
+        (TERMINATED, "Terminated"),
     )
     status = models.CharField(max_length=255, choices=STATUS_CHOICES)
 
@@ -702,25 +707,26 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.agreement_number:
-            number = self.agreement_number
-        else:
-            objects = list(Agreement.objects.filter(
-                created__year=self.year,
-                agreement_type=self.agreement_type
-            ).order_by('created').values_list('id', flat=True))
-            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-            number = u'{code}/{type}{year}{seq}'.format(
-                code=connection.tenant.country_short_code or '',
-                type=self.agreement_type,
-                year=self.year,
-                seq=sequence,
+        if self.status != Agreement.DRAFT:
+            if self.agreement_number:
+                number = self.agreement_number
+            else:
+                objects = list(Agreement.objects.filter(
+                    created__year=self.year,
+                    agreement_type=self.agreement_type
+                ).order_by('created').values_list('id', flat=True))
+                sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+                number = u'{code}/{type}{year}{seq}'.format(
+                    code=connection.tenant.country_short_code or '',
+                    type=self.agreement_type,
+                    year=self.year,
+                    seq=sequence,
+                )
+            return u'{}{}'.format(
+                number,
+                u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
+                if self.amendments_log.last() else ''
             )
-        return u'{}{}'.format(
-            number,
-            u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
-            if self.amendments_log.last() else ''
-        )
 
     def save(self, **kwargs):
 
