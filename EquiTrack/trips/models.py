@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.signals import post_save
 from django.contrib.sites.models import Site
 
-from reversion.models import Version
+from reversion.revisions import get_for_object
 from smart_selects.db_fields import ChainedForeignKey
 
 from EquiTrack.mixins import AdminURLMixin
@@ -245,7 +245,7 @@ class Trip(AdminURLMixin, models.Model):
 
     @property
     def trip_revision(self):
-        return Version.objects.get_for_object(self).count()
+        return get_for_object(self).count()
 
     @property
     def trip_overdue(self):
