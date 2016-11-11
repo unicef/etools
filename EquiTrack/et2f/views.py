@@ -42,7 +42,7 @@ class PageNumberPagination(_PageNumberPagination):
 def state_transition(transition_name):
     @detail_route(methods=['post', 'put', 'patch'])
     def func(self, request, *args, **kwargs):
-        kwargs['transition_name'] = transition_name
+        request.data['transition_name'] = transition_name
         return self.update(request, *args, **kwargs)
     func.__name__ = str(transition_name)
     return func
@@ -108,24 +108,19 @@ class TravelViewSet(mixins.ListModelMixin,
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status.HTTP_200_OK)
-    
-    def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        transition_name = kwargs.pop('transition_name', None)
-        
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        
-        self.perform_update(serializer, transition_name)
-        
-        return Response(serializer.data)
-    
+
+    def perform_create(self, serializer):
+        super(TravelViewSet, self).perform_create(serializer)
+        self.run_transition(serializer)
+
     def perform_update(self, serializer, transition_name=None):
         super(TravelViewSet, self).perform_update(serializer)
+        self.run_transition(serializer)
 
-        instance = serializer.instance
+    def run_transition(self, serializer):
+        transition_name = serializer.transition_name
         if transition_name:
+            instance = serializer.instance
             transition = getattr(instance, transition_name)
             transition()
             instance.save()
@@ -142,6 +137,11 @@ class TravelViewSet(mixins.ListModelMixin,
         return response
 
     # State changes
+    @list_route(['post'])
+    def save_and_submit(self, request, *args, **kwargs):
+        request.data['transition_name'] = 'submit_for_approval'
+        return self.create(request, *args, **kwargs)
+
     submit_for_approval = state_transition('submit_for_approval')
     approve = state_transition('approve')
     reject = state_transition('reject')

@@ -107,6 +107,11 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         # Review this, as a developer could be confusing why the status field is not saved during an update
         read_only_fields = ('status',)
 
+    def __init__(self, *args, **kwargs):
+        data = kwargs.get('data', {})
+        self.transition_name = data.get('transition_name', None)
+        super(TravelDetailsSerializer, self).__init__(*args, **kwargs)
+
     def create(self, validated_data):
         itinerary = validated_data.pop('itinerary', [])
         expenses = validated_data.pop('expenses', [])
