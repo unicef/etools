@@ -123,7 +123,7 @@ class Travel(models.Model):
         pass
 
     @transition(status, source=[TripStatus.CANCELLED], target=TripStatus.PLANNED)
-    def restore(self):
+    def plan(self):
         pass
 
     @transition(status, source=[TripStatus.APPROVED], target=TripStatus.SENT_FOR_PAYMENT)

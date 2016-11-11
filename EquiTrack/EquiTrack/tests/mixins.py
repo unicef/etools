@@ -1,3 +1,4 @@
+from unittest.case import TestCase
 
 from django.core.urlresolvers import resolve
 
@@ -10,6 +11,13 @@ from tenant_schemas.test.client import TenantClient
 class APITenantClient(TenantClient, APIClient):
     def __init__(self, tenant, **defaults):
         super(APITenantClient, self).__init__(tenant=tenant, defaults=defaults)
+
+
+# class AssertionMixin(TestCase):
+#     def _baseAssertEqual(self, first, second, msg=None):
+#         if first is Ellipsis or second is Ellipsis:
+#             return
+#         super(AssertionMixin, self)._baseAssertEqual(first, second, msg)
 
 
 class APITenantTestCase(TenantTestCase):

@@ -146,13 +146,13 @@ class TravelViewSet(mixins.ListModelMixin,
     approve = state_transition('approve')
     reject = state_transition('reject')
     cancel = state_transition('cancel')
-    restore = state_transition('restore')
+    plan = state_transition('plan')
     send_for_payment = state_transition('send_for_payment')
     # mark_as_done = state_transition('mark_as_done')
     submit_certificate = state_transition('submit_certificate')
     approve_cetificate = state_transition('approve_cetificate')
     reject_certificate = state_transition('reject_certificate')
-    mark_as_certified = state_transition('submit_for_approval')
+    mark_as_certified = state_transition('mark_as_certified')
     mark_as_completed = state_transition('mark_as_completed')
 
 
