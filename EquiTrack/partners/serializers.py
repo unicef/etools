@@ -260,6 +260,28 @@ class AgreementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Agreement
+        fields = (
+            "id",
+            "partner",
+            "agreement_type",
+            "agreement_number",
+            "attached_agreement",
+            "start",
+            "end",
+            "signed_by_unicef_date",
+            "signed_by",
+            "signed_by_partner_date",
+            "partner_manager",
+            "status",
+            "bank_name",
+            "bank_address",
+            "account_title",
+            "account_number",
+            "routing_details",
+            "bank_contact_person",
+            "year",
+            "reference_number",
+        )
 
 
 class PartnerStaffMemberSerializer(serializers.ModelSerializer):

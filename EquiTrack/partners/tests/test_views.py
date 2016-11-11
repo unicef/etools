@@ -1,6 +1,7 @@
 __author__ = 'unicef-leb-inn'
 
 import json
+import datetime
 
 from rest_framework import status
 
@@ -410,6 +411,16 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
+
+    def test_agreements_retrieve(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["reference_number"], "/PCA{}01".format(datetime.date.today().year))
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
