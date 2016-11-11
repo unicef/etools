@@ -130,12 +130,13 @@ class Travel(models.Model):
     def send_for_payment(self):
         pass
 
-    @transition(status, source=[TripStatus.SENT_FOR_PAYMENT, TripStatus.APPROVED, TripStatus.CERTIFICATION_REJECTED],
-                target=TripStatus.DONE)
-    def mark_as_done(self):
-        pass
+    # @transition(status, source=[TripStatus.SENT_FOR_PAYMENT, TripStatus.APPROVED, TripStatus.CERTIFICATION_REJECTED],
+    #             target=TripStatus.DONE)
+    # def mark_as_done(self):
+    #     pass
 
-    @transition(status, source=[TripStatus.DONE], target=TripStatus.CERTIFICATION_SUBMITTED)
+    @transition(status, source=[TripStatus.DONE, TripStatus.SENT_FOR_PAYMENT],
+                target=TripStatus.CERTIFICATION_SUBMITTED)
     def submit_certificate(self):
         pass
 
@@ -147,7 +148,8 @@ class Travel(models.Model):
     def reject_certificate(self):
         pass
 
-    @transition(status, source=[TripStatus.DONE, TripStatus.CERTIFICATION_APPROVED], target=TripStatus.CERTIFIED)
+    @transition(status, source=[TripStatus.DONE, TripStatus.CERTIFICATION_APPROVED, TripStatus.SENT_FOR_PAYMENT],
+                target=TripStatus.CERTIFIED)
     def mark_as_certified(self):
         pass
 
