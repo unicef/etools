@@ -122,7 +122,7 @@ class Travel(models.Model):
     def cancel(self):
         pass
 
-    @transition(status, source=[TripStatus.CANCELLED], target=TripStatus.PLANNED)
+    @transition(status, source=[TripStatus.CANCELLED, TripStatus.REJECTED], target=TripStatus.PLANNED)
     def plan(self):
         pass
 
