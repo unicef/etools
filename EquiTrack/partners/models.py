@@ -707,31 +707,30 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.status != Agreement.DRAFT:
-            if self.agreement_number:
-                number = self.agreement_number
-            else:
-                objects = list(Agreement.objects.filter(
-                    created__year=self.year,
-                    agreement_type=self.agreement_type
-                ).order_by('created').values_list('id', flat=True))
-                sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-                number = u'{code}/{type}{year}{seq}'.format(
-                    code=connection.tenant.country_short_code or '',
-                    type=self.agreement_type,
-                    year=self.year,
-                    seq=sequence,
-                )
-            return u'{}{}'.format(
-                number,
-                u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
-                if self.amendments_log.last() else ''
+        if self.agreement_number:
+            number = self.agreement_number
+        else:
+            objects = list(Agreement.objects.filter(
+                created__year=self.year,
+                agreement_type=self.agreement_type
+            ).order_by('created').values_list('id', flat=True))
+            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            number = u'{code}/{type}{year}{seq}'.format(
+                code=connection.tenant.country_short_code or '',
+                type=self.agreement_type,
+                year=self.year,
+                seq=sequence,
             )
+        return u'{}{}'.format(
+            number,
+            u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
+            if self.amendments_log.last() else ''
+        )
 
     def save(self, **kwargs):
 
         # commit the reference number to the database once the agreement is signed
-        if self.signed_by_unicef_date and not self.agreement_number:
+        if self.status != Agreement.DRAFT and self.signed_by_unicef_date and not self.agreement_number:
             self.agreement_number = self.reference_number
 
         if self.signed_by_unicef_date and self.signed_by_partner_date:
