@@ -69,7 +69,7 @@ class CostAssignmentSerializer(PermissionBasedModelSerializer):
 
     class Meta:
         model = CostAssignment
-        fields = ('id', 'wbs', 'share', 'grant')
+        fields = ('id', 'wbs', 'share', 'grant', 'fund')
 
 
 class ClearancesSerializer(PermissionBasedModelSerializer):
