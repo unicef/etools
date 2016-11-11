@@ -89,8 +89,8 @@ class TravelViewSet(mixins.ListModelMixin,
         # Hide hidden travels
         show_hidden = parameter_serializer.data['show_hidden']
         if not show_hidden:
-            q = Q(hidden=False) | Q(status=TripStatus.CANCELLED)
-            queryset = queryset.filter(q)
+            q = Q(hidden=True) | Q(status=TripStatus.CANCELLED)
+            queryset = queryset.exclude(q)
 
         # Sorting
         prefix = '-' if parameter_serializer.data['reverse'] else ''
