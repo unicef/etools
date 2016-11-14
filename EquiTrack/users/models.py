@@ -22,6 +22,7 @@ logger = logging.getLogger('users.models')
 
 class Country(TenantMixin):
     """
+    Tenant Schema
     Represents a country which has many offices and sections
 
     Relates to :model:`users.Office`
@@ -91,7 +92,7 @@ class CountrySectionManager(models.Manager):
 
 class Section(models.Model):
     """
-    Represents a section of the country
+    Represents a section for the country
     """
 
     name = models.CharField(max_length=50, unique=True)
@@ -109,7 +110,7 @@ class UserProfileManager(models.Manager):
 
 class UserProfile(models.Model):
     """
-    Represents an user profile that can belong to many Countries but to one active Country at a time
+    Represents a user profile that can have access to many Countries but to one active Country at a time
 
     Relates to :model:`auth.User`
     Relates to :model:`users.Country`

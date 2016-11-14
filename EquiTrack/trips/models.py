@@ -40,7 +40,7 @@ BOOL_CHOICES = (
 
 class Trip(AdminURLMixin, models.Model):
     """
-    Represents a trip for UNICEF officer
+    Represents a trip for UNICEF staff
 
     Relates to :model:`partners.PCA`
     Relates to :model:`partners.PartnerOrganization`
@@ -466,7 +466,7 @@ post_save.connect(Trip.send_trip_request, sender=Trip)
 
 class LinkedPartner(models.Model):
     """
-    Represents a partner involving in a trip
+    Represents a link between a partner, intervention and trip
 
     Relates to :model:`trips.Trip`
     Relates to :model:`partners.PartnerOrganization`
@@ -499,7 +499,7 @@ class LinkedPartner(models.Model):
 
 class LinkedGovernmentPartner(models.Model):
     """
-    Represents a government as a partner, involving in a trip
+    Represents a link between a partner, government intervention and trip
 
     Relates to :model:`trips.Trip`
     Relates to :model:`partners.PartnerOrganization`
@@ -532,7 +532,7 @@ class LinkedGovernmentPartner(models.Model):
 
 class TripFunds(models.Model):
     """
-    Represents a fund for the trip
+    Represents funding used for the trip
 
     Relates to :model:`trips.Trip`
     Relates to :model:`results.Result`
@@ -558,9 +558,6 @@ class TripLocation(models.Model):
     Represents a location for the trip
 
     Relates to :model:`trips.Trip`
-    Relates to :model:`locations.Governorate`
-    Relates to :model:`locations.Region`
-    Relates to :model:`loctions.Locality`
     Relates to :model:`loctions.Location`
     """
 

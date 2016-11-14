@@ -26,7 +26,7 @@ def get_random_color():
 
 class GatewayType(models.Model):
     """
-    Represents GatewayType in location-related models.
+    Represents an Admin Type in location-related models.
     """
 
     name = models.CharField(max_length=64L, unique=True)
@@ -41,7 +41,7 @@ class GatewayType(models.Model):
 
 class Governorate(models.Model):
     """
-    Represents Governorate as a geospatial boundary
+    Represents Admin level as a geospatial boundary
 
     Relates to :model:`locations.GatewayType`
     """
@@ -67,7 +67,7 @@ class Governorate(models.Model):
 
 class Region(models.Model):
     """
-    Represents Region, a part of Governorate area as a geospatial boundary
+    Represents a district, a part of Admin area as a geospatial boundary
 
     Relates to :model:`locations.GatewayType`
     Relates to :model:`locations.Governorate`
@@ -96,7 +96,7 @@ class Region(models.Model):
 
 class Locality(models.Model):
     """
-    Represents Locality, a part of Region area as a geospatial boundary
+    Represents Locality, a part of District area as a geospatial boundary
 
     Relates to :model:`locations.GatewayType`
     Relates to :model:`locations.Region`
@@ -136,7 +136,8 @@ class LocationManager(models.Manager):
 
 class Location(MPTTModel):
     """
-    Represents Location, a part of Locality area as a geospatial boundary
+    Represents Location, either a point or geospatial ojject,
+    pcode should be unique
 
     Relates to :model:`locations.GatewayType`
     Relates to :model:`locations.Locality`
@@ -253,7 +254,7 @@ class LinkedLocation(models.Model):
 
 class CartoDBTable(MPTTModel):
     """
-    Represents a record of CartoDB table
+    Represents a table in CartoDB, it is used to import lacations
 
     Relates to :model:`locations.GatewayType`
     """

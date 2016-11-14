@@ -64,7 +64,7 @@ RISK_RATINGS = (
 
 class PartnerOrganization(AdminURLMixin, models.Model):
     """
-    Represents an partner organization
+    Represents a partner organization
     """
 
     partner_type = models.CharField(
@@ -464,6 +464,7 @@ post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 class PartnerStaffMember(models.Model):
     """
     Represents a staff member at the partner organization.
+    A User is created for each staff member
 
     Relates to :model:`partners.PartnerOrganization`
     """
@@ -508,7 +509,7 @@ class PartnerStaffMember(models.Model):
 
 class Assessment(models.Model):
     """
-    Represents an assessment on the partner organization.
+    Represents an assessment for a partner organization.
 
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`auth.User`
@@ -817,6 +818,7 @@ class PCA(AdminURLMixin, models.Model):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`partners.Agreement`
     Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.CountryProgramme`
     Relates to :model:`auth.User`
     Relates to :model:`partners.PartnerStaffMember`
     """
@@ -1393,45 +1395,45 @@ class AgreementAmendmentLog(TimeStampedModel):
     Relates to :model:`partners.Agreement`
     """
 
-        agreement = models.ForeignKey(Agreement, related_name='amendments_log')
-        type = models.CharField(
-            max_length=50,
-            choices=Choices(
-                'Authorised Officers',
-                'Banking Info',
-                'Agreement Changes',
-                'Additional Clauses',
-            ))
-        amended_at = models.DateField(null=True, verbose_name='Signed At')
-        amendment_number = models.IntegerField(default=0)
-        status = models.CharField(
-            max_length=32L,
-            blank=True,
-            choices=PCA.PCA_STATUS,
+    agreement = models.ForeignKey(Agreement, related_name='amendments_log')
+    type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            'Authorised Officers',
+            'Banking Info',
+            'Agreement Changes',
+            'Additional Clauses',
+        ))
+    amended_at = models.DateField(null=True, verbose_name='Signed At')
+    amendment_number = models.IntegerField(default=0)
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=PCA.PCA_STATUS,
+    )
+
+    def __unicode__(self):
+        return u'{}: {} - {}'.format(
+            self.amendment_number,
+            self.type,
+            self.amended_at
         )
 
-        def __unicode__(self):
-            return u'{}: {} - {}'.format(
-                self.amendment_number,
-                self.type,
-                self.amended_at
-            )
+    @property
+    def amendment_number(self):
+        """
+        Increment amendment number automatically
+        """
+        objects = list(AgreementAmendmentLog.objects.filter(
+            agreement=self.agreement
+        ).order_by('created').values_list('id', flat=True))
 
-        @property
-        def amendment_number(self):
-            """
-            Increment amendment number automatically
-            """
-            objects = list(AgreementAmendmentLog.objects.filter(
-                agreement=self.agreement
-            ).order_by('created').values_list('id', flat=True))
-
-            return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
+        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
 
 class PartnershipBudget(TimeStampedModel):
     """
-    Represents a budget for the partner, which tracks the overall budget for the partnership, with amendments
+    Represents a budget for the intervention
 
     Relates to :model:`partners.PCA`
     Relates to :model:`partners.AmendmentLog`
@@ -1696,7 +1698,8 @@ class RAMIndicator(models.Model):
 
 class ResultChain(models.Model):
     """
-    Represents a result chain for the partner intervention
+    Represents a result chain for the partner intervention,
+    Connects Results and Indicators to interventions
     
     Relates to :model:`partners.PCA`
     Relates to :model:`reports.ResultType`

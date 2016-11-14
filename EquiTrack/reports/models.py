@@ -8,7 +8,7 @@ from django.utils.functional import cached_property
 
 class CountryProgramme(models.Model):
     """
-    Represents a country programme
+    Represents a country programme cycle
     """
 
     name = models.CharField(max_length=150)
@@ -29,7 +29,7 @@ class CountryProgramme(models.Model):
 
 class ResultStructure(models.Model):
     """
-    Represents a result structure for the country programme
+    Represents a humanitarian response plan in the country programme
 
     Relates to :model:`reports.CountryProgramme`
     """
@@ -115,7 +115,7 @@ class ResultManager(models.Manager):
 
 class Result(MPTTModel):
     """
-    Represents a result for its result structure and the country programme
+    Represents a result, wbs is unique
 
     Relates to :model:`reports.CountryProgramme`
     Relates to :model:`reports.ResultStructure`
@@ -202,7 +202,7 @@ class Milestone(models.Model):
 
 class Goal(models.Model):
     """
-    Represents a goal for the result structure
+    Represents a goal for the humanitarian response plan
 
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.Sector`
@@ -224,7 +224,7 @@ class Goal(models.Model):
 
 class Unit(models.Model):
     """
-    Represents an unit
+    Represents an unit of measurement
     """
     type = models.CharField(max_length=45L, unique=True)
 
@@ -237,7 +237,7 @@ class Unit(models.Model):
 
 class Indicator(models.Model):
     """
-    Represents an indicator on the result for the result structure
+    Represents an indicator
 
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.Sector`
