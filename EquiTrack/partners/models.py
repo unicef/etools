@@ -742,6 +742,11 @@ class Agreement(TimeStampedModel):
                 self.signed_by and self.partner_manager:
             self.status = Agreement.ACTIVE
 
+        if self.agreement_type == Agreement.PCA and not self.end:
+            cp = CountryProgramme.current()
+            if cp:
+                self.end = cp.to_date
+
         super(Agreement, self).save(**kwargs)
 
 

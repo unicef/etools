@@ -291,7 +291,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.save()
-        self.agreement = AgreementFactory(partner=self.partner)
+        self.agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
         self.agreement2 = AgreementFactory(
                                 partner=self.partner,
                                 agreement_type="MOU",
@@ -299,7 +299,11 @@ class TestAgreementAPIView(APITenantTestCase):
                             )
         self.intervention = PartnershipFactory(partner=self.partner, agreement=self.agreement)
         self.result_type = ResultType.objects.get(id=1)
-        self.country_programme = CountryProgrammeFactory()
+        today = datetime.date.today()
+        self.country_programme = CountryProgrammeFactory(
+                                        wbs='/A0/',
+                                        from_date=date(today.year-1, 1, 1),
+                                        to_date=date(today.year+1, 1, 1))
         self.result_structure=ResultStructureFactory(country_programme=self.country_programme)
         self.result = ResultFactory(result_type=self.result_type, result_structure=self.result_structure)
         self.resultchain = ResultChain.objects.create(
@@ -451,6 +455,22 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
+    def test_agreements_create_cp_todate(self):
+        data = {
+            "agreement_type":"PCA",
+            "partner": self.partner.id,
+            "status": "draft"
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/',
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(response.data["end"], str(self.country_programme.to_date))
+
     def test_agreements_list_filter_type(self):
         params = {"agreement_type": "PCA"}
         response = self.forced_auth_req(
@@ -506,7 +526,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertIn("Partner", response.data[0]["partner_name"])
 
     def test_agreements_list_filter_search_refno(self):
-        print([x.status for x in Agreement.objects.all()])
         params = {"search": datetime.date.today().year}
         response = self.forced_auth_req(
             'get',
