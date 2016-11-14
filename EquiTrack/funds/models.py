@@ -5,7 +5,7 @@ from django.db import models
 
 class Donor(models.Model):
     """
-    Represents Donor who initiated Grant.
+    Represents Donor for a Grant.
     """
 
     name = models.CharField(max_length=45L, unique=True)
@@ -23,7 +23,7 @@ class GrantManager(models.Manager):
 
 class Grant(models.Model):
     """
-    Represents Grant in funding with expiration date, created by Donor.
+    Represents the name of a Grant with expiration date, and Donor name.
 
     Relates to :model:`funds.Donor`
     """
