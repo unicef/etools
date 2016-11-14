@@ -71,7 +71,10 @@ class AgreementListAPIView(ListCreateAPIView):
             if "end" in query_params.keys():
                 queries.append(Q(end__lte=query_params.get("end")))
             if "search" in query_params.keys():
-                queries.append(Q(partner__name__icontains=query_params.get("search")))
+                queries.append(
+                    Q(partner__name__icontains=query_params.get("search")) |
+                    Q(agreement_number__icontains=query_params.get("search"))
+                )
 
             expression = functools.reduce(operator.and_, queries)
             return Agreement.objects.filter(expression)

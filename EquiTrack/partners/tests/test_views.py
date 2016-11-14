@@ -38,7 +38,7 @@ class TestPartnershipViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory()
-        agreement = AgreementFactory(partner=self.partner)
+        agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
         self.intervention = PartnershipFactory(partner=self.partner, agreement=agreement)
         assert self.partner == self.intervention.partner
 
@@ -504,6 +504,20 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
+
+    def test_agreements_list_filter_search_refno(self):
+        print([x.status for x in Agreement.objects.all()])
+        params = {"search": datetime.date.today().year}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/agreements/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["reference_number"], "/PCA{}01".format(datetime.date.today().year))
 
     def test_api_agreement_interventions_list(self):
 
