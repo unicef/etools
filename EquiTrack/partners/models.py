@@ -747,6 +747,15 @@ class Agreement(TimeStampedModel):
             if cp:
                 self.end = cp.to_date
 
+        if self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
+            interventions = PCA.objects.filter(
+                                partner_id=self.partner.id,
+                                agreement_id=self.id,
+                                partnership_type__in=[PCA.PD, PCA.SHPD])
+            for item in interventions:
+                item.status = self.status
+                item.save()
+
         super(Agreement, self).save(**kwargs)
 
 
@@ -811,11 +820,15 @@ class PCA(AdminURLMixin, models.Model):
     ACTIVE = u'active'
     IMPLEMENTED = u'implemented'
     CANCELLED = u'cancelled'
+    SUSPENDED = u'suspended'
+    TERMINATED = u'terminated'
     PCA_STATUS = (
         (IN_PROCESS, u"In Process"),
         (ACTIVE, u"Active"),
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
+        (SUSPENDED, u"Suspended"),
+        (TERMINATED, u"Terminated"),
     )
     PD = u'PD'
     SHPD = u'SHPD'

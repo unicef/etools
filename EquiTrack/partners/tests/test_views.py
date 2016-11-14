@@ -663,3 +663,18 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], Agreement.ACTIVE)
+
+    def test_partner_agreements_update_suspend(self):
+        data = {
+            "status":"suspended",
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/agreements/{}/'.format(self.partner.id, self.agreement.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["status"], "suspended")
+        self.assertEquals(PCA.objects.get(id=self.intervention.id).status, "suspended")
