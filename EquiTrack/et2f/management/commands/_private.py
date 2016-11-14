@@ -139,7 +139,7 @@ class PermissionMatrixSetter(object):
 
     def set_up_anyone(self):
         self.log('Set up permissions for anyone')
-        qs = TravelPermission.objects.filter(user_type=UserTypes.REPRESENTATIVE)
+        qs = TravelPermission.objects.filter(user_type=UserTypes.ANYONE)
         self.revoke_edit(qs)
 
         q = Q(model__in=['deductions', 'expenses', 'cost_assignments'])
@@ -163,6 +163,7 @@ class PermissionMatrixSetter(object):
         sub_qs = qs.filter(q)
         self.revoke_view(sub_qs)
         self.revoke_edit(sub_qs)
+        qs.filter(model='travel', field='traveller', permission_type=TravelPermission.EDIT).update(value=False)
 
     def set_up_travel_administrator(self):
         self.log('Set up permissions for travel administrator')
