@@ -10,11 +10,11 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
-from .models import Agreement, PCA
-from .serializers import InterventionSerializer
-from .serializers_v2 import AgreementListSerializer, AgreementSerializer
-from .permissions import PartnerManagerPermission
-from .filters import PartnerScopeFilter
+from partners.models import Agreement, PCA
+from partners.serializers.serializers import InterventionSerializer
+from partners.serializers.serializers_v2 import AgreementListSerializer, AgreementSerializer
+from partners.permissions import PartnerManagerPermission
+from partners.filters import PartnerScopeFilter
 
 
 class AgreementListAPIView(ListCreateAPIView):

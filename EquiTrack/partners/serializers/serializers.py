@@ -7,7 +7,7 @@ from rest_framework import serializers
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
-from .models import (
+from partners.models import (
     FileType,
     GwPCALocation,
     PCA,

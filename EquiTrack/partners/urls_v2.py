@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, url
 
-from .views_v2 import (
+from .views.views_v2 import (
     AgreementListAPIView,
     AgreementDetailAPIView,
     AgreementInterventionsListAPIView,

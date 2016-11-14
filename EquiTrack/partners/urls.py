@@ -6,7 +6,7 @@ from django.conf.urls import patterns, url, include
 
 from rest_framework_nested import routers
 
-from .views import (
+from .views.views import (
     InterventionLocationView,
     PortalDashView,
     PortalLoginFailedView,

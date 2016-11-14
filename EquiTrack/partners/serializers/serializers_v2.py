@@ -2,7 +2,7 @@ from operator import xor
 
 from rest_framework import serializers
 
-from .models import Agreement, PartnerOrganization
+from partners.models import Agreement, PartnerOrganization
 
 
 class AgreementListSerializer(serializers.ModelSerializer):

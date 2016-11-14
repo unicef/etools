@@ -31,7 +31,7 @@ from locations.views import (
     LocationsViewSet
 )
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
-from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
+from partners.views.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
 from reports.views import (

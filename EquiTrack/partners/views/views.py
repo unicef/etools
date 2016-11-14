@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
-from .serializers import (
+from partners.serializers.serializers import (
     FileTypeSerializer,
     LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,
@@ -36,10 +36,10 @@ from .serializers import (
     PartnershipBudgetSerializer,
     PCAFileSerializer
 )
-from .permissions import PartnerPermission, ResultChainPermission
-from .filters import PartnerScopeFilter
+from partners.permissions import PartnerPermission, ResultChainPermission
+from partners.filters import PartnerScopeFilter
 
-from .models import (
+from partners.models import (
     FileType,
     PartnershipBudget,
     PCAFile,
