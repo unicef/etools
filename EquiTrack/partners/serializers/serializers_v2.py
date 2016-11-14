@@ -30,11 +30,14 @@ class AgreementListSerializer(serializers.ModelSerializer):
 
 class AgreementSerializer(serializers.ModelSerializer):
 
+    partner_name = serializers.CharField(source='partner.name', read_only=True)
+
     class Meta:
         model = Agreement
         fields = (
             "id",
             "partner",
+            "partner_name",
             "agreement_type",
             "agreement_number",
             "attached_agreement",

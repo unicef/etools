@@ -362,6 +362,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
+        self.assertIn("Partner", response.data["partner_name"])
 
     def test_agreements_list(self):
         response = self.forced_auth_req(
