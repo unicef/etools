@@ -13,6 +13,8 @@ from partners.models import PartnerOrganization
 from reports.models import Result, ResultType
 from users.models import Country, Office
 
+from _private import populate_permission_matrix
+
 
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
@@ -191,101 +193,7 @@ class Command(BaseCommand):
                 self.stdout.write('DSA Region found: {}'.format(name))
 
     def _load_permission_matrix(self):
-        self.stdout.write('Delting old permission matrix')
-        TravelPermission.objects.all().delete()
-
-        model_field_mapping = {'clearances': {'id': None,
-                                              'medical_clearance': None,
-                                              'security_clearance': None,
-                                              'security_course': None},
-                               'cost_assignments': {'id': None,
-                                                    'wbs': None,
-                                                    'share': None,
-                                                    'grant': None},
-                               'deductions': {'id': None,
-                                              'date': None,
-                                              'breakfast': None,
-                                              'lunch': None,
-                                              'dinner': None,
-                                              'accomodation': None,
-                                              'no_dsa': None,
-                                              'day_of_the_week': None},
-                               'expenses': {'id': None,
-                                            'type': None,
-                                            'document_currency': None,
-                                            'account_currency': None,
-                                            'amount': None},
-                               'itinerary': {'id': None,
-                                             'origin': None,
-                                             'destination': None,
-                                             'departure_date': None,
-                                             'arrival_date': None,
-                                             'dsa_region': None,
-                                             'overnight_travel': None,
-                                             'mode_of_travel': None,
-                                             'airlines': None},
-                               'reference_number': None,
-                               'supervisor': None,
-                               'office': None,
-                               'end_date': None,
-                               'section': None,
-                               'international_travel': None,
-                               'traveller': None,
-                               'start_date': None,
-                               'ta_required': None,
-                               'purpose': None,
-                               'id': None,
-                               'status': None,
-                               'mode_of_travel': None,
-                               'estimated_travel_cost': None,
-                               'currency': None,
-                               'activities': {'id': None,
-                                              'travel_type': None,
-                                              'partner': None,
-                                              'partnership': None,
-                                              'result': None,
-                                              'locations': None,
-                                              'primary_traveler': None,
-                                              'date': None}}
-
-        def make_permissions_for_model(user_type, status, model_name, fields):
-            permissions = []
-
-            for field_name, value in fields.items():
-                name = '_'.join((user_type, status, model_name, field_name, TravelPermission.EDIT))
-                kwargs = dict(name=name,
-                              user_type=user_type,
-                              status=status,
-                              model=model_name,
-                              field=field_name,
-                              permission_type=TravelPermission.EDIT,
-                              value=True)
-                permissions.append(TravelPermission(**kwargs))
-
-                name = '_'.join((user_type, status, model_name, field_name, TravelPermission.VIEW))
-                kwargs = dict(name=name,
-                              user_type=user_type,
-                              status=status,
-                              model=model_name,
-                              field=field_name,
-                              permission_type=TravelPermission.VIEW,
-                              value=True)
-                permissions.append(TravelPermission(**kwargs))
-                if value is not None:
-                    permissions.extend(make_permissions_for_model(user_type, status, field_name, value))
-            return permissions
-
-        self.stdout.write('Regenerating permission matrix')
-        new_permissions = []
-        for user_type in UserTypes.CHOICES:
-            for status in TripStatus.CHOICES:
-                new_permissions.extend(make_permissions_for_model(user_type[0],
-                                                                  status[0],
-                                                                  'travel',
-                                                                  model_field_mapping))
-
-        TravelPermission.objects.bulk_create(new_permissions)
-        self.stdout.write('Permission matrix saved')
+        populate_permission_matrix(self)
 
     def _add_wbs(self):
         Result.objects.all().delete()
