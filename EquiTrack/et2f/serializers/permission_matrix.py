@@ -27,8 +27,8 @@ class PermissionMatrixSerializer(serializers.Serializer):
 
         for permission in permissions_qs:
             if permission.model == 'travel':
-                matrix[permission.user_type][permission.status][permission.field][permission.permission_type] = True
+                matrix[permission.user_type][permission.status][permission.field][permission.permission_type] = permission.value
             else:
                 model_dict = matrix[permission.user_type][permission.status][permission.model]
-                model_dict.setdefault(permission.field, {})[permission.permission_type] = True
+                model_dict.setdefault(permission.field, {})[permission.permission_type] = permission.value
         return matrix
