@@ -23,7 +23,6 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "status",
             "partner_manager",
             "signed_by",
-            "attached_agreement",
         )
 
 
