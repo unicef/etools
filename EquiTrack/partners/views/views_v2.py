@@ -55,6 +55,7 @@ class AgreementListAPIView(ListCreateAPIView):
         )
 
     def get_queryset(self):
+        q = Agreement.view_objects
         query_params = self.request.query_params
 
         if query_params:
@@ -77,9 +78,9 @@ class AgreementListAPIView(ListCreateAPIView):
                 )
 
             expression = functools.reduce(operator.and_, queries)
-            return Agreement.objects.filter(expression)
+            return q.filter(expression)
         else:
-            return super(AgreementListAPIView, self).get_queryset()
+            return q.all()
 
 
 class AgreementInterventionsListAPIView(ListAPIView):

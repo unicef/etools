@@ -608,6 +608,11 @@ def get_agreement_path(instance, filename):
     )
 
 
+class AgreementManager(models.Manager):
+    def get_queryset(self):
+        return super(AgreementManager, self).get_queryset().select_related('partner')
+
+
 class Agreement(TimeStampedModel):
 
     PCA = u'PCA'
@@ -686,6 +691,9 @@ class Agreement(TimeStampedModel):
         help_text='Routing Details, including SWIFT/IBAN (if applicable)'
     )
     bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
+    view_objects = AgreementManager()
+    objects = models.Manager()
 
     def __unicode__(self):
         return u'{} for {} ({} - {})'.format(
