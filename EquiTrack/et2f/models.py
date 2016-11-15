@@ -212,7 +212,16 @@ class CostAssignment(models.Model):
 
 
 class Clearances(models.Model):
+    REQUESTED = 'requested'
+    NOT_REQUESTED = 'not_requested'
+    NOT_APPLICABLE = 'not_applicable'
+    CHOICES = (
+        (REQUESTED, 'requested'),
+        (NOT_REQUESTED, 'not_requested'),
+        (NOT_APPLICABLE, 'not_applicable'),
+    )
+
     travel = models.OneToOneField('Travel', related_name='clearances')
-    medical_clearance = models.NullBooleanField(default=None, choices=BooleanChoice.CHOICES)
-    security_clearance = models.NullBooleanField(default=None, choices=BooleanChoice.CHOICES)
-    security_course = models.NullBooleanField(default=None, choices=BooleanChoice.CHOICES)
+    medical_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
+    security_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
+    security_course = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
