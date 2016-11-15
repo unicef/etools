@@ -25,7 +25,6 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by",
             "attached_agreement",
         )
-        read_only_fields = ("id",)
 
 
 class AgreementSerializer(serializers.ModelSerializer):
@@ -57,7 +56,6 @@ class AgreementSerializer(serializers.ModelSerializer):
             "year",
             "reference_number",
         )
-        read_only_fields = ("id",)
 
     def validate(self, data):
         data = super(AgreementSerializer, self).validate(data)
