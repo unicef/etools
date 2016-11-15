@@ -61,8 +61,13 @@ class AgreementSerializer(serializers.ModelSerializer):
         data = super(AgreementSerializer, self).validate(data)
         errors = {}
 
+        start_errors = []
         if data.get("end", None) and not data.get("start", None):
-            errors.update(start=["Start date must be provided along with end date."])
+            start_errors.append("Start date must be provided along with end date.")
+        if data.get("start", None) != max(data.get("signed_by_unicef_date", None), data.get("signed_by_partner_date", None)):
+            start_errors.append("Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).")
+        if start_errors:
+            errors.update(start=start_errors)
 
         if xor(bool(data.get("signed_by_partner_date", None)), bool(data.get("partner_manager", None))):
             errors.update(partner_manager=["partner_manager and signed_by_partner_date are both must be provided."])

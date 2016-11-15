@@ -572,7 +572,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date are both must be provided."])
         self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by are both must be provided."])
         self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date are both must be provided."])
-        self.assertEquals(response.data["start"], ["Start date must be provided along with end date."])
+        self.assertEquals(response.data["start"], ["Start date must be provided along with end date.", "Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date)."])
 
     def test_agreements_update_validation_signed_date(self):
         data = {
@@ -594,8 +594,11 @@ class TestAgreementAPIView(APITenantTestCase):
 
     def test_agreements_update_validation_end_date_pca(self):
         data = {
+            "signed_by": self.unicef_staff.id,
+            "partner_manager": self.partner_staff.id,
+            "signed_by_partner_date": datetime.date.today(),
+            "signed_by_unicef_date": datetime.date.today(),
             "start": datetime.date.today(),
-            "end": datetime.date.today(),
         }
         response = self.forced_auth_req(
             'patch',
@@ -605,7 +608,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        # self.assertEquals(response.data["end"], str(self.country_programme.to_date))
+        self.assertEquals(response.data["end"], str(self.country_programme.to_date))
 
     def test_agreements_update_start_set_to_max_signed(self):
         today = datetime.date.today()
@@ -624,8 +627,8 @@ class TestAgreementAPIView(APITenantTestCase):
             data=data
         )
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["start"], response.data["signed_by_unicef_date"])
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data["start"], ["Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date)."])
 
     def test_agreements_create_PCA_must_be_CSO(self):
         self.partner.partner_type = "Government"
@@ -648,7 +651,7 @@ class TestAgreementAPIView(APITenantTestCase):
     def test_agreements_update_set_to_active_on_save(self):
         today = datetime.date.today()
         data = {
-            "start": date(today.year, 1, 1),
+            "start": date(today.year, 3, 1),
             "end": date(today.year, 6, 1),
             "signed_by": self.unicef_staff.id,
             "partner_manager": self.partner_staff.id,

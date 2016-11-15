@@ -734,10 +734,6 @@ class Agreement(TimeStampedModel):
         if self.status != Agreement.DRAFT and self.signed_by_unicef_date and not self.agreement_number:
             self.agreement_number = self.reference_number
 
-        if self.signed_by_unicef_date and self.signed_by_partner_date:
-            start = max(self.signed_by_unicef_date, self.signed_by_partner_date)
-            self.start = start
-
         if self.status == Agreement.DRAFT and self.start and self.end and \
                 self.signed_by_unicef_date and self.signed_by_partner_date and \
                 self.signed_by and self.partner_manager:
