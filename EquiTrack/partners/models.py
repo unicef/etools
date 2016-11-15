@@ -727,6 +727,7 @@ class Agreement(TimeStampedModel):
             if self.amendments_log.last() else ''
         )
 
+    @transaction.atomic
     def save(self, **kwargs):
 
         # commit the reference number to the database once the agreement is signed
