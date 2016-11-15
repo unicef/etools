@@ -568,10 +568,10 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager are both must be provided."])
-        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date are both must be provided."])
-        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by are both must be provided."])
-        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date are both must be provided."])
+        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager must be provided."])
+        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date must be provided."])
+        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by must be provided."])
+        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date must be provided."])
         self.assertEquals(response.data["start"], ["Start date must be provided along with end date.", "Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date)."])
 
     def test_agreements_update_validation_signed_date(self):
@@ -587,10 +587,10 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager are both must be provided."])
-        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date are both must be provided."])
-        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by are both must be provided."])
-        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date are both must be provided."])
+        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager must be provided."])
+        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date must be provided."])
+        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by must be provided."])
+        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date must be provided."])
 
     def test_agreements_update_validation_end_date_pca(self):
         data = {
