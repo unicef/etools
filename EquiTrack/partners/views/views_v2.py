@@ -2,18 +2,25 @@ import operator
 import functools
 
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import (
     ListAPIView,
     ListCreateAPIView,
+    RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 
-from partners.models import Agreement, PCA
+from partners.models import Agreement, PCA, PartnerStaffMember
 from partners.serializers.serializers import InterventionSerializer
-from partners.serializers.serializers_v2 import AgreementListSerializer, AgreementSerializer
-from partners.permissions import PartnerManagerPermission
+from partners.serializers.serializers_v2 import (
+    AgreementListSerializer,
+    AgreementSerializer,
+    PartnerStaffMemberSerializer,
+    PartnerStaffMemberPropertiesSerializer,
+)
+from partners.permissions import PartnerManagerPermission, PartnerPermission
 from partners.filters import PartnerScopeFilter
 
 
@@ -126,3 +133,68 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
             data,
             status=status.HTTP_200_OK
         )
+
+
+class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
+    """
+    Returns a list of all Partner staff members
+    """
+    queryset = PartnerStaffMember.objects.all()
+    serializer_class = PartnerStaffMemberSerializer
+    permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Add Staff member to Partner Organization
+        :return: JSON
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )
+
+
+class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
+    queryset = PartnerStaffMember.objects.all()
+    serializer_class = PartnerStaffMemberSerializer
+    permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+
+
+class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
+    """
+    Gets the details of Staff Member that belongs to a partner
+    """
+    serializer_class = PartnerStaffMemberPropertiesSerializer
+    queryset = PartnerStaffMember.objects.all()
+
+    def get_object(self):
+        queryset = self.get_queryset()
+
+        # Get the current partnerstaffmember
+        try:
+            current_member = PartnerStaffMember.objects.get(id=self.request.user.profile.partner_staff_member)
+        except PartnerStaffMember.DoesNotExist:
+            raise Exception('there is no PartnerStaffMember record associated with this user')
+
+        # Perform the lookup filtering.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        # If current member is actually looking for themselves return right away.
+        if self.kwargs[lookup_url_kwarg] == str(current_member.id):
+            return current_member
+
+        filter = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        # allow lookup only for PSMs inside the same partnership
+        filter['partner'] = current_member.partner
+
+        obj = get_object_or_404(queryset, **filter)
+        self.check_object_permissions(self.request, obj)
+        return obj

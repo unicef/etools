@@ -682,3 +682,96 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "suspended")
         self.assertEquals(PCA.objects.get(id=self.intervention.id).status, "suspended")
+
+
+class TestPartnerStaffMemberAPIView(APITenantTestCase):
+
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.partner = PartnerFactory(partner_type="Civil Society Organization")
+        self.partner_staff = PartnerStaffFactory(partner=self.partner)
+        self.partner_staff_user = UserFactory(is_staff=True)
+        self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
+        self.partner_staff_user.save()
+
+    def test_partner_staffmember_list(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/staff-members/',
+            user=self.partner_staff_user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+        self.assertIn("Mace", response.data[0]["first_name"])
+
+    def test_partner_partner_staffmember_list(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/staff-members/'.format(self.partner.id),
+            user=self.partner_staff_user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+        self.assertEquals(response.data[0]["first_name"], "Mace")
+
+    def test_partner_staffmember_create(self):
+        data = {
+            "email": "a@aaa.com",
+            "partner": self.partner.id,
+            "first_name": "John",
+            "last_name": "Doe",
+            "title": "foobar"
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/staff-members/',
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_partner_staffmember_retrieve(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
+            user=self.partner_staff_user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["first_name"], "Mace")
+
+    def test_partner_staffmember_update(self):
+        data = {
+            "title": "foobar updated"
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["title"], "foobar updated")
+
+    def test_partner_staffmember_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
+            user=self.partner_staff_user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_partner_staffmember_retrieve_properties(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/staff-members/{}/properties/'.format(self.partner_staff.id),
+            user=self.partner_staff_user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertIn("agreement_set", response.data)

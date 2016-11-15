@@ -2,7 +2,8 @@ from operator import xor
 
 from rest_framework import serializers
 
-from partners.models import Agreement, PartnerOrganization
+from partners.models import Agreement, PartnerOrganization, PartnerStaffMember
+from partners.serializers.serializers import PartnerOrganizationSerializer
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
@@ -85,3 +86,18 @@ class AgreementSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         return data
+
+
+class PartnerStaffMemberSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+
+
+class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
+
+    partner = PartnerOrganizationSerializer()
+    agreement_set = AgreementSerializer(many=True)
+
+    class Meta:
+        model = PartnerStaffMember
