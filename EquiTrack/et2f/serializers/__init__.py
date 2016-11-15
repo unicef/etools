@@ -73,9 +73,9 @@ class CostAssignmentSerializer(PermissionBasedModelSerializer):
 
 
 class ClearancesSerializer(PermissionBasedModelSerializer):
-    medical_clearance = serializers.NullBooleanField()
-    security_clearance = serializers.NullBooleanField()
-    security_course = serializers.NullBooleanField()
+    medical_clearance = serializers.CharField()
+    security_clearance = serializers.CharField()
+    security_course = serializers.CharField()
 
     class Meta:
         model = Clearances
