@@ -69,12 +69,12 @@ class AgreementSerializer(serializers.ModelSerializer):
             errors.update(start=start_errors)
 
         if xor(bool(data.get("signed_by_partner_date", None)), bool(data.get("partner_manager", None))):
-            errors.update(partner_manager=["partner_manager and signed_by_partner_date are both must be provided."])
-            errors.update(signed_by_partner_date=["signed_by_partner_date and partner_manager are both must be provided."])
+            errors.update(partner_manager=["partner_manager and signed_by_partner_date must be provided."])
+            errors.update(signed_by_partner_date=["signed_by_partner_date and partner_manager must be provided."])
 
         if xor(bool(data.get("signed_by_unicef_date", None)), bool(data.get("signed_by", None))):
-            errors.update(signed_by=["signed_by and signed_by_unicef_date are both must be provided."])
-            errors.update(signed_by_unicef_date=["signed_by_unicef_date and signed_by are both must be provided."])
+            errors.update(signed_by=["signed_by and signed_by_unicef_date must be provided."])
+            errors.update(signed_by_unicef_date=["signed_by_unicef_date and signed_by must be provided."])
 
         if data.get("agreement_type", None) in [Agreement.PCA, Agreement.SSFA] and data.get("partner", None):
             partner = data.get("partner", None)
