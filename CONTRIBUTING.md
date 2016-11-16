@@ -2,7 +2,9 @@
 
 ##Pull Requests
 
-- To be followed Strictly
+* To be followed Strictly
+
+
 Open a PR as soon as you start working on the new feature,
 Refer to the issue you’re working on by tagging in a comment in the PR
 Label your PR with - WIP (if work in progress) READY (if ready for merge) or BLOCKED (if you’re blocked by anything)
@@ -19,7 +21,8 @@ KEEP YOUR PRs SLIM. If you’re changing code in 10 files, unless it’s comment
 
 ##Commiting
 
-- guide, although we understand it's hard to keep commit messages on track, on big changes proper messaging is required.
+* guide, although we understand it's hard to keep commit messages on track, on big changes proper messaging is required.
+
 
 The following guidelines should be followed when writing commit messages to ensure readability when viewing project history. The formatting can be added conventionally in git/GitHub or through the use of a CLI wizard ([Commitizen](https://github.com/commitizen/cz-cli)). To use the wizard, run `npm run commit` in your terminal after staging your changes in git.
 
