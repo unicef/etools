@@ -1,5 +1,6 @@
 # eTools and GitHub Best Practices - Contributing Guide
 
+
 ##Pull Requests
 
 * To be followed strictly
@@ -62,3 +63,10 @@ Any line of the commit message (including the header) should be no longer than 1
 
 If the commit reverts a previous commit, the **type** should be `revert: ` followed by the entire header of the reverted commit in quotes. So to revert the example above you would write `revert: "fix(copy): fix handling of typed subarrays"`
 In the body it should say: `This reverts commit <hash>.` where the hash is the SHA of the commit being reverted.
+
+
+##Issues
+
+Do not start work on any issues unless they have been confirmed and assigned to you. The only person with the authority to confirm or assign an issue is the Technical Lead, or a developer that has consulted the Technical Lead prior to confirming or assigning.
+
+Issues shall be labeled with anything by contributors except for the "confirmed" label
