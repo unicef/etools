@@ -8,7 +8,15 @@ from django_fsm import FSMField, transition
 from et2f import BooleanChoice, TripStatus, UserTypes
 
 
+class WBS(models.Model):
+    name = models.CharField(max_length=25)
+
+class Grant(models.Model):
+    wbs = models.ForeignKey('WBS', related_name='grants')
+    name = models.CharField(max_length=25)
+
 class Fund(models.Model):
+    grant = models.ForeignKey('Grant', related_name='funds')
     name = models.CharField(max_length=25)
 
 
@@ -206,10 +214,10 @@ class Deduction(models.Model):
 
 class CostAssignment(models.Model):
     travel = models.ForeignKey('Travel', related_name='cost_assignments')
-    wbs = models.ForeignKey('reports.Result', related_name='+')
     share = models.PositiveIntegerField()
-    grant = models.ForeignKey('funds.Grant', related_name='+')
-    fund = models.ForeignKey('Fund')    # Still no idea where to connect
+    wbs = models.ForeignKey('WBS', related_name='+')
+    grant = models.ForeignKey('Grant', related_name='+')
+    fund = models.ForeignKey('Fund', related_name='+')
 
 
 class Clearances(models.Model):
