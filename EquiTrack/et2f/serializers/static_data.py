@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from et2f.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType
-from funds.models import Grant
+from et2f.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -76,16 +75,22 @@ class DSARegionSerializer(serializers.ModelSerializer):
                   'dsa_amount_60plus_local', 'room_rate')
 
 
+class WBSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WBS
+        fields = ('id', 'name')
+
+
 class GrantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grant
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'wbs')
 
 
 class FundSerializer(serializers.ModelSerializer):
     class Meta:
         model = Fund
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'grant')
 
 
 class ExpenseTypeSerializer(serializers.ModelSerializer):
@@ -107,7 +112,7 @@ class StaticDataSerializer(serializers.Serializer):
     results = ResultSerializer(many=True)
     locations = LocationSerializer(many=True)
     dsa_regions = DSARegionSerializer(many=True)
-    wbs = ResultSerializer(many=True)
+    wbs = WBSSerializer(many=True)
     grants = GrantSerializer(many=True)
     funds = FundSerializer(many=True)
     expense_types = ExpenseTypeSerializer(many=True)

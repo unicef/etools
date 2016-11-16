@@ -11,15 +11,14 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
-from funds.models import Grant
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
-from reports.models import Result, ResultType
+from reports.models import Result
 from users.models import Office, Section
 
 from et2f import TripStatus
 from et2f.exports import TravelListExporter
-from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType
+from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant
 from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer, \
     CurrentUserSerializer
 from et2f.serializers.static_data import StaticDataSerializer
@@ -145,8 +144,6 @@ class StaticDataView(generics.GenericAPIView):
     def get(self, request):
         User = get_user_model()
 
-        wbs_qs = Result.objects.filter(result_type__name=ResultType.ACTIVITY, hidden=False)
-
         data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all(),
                 'airlines': AirlineCompany.objects.all(),
@@ -157,7 +154,7 @@ class StaticDataView(generics.GenericAPIView):
                 'results': Result.objects.all(),
                 'locations': Location.objects.all(),
                 'dsa_regions': DSARegion.objects.all(),
-                'wbs': wbs_qs,
+                'wbs': WBS.objects.all(),
                 'grants': Grant.objects.all(),
                 'funds': Fund.objects.all(),
                 'expense_types': ExpenseType.objects.all()}

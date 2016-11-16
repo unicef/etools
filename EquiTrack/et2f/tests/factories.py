@@ -2,12 +2,11 @@
 from datetime import datetime, timedelta
 import factory
 from factory import fuzzy
-from pytz import UTC
 
-from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, GrantFactory, PartnerFactory,\
+from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
     PartnershipFactory, ResultFactory, LocationFactory
 from et2f.models import DSARegion, Currency, AirlineCompany, Travel, TravelActivity, IteneraryItem, Expense, Deduction,\
-    CostAssignment, Clearances, ExpenseType, Fund
+    CostAssignment, Clearances, ExpenseType, Fund, Grant, WBS
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
@@ -21,8 +20,24 @@ class ExpenseTypeFactory(factory.DjangoModelFactory):
         model = ExpenseType
 
 
+class WBSFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=12)
+
+    class Meta:
+        model = WBS
+
+
+class GrantFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=12)
+    wbs = factory.SubFactory(WBSFactory)
+
+    class Meta:
+        model = Grant
+
+
 class FundFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=12)
+    grant = factory.SubFactory(GrantFactory)
 
     class Meta:
         model = Fund
@@ -114,7 +129,7 @@ class DeductionFactory(factory.DjangoModelFactory):
 
 
 class CostAssignmentFactory(factory.DjangoModelFactory):
-    wbs = factory.SubFactory(ResultFactory)
+    wbs = factory.SubFactory(WBSFactory)
     share = fuzzy.FuzzyInteger(1, 100)
     grant = factory.SubFactory(GrantFactory)
     fund = factory.SubFactory(FundFactory)
