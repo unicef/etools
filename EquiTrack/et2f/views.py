@@ -105,6 +105,7 @@ class TravelViewSet(mixins.ListModelMixin,
         return self.get_paginated_response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
+        self.request.GET['show_hidden'] = True
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status.HTTP_200_OK)
