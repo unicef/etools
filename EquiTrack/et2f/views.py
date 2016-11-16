@@ -7,6 +7,7 @@ from django.db.models.query_utils import Q
 from django.http.response import HttpResponse, Http404
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import list_route, detail_route
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
@@ -105,9 +106,16 @@ class TravelViewSet(mixins.ListModelMixin,
         return self.get_paginated_response(serializer.data)
 
     def retrieve(self, request, *args, **kwargs):
-        self.request.GET['show_hidden'] = True
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
+        queryset = self.queryset.all()
+
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+
+        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
+        obj = get_object_or_404(queryset, **filter_kwargs)
+
+        self.check_object_permissions(self.request, obj)
+
+        serializer = self.get_serializer(obj)
         return Response(serializer.data, status.HTTP_200_OK)
 
     def perform_create(self, serializer):
