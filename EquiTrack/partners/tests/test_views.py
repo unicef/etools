@@ -345,7 +345,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/agreements/{}/'.format(self.partner.id, self.agreement.id),
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
             user=self.partner_staff_user,
             data=data
         )
@@ -539,13 +539,26 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(len(response.data), 1)
         self.assertEquals(response.data[0]["reference_number"], "/PCA{}01".format(datetime.date.today().year))
 
-    def test_api_agreement_interventions_list(self):
+    def test_api_agreement_partner_nterventions_list(self):
 
         response = self.forced_auth_req('get',
                                         '/'.join([
                                             '/api/v2/partners',
                                             str(self.intervention.partner.id),
                                             'agreements',
+                                            str(self.intervention.agreement.id),
+                                            'interventions/'
+                                        ]), user=self.unicef_staff)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertIn("galaxy", response.data[0]["pca_title"])
+
+    def test_api_agreement_interventions_list(self):
+
+        response = self.forced_auth_req('get',
+                                        '/'.join([
+                                            '/api/v2/agreements',
                                             str(self.intervention.agreement.id),
                                             'interventions/'
                                         ]), user=self.unicef_staff)
@@ -674,7 +687,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/agreements/{}/'.format(self.partner.id, self.agreement.id),
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
             user=self.partner_staff_user,
             data=data
         )
