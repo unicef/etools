@@ -122,29 +122,29 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         instance = super(TravelDetailsSerializer, self).create(validated_data)
 
-        def create_related_models(model, related_data):
-            for data in related_data:
-                m2m_fields = {k: data.pop(k, []) for k in data
-                              if isinstance(model._meta.get_field_by_name(k)[0], ManyToManyField)}
-                data['travel'] = instance
-                related_instance = model.objects.create(**data)
-                for field_name, value in m2m_fields.items():
-                    related_manager = getattr(related_instance, field_name)
-                    related_manager.add(*value)
-
         # Reverse FK and M2M relations
-        create_related_models(IteneraryItem, itinerary)
-        create_related_models(Expense, expenses)
-        create_related_models(Deduction, deductions)
-        create_related_models(CostAssignment, cost_assignments)
-        create_related_models(TravelActivity, activities)
-        create_related_models(IteneraryItem, itinerary)
+        self.create_related_models(IteneraryItem, itinerary, travel=instance)
+        self.create_related_models(Expense, expenses, travel=instance)
+        self.create_related_models(Deduction, deductions, travel=instance)
+        self.create_related_models(CostAssignment, cost_assignments, travel=instance)
+        self.create_related_models(TravelActivity, activities, travel=instance)
+        self.create_related_models(IteneraryItem, itinerary, travel=instance)
 
         # O2O relations
         clearances['travel'] = instance
         Clearances.objects.create(**clearances)
 
         return instance
+
+    def create_related_models(self, model, related_data, **kwargs):
+        for data in related_data:
+            m2m_fields = {k: data.pop(k, []) for k in data
+                          if isinstance(model._meta.get_field_by_name(k)[0], ManyToManyField)}
+            data.update(kwargs)
+            related_instance = model.objects.create(**data)
+            for field_name, value in m2m_fields.items():
+                related_manager = getattr(related_instance, field_name)
+                related_manager.add(*value)
 
     def update(self, instance, validated_data):
         related_attributes = {}
@@ -194,7 +194,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                     self.update_object(obj, attrs)
                     related_to_delete.remove(pk)
                 else:
-                    model.objects.create(travel=self.instance, **attrs)
+                    self.create_related_models(model, [attrs], travel=self.instance)
 
             # Delete the leftover
             model.objects.filter(pk__in=related_to_delete).delete()
@@ -204,7 +204,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                 self.update_object(related, related_data)
             elif related_data and related is None:
                 model = self._fields[attr_name].Meta.model
-                model.objects.creat(travel=self.instance, **related_data)
+                self.create_related_models(model, [related_data], travel=self.instance)
             elif related_data is None and related:
                 related.delete()
 
