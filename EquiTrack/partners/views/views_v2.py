@@ -93,7 +93,10 @@ class AgreementInterventionsListAPIView(ListAPIView):
         """
         Return All Interventions for Partner and Agreement
         """
-        interventions = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk)
+        if partner_pk:
+            interventions = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk)
+        else:
+            interventions = PCA.objects.filter(agreement_id=pk)
         serializer = InterventionSerializer(interventions, many=True)
         return Response(
             serializer.data,
