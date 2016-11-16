@@ -211,7 +211,6 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
 class TravelListSerializer(TravelDetailsSerializer):
     traveller = serializers.CharField(source='traveller.get_full_name')
-    attachment_count = serializers.IntegerField(source='attachments')
 
     class Meta(TravelDetailsSerializer.Meta):
         fields = ('id', 'reference_number', 'traveller', 'purpose', 'status', 'section', 'office', 'start_date',
