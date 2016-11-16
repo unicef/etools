@@ -5,7 +5,7 @@ from datetime import timedelta
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from django.db.models.fields.related import ManyToManyField
 
-from EquiTrack.factories import PartnershipFactory, AgreementFactory, ResultStructureFactory, CountryProgrammeFactory
+from EquiTrack.factories import PartnershipFactory, AgreementFactory, ResponsePlanFactory, CountryProgrammeFactory
 from partners.models import (
     PartnerOrganization,
     PCA,
@@ -40,7 +40,7 @@ class TestAgreementForm(TenantTestCase):
         self.tenant.save()
         self.text = 'LEBA/{{}}{}01'.format(self.date.year)
         self.agreement = AgreementFactory()
-        self.result_structure = ResultStructureFactory()
+        self.hrp = ResponsePlanFactory()
         self.country_programme = CountryProgrammeFactory()
 
     def create_form(self, data=None, instance=None, user=None):

@@ -177,9 +177,9 @@ class ResultTypeFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'ResultType {}'.format(n))
 
 
-class ResultStructureFactory(factory.django.DjangoModelFactory):
+class ResponsePlanFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = report_models.ResultStructure
+        model = report_models.ResponsePlan
 
     name = factory.Sequence(lambda n: 'RSSP {}'.format(n))
     from_date = date(date.today().year, 1, 1)
@@ -190,7 +190,7 @@ class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Result
 
-    result_structure = factory.SubFactory(ResultStructureFactory)
+    hrp = factory.SubFactory(ResponsePlanFactory)
     result_type = factory.SubFactory(ResultTypeFactory)
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)

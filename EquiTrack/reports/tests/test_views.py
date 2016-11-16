@@ -6,7 +6,7 @@ from rest_framework import status
 
 from reports.models import ResultType
 from EquiTrack.factories import UserFactory, ResultFactory, ResultWorkplanPropertyFactory
-from EquiTrack.factories import SectionFactory, LocationFactory, WorkplanFactory, ResultStructureFactory
+from EquiTrack.factories import SectionFactory, LocationFactory, WorkplanFactory, ResponsePlanFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
 
@@ -16,7 +16,7 @@ class TestReportViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
         self.workplan = WorkplanFactory()
-        self.result1 = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.result1 = ResultFactory(result_type=self.result_type, hrp=ResponsePlanFactory())
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan, result=self.result1)
 
         # Additional data to use in tests
@@ -25,8 +25,8 @@ class TestReportViews(APITenantTestCase):
         self.section1 = SectionFactory()
         self.section3 = SectionFactory()
 
-    def test_api_resultstructures_list(self):
-        response = self.forced_auth_req('get', '/api/reports/result-structures/', user=self.unicef_staff)
+    def test_api_ResponsePlans_list(self):
+        response = self.forced_auth_req('get', '/api/reports/hrps/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 

@@ -106,12 +106,12 @@
         </div>
     </div>
     <!--tiles end-->
-    <!-- result structure dropdown -->
+    <!-- response plan dropdown -->
     <div class="row">
         <div class="col-md-4">
             <div class="btn-group">
                 <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown">
-                    Result Structure: {{ current_structure.name }} <span class="caret"></span>
+                    Response Plan: {{ current_structure.name }} <span class="caret"></span>
                 </button>
                 <ul class="dropdown-menu" role="menu">
                     {% for structure in structures %}
@@ -143,7 +143,7 @@
                 {% for ind in indicators %}
                 <div class="row panel-body" style="margin-top: 10px; background-color: #ffffff;">
                     <a href="{% url 'admin:reports_indicator_change' ind.indicator.id %}">
-                        <span class="sublabel">{{ ind.indicator.name }} ({{ ind.indicator.result_structure }})</span>
+                        <span class="sublabel">{{ ind.indicator.name }} ({{ ind.indicator.hrp }})</span>
                     </a>
                     {% with actual=ind.indicator.current %}
                     <div>

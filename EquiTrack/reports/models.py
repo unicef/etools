@@ -23,7 +23,7 @@ class CountryProgramme(models.Model):
         return cps.first()
 
 
-class ResultStructure(models.Model):
+class ResponsePlan(models.Model):
 
     name = models.CharField(max_length=150)
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
@@ -40,7 +40,7 @@ class ResultStructure(models.Model):
 
     @classmethod
     def current(cls):
-        return ResultStructure.objects.order_by('to_date').last()
+        return ResponsePlan.objects.order_by('to_date').last()
 
 
 class ResultType(models.Model):
@@ -94,12 +94,14 @@ class Sector(models.Model):
 
 class ResultManager(models.Manager):
     def get_queryset(self):
-        return super(ResultManager, self).get_queryset().select_related('country_programme', 'result_structure', 'result_type')
-
+        return super(ResultManager, self).get_queryset().select_related('country_programme',
+                                                                        'hrp',
+                                                                        'result_type')
 
 class Result(MPTTModel):
 
-    result_structure = models.ForeignKey(ResultStructure, null=True, blank=True, on_delete=models.DO_NOTHING)
+    hrp = models.ForeignKey(ResponsePlan, null=True, blank=True,
+                            on_delete=models.DO_NOTHING, verbose_name='Humanitarian response plan')
     country_programme = models.ForeignKey(CountryProgramme, null=True, blank=True)
     result_type = models.ForeignKey(ResultType)
     sector = models.ForeignKey(Sector, null=True, blank=True)
@@ -174,8 +176,8 @@ class Milestone(models.Model):
 
 class Goal(models.Model):
 
-    result_structure = models.ForeignKey(
-        ResultStructure, blank=True, null=True, on_delete=models.DO_NOTHING)
+    hrp = models.ForeignKey(
+        ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name='Humanitarian response plan')
     sector = models.ForeignKey(Sector, related_name='goals')
     name = models.CharField(max_length=512L, unique=True)
     description = models.CharField(max_length=512L, blank=True)
@@ -204,9 +206,8 @@ class Indicator(models.Model):
         Sector,
         blank=True, null=True
     )
-    result_structure = models.ForeignKey(
-        ResultStructure,
-        blank=True, null=True, on_delete=models.DO_NOTHING
+    hrp = models.ForeignKey(
+        ResponsePlan, blank=True, null=True, on_delete=models.DO_NOTHING, verbose_name='Humanitarian response plan',
     )
 
     result = models.ForeignKey(Result, null=True, blank=True)
@@ -250,21 +251,21 @@ class Indicator(models.Model):
             partnership__status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]
         )
 
-    def programmed(self, result_structure=None):
+    def programmed(self, hrp=None):
         programmed = self.programmed_amounts()
-        if result_structure:
+        if hrp:
             programmed = programmed.filter(
-                partnership__result_structure=result_structure,
+                partnership__hrp=hrp,
 
             )
         total = programmed.aggregate(models.Sum('target'))
         return total[total.keys()[0]] or 0
 
-    def progress(self, result_structure=None):
+    def progress(self, hrp=None):
         programmed = self.programmed_amounts()
-        if result_structure:
+        if hrp:
             programmed = programmed.filter(
-                partnership__result_structure=result_structure,
+                partnership__hrp=hrp,
 
             )
         total = programmed.aggregate(models.Sum('current_progress'))

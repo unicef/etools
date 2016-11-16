@@ -66,10 +66,10 @@
             <div class="row" style="margin-bottom: 10px;">
                 <div class="col-xs-10">
                     <etools-dropdown-filter
-                        url="/api/reports/result-structures/"
-                        filter-id="result_structure"
-                        label="Result structures"
-                        all-label="All result structures">
+                        url="/api/reports/hrps/"
+                        filter-id="hrp"
+                        label="Response Plans"
+                        all-label="All response plans">
                     </etools-dropdown-filter>
 
                     <etools-dropdown-filter
@@ -132,7 +132,7 @@
 {% endverbatim %}
 
 <script type="text/javascript">
-    var filterTypes = ['result_structure', 'sector', 'gateway', 'status', 'donor', 'partner'];
+    var filterTypes = ['hrp', 'sector', 'gateway', 'status', 'donor', 'partner'];
     var locationsUrl = "{% url 'locations' %}?";
     var base = 'map';
     var mapDefaultValues = {

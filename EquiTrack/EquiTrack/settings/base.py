@@ -54,8 +54,8 @@ SUIT_CONFIG = {
 
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
-        {'label': 'Result Structures', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
-            {'model': 'reports.resultstructure'},
+        {'label': 'response plans', 'app': 'reports', 'icon': 'icon-info-sign', 'models': [
+            {'model': 'reports.ResponsePlan'},
             {'model': 'reports.sector'},
             {'model': 'reports.result'},
             {'model': 'reports.indicator'},
@@ -419,6 +419,7 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 TENANT_APPS = (
     'logentry_admin',
     'reversion',
+    # 'django.contrib.contenttypes',
     'funds',
     'locations',
     'activityinfo',
@@ -439,7 +440,7 @@ LEAFLET_CONFIG = {
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
-INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
+INSTALLED_APPS = SHARED_APPS + tuple(app for app in TENANT_APPS if app not in SHARED_APPS) + ('tenant_schemas',)
 TENANT_MODEL = "users.Country"  # app.Model
 ########## END APP CONFIGURATION
 

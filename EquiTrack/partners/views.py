@@ -109,7 +109,7 @@ class InterventionLocationView(ListAPIView):
         Return locations with GPS points only
         """
         status = self.request.query_params.get('status', PCA.ACTIVE)
-        result_structure = self.request.query_params.get('result_structure', None)
+        hrp = self.request.query_params.get('hrp', None)
         sector = self.request.query_params.get('sector', None)
         gateway = self.request.query_params.get('gateway', None)
         governorate = self.request.query_params.get('governorate', None)
@@ -133,9 +133,9 @@ class InterventionLocationView(ListAPIView):
             queryset = queryset.filter(
                 region__id=int(district)
             )
-        if result_structure is not None:
+        if hrp is not None:
             queryset = queryset.filter(
-                pca__result_structure__id=int(result_structure)
+                pca__hrp__id=int(hrp)
             )
         if partner is not None:
             queryset = queryset.filter(

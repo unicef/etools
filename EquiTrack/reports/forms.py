@@ -25,8 +25,8 @@ class IndicatorAdminForm(forms.ModelForm):
             results = Result.objects.filter(
                 sector=self.instance.sector
             )
-            if self.instance.result_structure:
+            if self.instance.hrp:
                 results = results.filter(
-                    result_structure=self.instance.result_structure
+                    hrp=self.instance.hrp
                 )
             self.fields['result'].queryset = results

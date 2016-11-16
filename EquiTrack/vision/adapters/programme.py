@@ -1,7 +1,7 @@
 import json
 import datetime
 
-from reports.models import ResultStructure, ResultType, Result, Indicator, CountryProgramme
+from reports.models import ResponsePlan, ResultType, Result, Indicator, CountryProgramme
 from vision.utils import wcf_json_date_as_datetime
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
@@ -135,7 +135,7 @@ class ProgrammeSynchronizer(VisionDataSynchronizer):
                     )
                     updating_cp = True
                 except CountryProgramme.MultipleObjectsReturned as exp:
-                    exp.message += 'Result Structure: ' + result['COUNTRY_PROGRAMME_NAME']
+                    exp.message += 'response plan: ' + result['COUNTRY_PROGRAMME_NAME']
                     raise
                 else:
                     cps[result["COUNTRY_PROGRAMME_WBS"]] = country_programme

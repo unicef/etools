@@ -49,17 +49,17 @@
            <div class="row" style=" padding-top: 10px;">
             <div class="col-md-2">
                 <div class="btn-group btn-block">
-                    <button id="btn-result_structure" type="button" class="col-md-10 btn btn-info">
-                       Result Structure
+                    <button id="btn-hrp" type="button" class="col-md-10 btn btn-info">
+                       Response Plan
                     </button>
 
                     <button class="col-md-2 btn btn-info dropdown-toggle" data-toggle="dropdown">
                          <span class="caret"></span>
                     </button>
                     <ul class="dropdown-menu scrollable-menu" role="menu">
-                        <li><a href="javascript:void(0);" id="result_structure999" onclick="DropdownSelect(this.id);" itemid="999">All Result Structures</a></li>
-                        {% for result_structure in result_structure_list %}
-                            <li><a href="javascript:void(0);" id="result_structure{{ result_structure.id }}" onclick="DropdownSelect(this.id);" itemid="{{ result_structure.id }}">{{ result_structure.name }}</a></li>
+                        <li><a href="javascript:void(0);" id="hrp999" onclick="DropdownSelect(this.id);" itemid="999">All Response Plans</a></li>
+                        {% for hrp in hrp_list %}
+                            <li><a href="javascript:void(0);" id="hrp{{ hrp.id }}" onclick="DropdownSelect(this.id);" itemid="{{ hrp.id }}">{{ hrp.name }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -323,7 +323,7 @@
                 $('#' + btnId).html(selectVal);
            // }
             //else{ //all is clicked
-                 //$('#' + btnId).html('Result Structure');
+                 //$('#' + btnId).html('response plan');
             //}
 
             //get the current color class and set the background of selected item
@@ -344,7 +344,7 @@
         }
 
         function SubmitSearch(){
-            var resultStructure = $('#btn-result_structure').html();
+            var ResponsePlan = $('#btn-hrp').html();
             var sector = $('#btn-sector').html();
             var gateway = $('#btn-gateway').html();
             var governorate = $('#btn-governorate').html();
@@ -356,8 +356,8 @@
             var to_date = $("#to_date").text();
 
             var query='';
-            if(!resultStructure.includes('Result Structure'))
-                query += 'result_structure=' + $("a:contains(" + resultStructure + ")").attr("itemid") + '&';
+            if(!ResponsePlan.includes('Response Plan'))
+                query += 'hrp=' + $("a:contains(" + ResponsePlan + ")").attr("itemid") + '&';
 
             if(!sector.includes('Sector'))
                 query += 'sector=' + $("a:contains(" + sector + ")").attr("itemid") + '&';

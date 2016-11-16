@@ -31,7 +31,7 @@ from EquiTrack.forms import (
 from django.contrib.auth.models import User
 
 from reports.models import (
-    ResultStructure,
+    ResponsePlan,
 )
 from locations.models import Location
 from reports.models import Sector, Result, ResultType, Indicator
@@ -94,7 +94,7 @@ class AssessmentAdminForm(AutoSizeTextForm):
 
     def __init__(self, *args, **kwargs):
         """
-        Filter linked results by sector and result structure
+        Filter linked results by sector and response plan
         """
         if 'parent_object' in kwargs:
             self.parent_partnership = kwargs.pop('parent_object')
@@ -332,17 +332,17 @@ class AgreementForm(UserGroupForm):
                     raise ValidationError({'agreement_type': err})
 
             # PCAs last as long as the most recent CPD
-            result_structure = ResultStructure.current()
-            if result_structure and end and end > result_structure.to_date:
+            hrp = ResponsePlan.current()
+            if hrp and end and end > hrp.to_date:
                 raise ValidationError(
                     {'end': u'This agreement cannot last longer than the current {} which ends on {}'.format(
-                        result_structure.name, result_structure.to_date
+                        hrp.name, hrp.to_date
                     )}
                 )
 
-            # set end date to result structure end date
+            # set end date to response plan end date
             if end is None:
-                self.cleaned_data[u'end'] = ResultStructure.current().to_date
+                self.cleaned_data[u'end'] = ResponsePlan.current().to_date
 
             #  set start date to one of the signed dates
             if start is None:
@@ -486,7 +486,7 @@ class PartnershipForm(UserGroupForm):
 
     def import_results_from_work_plan(self, work_plan):
         """
-        Matches results from the work plan to country result structure.
+        Matches results from the work plan to country response plan.
         Will try to match indicators one to one or by name, this can be ran
         multiple times to continually update the work plan
         """
@@ -497,7 +497,7 @@ class PartnershipForm(UserGroupForm):
 
         data.fillna('', inplace=True)
         current_output = None
-        result_structure = self.obj.result_structure or ResultStructure.current()
+        hrp = self.obj.hrp or ResponsePlan.current()
         imported = found = not_found = row_num = 0
         # TODO: make sure to check all the expected columns are in
 
@@ -532,7 +532,7 @@ class PartnershipForm(UserGroupForm):
                     # we are dealing with a result statement
                     # now we try to look up the result based on the statement
                     result, created = Result.objects.get_or_create(
-                        result_structure=result_structure,
+                        hrp=hrp,
                         result_type=result_type,
                         name=statement,
                         code=label,
@@ -610,7 +610,7 @@ class PartnershipForm(UserGroupForm):
         cleaned_data = super(PartnershipForm, self).clean()
 
         partnership_type = cleaned_data[u'partnership_type']
-        result_structure = cleaned_data.get(u'result_structure')
+        hrp = cleaned_data.get(u'hrp')
         agreement = cleaned_data[u'agreement']
         unicef_manager = cleaned_data[u'unicef_manager']
         signed_by_unicef_date = cleaned_data[u'signed_by_unicef_date']
@@ -725,9 +725,9 @@ class PartnershipForm(UserGroupForm):
                 raise ValidationError(
                     u'After the intervention is signed, the workplan cannot be changed'
                 )
-            if result_structure is None:
+            if hrp is None:
                 raise ValidationError(
-                    u'Please select a result structure from the man info tab to import results against'
+                    u'Please select a response plan from the man info tab to import results against'
                 )
             # make sure another workplan has not been uploaded already:
             if self.instance.results and self.instance.results.count() > 0:
