@@ -2,18 +2,23 @@
 
 ##Pull Requests
 
-* To be followed Strictly
+* To be followed strictly
 
 
 Open a PR as soon as you start working on the new feature,
+
 Refer to the issue you’re working on by tagging in a comment in the PR
+
 Label your PR with - WIP (if work in progress) READY (if ready for merge) or BLOCKED (if you’re blocked by anything)
+
 If ready, or blocked assign one or more of your colleagues to review the code and comments.. Include the Technical Lead
 
-If you have a question that needs answering.. please label your pr with "question".
+If you have a question that needs answering.. please label your PR with "question".
 
 Update your PRs from the main branch you’re PRing into (on a daily basis if needed).
+
 Update your branch in the end of every day even if you’re not ready.
+
 In order to not freak other devs out.. If you’re writing some spectacularly outside-of-best-practices code just for testing or while in progress please comment that with #begin dev code -> #end dev code
 
 
