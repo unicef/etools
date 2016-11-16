@@ -46,12 +46,6 @@ class AgreementSerializer(serializers.ModelSerializer):
             "signed_by_partner_date",
             "partner_manager",
             "status",
-            "bank_name",
-            "bank_address",
-            "account_title",
-            "account_number",
-            "routing_details",
-            "bank_contact_person",
             "year",
             "reference_number",
         )
