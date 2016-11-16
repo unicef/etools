@@ -337,13 +337,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         crs = CountryProgramme.current()
         if self.partner_type == u'Government':
             return self.linkedgovernmentpartner_set.filter(
-                        trip__from_date__lt=crs.to_date,
-                        trip__from_date__gte=crs.from_date
+                        trip__from_date__year=datetime.datetime.now().year,
                 ).distinct('trip')
         else:
             return self.linkedpartner_set.filter(
-                    trip__from_date__lt=crs.to_date,
-                    trip__from_date__gte=crs.from_date
+                    trip__from_date__year=datetime.datetime.now().year,
                 ).distinct('trip')
 
     @property
