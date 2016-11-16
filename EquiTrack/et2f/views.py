@@ -4,10 +4,9 @@ from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
 from django.db.models.query_utils import Q
-from django.http.response import HttpResponse, Http404
-from rest_framework import viewsets, mixins, status
-from rest_framework.decorators import list_route, detail_route
-from rest_framework.generics import get_object_or_404
+from django.http.response import HttpResponse
+
+from rest_framework import generics, viewsets, mixins, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
@@ -40,40 +39,30 @@ class PageNumberPagination(_PageNumberPagination):
         ]))
 
 
-def state_transition(transition_name):
-    @detail_route(methods=['post', 'put', 'patch'])
-    def func(self, request, *args, **kwargs):
-        request.data['transition_name'] = transition_name
-        return self.update(request, *args, **kwargs)
-    func.__name__ = str(transition_name)
-    return func
+def run_transition(serializer):
+    transition_name = serializer.transition_name
+    if transition_name:
+        instance = serializer.instance
+        transition = getattr(instance, transition_name)
+        transition()
+        instance.save()
 
 
-class TravelViewSet(mixins.ListModelMixin,
-                    mixins.CreateModelMixin,
-                    mixins.RetrieveModelMixin,
-                    mixins.UpdateModelMixin,
-                    viewsets.GenericViewSet):
+class TravelListViewSet(mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        viewsets.GenericViewSet):
     queryset = Travel.objects.all()
-    serializer_class = TravelDetailsSerializer
+    serializer_class = TravelListSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminUser,)
 
     _search_fields = ('id', 'reference_number', 'traveller__first_name', 'traveller__last_name', 'purpose',
                       'section__name', 'office__name', 'supervisor__first_name', 'supervisor__last_name')
 
-    def get_serializer_context(self):
-        context = super(TravelViewSet, self).get_serializer_context()
-        try:
-            obj = self.get_object()
-            context['permission_matrix'] = PermissionMatrix(obj, self.request.user)
-        except AssertionError:
-            pass
-
-        return context
+    _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
 
     def get_queryset(self):
-        queryset = super(TravelViewSet, self).get_queryset()
+        queryset = super(TravelListViewSet, self).get_queryset()
         parameter_serializer = TravelListParameterSerializer(data=self.request.GET)
         if not parameter_serializer.is_valid():
             return queryset
@@ -98,43 +87,21 @@ class TravelViewSet(mixins.ListModelMixin,
         sort_by = '{}{}'.format(prefix, parameter_serializer.data['sort_by'])
         return queryset.order_by(sort_by)
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+    def create(self, request, *args, **kwargs):
+        if 'transition_name' in kwargs:
+            transition_name = kwargs['transition_name']
+            request.data['transition_name'] = self._transition_name_mapping.get(transition_name, transition_name)
 
-        page = self.paginate_queryset(queryset)
-        serializer = TravelListSerializer(page, many=True)
-        return self.get_paginated_response(serializer.data)
-
-    def retrieve(self, request, *args, **kwargs):
-        queryset = self.queryset.all()
-
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-
-        filter_kwargs = {self.lookup_field: self.kwargs[lookup_url_kwarg]}
-        obj = get_object_or_404(queryset, **filter_kwargs)
-
-        self.check_object_permissions(self.request, obj)
-
-        serializer = self.get_serializer(obj)
-        return Response(serializer.data, status.HTTP_200_OK)
+        serializer = TravelDetailsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def perform_create(self, serializer):
-        super(TravelViewSet, self).perform_create(serializer)
-        self.run_transition(serializer)
+        super(TravelListViewSet, self).perform_create(serializer)
+        run_transition(serializer)
 
-    def perform_update(self, serializer, transition_name=None):
-        super(TravelViewSet, self).perform_update(serializer)
-        self.run_transition(serializer)
-
-    def run_transition(self, serializer):
-        transition_name = serializer.transition_name
-        if transition_name:
-            instance = serializer.instance
-            transition = getattr(instance, transition_name)
-            transition()
-            instance.save()
-
-    @list_route(methods=['get'])
     def export(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         dataset = TravelListExporter().export(queryset)
@@ -145,31 +112,37 @@ class TravelViewSet(mixins.ListModelMixin,
 
         return response
 
-    # State changes
-    @list_route(['post'])
-    def save_and_submit(self, request, *args, **kwargs):
-        request.data['transition_name'] = 'submit_for_approval'
-        return self.create(request, *args, **kwargs)
 
-    submit_for_approval = state_transition('submit_for_approval')
-    approve = state_transition('approve')
-    reject = state_transition('reject')
-    cancel = state_transition('cancel')
-    plan = state_transition('plan')
-    send_for_payment = state_transition('send_for_payment')
-    # mark_as_done = state_transition('mark_as_done')
-    submit_certificate = state_transition('submit_certificate')
-    approve_cetificate = state_transition('approve_cetificate')
-    reject_certificate = state_transition('reject_certificate')
-    mark_as_certified = state_transition('mark_as_certified')
-    mark_as_completed = state_transition('mark_as_completed')
+class TravelDetailsViewSet(mixins.RetrieveModelMixin,
+                           mixins.UpdateModelMixin,
+                           viewsets.GenericViewSet):
+    queryset = Travel.objects.all()
+    serializer_class = TravelDetailsSerializer
+    pagination_class = PageNumberPagination
+    permission_classes = (IsAdminUser,)
+
+    def get_serializer_context(self):
+        context = super(TravelDetailsViewSet, self).get_serializer_context()
+
+        obj = self.get_object()
+        context['permission_matrix'] = PermissionMatrix(obj, self.request.user)
+
+        return context
+
+    def partial_update(self, request, *args, **kwargs):
+        if 'transition_name' in kwargs:
+            request.data['transition_name'] = kwargs['transition_name']
+        return super(TravelDetailsViewSet, self).partial_update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        super(TravelDetailsViewSet, self).perform_update(serializer)
+        run_transition(serializer)
 
 
-class StaticDataViewSet(mixins.ListModelMixin,
-                        viewsets.GenericViewSet):
+class StaticDataView(generics.GenericAPIView):
     serializer_class = StaticDataSerializer
 
-    def list(self, request, *args, **kwargs):
+    def get(self, request):
         User = get_user_model()
 
         wbs_qs = Result.objects.filter(result_type__name=ResultType.ACTIVITY, hidden=False)
@@ -193,20 +166,18 @@ class StaticDataViewSet(mixins.ListModelMixin,
         return Response(serializer.data, status.HTTP_200_OK)
 
 
-class PermissionMatrixViewSet(mixins.ListModelMixin,
-                              viewsets.GenericViewSet):
+class PermissionMatrixView(generics.GenericAPIView):
     serializer_class = PermissionMatrixSerializer
 
-    def list(self, request, *args, **kwargs):
+    def get(self, request):
         permissions = TravelPermission.objects.all()
         serializer = self.get_serializer(permissions)
         return Response(serializer.data, status.HTTP_200_OK)
 
 
-class CurrentUserViewSet(mixins.ListModelMixin,
-                         viewsets.GenericViewSet):
+class CurrentUserView(generics.GenericAPIView):
     serializer_class = CurrentUserSerializer
 
-    def list(self, request, *args, **kwargs):
+    def get(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data, status.HTTP_200_OK)

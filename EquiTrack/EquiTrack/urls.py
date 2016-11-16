@@ -63,7 +63,7 @@ from partners.urls import (
     agreement_api,
 )
 
-from et2f.urls import api as et2f_api
+from et2f.urls import urlpatterns as et2f_patterns
 
 api = routers.SimpleRouter()
 
@@ -135,7 +135,7 @@ urlpatterns = patterns(
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
-    url(r'^api/et2f/', include(et2f_api.urls)),
+    url(r'^api/et2f/', include(et2f_patterns)),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
 
     # Uncomment the next line to enable the admin:
