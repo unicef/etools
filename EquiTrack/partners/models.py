@@ -334,14 +334,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def cp_cycle_trip_links(self):
         from trips.models import Trip
-        crs = CountryProgramme.current()
+        cry = datetime.datetime.now().year
         if self.partner_type == u'Government':
             return self.linkedgovernmentpartner_set.filter(
-                        trip__from_date__year=datetime.datetime.now().year,
+                        trip__from_date__year=cry,
                 ).distinct('trip')
         else:
             return self.linkedpartner_set.filter(
-                    trip__from_date__year=datetime.datetime.now().year,
+                    trip__from_date__year=cry,
                 ).distinct('trip')
 
     @property
