@@ -72,6 +72,9 @@ class Travel(models.Model):
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     completed_at = models.DateTimeField(null=True)
     canceled_at = models.DateTimeField(null=True)
+    submitted_at = models.DateTimeField(null=True)
+    rejected_at = models.DateTimeField(null=True)
+    approved_at = models.DateTimeField(null=True)
 
     rejection_note = models.TextField(null=True)
     cancellation_note = models.TextField(null=True)
@@ -106,7 +109,7 @@ class Travel(models.Model):
 
     @property
     def approval_date(self):
-        return None
+        return self.approved_at
 
     # State machine transitions
     @transition(status, source=[TripStatus.PLANNED, TripStatus.REJECTED], target=TripStatus.SUBMITTED)
@@ -115,11 +118,11 @@ class Travel(models.Model):
 
     @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.APPROVED)
     def approve(self):
-        pass
+        self.approved_at = datetime.now()
 
     @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.REJECTED)
     def reject(self):
-        pass
+        self.rejected_at datetime.now()
 
     @transition(status, source=[TripStatus.PLANNED,
 
@@ -129,7 +132,7 @@ class Travel(models.Model):
                                 TripStatus.SENT_FOR_PAYMENT],
                 target=TripStatus.CANCELLED)
     def cancel(self):
-        pass
+        self.canceled_at = datetime.now()
 
     @transition(status, source=[TripStatus.CANCELLED, TripStatus.REJECTED], target=TripStatus.PLANNED)
     def plan(self):
@@ -138,11 +141,6 @@ class Travel(models.Model):
     @transition(status, source=[TripStatus.APPROVED], target=TripStatus.SENT_FOR_PAYMENT)
     def send_for_payment(self):
         pass
-
-    # @transition(status, source=[TripStatus.SENT_FOR_PAYMENT, TripStatus.APPROVED, TripStatus.CERTIFICATION_REJECTED],
-    #             target=TripStatus.DONE)
-    # def mark_as_done(self):
-    #     pass
 
     @transition(status, source=[TripStatus.DONE, TripStatus.SENT_FOR_PAYMENT],
                 target=TripStatus.CERTIFICATION_SUBMITTED)
@@ -164,7 +162,7 @@ class Travel(models.Model):
 
     @transition(status, source=[TripStatus.CERTIFIED], target=TripStatus.COMPLETED)
     def mark_as_completed(self):
-        pass
+        self.completed_at = datetime.now()
 
 
 class TravelActivity(models.Model):
