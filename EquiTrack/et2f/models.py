@@ -122,7 +122,7 @@ class Travel(models.Model):
 
     @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.REJECTED)
     def reject(self):
-        self.rejected_at datetime.now()
+        self.rejected_at = datetime.now()
 
     @transition(status, source=[TripStatus.PLANNED,
 
