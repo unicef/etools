@@ -96,10 +96,6 @@ class Travel(models.Model):
     currency = models.ForeignKey('Currency', null=True, blank=True, related_name='+')
 
     @property
-    def attachments(self):
-        return 0
-
-    @property
     def is_driver(self):
         return False
 

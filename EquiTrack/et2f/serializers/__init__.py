@@ -217,21 +217,6 @@ class TravelListSerializer(TravelDetailsSerializer):
                   'end_date')
 
 
-class TravelListParameterSerializer(serializers.Serializer):
-    _SORTABLE_FIELDS = tuple(TravelListSerializer.Meta.fields)
-
-    sort_by = serializers.CharField(default=_SORTABLE_FIELDS[0])
-    reverse = serializers.BooleanField(required=False, default=False)
-    search = serializers.CharField(required=False, default='')
-    show_hidden = serializers.BooleanField(required=False, default=False)
-
-    def validate_sort_by(self, value):
-        if value not in self._SORTABLE_FIELDS:
-            valid_values = ', '.join(self._SORTABLE_FIELDS)
-            raise ValidationError('Invalid sorting option. Valid values are {}'.format(valid_values))
-        return value
-
-
 class CurrentUserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name')
 

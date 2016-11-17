@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
+from et2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -57,37 +58,9 @@ class TravelListViewSet(mixins.ListModelMixin,
     serializer_class = TravelListSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminUser,)
-
-    _search_fields = ('id', 'reference_number', 'traveller__first_name', 'traveller__last_name', 'purpose',
-                      'section__name', 'office__name', 'supervisor__first_name', 'supervisor__last_name')
+    filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
 
     _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
-
-    def get_queryset(self):
-        queryset = super(TravelListViewSet, self).get_queryset()
-        parameter_serializer = TravelListParameterSerializer(data=self.request.GET)
-        if not parameter_serializer.is_valid():
-            return queryset
-
-        # Searching
-        search_str = parameter_serializer.data['search']
-        if search_str:
-            q = Q()
-            for field_name in self._search_fields:
-                constructed_field_name = '{}__iexact'.format(field_name)
-                q |= Q(**{constructed_field_name: search_str})
-            queryset = queryset.filter(q)
-
-        # Hide hidden travels
-        show_hidden = parameter_serializer.data['show_hidden']
-        if not show_hidden:
-            q = Q(hidden=True) | Q(status=TripStatus.CANCELLED)
-            queryset = queryset.exclude(q)
-
-        # Sorting
-        prefix = '-' if parameter_serializer.data['reverse'] else ''
-        sort_by = '{}{}'.format(prefix, parameter_serializer.data['sort_by'])
-        return queryset.order_by(sort_by)
 
     def create(self, request, *args, **kwargs):
         if 'transition_name' in kwargs:
