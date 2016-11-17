@@ -1,7 +1,8 @@
 
 from django.conf.urls import url, patterns, include
 
-from et2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, CurrentUserView
+from et2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, CurrentUserView,\
+    TravelAttachmentViewSet
 
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
@@ -15,6 +16,9 @@ travel_details = TravelDetailsViewSet.as_view({'get': 'retrieve',
 travel_details_state_change = TravelDetailsViewSet.as_view({'post': 'partial_update',
                                                             'put': 'partial_update',
                                                             'patch': 'partial_update'})
+travel_attachments = TravelAttachmentViewSet.as_view({'get': 'list',
+                                                      'post': 'create'})
+travel_attachment_details = TravelAttachmentViewSet.as_view({'delete': 'destroy'})
 
 details_state_changes_pattern = r'^(?P<pk>[0-9]+)/(?P<transition_name>submit_for_approval|approve|reject|cancel|plan|' \
                                 r'send_for_payment|submit_certificate|approve_cetificate|reject_certificate|' \
@@ -27,6 +31,8 @@ travel_pattens = patterns(
     url(r'^(?P<transition_name>save_and_submit)/$', travel_list_state_change, name='list_state_change'),
 
     url(r'^(?P<pk>[0-9]+)/$', travel_details, name='details'),
+    url(r'^(?P<travel_pk>[0-9]+)/attachments/$', travel_attachments, name='details_attachments'),
+    url(r'^(?P<travel_pk>[0-9]+)/attachments/(?P<pk>[0-9]+)/$', travel_attachment_details, name='details_attachment_details'),
     url(details_state_changes_pattern, travel_details_state_change, name='details_state_change'),
 )
 

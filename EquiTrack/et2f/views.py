@@ -7,6 +7,8 @@ from django.db.models.query_utils import Q
 from django.http.response import HttpResponse
 
 from rest_framework import generics, viewsets, mixins, status
+from rest_framework.generics import get_object_or_404
+from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
@@ -18,9 +20,10 @@ from users.models import Office, Section
 
 from et2f import TripStatus
 from et2f.exports import TravelListExporter
-from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant
+from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
+    TravelAttachment
 from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer, \
-    CurrentUserSerializer
+    CurrentUserSerializer, TravelAttachmentSerializer
 from et2f.serializers.static_data import StaticDataSerializer
 from et2f.serializers.permission_matrix import PermissionMatrixSerializer
 from et2f.helpers import PermissionMatrix
@@ -136,6 +139,24 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
         run_transition(serializer)
+
+
+class TravelAttachmentViewSet(mixins.ListModelMixin,
+                              mixins.CreateModelMixin,
+                              mixins.DestroyModelMixin,
+                              viewsets.GenericViewSet):
+    queryset = TravelAttachment.objects.all()
+    serializer_class = TravelAttachmentSerializer
+    parser_classes = (FormParser, MultiPartParser, FileUploadParser)
+    permission_classes = (IsAdminUser,)
+
+    def get_serializer_context(self):
+        context = super(TravelAttachmentViewSet, self).get_serializer_context()
+        # TODO filter out the travels which cannot be edited (permission check)
+        queryset = Travel.objects.all()
+        travel = get_object_or_404(queryset, pk=self.kwargs['travel_pk'])
+        context['travel'] = travel
+        return context
 
 
 class StaticDataView(generics.GenericAPIView):

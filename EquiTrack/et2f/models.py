@@ -232,3 +232,16 @@ class Clearances(models.Model):
     medical_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
     security_clearance = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
     security_course = models.CharField(max_length=14, choices=CHOICES, default=NOT_APPLICABLE)
+
+
+def determine_file_upload_path(instance, filename):
+    # CONFIRM THIS PLEASE
+    return 'travels/{}/{}'.format(instance.travel.id, filename)
+
+
+class TravelAttachment(models.Model):
+    travel = models.ForeignKey('Travel', related_name='attachments')
+    type = models.CharField(max_length=64)
+
+    name = models.CharField(max_length=255)
+    file = models.FileField(upload_to=determine_file_upload_path)

@@ -7,7 +7,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from et2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelPermission
+    TravelPermission, TravelAttachment
 
 
 class PermissionBasedModelSerializer(serializers.ModelSerializer):
@@ -238,3 +238,15 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'full_name')
+
+
+class TravelAttachmentSerializer(serializers.ModelSerializer):
+    url = serializers.CharField(source='file.url', read_only=True)
+
+    class Meta:
+        model = TravelAttachment
+        fields = ('id', 'name', 'type', 'url', 'file')
+
+    def create(self, validated_data):
+        validated_data['travel'] = self.context['travel']
+        return super(TravelAttachmentSerializer, self).create(validated_data)

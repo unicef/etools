@@ -28,7 +28,7 @@ django-rest-swagger==0.3.5
 django-redis-cache==1.6.4
 django-smtp-ssl==1.0
 hiredis==0.2.0
-GDAL==1.10.0
+GDAL==2.1.0
 # Fiona==1.5.0
 # Shapely==1.5.7
 cartodb==0.8.1

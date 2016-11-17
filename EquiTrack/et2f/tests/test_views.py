@@ -1,9 +1,11 @@
 import json
 
+from StringIO import StringIO
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from et2f import TripStatus, UserTypes
-from et2f.models import TravelPermission
+from et2f.models import TravelPermission, DSARegion, AirlineCompany, Travel, TravelAttachment
+from et2f.tests.factories import AirlineCompanyFactory
 
 from .factories import TravelFactory
 
@@ -87,6 +89,10 @@ class TravelViews(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_travel_creation(self):
+        dsaregion = DSARegion.objects.first()
+        airlines = AirlineCompanyFactory()
+        airlines2 = AirlineCompanyFactory()
+
         data = {'cost_assignments': [],
                 'deductions': [{'date': '2016-11-03',
                                 'breakfast': True,
@@ -94,23 +100,39 @@ class TravelViews(APITenantTestCase):
                                 'dinner': False,
                                 'accomodation': True}],
                 'expenses': [],
-                'itinerary': [],
+                'itinerary': [{'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-16T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': 'plane',
+                               'airlines': [airlines.id, airlines2.id]}],
                 'activities': []}
         response = self.forced_auth_req('post', '/api/et2f/travels/', data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        # self.assertEqual(response_json, {})
-
-        response_json['deductions'].append({'date': '2016-12-12',
-                                            'dinner': True,
-                                            'lunch': True,
-                                            'no_dsa': False})
-
-        response = self.forced_auth_req('patch', '/api/et2f/travels/{}/'.format(response_json['id']),
-                                        data=response_json,
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {})
+
+        # t = Travel.objects.get(id=response_json['id'])
+        # t.cancel()
+        # t.save()
+        #
+        # response = self.forced_auth_req('get', '/api/et2f/travels/{}/'.format(response_json['id']),
+        #                                 user=self.unicef_staff)
+        # response_json = json.loads(response.rendered_content)
+        # self.assertEqual(response_json, {})
+        #
+        # response_json['deductions'].append({'date': '2016-12-12',
+        #                                     'dinner': True,
+        #                                     'lunch': True,
+        #                                     'no_dsa': False})
+        #
+        # response = self.forced_auth_req('patch', '/api/et2f/travels/{}/'.format(response_json['id']),
+        #                                 data=response_json,
+        #                                 user=self.unicef_staff)
+        # response_json = json.loads(response.rendered_content)
+        # self.assertEqual(response_json, {})
 
     def test_static_data_endpoint(self):
         response = self.forced_auth_req('get', '/api/et2f/static_data/', user=self.unicef_staff)
@@ -243,3 +265,29 @@ class TravelViews(APITenantTestCase):
     #         permnames[model_name] = fields
     #
     #     self.assertEqual(permnames, {})
+
+    def test_file_attachments(self):
+        class FakeFile(StringIO):
+            def size(self):
+                return len(self)
+
+        fakefile = FakeFile('some stuff')
+        travel = TravelFactory()
+        attachment = TravelAttachment.objects.create(travel=travel,
+                                                     name='Lofasz',
+                                                     type='nehogymar')
+        attachment.file.save('fake.txt', fakefile)
+        fakefile.seek(0)
+
+        data = {'name': 'second',
+                'type': 'something',
+                'file': fakefile}
+        response = self.forced_auth_req('post', '/api/et2f/travels/{}/attachments/'.format(travel.id), data=data,
+                                        user=self.unicef_staff, request_format='multipart')
+        response_json = json.loads(response.rendered_content)
+        # self.assertEqual(response_json, {})
+
+        response = self.forced_auth_req('delete',
+                                        '/api/et2f/travels/{}/attachments/{}/'.format(travel.id, response_json['id']),
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 0)

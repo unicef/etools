@@ -32,12 +32,21 @@ Step 3. Set Postgres user password to "postgres", and create PostGIS required ex
 # \q
 ```
 
+Modifiy the base template so all newly created test databases will have hstore extension:
+
+```bash
+$ psql -d template1 -c 'CREATE EXTENSION hstore;'
+```
+
 Step 4. Install Redis
 
 ```bash
 $ wget http://download.redis.io/redis-stable.tar.gz
 $ tar xvzf redis-stable.tar.gz
 $ cd redis-stable
+$ cd deps
+$ make hiredis lua jemalloc linenoise geohash-int
+$ cd ..
 $ sudo make install
 $ make test
 ```
@@ -83,7 +92,7 @@ Step 9. Install Cryptography dependencies
 
 ```bash
 $ sudo apt-get install libffi-dev
-$ sudp apt-get install libssl-dev
+$ sudo apt-get install libssl-dev
 ```
 
 Step 10. Load Python packages
