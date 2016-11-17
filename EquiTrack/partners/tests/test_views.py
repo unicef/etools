@@ -694,17 +694,6 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.save()
 
-    def test_partner_staffmember_list(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/staff-members/',
-            user=self.partner_staff_user
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
-        self.assertIn("Mace", response.data[0]["first_name"])
-
     def test_partner_partner_staffmember_list(self):
         response = self.forced_auth_req(
             'get',

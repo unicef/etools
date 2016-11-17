@@ -7,6 +7,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import (
     ListAPIView,
+    CreateAPIView,
     ListCreateAPIView,
     RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -132,6 +133,31 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
         return Response(
             data,
             status=status.HTTP_200_OK
+        )
+
+
+class PartnerStaffMemberCreateAPIVIew(CreateAPIView):
+    """
+    Returns a list of all Partner staff members
+    """
+    serializer_class = PartnerStaffMemberSerializer
+    permission_classes = (PartnerPermission,)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Add Staff member to Partner Organization
+        :return: JSON
+        """
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED,
+            headers=headers
         )
 
 
