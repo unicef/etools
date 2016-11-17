@@ -19,6 +19,7 @@ class SearchFilter(BaseFilterBackend):
         serializer = SearchFilterSerializer(request.GET)
 
         search_str = serializer.data['search']
+        data = serializer.instance
         if search_str:
             q = Q()
             for field_name in self._search_fields:
@@ -77,3 +78,8 @@ class FilterBoxFilter(BaseFilterBackend):
         data.pop('cp_output')
 
         return queryset.filter(**data)
+
+
+class TravelAttachmentFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        return queryset.filter(travel__pk=view.kwargs['travel_pk'])

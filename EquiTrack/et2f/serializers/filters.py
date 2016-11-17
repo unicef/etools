@@ -8,16 +8,16 @@ from et2f.serializers import TravelListSerializer
 
 
 class SearchFilterSerializer(serializers.Serializer):
-    reverse = serializers.BooleanField(required=False, default=False)
-    search = serializers.CharField(required=False, default='')
+    search = serializers.CharField(default='')
 
 
 class ShowHiddenFilterSerializer(serializers.Serializer):
-    show_hidden = serializers.BooleanField(required=False, default=False)
+    show_hidden = serializers.BooleanField(default=False)
 
 
 class SortFilterSerializer(serializers.Serializer):
     _SORTABLE_FIELDS = tuple(TravelListSerializer.Meta.fields)
+    reverse = serializers.BooleanField(default=False)
     sort_by = serializers.CharField(default=_SORTABLE_FIELDS[0])
 
     def validate_sort_by(self, value):

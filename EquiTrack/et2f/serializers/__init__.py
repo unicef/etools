@@ -90,6 +90,18 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date')
 
 
+class TravelAttachmentSerializer(serializers.ModelSerializer):
+    url = serializers.CharField(source='file.url', read_only=True)
+
+    class Meta:
+        model = TravelAttachment
+        fields = ('id', 'name', 'type', 'url', 'file')
+
+    def create(self, validated_data):
+        validated_data['travel'] = self.context['travel']
+        return super(TravelAttachmentSerializer, self).create(validated_data)
+
+
 class TravelDetailsSerializer(serializers.ModelSerializer):
     itinerary = IteneraryItemSerializer(many=True, required=False)
     expenses = ExpenseSerializer(many=True, required=False)
@@ -97,6 +109,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     cost_assignments = CostAssignmentSerializer(many=True, required=False)
     clearances = ClearancesSerializer(required=False)
     activities = TravelActivitySerializer(many=True, required=False)
+    attachments = TravelAttachmentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Travel
@@ -223,15 +236,3 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'full_name')
-
-
-class TravelAttachmentSerializer(serializers.ModelSerializer):
-    url = serializers.CharField(source='file.url', read_only=True)
-
-    class Meta:
-        model = TravelAttachment
-        fields = ('id', 'name', 'type', 'url', 'file')
-
-    def create(self, validated_data):
-        validated_data['travel'] = self.context['travel']
-        return super(TravelAttachmentSerializer, self).create(validated_data)

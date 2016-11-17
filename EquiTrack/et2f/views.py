@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
-from django.db.models.query_utils import Q
 from django.http.response import HttpResponse
 
 from rest_framework import generics, viewsets, mixins, status
@@ -13,18 +12,16 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
 from rest_framework.response import Response
 
-from et2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter
+from et2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter, TravelAttachmentFilter
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
 from users.models import Office, Section
 
-from et2f import TripStatus
 from et2f.exports import TravelListExporter
 from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
     TravelAttachment
-from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelListParameterSerializer, \
-    CurrentUserSerializer, TravelAttachmentSerializer
+from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, CurrentUserSerializer, TravelAttachmentSerializer
 from et2f.serializers.static_data import StaticDataSerializer
 from et2f.serializers.permission_matrix import PermissionMatrixSerializer
 from et2f.helpers import PermissionMatrix
@@ -58,7 +55,7 @@ class TravelListViewSet(mixins.ListModelMixin,
     serializer_class = TravelListSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminUser,)
-    filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
+    # filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
 
     _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
 
@@ -122,6 +119,7 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
     serializer_class = TravelAttachmentSerializer
     parser_classes = (FormParser, MultiPartParser, FileUploadParser)
     permission_classes = (IsAdminUser,)
+    filter_backends = (TravelAttachmentFilter,)
 
     def get_serializer_context(self):
         context = super(TravelAttachmentViewSet, self).get_serializer_context()
