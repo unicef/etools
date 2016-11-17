@@ -37,7 +37,7 @@ from .serializers import (
     PCAFileSerializer
 )
 from .permissions import PartnerPermission, ResultChainPermission
-from rest_framework.parsers import MultiPartParser, FormParser
+from .filters import PartnerScopeFilter
 
 from .models import (
     FileType,
@@ -55,7 +55,7 @@ from .models import (
     ResultChain,
     IndicatorReport
 )
-from reports.models import ResultStructure
+from reports.models import CountryProgramme
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -80,7 +80,7 @@ class PcaPDFView(PDFTemplateView):
             title="Partnership",
             agreement=agreement,
             bank_details=agreement.bank_details.all(),
-            cp=ResultStructure.current(),
+            cp=CountryProgramme.current(),
             auth_officers=officers_list,
             country=self.request.tenant.name,
             **kwargs
@@ -236,6 +236,7 @@ class AgreementViewSet(
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -295,6 +296,7 @@ class InterventionsViewSet(
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter,)
 
     def create(self, request, *args, **kwargs):
         """

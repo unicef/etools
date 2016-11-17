@@ -302,16 +302,14 @@ class Trip(AdminURLMixin, models.Model):
             driver_trip.save()
 
         # update partner hact values
-        if self.travel_type in [Trip.PROGRAMME_MONITORING, Trip.SPOT_CHECK]:
+        if self.status == Trip.COMPLETED and self.travel_type in [Trip.PROGRAMME_MONITORING, Trip.SPOT_CHECK]:
             if self.linkedgovernmentpartner_set:
-                for gov_partner in self.linkedpartner_set.all():
-                    PartnerOrganization.planned_visits(gov_partner.partner, self)
+                for gov_partner in self.linkedgovernmentpartner_set.all():
                     PartnerOrganization.programmatic_visits(gov_partner.partner, self)
                     PartnerOrganization.spot_checks(gov_partner.partner, self)
 
             if self.linkedpartner_set:
                 for link_partner in self.linkedpartner_set.all():
-                    PartnerOrganization.planned_visits(link_partner.partner, self)
                     PartnerOrganization.programmatic_visits(link_partner.partner, self)
                     PartnerOrganization.spot_checks(link_partner.partner, self)
 
@@ -481,15 +479,6 @@ class LinkedPartner(models.Model):
         blank=True, null=True,
     )
 
-    @transaction.atomic
-    def save(self, **kwargs):
-        # update partner hact values
-        if self.pk is None:
-            PartnerOrganization.planned_visits(self.partner, self.trip)
-            PartnerOrganization.programmatic_visits(self.partner, self.trip)
-            PartnerOrganization.spot_checks(self.partner, self.trip)
-        return super(LinkedPartner, self).save(**kwargs)
-
 
 class LinkedGovernmentPartner(models.Model):
     trip = models.ForeignKey(Trip)
@@ -513,15 +502,6 @@ class LinkedGovernmentPartner(models.Model):
         auto_choose=True,
         blank=True, null=True,
     )
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        # update partner hact values
-        if self.pk is None:
-            PartnerOrganization.planned_visits(self.partner, self.trip)
-            PartnerOrganization.programmatic_visits(self.partner, self.trip)
-            PartnerOrganization.spot_checks(self.partner, self.trip)
-        return super(LinkedGovernmentPartner, self).save(**kwargs)
 
 
 class TripFunds(models.Model):

@@ -170,6 +170,12 @@ class UserProfile(models.Model):
 
         return mods_made
 
+    def save(self, **kwargs):
+
+        if self.country_override and self.country != self.country_override:
+            self.country = self.country_override
+        super(UserProfile, self).save(**kwargs)
+
 
 post_save.connect(UserProfile.create_user_profile, sender=User)
 pre_user_save.connect(UserProfile.custom_update_user)  #TODO: The sender should be set
