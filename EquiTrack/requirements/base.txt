@@ -27,6 +27,7 @@ django-hstore==1.4.1
 django-rest-swagger==0.3.5
 django-redis-cache==1.6.4
 django-smtp-ssl==1.0
+django-mptt==0.8.6
 hiredis==0.2.0
 GDAL==1.10.0
 # Fiona==1.5.0
