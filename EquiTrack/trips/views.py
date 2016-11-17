@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 import datetime
 import logging
 
@@ -63,7 +61,7 @@ class AppsIOSPlistView(View):
         # not serving this as a static file in case in the future we want to be able to change versions
         with open(settings.SITE_ROOT + '/templates/trips/apps/etrips.plist', 'r') as my_f:
             result = my_f.read()
-        etrips_version = settings.ETRIPS_VERSION or "2.9.3"
+        etrips_version = settings.ETRIPS_VERSION or "2.9.7"
         
         result = result.format(request.get_host(), etrips_version)
 

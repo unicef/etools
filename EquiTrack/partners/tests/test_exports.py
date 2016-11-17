@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import xlrd
 from datetime import datetime
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
 from rest_framework import status
 from tablib.core import Dataset

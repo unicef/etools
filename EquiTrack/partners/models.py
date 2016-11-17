@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-__author__ = 'jcranwellward'
-
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -14,7 +12,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from jsonfield import JSONField
+from django.contrib.postgres.fields import JSONField
 from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
@@ -346,16 +344,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def cp_cycle_trip_links(self):
         from trips.models import Trip
-        crs = ResultStructure.current()
+        cry = datetime.datetime.now().year
         if self.partner_type == u'Government':
             return self.linkedgovernmentpartner_set.filter(
-                        trip__from_date__lt=crs.to_date,
-                        trip__from_date__gte=crs.from_date
+                        trip__from_date__year=cry,
                 ).distinct('trip')
         else:
             return self.linkedpartner_set.filter(
-                    trip__from_date__lt=crs.to_date,
-                    trip__from_date__gte=crs.from_date
+                    trip__from_date__year=cry,
                 ).distinct('trip')
 
     @property
