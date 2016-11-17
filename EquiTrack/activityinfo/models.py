@@ -8,6 +8,11 @@ from activtyinfo_client import ActivityInfoClient
 
 
 class Database(models.Model):
+    """
+    Represents ActivityInfo database client.
+    
+    Can import database data and reports data from ActivityInfoClient.
+    """
 
     ai_id = models.PositiveIntegerField(
         unique=True,
@@ -157,6 +162,9 @@ class Database(models.Model):
 
 
 class Partner(models.Model):
+    """
+    Represents Partner in ActivityInfo database client.
+    """
 
     ai_id = models.PositiveIntegerField(unique=True)
     database = models.ForeignKey(Database)
@@ -171,6 +179,9 @@ class Partner(models.Model):
 
 
 class Activity(models.Model):
+    """
+    Represents Activity in ActivityInfo database client.
+    """
 
     ai_id = models.PositiveIntegerField(unique=True)
     database = models.ForeignKey(Database)
@@ -185,6 +196,9 @@ class Activity(models.Model):
 
 
 class Indicator(models.Model):
+    """
+    Represents Indicator in ActivityInfo database client.
+    """
 
     ai_id = models.PositiveIntegerField(unique=True)
     activity = models.ForeignKey(Activity)
@@ -197,6 +211,9 @@ class Indicator(models.Model):
 
 
 class AttributeGroup(models.Model):
+    """
+    Represents AttributeGroup in ActivityInfo database client.
+    """
 
     activity = models.ForeignKey(Activity)
     ai_id = models.PositiveIntegerField(unique=True)
@@ -209,6 +226,9 @@ class AttributeGroup(models.Model):
 
 
 class Attribute(models.Model):
+    """
+    Represents Attribute in ActivityInfo database client.
+    """
 
     attribute_group = models.ForeignKey(AttributeGroup)
     ai_id = models.PositiveIntegerField(unique=True)
