@@ -1,4 +1,7 @@
+from __future__ import unicode_literals
+
 from datetime import datetime
+from decimal import Decimal as D
 
 from django.contrib.postgres.fields.array import ArrayField
 from django.db import models
@@ -106,6 +109,12 @@ class Travel(models.Model):
     @property
     def approval_date(self):
         return self.approved_at
+
+    @property
+    def cost_summary(self):
+        return {'dsa_total': D(0),
+                'expenses_total': D(0),
+                'deductions_total': D(0)}
 
     # State machine transitions
     @transition(status, source=[TripStatus.PLANNED, TripStatus.REJECTED], target=TripStatus.SUBMITTED)

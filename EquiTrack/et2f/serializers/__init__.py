@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from et2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     TravelPermission, TravelAttachment
@@ -102,6 +101,12 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
         return super(TravelAttachmentSerializer, self).create(validated_data)
 
 
+class CostSummarySerializer(serializers.Serializer):
+    dsa_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
+    expenses_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
+    deductions_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
+
+
 class TravelDetailsSerializer(serializers.ModelSerializer):
     itinerary = IteneraryItemSerializer(many=True, required=False)
     expenses = ExpenseSerializer(many=True, required=False)
@@ -110,13 +115,15 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     clearances = ClearancesSerializer(required=False)
     activities = TravelActivitySerializer(many=True, required=False)
     attachments = TravelAttachmentSerializer(many=True, read_only=True)
+    cost_summary = CostSummarySerializer(read_only=True)
 
     class Meta:
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
                   'traveller', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
                   'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
-                  'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments')
+                  'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
+                  'cost_summary')
         # Review this, as a developer could be confusing why the status field is not saved during an update
         read_only_fields = ('status',)
 
