@@ -8,17 +8,17 @@ from et2f.serializers import TravelListSerializer
 
 
 class SearchFilterSerializer(serializers.Serializer):
-    search = serializers.CharField(default='')
+    search = serializers.CharField(default='', required=False)
 
 
 class ShowHiddenFilterSerializer(serializers.Serializer):
-    show_hidden = serializers.BooleanField(default=False)
+    show_hidden = serializers.BooleanField(default=False, required=False)
 
 
 class SortFilterSerializer(serializers.Serializer):
     _SORTABLE_FIELDS = tuple(TravelListSerializer.Meta.fields)
-    reverse = serializers.BooleanField(default=False)
-    sort_by = serializers.CharField(default=_SORTABLE_FIELDS[0])
+    reverse = serializers.BooleanField(default=False, required=False)
+    sort_by = serializers.CharField(default=_SORTABLE_FIELDS[0], required=False)
 
     def validate_sort_by(self, value):
         if value not in self._SORTABLE_FIELDS:
@@ -28,16 +28,16 @@ class SortFilterSerializer(serializers.Serializer):
 
 
 class FilterBoxFilterSerializer(serializers.Serializer):
-    f_traveler = serializers.IntegerField(source='traveller__pk')
-    f_supervisor = serializers.IntegerField(source='supervisor__pk')
-    f_year = serializers.IntegerField(source='year')
-    f_month = serializers.IntegerField(source='month')
-    f_office = serializers.IntegerField(source='offices__pk')
-    f_section = serializers.IntegerField(source='sections__pk')
-    f_travel_type = serializers.CharField(source='travel_type')
-    f_status = serializers.CharField(source='status')
-    f_partner = serializers.IntegerField(source='travel_activity__partner__pk')
-    f_cp_output = serializers.IntegerField(source='cp_output')
+    f_traveler = serializers.IntegerField(source='traveller__pk', required=False)
+    f_supervisor = serializers.IntegerField(source='supervisor__pk', required=False)
+    f_year = serializers.IntegerField(source='year', required=False)
+    f_month = serializers.IntegerField(source='month', required=False)
+    f_office = serializers.IntegerField(source='offices__pk', required=False)
+    f_section = serializers.IntegerField(source='sections__pk', required=False)
+    f_travel_type = serializers.CharField(source='travel_type', required=False)
+    f_status = serializers.CharField(source='status', required=False)
+    f_partner = serializers.IntegerField(source='travel_activity__partner__pk', required=False)
+    f_cp_output = serializers.IntegerField(source='cp_output', required=False)
 
     # TODO simon: figure out how to handle when year is not in the payload but month is
 
