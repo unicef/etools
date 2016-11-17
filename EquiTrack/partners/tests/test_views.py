@@ -291,7 +291,11 @@ class TestAgreementAPIView(APITenantTestCase):
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.save()
-        self.agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
+        self.agreement = AgreementFactory(
+                            partner=self.partner,
+                            partner_manager=self.partner_staff,
+                            signed_by_unicef_date=datetime.date.today()
+                        )
         self.agreement2 = AgreementFactory(
                                 partner=self.partner,
                                 agreement_type="MOU",
@@ -387,6 +391,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["reference_number"], "/PCA{}01".format(datetime.date.today().year))
+        self.assertTrue(response.data["authorized_officers"])
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(

@@ -3,6 +3,7 @@ from operator import xor
 from rest_framework import serializers
 
 from partners.models import Agreement, PartnerOrganization
+from partners.serializers.serializers import PartnerStaffMemberSerializer
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
@@ -48,7 +49,9 @@ class AgreementSerializer(serializers.ModelSerializer):
             "status",
             "year",
             "reference_number",
+            "authorized_officers",
         )
+        read_only_fields = ("authorized_officers",)
 
     def validate(self, data):
         data = super(AgreementSerializer, self).validate(data)
