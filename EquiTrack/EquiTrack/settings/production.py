@@ -50,21 +50,6 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
     # MEDIA_URL = 'https://{}.blob.core.windows.net/{}/'.format(
     #     AZURE_ACCOUNT_NAME, AZURE_CONTAINER
     # )
-    FILER_IS_PUBLIC_DEFAULT = False
-    FILER_STORAGES = {
-        'public': {
-            'main': {
-                'ENGINE': 'storages.backends.azure_storage.AzureStorage',
-                'UPLOAD_TO': 'partners.utils.by_pca',
-            },
-        },
-        'private': {
-            'main': {
-                'ENGINE': 'storages.backends.azure_storage.AzureStorage',
-                'UPLOAD_TO': 'partners.utils.by_pca',
-            },
-        },
-    }
 
     from storages.backends.azure_storage import AzureStorage
     storage = AzureStorage()
