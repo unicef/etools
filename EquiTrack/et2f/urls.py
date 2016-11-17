@@ -8,7 +8,7 @@ from et2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
 travel_list_export = TravelListViewSet.as_view({'get': 'export'})
-travel_list_state_change = TravelListViewSet.as_view({'post': 'state_change'})
+travel_list_state_change = TravelListViewSet.as_view({'post': 'create'})
 
 travel_details = TravelDetailsViewSet.as_view({'get': 'retrieve',
                                                'put': 'update',
