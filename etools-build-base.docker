@@ -1,0 +1,14 @@
+FROM unicef/etools:base
+
+ENV NODE_VERSION="v5.1.0"
+
+RUN curl -LO http://nodejs.org/dist/$NODE_VERSION/node-$NODE_VERSION-linux-x64.tar.gz && \
+    tar xzf node-$NODE_VERSION-linux-x64.tar.gz && \
+    cp -rp node-$NODE_VERSION-linux-x64 /usr/local/ && \
+    ln -s /usr/local/node-$NODE_VERSION-linux-x64 /usr/local/node
+
+ENV PATH=$PATH:/usr/local/node/bin
+
+RUN npm install -g gulp && \
+    npm install -g bower
+

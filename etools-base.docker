@@ -1,0 +1,9 @@
+FROM python:2.7
+
+RUN apt-get update
+
+RUN apt-get install -qyy \
+    -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
+    python-gdal gdal-bin libgdal-dev libgdal1h libgdal1-dev libxml2-dev libxslt-dev python-dev xmlsec1
+
+
