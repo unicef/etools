@@ -45,23 +45,6 @@ class AgreementListAPIView(ListCreateAPIView):
         else:
             return super(AgreementListAPIView, self).get_serializer_class()
 
-    def create(self, request, *args, **kwargs):
-        """
-        Add a new Agreement
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
     def get_queryset(self):
         query_params = self.request.query_params
 
@@ -143,23 +126,6 @@ class PartnerStaffMemberCreateAPIVIew(CreateAPIView):
     serializer_class = PartnerStaffMemberSerializer
     permission_classes = (PartnerPermission,)
 
-    def create(self, request, *args, **kwargs):
-        """
-        Add Staff member to Partner Organization
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
-
 
 class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     """
@@ -169,23 +135,6 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberSerializer
     permission_classes = (PartnerPermission,)
     filter_backends = (PartnerScopeFilter,)
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add Staff member to Partner Organization
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
