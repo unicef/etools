@@ -16,10 +16,11 @@ class SearchFilter(BaseFilterBackend):
                       'section__name', 'office__name', 'supervisor__first_name', 'supervisor__last_name')
 
     def filter_queryset(self, request, queryset, view):
-        serializer = SearchFilterSerializer(request.GET)
+        serializer = SearchFilterSerializer(data=request.GET)
+        serializer.is_valid()
+        data = serializer.validated_data
 
-        search_str = serializer.data['search']
-        data = serializer.instance
+        search_str = data['search']
         if search_str:
             q = Q()
             for field_name in self._search_fields:
@@ -32,9 +33,11 @@ class SearchFilter(BaseFilterBackend):
 
 class ShowHiddenFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        serializer = ShowHiddenFilterSerializer(request.GET)
+        serializer = ShowHiddenFilterSerializer(data=request.GET)
+        serializer.is_valid()
+        data = serializer.validated_data
 
-        show_hidden = serializer.data['show_hidden']
+        show_hidden = data['show_hidden']
         if not show_hidden:
             q = Q(hidden=True) | Q(status=TripStatus.CANCELLED)
             queryset = queryset.exclude(q)
@@ -44,10 +47,12 @@ class ShowHiddenFilter(BaseFilterBackend):
 
 class SortFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        serializer = SortFilterSerializer(request.GET)
+        serializer = SortFilterSerializer(data=request.GET)
+        serializer.is_valid()
+        data = serializer.validated_data
 
-        prefix = '-' if serializer.data['reverse'] else ''
-        sort_by = '{}{}'.format(prefix, serializer.data['sort_by'])
+        prefix = '-' if data['reverse'] else ''
+        sort_by = '{}{}'.format(prefix, data['sort_by'])
         return queryset.order_by(sort_by)
 
 
@@ -56,8 +61,9 @@ class FilterBoxFilter(BaseFilterBackend):
     Does the filtering based on the filter parameters coming from the frontend
     """
     def filter_queryset(self, request, queryset, view):
-        serializer = FilterBoxFilterSerializer(request.GET)
-        data = serializer.data
+        serializer = FilterBoxFilterSerializer(data=request.GET)
+        serializer.is_valid()
+        data = serializer.validated_data
 
         # Construct a backend readable date
         year = data.pop('year', None)
@@ -75,7 +81,7 @@ class FilterBoxFilter(BaseFilterBackend):
             data['end_date__gte'] = start_date
 
         # TODO simon: figure out what to do with this
-        data.pop('cp_output')
+        data.pop('cp_output', None)
 
         return queryset.filter(**data)
 

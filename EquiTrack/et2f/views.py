@@ -55,7 +55,7 @@ class TravelListViewSet(mixins.ListModelMixin,
     serializer_class = TravelListSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminUser,)
-    # filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
+    filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
 
     _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
 
