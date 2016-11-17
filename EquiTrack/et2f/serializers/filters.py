@@ -32,11 +32,11 @@ class FilterBoxFilterSerializer(serializers.Serializer):
     f_supervisor = serializers.IntegerField(source='supervisor__pk', required=False)
     f_year = serializers.IntegerField(source='year', required=False)
     f_month = serializers.IntegerField(source='month', required=False)
-    f_office = serializers.IntegerField(source='offices__pk', required=False)
-    f_section = serializers.IntegerField(source='sections__pk', required=False)
-    f_travel_type = serializers.CharField(source='travel_type', required=False)
+    f_office = serializers.IntegerField(source='office__pk', required=False)
+    f_section = serializers.IntegerField(source='section__pk', required=False)
+    f_travel_type = serializers.CharField(source='mode_of_travel__contains', required=False)
     f_status = serializers.CharField(source='status', required=False)
-    f_partner = serializers.IntegerField(source='travel_activity__partner__pk', required=False)
+    f_partner = serializers.IntegerField(source='activities__partner__pk', required=False)
     f_cp_output = serializers.IntegerField(source='cp_output', required=False)
 
     # TODO simon: figure out how to handle when year is not in the payload but month is
@@ -47,5 +47,9 @@ class FilterBoxFilterSerializer(serializers.Serializer):
         # Adjust month because frontend sends 0-11
         if 'month' in data:
             data['month'] += 1
+
+        # Adjust travel_type because it's an array field
+        if 'mode_of_travel__contains' in data:
+            data['mode_of_travel__contains'] = [data['mode_of_travel__contains']]
 
         return data
