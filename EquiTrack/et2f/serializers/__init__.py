@@ -39,7 +39,8 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
 
 class IteneraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
-    airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.objects.all(), required=False)
+    airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.objects.all(), required=False,
+                                                  allow_null=True)
 
     class Meta:
         model = IteneraryItem
