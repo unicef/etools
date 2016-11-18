@@ -58,6 +58,7 @@ class SectorCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sector
+        fields = '__all__'
 
 
 # class GoalCreateSerializer(serializers.ModelSerializer):
@@ -74,6 +75,7 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indicator
+        fields = '__all__'
 
 
 class MilestoneSerializer(serializers.ModelSerializer):
@@ -91,6 +93,7 @@ class ResultSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Result
+        fields = '__all__'
 
     def create(self, validated_data):
         workplan_properties = validated_data.pop("workplan_properties")
@@ -106,6 +109,7 @@ class ResultStructureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultStructure
+        fields = '__all__'
 
 
 class ResultTypeSerializer(serializers.ModelSerializer):
@@ -114,6 +118,7 @@ class ResultTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultType
+        fields = '__all__'
 
 
 class UnitSerializer(serializers.ModelSerializer):
@@ -122,3 +127,4 @@ class UnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
+        fields = '__all__'

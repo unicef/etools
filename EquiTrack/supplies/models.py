@@ -6,6 +6,9 @@ from django.db import models
 
 
 class SupplyItem(models.Model):
+    """
+    Represents a supply item
+    """
 
     name = models.CharField(
         max_length=255,
