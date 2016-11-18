@@ -225,6 +225,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                     try:
                         self.create_related_models(model, [attrs], travel=self.instance)
                     except TypeError:
+                        attrs.pop('travel', None)
                         new_models = self.create_related_models(model, [attrs])
                         for m in new_models:
                             m.travels.add(self.instance)
