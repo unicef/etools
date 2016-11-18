@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import migrations, models
 
 def create_initial_models(apps, schema_editor):
@@ -8,9 +9,20 @@ def create_initial_models(apps, schema_editor):
     Grant = apps.get_model('et2f', 'Grant')
     Fund = apps.get_model('et2f', 'Fund')
 
-    WBS.objects.get_or_create(id=1, defaults={'name': 'Initial WBS'})
-    Grant.objects.get_or_create(id=1, defaults={'name': 'Initial Grant'})
-    Fund.objects.get_or_create(id=1, defaults={'name': 'Initial Fund'})
+    try:
+        WBS.objects.get(id=1)
+    except ObjectDoesNotExist:
+        WBS.objects.create(name='Initial WBS')
+
+    try:
+        Grant.objects.get(id=1)
+    except ObjectDoesNotExist:
+        Grant.objects.create(name='Initial Grant')
+
+    try:
+        Fund.objects.get(id=1)
+    except ObjectDoesNotExist:
+        Fund.objects.create(name='Initial Fund')
 
 
 class Migration(migrations.Migration):
