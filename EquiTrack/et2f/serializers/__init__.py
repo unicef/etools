@@ -116,7 +116,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     activities = TravelActivitySerializer(many=True, required=False)
     attachments = TravelAttachmentSerializer(many=True, read_only=True)
     cost_summary = CostSummarySerializer(read_only=True)
-    report = serializers.CharField(source='report_note')
+    report = serializers.CharField(source='report_note', required=False, default='')
 
     class Meta:
         model = Travel
