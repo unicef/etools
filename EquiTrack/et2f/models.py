@@ -152,7 +152,7 @@ class Travel(models.Model):
     def send_for_payment(self):
         self.send_notification('Travel #{} was sent for payment.'.format(self.id))
 
-    @transition(status, source=[TripStatus.DONE, TripStatus.SENT_FOR_PAYMENT],
+    @transition(status, source=[TripStatus.DONE, TripStatus.SENT_FOR_PAYMENT, TripStatus.CERTIFICATION_REJECTED],
                 target=TripStatus.CERTIFICATION_SUBMITTED)
     def submit_certificate(self):
         self.send_notification('Travel #{} certification was submitted.'.format(self.id))
