@@ -3,6 +3,7 @@ import uuid
 
 from django.db import connection
 from django.core.cache import cache
+from django.utils.cache import patch_cache_control
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, permissions, status
 from rest_framework.response import Response
@@ -52,11 +53,12 @@ class ETagMixin(object):
 
         request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
         if cache_etag == request_etag:
-            return Response(status=status.HTTP_304_NOT_MODIFIED)
+            response = Response(status=status.HTTP_304_NOT_MODIFIED)
         else:
             response = super(cls, self).list(*args, **kwargs)
             response["ETag"] = cache_etag
-            return response
+        patch_cache_control(response)
+        return response
 
 
 class LocationsViewSet(ETagMixin,
