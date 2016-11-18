@@ -56,6 +56,8 @@ class CostSummaryCalculator(object):
 
     def _get_dsa_rate_at(self, date, since=1):
         dsa_region = self._get_dsa_region_at(date)
+        if dsa_region is None:
+            return D(0)
         if since <= 60:
             return dsa_region.dsa_amount_usd
         return dsa_region.dsa_amount_60plus_usd
