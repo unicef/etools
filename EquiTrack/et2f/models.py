@@ -158,10 +158,11 @@ class Travel(models.Model):
         self.send_notification('Travel #{} certification was submitted.'.format(self.id))
 
     @transition(status, source=[TripStatus.CERTIFICATION_SUBMITTED], target=TripStatus.CERTIFICATION_APPROVED)
-    def approve_cetificate(self):
+    def approve_certificate(self):
         self.send_notification('Travel #{} certification was approved.'.format(self.id))
 
-    @transition(status, source=[TripStatus.CERTIFICATION_APPROVED], target=TripStatus.CERTIFICATION_REJECTED)
+    @transition(status, source=[TripStatus.CERTIFICATION_APPROVED, TripStatus.CERTIFICATION_SUBMITTED],
+                target=TripStatus.CERTIFICATION_REJECTED)
     def reject_certificate(self):
         self.send_notification('Travel #{} certification was rejected.'.format(self.id))
 

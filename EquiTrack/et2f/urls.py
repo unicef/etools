@@ -24,7 +24,7 @@ clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clo
 clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
 
 details_state_changes_pattern = r'^(?P<pk>[0-9]+)/(?P<transition_name>submit_for_approval|approve|reject|cancel|plan|' \
-                                r'send_for_payment|submit_certificate|approve_cetificate|reject_certificate|' \
+                                r'send_for_payment|submit_certificate|approve_certificate|reject_certificate|' \
                                 r'mark_as_certified|mark_as_completed)/$'
 
 travel_pattens = patterns(
