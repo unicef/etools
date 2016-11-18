@@ -66,8 +66,6 @@ SUIT_CONFIG = {
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
-        #{'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
-
         {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
@@ -374,7 +372,6 @@ SHARED_APPS = (
     'mathfilters',
 
     'easy_thumbnails',
-    'filer',
     'storages',
     'rest_framework',
     'rest_framework_swagger',

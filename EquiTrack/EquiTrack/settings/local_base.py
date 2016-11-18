@@ -7,7 +7,6 @@ from base import *
 ########## DEBUG CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = True
-FILER_DEBUG = DEBUG
 
 ALLOWED_HOSTS = ['127.0.0.1']
 
