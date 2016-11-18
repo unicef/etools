@@ -174,6 +174,10 @@ class Travel(models.Model):
     def mark_as_completed(self):
         self.completed_at = datetime.now()
 
+    @transition(status, target=TripStatus.PLANNED)
+    def reset_status(self):
+        pass
+
     def send_notification(self, message):
         send_mail('Travel #{} state changed'.format(self.id),
                   message,
