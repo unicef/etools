@@ -108,11 +108,16 @@ class TravelViews(APITenantTestCase):
                                'overnight_travel': False,
                                'mode_of_travel': 'plane',
                                'airlines': [airlines.id, airlines2.id]}],
-                'activities': []}
+                'activities': [],
+                'start_date': '2016-11-15T12:06:55.821490',
+                'end_date': '2016-11-17T12:06:55.821490'}
         response = self.forced_auth_req('post', '/api/et2f/travels/', data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {})
+        # self.assertEqual(response_json, {})
+
+        t = Travel.objects.get(id=response_json['id'])
+        self.assertEqual(t.cost_summary, {})
 
         # t = Travel.objects.get(id=response_json['id'])
         # t.cancel()

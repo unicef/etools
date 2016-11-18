@@ -91,6 +91,9 @@ class CostSummaryCalculator(object):
         return dsa_rate * multiplier
 
     def calculate_total_dsa(self):
+        if self.travel.start_date is None or self.travel.end_date is None:
+            return D(0)
+
         current_date = self.travel.start_date.date()
         end_date = self.travel.end_date.date()
         step = timedelta(days=1)
@@ -128,6 +131,9 @@ class CostSummaryCalculator(object):
         return total
 
     def calculate_total_deductions(self):
+        if self.travel.start_date is None or self.travel.end_date is None:
+            return D(0)
+
         current_date = self.travel.start_date.date()
         end_date = self.travel.end_date.date()
         step = timedelta(days=1)
