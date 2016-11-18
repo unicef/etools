@@ -27,6 +27,7 @@ class WorkplanSerializer(serializers.ModelSerializer):
 class LabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Label
+        fields = '__all__'
 
 
 class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
@@ -54,11 +55,13 @@ class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultWorkplanProperty
+        fields = '__all__'
 
 
 class CoverPageBudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoverPageBudget
+        fields = '__all__'
 
 
 class CoverPageSerializer(serializers.ModelSerializer):
@@ -75,3 +78,4 @@ class WorkplanProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkplanProject
+        fields = '__all__'
