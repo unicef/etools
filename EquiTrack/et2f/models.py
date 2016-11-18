@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
-from decimal import Decimal as D
 
+from django.core.mail import send_mail
 from django.contrib.postgres.fields.array import ArrayField
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.auth.models import User
 from django_fsm import FSMField, transition
@@ -121,15 +122,17 @@ class Travel(models.Model):
     # State machine transitions
     @transition(status, source=[TripStatus.PLANNED, TripStatus.REJECTED], target=TripStatus.SUBMITTED)
     def submit_for_approval(self):
-        pass
+        self.send_notification('Travel #{} was sent for approval.'.format(self.id))
 
     @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.APPROVED)
     def approve(self):
         self.approved_at = datetime.now()
+        self.send_notification('Travel #{} was approved.'.format(self.id))
 
     @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.REJECTED)
     def reject(self):
         self.rejected_at = datetime.now()
+        self.send_notification('Travel #{} was rejected.'.format(self.id))
 
     @transition(status, source=[TripStatus.PLANNED,
 
@@ -147,20 +150,20 @@ class Travel(models.Model):
 
     @transition(status, source=[TripStatus.APPROVED], target=TripStatus.SENT_FOR_PAYMENT)
     def send_for_payment(self):
-        pass
+        self.send_notification('Travel #{} was sent for payment.'.format(self.id))
 
     @transition(status, source=[TripStatus.DONE, TripStatus.SENT_FOR_PAYMENT],
                 target=TripStatus.CERTIFICATION_SUBMITTED)
     def submit_certificate(self):
-        pass
+        self.send_notification('Travel #{} certification was submitted.'.format(self.id))
 
     @transition(status, source=[TripStatus.CERTIFICATION_SUBMITTED], target=TripStatus.CERTIFICATION_APPROVED)
     def approve_cetificate(self):
-        pass
+        self.send_notification('Travel #{} certification was approved.'.format(self.id))
 
     @transition(status, source=[TripStatus.CERTIFICATION_APPROVED], target=TripStatus.CERTIFICATION_REJECTED)
     def reject_certificate(self):
-        pass
+        self.send_notification('Travel #{} certification was rejected.'.format(self.id))
 
     @transition(status, source=[TripStatus.DONE, TripStatus.CERTIFICATION_APPROVED, TripStatus.SENT_FOR_PAYMENT],
                 target=TripStatus.CERTIFIED)
@@ -170,6 +173,13 @@ class Travel(models.Model):
     @transition(status, source=[TripStatus.CERTIFIED], target=TripStatus.COMPLETED)
     def mark_as_completed(self):
         self.completed_at = datetime.now()
+
+    def send_notification(self, message):
+        send_mail('Travel #{} state changed'.format(self.id),
+                  message,
+                  'simon+test@pulilab.com',
+                  ['simon+test@pulilab.com', 'nico+test@pulilab.com'],
+                  fail_silently=False)
 
 
 class TravelActivity(models.Model):

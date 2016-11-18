@@ -149,7 +149,7 @@ urlpatterns = patterns(
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
-    url(r'^api/et2f/', include(et2f_patterns)),
+    url(r'^api/et2f/', include(et2f_patterns, namespace='et2f')),
     url(r'^api/docs/', include('rest_framework_swagger.urls')),
 
     # Uncomment the next line to enable the admin:
