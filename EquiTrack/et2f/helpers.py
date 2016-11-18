@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from decimal import Decimal as D
 
 from et2f import UserTypes
-from et2f.models import TravelPermission
 
 
 class PermissionMatrix(object):
@@ -73,3 +72,21 @@ class CostSummaryCalculator(object):
     def _get_dsa_rate_for_date(self, date):
         # TODO implement it
         return D(100)
+
+class CloneTravelHelper(object):
+    def __init__(self, travel):
+        self.travel = travel
+
+    def clone_for_secondary_traveler(self, user_id):
+        travel = self._clone_model(self.travel)
+        a = 12
+
+    def clone_for_driver(self, user_id):
+        pass
+
+    def _clone_model(self, model):
+        new_instance = model.__class__.objects.get(pk=model.pk)
+        new_instance.pk = None
+        new_instance.id = None
+        new_instance.save()
+        return new_instance

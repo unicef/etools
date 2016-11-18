@@ -291,3 +291,9 @@ class TravelViews(APITenantTestCase):
                                         '/api/et2f/travels/{}/attachments/{}/'.format(travel.id, response_json['id']),
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 0)
+
+    def test_duplication(self):
+        response = self.forced_auth_req('post', '/api/et2f/travels/{}/add_driver/'.format(self.travel.id),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {})

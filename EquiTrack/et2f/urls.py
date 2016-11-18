@@ -20,6 +20,9 @@ travel_attachments = TravelAttachmentViewSet.as_view({'get': 'list',
                                                       'post': 'create'})
 travel_attachment_details = TravelAttachmentViewSet.as_view({'delete': 'destroy'})
 
+clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clone_for_secondary_traveler'})
+clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
+
 details_state_changes_pattern = r'^(?P<pk>[0-9]+)/(?P<transition_name>submit_for_approval|approve|reject|cancel|plan|' \
                                 r'send_for_payment|submit_certificate|approve_cetificate|reject_certificate|' \
                                 r'mark_as_certified|mark_as_completed)/$'
@@ -34,6 +37,8 @@ travel_pattens = patterns(
     url(r'^(?P<travel_pk>[0-9]+)/attachments/$', travel_attachments, name='details_attachments'),
     url(r'^(?P<travel_pk>[0-9]+)/attachments/(?P<pk>[0-9]+)/$', travel_attachment_details, name='details_attachment_details'),
     url(details_state_changes_pattern, travel_details_state_change, name='details_state_change'),
+    url(r'^(?P<pk>[0-9]+)/duplicate_travel/$', clone_travel_for_secondary_traveler, name='clone_for_secondary_traveler'),
+    url(r'^(?P<pk>[0-9]+)/add_driver/$', clone_travel_for_driver, name='clone_for_driver'),
 )
 
 urlpatterns = patterns(

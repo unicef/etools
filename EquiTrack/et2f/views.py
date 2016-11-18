@@ -21,10 +21,11 @@ from users.models import Office, Section
 from et2f.exports import TravelListExporter
 from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
     TravelAttachment
-from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, CurrentUserSerializer, TravelAttachmentSerializer
+from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, CurrentUserSerializer, TravelAttachmentSerializer, \
+    CloneParameterSerializer, CloneOutputSerializer
 from et2f.serializers.static_data import StaticDataSerializer
 from et2f.serializers.permission_matrix import PermissionMatrixSerializer
-from et2f.helpers import PermissionMatrix
+from et2f.helpers import PermissionMatrix, CloneTravelHelper
 
 
 class PageNumberPagination(_PageNumberPagination):
@@ -109,6 +110,28 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
         run_transition(serializer)
+
+    def clone_for_secondary_traveler(self, request, *args, **kwargs):
+        # traveler = self._get_traveler_for_cloning()
+        # helper = CloneTravelHelper(self.get_object())
+        # clone = helper.clone_for_secondary_traveler(traveler)
+        # serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
+        # return Response(serializer.data, status.HTTP_201_CREATED)
+        return Response({'id': kwargs['pk']}, status.HTTP_201_CREATED)
+
+    def clone_for_driver(self, request, *args, **kwargs):
+        # traveler = self._get_traveler_for_cloning()
+        # helper = CloneTravelHelper(self.get_object())
+        # clone = helper.clone_for_driver(traveler)
+        # serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
+        # return Response(serializer.data, status.HTTP_201_CREATED)
+        return Response({'id': kwargs['pk']}, status.HTTP_201_CREATED)
+
+    def _get_traveler_for_cloning(self):
+        parameter_serializer = CloneParameterSerializer(data=self.request.data)
+        parameter_serializer.is_valid(raise_exception=True)
+        traveler = parameter_serializer.validated_data['traveler']
+        return traveler
 
 
 class TravelAttachmentViewSet(mixins.ListModelMixin,

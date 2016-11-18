@@ -243,3 +243,12 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'full_name')
+
+
+class CloneParameterSerializer(serializers.ModelSerializer):
+    traveler = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
+
+
+class CloneOutputSerializer(TravelDetailsSerializer):
+    class Meta(TravelDetailsSerializer.Meta):
+        fields = ('id',)
