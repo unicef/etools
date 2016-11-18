@@ -184,7 +184,10 @@ class CloneTravelHelper(object):
             cloned_models.extend(new_models)
 
         for relation_name in o2o_related:
-            related = getattr(self.travel, relation_name)
+            try:
+                related = getattr(self.travel, relation_name)
+            except ObjectDoesNotExist:
+                continue
             new_related = self._clone_model(related)
             cloned_models.append(new_related)
 
