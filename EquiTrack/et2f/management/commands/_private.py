@@ -124,6 +124,9 @@ class PermissionMatrixSetter(object):
         num_revoked = qs.filter(permission_type=TravelPermission.EDIT).update(value=False)
         self.log('{} permissions revoked'.format(num_revoked))
 
+    def grant_edit(self, qs):
+        num_revoked = qs.filter(permission_type=TravelPermission.EDIT).update(value=True)
+        self.log('{} permissions revoked'.format(num_revoked))
     def revoke_view(self, qs):
         num_revoked = qs.filter(permission_type=TravelPermission.VIEW).update(value=False)
         self.log('{} permissions revoked'.format(num_revoked))
@@ -153,6 +156,7 @@ class PermissionMatrixSetter(object):
         self.log('Set up permissions for travel traveler')
         qs = TravelPermission.objects.filter(user_type=UserTypes.TRAVELER)
 
+        self.revoke_edit(qs.filter(model='travel', field='traveller'))
         status_where_hide = [TripStatus.PLANNED,
                              TripStatus.SUBMITTED,
                              TripStatus.APPROVED,
@@ -163,8 +167,9 @@ class PermissionMatrixSetter(object):
         sub_qs = qs.filter(q)
         self.revoke_view(sub_qs)
         self.revoke_edit(sub_qs)
-        qs.filter(model='travel', field='traveller', permission_type=TravelPermission.EDIT).update(value=False)
 
+        sub_qs = qs.filter(status__in=[TripStatus.SUBMITTED, TripStatus.CERTIFICATION_SUBMITTED])
+        self.revoke_edit(sub_qs)
     def set_up_travel_administrator(self):
         self.log('Set up permissions for travel administrator')
         qs = TravelPermission.objects.filter(user_type=UserTypes.TRAVEL_ADMINISTRATOR)
@@ -192,6 +197,8 @@ class PermissionMatrixSetter(object):
         num_granted = qs.filter(q).update(value=True)
         self.log('{} permissions granted'.format(num_granted))
 
+        sub_q = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency'])
+        self.grant_edit(sub_q)
     def set_up_finance_focal_point(self):
         self.log('Set up permissions for finance focal point')
         fields_to_edit = ['itinerary', 'deductions', 'expenses', 'cost_assignments']
