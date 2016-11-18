@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django_fsm import FSMField, transition
 
 from et2f import BooleanChoice, TripStatus, UserTypes
+from et2f.helpers import CostSummaryCalculator
 
 
 class WBS(models.Model):
@@ -113,9 +114,8 @@ class Travel(models.Model):
 
     @property
     def cost_summary(self):
-        return {'dsa_total': D(0),
-                'expenses_total': D(0),
-                'deductions_total': D(0)}
+        calculator = CostSummaryCalculator(self)
+        return calculator.calculate_cost_summary()
 
     # State machine transitions
     @transition(status, source=[TripStatus.PLANNED, TripStatus.REJECTED], target=TripStatus.SUBMITTED)
