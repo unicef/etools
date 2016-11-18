@@ -222,7 +222,12 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                     self.update_object(obj, attrs)
                     related_to_delete.remove(pk)
                 else:
-                    self.create_related_models(model, [attrs], travel=self.instance)
+                    try:
+                        self.create_related_models(model, [attrs], travel=self.instance)
+                    except TypeError:
+                        new_models = self.create_related_models(model, [attrs])
+                        for m in new_models:
+                            m.travels.add(self.instance)
 
             # Delete the leftover
             model.objects.filter(pk__in=related_to_delete).delete()
