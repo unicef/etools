@@ -27,7 +27,7 @@ class GatewayTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GatewayType
-
+        fields = '__all__'
 
 class LocationSerializer(serializers.ModelSerializer):
 

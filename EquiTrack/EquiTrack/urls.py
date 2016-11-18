@@ -9,6 +9,8 @@ from autocomplete_light import shortcuts as autocomplete_light
 # import every app/autocomplete_light_registry.py
 autocomplete_light.autodiscover()
 
+from rest_framework_swagger.views import get_swagger_view
+
 from rest_framework_nested import routers
 
 # Uncomment the next two lines to enable the admin:
@@ -71,6 +73,8 @@ from workplan.views import (
     WorkplanProjectViewSet,
     LabelViewSet,
 )
+
+schema_view = get_swagger_view(title='eTools API')
 
 api = routers.SimpleRouter()
 
@@ -150,7 +154,7 @@ urlpatterns = patterns(
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
-    url(r'^api/docs/', include('rest_framework_swagger.urls')),
+    url(r'^api/docs/', schema_view),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),

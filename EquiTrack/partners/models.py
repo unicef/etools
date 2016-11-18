@@ -63,6 +63,9 @@ RISK_RATINGS = (
 
 
 class PartnerOrganization(AdminURLMixin, models.Model):
+    """
+    Represents a partner organization
+    """
 
     partner_type = models.CharField(
         max_length=50,
@@ -334,16 +337,14 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def cp_cycle_trip_links(self):
         from trips.models import Trip
-        crs = CountryProgramme.current()
+        cry = datetime.datetime.now().year
         if self.partner_type == u'Government':
             return self.linkedgovernmentpartner_set.filter(
-                        trip__from_date__lt=crs.to_date,
-                        trip__from_date__gte=crs.from_date
+                        trip__from_date__year=cry,
                 ).distinct('trip')
         else:
             return self.linkedpartner_set.filter(
-                    trip__from_date__lt=crs.to_date,
-                    trip__from_date__gte=crs.from_date
+                    trip__from_date__year=cry,
                 ).distinct('trip')
 
     @property
@@ -459,6 +460,12 @@ post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 
 
 class PartnerStaffMember(models.Model):
+    """
+    Represents a staff member at the partner organization.
+    A User is created for each staff member
+
+    Relates to :model:`partners.PartnerOrganization`
+    """
 
     partner = models.ForeignKey(PartnerOrganization)
     title = models.CharField(max_length=64L)
@@ -499,6 +506,12 @@ class PartnerStaffMember(models.Model):
 
 
 class Assessment(models.Model):
+    """
+    Represents an assessment for a partner organization.
+
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`auth.User`
+    """
 
     partner = models.ForeignKey(
         PartnerOrganization,
@@ -609,6 +622,11 @@ def get_agreement_path(instance, filename):
 
 
 class Agreement(TimeStampedModel):
+    """
+    Represents an agreement with the partner organization.
+
+    Relates to :model:`partners.PartnerOrganization`
+    """
 
     PCA = u'PCA'
     MOU = u'MOU'
@@ -723,6 +741,12 @@ class Agreement(TimeStampedModel):
 
 
 class BankDetails(models.Model):
+    """
+    Represents bank information on the partner agreement and/or agreement amendment log.
+
+    Relates to :model:`partners.Agreement`
+    Relates to :model:`partners.AgreementAmendmentLog`
+    """
 
     agreement = models.ForeignKey(Agreement, related_name='bank_details')
     bank_name = models.CharField(max_length=255, null=True, blank=True)
@@ -746,6 +770,14 @@ class BankDetails(models.Model):
 
 
 class AuthorizedOfficer(models.Model):
+    """
+    Represents an authorized UNICEF officer on the partner agreement.
+
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`partners.PartnerStaffMember`
+    Relates to :model:`partners.AgreementAmendmentLog`
+    """
+
     agreement = models.ForeignKey(
         Agreement,
         related_name='authorized_officers'
@@ -778,6 +810,16 @@ post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 
 class PCA(AdminURLMixin, models.Model):
+    """
+    Represents a partner intervention.
+
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`partners.Agreement`
+    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.CountryProgramme`
+    Relates to :model:`auth.User`
+    Relates to :model:`partners.PartnerStaffMember`
+    """
 
     IN_PROCESS = u'in_process'
     ACTIVE = u'active'
@@ -1146,6 +1188,12 @@ post_save.connect(PCA.send_changes, sender=PCA)
 
 
 class GovernmentIntervention(models.Model):
+    """
+    Represents a government intervention.
+
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`reports.ResultStructure`
+    """
 
     partner = models.ForeignKey(
         PartnerOrganization,
@@ -1195,6 +1243,15 @@ class GovernmentIntervention(models.Model):
 
 
 class GovernmentInterventionResult(models.Model):
+    """
+    Represents an result from government intervention.
+
+    Relates to :model:`partners.GovernmentIntervention`
+    Relates to :model:`auth.User`
+    Relates to :model:`reports.Sector`
+    Relates to :model:`users.Section`
+    Relates to :model:`reports.Result`
+    """
 
     intervention = models.ForeignKey(
         GovernmentIntervention,
@@ -1286,6 +1343,11 @@ class GovernmentInterventionResult(models.Model):
 
 
 class AmendmentLog(TimeStampedModel):
+    """
+    Represents an amendment log for the partner intervention.
+
+    Relates to :model:`partners.PCA`
+    """
 
     partnership = models.ForeignKey(PCA, related_name='amendments_log')
     type = models.CharField(
@@ -1325,47 +1387,56 @@ class AmendmentLog(TimeStampedModel):
 
 
 class AgreementAmendmentLog(TimeStampedModel):
+    """
+    Represents an amendment log for the partner agreement.
 
-        agreement = models.ForeignKey(Agreement, related_name='amendments_log')
-        type = models.CharField(
-            max_length=50,
-            choices=Choices(
-                'Authorised Officers',
-                'Banking Info',
-                'Agreement Changes',
-                'Additional Clauses',
-            ))
-        amended_at = models.DateField(null=True, verbose_name='Signed At')
-        amendment_number = models.IntegerField(default=0)
-        status = models.CharField(
-            max_length=32L,
-            blank=True,
-            choices=PCA.PCA_STATUS,
+    Relates to :model:`partners.Agreement`
+    """
+
+    agreement = models.ForeignKey(Agreement, related_name='amendments_log')
+    type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            'Authorised Officers',
+            'Banking Info',
+            'Agreement Changes',
+            'Additional Clauses',
+        ))
+    amended_at = models.DateField(null=True, verbose_name='Signed At')
+    amendment_number = models.IntegerField(default=0)
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=PCA.PCA_STATUS,
+    )
+
+    def __unicode__(self):
+        return u'{}: {} - {}'.format(
+            self.amendment_number,
+            self.type,
+            self.amended_at
         )
 
-        def __unicode__(self):
-            return u'{}: {} - {}'.format(
-                self.amendment_number,
-                self.type,
-                self.amended_at
-            )
+    @property
+    def amendment_number(self):
+        """
+        Increment amendment number automatically
+        """
+        objects = list(AgreementAmendmentLog.objects.filter(
+            agreement=self.agreement
+        ).order_by('created').values_list('id', flat=True))
 
-        @property
-        def amendment_number(self):
-            """
-            Increment amendment number automatically
-            """
-            objects = list(AgreementAmendmentLog.objects.filter(
-                agreement=self.agreement
-            ).order_by('created').values_list('id', flat=True))
-
-            return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
+        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
 
 class PartnershipBudget(TimeStampedModel):
     """
-    Tracks the overall budget for the partnership, with amendments
+    Represents a budget for the intervention
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`partners.AmendmentLog`
     """
+
     partnership = models.ForeignKey(PCA, related_name='budget_log')
     partner_contribution = models.IntegerField(default=0)
     unicef_cash = models.IntegerField(default=0)
@@ -1415,8 +1486,13 @@ class PartnershipBudget(TimeStampedModel):
 
 class PCAGrant(TimeStampedModel):
     """
-    Links a grant to a partnership with a specified amount
+    Represents a grant for the partner intervention, which links a grant to a partnership with a specified amount
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`funds.Grant`
+    Relates to :model:`partners.AmendmentLog`
     """
+    
     partnership = models.ForeignKey(PCA)
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
@@ -1439,8 +1515,16 @@ class PCAGrant(TimeStampedModel):
 
 class GwPCALocation(models.Model):
     """
-    Links a location to a partnership
+    Represents a location for the partner intervention, which links a location to a partnership
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`users.Sector`
+    Relates to :model:`locations.Governorate`
+    Relates to :model:`locations.Region`
+    Relates to :model:`locations.Locality`
+    Relates to :model:`locations.Location`
     """
+
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
     governorate = models.ForeignKey(
@@ -1484,9 +1568,13 @@ class GwPCALocation(models.Model):
 
 class PCASector(TimeStampedModel):
     """
-    Links a sector to a partnership
-    Many-to-many cardinality
+    Represents a sector for the partner intervention, which links a sector to a partnership
+    
+    Relates to :model:`partners.PCA`
+    Relates to :model:`users.Sector`
+    Relates to :model:`partners.AmendmentLog`
     """
+
     pca = models.ForeignKey(PCA)
     sector = models.ForeignKey(Sector)
     amendment = models.ForeignKey(
@@ -1507,6 +1595,12 @@ class PCASector(TimeStampedModel):
 
 
 class PCASectorGoal(models.Model):
+    """
+    Represents a goal for the partner intervention sector, which links a sector to a partnership
+    
+    Relates to :model:`partners.PCASector`
+    Relates to :model:`reports.Goal`
+    """
 
     pca_sector = models.ForeignKey(PCASector)
     goal = models.ForeignKey(Goal)
@@ -1517,6 +1611,10 @@ class PCASectorGoal(models.Model):
 
 
 class FileType(models.Model):
+    """
+    Represents a file type
+    """
+
     name = models.CharField(max_length=64L, unique=True)
 
     def __unicode__(self):
@@ -1534,6 +1632,12 @@ def get_file_path(instance, filename):
 
 
 class PCAFile(models.Model):
+    """
+    Represents a file for the partner intervention
+    
+    Relates to :model:`partners.PCA`
+    Relates to :model:`partners.FileType`
+    """
 
     pca = models.ForeignKey(PCA, related_name='attachments')
     type = models.ForeignKey(FileType)
@@ -1555,6 +1659,13 @@ class PCAFile(models.Model):
 
 
 class RAMIndicator(models.Model):
+    """
+    Represents a RAM Indicator for the partner intervention
+    
+    Relates to :model:`partners.PCA`
+    Relates to :model:`reports.Result`
+    Relates to :model:`reports.Indicator`
+    """
 
     intervention = models.ForeignKey(PCA, related_name='indicators')
     result = models.ForeignKey(Result)
@@ -1584,6 +1695,15 @@ class RAMIndicator(models.Model):
 
 
 class ResultChain(models.Model):
+    """
+    Represents a result chain for the partner intervention,
+    Connects Results and Indicators to interventions
+    
+    Relates to :model:`partners.PCA`
+    Relates to :model:`reports.ResultType`
+    Relates to :model:`reports.Result`
+    Relates to :model:`reports.Indicator`
+    """
 
     partnership = models.ForeignKey(PCA, related_name='results')
     code = models.CharField(max_length=50, null=True, blank=True)
@@ -1625,6 +1745,11 @@ class ResultChain(models.Model):
 
 
 class IndicatorDueDates(models.Model):
+    """
+    Represents an indicator due date for the partner intervention
+    
+    Relates to :model:`partners.PCA`
+    """
 
     intervention = models.ForeignKey(
         'PCA',
@@ -1640,6 +1765,14 @@ class IndicatorDueDates(models.Model):
 
 
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
+    """
+    Represents an indicator report for the result chain on the location
+    
+    Relates to :model:`partners.ResultChain`
+    Relates to :model:`partners.PartnerStaffMember`
+    Relates to :model:`results.Indicator`
+    Relates to :model:`locations.Location`
+    """
 
     STATUS_CHOICES = Choices(
         ('ontrack', _('On Track')),
@@ -1674,6 +1807,12 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 
 
 class SupplyPlan(models.Model):
+    """
+    Represents a supply plan for the partner intervention
+    
+    Relates to :model:`partners.PCA`
+    Relates to :model:`supplies.SupplyItem`
+    """
 
     partnership = models.ForeignKey(
         PCA,
@@ -1686,6 +1825,13 @@ class SupplyPlan(models.Model):
 
 
 class DistributionPlan(models.Model):
+    """
+    Represents a distribution plan for the partner intervention
+    
+    Relates to :model:`partners.PCA`
+    Relates to :model:`supplies.SupplyItem`
+    Relates to :model:`locations.Location`
+    """
 
     partnership = models.ForeignKey(
         PCA,
@@ -1730,6 +1876,11 @@ class FCManager(models.Manager):
 
 
 class FundingCommitment(TimeFramedModel):
+    """
+    Represents a funding commitment for the grant
+    
+    Relates to :model:`funds.Grant`
+    """
 
     grant = models.ForeignKey(Grant, null=True, blank=True)
     fr_number = models.CharField(max_length=50)
@@ -1744,6 +1895,9 @@ class FundingCommitment(TimeFramedModel):
     objects = FCManager()
 
 class DirectCashTransfer(models.Model):
+    """
+    Represents a direct cash transfer
+    """
 
     fc_ref = models.CharField(max_length=50)
     amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
