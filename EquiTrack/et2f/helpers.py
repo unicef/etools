@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from decimal import Decimal as D
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -45,12 +45,8 @@ class CostSummaryCalculator(object):
         :rtype: et2f.models.DSARegion | None
         """
         if date not in self._dsa_region_cache:
-            last_itinerary_item = self.travel.itinerary.filter(departure_date__year=date.year,
-                                                               departure_date__month=date.month,
-                                                               departure_date__day=date.day,
-                                                               arrival_date__year=date.year,
-                                                               arrival_date__month=date.month,
-                                                               arrival_date__day=date.day).last()
+            start_date = datetime(date.year, date.month, date.day)
+            last_itinerary_item = self.travel.itinerary.filter(arrival_date__gte=start_date).last()
             self._dsa_region_cache[date] = getattr(last_itinerary_item, 'dsa_region', None)
         return self._dsa_region_cache[date]
 
