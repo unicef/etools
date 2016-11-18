@@ -148,7 +148,9 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         self.create_related_models(Expense, expenses, travel=instance)
         self.create_related_models(Deduction, deductions, travel=instance)
         self.create_related_models(CostAssignment, cost_assignments, travel=instance)
-        self.create_related_models(TravelActivity, activities, travels=[instance])
+        travel_activities = self.create_related_models(TravelActivity, activities)
+        for activity in travel_activities:
+            activity.travels.add(instance)
         self.create_related_models(IteneraryItem, itinerary, travel=instance)
 
         # O2O relations
@@ -158,6 +160,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         return instance
 
     def create_related_models(self, model, related_data, **kwargs):
+        new_models = []
         for data in related_data:
             m2m_fields = {k: data.pop(k, []) for k in data
                           if isinstance(model._meta.get_field_by_name(k)[0], ManyToManyField)}
@@ -166,6 +169,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             for field_name, value in m2m_fields.items():
                 related_manager = getattr(related_instance, field_name)
                 related_manager.add(*value)
+            new_models.append(related_instance)
+        return new_models
 
     def update(self, instance, validated_data):
         related_attributes = {}
