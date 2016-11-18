@@ -173,7 +173,7 @@ class Travel(models.Model):
 
 
 class TravelActivity(models.Model):
-    travel = models.ForeignKey('Travel', related_name='activities')
+    travels = models.ManyToManyField('Travel', related_name='activities')
     travel_type = models.CharField(max_length=64)
     partner = models.ForeignKey('partners.PartnerOrganization', related_name='+')
     partnership = models.ForeignKey('partners.PCA', related_name='+')

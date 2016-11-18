@@ -160,12 +160,16 @@ class TravelFactory(factory.DjangoModelFactory):
     reference_number = fuzzy.FuzzyText()
     currency = factory.SubFactory(CurrencyFactory)
 
-    activites = factory.RelatedFactory(TravelActivityFactory, 'travel')
     itinerary = factory.RelatedFactory(IteneraryItemFactory, 'travel')
     expenses = factory.RelatedFactory(ExpenseFactory, 'travel')
     deductions = factory.RelatedFactory(DeductionFactory, 'travel')
     cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')
     clearances = factory.RelatedFactory(ClearanceFactory, 'travel')
+
+    @factory.post_generation
+    def populate_activities(self, create, extracted, **kwargs):
+        ta = TravelActivityFactory()
+        ta.travels.add(self)
 
     class Meta:
         model = Travel

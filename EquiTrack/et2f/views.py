@@ -112,20 +112,18 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
         run_transition(serializer)
 
     def clone_for_secondary_traveler(self, request, *args, **kwargs):
-        # traveler = self._get_traveler_for_cloning()
-        # helper = CloneTravelHelper(self.get_object())
-        # clone = helper.clone_for_secondary_traveler(traveler)
-        # serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
-        # return Response(serializer.data, status.HTTP_201_CREATED)
-        return Response({'id': kwargs['pk']}, status.HTTP_201_CREATED)
+        traveler = self._get_traveler_for_cloning()
+        helper = CloneTravelHelper(self.get_object())
+        clone = helper.clone_for_secondary_traveler(traveler)
+        serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
+        return Response(serializer.data, status.HTTP_201_CREATED)
 
     def clone_for_driver(self, request, *args, **kwargs):
-        # traveler = self._get_traveler_for_cloning()
-        # helper = CloneTravelHelper(self.get_object())
-        # clone = helper.clone_for_driver(traveler)
-        # serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
-        # return Response(serializer.data, status.HTTP_201_CREATED)
-        return Response({'id': kwargs['pk']}, status.HTTP_201_CREATED)
+        traveler = self._get_traveler_for_cloning()
+        helper = CloneTravelHelper(self.get_object())
+        clone = helper.clone_for_driver(traveler)
+        serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
+        return Response(serializer.data, status.HTTP_201_CREATED)
 
     def _get_traveler_for_cloning(self):
         parameter_serializer = CloneParameterSerializer(data=self.request.data)

@@ -148,7 +148,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         self.create_related_models(Expense, expenses, travel=instance)
         self.create_related_models(Deduction, deductions, travel=instance)
         self.create_related_models(CostAssignment, cost_assignments, travel=instance)
-        self.create_related_models(TravelActivity, activities, travel=instance)
+        self.create_related_models(TravelActivity, activities, travels=[instance])
         self.create_related_models(IteneraryItem, itinerary, travel=instance)
 
         # O2O relations
@@ -246,8 +246,11 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         fields = ('id', 'full_name')
 
 
-class CloneParameterSerializer(serializers.ModelSerializer):
+class CloneParameterSerializer(serializers.Serializer):
     traveler = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
+
+    class Meta:
+        fields = ('traveler',)
 
 
 class CloneOutputSerializer(TravelDetailsSerializer):
