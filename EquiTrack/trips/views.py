@@ -249,7 +249,6 @@ class TripsViewSet(mixins.RetrieveModelMixin,
         trips = Trip.get_current_trips(user)
         return trips
 
-    @detail_route(methods=['post'])
     def create(self, request, *args, **kwargs):
         """
         Create a new Trip

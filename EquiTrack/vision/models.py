@@ -5,6 +5,11 @@ from users.models import Country
 
 
 class VisionSyncLog(models.Model):
+    """
+    Represents a sync log for Vision SAP sync
+
+    Relates to :model:`users.Country`
+    """
 
     country = models.ForeignKey(Country)
     handler_name = models.CharField(max_length=50)
