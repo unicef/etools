@@ -5,14 +5,14 @@ machine:
      - redis
 
 dependencies:
-  cache_directories:
-    - "~/docker"
-    - "wheelhouse"
+#  cache_directories:
+#    - "~/docker"
+#    - "wheelhouse"
 
   override:
 #    - echo $CIRCLE_BRANCH
 #    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
-    - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
+    - docker build -t unicef/etools:$CIRCLE_BRANCH .
 #    - mkdir -p ~/docker; docker save unicef/etools > ~/docker/image.tar
 
 test:
