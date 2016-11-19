@@ -1,8 +1,6 @@
-FROM python:2.7:latest
+FROM python:2.7
 
 ARG requirements_file
-
-MAINTAINER Sumit Chachra <sumit@tivix.com>
 
 # Install dependencies
 RUN apt-get update

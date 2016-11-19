@@ -5,15 +5,15 @@ machine:
      - redis
 
 dependencies:
-#  cache_directories:
-#    - "~/docker"
-#    - "wheelhouse"
+  cache_directories:
+    - "~/docker"
+    - "wheelhouse"
 
   override:
-#    - echo $CIRCLE_BRANCH
-#    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
-    - docker build -t unicef/etools .
-#    - mkdir -p ~/docker; docker save unicef/etools > ~/docker/image.tar
+
+    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+    - docker build -t unicef/etools:$CIRCLE_BRANCH .
+    - mkdir -p ~/docker; docker save unicef/etools > ~/docker/image.tar
 
 test:
    pre: # bootstrap postgres to accept connections from our container
