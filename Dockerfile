@@ -1,4 +1,4 @@
-FROM python:2.7
+FROM python:2.7:latest
 
 ARG requirements_file
 
