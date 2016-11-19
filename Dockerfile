@@ -1,4 +1,5 @@
 FROM python:2.7
+ENV PYTHONUNBUFFERED 1
 
 # Install dependencies
 RUN apt-get update
@@ -40,7 +41,6 @@ RUN pip install --upgrade \
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
-ENV PYTHONUNBUFFERED 1
 ENV REQUIREMENTS_FILE production.txt
 
 ADD ./EquiTrack/requirements/*.txt /pip/
