@@ -1,4 +1,4 @@
 -r base.txt
 
-django-debug-toolbar==1.6
+
 raven==5.27.1
