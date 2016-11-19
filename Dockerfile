@@ -1,5 +1,4 @@
 FROM python:2.7
-ENV PYTHONUNBUFFERED 1
 
 # Install dependencies
 RUN apt-get update
@@ -47,6 +46,7 @@ ADD ./EquiTrack/requirements/*.txt /pip/
 ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
 
+ENV PYTHONUNBUFFERED 1 # for some this and every layer after this is not cached in docker
 ADD EquiTrack /code/
 
 WORKDIR /code/
