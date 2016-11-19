@@ -10,10 +10,10 @@ dependencies:
     - "wheelhouse"
 
   override:
-    - echo $CIRCLE_BRANCH
-    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
-    - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH -f Dockerfile .
-    - mkdir -p ~/docker; docker save unicef/etools > ~/docker/image.tar
+#    - echo $CIRCLE_BRANCH
+#    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+    - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
+#    - mkdir -p ~/docker; docker save unicef/etools > ~/docker/image.tar
 
 test:
    pre: # bootstrap postgres to accept connections from our container
