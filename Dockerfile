@@ -1,7 +1,5 @@
 FROM python:2.7
 
-
-
 # Install dependencies
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends \
@@ -48,11 +46,13 @@ ENV PIP_FIND_LINKS=/wheelhouse
 ENV PYTHONUNBUFFERED 1
 ENV REQUIREMENTS_FILE production.txt
 
-ADD EquiTrack /code/
 ADD ./EquiTrack/requirements/*.txt /pip/
 ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
 
+ADD EquiTrack /code/
+
 WORKDIR /code/
+
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.production
 RUN python manage.py collectstatic --noinput
