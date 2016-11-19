@@ -40,9 +40,6 @@ RUN pip install --upgrade \
 # http://gis.stackexchange.com/a/74060
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
-ENV WHEELHOUSE=/wheelhouse
-ENV PIP_WHEEL_DIR=/wheelhouse
-ENV PIP_FIND_LINKS=/wheelhouse
 ENV PYTHONUNBUFFERED 1
 ENV REQUIREMENTS_FILE production.txt
 
