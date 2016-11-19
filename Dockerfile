@@ -1,6 +1,6 @@
 FROM python:2.7
 
-ARG requirements_file
+
 
 # Install dependencies
 RUN apt-get update
@@ -43,10 +43,11 @@ RUN pip install --upgrade \
 ENV CPLUS_INCLUDE_PATH /usr/include/gdal
 ENV C_INCLUDE_PATH /usr/include/gdal
 ENV PYTHONUNBUFFERED 1
+ENV REQUIREMENTS_FILE production.txt
 
 ADD EquiTrack /code/
 ADD ./EquiTrack/requirements/*.txt /pip/
-ADD ./EquiTrack/requirements/${requirements_file:-production.txt} /pip/app_requirements.txt
+ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
 
 WORKDIR /code/
