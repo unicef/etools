@@ -12,7 +12,7 @@ dependencies:
   override:
 
     - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
-    - docker build -t unicef/etools:$CIRCLE_BRANCH .
+    - docker build -rm=false -t unicef/etools:$CIRCLE_BRANCH .
     - mkdir -p ~/docker; docker save unicef/etools > ~/docker/image.tar
 
 test:
