@@ -34,7 +34,7 @@ class PCAResource(BaseExportResource):
 
     def fill_pca_grants(self, row, pca):
 
-        for num, grant in enumerate(pca.pcagrant_set.all()):
+        for num, grant in enumerate(pca.grants.all()):
             num += 1
             values = OrderedDict()
 

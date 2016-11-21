@@ -177,7 +177,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         # we could allow superusers by checking for superusers first
         if not (user or rc) or \
                 (user.profile.partner_staff_member not in
-                    rc.partnership.partner.partnerstaffmember_set.values_list('id', flat=True)):
+                    rc.partnership.partner.staff_members.values_list('id', flat=True)):
             raise Exception('hell')
 
         return data
@@ -323,12 +323,12 @@ class RapidProRequest(serializers.Serializer):
 
 
 class PartnershipExportFilterSerializer(serializers.Serializer):
-    MARKET_FOR_DELETION = 'marked_for_deletion'
+    MARKED_FOR_DELETION = 'marked_for_deletion'
     search = serializers.CharField(default='', required=False)
     partner_type = serializers.ChoiceField(PartnerType.CHOICES, required=False)
     cso_type = serializers.ChoiceField(CSO_TYPES, required=False)
     risk_rating = serializers.ChoiceField(RISK_RATINGS, required=False)
-    flagged = serializers.ChoiceField((MARKET_FOR_DELETION,), required=False)
+    flagged = serializers.ChoiceField((MARKED_FOR_DELETION,), required=False)
     show_hidden = serializers.BooleanField(default=False, required=False)
 
 

@@ -477,7 +477,7 @@ class PartnerStaffMember(models.Model):
     Relates to :model:`partners.PartnerOrganization`
     """
 
-    partner = models.ForeignKey(PartnerOrganization)
+    partner = models.ForeignKey(PartnerOrganization, related_name='staff_members')
     title = models.CharField(max_length=64L)
     first_name = models.CharField(max_length=64L)
     last_name = models.CharField(max_length=64L)
