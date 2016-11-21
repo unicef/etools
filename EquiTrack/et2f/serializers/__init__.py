@@ -193,7 +193,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         return instance
 
     def update_object(self, obj, data):
-        m2m_fields = {k: data.pop(k, []) for k in data
+        m2m_fields = {k: data.pop(k, []) for k in data.keys()
                       if isinstance(obj._meta.get_field_by_name(k)[0], ManyToManyField)}
         for attr, value in data.items():
             setattr(obj, attr, value)
