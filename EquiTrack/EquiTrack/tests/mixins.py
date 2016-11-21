@@ -1,4 +1,5 @@
 from django.core.urlresolvers import resolve
+from django.http.response import HttpResponse
 
 from rest_framework.test import APIClient, force_authenticate, APIRequestFactory
 
@@ -83,6 +84,7 @@ class APITenantTestCase(FastTenantTestCase):
         force_authenticate(request, user=user)
 
         response = view(request, *view_info.args, **view_info.kwargs)
-        response.render()
+        if hasattr(response, 'render'):
+            response.render()
 
         return response
