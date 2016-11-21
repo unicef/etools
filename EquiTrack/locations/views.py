@@ -44,20 +44,20 @@ class ETagMixin(object):
     def etag_cache_list(self, cls, *args, **kwargs):
         schema_name = connection.schema_name
         cache_etag = cache.get("{}-locations-etag".format(schema_name))
-        if not cache_etag:
-            new_etag = uuid.uuid4().hex
-            response = super(cls, self).list(*args, **kwargs)
-            response["ETag"] = new_etag
-            cache.set("{}-locations-etag".format(schema_name), new_etag)
-            return response
-
         request_etag = self.request.META.get("HTTP_IF_NONE_MATCH", None)
-        if cache_etag == request_etag:
+
+        local_etag = cache_etag if cache_etag else '"'+uuid.uuid4().hex+'"'
+
+        if cache_etag and request_etag and cache_etag == request_etag:
             response = Response(status=status.HTTP_304_NOT_MODIFIED)
         else:
             response = super(cls, self).list(*args, **kwargs)
-            response["ETag"] = cache_etag
-        patch_cache_control(response)
+            response["ETag"] = local_etag
+
+        if not cache_etag:
+            cache.set("{}-locations-etag".format(schema_name), local_etag)
+
+        patch_cache_control(response, private=True, must_revalidate=True)
         return response
 
 
