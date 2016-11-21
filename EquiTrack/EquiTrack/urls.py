@@ -33,7 +33,7 @@ from locations.views import (
     LocationsViewSet
 )
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
-from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
+from partners.views.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
 from reports.views import (
@@ -130,6 +130,9 @@ urlpatterns = patterns(
     url(r'^trips/', include('trips.urls')),
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
+
+    # API v2 urls
+    url(r'^api/v2/', include('partners.urls_v2')),
 
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(partners_api.urls)),

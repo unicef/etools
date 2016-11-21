@@ -4,9 +4,6 @@ import datetime
 
 from rest_framework.decorators import detail_route
 
-__author__ = 'jcranwellward'
-
-
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
 from django.http import HttpResponse
@@ -14,12 +11,12 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework import viewsets, mixins, generics
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
-from .serializers import (
+from partners.serializers.serializers import (
     FileTypeSerializer,
     LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,
@@ -36,10 +33,10 @@ from .serializers import (
     PartnershipBudgetSerializer,
     PCAFileSerializer
 )
-from .permissions import PartnerPermission, ResultChainPermission
-from .filters import PartnerScopeFilter
+from partners.permissions import PartnerPermission, ResultChainPermission
+from partners.filters import PartnerScopeFilter
 
-from .models import (
+from partners.models import (
     FileType,
     PartnershipBudget,
     PCAFile,
