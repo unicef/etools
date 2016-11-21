@@ -72,7 +72,7 @@ def generate_all_permissions(command):
                            'end_date': None,
                            'section': None,
                            'international_travel': None,
-                           'traveller': None,
+                           'traveler': None,
                            'start_date': None,
                            'ta_required': None,
                            'purpose': None,
@@ -156,7 +156,7 @@ class PermissionMatrixSetter(object):
         self.log('Set up permissions for travel traveler')
         qs = TravelPermission.objects.filter(user_type=UserTypes.TRAVELER)
 
-        self.revoke_edit(qs.filter(model='travel', field='traveller'))
+        self.revoke_edit(qs.filter(model='travel', field='traveler'))
         status_where_hide = [TripStatus.PLANNED,
                              TripStatus.SUBMITTED,
                              TripStatus.APPROVED,

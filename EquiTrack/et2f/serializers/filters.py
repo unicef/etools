@@ -28,7 +28,7 @@ class SortFilterSerializer(serializers.Serializer):
 
 
 class FilterBoxFilterSerializer(serializers.Serializer):
-    f_traveler = serializers.IntegerField(source='traveller__pk', required=False)
+    f_traveler = serializers.IntegerField(source='traveler__pk', required=False)
     f_supervisor = serializers.IntegerField(source='supervisor__pk', required=False)
     f_year = serializers.IntegerField(source='year', required=False)
     f_month = serializers.IntegerField(source='month', required=False)

@@ -123,7 +123,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
-                  'traveller', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
+                  'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
                   'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
                   'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
                   'cost_summary', 'certification_note', 'report')
@@ -244,10 +244,10 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
 
 class TravelListSerializer(TravelDetailsSerializer):
-    traveller = serializers.CharField(source='traveller.get_full_name')
+    traveler = serializers.CharField(source='traveler.get_full_name')
 
     class Meta(TravelDetailsSerializer.Meta):
-        fields = ('id', 'reference_number', 'traveller', 'purpose', 'status', 'section', 'office', 'start_date',
+        fields = ('id', 'reference_number', 'traveler', 'purpose', 'status', 'section', 'office', 'start_date',
                   'end_date')
 
 

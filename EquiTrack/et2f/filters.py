@@ -12,7 +12,7 @@ from et2f.serializers.filters import SearchFilterSerializer, ShowHiddenFilterSer
 
 
 class SearchFilter(BaseFilterBackend):
-    _search_fields = ('id', 'reference_number', 'traveller__first_name', 'traveller__last_name', 'purpose',
+    _search_fields = ('id', 'reference_number', 'traveler__first_name', 'traveler__last_name', 'purpose',
                       'section__name', 'office__name', 'supervisor__first_name', 'supervisor__last_name')
 
     def filter_queryset(self, request, queryset, view):

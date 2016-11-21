@@ -13,10 +13,10 @@ class TravelDetails(APITenantTestCase):
 
     def setUp(self):
         super(TravelDetails, self).setUp()
-        self.traveller = UserFactory()
+        self.traveler = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(reference_number='REF1',
-                                    traveller=self.traveller,
+                                    traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
     def test_list_view(self):

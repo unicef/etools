@@ -15,10 +15,10 @@ class TravelViews(APITenantTestCase):
 
     def setUp(self):
         super(TravelViews, self).setUp()
-        self.traveller = UserFactory()
+        self.traveler = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(reference_number='REF1',
-                                    traveller=self.traveller,
+                                    traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
     def test_list_view(self):
@@ -30,8 +30,8 @@ class TravelViews(APITenantTestCase):
         self.assertEqual(response_json['page_count'], 1)
 
     def test_pagination(self):
-        TravelFactory(traveller=self.traveller, supervisor=self.unicef_staff)
-        TravelFactory(traveller=self.traveller, supervisor=self.unicef_staff)
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
 
         response = self.forced_auth_req('get', '/api/et2f/travels/', data={'page': 1, 'page_size': 2},
                                         user=self.unicef_staff)
@@ -48,8 +48,8 @@ class TravelViews(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_sorting(self):
-        TravelFactory(reference_number='ref2', traveller=self.traveller, supervisor=self.unicef_staff)
-        TravelFactory(reference_number='REF3', traveller=self.traveller, supervisor=self.unicef_staff)
+        TravelFactory(reference_number='ref2', traveler=self.traveler, supervisor=self.unicef_staff)
+        TravelFactory(reference_number='REF3', traveler=self.traveler, supervisor=self.unicef_staff)
 
         response = self.forced_auth_req('get', '/api/et2f/travels/', data={'sort_by': 'reference_number',
                                                                            'reverse': False},
@@ -68,7 +68,7 @@ class TravelViews(APITenantTestCase):
         self.assertEqual(reference_numbers, ['REF3', 'ref2', 'REF1'])
 
     def test_searching(self):
-        TravelFactory(reference_number='REF2', traveller=self.traveller, supervisor=self.unicef_staff)
+        TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff)
 
         response = self.forced_auth_req('get', '/api/et2f/travels/', data={'search': 'REF2'},
                                         user=self.unicef_staff)
@@ -76,7 +76,7 @@ class TravelViews(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_show_hidden(self):
-        TravelFactory(reference_number='REF2', traveller=self.traveller, supervisor=self.unicef_staff, hidden=True)
+        TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff, hidden=True)
 
         response = self.forced_auth_req('get', '/api/et2f/travels/', data={'show_hidden': True},
                                         user=self.unicef_staff)
@@ -163,13 +163,13 @@ class TravelViews(APITenantTestCase):
                 "expenses_total": "0.0000",
                 "deductions_total": "0.0000",
                 "reference_number": "19/10/41",
-                "supervisor": self.traveller.id,
+                "supervisor": self.traveler.id,
                 "office": office.id,
-                "end_date": "2016-11-20T01:00:00+01:00",
+                "end_date": None,
                 "section": section.id,
                 "international_travel": False,
-                "traveller": self.traveller.id,
-                "start_date": "2016-11-16T01:00:00+01:00",
+                "traveler": self.traveler.id,
+                "start_date": None,
                 "ta_required": True,
                 "purpose": None,
                 "status": "submitted",
@@ -180,7 +180,7 @@ class TravelViews(APITenantTestCase):
         response = self.forced_auth_req('post', '/api/et2f/travels/', data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        # self.assertEqual(response_json, {})
+        self.assertEqual(response_json, {})
         new_travel_id = response_json['id']
 
         second_traveler = UserFactory()
@@ -265,7 +265,7 @@ def test_permission_matrix(self):
                                       'end_date',
                                       'section',
                                       'international_travel',
-                                      'traveller',
+                                      'traveler',
                                       'start_date',
                                       'ta_required',
                                       'purpose',

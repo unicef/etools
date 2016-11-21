@@ -148,7 +148,7 @@ class ClearanceFactory(factory.DjangoModelFactory):
 
 
 class TravelFactory(factory.DjangoModelFactory):
-    traveller = factory.SubFactory(UserFactory)
+    traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
     section = factory.SubFactory(SectionFactory)

@@ -87,7 +87,7 @@ class Travel(models.Model):
     report_note = models.TextField(null=True)
 
     status = FSMField(default=TripStatus.PLANNED, choices=TripStatus.CHOICES, protected=True)
-    traveller = models.ForeignKey(User, null=True, blank=True, related_name='travels')
+    traveler = models.ForeignKey(User, null=True, blank=True, related_name='travels')
     supervisor = models.ForeignKey(User, null=True, blank=True, related_name='+')
     office = models.ForeignKey('users.Office', null=True, blank=True, related_name='+')
     section = models.ForeignKey('users.Section', null=True, blank=True, related_name='+')

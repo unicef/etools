@@ -13,7 +13,7 @@ class TravelListExporter(resources.ModelResource):
 
     class Meta:
         model = Travel
-        fields = ('id', 'reference_number', 'traveller', 'purpose', 'start_date', 'end_date', 'status', 'created',
+        fields = ('id', 'reference_number', 'traveler', 'purpose', 'start_date', 'end_date', 'status', 'created',
                   'section', 'office', 'supervisor', 'ta_required', 'ta_reference_number', 'approval_date', 'is_driver',
                   'attachment_count')
         export_order = fields

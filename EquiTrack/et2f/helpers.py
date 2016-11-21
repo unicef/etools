@@ -162,7 +162,7 @@ class CloneTravelHelper(object):
 
     def _do_the_cloning(self, new_traveler, fk_related, o2o_related):
         new_travel = self._clone_model(self.travel)
-        new_travel.traveller = new_traveler
+        new_travel.traveler = new_traveler
         new_travel.reset_status()
         new_travel.save()
 
