@@ -7,7 +7,7 @@ from django.contrib.postgres.fields.array import ArrayField
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.auth.models import User
-from django_fsm import FSMField, transition
+from django_fsm import FSMField, transition, TransitionNotAllowed
 
 from et2f import BooleanChoice, TripStatus, UserTypes
 from et2f.helpers import CostSummaryCalculator
@@ -134,6 +134,11 @@ class Travel(models.Model):
         return calculator.calculate_cost_summary()
 
     # State machine transitions
+    def check_completion_conditions(self):
+        if self.status is TripStatus.SUBMITTED and not self.international_travel:
+            return False
+        return True
+
     @transition(status, source=[TripStatus.PLANNED, TripStatus.REJECTED], target=TripStatus.SUBMITTED)
     def submit_for_approval(self):
         self.send_notification('Travel #{} was sent for approval.'.format(self.id))
@@ -185,7 +190,8 @@ class Travel(models.Model):
     def mark_as_certified(self):
         pass
 
-    @transition(status, source=[TripStatus.CERTIFIED], target=TripStatus.COMPLETED)
+    @transition(status, source=[TripStatus.CERTIFIED, TripStatus.SUBMITTED], target=TripStatus.COMPLETED,
+                conditions=[check_completion_conditions])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
 

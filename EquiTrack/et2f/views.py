@@ -4,8 +4,10 @@ from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
 from django.http.response import HttpResponse
+from django_fsm import TransitionNotAllowed
 
 from rest_framework import generics, viewsets, mixins, status
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
 from rest_framework.permissions import IsAdminUser
@@ -45,7 +47,10 @@ def run_transition(serializer):
     if transition_name:
         instance = serializer.instance
         transition = getattr(instance, transition_name)
-        transition()
+        try:
+            transition()
+        except TransitionNotAllowed as exc:
+            raise ValidationError(exc.message)
         instance.save()
 
 
