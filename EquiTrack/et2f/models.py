@@ -30,6 +30,20 @@ class ExpenseType(models.Model):
     code = models.CharField(max_length=16)
 
 
+class TravelType(models.Model):
+    PLANE = 'Plane'
+    BUS = 'Bus'
+    CAR = 'Car'
+    BOAT = 'Boat'
+    CHOICES = (
+        (PLANE, 'Plane'),
+        (BUS, 'Bus'),
+        (CAR, 'Car'),
+        (BOAT, 'Boat'),
+    )
+    name = models.CharField(max_length=8, choices=CHOICES)
+
+
 class TravelPermission(models.Model):
     EDIT = 'edit'
     VIEW = 'view'
@@ -98,7 +112,7 @@ class Travel(models.Model):
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_reference_number)
     hidden = models.BooleanField(default=False)
-    mode_of_travel = ArrayField(models.CharField(max_length=255), default=[])
+    mode_of_travel = models.ManyToManyField('TravelType', related_name='+')
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
     currency = models.ForeignKey('Currency', null=True, blank=True, related_name='+')
 
@@ -189,7 +203,7 @@ class Travel(models.Model):
 
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities')
-    travel_type = models.CharField(max_length=64)
+    travel_type = models.ForeignKey('TravelType', related_name='+')
     partner = models.ForeignKey('partners.PartnerOrganization', related_name='+')
     partnership = models.ForeignKey('partners.PCA', related_name='+')
     result = models.ForeignKey('reports.Result', related_name='+')
@@ -206,7 +220,7 @@ class IteneraryItem(models.Model):
     arrival_date = models.DateTimeField()
     dsa_region = models.ForeignKey('DSARegion', related_name='+')
     overnight_travel = models.BooleanField(default=False)
-    mode_of_travel = models.CharField(max_length=255)
+    mode_of_travel = models.ForeignKey('TravelType', related_name='+')
     airlines = models.ManyToManyField('AirlineCompany', related_name='+')
 
 

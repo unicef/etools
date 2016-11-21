@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from et2f.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant
+from et2f.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant, TravelType
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -101,6 +101,12 @@ class ExpenseTypeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name')
 
 
+class TravelTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TravelType
+        fields = ('id', 'name')
+
+
 class StaticDataSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     currencies = CurrencySerializer(many=True)
@@ -116,3 +122,4 @@ class StaticDataSerializer(serializers.Serializer):
     grants = GrantSerializer(many=True)
     funds = FundSerializer(many=True)
     expense_types = ExpenseTypeSerializer(many=True)
+    travel_types = TravelTypeSerializer(many=True)
