@@ -232,7 +232,7 @@ class PartnerOrganizationExportFilter(BaseFilterBackend):
             q &= Q(rating=risk_rating)
 
         flag = parameters.get('flagged')
-        if flag == PartnershipExportFilterSerializer.MARKET_FOR_DELETION:
+        if flag == PartnershipExportFilterSerializer.MARKED_FOR_DELETION:
             q &= Q(deleted_flag=True)
 
         show_hidden = parameters.get('show_hidden')
