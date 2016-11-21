@@ -81,6 +81,7 @@ def generate_all_permissions(command):
                            'mode_of_travel': None,
                            'estimated_travel_cost': None,
                            'currency': None,
+                           'cost_summary': None,
                            'activities': {'id': None,
                                           'travel_type': None,
                                           'partner': None,
