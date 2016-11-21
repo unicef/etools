@@ -109,32 +109,4 @@ class Migration(migrations.Migration):
         migrations.RunPython(convert_old_values_travel),
         migrations.RunPython(convert_old_values_travelactivity),
 
-        migrations.RemoveField(
-            model_name='iteneraryitem',
-            name='mode_of_travel',
-        ),
-        migrations.RemoveField(
-            model_name='travel',
-            name='mode_of_travel',
-        ),
-        migrations.RemoveField(
-            model_name='travelactivity',
-            name='travel_type',
-        ),
-
-        migrations.RenameField(
-            model_name='iteneraryitem',
-            old_name='new_mode_of_travel',
-            new_name='mode_of_travel',
-        ),
-        migrations.RenameField(
-            model_name='travelactivity',
-            old_name='new_travel_type',
-            new_name='travel_type',
-        ),
-        migrations.RenameField(
-            model_name='travel',
-            old_name='new_mode_of_travel',
-            new_name='mode_of_travel',
-        ),
     ]
