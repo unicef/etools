@@ -3,7 +3,6 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-import django.db.models.deletion
 
 PLANE = 'Plane'
 BUS = 'Bus'
@@ -16,60 +15,6 @@ def create_initial_travel_types(apps, schema_editor):
     TravelType.objects.create(name=BUS)
     TravelType.objects.create(name=CAR)
     TravelType.objects.create(name=BOAT)
-
-
-def convert_old_values_itinerary(apps, schema_editor):
-    IteneraryItem = apps.get_model('et2f', 'IteneraryItem')
-    TravelType = apps.get_model('et2f', 'TravelType')
-
-    plane_tt = TravelType.objects.get(name=PLANE)
-    bus_tt = TravelType.objects.get(name=BUS)
-    car_tt = TravelType.objects.get(name=CAR)
-    boat_tt = TravelType.objects.get(name=BOAT)
-    mapping = {PLANE: plane_tt,
-               BUS: bus_tt,
-               CAR: car_tt,
-               BOAT: boat_tt}
-
-    for item in IteneraryItem.objects.all():
-        item.new_mode_of_travel = mapping[item.mode_of_travel]
-        item.save()
-
-
-def convert_old_values_travel(apps, schema_editor):
-    Travel = apps.get_model('et2f', 'Travel')
-    TravelType = apps.get_model('et2f', 'TravelType')
-
-    plane_tt = TravelType.objects.get(name=PLANE)
-    bus_tt = TravelType.objects.get(name=BUS)
-    car_tt = TravelType.objects.get(name=CAR)
-    boat_tt = TravelType.objects.get(name=BOAT)
-    mapping = {PLANE: plane_tt,
-               BUS: bus_tt,
-               CAR: car_tt,
-               BOAT: boat_tt}
-
-    for item in Travel.objects.all():
-        for mode in item.mode_of_travel:
-            item.new_mode_of_travel.add(mapping[mode])
-
-
-def convert_old_values_travelactivity(apps, schema_editor):
-    TravelActivity = apps.get_model('et2f', 'TravelActivity')
-    TravelType = apps.get_model('et2f', 'TravelType')
-
-    plane_tt = TravelType.objects.get(name=PLANE)
-    bus_tt = TravelType.objects.get(name=BUS)
-    car_tt = TravelType.objects.get(name=CAR)
-    boat_tt = TravelType.objects.get(name=BOAT)
-    mapping = {PLANE: plane_tt,
-               BUS: bus_tt,
-               CAR: car_tt,
-               BOAT: boat_tt}
-
-    for item in TravelActivity.objects.all():
-        item.new_travel_type = mapping[item.travel_type]
-        item.save()
 
 
 class Migration(migrations.Migration):
@@ -87,26 +32,4 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.RunPython(create_initial_travel_types),
-        migrations.AddField(
-            model_name='iteneraryitem',
-            name='new_mode_of_travel',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.TravelType'),
-            preserve_default=False,
-        ),
-        migrations.AddField(
-            model_name='travel',
-            name='new_mode_of_travel',
-            field=models.ManyToManyField(related_name='_travel_new_mode_of_travel_+', to='et2f.TravelType'),
-        ),
-        migrations.AddField(
-            model_name='travelactivity',
-            name='new_travel_type',
-            field=models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.TravelType'),
-            preserve_default=False,
-        ),
-
-        migrations.RunPython(convert_old_values_itinerary),
-        migrations.RunPython(convert_old_values_travel),
-        migrations.RunPython(convert_old_values_travelactivity),
-
     ]
