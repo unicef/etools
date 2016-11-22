@@ -154,8 +154,7 @@ class Travel(models.Model):
         self.send_notification('Travel #{} was rejected.'.format(self.id))
 
     @transition(status, source=[TripStatus.PLANNED,
-
-
+                                TripStatus.SUBMITTED,
                                 TripStatus.REJECTED,
                                 TripStatus.APPROVED,
                                 TripStatus.SENT_FOR_PAYMENT],
@@ -200,11 +199,13 @@ class Travel(models.Model):
         pass
 
     def send_notification(self, message):
-        send_mail('Travel #{} state changed'.format(self.id),
-                  message,
-                  'simon+test@pulilab.com',
-                  ['simon+test@pulilab.com', 'nico+test@pulilab.com'],
-                  fail_silently=False)
+        # TODO do this
+        pass
+        # send_mail('Travel #{} state changed'.format(self.id),
+        #           message,
+        #           'simon+test@pulilab.com',
+        #           ['simon+test@pulilab.com', 'nico+test@pulilab.com'],
+        #           fail_silently=False)
 
 
 class TravelActivity(models.Model):

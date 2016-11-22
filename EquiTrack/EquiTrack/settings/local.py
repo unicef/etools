@@ -21,9 +21,3 @@ DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TEMPLATE_CONTEXT': True,
 }
 ########## END TOOLBAR CONFIGURATION
-
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtpout.secureserver.net'
-EMAIL_PORT = '25'
-EMAIL_HOST_USER = 'info@simonsagi.com'
-EMAIL_HOST_PASSWORD = 'Fyk7bmdTTd'
