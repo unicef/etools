@@ -16,6 +16,7 @@ from django.http import HttpResponse, StreamingHttpResponse
 from partners.models import PartnerOrganization, PCA
 from partners.permissions import PartnerPermission
 from partners.serializers.serializers import PartnerOrganizationSerializer, InterventionSerializer
+from partners.serializers.serializers_v2 import PartnerOrganizationExportSerializer
 from partners.filters import PartnerScopeFilter
 
 
@@ -35,6 +36,10 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         Use restriceted field set for listing
         """
         if self.request.method == "GET":
+            query_params = self.request.query_params
+            if "format" in query_params.keys():
+                if query_params.get("format") == 'csv':
+                    return PartnerOrganizationExportSerializer
             return PartnerOrganizationSerializer
         else:
             return super(PartnerOrganizationListAPIView, self).get_serializer_class()
