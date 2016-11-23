@@ -664,7 +664,7 @@ class Agreement(TimeStampedModel):
     partner = models.ForeignKey(PartnerOrganization)
     partner_staff_members = models.ManyToManyField(
         PartnerStaffMember,
-        blank=True, 
+        blank=True,
         related_name="+")
     agreement_type = models.CharField(
         max_length=10,
@@ -868,9 +868,6 @@ class AuthorizedOfficer(models.Model):
 
             cls.objects.create(agreement=instance,
                                officer=instance.partner_manager)
-
-
-post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 
 class PCA(AdminURLMixin, models.Model):

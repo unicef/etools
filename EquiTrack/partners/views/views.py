@@ -48,7 +48,6 @@ from partners.models import (
     FileType,
     PartnershipBudget,
     PCAFile,
-    AuthorizedOfficer,
     PCA,
     PartnerOrganization,
     Agreement,
