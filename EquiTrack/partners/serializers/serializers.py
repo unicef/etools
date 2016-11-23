@@ -269,9 +269,17 @@ class GWLocationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PartnerStaffMemberEmbedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = ("id", "first_name", "last_name",)
+
+
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
     pca_set = InterventionSerializer(many=True, read_only=True)
+    staff_members = PartnerStaffMemberEmbedSerializer(many=True, read_only=True)
 
     class Meta:
         model = PartnerOrganization

@@ -650,6 +650,17 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.assertEquals(len(response.data), 2)
         self.assertEquals(response.data[0]["first_name"], "Mace")
 
+    def test_partner_retrieve_embedded_staffmembers(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertIn("Partner", response.data["name"])
+        self.assertEquals("Mace", response.data["staff_members"][0]["first_name"])
+
     def test_partner_staffmember_create(self):
         data = {
             "email": "a@aaa.com",
