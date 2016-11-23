@@ -3,7 +3,10 @@ from operator import xor
 from rest_framework import serializers
 
 from partners.models import Agreement, PartnerOrganization, PartnerStaffMember
-from partners.serializers.serializers import PartnerOrganizationSerializer
+from partners.serializers.serializers import (
+    PartnerOrganizationSerializer,
+    PartnerStaffMemberEmbedSerializer,
+)
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
@@ -27,15 +30,17 @@ class AgreementListSerializer(serializers.ModelSerializer):
         )
 
 
-class AgreementSerializer(serializers.ModelSerializer):
+class AgreementRetrieveSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
+    partner_staff_members = PartnerStaffMemberEmbedSerializer(many=True)
 
     class Meta:
         model = Agreement
         fields = (
             "id",
             "partner",
+            "partner_staff_members",
             "partner_name",
             "agreement_type",
             "agreement_number",
@@ -51,8 +56,15 @@ class AgreementSerializer(serializers.ModelSerializer):
             "reference_number",
         )
 
+
+class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Agreement
+        fields = "__all__"
+
     def validate(self, data):
-        data = super(AgreementSerializer, self).validate(data)
+        data = super(AgreementCreateUpdateSerializer, self).validate(data)
         errors = {}
 
         start_errors = []
@@ -91,7 +103,7 @@ class PartnerStaffMemberSerializer(serializers.ModelSerializer):
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
 
     partner = PartnerOrganizationSerializer()
-    agreement_set = AgreementSerializer(many=True)
+    agreement_set = AgreementRetrieveSerializer(many=True)
 
     class Meta:
         model = PartnerStaffMember

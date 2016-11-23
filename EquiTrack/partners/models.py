@@ -662,6 +662,10 @@ class Agreement(TimeStampedModel):
     )
 
     partner = models.ForeignKey(PartnerOrganization)
+    partner_staff_members = models.ManyToManyField(
+        PartnerStaffMember,
+        blank=True, 
+        related_name="+")
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES

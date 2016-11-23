@@ -17,7 +17,8 @@ from partners.models import Agreement, PCA, PartnerStaffMember
 from partners.serializers.serializers import InterventionSerializer
 from partners.serializers.serializers_v2 import (
     AgreementListSerializer,
-    AgreementSerializer,
+    AgreementCreateUpdateSerializer,
+    AgreementRetrieveSerializer,
     PartnerStaffMemberSerializer,
     PartnerStaffMemberPropertiesSerializer,
 )
@@ -32,7 +33,7 @@ class AgreementListAPIView(ListCreateAPIView):
     Returns related Interventions.
     """
     queryset = Agreement.objects.all()
-    serializer_class = AgreementSerializer
+    serializer_class = AgreementListSerializer
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self):
@@ -41,8 +42,9 @@ class AgreementListAPIView(ListCreateAPIView):
         """
         if self.request.method == "GET":
             return AgreementListSerializer
-        else:
-            return super(AgreementListAPIView, self).get_serializer_class()
+        elif self.request.method == "POST":
+            return AgreementCreateUpdateSerializer
+        return super(AgreementListAPIView, self).get_serializer_class()
 
     def get_queryset(self):
         q = Agreement.view_objects
@@ -98,7 +100,17 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     Retrieve and Update Agreement.
     """
     queryset = Agreement.objects.all()
-    serializer_class = AgreementSerializer
+    serializer_class = AgreementRetrieveSerializer
+
+    def get_serializer_class(self):
+        """
+        Use restriceted field set for listing
+        """
+        if self.request.method == "GET":
+            return AgreementRetrieveSerializer
+        elif self.request.method in ["POST", "PUT", "PATCH"]:
+            return AgreementCreateUpdateSerializer
+        return super(AgreementDetailAPIView, self).get_serializer_class()
 
     def retrieve(self, request, pk=None):
         """

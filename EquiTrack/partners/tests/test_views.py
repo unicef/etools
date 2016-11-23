@@ -288,6 +288,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory(partner_type="Civil Society Organization")
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
+        self.partner_staff2 = PartnerStaffFactory(partner=self.partner)
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.save()
@@ -296,6 +297,8 @@ class TestAgreementAPIView(APITenantTestCase):
                             partner_manager=self.partner_staff,
                             signed_by_unicef_date=datetime.date.today()
                         )
+        self.agreement.partner_staff_members.add(self.partner_staff)
+        self.agreement.save()
         self.agreement2 = AgreementFactory(
                                 partner=self.partner,
                                 agreement_type="MOU",
@@ -378,6 +381,33 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["reference_number"], "/PCA{}01".format(datetime.date.today().year))
+
+    def test_agreements_retrieve_staff_members(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["partner_staff_members"][0]["first_name"], self.partner_staff.first_name)
+
+    def test_agreements_update_partner_staff(self):
+        data = {
+            "partner_staff_members": [
+                self.partner_staff.id,
+                self.partner_staff2.id
+            ],
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["partner_staff_members"], [self.partner_staff.id, self.partner_staff2.id])
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
