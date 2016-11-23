@@ -21,7 +21,7 @@ from partners.serializers.serializers_v2 import (
     PartnerStaffMemberSerializer,
     PartnerStaffMemberPropertiesSerializer,
 )
-from partners.permissions import PartnerManagerPermission, PartnerPermission
+from partners.permissions import PartnerPermission
 from partners.filters import PartnerScopeFilter
 
 
@@ -33,7 +33,6 @@ class AgreementListAPIView(ListCreateAPIView):
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
-    permission_classes = (PartnerManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self):
@@ -77,7 +76,6 @@ class AgreementListAPIView(ListCreateAPIView):
 class AgreementInterventionsListAPIView(ListAPIView):
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
-    permission_classes = (PartnerManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def list(self, request, partner_pk=None, pk=None):
@@ -101,7 +99,6 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
-    permission_classes = (PartnerManagerPermission,)
 
     def retrieve(self, request, pk=None):
         """

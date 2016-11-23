@@ -369,19 +369,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "active")
 
-    def test_agreements_update_no_perm(self):
-        data = {
-            "status":"active",
-        }
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.unicef_staff,
-            data=data
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
-
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
             'get',
@@ -400,15 +387,6 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
-
-    def test_agreements_delete_no_perm(self):
-        response = self.forced_auth_req(
-            'delete',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.unicef_staff
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_agreements_create_cp_todate(self):
         data = {
