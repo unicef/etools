@@ -46,6 +46,7 @@ class AgreementListAPIView(ListCreateAPIView):
             return super(AgreementListAPIView, self).get_serializer_class()
 
     def get_queryset(self):
+        q = Agreement.view_objects
         query_params = self.request.query_params
 
         if query_params:
@@ -68,9 +69,9 @@ class AgreementListAPIView(ListCreateAPIView):
                 )
 
             expression = functools.reduce(operator.and_, queries)
-            return Agreement.objects.filter(expression)
+            return q.filter(expression)
         else:
-            return super(AgreementListAPIView, self).get_queryset()
+            return q.all()
 
 
 class AgreementInterventionsListAPIView(ListAPIView):
@@ -83,7 +84,10 @@ class AgreementInterventionsListAPIView(ListAPIView):
         """
         Return All Interventions for Partner and Agreement
         """
-        interventions = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk)
+        if partner_pk:
+            interventions = PCA.objects.filter(partner_id=partner_pk, agreement_id=pk)
+        else:
+            interventions = PCA.objects.filter(agreement_id=pk)
         serializer = InterventionSerializer(interventions, many=True)
         return Response(
             serializer.data,
@@ -98,17 +102,13 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
     permission_classes = (PartnerManagerPermission,)
-    filter_backends = (PartnerScopeFilter,)
 
-    def retrieve(self, request, partner_pk=None, pk=None):
+    def retrieve(self, request, pk=None):
         """
-        Returns an Agreement object for this Agreement PK and partner
+        Returns an Agreement object for this Agreement PK
         """
         try:
-            if partner_pk:
-                queryset = self.queryset.get(partner=partner_pk, id=pk)
-            else:
-                queryset = self.queryset.get(id=pk)
+            queryset = self.queryset.get(id=pk)
             serializer = self.serializer_class(queryset)
             data = serializer.data
         except Agreement.DoesNotExist:

@@ -291,7 +291,11 @@ class TestAgreementAPIView(APITenantTestCase):
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.save()
-        self.agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
+        self.agreement = AgreementFactory(
+                            partner=self.partner,
+                            partner_manager=self.partner_staff,
+                            signed_by_unicef_date=datetime.date.today()
+                        )
         self.agreement2 = AgreementFactory(
                                 partner=self.partner,
                                 agreement_type="MOU",
@@ -324,7 +328,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertIn("Partner", response.data[0]["partner_name"])
         self.assertEquals(response.data[0]["agreement_type"], Agreement.AGREEMENT_TYPES[2][0])
 
-    def test_partner_agreements_create(self):
+    def test_agreements_create(self):
         data = {
             "agreement_type":"PCA",
             "partner": self.partner.id,
@@ -332,37 +336,12 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'post',
-            '/api/v2/partners/{}/agreements/'.format(self.partner.id),
+            '/api/v2/agreements/'.format(self.partner.id),
             user=self.partner_staff_user,
             data=data
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-    def test_partner_agreements_update(self):
-        data = {
-            "status":"active",
-        }
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/partners/{}/agreements/{}/'.format(self.partner.id, self.agreement.id),
-            user=self.partner_staff_user,
-            data=data
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["status"], "active")
-
-    def test_partner_agreements_retrieve(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/partners/{}/agreements/{}/'.format(self.partner.id, self.agreement.id),
-            user=self.unicef_staff
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
-        self.assertIn("Partner", response.data["partner_name"])
 
     def test_agreements_list(self):
         response = self.forced_auth_req(
@@ -375,21 +354,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
         self.assertEquals(response.data[0]["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
-
-    def test_agreements_create(self):
-        data = {
-            "agreement_type":"PCA",
-            "partner": self.partner.id,
-            "status": "draft"
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/agreements/',
-            user=self.partner_staff_user,
-            data=data
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
     def test_agreements_update(self):
         data = {
@@ -426,17 +390,8 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
-
-    def test_agreements_retrieve(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.unicef_staff
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["reference_number"], "/PCA{}01".format(datetime.date.today().year))
+        self.assertTrue(response.data["authorized_officers"])
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
@@ -539,13 +494,26 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(len(response.data), 1)
         self.assertEquals(response.data[0]["reference_number"], "/PCA{}01".format(datetime.date.today().year))
 
-    def test_api_agreement_interventions_list(self):
+    def test_api_agreement_partner_nterventions_list(self):
 
         response = self.forced_auth_req('get',
                                         '/'.join([
                                             '/api/v2/partners',
                                             str(self.intervention.partner.id),
                                             'agreements',
+                                            str(self.intervention.agreement.id),
+                                            'interventions/'
+                                        ]), user=self.unicef_staff)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertIn("galaxy", response.data[0]["pca_title"])
+
+    def test_api_agreement_interventions_list(self):
+
+        response = self.forced_auth_req('get',
+                                        '/'.join([
+                                            '/api/v2/agreements',
                                             str(self.intervention.agreement.id),
                                             'interventions/'
                                         ]), user=self.unicef_staff)
@@ -568,10 +536,10 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager are both must be provided."])
-        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date are both must be provided."])
-        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by are both must be provided."])
-        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date are both must be provided."])
+        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager must be provided."])
+        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date must be provided."])
+        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by must be provided."])
+        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date must be provided."])
         self.assertEquals(response.data["start"], ["Start date must be provided along with end date.", "Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date)."])
 
     def test_agreements_update_validation_signed_date(self):
@@ -587,10 +555,10 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager are both must be provided."])
-        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date are both must be provided."])
-        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by are both must be provided."])
-        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date are both must be provided."])
+        self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager must be provided."])
+        self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date must be provided."])
+        self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by must be provided."])
+        self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date must be provided."])
 
     def test_agreements_update_validation_end_date_pca(self):
         data = {
@@ -674,7 +642,7 @@ class TestAgreementAPIView(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/api/v2/partners/{}/agreements/{}/'.format(self.partner.id, self.agreement.id),
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
             user=self.partner_staff_user,
             data=data
         )

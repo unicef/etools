@@ -635,6 +635,11 @@ def get_agreement_path(instance, filename):
     )
 
 
+class AgreementManager(models.Manager):
+    def get_queryset(self):
+        return super(AgreementManager, self).get_queryset().select_related('partner')
+
+
 class Agreement(TimeStampedModel):
     """
     Represents an agreement with the partner organization.
@@ -702,7 +707,11 @@ class Agreement(TimeStampedModel):
         (SUSPENDED, "Suspended"),
         (TERMINATED, "Terminated"),
     )
-    status = models.CharField(max_length=255, choices=STATUS_CHOICES)
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=STATUS_CHOICES,
+    )
 
     # bank information
     bank_name = models.CharField(max_length=255, null=True, blank=True)
@@ -718,6 +727,9 @@ class Agreement(TimeStampedModel):
         help_text='Routing Details, including SWIFT/IBAN (if applicable)'
     )
     bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
+    view_objects = AgreementManager()
+    objects = models.Manager()
 
     def __unicode__(self):
         return u'{} for {} ({} - {})'.format(
@@ -1620,7 +1632,7 @@ class GwPCALocation(models.Model):
 class PCASector(TimeStampedModel):
     """
     Represents a sector for the partner intervention, which links a sector to a partnership
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`users.Sector`
     Relates to :model:`partners.AmendmentLog`
@@ -1648,7 +1660,7 @@ class PCASector(TimeStampedModel):
 class PCASectorGoal(models.Model):
     """
     Represents a goal for the partner intervention sector, which links a sector to a partnership
-    
+
     Relates to :model:`partners.PCASector`
     Relates to :model:`reports.Goal`
     """
@@ -1685,7 +1697,7 @@ def get_file_path(instance, filename):
 class PCAFile(models.Model):
     """
     Represents a file for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`partners.FileType`
     """
@@ -1712,7 +1724,7 @@ class PCAFile(models.Model):
 class RAMIndicator(models.Model):
     """
     Represents a RAM Indicator for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`reports.Result`
     Relates to :model:`reports.Indicator`
@@ -1749,7 +1761,7 @@ class ResultChain(models.Model):
     """
     Represents a result chain for the partner intervention,
     Connects Results and Indicators to interventions
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`reports.ResultType`
     Relates to :model:`reports.Result`
@@ -1798,7 +1810,7 @@ class ResultChain(models.Model):
 class IndicatorDueDates(models.Model):
     """
     Represents an indicator due date for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     """
 
@@ -1818,7 +1830,7 @@ class IndicatorDueDates(models.Model):
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
-    
+
     Relates to :model:`partners.ResultChain`
     Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`results.Indicator`
@@ -1860,7 +1872,7 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 class SupplyPlan(models.Model):
     """
     Represents a supply plan for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     """
@@ -1878,7 +1890,7 @@ class SupplyPlan(models.Model):
 class DistributionPlan(models.Model):
     """
     Represents a distribution plan for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     Relates to :model:`locations.Location`
@@ -1929,7 +1941,7 @@ class FCManager(models.Manager):
 class FundingCommitment(TimeFramedModel):
     """
     Represents a funding commitment for the grant
-    
+
     Relates to :model:`funds.Grant`
     """
 
