@@ -49,9 +49,7 @@ class AgreementSerializer(serializers.ModelSerializer):
             "status",
             "year",
             "reference_number",
-            "authorized_officers",
         )
-        read_only_fields = ("authorized_officers",)
 
     def validate(self, data):
         data = super(AgreementSerializer, self).validate(data)
@@ -87,6 +85,7 @@ class PartnerStaffMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerStaffMember
+        fields = "__all__"
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
@@ -96,3 +95,4 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerStaffMember
+        fields = "__all__"

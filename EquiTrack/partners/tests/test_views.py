@@ -391,7 +391,6 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["reference_number"], "/PCA{}01".format(datetime.date.today().year))
-        self.assertTrue(response.data["authorized_officers"])
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
