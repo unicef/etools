@@ -121,8 +121,8 @@ class Command(BaseCommand):
                             print(u'6. Amended budget: {}'.format(budget))
 
                     # migrate grants
-                    for grant in amendment.pcagrant_set.all():
-                        if grant not in partnership.pcagrant_set.all():
+                    for grant in amendment.grants.all():
+                        if grant not in partnership.grants.all():
                             grant.partnership = partnership
                             grant.amendment = amendment_log
                             grant.save()

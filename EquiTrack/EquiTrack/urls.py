@@ -9,6 +9,8 @@ from autocomplete_light import shortcuts as autocomplete_light
 # import every app/autocomplete_light_registry.py
 autocomplete_light.autodiscover()
 
+from rest_framework_swagger.views import get_swagger_view
+
 from rest_framework_nested import routers
 
 # Uncomment the next two lines to enable the admin:
@@ -48,6 +50,8 @@ from reports.views import (
 from partners.urls import (
     simple_interventions_api,
     interventions_api,
+    government_interventions_api,
+    simple_government_interventions_api,
     results_api,
     simple_results_api,
     intervention_reports_api,
@@ -72,6 +76,8 @@ from workplan.views import (
 )
 
 from et2f.urls import urlpatterns as et2f_patterns
+
+schema_view = get_swagger_view(title='eTools API')
 
 api = routers.SimpleRouter()
 
@@ -135,6 +141,8 @@ urlpatterns = patterns(
     url(r'^api/', include(agreement_api.urls)),
     url(r'^api/', include(simple_agreements_api.urls)),
     url(r'^api/', include(interventions_api.urls)),
+    url(r'^api/', include(government_interventions_api.urls)),
+    url(r'^api/', include(simple_government_interventions_api.urls)),
     url(r'^api/', include(simple_interventions_api.urls)),
     url(r'^api/', include(simple_results_api.urls)),
     url(r'^api/', include(results_api.urls)),
@@ -150,7 +158,7 @@ urlpatterns = patterns(
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
     url(r'^api/et2f/', include(et2f_patterns, namespace='et2f')),
-    url(r'^api/docs/', include('rest_framework_swagger.urls')),
+    url(r'^api/docs/', schema_view),
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
