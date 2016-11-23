@@ -5,31 +5,31 @@ from et2f.models import TravelPermission
 
 
 def make_permissions_for_model(user_type, status, model_name, fields):
-        permissions = []
+    permissions = []
 
-        for field_name, value in fields.items():
-            name = '_'.join((user_type, status, model_name, field_name, TravelPermission.EDIT))
-            kwargs = dict(name=name,
-                          user_type=user_type,
-                          status=status,
-                          model=model_name,
-                          field=field_name,
-                          permission_type=TravelPermission.EDIT,
-                          value=True)
-            permissions.append(TravelPermission(**kwargs))
+    for field_name, value in fields.items():
+        name = '_'.join((user_type, status, model_name, field_name, TravelPermission.EDIT))
+        kwargs = dict(name=name,
+                      user_type=user_type,
+                      status=status,
+                      model=model_name,
+                      field=field_name,
+                      permission_type=TravelPermission.EDIT,
+                      value=True)
+        permissions.append(TravelPermission(**kwargs))
 
-            name = '_'.join((user_type, status, model_name, field_name, TravelPermission.VIEW))
-            kwargs = dict(name=name,
-                          user_type=user_type,
-                          status=status,
-                          model=model_name,
-                          field=field_name,
-                          permission_type=TravelPermission.VIEW,
-                          value=True)
-            permissions.append(TravelPermission(**kwargs))
-            if value is not None:
-                permissions.extend(make_permissions_for_model(user_type, status, field_name, value))
-        return permissions
+        name = '_'.join((user_type, status, model_name, field_name, TravelPermission.VIEW))
+        kwargs = dict(name=name,
+                      user_type=user_type,
+                      status=status,
+                      model=model_name,
+                      field=field_name,
+                      permission_type=TravelPermission.VIEW,
+                      value=True)
+        permissions.append(TravelPermission(**kwargs))
+        if value is not None:
+            permissions.extend(make_permissions_for_model(user_type, status, field_name, value))
+    return permissions
 
 
 def generate_all_permissions(command):
@@ -123,14 +123,15 @@ class PermissionMatrixSetter(object):
 
     def revoke_edit(self, qs):
         num_revoked = qs.filter(permission_type=TravelPermission.EDIT).update(value=False)
-        self.log('{} permissions revoked'.format(num_revoked))
+        self.log('{} edit permissions revoked'.format(num_revoked))
 
     def grant_edit(self, qs):
         num_revoked = qs.filter(permission_type=TravelPermission.EDIT).update(value=True)
-        self.log('{} permissions revoked'.format(num_revoked))
+        self.log('{} edit permissions granted'.format(num_revoked))
+
     def revoke_view(self, qs):
         num_revoked = qs.filter(permission_type=TravelPermission.VIEW).update(value=False)
-        self.log('{} permissions revoked'.format(num_revoked))
+        self.log('{} view permissions revoked'.format(num_revoked))
 
     def get_related_q(self, fields):
         q = Q(model__in=fields)
@@ -146,10 +147,12 @@ class PermissionMatrixSetter(object):
         qs = TravelPermission.objects.filter(user_type=UserTypes.ANYONE)
         self.revoke_edit(qs)
 
-        q = Q(model__in=['deductions', 'expenses', 'cost_assignments'])
-        q |= Q(Q(model='travel') & Q(field__in=['deductions', 'expenses', 'cost_assignments']))
-
+        q = self.get_related_q(['deductions', 'expenses', 'cost_assignments', 'cost_summary'])
         sub_qs = qs.filter(q)
+        self.revoke_view(sub_qs)
+        self.revoke_edit(sub_qs)
+
+        sub_qs = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency'])
         self.revoke_view(sub_qs)
         self.revoke_edit(sub_qs)
 
@@ -169,14 +172,32 @@ class PermissionMatrixSetter(object):
         self.revoke_view(sub_qs)
         self.revoke_edit(sub_qs)
 
-        sub_qs = qs.filter(status__in=[TripStatus.SUBMITTED, TripStatus.CERTIFICATION_SUBMITTED])
+        sub_qs = qs.filter(status__in=[TripStatus.SUBMITTED,
+                                       TripStatus.CERTIFICATION_SUBMITTED,
+                                       TripStatus.CERTIFICATION_REJECTED,
+                                       TripStatus.CERTIFICATION_APPROVED,
+                                       TripStatus.SENT_FOR_PAYMENT,
+                                       TripStatus.COMPLETED])
         self.revoke_edit(sub_qs)
+
+        sub_qs = qs.filter(self.get_related_q(['activities']), status__in=[TripStatus.SENT_FOR_PAYMENT,
+                                                                           TripStatus.CERTIFICATION_REJECTED])
+        self.grant_edit(sub_qs)
+
     def set_up_travel_administrator(self):
         self.log('Set up permissions for travel administrator')
         qs = TravelPermission.objects.filter(user_type=UserTypes.TRAVEL_ADMINISTRATOR)
 
-        sub_q = qs.filter(status=TripStatus.APPROVED).exclude(self.get_related_q(['travel_activities']))
-        self.revoke_edit(sub_q)
+        sub_qs = qs.filter(status=TripStatus.APPROVED).exclude(self.get_related_q(['activities']))
+        self.revoke_edit(sub_qs)
+
+        sub_qs = qs.filter(status__in=[TripStatus.SENT_FOR_PAYMENT,
+                                      TripStatus.CERTIFICATION_REJECTED])
+        sub_qs = sub_qs.exclude(self.get_related_q(['activities']))
+        self.revoke_edit(sub_qs)
+
+        sub_qs = qs.filter(status__in=[TripStatus.COMPLETED, TripStatus.CERTIFICATION_APPROVED])
+        self.revoke_edit(sub_qs)
 
     def set_up_supervisor(self):
         self.log('Set up permissions for supervisor')
@@ -198,8 +219,13 @@ class PermissionMatrixSetter(object):
         num_granted = qs.filter(q).update(value=True)
         self.log('{} permissions granted'.format(num_granted))
 
-        sub_q = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency'])
-        self.grant_edit(sub_q)
+        sub_qs = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency'])
+        sub_qs = sub_qs.exclude(status__in=[TripStatus.COMPLETED,
+                                            TripStatus.CERTIFICATION_SUBMITTED,
+                                            TripStatus.CERTIFICATION_APPROVED,
+                                            TripStatus.CERTIFICATION_REJECTED])
+        self.grant_edit(sub_qs)
+
     def set_up_finance_focal_point(self):
         self.log('Set up permissions for finance focal point')
         fields_to_edit = ['itinerary', 'deductions', 'expenses', 'cost_assignments']
@@ -208,18 +234,25 @@ class PermissionMatrixSetter(object):
                              TripStatus.CANCELLED,
                              TripStatus.APPROVED,
                              TripStatus.REJECTED,
-                             TripStatus.CERTIFICATION_APPROVED]
+                             TripStatus.CERTIFICATION_APPROVED,
+                             TripStatus.SENT_FOR_PAYMENT]
         qs = TravelPermission.objects.filter(user_type=UserTypes.FINANCE_FOCAL_POINT)
         self.revoke_edit(qs)
 
         q = Q(status__in=status_where_edit) & self.get_related_q(fields_to_edit)
-        num_granted = qs.filter(q).update(value=True)
-        self.log('{} permissions granted'.format(num_granted))
+        sub_qs = qs.filter(q)
+        self.grant_edit(sub_qs)
+
+        sub_qs = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency']).exclude(
+            status__in=[TripStatus.COMPLETED,
+                        TripStatus.CERTIFICATION_SUBMITTED,
+                        TripStatus.CERTIFICATION_APPROVED,
+                        TripStatus.CERTIFICATION_REJECTED])
+        self.grant_edit(sub_qs)
 
     def set_up_representative(self):
-        permissions = TravelPermission.objects.filter(user_type=UserTypes.REPRESENTATIVE)
-        permissions = permissions.filter(permission_type=TravelPermission.EDIT)
-        permissions.update(value=False)
+        qs = TravelPermission.objects.filter(user_type=UserTypes.REPRESENTATIVE)
+        self.revoke_edit(qs)
 
 
 def populate_permission_matrix(command):
