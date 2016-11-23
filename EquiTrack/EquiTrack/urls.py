@@ -50,6 +50,8 @@ from reports.views import (
 from partners.urls import (
     simple_interventions_api,
     interventions_api,
+    government_interventions_api,
+    simple_government_interventions_api,
     results_api,
     simple_results_api,
     intervention_reports_api,
@@ -140,6 +142,8 @@ urlpatterns = patterns(
     url(r'^api/', include(agreement_api.urls)),
     url(r'^api/', include(simple_agreements_api.urls)),
     url(r'^api/', include(interventions_api.urls)),
+    url(r'^api/', include(government_interventions_api.urls)),
+    url(r'^api/', include(simple_government_interventions_api.urls)),
     url(r'^api/', include(simple_interventions_api.urls)),
     url(r'^api/', include(simple_results_api.urls)),
     url(r'^api/', include(results_api.urls)),
