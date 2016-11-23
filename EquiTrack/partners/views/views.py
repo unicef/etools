@@ -1,11 +1,13 @@
 from __future__ import absolute_import
 
-import datetime
-
-from rest_framework.decorators import detail_route
+from partners.exports import PartnerExport, AgreementExport, InterventionExport, GovernmentExport
+from partners.filters import PartnerOrganizationExportFilter, AgreementExportFilter, InterventionExportFilter, \
+    GovernmentInterventionExportFilter, PartnerScopeFilter
+from partners.models import GovernmentIntervention
 
 __author__ = 'jcranwellward'
 
+import datetime
 
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -13,8 +15,10 @@ from django.http import HttpResponse
 from django.conf import settings
 from django.shortcuts import get_object_or_404
 
+from rest_framework import status
+from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework import viewsets, mixins, generics
+from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
@@ -34,7 +38,8 @@ from partners.serializers.serializers import (
     PartnerStaffMemberSerializer,
     AgreementSerializer,
     PartnershipBudgetSerializer,
-    PCAFileSerializer
+    PCAFileSerializer,
+    GovernmentInterventionSerializer,
 )
 from partners.permissions import PartnerPermission, ResultChainPermission
 from partners.filters import PartnerScopeFilter
@@ -56,8 +61,6 @@ from partners.models import (
     IndicatorReport
 )
 from reports.models import CountryProgramme
-from rest_framework import status
-from rest_framework.response import Response
 
 
 class PcaPDFView(PDFTemplateView):
@@ -236,7 +239,7 @@ class AgreementViewSet(
     queryset = Agreement.objects.all()
     serializer_class = AgreementSerializer
     permission_classes = (PartnerPermission,)
-    filter_backends = (PartnerScopeFilter,)
+    filter_backends = (PartnerScopeFilter, AgreementExportFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -283,6 +286,36 @@ class AgreementViewSet(
             status=status.HTTP_200_OK
         )
 
+    @list_route(methods=['get'])
+    def export(self, request, partner_pk=None):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        dataset = AgreementExport().export(queryset)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportAgreements.csv"'
+        response.write(dataset.csv)
+        return response
+
+
+class GovernmentInterventionsViewSet(viewsets.GenericViewSet,
+                                    mixins.RetrieveModelMixin,
+                                    mixins.ListModelMixin,):
+    queryset = GovernmentIntervention.objects.all()
+    serializer_class = GovernmentInterventionSerializer
+    permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter, GovernmentInterventionExportFilter,)
+
+    @list_route(methods=['get'])
+    def export(self, request, partner_pk=None):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        dataset = GovernmentExport().export(queryset)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportGovernmentInterventions.csv"'
+        response.write(dataset.csv)
+        return response
 
 class InterventionsViewSet(
     mixins.RetrieveModelMixin,
@@ -296,7 +329,7 @@ class InterventionsViewSet(
     queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
-    filter_backends = (PartnerScopeFilter,)
+    filter_backends = (PartnerScopeFilter, InterventionExportFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -359,6 +392,17 @@ class InterventionsViewSet(
             data,
             status=status.HTTP_200_OK
         )
+
+    @list_route(methods=['get'])
+    def export(self, request, partner_pk=None):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        dataset = InterventionExport().export(queryset)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportInterventions.csv"'
+        response.write(dataset.csv)
+        return response
 
 
 class ResultChainViewSet(
@@ -790,6 +834,7 @@ class PartnerOrganizationsViewSet(
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationSerializer
     permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerOrganizationExportFilter,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -807,6 +852,17 @@ class PartnerOrganizationsViewSet(
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+
+    @list_route(methods=['get'])
+    def export(self, request):
+        queryset = self.get_queryset()
+        queryset = self.filter_queryset(queryset)
+        dataset = PartnerExport().export(queryset)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="ModelExportPartners.csv"'
+        response.write(dataset.csv)
+        return response
 
 
 class PartnerStaffMembersViewSet(

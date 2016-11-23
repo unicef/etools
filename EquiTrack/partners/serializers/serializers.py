@@ -1,3 +1,4 @@
+
 __author__ = 'jcranwellward'
 
 import json
@@ -23,8 +24,11 @@ from partners.models import (
     ResultChain,
     IndicatorReport,
     DistributionPlan,
+    RISK_RATINGS,
+    CSO_TYPES,
+    PartnerType,
+    GovernmentIntervention,
 )
-
 
 class PCASectorGoalSerializer(serializers.ModelSerializer):
 
@@ -64,6 +68,7 @@ class PCASectorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCASector
+        fields = '__all__'
 
 
 class PCAFileSerializer(serializers.ModelSerializer):
@@ -87,24 +92,28 @@ class FileTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FileType
+        fields = '__all__'
 
 
 class PCAGrantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCAGrant
+        fields = '__all__'
 
 
 class PartnershipBudgetSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnershipBudget
+        fields = '__all__'
 
 
 class AmendmentLogSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AmendmentLog
+        fields = '__all__'
 
 
 class ResultChainSerializer(serializers.ModelSerializer):
@@ -117,6 +126,7 @@ class ResultChainSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultChain
+        fields = '__all__'
 
 
 class LocationSerializer(serializers.Serializer):
@@ -138,6 +148,7 @@ class LocationSerializer(serializers.Serializer):
 
     class Meta:
         model = Location
+        fields = '__all__'
 
 
 class IndicatorReportSerializer(serializers.ModelSerializer):
@@ -149,6 +160,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IndicatorReport
+        fields = '__all__'
 
     def get_indicator(self, obj):
         return obj.indicator.id
@@ -165,7 +177,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         # we could allow superusers by checking for superusers first
         if not (user or rc) or \
                 (user.profile.partner_staff_member not in
-                    rc.partnership.partner.partnerstaffmember_set.values_list('id', flat=True)):
+                    rc.partnership.partner.staff_members.values_list('id', flat=True)):
             raise Exception('hell')
 
         return data
@@ -200,6 +212,7 @@ class ResultChainDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultChain
+        fields = '__all__'
 
 
 class DistributionPlanSerializer(serializers.ModelSerializer):
@@ -227,6 +240,13 @@ class InterventionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
+        fields = '__all__'
+
+
+class GovernmentInterventionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GovernmentIntervention
 
 
 class GWLocationSerializer(serializers.ModelSerializer):
@@ -246,6 +266,7 @@ class GWLocationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GwPCALocation
+        fields = '__all__'
 
 
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
@@ -254,41 +275,21 @@ class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerOrganization
+        fields = '__all__'
 
 
 class AgreementSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Agreement
-        fields = (
-            "id",
-            "partner",
-            "agreement_type",
-            "agreement_number",
-            "attached_agreement",
-            "start",
-            "end",
-            "signed_by_unicef_date",
-            "signed_by",
-            "signed_by_partner_date",
-            "partner_manager",
-            "status",
-            "bank_name",
-            "bank_address",
-            "account_title",
-            "account_number",
-            "routing_details",
-            "bank_contact_person",
-            "year",
-            "reference_number",
-        )
-        read_only_fields = ("id",)
+        fields = '__all__'
 
 
 class PartnerStaffMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerStaffMember
+        fields = '__all__'
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
@@ -298,6 +299,7 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerStaffMember
+        fields = '__all__'
         # fields = (
         # )
 
@@ -318,3 +320,41 @@ class RapidProRequest(serializers.Serializer):
         if restored_data['values']:
             restored_data['values'] = json.loads(restored_data['values'])
         return restored_data
+
+
+class PartnershipExportFilterSerializer(serializers.Serializer):
+    MARKED_FOR_DELETION = 'marked_for_deletion'
+    search = serializers.CharField(default='', required=False)
+    partner_type = serializers.ChoiceField(PartnerType.CHOICES, required=False)
+    cso_type = serializers.ChoiceField(CSO_TYPES, required=False)
+    risk_rating = serializers.ChoiceField(RISK_RATINGS, required=False)
+    flagged = serializers.ChoiceField((MARKED_FOR_DELETION,), required=False)
+    show_hidden = serializers.BooleanField(default=False, required=False)
+
+
+class AgreementExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    agreement_type = serializers.ChoiceField(Agreement.AGREEMENT_TYPES, required=False)
+    starts_after = serializers.DateField(required=False)
+    ends_before = serializers.DateField(required=False)
+
+
+class InterventionExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    document_type = serializers.ChoiceField(PCA.PARTNERSHIP_TYPES, required=False)
+    country_programme = serializers.CharField(required=False)
+    result_structure = serializers.CharField(required=False)
+    sector = serializers.CharField(required=False)
+    status = serializers.ChoiceField(PCA.PCA_STATUS, required=False)
+    unicef_focal_point = serializers.CharField(required=False)
+    donor = serializers.CharField(required=False)
+    grant = serializers.CharField(required=False)
+    starts_after = serializers.DateField(required=False)
+    ends_before = serializers.DateField(required=False)
+
+
+class GovernmentInterventionExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    result_structure = serializers.CharField(required=False)
+    country_programme = serializers.CharField(required=False)
+    year = serializers.IntegerField(required=False)

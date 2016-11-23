@@ -1,3 +1,4 @@
 -r base.txt
 sqlparse==0.1.19  # for django debug toolbar to not break admin
 django-debug-toolbar==1.4
+django-extensions
