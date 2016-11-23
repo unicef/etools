@@ -11,7 +11,7 @@ from rest_framework.generics import (
     ListAPIView,
     RetrieveUpdateDestroyAPIView,
 )
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 
 from partners.models import PartnerOrganization, PCA
 from partners.permissions import PartnerPermission
@@ -38,7 +38,6 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             return PartnerOrganizationSerializer
         else:
             return super(PartnerOrganizationListAPIView, self).get_serializer_class()
-
 
     def create(self, request, *args, **kwargs):
         """
@@ -79,16 +78,21 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
+        return q
 
-            if format == 'csv':
-                response = HttpResponse(content_type='text/csv')
-                response['Content-Disposition'] = 'attachment; filename="ExportPartners.csv"'
-                response.write(q.csv)
-                return response
-            else:
-                return q
-        else:
-            return q.all()
+    def list(self, request):
+        """
+        Checks for format query parameter
+        :returns: JSON or CSV file
+        """
+        query_params = self.request.query_params
+        response = super(PartnerOrganizationListAPIView, self).list(request)
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                response['Content-Disposition'] = "attachment;filename=partner.csv"
+
+        return response
+
 
 
 class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
