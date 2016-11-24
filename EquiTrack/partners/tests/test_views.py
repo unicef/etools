@@ -305,19 +305,11 @@ class TestAgreementAPIView(APITenantTestCase):
                                 status="draft"
                             )
         self.intervention = PartnershipFactory(partner=self.partner, agreement=self.agreement)
-        self.result_type = ResultType.objects.get(id=1)
         today = datetime.date.today()
         self.country_programme = CountryProgrammeFactory(
                                         wbs='/A0/',
                                         from_date=date(today.year-1, 1, 1),
                                         to_date=date(today.year+1, 1, 1))
-        self.result_structure=ResultStructureFactory(country_programme=self.country_programme)
-        self.result = ResultFactory(result_type=self.result_type, result_structure=self.result_structure)
-        self.resultchain = ResultChain.objects.create(
-            result=self.result,
-            result_type=self.result_type,
-            partnership=self.intervention,
-        )
 
     def test_partner_agreements_list(self):
         response = self.forced_auth_req(
