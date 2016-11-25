@@ -30,6 +30,31 @@ class AgreementListSerializer(serializers.ModelSerializer):
         )
 
 
+class AgreementExportSerializer(serializers.ModelSerializer):
+
+    staff_members = serializers.SerializerMethodField()
+    partner_name = serializers.CharField(source='partner.name', read_only=True)
+
+    class Meta:
+        model = Agreement
+        fields = (
+            "reference_number",
+            "status",
+            "partner_name",
+            "agreement_type",
+            "start",
+            "end",
+            "partner_manager",
+            "signed_by_partner_date",
+            "signed_by",
+            "signed_by_unicef_date",
+            "staff_members",
+        )
+
+    def get_staff_members(self, obj):
+        return ', '.join([sm.get_full_name() for sm in obj.partner_staff_members.all()])
+
+
 class AgreementRetrieveSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
