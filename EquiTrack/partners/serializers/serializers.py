@@ -1,6 +1,3 @@
-
-__author__ = 'jcranwellward'
-
 import json
 from django.db import transaction
 from rest_framework import serializers
@@ -8,7 +5,7 @@ from rest_framework import serializers
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
-from .models import (
+from partners.models import (
     FileType,
     GwPCALocation,
     PCA,
@@ -29,6 +26,7 @@ from .models import (
     PartnerType,
     GovernmentIntervention,
 )
+
 
 class PCASectorGoalSerializer(serializers.ModelSerializer):
 

@@ -878,6 +878,7 @@ class PCA(AdminURLMixin, models.Model):
         max_length=255,
         verbose_name=u'Document type'
     )
+
     result_structure = models.ForeignKey(
         ResultStructure,
         blank=True, null=True, on_delete=models.DO_NOTHING,
@@ -1027,6 +1028,16 @@ class PCA(AdminURLMixin, models.Model):
     @property
     def amendment_num(self):
         return self.amendments_log.all().count()
+
+    @property
+    def total_partner_contribution(self):
+
+        if self.budget_log.exists():
+            return sum([b['partner_contribution'] for b in
+                 self.budget_log.values('created', 'year', 'partner_contribution').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
+        return 0
 
     @property
     def total_unicef_cash(self):
