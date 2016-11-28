@@ -719,7 +719,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
                     u'partner_manager',
                     u'signed_by_unicef_date',
                     u'signed_by',
-                    u'partner_staff_members',
+                    u'authorized_officers',
                 )
         }),
         # (_('Bank Details'), {

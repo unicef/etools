@@ -70,7 +70,7 @@ class Command(BaseCommand):
                     partnership.end_date,
                     datetime.time(00, 00)
                 )
-            pca.partner_staff_members.add(partner_staff)
+            pca.authorized_officers.add(partner_staff)
             pca.save()
 
             PartnershipBudget.objects.create(

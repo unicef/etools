@@ -662,7 +662,7 @@ class Agreement(TimeStampedModel):
     )
 
     partner = models.ForeignKey(PartnerOrganization)
-    partner_staff_members = models.ManyToManyField(
+    authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
         blank=True,
         related_name="staff_members")
@@ -844,7 +844,7 @@ class AuthorizedOfficer(models.Model):
 
     agreement = models.ForeignKey(
         Agreement,
-        related_name='authorized_officers'
+        related_name='__authorized_officers'
     )
     officer = models.ForeignKey(
         PartnerStaffMember

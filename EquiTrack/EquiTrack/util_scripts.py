@@ -390,5 +390,5 @@ def migrate_authorized_officers():
     for item in authorized_officers:
         agreement = item.agreement
         officer = item.officer
-        agreement.partner_staff_members.add(officer)
+        agreement.authorized_officers.add(officer)
         agreement.save()

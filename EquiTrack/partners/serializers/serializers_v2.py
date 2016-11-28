@@ -56,20 +56,20 @@ class AgreementExportSerializer(serializers.ModelSerializer):
         )
 
     def get_staff_members(self, obj):
-        return ', '.join([sm.get_full_name() for sm in obj.partner_staff_members.all()])
+        return ', '.join([sm.get_full_name() for sm in obj.authorized_officers.all()])
 
 
 class AgreementRetrieveSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
-    partner_staff_members = PartnerStaffMemberEmbedSerializer(many=True)
+    authorized_officers = PartnerStaffMemberEmbedSerializer(many=True)
 
     class Meta:
         model = Agreement
         fields = (
             "id",
             "partner",
-            "partner_staff_members",
+            "authorized_officers",
             "partner_name",
             "agreement_type",
             "agreement_number",

@@ -276,9 +276,9 @@ class AgreementForm(UserGroupForm):
     def __init__(self, *args, **kwargs):
         super(AgreementForm, self).__init__(*args, **kwargs)
         if hasattr(self, 'partner'):
-            self.fields['partner_staff_members'].queryset = PartnerStaffMember.objects.filter(partner=self.partner)
+            self.fields['authorized_officers'].queryset = PartnerStaffMember.objects.filter(partner=self.partner)
         else:
-            self.fields['partner_staff_members'].queryset = PartnerStaffMember.objects.none()
+            self.fields['authorized_officers'].queryset = PartnerStaffMember.objects.none()
 
     class Meta:
         model = Agreement

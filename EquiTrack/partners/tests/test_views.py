@@ -305,7 +305,7 @@ class TestAgreementAPIView(APITenantTestCase):
                             partner_manager=self.partner_staff,
                             signed_by_unicef_date=datetime.date.today()
                         )
-        self.agreement.partner_staff_members.add(self.partner_staff)
+        self.agreement.authorized_officers.add(self.partner_staff)
         self.agreement.save()
         self.agreement2 = AgreementFactory(
                                 partner=self.partner,
@@ -401,11 +401,11 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["partner_staff_members"][0]["first_name"], self.partner_staff.first_name)
+        self.assertEquals(response.data["authorized_officers"][0]["first_name"], self.partner_staff.first_name)
 
     def test_agreements_update_partner_staff(self):
         data = {
-            "partner_staff_members": [
+            "authorized_officers": [
                 self.partner_staff.id,
                 self.partner_staff2.id
             ],
@@ -418,7 +418,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["partner_staff_members"], [self.partner_staff.id, self.partner_staff2.id])
+        self.assertEquals(response.data["authorized_officers"], [self.partner_staff.id, self.partner_staff2.id])
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
