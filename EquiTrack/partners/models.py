@@ -665,7 +665,7 @@ class Agreement(TimeStampedModel):
     partner_staff_members = models.ManyToManyField(
         PartnerStaffMember,
         blank=True,
-        related_name="+")
+        related_name="staff_members")
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES
