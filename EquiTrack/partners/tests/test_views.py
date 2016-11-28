@@ -16,6 +16,7 @@ from EquiTrack.factories import (
     AgreementFactory,
     PartnerStaffFactory,
     CountryProgrammeFactory,
+    GroupFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
@@ -289,9 +290,16 @@ class TestAgreementAPIView(APITenantTestCase):
         self.partner = PartnerFactory(partner_type="Civil Society Organization")
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff2 = PartnerStaffFactory(partner=self.partner)
+
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.save()
+
+        self.partnership_manager_user = UserFactory(is_staff=True)
+        self.partnership_manager_user.groups.add(GroupFactory())
+        self.partnership_manager_user.profile.partner_staff_member = self.partner_staff.id
+        self.partnership_manager_user.save()
+
         self.agreement = AgreementFactory(
                             partner=self.partner,
                             partner_manager=self.partner_staff,
@@ -321,7 +329,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
-        self.assertEquals(response.data[0]["agreement_type"], Agreement.AGREEMENT_TYPES[2][0])
 
     def test_agreements_create(self):
         data = {
@@ -348,7 +355,19 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
         self.assertIn("Partner", response.data[0]["partner_name"])
-        self.assertEquals(response.data[0]["agreement_type"], Agreement.AGREEMENT_TYPES[0][0])
+
+    def test_agreements_update_noperm(self):
+        data = {
+            "status":"active",
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_agreements_update(self):
         data = {
@@ -357,7 +376,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -394,7 +413,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -405,10 +424,19 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'delete',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user
+            user=self.partnership_manager_user
         )
 
         self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_agreements_delete_noperm(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/{}/'.format(self.agreement.id),
+            user=self.partner_staff_user
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_agreements_create_cp_todate(self):
         data = {
@@ -419,7 +447,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/',
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -530,7 +558,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -549,7 +577,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -570,7 +598,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -590,7 +618,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -608,7 +636,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'post',
             '/api/v2/agreements/',
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -628,7 +656,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
@@ -642,7 +670,7 @@ class TestAgreementAPIView(APITenantTestCase):
         response = self.forced_auth_req(
             'patch',
             '/api/v2/agreements/{}/'.format(self.agreement.id),
-            user=self.partner_staff_user,
+            user=self.partnership_manager_user,
             data=data
         )
 
