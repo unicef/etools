@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListAPIView,
     CreateAPIView,
@@ -17,6 +18,7 @@ from partners.models import Agreement, PCA, PartnerStaffMember
 from partners.serializers.serializers import InterventionSerializer
 from partners.serializers.serializers_v2 import (
     AgreementListSerializer,
+    AgreementExportSerializer,
     AgreementCreateUpdateSerializer,
     AgreementRetrieveSerializer,
     PartnerStaffMemberSerializer,
@@ -35,12 +37,17 @@ class AgreementListAPIView(ListCreateAPIView):
     serializer_class = AgreementListSerializer
     filter_backends = (PartnerScopeFilter,)
     permission_classes = (PartneshipManagerPermission,)
+    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
 
     def get_serializer_class(self):
         """
         Use restriceted field set for listing
         """
         if self.request.method == "GET":
+            query_params = self.request.query_params
+            if "format" in query_params.keys():
+                if query_params.get("format") == 'csv':
+                    return AgreementExportSerializer
             return AgreementListSerializer
         elif self.request.method == "POST":
             return AgreementCreateUpdateSerializer
@@ -69,10 +76,25 @@ class AgreementListAPIView(ListCreateAPIView):
                     Q(agreement_number__icontains=query_params.get("search"))
                 )
 
-            expression = functools.reduce(operator.and_, queries)
-            return q.filter(expression)
-        else:
-            return q.all()
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+            else:
+                q = q.all()
+        return q
+
+    def list(self, request, partner_pk=None):
+        """
+            Checks for format query parameter
+            :returns: JSON or CSV file
+        """
+        query_params = self.request.query_params
+        response = super(AgreementListAPIView, self).list(request)
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                response['Content-Disposition'] = "attachment;filename=agreements.csv"
+
+        return response
 
 
 class AgreementInterventionsListAPIView(ListAPIView):
