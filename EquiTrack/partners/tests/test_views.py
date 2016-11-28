@@ -687,7 +687,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff_user = UserFactory(is_staff=True)
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
-        self.partner_staff_user.save()
+        self.partner_staff_user.profile.save()
 
     def test_partner_partner_staffmember_list(self):
         response = self.forced_auth_req(
@@ -711,7 +711,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.assertIn("Partner", response.data["name"])
         self.assertEquals("Mace", response.data["staff_members"][0]["first_name"])
 
-    def test_partner_staffmember_create(self):
+    def test_partner_staffmember_create_non_active(self):
         data = {
             "email": "a@aaa.com",
             "partner": self.partner.id,
@@ -726,7 +726,52 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
             data=data
         )
 
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data["non_field_errors"], ["New Staff Member needs to be active at the moment of creation"])
+
+    def test_partner_staffmember_create_already_partner(self):
+        partner = PartnerFactory(partner_type="Civil Society Organization")
+        partner_staff = PartnerStaffFactory(partner=partner)
+        partner_staff_user = UserFactory(is_staff=True)
+        partner_staff_user.profile.partner_staff_member = partner_staff.id
+        partner_staff_user.profile.save()
+        data = {
+            "email": partner_staff_user.email,
+            "partner": self.partner.id,
+            "first_name": "John",
+            "last_name": "Doe",
+            "title": "foobar",
+            "active": True
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/staff-members/',
+            user=partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("This user already exists under a different partnership", response.data["non_field_errors"][0])
+
+
+    def test_partner_staffmember_create(self):
+        data = {
+            "email": "a@aaa.com",
+            "partner": self.partner.id,
+            "first_name": "John",
+            "last_name": "Doe",
+            "title": "foobar",
+            "active": True,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/staff-members/',
+            user=self.partner_staff_user,
+            data=data
+        )
+
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
 
     def test_partner_staffmember_retrieve(self):
         response = self.forced_auth_req(
@@ -740,10 +785,15 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
     def test_partner_staffmember_update(self):
         data = {
-            "title": "foobar updated"
+            "email": self.partner_staff.email,
+            "partner": self.partner.id,
+            "first_name": "John",
+            "last_name": "Doe",
+            "title": "foobar updated",
+            "active": True,
         }
         response = self.forced_auth_req(
-            'patch',
+            'put',
             '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
             user=self.partner_staff_user,
             data=data
@@ -751,6 +801,25 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["title"], "foobar updated")
+
+    def test_partner_staffmember_update_email(self):
+        data = {
+            "email": "a@a.com",
+            "partner": self.partner.id,
+            "first_name": "John",
+            "last_name": "Doe",
+            "title": "foobar updated",
+            "active": True,
+        }
+        response = self.forced_auth_req(
+            'put',
+            '/api/v2/staff-members/{}/'.format(self.partner_staff.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("User emails cannot be changed, please remove the user and add another one", response.data["non_field_errors"][0])
 
     def test_partner_staffmember_delete(self):
         response = self.forced_auth_req(
