@@ -383,12 +383,16 @@ def after_code_merge(): #and after migrations
 
 def migrate_authorized_officers():
     """
-    Migrates AuthorizedOfficer instances back to the Agreement as a M2M field
+    Migrates AuthorizedOfficer from schema  , cntryinstances back to the Agreement as a M2M field
     to PartnerStaffMember
     """
-    authorized_officers = AuthorizedOfficer.objects.all()
-    for item in authorized_officers:
-        agreement = item.agreement
-        officer = item.officer
-        agreement.authorized_officers.add(officer)
-        agreement.save()
+    for cntry in Country.objects.order_by('name').exclude(name='Global'):
+        printtf("== Migrate AuthorizedOfficers from schema ", cntry)
+        set_country(cntry.name)
+        authorized_officers = AuthorizedOfficer.objects.all()
+        for item in authorized_officers:
+            printtf("- Migrate "item.officer.email)
+            agreement = item.agreement
+            officer = item.officer
+            agreement.authorized_officers.add(officer)
+            agreement.save()
