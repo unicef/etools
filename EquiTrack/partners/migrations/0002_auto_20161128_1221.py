@@ -31,16 +31,6 @@ class Migration(migrations.Migration):
             field=models.CharField(blank=True, choices=[(b'draft', b'Draft'), (b'active', b'Active'), (b'ended', b'Ended'), (b'suspended', b'Suspended'), (b'terminated', b'Terminated')], max_length=32L),
         ),
         migrations.AlterField(
-            model_name='agreementamendmentlog',
-            name='status',
-            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32L),
-        ),
-        migrations.AlterField(
-            model_name='amendmentlog',
-            name='status',
-            field=models.CharField(blank=True, choices=[('in_process', 'In Process'), ('active', 'Active'), ('implemented', 'Implemented'), ('cancelled', 'Cancelled'), ('suspended', 'Suspended'), ('terminated', 'Terminated')], max_length=32L),
-        ),
-        migrations.AlterField(
             model_name='partnerstaffmember',
             name='partner',
             field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='staff_members', to='partners.PartnerOrganization'),
