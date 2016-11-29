@@ -391,7 +391,7 @@ def migrate_authorized_officers():
         set_country(cntry.name)
         authorized_officers = AuthorizedOfficer.objects.all()
         for item in authorized_officers:
-            printtf("- Migrate "item.officer.email)
+            printtf("- Migrate ".join(item.officer.email))
             agreement = item.agreement
             officer = item.officer
             agreement.authorized_officers.add(officer)

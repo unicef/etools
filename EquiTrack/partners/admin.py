@@ -739,6 +739,9 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         u'download_url',
         u'reference_number',
     )
+    filter_horizontal = (
+        u'authorized_officers',
+    )
     inlines = [
         AgreementAmendmentLogInlineAdmin,
         BankDetailsInlineAdmin,

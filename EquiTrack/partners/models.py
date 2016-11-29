@@ -661,6 +661,19 @@ class Agreement(TimeStampedModel):
         (AWP, u"Work Plan"),
     )
 
+    DRAFT = "draft"
+    ACTIVE = "active"
+    ENDED = "ended"
+    SUSPENDED = "suspended"
+    TERMINATED = "terminated"
+    STATUS_CHOICES = (
+        (DRAFT, "Draft"),
+        (ACTIVE, "Active"),
+        (ENDED, "Ended"),
+        (SUSPENDED, "Suspended"),
+        (TERMINATED, "Terminated"),
+    )
+
     partner = models.ForeignKey(PartnerOrganization)
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
@@ -698,18 +711,6 @@ class Agreement(TimeStampedModel):
         show_all=False,
         auto_choose=False,
         blank=True, null=True,
-    )
-    DRAFT = "draft"
-    ACTIVE = "active"
-    ENDED = "ended"
-    SUSPENDED = "suspended"
-    TERMINATED = "terminated"
-    STATUS_CHOICES = (
-        (DRAFT, "Draft"),
-        (ACTIVE, "Active"),
-        (ENDED, "Ended"),
-        (SUSPENDED, "Suspended"),
-        (TERMINATED, "Terminated"),
     )
     status = models.CharField(
         max_length=32L,
