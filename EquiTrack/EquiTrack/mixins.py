@@ -91,6 +91,9 @@ class EToolsTenantMiddleware(TenantMiddleware):
         # the tenant metadata is stored.
         connection.set_schema_to_public()
 
+        if not request.user:
+            return
+
         if request.user.is_anonymous():
             # check if user is trying to reach an authentication endpoint
             if any(x in request.path for x in [
