@@ -39,3 +39,23 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
     def get_active_staff_members(self, obj):
         return ', '.join([sm.get_full_name() for sm in obj.staff_members.all()])
+
+
+class PartnerOrganizationListSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "vendor_number",
+            "deleted_flag",
+            "name",
+            "short_name",
+            "partner_type",
+            "rating",
+            "shared_partner",
+            "email",
+            "phone_number",
+            "total_ct_cp",
+            "total_ct_cy"
+        )

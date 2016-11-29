@@ -16,7 +16,10 @@ from django.http import HttpResponse, StreamingHttpResponse
 from partners.models import PartnerOrganization, PCA
 from partners.permissions import PartnerPermission
 from partners.serializers.serializers import PartnerOrganizationSerializer, InterventionSerializer
-from partners.serializers.serializers_v2 import PartnerOrganizationExportSerializer
+from partners.serializers.serializers_v2 import (
+    PartnerOrganizationExportSerializer,
+    PartnerOrganizationListSerializer,
+)
 from partners.filters import PartnerScopeFilter
 
 
@@ -40,7 +43,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return PartnerOrganizationExportSerializer
-            return PartnerOrganizationSerializer
+            return PartnerOrganizationListSerializer
         else:
             return super(PartnerOrganizationListAPIView, self).get_serializer_class()
 
@@ -73,7 +76,13 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if "cso_type" in query_params.keys():
                 queries.append(Q(cso_type=query_params.get("cso_type")))
             if "hidden" in query_params.keys():
-                queries.append(Q(hidden=query_params.get("hidden")))
+                hidden = None
+                if query_params.get("hidden").lower() == "true":
+                    hidden = True
+                if query_params.get("hidden").lower() == "false":
+                    hidden = False
+                if hidden != None:
+                    queries.append(Q(hidden=hidden))
             if "search" in query_params.keys():
                 queries.append(
                     Q(name__icontains=query_params.get("search")) |
