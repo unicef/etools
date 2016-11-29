@@ -34,18 +34,10 @@ class TripResource(BaseExportResource):
         return row
 
     def fill_trip_pcas(self, row, trip):
-        # interventions = []
-        # for lp in trip.linkedpartner_set.all():
-        #     if lp.intervention:
-        #         interventions.append(lp.intervention.__unicode__())
         pcas = set(lp.intervention.__unicode__() for lp in trip.linkedpartner_set.all() if lp.intervention)
-        # g_interventions = []
-        # for lgp in trip.linkedgovernmentpartner_set.all():
-        #     if lgp.intervention:
-        #         g_interventions.append(lgp.intervention.__unicode__())
 
         pcas.union(
-            set(set(lgp.intervention.__unicode__() for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention))
+            set(lgp.intervention.__unicode__() for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention)
         )
         self.insert_column(
             row,
@@ -71,7 +63,7 @@ class TripResource(BaseExportResource):
         self.insert_column(
             row,
             'Locations',
-            ', '.join([tl.location.name for tl in trip.triplocation_set.all() if tl.location and tl.location.name])
+            ', '.join([' - '.join((tl.location.name, tl.location.p_code)) for tl in trip.triplocation_set.all() if tl.location and tl.location.name and tl.location.p_code])
         )
 
     def fill_trip_row(self, row, trip):
