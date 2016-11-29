@@ -635,6 +635,11 @@ def get_agreement_path(instance, filename):
     )
 
 
+class AgreementManager(models.Manager):
+    def get_queryset(self):
+        return super(AgreementManager, self).get_queryset().select_related('partner')
+
+
 class Agreement(TimeStampedModel):
     """
     Represents an agreement with the partner organization.
@@ -651,11 +656,16 @@ class Agreement(TimeStampedModel):
         (PCA, u"Programme Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
+        # TODO Remove these two with data migration
         (IC, u'Institutional Contract'),
         (AWP, u"Work Plan"),
     )
 
     partner = models.ForeignKey(PartnerOrganization)
+    authorized_officers = models.ManyToManyField(
+        PartnerStaffMember,
+        blank=True,
+        related_name="staff_members")
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES
@@ -689,6 +699,23 @@ class Agreement(TimeStampedModel):
         auto_choose=False,
         blank=True, null=True,
     )
+    DRAFT = "draft"
+    ACTIVE = "active"
+    ENDED = "ended"
+    SUSPENDED = "suspended"
+    TERMINATED = "terminated"
+    STATUS_CHOICES = (
+        (DRAFT, "Draft"),
+        (ACTIVE, "Active"),
+        (ENDED, "Ended"),
+        (SUSPENDED, "Suspended"),
+        (TERMINATED, "Terminated"),
+    )
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=STATUS_CHOICES,
+    )
 
     # bank information
     bank_name = models.CharField(max_length=255, null=True, blank=True)
@@ -704,6 +731,9 @@ class Agreement(TimeStampedModel):
         help_text='Routing Details, including SWIFT/IBAN (if applicable)'
     )
     bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
+    view_objects = AgreementManager()
+    objects = models.Manager()
 
     def __unicode__(self):
         return u'{} for {} ({} - {})'.format(
@@ -745,11 +775,31 @@ class Agreement(TimeStampedModel):
             if self.amendments_log.last() else ''
         )
 
+    @transaction.atomic
     def save(self, **kwargs):
 
         # commit the reference number to the database once the agreement is signed
-        if self.signed_by_unicef_date and not self.agreement_number:
+        if self.status != Agreement.DRAFT and self.signed_by_unicef_date and not self.agreement_number:
             self.agreement_number = self.reference_number
+
+        if self.status == Agreement.DRAFT and self.start and self.end and \
+                self.signed_by_unicef_date and self.signed_by_partner_date and \
+                self.signed_by and self.partner_manager:
+            self.status = Agreement.ACTIVE
+
+        if self.agreement_type == Agreement.PCA and not self.end:
+            cp = CountryProgramme.current()
+            if cp:
+                self.end = cp.to_date
+
+        if self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
+            interventions = PCA.objects.filter(
+                                partner_id=self.partner.id,
+                                agreement_id=self.id,
+                                partnership_type__in=[PCA.PD, PCA.SHPD])
+            for item in interventions:
+                item.status = self.status
+                item.save()
 
         super(Agreement, self).save(**kwargs)
 
@@ -794,7 +844,7 @@ class AuthorizedOfficer(models.Model):
 
     agreement = models.ForeignKey(
         Agreement,
-        related_name='authorized_officers'
+        related_name='__authorized_officers'
     )
     officer = models.ForeignKey(
         PartnerStaffMember
@@ -820,9 +870,6 @@ class AuthorizedOfficer(models.Model):
                                officer=instance.partner_manager)
 
 
-post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
-
-
 class PCA(AdminURLMixin, models.Model):
     """
     Represents a partner intervention.
@@ -839,11 +886,15 @@ class PCA(AdminURLMixin, models.Model):
     ACTIVE = u'active'
     IMPLEMENTED = u'implemented'
     CANCELLED = u'cancelled'
+    SUSPENDED = u'suspended'
+    TERMINATED = u'terminated'
     PCA_STATUS = (
         (IN_PROCESS, u"In Process"),
         (ACTIVE, u"Active"),
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
+        (SUSPENDED, u"Suspended"),
+        (TERMINATED, u"Terminated"),
     )
     PD = u'PD'
     SHPD = u'SHPD'
@@ -1582,7 +1633,7 @@ class GwPCALocation(models.Model):
 class PCASector(TimeStampedModel):
     """
     Represents a sector for the partner intervention, which links a sector to a partnership
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`users.Sector`
     Relates to :model:`partners.AmendmentLog`
@@ -1610,7 +1661,7 @@ class PCASector(TimeStampedModel):
 class PCASectorGoal(models.Model):
     """
     Represents a goal for the partner intervention sector, which links a sector to a partnership
-    
+
     Relates to :model:`partners.PCASector`
     Relates to :model:`reports.Goal`
     """
@@ -1647,7 +1698,7 @@ def get_file_path(instance, filename):
 class PCAFile(models.Model):
     """
     Represents a file for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`partners.FileType`
     """
@@ -1674,7 +1725,7 @@ class PCAFile(models.Model):
 class RAMIndicator(models.Model):
     """
     Represents a RAM Indicator for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`reports.Result`
     Relates to :model:`reports.Indicator`
@@ -1711,7 +1762,7 @@ class ResultChain(models.Model):
     """
     Represents a result chain for the partner intervention,
     Connects Results and Indicators to interventions
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`reports.ResultType`
     Relates to :model:`reports.Result`
@@ -1760,7 +1811,7 @@ class ResultChain(models.Model):
 class IndicatorDueDates(models.Model):
     """
     Represents an indicator due date for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     """
 
@@ -1780,7 +1831,7 @@ class IndicatorDueDates(models.Model):
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
-    
+
     Relates to :model:`partners.ResultChain`
     Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`results.Indicator`
@@ -1822,7 +1873,7 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 class SupplyPlan(models.Model):
     """
     Represents a supply plan for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     """
@@ -1840,7 +1891,7 @@ class SupplyPlan(models.Model):
 class DistributionPlan(models.Model):
     """
     Represents a distribution plan for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     Relates to :model:`locations.Location`
@@ -1891,7 +1942,7 @@ class FCManager(models.Manager):
 class FundingCommitment(TimeFramedModel):
     """
     Represents a funding commitment for the grant
-    
+
     Relates to :model:`funds.Grant`
     """
 
