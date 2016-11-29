@@ -9,6 +9,7 @@ from .factories import TravelFactory
 
 
 # class TravelDetails(APITenantTestCase):
+
 class TravelDetails(object):
     maxDiff = None
 
