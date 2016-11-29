@@ -22,9 +22,8 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
         model = PartnerOrganization
         # TODO add missing fields:
-        #   Blocked Flag (new property)
         #   Bank Info (just the number of accounts synced from VISION)
-        fields = ('vendor_number', 'vision_synced', 'deleted_flag', 'name', 'short_name', 'alternate_id',
+        fields = ('vendor_number', 'vision_synced', 'deleted_flag', 'blocked', 'name', 'short_name', 'alternate_id',
                   'alternate_name', 'partner_type', 'cso_type', 'shared_partner', 'address', 'email', 'phone_number',
                   'rating', 'type_of_assessment', 'last_assessment_date', 'total_ct_cp', 'total_ct_cy',
                   'agreement_count', 'intervention_count', 'active_staff_members')
@@ -49,6 +48,7 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "id",
             "vendor_number",
             "deleted_flag",
+            "blocked",
             "name",
             "short_name",
             "partner_type",
@@ -57,5 +57,5 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "email",
             "phone_number",
             "total_ct_cp",
-            "total_ct_cy"
+            "total_ct_cy",
         )
