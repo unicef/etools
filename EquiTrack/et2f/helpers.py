@@ -1,11 +1,9 @@
 from __future__ import unicode_literals
 
 from datetime import timedelta, datetime
-from decimal import Decimal as D
+from decimal import Decimal
 
 from django.core.exceptions import ObjectDoesNotExist
-
-from et2f import UserTypes
 
 
 class PermissionMatrix(object):
@@ -16,6 +14,7 @@ class PermissionMatrix(object):
         self._permission_dict = self.get_permission_dict()
 
     def get_user_type(self):
+        from et2f.models import UserTypes
         return UserTypes.GOD
 
     def get_permission_dict(self):
@@ -53,13 +52,13 @@ class CostSummaryCalculator(object):
     def _get_dsa_rate_at(self, date, since=1):
         dsa_region = self._get_dsa_region_at(date)
         if dsa_region is None:
-            return D(0)
+            return Decimal(0)
         if since <= 60:
             return dsa_region.dsa_amount_usd
         return dsa_region.dsa_amount_60plus_usd
 
     def _get_deduction_multiplier_at(self, date):
-        multiplier = D(0)
+        multiplier = Decimal(0)
 
         try:
             deduction = self.travel.deductions.get(date=date)
@@ -68,15 +67,15 @@ class CostSummaryCalculator(object):
 
         # TODO handle overnight
         if deduction.no_dsa:
-            multiplier += D(1)
+            multiplier += Decimal(1)
         if deduction.breakfast:
-            multiplier += D('0.05')
+            multiplier += Decimal('0.05')
         if deduction.lunch:
-            multiplier += D('0.1')
+            multiplier += Decimal('0.1')
         if deduction.dinner:
-            multiplier += D('0.15')
+            multiplier += Decimal('0.15')
         if deduction.accomodation:
-            multiplier += D('0.5')
+            multiplier += Decimal('0.5')
 
         # Handle if it goes above 1
         return min(multiplier, 1)
@@ -88,7 +87,7 @@ class CostSummaryCalculator(object):
 
     def calculate_total_dsa(self):
         if self.travel.start_date is None or self.travel.end_date is None:
-            return D(0)
+            return Decimal(0)
 
         current_date = self.travel.start_date.date()
         end_date = self.travel.end_date.date()
@@ -97,7 +96,7 @@ class CostSummaryCalculator(object):
         previous_region = None
         previous_region_since = 0
 
-        total = D(0)
+        total = Decimal(0)
         while current_date <= end_date:
             dsa_region = self._get_dsa_region_at(current_date)
             if dsa_region == previous_region:
@@ -108,7 +107,7 @@ class CostSummaryCalculator(object):
 
             dsa_rate = self._get_dsa_rate_at(current_date, previous_region_since)
             if current_date == end_date:
-                dsa_rate *= D('0.4')
+                dsa_rate *= Decimal('0.4')
             else:
                 deductions = self._get_deduction_at(current_date)
                 dsa_rate -= deductions
@@ -121,20 +120,20 @@ class CostSummaryCalculator(object):
 
     def calculate_total_expenses(self):
         # TODO: figure out how to handle different currencies
-        total = D(0)
+        total = Decimal(0)
         for expense in self.travel.expenses.all():
             total += expense.amount
         return total
 
     def calculate_total_deductions(self):
         if self.travel.start_date is None or self.travel.end_date is None:
-            return D(0)
+            return Decimal(0)
 
         current_date = self.travel.start_date.date()
         end_date = self.travel.end_date.date()
         step = timedelta(days=1)
 
-        total = D(0)
+        total = Decimal(0)
         while current_date <= end_date:
             total += self._get_deduction_at(current_date)
             current_date += step
@@ -158,6 +157,8 @@ class CloneTravelHelper(object):
         fk_related = ['itinerary']
         o2o_related = ['clearances']
         new_travel = self._do_the_cloning(new_traveler, fk_related, o2o_related)
+        new_travel.is_driver = True
+        new_travel.save()
         return new_travel
 
     def _do_the_cloning(self, new_traveler, fk_related, o2o_related):
@@ -166,14 +167,14 @@ class CloneTravelHelper(object):
         new_travel.reset_status()
         new_travel.save()
 
-        cloned_models = self._clone_related(fk_related, o2o_related)
+        cloned_models = self._clone_relateDecimal(fk_related, o2o_related)
         for new_related in cloned_models:
             new_related.travel = new_travel
             new_related.save()
 
         return new_travel
 
-    def _clone_related(self, fk_related=None, o2o_related=None):
+    def _clone_relateDecimal(self, fk_related=None, o2o_related=None):
         fk_related = fk_related or []
         o2o_related = o2o_related or []
         cloned_models = []

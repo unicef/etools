@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from rest_framework import serializers
 
-from et2f import UserTypes, TripStatus
+from et2f.models import UserTypes, Travel
 
 
 class PermissionMatrixSerializer(serializers.Serializer):
@@ -22,7 +22,7 @@ class PermissionMatrixSerializer(serializers.Serializer):
 
         matrix = defaultdict(dict)
         for user_type in UserTypes.CHOICES:
-            for status in TripStatus.CHOICES:
+            for status in Travel.CHOICES:
                 matrix[user_type[0]][status[0]] = defaultdict(dict)
 
         for permission in permissions_qs:

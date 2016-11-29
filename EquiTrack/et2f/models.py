@@ -2,15 +2,34 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
-from django.core.mail import send_mail
-from django.contrib.postgres.fields.array import ArrayField
-from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.auth.models import User
-from django_fsm import FSMField, transition, TransitionNotAllowed
+from django.utils.translation import ugettext_lazy as _
+from django_fsm import FSMField, transition
 
-from et2f import BooleanChoice, TripStatus, UserTypes
 from et2f.helpers import CostSummaryCalculator
+
+
+class UserTypes(object):
+    GOD = 'God'
+    ANYONE = 'Anyone'
+    TRAVELER = 'Traveler'
+    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
+    SUPERVISOR = 'Supervisor'
+    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
+    FINANCE_FOCAL_POINT = 'Finance Focal Point'
+    REPRESENTATIVE = 'Representative'
+
+    CHOICES = (
+        (GOD, 'God'),
+        (ANYONE, _('Anyone')),
+        (TRAVELER, _('Traveler')),
+        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
+        (SUPERVISOR, _('Supervisor')),
+        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
+        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
+        (REPRESENTATIVE, _('Representative')),
+    )
 
 
 class WBS(models.Model):
@@ -44,24 +63,6 @@ class TravelType(models.Model):
     name = models.CharField(max_length=8, choices=CHOICES)
 
 
-class TravelPermission(models.Model):
-    EDIT = 'edit'
-    VIEW = 'view'
-    CHOICES = (
-        (EDIT, 'Edit'),
-        (VIEW, 'View'),
-    )
-
-    name = models.CharField(max_length=128)
-    code = models.CharField(max_length=128)
-    status = models.CharField(max_length=50, choices=TripStatus.CHOICES)
-    user_type = models.CharField(max_length=25, choices=UserTypes.CHOICES)
-    model = models.CharField(max_length=128)
-    field = models.CharField(max_length=64)
-    permission_type = models.CharField(max_length=5, choices=CHOICES)
-    value = models.BooleanField(default=False)
-
-
 class Currency(models.Model):
     # This will be populated from vision
     name = models.CharField(max_length=128)
@@ -84,10 +85,38 @@ class DSARegion(models.Model):
 
 
 def make_reference_number():
-    return datetime.now().strftime('%H/%M/%S')
+    return datetime.now().strftime('%H-%M-%S')
 
 
 class Travel(models.Model):
+    PLANNED = 'planned'
+    SUBMITTED = 'submitted'
+    REJECTED = 'rejected'
+    APPROVED = 'approved'
+    CANCELLED = 'cancelled'
+    SENT_FOR_PAYMENT = 'sent_for_payment'
+    CERTIFICATION_SUBMITTED = 'certification_submitted'
+    CERTIFICATION_APPROVED = 'certification_approved'
+    CERTIFICATION_REJECTED = 'certification_rejected'
+    CERTIFIED = 'certified'
+    COMPLETED = 'completed'
+
+    CHOICES = (
+        (PLANNED, _('Planned')),
+        (SUBMITTED, _('Submitted')),
+        (REJECTED, _('Rejected')),
+        (APPROVED, _('Approved')),
+        (COMPLETED, _('Completed')),
+        (CANCELLED, _('Cancelled')),
+        (SENT_FOR_PAYMENT, _('Sent for payment')),
+        (CERTIFICATION_SUBMITTED, _('Certification submitted')),
+        (CERTIFICATION_APPROVED, _('Certification approved')),
+        (CERTIFICATION_REJECTED, _('Certification rejected')),
+        (CERTIFIED, _('Certified')),
+        (COMPLETED, _('Completed')),
+    )
+
+
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     completed_at = models.DateTimeField(null=True)
     canceled_at = models.DateTimeField(null=True)
@@ -100,7 +129,7 @@ class Travel(models.Model):
     certification_note = models.TextField(null=True)
     report_note = models.TextField(null=True)
 
-    status = FSMField(default=TripStatus.PLANNED, choices=TripStatus.CHOICES, protected=True)
+    status = FSMField(default=PLANNED, choices=CHOICES, protected=True)
     traveler = models.ForeignKey(User, null=True, blank=True, related_name='travels')
     supervisor = models.ForeignKey(User, null=True, blank=True, related_name='+')
     office = models.ForeignKey('users.Office', null=True, blank=True, related_name='+')
@@ -115,10 +144,7 @@ class Travel(models.Model):
     mode_of_travel = models.ManyToManyField('TravelType', related_name='+')
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
     currency = models.ForeignKey('Currency', null=True, blank=True, related_name='+')
-
-    @property
-    def is_driver(self):
-        return False
+    is_driver = models.BooleanField(default=False)
 
     @property
     def ta_reference_number(self):
@@ -135,66 +161,66 @@ class Travel(models.Model):
 
     # State machine transitions
     def check_completion_conditions(self):
-        if self.status is TripStatus.SUBMITTED and not self.international_travel:
+        if self.status == Travel.SUBMITTED and not self.international_travel:
             return False
         return True
 
-    @transition(status, source=[TripStatus.PLANNED, TripStatus.REJECTED], target=TripStatus.SUBMITTED)
+    @transition(status, source=[PLANNED, REJECTED], target=SUBMITTED)
     def submit_for_approval(self):
         self.send_notification('Travel #{} was sent for approval.'.format(self.id))
 
-    @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.APPROVED)
+    @transition(status, source=[SUBMITTED], target=APPROVED)
     def approve(self):
         self.approved_at = datetime.now()
         self.send_notification('Travel #{} was approved.'.format(self.id))
 
-    @transition(status, source=[TripStatus.SUBMITTED], target=TripStatus.REJECTED)
+    @transition(status, source=[SUBMITTED], target=REJECTED)
     def reject(self):
         self.rejected_at = datetime.now()
         self.send_notification('Travel #{} was rejected.'.format(self.id))
 
-    @transition(status, source=[TripStatus.PLANNED,
-                                TripStatus.SUBMITTED,
-                                TripStatus.REJECTED,
-                                TripStatus.APPROVED,
-                                TripStatus.SENT_FOR_PAYMENT],
-                target=TripStatus.CANCELLED)
+    @transition(status, source=[PLANNED,
+                                SUBMITTED,
+                                REJECTED,
+                                APPROVED,
+                                SENT_FOR_PAYMENT],
+                target=CANCELLED)
     def cancel(self):
         self.canceled_at = datetime.now()
 
-    @transition(status, source=[TripStatus.CANCELLED, TripStatus.REJECTED], target=TripStatus.PLANNED)
+    @transition(status, source=[CANCELLED, REJECTED], target=PLANNED)
     def plan(self):
         pass
 
-    @transition(status, source=[TripStatus.APPROVED], target=TripStatus.SENT_FOR_PAYMENT)
+    @transition(status, source=[APPROVED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.send_notification('Travel #{} was sent for payment.'.format(self.id))
 
-    @transition(status, source=[TripStatus.DONE, TripStatus.SENT_FOR_PAYMENT, TripStatus.CERTIFICATION_REJECTED],
-                target=TripStatus.CERTIFICATION_SUBMITTED)
+    @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED],
+                target=CERTIFICATION_SUBMITTED)
     def submit_certificate(self):
         self.send_notification('Travel #{} certification was submitted.'.format(self.id))
 
-    @transition(status, source=[TripStatus.CERTIFICATION_SUBMITTED], target=TripStatus.CERTIFICATION_APPROVED)
+    @transition(status, source=[CERTIFICATION_SUBMITTED], target=CERTIFICATION_APPROVED)
     def approve_certificate(self):
         self.send_notification('Travel #{} certification was approved.'.format(self.id))
 
-    @transition(status, source=[TripStatus.CERTIFICATION_APPROVED, TripStatus.CERTIFICATION_SUBMITTED],
-                target=TripStatus.CERTIFICATION_REJECTED)
+    @transition(status, source=[CERTIFICATION_APPROVED, CERTIFICATION_SUBMITTED],
+                target=CERTIFICATION_REJECTED)
     def reject_certificate(self):
         self.send_notification('Travel #{} certification was rejected.'.format(self.id))
 
-    @transition(status, source=[TripStatus.DONE, TripStatus.CERTIFICATION_APPROVED, TripStatus.SENT_FOR_PAYMENT],
-                target=TripStatus.CERTIFIED)
+    @transition(status, source=[CERTIFICATION_APPROVED, SENT_FOR_PAYMENT],
+                target=CERTIFIED)
     def mark_as_certified(self):
         pass
 
-    @transition(status, source=[TripStatus.CERTIFIED, TripStatus.SUBMITTED], target=TripStatus.COMPLETED,
+    @transition(status, source=[CERTIFIED, SUBMITTED], target=COMPLETED,
                 conditions=[check_completion_conditions])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
 
-    @transition(status, target=TripStatus.PLANNED)
+    @transition(status, target=PLANNED)
     def reset_status(self):
         pass
 
@@ -278,7 +304,7 @@ class Clearances(models.Model):
 
 
 def determine_file_upload_path(instance, filename):
-    # CONFIRM THIS PLEASE
+    # TODO: CONFIRM THIS PLEASE
     return 'travels/{}/{}'.format(instance.travel.id, filename)
 
 
@@ -288,3 +314,41 @@ class TravelAttachment(models.Model):
 
     name = models.CharField(max_length=255)
     file = models.FileField(upload_to=determine_file_upload_path)
+
+
+class TravelPermission(models.Model):
+    GOD = 'God'
+    ANYONE = 'Anyone'
+    TRAVELER = 'Traveler'
+    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
+    SUPERVISOR = 'Supervisor'
+    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
+    FINANCE_FOCAL_POINT = 'Finance Focal Point'
+    REPRESENTATIVE = 'Representative'
+
+    USER_TYPE_CHOICES = (
+        (GOD, 'God'),
+        (ANYONE, _('Anyone')),
+        (TRAVELER, _('Traveler')),
+        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
+        (SUPERVISOR, _('Supervisor')),
+        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
+        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
+        (REPRESENTATIVE, _('Representative')),
+    )
+
+    EDIT = 'edit'
+    VIEW = 'view'
+    PERMISSION_TYPE_CHOICES = (
+        (EDIT, 'Edit'),
+        (VIEW, 'View'),
+    )
+
+    name = models.CharField(max_length=128)
+    code = models.CharField(max_length=128)
+    status = models.CharField(max_length=50, choices=Travel.CHOICES)
+    user_type = models.CharField(max_length=25, choices=USER_TYPE_CHOICES)
+    model = models.CharField(max_length=128)
+    field = models.CharField(max_length=64)
+    permission_type = models.CharField(max_length=5, choices=PERMISSION_TYPE_CHOICES)
+    value = models.BooleanField(default=False)

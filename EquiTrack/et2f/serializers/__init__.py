@@ -246,9 +246,17 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 class TravelListSerializer(TravelDetailsSerializer):
     traveler = serializers.CharField(source='traveler.get_full_name')
 
-    class Meta(TravelDetailsSerializer.Meta):
+    class Meta:
+        model = Travel
         fields = ('id', 'reference_number', 'traveler', 'purpose', 'status', 'section', 'office', 'start_date',
                   'end_date')
+        read_only_fields = ('status',)
+
+
+class CloneOutputSerializer(TravelDetailsSerializer):
+    class Meta:
+        model = Travel
+        fields = ('id',)
 
 
 class CurrentUserSerializer(serializers.ModelSerializer):
@@ -264,8 +272,3 @@ class CloneParameterSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('traveler',)
-
-
-class CloneOutputSerializer(TravelDetailsSerializer):
-    class Meta(TravelDetailsSerializer.Meta):
-        fields = ('id',)

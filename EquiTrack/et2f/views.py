@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
 from rest_framework.permissions import IsAdminUser
-from rest_framework.pagination import PageNumberPagination as _PageNumberPagination
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from et2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter, TravelAttachmentFilter
@@ -23,16 +23,17 @@ from users.models import Office, Section
 from et2f.exports import TravelListExporter
 from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
     TravelAttachment, TravelType
-from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, CurrentUserSerializer, TravelAttachmentSerializer, \
-    CloneParameterSerializer, CloneOutputSerializer
+from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, CurrentUserSerializer, \
+    TravelAttachmentSerializer, CloneParameterSerializer, CloneOutputSerializer
 from et2f.serializers.static_data import StaticDataSerializer
 from et2f.serializers.permission_matrix import PermissionMatrixSerializer
 from et2f.helpers import PermissionMatrix, CloneTravelHelper
 
 
-class PageNumberPagination(_PageNumberPagination):
+class TravelPagePagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
+    page_query_param = 'page'
 
     def get_paginated_response(self, data):
         return Response(OrderedDict([

@@ -2,8 +2,6 @@
 Model factories used for generating models dynamically for tests
 """
 
-__author__ = 'jcranwellward'
-
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry

@@ -6,8 +6,8 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD, UserTypes, TripStatus
-from et2f.models import Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType
+from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD
+from et2f.models import Currency, AirlineCompany, DSARegion, Fund, ExpenseType
 from funds.models import Donor, Grant
 from partners.models import PartnerOrganization
 from reports.models import Result, ResultType

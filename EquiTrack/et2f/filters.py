@@ -6,7 +6,7 @@ from datetime import date
 from django.db.models.query_utils import Q
 from rest_framework.filters import BaseFilterBackend
 
-from et2f import TripStatus
+from et2f.models import Travel
 from et2f.serializers.filters import SearchFilterSerializer, ShowHiddenFilterSerializer, SortFilterSerializer, \
     FilterBoxFilterSerializer
 
@@ -17,7 +17,8 @@ class SearchFilter(BaseFilterBackend):
 
     def filter_queryset(self, request, queryset, view):
         serializer = SearchFilterSerializer(data=request.GET)
-        serializer.is_valid()
+        if not serializer.is_valid():
+            return queryset
         data = serializer.validated_data
 
         search_str = data['search']
@@ -34,12 +35,13 @@ class SearchFilter(BaseFilterBackend):
 class ShowHiddenFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         serializer = ShowHiddenFilterSerializer(data=request.GET)
-        serializer.is_valid()
+        if not serializer.is_valid():
+            return queryset
         data = serializer.validated_data
 
         show_hidden = data['show_hidden']
         if not show_hidden:
-            q = Q(hidden=True) | Q(status=TripStatus.CANCELLED)
+            q = Q(hidden=True) | Q(status=Travel.CANCELLED)
             queryset = queryset.exclude(q)
 
         return queryset
@@ -48,7 +50,8 @@ class ShowHiddenFilter(BaseFilterBackend):
 class SortFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         serializer = SortFilterSerializer(data=request.GET)
-        serializer.is_valid()
+        if not serializer.is_valid():
+            return queryset
         data = serializer.validated_data
 
         prefix = '-' if data['reverse'] else ''
@@ -62,7 +65,8 @@ class FilterBoxFilter(BaseFilterBackend):
     """
     def filter_queryset(self, request, queryset, view):
         serializer = FilterBoxFilterSerializer(data=request.GET)
-        serializer.is_valid()
+        if not serializer.is_valid():
+            return queryset
         data = serializer.validated_data
 
         # Construct a backend readable date

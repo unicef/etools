@@ -131,7 +131,7 @@ class EtoolsTokenAuthentication(TokenAuthentication):
 
     def authenticate(self, request):
         super_return = super(EtoolsTokenAuthentication, self).authenticate(request)
-        if super_return is None:
+        if not super_return:
             return None
 
         user, token = super_return
