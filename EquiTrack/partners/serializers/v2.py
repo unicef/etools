@@ -122,41 +122,62 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
         return data
 
 
-class PartnerStaffMemberSerializer(serializers.ModelSerializer):
+class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+
+
+class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
 
     def validate(self, data):
-        data = super(PartnerStaffMemberSerializer, self).validate(data)
+        data = super(PartnerStaffMemberCreateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
         existing_user = None
-        if not self.instance:
-            # user should be active first time it's created
-            if not active:
-                raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
-            try:
-                existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
-                if existing_user.profile.partner_staff_member:
-                    raise ValidationError("This user already exists under a different partnership: {}".format(email))
-            except User.DoesNotExist:
-                pass
 
-        else:
-            # make sure email addresses are not editable after creation.. user must be removed and re-added
-            if email != self.instance.email:
-                raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
+        # user should be active first time it's created
+        if not active:
+            raise ValidationError({'active': 'New Staff Member needs to be active at the moment of creation'})
+        try:
+            existing_user = User.objects.filter(Q(username=email) | Q(email=email)).get()
+            if existing_user.profile.partner_staff_member:
+                raise ValidationError("This user already exists under a different partnership: {}".format(email))
+        except User.DoesNotExist:
+            pass
 
-            # when adding the active tag to a previously untagged user
-            # make sure this user has not already been associated with another partnership.
-            if active and not self.instance.active and \
-                    existing_user and existing_user.partner_staff_member and \
-                    existing_user.partner_staff_member != self.instance.pk:
-                raise ValidationError(
-                    {'active': 'The Partner Staff member you are trying to activate is associated with a different partnership'}
-                )
+        return data
+
+
+class PartnerStaffMemberUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+
+    def validate(self, data):
+        data = super(PartnerStaffMemberUpdateSerializer, self).validate(data)
+        email = data.get('email', "")
+        active = data.get('active', "")
+        existing_user = None
+
+        # make sure email addresses are not editable after creation.. user must be removed and re-added
+        if email != self.instance.email:
+            raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
+
+        # when adding the active tag to a previously untagged user
+        # make sure this user has not already been associated with another partnership.
+        if active and not self.instance.active and \
+                existing_user and existing_user.partner_staff_member and \
+                existing_user.partner_staff_member != self.instance.pk:
+            raise ValidationError(
+                {'active': 'The Partner Staff member you are trying to activate is associated with a different partnership'}
+            )
 
         return data
 

@@ -21,7 +21,9 @@ from partners.serializers.v2 import (
     AgreementExportSerializer,
     AgreementCreateUpdateSerializer,
     AgreementRetrieveSerializer,
-    PartnerStaffMemberSerializer,
+    PartnerStaffMemberCreateSerializer,
+    PartnerStaffMemberUpdateSerializer,
+    PartnerStaffMemberDetailSerializer,
     PartnerStaffMemberPropertiesSerializer,
 )
 from partners.permissions import PartnerPermission, PartneshipManagerPermission
@@ -150,29 +152,31 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
         )
 
 
-class PartnerStaffMemberCreateAPIVIew(CreateAPIView):
-    """
-    Returns a list of all Partner staff members
-    """
-    serializer_class = PartnerStaffMemberSerializer
-    permission_classes = (PartnerPermission,)
-
-
 class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     """
     Returns a list of all Partner staff members
     """
     queryset = PartnerStaffMember.objects.all()
-    serializer_class = PartnerStaffMemberSerializer
+    serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (PartnerPermission,)
     filter_backends = (PartnerScopeFilter,)
+
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return PartnerStaffMemberCreateSerializer
+        return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
-    serializer_class = PartnerStaffMemberSerializer
+    serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (PartnerPermission,)
     filter_backends = (PartnerScopeFilter,)
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return PartnerStaffMemberUpdateSerializer
+        return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()
 
 
 class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
