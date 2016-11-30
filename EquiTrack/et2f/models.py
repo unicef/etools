@@ -146,6 +146,9 @@ class Travel(models.Model):
     currency = models.ForeignKey('Currency', null=True, blank=True, related_name='+')
     is_driver = models.BooleanField(default=False)
 
+    # When the travel is sent for payment, the expenses should be saved for later use
+    preserved_expenses = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+
     @property
     def ta_reference_number(self):
         return ''
@@ -194,6 +197,7 @@ class Travel(models.Model):
 
     @transition(status, source=[APPROVED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
+        self.preserved_expenses = self.cost_summary['expenses_total']
         self.send_notification('Travel #{} was sent for payment.'.format(self.id))
 
     @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED],

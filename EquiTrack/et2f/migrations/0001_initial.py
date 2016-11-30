@@ -145,7 +145,6 @@ class Migration(migrations.Migration):
                 ('reference_number', models.CharField(default=et2f.models.make_reference_number, max_length=12)),
                 ('hidden', models.BooleanField(default=False)),
                 ('estimated_travel_cost', models.DecimalField(decimal_places=4, default=0, max_digits=20)),
-                ('is_driver', models.BooleanField(default=False)),
                 ('currency', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.Currency')),
             ],
         ),
