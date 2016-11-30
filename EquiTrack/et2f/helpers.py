@@ -167,14 +167,14 @@ class CloneTravelHelper(object):
         new_travel.reset_status()
         new_travel.save()
 
-        cloned_models = self._clone_relateDecimal(fk_related, o2o_related)
+        cloned_models = self._clone_related(fk_related, o2o_related)
         for new_related in cloned_models:
             new_related.travel = new_travel
             new_related.save()
 
         return new_travel
 
-    def _clone_relateDecimal(self, fk_related=None, o2o_related=None):
+    def _clone_related(self, fk_related=None, o2o_related=None):
         fk_related = fk_related or []
         o2o_related = o2o_related or []
         cloned_models = []
