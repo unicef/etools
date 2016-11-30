@@ -152,6 +152,15 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
+    staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = PartnerOrganization
+        fields = "__all__"
+
+
+class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
+
     staff_members = PartnerStaffMemberNestedSerializer(many=True)
 
     class Meta:
@@ -160,8 +169,8 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        staff_members = validated_data.pop("staff_members")
-        partner = super(PartnerOrganizationDetailSerializer, self).create(validated_data)
+        staff_members = validated_data.pop("staff_members", [])
+        partner = super(PartnerOrganizationCreateUpdateSerializer, self).create(validated_data)
         for item in staff_members:
             item["partner"] = partner.id
             # Utilize extra validation logic in this serializer
@@ -169,6 +178,32 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
             serializer.is_valid(raise_exception=True)
             serializer.save()
         return partner
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        staff_members = validated_data.pop("staff_members", [])
+        updated = PartnerOrganization(id=instance.id, **validated_data)
+        updated.save()
+
+        # Delete removed members.
+        member_ids = [x["id"] for x in staff_members if "id" in x.keys()]
+        for member in instance.staff_members.all():
+            if member.id not in member_ids:
+                member.delete()
+
+        # Create or update new/changed members.
+        for item in staff_members:
+            item["partner"] = instance.id
+            if "id" in item.keys():
+                # Utilize extra validation logic in this serializer
+                serializer = PartnerStaffMemberUpdateSerializer(data=item)
+            else:
+                # Utilize extra validation logic in this serializer
+                serializer = PartnerStaffMemberCreateSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        return updated
 
 
 class AgreementListSerializer(serializers.ModelSerializer):

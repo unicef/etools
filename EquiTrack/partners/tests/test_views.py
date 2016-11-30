@@ -94,6 +94,40 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+    def test_api_partners_update_with_members(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data["staff_members"]), 1)
+        self.assertEquals(response.data["staff_members"][0]["first_name"], "Mace")
+
+        staff_members = [{
+                "title": "Some title",
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "a@a.com",
+                "active": True,
+            }]
+        data = {
+            "name": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "staff_members": staff_members,
+        }
+        response = self.forced_auth_req(
+            'put',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data["staff_members"]), 1)
+        self.assertEquals(response.data["staff_members"][0]["first_name"], "John")
+
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
             'get',

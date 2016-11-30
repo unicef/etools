@@ -35,6 +35,7 @@ from partners.serializers.v2 import (
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
     PartnerOrganizationDetailSerializer,
+    PartnerOrganizationCreateUpdateSerializer,
 )
 from partners.permissions import PartnerPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
@@ -46,7 +47,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     Returns a list of Partners.
     """
     queryset = PartnerOrganization.objects.all()
-    serializer_class = PartnerOrganizationDetailSerializer
+    serializer_class = PartnerOrganizationListSerializer
     permission_classes = (PartnerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, r.CSVRenderer)
@@ -60,9 +61,9 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
                     return PartnerOrganizationExportSerializer
-            return PartnerOrganizationListSerializer
-        else:
-            return super(PartnerOrganizationListAPIView, self).get_serializer_class()
+        if self.request.method == "POST":
+            return PartnerOrganizationCreateUpdateSerializer
+        return super(PartnerOrganizationListAPIView, self).get_serializer_class()
 
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()
@@ -108,7 +109,6 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         return response
 
 
-
 class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update PartnerOrganization.
@@ -116,6 +116,12 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (PartnerPermission,)
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return PartnerOrganizationCreateUpdateSerializer
+        else:
+            return super(PartnerOrganizationDetailAPIView, self).get_serializer_class()
 
     def retrieve(self, request, pk=None, format=None):
         """
