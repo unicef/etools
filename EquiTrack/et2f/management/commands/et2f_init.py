@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from et2f import PULI_USER_USERNAME, PULI_USER_PASSWORD
 from et2f.models import Currency, AirlineCompany, DSARegion, Fund, ExpenseType
 from funds.models import Donor, Grant
 from partners.models import PartnerOrganization
@@ -18,9 +17,15 @@ from _private import populate_permission_matrix
 
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
+    def add_arguments(self, parser):
+        parser.add_argument('username', nargs=1)
+        parser.add_argument('password', nargs=1, default='password')
+
     @atomic
     def handle(self, *args, **options):
-        user = self._create_admin_user()
+        username = options['username']
+        password = options['password']
+        user = self._get_or_create_admin_user(username, password)
         connection.set_tenant(user.profile.country)
 
         self._load_currencies()
@@ -32,22 +37,22 @@ class Command(BaseCommand):
         self._load_permission_matrix()
         self._add_wbs()
 
-    def _create_admin_user(self):
+    def _get_or_create_admin_user(self, username, password):
         User = get_user_model()
 
         try:
-            return User.objects.get(username=PULI_USER_USERNAME)
+            return User.objects.get(username=username)
         except ObjectDoesNotExist:
             pass
 
         uat_country = Country.objects.get(name='UAT')
 
-        user = User(username=PULI_USER_USERNAME,
+        user = User(username=username,
                     first_name='Puli',
                     last_name='Lab',
                     is_superuser=True,
                     is_staff=True)
-        user.set_password(PULI_USER_PASSWORD)
+        user.set_password(password)
         user.save()
 
         profile = user.profile
