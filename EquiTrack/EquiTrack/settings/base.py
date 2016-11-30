@@ -338,7 +338,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    'et2f.middlewares.TestingAuthMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
     'EquiTrack.mixins.CSRFExemptMiddleware',
 )
