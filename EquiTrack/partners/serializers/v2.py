@@ -131,8 +131,7 @@ class PartnerStaffMemberSerializer(serializers.ModelSerializer):
     def validate(self, data):
         data = super(PartnerStaffMemberSerializer, self).validate(data)
         email = data.get('email', "")
-        active = data.get('active')
-        validate_email(email)
+        active = data.get('active', "")
         existing_user = None
         if not self.instance:
             # user should be active first time it's created
