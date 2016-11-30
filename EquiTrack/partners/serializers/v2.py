@@ -150,14 +150,13 @@ class PartnerStaffMemberSerializer(serializers.ModelSerializer):
                 raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
 
             # when adding the active tag to a previously untagged user
-            if active and not self.instance.active:
-                # make sure this user has not already been associated with another partnership.
-                if existing_user:
-                    if existing_user.partner_staff_member and \
-                            existing_user.partner_staff_member != self.instance.pk:
-                        raise ValidationError(
-                            {'active': 'The Partner Staff member you are trying to activate is associated with a different partnership'}
-                        )
+            # make sure this user has not already been associated with another partnership.
+            if active and not self.instance.active and \
+                    existing_user and existing_user.partner_staff_member and \
+                    existing_user.partner_staff_member != self.instance.pk:
+                raise ValidationError(
+                    {'active': 'The Partner Staff member you are trying to activate is associated with a different partnership'}
+                )
 
         return data
 
