@@ -33,7 +33,6 @@ class AgreementListAPIView(ListCreateAPIView):
     Create new Agreements.
     Returns a list of Agreements.
     """
-    queryset = Agreement.objects.all()
     serializer_class = AgreementListSerializer
     filter_backends = (PartnerScopeFilter,)
     permission_classes = (PartneshipManagerPermission,)
@@ -98,7 +97,6 @@ class AgreementListAPIView(ListCreateAPIView):
 
 
 class AgreementInterventionsListAPIView(ListAPIView):
-    queryset = PCA.objects.all()
     serializer_class = InterventionSerializer
     filter_backends = (PartnerScopeFilter,)
     permission_classes = (PartneshipManagerPermission,)
