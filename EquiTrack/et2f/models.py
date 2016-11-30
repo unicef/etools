@@ -137,6 +137,7 @@ class Travel(models.Model):
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     purpose = models.CharField(max_length=500, null=True, blank=True)
+    additional_note = models.TextField(null=True, blank=True)
     international_travel = models.NullBooleanField(default=False, null=True, blank=True)
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_reference_number)
