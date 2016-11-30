@@ -60,7 +60,7 @@ class TravelListViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     queryset = Travel.objects.all()
     serializer_class = TravelListSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = TravelPagePagination
     permission_classes = (IsAdminUser,)
     filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
 
