@@ -4,7 +4,7 @@ from rest_framework import serializers
 
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
-from partners.serializers.serializers import InterventionSerializer
+from partners.serializers.v1 import InterventionSerializer
 from partners.models import (
     PartnerOrganization,
     PartnerType,

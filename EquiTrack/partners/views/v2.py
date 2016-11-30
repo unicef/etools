@@ -15,8 +15,8 @@ from django.http import HttpResponse, StreamingHttpResponse
 
 from partners.models import PartnerOrganization, PCA
 from partners.permissions import PartnerPermission
-from partners.serializers.serializers import PartnerOrganizationSerializer, InterventionSerializer
-from partners.serializers.serializers_v2 import (
+from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
+from partners.serializers.v2 import (
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
 )
