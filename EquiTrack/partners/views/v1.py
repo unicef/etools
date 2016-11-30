@@ -23,7 +23,7 @@ from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
-from partners.serializers.serializers import (
+from partners.serializers.v1 import (
     FileTypeSerializer,
     LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,

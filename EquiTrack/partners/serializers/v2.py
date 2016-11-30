@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 
 from partners.models import Agreement, PartnerOrganization, PartnerStaffMember
-from partners.serializers.serializers import (
+from partners.serializers.v1 import (
     PartnerOrganizationSerializer,
     PartnerStaffMemberEmbedSerializer,
 )

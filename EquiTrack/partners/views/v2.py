@@ -15,8 +15,8 @@ from rest_framework.generics import (
 )
 
 from partners.models import Agreement, PCA, PartnerStaffMember
-from partners.serializers.serializers import InterventionSerializer
-from partners.serializers.serializers_v2 import (
+from partners.serializers.v1 import InterventionSerializer
+from partners.serializers.v2 import (
     AgreementListSerializer,
     AgreementExportSerializer,
     AgreementCreateUpdateSerializer,
