@@ -60,6 +60,30 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             "name": "PO 1",
             "partner_type": "Government",
             "vendor_number": "AAA",
+            "staff_members": [],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_api_partners_create_with_members(self):
+        staff_members = [{
+                "title": "Some title",
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "a@a.com",
+                "active": True,
+            }]
+        data = {
+            "name": "PO 1",
+            "partner_type": "Government",
+            "vendor_number": "AAA",
+            "staff_members": staff_members,
         }
         response = self.forced_auth_req(
             'post',
@@ -81,6 +105,17 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
+
+    def test_api_partners_retrieve_staff_members(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertIn("staff_members", response.data.keys())
+        self.assertEquals(len(response.data["staff_members"]), 1)
 
     def test_api_partners_update(self):
         data = {

@@ -22,7 +22,7 @@ from partners.models import (
     PartnerStaffMember,
 )
 from partners.permissions import PartnerPermission
-from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
+from partners.serializers.v1 import InterventionSerializer
 from partners.serializers.v2 import (
     AgreementListSerializer,
     AgreementExportSerializer,
@@ -34,6 +34,7 @@ from partners.serializers.v2 import (
     PartnerStaffMemberPropertiesSerializer,
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
+    PartnerOrganizationDetailSerializer,
 )
 from partners.permissions import PartnerPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
@@ -45,7 +46,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     Returns a list of Partners.
     """
     queryset = PartnerOrganization.objects.all()
-    serializer_class = PartnerOrganizationSerializer
+    serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (PartnerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, r.CSVRenderer)
@@ -62,23 +63,6 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             return PartnerOrganizationListSerializer
         else:
             return super(PartnerOrganizationListAPIView, self).get_serializer_class()
-
-    def create(self, request, *args, **kwargs):
-        """
-        Add a new Partner
-        :return: JSON
-        """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        serializer.instance = serializer.save()
-
-        headers = self.get_success_headers(serializer.data)
-        return Response(
-            serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
 
     def get_queryset(self, format=None):
         q = PartnerOrganization.objects.all()
@@ -130,7 +114,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     Retrieve and Update PartnerOrganization.
     """
     queryset = PartnerOrganization.objects.all()
-    serializer_class = PartnerOrganizationSerializer
+    serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (PartnerPermission,)
 
     def retrieve(self, request, pk=None, format=None):
