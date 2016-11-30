@@ -149,10 +149,6 @@ class PartnerStaffMemberSerializer(serializers.ModelSerializer):
             if email != self.instance.email:
                 raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
 
-            # when removing the active tag
-            if self.instance.active and not active:
-                pass
-
             # when adding the active tag to a previously untagged user
             if active and not self.instance.active:
                 # make sure this user has not already been associated with another partnership.
