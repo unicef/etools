@@ -125,8 +125,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data["staff_members"]), 1)
-        self.assertEquals(response.data["staff_members"][0]["first_name"], "John")
+        self.assertEquals(len(response.data["staff_members"]), 2)
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(

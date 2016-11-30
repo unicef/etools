@@ -185,12 +185,6 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
         updated = PartnerOrganization(id=instance.id, **validated_data)
         updated.save()
 
-        # Delete removed members.
-        member_ids = [x["id"] for x in staff_members if "id" in x.keys()]
-        for member in instance.staff_members.all():
-            if member.id not in member_ids:
-                member.delete()
-
         # Create or update new/changed members.
         for item in staff_members:
             item["partner"] = instance.id
