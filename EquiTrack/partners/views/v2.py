@@ -21,7 +21,6 @@ from partners.models import (
     Agreement,
     PartnerStaffMember,
 )
-from partners.permissions import PartnerPermission
 from partners.serializers.v1 import InterventionSerializer
 from partners.serializers.v2 import (
     AgreementListSerializer,
@@ -284,7 +283,7 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     """
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartnerPermission,)
+    permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self):
@@ -296,7 +295,7 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartnerPermission,)
+    permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self):
@@ -311,6 +310,7 @@ class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
     """
     serializer_class = PartnerStaffMemberPropertiesSerializer
     queryset = PartnerStaffMember.objects.all()
+    permission_classes = (PartneshipManagerPermission,)
 
     def get_object(self):
         queryset = self.get_queryset()

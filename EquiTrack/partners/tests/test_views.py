@@ -286,15 +286,6 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEquals(response.data["hidden"], True)
 
 
-
-
-
-
-
-
-
-
-
 class TestPartnershipViews(APITenantTestCase):
     fixtures = ['initial_data.json']
     def setUp(self):
@@ -919,6 +910,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.partner = PartnerFactory(partner_type="Civil Society Organization")
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff_user = UserFactory(is_staff=True)
+        self.partner_staff_user.groups.add(GroupFactory())
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.profile.save()
 

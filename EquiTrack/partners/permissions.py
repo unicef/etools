@@ -22,7 +22,7 @@ class PartnerPermission(permissions.BasePermission):
 
 
 class PartneshipManagerPermission(permissions.BasePermission):
-    message = 'Accessing this Agreement is not allowed.'
+    message = 'Accessing this item is not allowed.'
 
     def _has_access_permissions(self, user, object):
         if user.is_staff or \
