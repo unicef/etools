@@ -50,6 +50,27 @@ class ExpenseType(models.Model):
 
 
 class TravelType(models.Model):
+    PROGRAMME_MONITORING = 'programme_monitoring'
+    SPOT_CHECK = 'spot_check'
+    ADVOCACY = 'advocacy'
+    TECHNICAL_SUPPORT = 'technical_support'
+    MEETING = 'meeting'
+    STAFF_DEVELOPMENT = 'staff_development'
+    STAFF_ENTITLEMENT = 'staff_entitlement'
+    CHOICES = (
+        (PROGRAMME_MONITORING, 'PROGRAMMATIC VISIT'),
+        (SPOT_CHECK, 'SPOT CHECK'),
+        (ADVOCACY, 'ADVOCACY'),
+        (TECHNICAL_SUPPORT, 'TECHNICAL SUPPORT'),
+        (MEETING, 'MEETING'),
+        (STAFF_DEVELOPMENT, 'STAFF DEVELOPMENT'),
+        (STAFF_ENTITLEMENT, 'STAFF ENTITLEMENT'),
+    )
+
+    name = models.CharField(max_length=32, choices=CHOICES)
+
+
+class ModeOfTravel(models.Model):
     PLANE = 'Plane'
     BUS = 'Bus'
     CAR = 'Car'
@@ -116,7 +137,6 @@ class Travel(models.Model):
         (COMPLETED, _('Completed')),
     )
 
-
     created = models.DateTimeField(auto_now_add=True, db_index=True)
     completed_at = models.DateTimeField(null=True)
     canceled_at = models.DateTimeField(null=True)
@@ -142,7 +162,7 @@ class Travel(models.Model):
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_reference_number)
     hidden = models.BooleanField(default=False)
-    mode_of_travel = models.ManyToManyField('TravelType', related_name='+')
+    mode_of_travel = models.ManyToManyField('ModeOfTravel', related_name='+')
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
     currency = models.ForeignKey('Currency', null=True, blank=True, related_name='+')
     is_driver = models.BooleanField(default=False)
@@ -258,7 +278,7 @@ class IteneraryItem(models.Model):
     arrival_date = models.DateTimeField()
     dsa_region = models.ForeignKey('DSARegion', related_name='+')
     overnight_travel = models.BooleanField(default=False)
-    mode_of_travel = models.ForeignKey('TravelType', related_name='+')
+    mode_of_travel = models.ForeignKey('ModeOfTravel', related_name='+')
     airlines = models.ManyToManyField('AirlineCompany', related_name='+')
 
 
