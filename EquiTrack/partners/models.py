@@ -14,7 +14,7 @@ from django.utils.functional import cached_property
 
 from django.contrib.postgres.fields import JSONField
 from django_hstore import hstore
-from smart_selects.db_fields import ChainedForeignKey
+from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -46,7 +46,7 @@ from supplies.tasks import (
     set_unisupply_distribution,
     set_unisupply_user
 )
-from users.models import Section
+from users.models import Section, Office
 from . import emails
 
 
@@ -947,6 +947,11 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
+    programme_focal_points = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='partnership_focals',
+        blank=True
+    )
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         verbose_name=u'Signed by partner',
@@ -957,24 +962,26 @@ class PCA(AdminURLMixin, models.Model):
         auto_choose=False,
         blank=True, null=True,
     )
-    partner_focal_point = ChainedForeignKey(
+    partner_focal_point = ChainedManyToManyField(
         PartnerStaffMember,
         related_name='my_partnerships',
         chained_field="partner",
         chained_model_field="partner",
-        show_all=False,
         auto_choose=False,
-        blank=True, null=True,
+        blank=True,
     )
+    office = models.ManyToManyField(Office, blank=True, related_name='+')
 
     fr_number = models.CharField(max_length=50, null=True, blank=True)
     planned_visits = models.IntegerField(default=0)
+    population_focus = models.CharField(max_length=130, null=True, blank=True)
 
     # meta fields
     sectors = models.CharField(max_length=255, null=True, blank=True)
     current = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
 
     class Meta:
         verbose_name = 'Intervention'
@@ -1006,14 +1013,18 @@ class PCA(AdminURLMixin, models.Model):
     def days_from_submission_to_signed(self):
         if not self.submission_date:
             return u'Not Submitted'
-        signed_date = self.signed_by_partner_date or datetime.date.today()
+        if not self.signed_by_unicef_date or self.signed_by_partner_date:
+            return u'Not fully signed'
+        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         return relativedelta(signed_date - self.submission_date).days
 
     @property
     def days_from_review_to_signed(self):
-        if not self.submission_date or not self.review_date:
+        if not self.review_date:
             return u'Not Reviewed'
-        signed_date = self.signed_by_partner_date or datetime.date.today()
+        if not self.signed_by_unicef_date or self.signed_by_partner_date:
+            return u'Not fully signed'
+        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
         return relativedelta(signed_date - self.review_date).days
 
     @property
@@ -1466,6 +1477,12 @@ class PartnershipBudget(TimeStampedModel):
     partner_contribution = models.IntegerField(default=0)
     unicef_cash = models.IntegerField(default=0)
     in_kind_amount = models.IntegerField(
+        default=0,
+        verbose_name='UNICEF Supplies'
+    )
+    partner_contribution_local = models.IntegerField(default=0)
+    unicef_cash_local = models.IntegerField(default=0)
+    in_kind_amount_local = models.IntegerField(
         default=0,
         verbose_name='UNICEF Supplies'
     )

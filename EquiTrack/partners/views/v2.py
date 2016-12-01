@@ -14,8 +14,8 @@ from django.http import HttpResponse, StreamingHttpResponse
 
 from partners.models import PartnerOrganization, PCA
 from partners.permissions import PartnerPermission
-from partners.serializers.serializers import PartnerOrganizationSerializer, InterventionSerializer
-from partners.serializers.serializers_v2 import InterventionListSerializer
+from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
+from partners.serializers.v2 import InterventionListSerializer
 from partners.filters import PartnerScopeFilter
 
 
@@ -152,4 +152,6 @@ class PartnerInterventionListAPIView(ListAPIView):
             serializer.data,
             status=status.HTTP_200_OK
         )
+
+
 
