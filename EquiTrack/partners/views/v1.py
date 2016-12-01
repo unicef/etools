@@ -5,9 +5,7 @@ from partners.filters import PartnerOrganizationExportFilter, AgreementExportFil
     GovernmentInterventionExportFilter, PartnerScopeFilter
 from partners.models import GovernmentIntervention
 
-__author__ = 'jcranwellward'
-
-import datetime
+from rest_framework.decorators import detail_route
 
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -60,6 +58,8 @@ from partners.models import (
     IndicatorReport
 )
 from reports.models import CountryProgramme
+from rest_framework import status
+from rest_framework.response import Response
 
 
 class PcaPDFView(PDFTemplateView):

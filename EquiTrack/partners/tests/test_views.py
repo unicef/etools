@@ -25,6 +25,7 @@ from partners.models import (
     PCA,
     Agreement,
     PartnerOrganization,
+    PartnerType,
     ResultChain,
     PCASector,
     PartnershipBudget,
@@ -32,6 +33,257 @@ from partners.models import (
     AmendmentLog,
     GwPCALocation,
 )
+
+
+class TestPartnerOrganizationViews(APITenantTestCase):
+
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.partner = PartnerFactory(
+                            partner_type=PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+                            cso_type="International",
+                            hidden=False,
+                            vendor_number="DDD",
+                            short_name="Short name",
+                        )
+
+    def test_api_partners_list_restricted(self):
+        response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertIn("vendor_number", response.data[0].keys())
+        self.assertNotIn("address", response.data[0].keys())
+
+    def test_api_partners_create(self):
+        data = {
+            "name": "PO 1",
+            "partner_type": "Government",
+            "vendor_number": "AAA",
+            "staff_members": [],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_api_partners_create_with_members(self):
+        staff_members = [{
+                "title": "Some title",
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "a@a.com",
+                "active": True,
+            }]
+        data = {
+            "name": "PO 1",
+            "partner_type": "Government",
+            "vendor_number": "AAA",
+            "staff_members": staff_members,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_api_partners_update_with_members(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data["staff_members"]), 1)
+        self.assertEquals(response.data["staff_members"][0]["first_name"], "Mace")
+
+        staff_members = [{
+                "title": "Some title",
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "a@a.com",
+                "active": True,
+            }]
+        data = {
+            "name": self.partner.name,
+            "partner_type": self.partner.partner_type,
+            "vendor_number": self.partner.vendor_number,
+            "staff_members": staff_members,
+        }
+        response = self.forced_auth_req(
+            'put',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data["staff_members"]), 2)
+
+    def test_api_partners_retrieve(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertIn("vendor_number", response.data.keys())
+        self.assertIn("address", response.data.keys())
+        self.assertIn("Partner", response.data["name"])
+
+    def test_api_partners_retrieve_staff_members(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertIn("staff_members", response.data.keys())
+        self.assertEquals(len(response.data["staff_members"]), 1)
+
+    def test_api_partners_update(self):
+        data = {
+            "name": "Updated name",
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertIn("Updated", response.data["name"])
+
+    def test_api_partners_filter_partner_type(self):
+        # make some other type to filter against
+        PartnerFactory(partner_type=PartnerType.GOVERNMENT)
+        params = {"partner_type": PartnerType.CIVIL_SOCIETY_ORGANIZATION}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.partner.id)
+        self.assertEquals(response.data[0]["partner_type"], PartnerType.CIVIL_SOCIETY_ORGANIZATION)
+
+    def test_api_partners_filter_cso_type(self):
+        # make some other type to filter against
+        PartnerFactory(cso_type="National")
+        params = {"cso_type": "International"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.partner.id)
+
+    def test_api_partners_filter_hidden(self):
+        # make some other type to filter against
+        PartnerFactory(hidden=True)
+        params = {"hidden": False}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.partner.id)
+
+    def test_api_partners_filter_multiple(self):
+        # make some other type to filter against
+        PartnerFactory(cso_type="National")
+        params = {
+            "cso_type": "National",
+            "partner_type": PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 0)
+
+    def test_api_partners_search_name(self):
+        # make some other type to filter against
+        PartnerFactory(name="Somethingelse")
+        params = {"search": "Partner"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.partner.id)
+
+    def test_api_partners_short_name(self):
+        # make some other type to filter against
+        PartnerFactory(short_name="foo")
+        params = {"search": "Short"}
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.partner.id)
+
+    def test_api_partners_update_blocked(self):
+        data = {
+            "blocked": True,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["hidden"], True)
+
+    def test_api_partners_update_deleted_flag(self):
+        data = {
+            "deleted_flag": True,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["hidden"], True)
 
 
 class TestPartnershipViews(APITenantTestCase):
@@ -253,34 +505,6 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
         self.assertIn("Location", response.data[0]["location_name"])
-
-
-class TestPartnerOrganizationViews(APITenantTestCase):
-
-    def setUp(self):
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory()
-
-    def test_api_partners_list(self):
-        response = self.forced_auth_req('get', '/api/partners/', user=self.unicef_staff)
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-
-    def test_api_partners_create(self):
-        data = {
-            "name": "PO 1",
-            "partner_type": "Government",
-            "vendor_number": "AAA",
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/partners/',
-            user=self.unicef_staff,
-            data=data
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
 
 class TestAgreementAPIView(APITenantTestCase):
@@ -686,6 +910,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         self.partner = PartnerFactory(partner_type="Civil Society Organization")
         self.partner_staff = PartnerStaffFactory(partner=self.partner)
         self.partner_staff_user = UserFactory(is_staff=True)
+        self.partner_staff_user.groups.add(GroupFactory())
         self.partner_staff_user.profile.partner_staff_member = self.partner_staff.id
         self.partner_staff_user.profile.save()
 

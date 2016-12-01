@@ -170,6 +170,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         help_text=u'Only required for CSO partners'
     )
     vision_synced = models.BooleanField(default=False)
+    blocked = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     deleted_flag = models.BooleanField(default=False, verbose_name=u'Marked for deletion')
 
@@ -465,6 +466,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 instance.short_name,
                 instance.alternate_name
             )
+
+    def save(self, **kwargs):
+        if self.blocked or self.deleted_flag:
+            self.hidden = True
+
+        return super(PartnerOrganization, self).save(**kwargs)
 
 post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 

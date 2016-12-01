@@ -3,18 +3,24 @@ import functools
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse, StreamingHttpResponse
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 from rest_framework_csv import renderers as r
 from rest_framework.generics import (
-    ListAPIView,
-    CreateAPIView,
     ListCreateAPIView,
+    ListAPIView,
     RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 
-from partners.models import Agreement, PCA, PartnerStaffMember
+from partners.models import (
+    PartnerOrganization,
+    PCA,
+    Agreement,
+    PartnerStaffMember,
+)
 from partners.serializers.v1 import InterventionSerializer
 from partners.serializers.v2 import (
     AgreementListSerializer,
@@ -25,9 +31,128 @@ from partners.serializers.v2 import (
     PartnerStaffMemberUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PartnerStaffMemberPropertiesSerializer,
+    PartnerOrganizationExportSerializer,
+    PartnerOrganizationListSerializer,
+    PartnerOrganizationDetailSerializer,
+    PartnerOrganizationCreateUpdateSerializer,
 )
 from partners.permissions import PartnerPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
+
+
+class PartnerOrganizationListAPIView(ListCreateAPIView):
+    """
+    Create new Partners.
+    Returns a list of Partners.
+    """
+    queryset = PartnerOrganization.objects.all()
+    serializer_class = PartnerOrganizationListSerializer
+    permission_classes = (PartnerPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+
+    def get_serializer_class(self):
+        """
+        Use restriceted field set for listing
+        """
+        if self.request.method == "GET":
+            query_params = self.request.query_params
+            if "format" in query_params.keys():
+                if query_params.get("format") == 'csv':
+                    return PartnerOrganizationExportSerializer
+        if self.request.method == "POST":
+            return PartnerOrganizationCreateUpdateSerializer
+        return super(PartnerOrganizationListAPIView, self).get_serializer_class()
+
+    def get_queryset(self, format=None):
+        q = PartnerOrganization.objects.all()
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+
+            if "partner_type" in query_params.keys():
+                queries.append(Q(partner_type=query_params.get("partner_type")))
+            if "cso_type" in query_params.keys():
+                queries.append(Q(cso_type=query_params.get("cso_type")))
+            if "hidden" in query_params.keys():
+                hidden = None
+                if query_params.get("hidden").lower() == "true":
+                    hidden = True
+                if query_params.get("hidden").lower() == "false":
+                    hidden = False
+                if hidden != None:
+                    queries.append(Q(hidden=hidden))
+            if "search" in query_params.keys():
+                queries.append(
+                    Q(name__icontains=query_params.get("search")) |
+                    Q(vendor_number__icontains=query_params.get("search")) |
+                    Q(short_name__icontains=query_params.get("search"))
+                )
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression)
+        return q
+
+    def list(self, request):
+        """
+        Checks for format query parameter
+        :returns: JSON or CSV file
+        """
+        query_params = self.request.query_params
+        response = super(PartnerOrganizationListAPIView, self).list(request)
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                response['Content-Disposition'] = "attachment;filename=partner.csv"
+
+        return response
+
+
+class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve and Update PartnerOrganization.
+    """
+    queryset = PartnerOrganization.objects.all()
+    serializer_class = PartnerOrganizationDetailSerializer
+    permission_classes = (PartnerPermission,)
+
+    def get_serializer_class(self):
+        if self.request.method in ["PUT", "PATCH"]:
+            return PartnerOrganizationCreateUpdateSerializer
+        else:
+            return super(PartnerOrganizationDetailAPIView, self).get_serializer_class()
+
+    def retrieve(self, request, pk=None, format=None):
+        """
+        Returns an Partner object for this partner PK
+        """
+        try:
+            queryset = self.queryset.get(id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except PartnerOrganization.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
+
+class PartnerInterventionListAPIView(ListAPIView):
+    queryset = PCA.objects.all()
+    serializer_class = InterventionSerializer
+    permission_classes = (PartnerPermission,)
+
+    def list(self, request, pk=None, format=None):
+        """
+        Return All Interventions for Partner
+        """
+        interventions = PCA.objects.filter(partner_id=pk)
+        serializer = InterventionSerializer(interventions, many=True)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
 
 class AgreementListAPIView(ListCreateAPIView):
@@ -158,7 +283,7 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     """
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartnerPermission,)
+    permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self):
@@ -170,7 +295,7 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartnerPermission,)
+    permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
     def get_serializer_class(self):
@@ -185,6 +310,7 @@ class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
     """
     serializer_class = PartnerStaffMemberPropertiesSerializer
     queryset = PartnerStaffMember.objects.all()
+    permission_classes = (PartneshipManagerPermission,)
 
     def get_object(self):
         queryset = self.get_queryset()
