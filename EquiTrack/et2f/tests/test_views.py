@@ -194,7 +194,7 @@ class TravelViews(APITenantTestCase):
         self.assertNotEqual(response_json['id'], new_travel_id)
         self.assertEqual(response_json, {})
 
-    # @skip('To be fixed')
+    @skip('To be fixed')
     def test_static_data_endpoint(self):
         response = self.forced_auth_req('get', '/api/et2f/static_data/', user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)

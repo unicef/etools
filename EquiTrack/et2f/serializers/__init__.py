@@ -6,7 +6,7 @@ from django.utils.functional import cached_property
 from rest_framework import serializers
 
 from et2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelPermission, TravelAttachment, AirlineCompany, get_assigned_roles
+    TravelPermission, TravelAttachment, AirlineCompany, get_assigned_roles, ModeOfTravel
 
 
 class PermissionBasedModelSerializer(serializers.ModelSerializer):
@@ -119,6 +119,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     attachments = TravelAttachmentSerializer(many=True, read_only=True)
     cost_summary = CostSummarySerializer(read_only=True)
     report = serializers.CharField(source='report_note', required=False, default='')
+    mode_of_travel = serializers.PrimaryKeyRelatedField(queryset=ModeOfTravel.objects.all(), required=False, many=True)
 
     class Meta:
         model = Travel
