@@ -436,6 +436,11 @@ LEAFLET_CONFIG = {
     'MAX_ZOOM': 18,
 }
 
+ACTSTREAM_SETTINGS = {
+    'FETCH_RELATIONS': True,
+    'GFK_FETCH_DEPTH': 1,
+}
+
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = SHARED_APPS + TENANT_APPS + ('tenant_schemas',)
 TENANT_MODEL = "users.Country"  # app.Model
