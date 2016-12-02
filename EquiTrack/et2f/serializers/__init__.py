@@ -6,7 +6,7 @@ from django.utils.functional import cached_property
 from rest_framework import serializers
 
 from et2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelPermission, TravelAttachment, AirlineCompany
+    TravelPermission, TravelAttachment, AirlineCompany, get_assigned_roles
 
 
 class PermissionBasedModelSerializer(serializers.ModelSerializer):
@@ -261,10 +261,14 @@ class CloneOutputSerializer(TravelDetailsSerializer):
 
 class CurrentUserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(source='get_full_name')
+    roles = serializers.SerializerMethodField('get_assigned_roles')
 
     class Meta:
         model = get_user_model()
-        fields = ('id', 'full_name')
+        fields = ('id', 'full_name', 'roles')
+
+    def get_assigned_roles(self, obj):
+        return get_assigned_roles(obj)
 
 
 class CloneParameterSerializer(serializers.Serializer):
