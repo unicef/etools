@@ -425,6 +425,7 @@ TENANT_APPS = (
     'tpm',
     'supplies',
     'workplan',
+    'actstream',
 )
 
 
