@@ -439,6 +439,7 @@ LEAFLET_CONFIG = {
 ACTSTREAM_SETTINGS = {
     'FETCH_RELATIONS': True,
     'GFK_FETCH_DEPTH': 1,
+    'USE_JSONFIELD': True
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
