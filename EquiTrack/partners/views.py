@@ -1,28 +1,23 @@
 from __future__ import absolute_import
-
-from partners.exports import PartnerExport, AgreementExport, InterventionExport, GovernmentExport
-from partners.filters import PartnerOrganizationExportFilter, AgreementExportFilter, InterventionExportFilter, \
-    GovernmentInterventionExportFilter, PartnerScopeFilter
-from partners.models import GovernmentIntervention
-
-__author__ = 'jcranwellward'
-
 import datetime
 
+from django.conf import settings
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
-from django.http import HttpResponse
-from django.conf import settings
-from django.shortcuts import get_object_or_404
 
-from rest_framework import status
+from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework import viewsets, mixins
 from rest_framework.response import Response
+
 from easy_pdf.views import PDFTemplateView
+from actstream import action
 
 from locations.models import Location
+from reports.models import CountryProgramme
+
 from .serializers import (
     FileTypeSerializer,
     LocationSerializer,
@@ -41,9 +36,13 @@ from .serializers import (
     PCAFileSerializer,
     GovernmentInterventionSerializer,
 )
+from .exports import PartnerExport, AgreementExport, InterventionExport, GovernmentExport
 from .permissions import PartnerPermission, ResultChainPermission
-from .filters import PartnerScopeFilter
-
+from .filters import (
+    PartnerOrganizationExportFilter, AgreementExportFilter,
+    InterventionExportFilter, GovernmentInterventionExportFilter,
+    PartnerScopeFilter
+)
 from .models import (
     FileType,
     PartnershipBudget,
@@ -58,9 +57,9 @@ from .models import (
     GwPCALocation,
     PartnerStaffMember,
     ResultChain,
-    IndicatorReport
+    IndicatorReport,
+    GovernmentIntervention
 )
-from reports.models import CountryProgramme
 
 
 class PcaPDFView(PDFTemplateView):
@@ -250,6 +249,8 @@ class AgreementViewSet(
         serializer.is_valid(raise_exception=True)
 
         serializer.instance = serializer.save()
+
+        action.send(actor, verb="changed", target=target, snapshot=snapshot)
 
         headers = self.get_success_headers(serializer.data)
         return Response(
