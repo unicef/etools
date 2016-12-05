@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
+from django.core.cache import cache
 from django.http.response import HttpResponse
 from django_fsm import TransitionNotAllowed
 
@@ -186,11 +187,16 @@ class StaticDataView(generics.GenericAPIView):
 
 class PermissionMatrixView(generics.GenericAPIView):
     serializer_class = PermissionMatrixSerializer
+    cache_timeout = None
 
     def get(self, request):
-        permissions = TravelPermission.objects.all()
-        serializer = self.get_serializer(permissions)
-        return Response(serializer.data, status.HTTP_200_OK)
+        permission_matrix_data = cache.get('permssion_matrix_data')
+        if not permission_matrix_data:
+            permissions = TravelPermission.objects.all()
+            serializer = self.get_serializer(permissions)
+            permission_matrix_data = serializer.data
+            cache.set('permssion_matrix_data', permission_matrix_data, self.cache_timeout)
+        return Response(permission_matrix_data, status.HTTP_200_OK)
 
 
 class CurrentUserView(generics.GenericAPIView):

@@ -49,6 +49,11 @@ class FastTenantTestCase(TenantTestCase):
     def tearDownClass(cls):
         connection.set_schema_to_public()
 
+    def assertKeysIn(self, keys, container, msg=None):
+        """Small helper to check all keys in the response payload"""
+        for key in keys:
+            self.assertIn(key, container, msg)
+
 
 class APITenantClient(TenantClient, APIClient):
     def __init__(self, tenant, **defaults):
@@ -60,6 +65,7 @@ class APITenantTestCase(FastTenantTestCase):
     Base test case for testing APIs
     """
     client_class = APIClient
+    maxDiff = None
 
     def forced_auth_req(self, method, url, user=None, data=None, request_format='json', **kwargs):
         """
