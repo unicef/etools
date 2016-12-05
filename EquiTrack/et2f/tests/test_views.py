@@ -23,73 +23,6 @@ class TravelViews(APITenantTestCase):
                                     traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
-    def test_list_view(self):
-        response = self.forced_auth_req('get', '/api/et2f/travels/', user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertIn('data', response_json)
-        self.assertEqual(len(response_json['data']), 1)
-        self.assertIn('page_count', response_json)
-        self.assertEqual(response_json['page_count'], 1)
-
-    def test_pagination(self):
-        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-
-        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'page': 1, 'page_size': 2},
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertIn('data', response_json)
-        self.assertEqual(len(response_json['data']), 2)
-        self.assertIn('page_count', response_json)
-        self.assertEqual(response_json['page_count'], 2)
-
-        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'page': 2, 'page_size': 2},
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertIn('data', response_json)
-        self.assertEqual(len(response_json['data']), 1)
-
-    def test_sorting(self):
-        TravelFactory(reference_number='ref2', traveler=self.traveler, supervisor=self.unicef_staff)
-        TravelFactory(reference_number='REF3', traveler=self.traveler, supervisor=self.unicef_staff)
-
-        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'sort_by': 'reference_number',
-                                                                           'reverse': False},
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertIn('data', response_json)
-        reference_numbers = [e['reference_number'] for e in response_json['data']]
-        self.assertEqual(reference_numbers, ['REF1', 'ref2', 'REF3'])
-
-        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'sort_by': 'reference_number',
-                                                                           'reverse': True},
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertIn('data', response_json)
-        reference_numbers = [e['reference_number'] for e in response_json['data']]
-        self.assertEqual(reference_numbers, ['REF3', 'ref2', 'REF1'])
-
-    def test_searching(self):
-        TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff)
-
-        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'search': 'REF2'},
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['data']), 1)
-
-    def test_show_hidden(self):
-        TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff, hidden=True)
-
-        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'show_hidden': True},
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['data']), 2)
-
-        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'show_hidden': False},
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(len(response_json['data']), 1)
-
     @skip('To be fixed')
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()
@@ -195,20 +128,6 @@ class TravelViews(APITenantTestCase):
         self.assertEqual(response_json, {})
 
     @skip('To be fixed')
-    def test_static_data_endpoint(self):
-        response = self.forced_auth_req('get', '/api/et2f/static_data/', user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {})
-
-    def test_curent_user_endpoint(self):
-        response = self.forced_auth_req('get', '/api/et2f/me/', user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json,
-                         {'full_name': u'',
-                          'id': self.unicef_staff.id,
-                          'roles': [u'Anyone']})
-
-    @skip('To be fixed')
     def test_payload(self):
         TravelPermission.objects.create(name='afds', code='can_see_travel_status', user_type='God', status='planned')
 
@@ -216,36 +135,3 @@ class TravelViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/et2f/travels/{}/'.format(travel.id), user=self.unicef_staff)
         self.assertEqual(json.loads(response.rendered_content), {})
 
-    @skip('To be fixed')
-    def test_file_attachments(self):
-        class FakeFile(StringIO):
-            def size(self):
-                return len(self)
-
-        fakefile = FakeFile('some stuff')
-        travel = TravelFactory()
-        attachment = TravelAttachment.objects.create(travel=travel,
-                                                     name='Lofasz',
-                                                     type='nehogymar')
-        attachment.file.save('fake.txt', fakefile)
-        fakefile.seek(0)
-
-        data = {'name': 'second',
-                'type': 'something',
-                'file': fakefile}
-        response = self.forced_auth_req('post', '/api/et2f/travels/{}/attachments/'.format(travel.id), data=data,
-                                        user=self.unicef_staff, request_format='multipart')
-        response_json = json.loads(response.rendered_content)
-        # self.assertEqual(response_json, {})
-
-        response = self.forced_auth_req('delete',
-                                        '/api/et2f/travels/{}/attachments/{}/'.format(travel.id, response_json['id']),
-                                        user=self.unicef_staff)
-        self.assertEqual(response.status_code, 0)
-
-    @skip('To be fixed')
-    def test_duplication(self):
-        response = self.forced_auth_req('post', '/api/et2f/travels/{}/add_driver/'.format(self.travel.id),
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {})

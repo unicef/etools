@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import json
 import csv
 from cStringIO import StringIO
-from unittest.case import skip
 
 from django.core.urlresolvers import reverse
 
@@ -41,6 +40,65 @@ class TravelDetails(APITenantTestCase):
         expected_keys = ['end_date', 'id', 'office', 'purpose', 'reference_number',
                          'section', 'start_date', 'status', 'traveler']
         self.assertKeysIn(expected_keys, travel_data)
+
+    def test_pagination(self):
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'page': 1, 'page_size': 2},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertIn('data', response_json)
+        self.assertEqual(len(response_json['data']), 2)
+        self.assertIn('page_count', response_json)
+        self.assertEqual(response_json['page_count'], 2)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'page': 2, 'page_size': 2},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertIn('data', response_json)
+        self.assertEqual(len(response_json['data']), 1)
+
+    def test_sorting(self):
+        TravelFactory(reference_number='ref2', traveler=self.traveler, supervisor=self.unicef_staff)
+        TravelFactory(reference_number='REF3', traveler=self.traveler, supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'sort_by': 'reference_number',
+                                                                           'reverse': False},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertIn('data', response_json)
+        reference_numbers = [e['reference_number'] for e in response_json['data']]
+        self.assertEqual(reference_numbers, ['REF1', 'ref2', 'REF3'])
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'sort_by': 'reference_number',
+                                                                           'reverse': True},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertIn('data', response_json)
+        reference_numbers = [e['reference_number'] for e in response_json['data']]
+        self.assertEqual(reference_numbers, ['REF3', 'ref2', 'REF1'])
+
+    def test_searching(self):
+        TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'search': 'REF2'},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 1)
+
+    def test_show_hidden(self):
+        TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff, hidden=True)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'show_hidden': True},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 2)
+
+        response = self.forced_auth_req('get', '/api/et2f/travels/', data={'show_hidden': False},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 1)
 
     def test_export(self):
         response = self.forced_auth_req('get', reverse('et2f:travels:list_export'), user=self.unicef_staff)
