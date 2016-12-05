@@ -50,21 +50,6 @@ if AZURE_ACCOUNT_NAME and AZURE_ACCOUNT_KEY and AZURE_CONTAINER:
     # MEDIA_URL = 'https://{}.blob.core.windows.net/{}/'.format(
     #     AZURE_ACCOUNT_NAME, AZURE_CONTAINER
     # )
-    FILER_IS_PUBLIC_DEFAULT = False
-    FILER_STORAGES = {
-        'public': {
-            'main': {
-                'ENGINE': 'storages.backends.azure_storage.AzureStorage',
-                'UPLOAD_TO': 'partners.utils.by_pca',
-            },
-        },
-        'private': {
-            'main': {
-                'ENGINE': 'storages.backends.azure_storage.AzureStorage',
-                'UPLOAD_TO': 'partners.utils.by_pca',
-            },
-        },
-    }
 
     from storages.backends.azure_storage import AzureStorage
     storage = AzureStorage()
@@ -180,7 +165,7 @@ SAML_CONFIG = {
 SAML_SIGNED_LOGOUT = True
 
 ########## JWT AUTH CONFIGURATION
-certificate_text = open(join(DJANGO_ROOT, 'saml/stspem.cer'), 'r').read()
+certificate_text = open(join(DJANGO_ROOT, 'saml/etripspub.cer'), 'r').read()
 certificate = load_pem_x509_certificate(certificate_text, default_backend())
 JWT_SECRET_KEY = certificate.public_key()
 JWT_AUTH = {
@@ -210,7 +195,7 @@ JWT_AUTH = {
     'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=3000),
     #'JWT_AUDIENCE': 'https://{}/API'.format(HOST),
     # TODO: FIX THIS, NEEDS SETUP WITH ADFS
-    'JWT_AUDIENCE': 'https://etools-staging.unicef.org/API',  # Hotfix to enable etrips login into prod
+    'JWT_AUDIENCE': 'https://etools.unicef.org/API',
     'JWT_ISSUER': None,
 
     'JWT_ALLOW_REFRESH': False,
@@ -219,3 +204,12 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'JWT',
 }
 ######## END JWT AUTH CONFIGURATION
+
+########## CACHE CONFIGURATION
+CACHES = {
+    'default': {
+        'BACKEND': 'redis_cache.RedisCache',
+        'LOCATION': environ.get('REDIS_URL', 'redis://localhost:6379/0')
+    }
+}
+########## END CACHE CONFIGURATION

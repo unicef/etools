@@ -6,8 +6,16 @@ from users.models import Section
 from partners.models import PartnerOrganization
 from locations.models import Location
 
-from .models import Comment, Workplan, ResultWorkplanProperty, WorkplanProject, CoverPage, CoverPageBudget, Label
-
+from .models import (
+    Comment,
+    Workplan,
+    ResultWorkplanProperty,
+    WorkplanProject,
+    CoverPage,
+    CoverPageBudget,
+    Label,
+    Milestone
+)
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -27,6 +35,14 @@ class WorkplanSerializer(serializers.ModelSerializer):
 class LabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Label
+        fields = '__all__'
+
+
+class MilestoneSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Milestone
+        fields = ("id", "description", "assumptions",)
 
 
 class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
@@ -36,6 +52,7 @@ class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
                 read_only=False,
                 queryset=Section.objects.all()
             )
+    milestones = MilestoneSerializer(many=True)
     geotag = serializers.PrimaryKeyRelatedField(
                 many=True,
                 read_only=False,
@@ -54,11 +71,13 @@ class ResultWorkplanPropertySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultWorkplanProperty
+        fields = '__all__'
 
 
 class CoverPageBudgetSerializer(serializers.ModelSerializer):
     class Meta:
         model = CoverPageBudget
+        fields = '__all__'
 
 
 class CoverPageSerializer(serializers.ModelSerializer):
@@ -75,3 +94,4 @@ class WorkplanProjectSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkplanProject
+        fields = '__all__'

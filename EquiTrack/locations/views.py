@@ -87,6 +87,7 @@ class LocationQuerySetView(ListAPIView):
     def get_queryset(self):
         q = self.request.query_params.get('q')
         qs = self.model.objects
+
         if q:
             qs = qs.filter(name__icontains=q)
 

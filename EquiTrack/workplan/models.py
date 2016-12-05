@@ -10,6 +10,13 @@ from reports.models import Result
 
 
 class Comment(TimeStampedModel):
+    """
+    Represents a comment
+
+    Relates to :model:`auth.User`
+    Relates to :model:`workplan.Workplan`
+    """
+
     author = models.ForeignKey(User, related_name='comments')
     tagged_users = models.ManyToManyField(User, blank=True, related_name='+')
     text = models.TextField()
@@ -17,6 +24,12 @@ class Comment(TimeStampedModel):
 
 
 class Workplan(models.Model):
+    """
+    Represents a work plan for the country programme
+
+    Relates to :model:`reports.CountryProgramme`
+    """
+
     STATUS = (
         ("On Track", "On Track"),
         ("Constrained", "Constrained"),
@@ -28,11 +41,24 @@ class Workplan(models.Model):
 
 
 class WorkplanProject(models.Model):
+    """
+    Represents a project for the work plan
+
+    Relates to :model:`workplan.Workplan`
+    """
+
     workplan = models.ForeignKey('Workplan', related_name='workplan_projects')
     # TODO: add all results that belong to this workplan project
 
 
 class Quarter(models.Model):
+    # TODO: refactor this to use the country Quarters
+    """
+    Represents a quarter for the work plan
+
+    Relates to :model:`workplan.Workplan`
+    """
+
     workplan = models.ForeignKey('Workplan', related_name='quarters')
     name = models.CharField(max_length=64)
     start_date = models.DateTimeField()
@@ -40,10 +66,26 @@ class Quarter(models.Model):
 
 
 class Label(models.Model):
+    """
+    Represents a label
+    """
+
     name = models.CharField(max_length=32, unique=True)
 
 
 class ResultWorkplanProperty(models.Model):
+    """
+    Represents a result work plan property for the work plan
+
+    Relates to :model:`workplan.Workplan`
+    Relates to :model:`reports.Result`
+    Relates to :model:`users.Section`
+    Relates to :model:`locations.Location`
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`auth.User`
+    Relates to :model:`workplan.Label`
+    """
+
     workplan = models.OneToOneField(Workplan)
     result = models.ForeignKey(Result, related_name='workplan_properties')
     assumptions = models.TextField(null=True, blank=True)
@@ -95,7 +137,19 @@ class ResultWorkplanProperty(models.Model):
         return cls.objects.filter(labels__id=label_id).exists()
 
 
+class Milestone(models.Model):
+
+    result_wp_property = models.ForeignKey(ResultWorkplanProperty, related_name="milestones")
+    description = models.TextField()
+    assumptions = models.TextField(null=True, blank=True)
+
 class CoverPage(models.Model):
+    """
+    Represents a cover page for the work plan project
+
+    Relates to :model:`workplan.WorkplanProject`
+    """
+
     workplan_project = models.OneToOneField('WorkplanProject', related_name='cover_page')
 
     national_priority = models.CharField(max_length=255)
@@ -105,6 +159,11 @@ class CoverPage(models.Model):
 
 
 class CoverPageBudget(models.Model):
+    """
+    Represents a budget for the cover page
+
+    Relates to :model:`workplan.CoverPage`
+    """
     cover_page = models.ForeignKey('CoverPage', related_name='budgets')
 
     from_date = models.DateField()

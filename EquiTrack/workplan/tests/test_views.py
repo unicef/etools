@@ -108,7 +108,7 @@ class TestWorkplanViews(APITenantTestCase):
         }
         response = self.forced_auth_req('post', '/api/labels/', data=data, user=self.unicef_staff)
 
-        self.assertEqual(response.data["name"][0], "Label with this name already exists.")
+        self.assertEqual(response.data["name"][0], u'label with this name already exists.')
 
     def test_view_labels_list(self):
         response = self.forced_auth_req('get', '/api/labels/', user=self.unicef_staff)
