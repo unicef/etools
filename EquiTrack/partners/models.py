@@ -756,7 +756,7 @@ class Agreement(TimeStampedModel):
         super(Agreement, self).save(**kwargs)
 
     @classmethod
-    def create_activity_stream(cls, actor, target):
+    def create_snapshot_activity_stream(cls, actor, target):
         """
         Create activity stream for Agreement in order to keep track of field changes
 
