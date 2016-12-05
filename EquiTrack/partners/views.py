@@ -261,6 +261,28 @@ class AgreementViewSet(
             headers=headers
         )
 
+    def update(self, request, *args, **kwargs):
+        """
+        Update (with partially) an existing Agreement
+        :return: JSON
+        """
+        # Copied from update method in UpdateModelMixin and modified to add activity stream
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        serializer.instance = serializer.save()
+
+        Agreement.create_snapshot_activity_stream(request.user, serializer.instance)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
+
     @detail_route(methods=['get'], url_path='interventions')
     def interventions(self, request, partner_pk=None, pk =None):
         """
