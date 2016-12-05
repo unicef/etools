@@ -34,9 +34,11 @@ class TripResource(BaseExportResource):
         return row
 
     def fill_trip_pcas(self, row, trip):
+        pcas = set(lp.intervention.__unicode__() for lp in trip.linkedpartner_set.all() if lp.intervention)
 
-        pcas = [pca.__unicode__() for pca in trip.pcas.all()]
-
+        pcas.union(
+            set(lgp.intervention.__unicode__() for lgp in trip.linkedgovernmentpartner_set.all() if lgp.intervention)
+        )
         self.insert_column(
             row,
             'Interventions',
@@ -45,15 +47,23 @@ class TripResource(BaseExportResource):
 
     def fill_trip_partners(self, row, trip):
 
-        partners = set([pca.partner.name for pca in trip.pcas.all()])
+        partners = set([lp.partner.name for lp in trip.linkedpartner_set.all()])
         partners.union(
-            set([partner.name for partner in trip.partners.all()])
+            set([lgp.partner.name for lgp in trip.linkedgovernmentpartner_set.all()])
         )
 
         self.insert_column(
             row,
             'Partners',
             ', '.join(set(partners))
+        )
+
+    def fill_trip_locations(self, row, trip):
+
+        self.insert_column(
+            row,
+            'Locations',
+            ', '.join([' - '.join((tl.location.name, tl.location.p_code)) for tl in trip.triplocation_set.all() if tl.location and tl.location.name and tl.location.p_code])
         )
 
     def fill_trip_row(self, row, trip):
@@ -79,6 +89,7 @@ class TripResource(BaseExportResource):
         self.fill_trip_row(row, trip)
         self.fill_trip_partners(row, trip)
         self.fill_trip_pcas(row, trip)
+        self.fill_trip_locations(row, trip)
         self.fill_trip_routes(row, trip)
 
 

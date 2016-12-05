@@ -186,6 +186,15 @@ class ResultStructureFactory(factory.django.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
+class GovernmentInterventionFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = partner_models.GovernmentIntervention
+
+    partner = factory.SubFactory(PartnerFactory)
+    result_structure = factory.SubFactory(ResultStructureFactory)
+    number = 'RefNumber'
+
+
 class ResultFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.Result

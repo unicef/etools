@@ -56,6 +56,7 @@ class SectorViewSet(mixins.RetrieveModelMixin,
 #     """
 #     Return a list of all Goals (CCCs)
 #     """
+#
 #     queryset = Goal.objects.all()
 #     serializer_class = GoalCreateSerializer
 
