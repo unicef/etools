@@ -3,24 +3,24 @@ from __future__ import absolute_import
 import datetime
 from dateutil.relativedelta import relativedelta
 
-from django.db.models import Q
 from django.conf import settings
+from django.contrib.auth.models import User, Group
+from django.contrib.postgres.fields import JSONField
 from django.db import models, connection, transaction
-from django.contrib.auth.models import Group
+from django.db.models import Q
 from django.db.models.signals import post_save, pre_delete
-from django.contrib.auth.models import User
+from django.forms.models import model_to_dict
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from django.contrib.postgres.fields import JSONField
+from actstream import action
 from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey
+from model_utils import Choices, FieldTracker
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
-from model_utils import Choices
-
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
@@ -705,6 +705,8 @@ class Agreement(TimeStampedModel):
     )
     bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
 
+    tracker = FieldTracker()
+
     def __unicode__(self):
         return u'{} for {} ({} - {})'.format(
             self.agreement_type,
@@ -752,6 +754,24 @@ class Agreement(TimeStampedModel):
             self.agreement_number = self.reference_number
 
         super(Agreement, self).save(**kwargs)
+
+    @classmethod
+    def create_activity_stream(cls, actor, target):
+        """
+        Create activity stream for Agreement in order to keep track of field changes
+
+        actor: An activity trigger - Any Python object or value
+        target: An action target for the activity - Django ORM with FieldTracker
+        """
+
+        if hasattr(target, 'tracker'):
+            # Get the previous values for changed fields and merge it with target as dictionary
+            changes = target.tracker.changed()
+            snapshot = dict(model_to_dict(target).items() + changes.items())
+
+            # TODO: Use a different action verb for each status choice in Agreement
+            # Draft, Active, Expired, Suspended, Terminated
+            action.send(actor, verb="changed", target=target, snapshot=snapshot)
 
 
 class BankDetails(models.Model):
