@@ -248,11 +248,11 @@ class AgreementViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        serializer.instance = serializer.save()
-
         # TODO: Use a different action verb for each status choice in Agreement
         # Draft, Active, Expired, Suspended, Terminated
         action.send(request.user, verb="created", target=serializer.instance)
+
+        serializer.instance = serializer.save()
 
         headers = self.get_success_headers(serializer.data)
         return Response(
@@ -272,9 +272,9 @@ class AgreementViewSet(
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        serializer.instance = serializer.save()
-
         Agreement.create_snapshot_activity_stream(request.user, serializer.instance)
+
+        serializer.instance = serializer.save()
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

@@ -769,6 +769,11 @@ class Agreement(TimeStampedModel):
             changes = target.tracker.changed()
             snapshot = dict(model_to_dict(target).items() + changes.items())
 
+            # Stringify any datetime data types in order to be JSON serializer
+            for key, value in snapshot.items():
+                if type(value) not in [int, float, bool, str]:
+                    snapshot[key] = str(snapshot[key])
+
             # TODO: Use a different action verb for each status choice in Agreement
             # Draft, Active, Expired, Suspended, Terminated
             action.send(actor, verb="changed", target=target, snapshot=snapshot)
