@@ -1090,7 +1090,7 @@ class PCA(AdminURLMixin, models.Model):
 
         if self.budget_log.exists():
             return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] for b in
-                 self.budget_log.values('created', 'year', 'unicef_cash_local').
+                 self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local').
                  order_by('year', '-created').distinct('year').all()
                  ])
         return 0

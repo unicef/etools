@@ -432,18 +432,22 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 # Distribution Plan
 # URL
 
+
 class InterventionExportSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name')
     pcasector_set = PCASectorSerializer(many=True, read_only=True)
     unicef_budget = serializers.IntegerField(source='total_unicef_cash')
     cso_contribution = serializers.IntegerField(source='total_partner_contribution')
+    planned_budget_local = serializers.IntegerField(source='total_budget_local')
+    partner_contribution_local = serializers.IntegerField(source='total_partner_contribution_local')
+    unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     result_structure_name = serializers.CharField(source='result_structure.name')
-    agreement_name = serializers.CharField(source='agreement.name')
+    agreement_name = serializers.CharField(source='agreement.agreement_number')
     locations = serializers.SerializerMethodField()
     unicef_focal_points = serializers.CharField(source='unicef_managers.name')
-    cso_authorized_officials = serializers.CharField(source='partner_focal_point.first_name')
-    programme_focals = serializers.CharField(source='programme_focal_points.name')
+    cso_authorized_officials = serializers.CharField(source='partner_focal_point')
+    programme_focals = serializers.SerializerMethodField()
 
     class Meta:
         model = PCA
@@ -451,9 +455,13 @@ class InterventionExportSerializer(serializers.ModelSerializer):
                   'pcasector_set', 'result_structure_name',  'unicef_budget', 'cso_contribution', 'agreement_name',
                   'office', 'locations', 'unicef_focal_points', 'programme_focal_points', 'population_focus',
                   'initiation_date', 'submission_date', 'review_date', 'partner_manager', 'signed_by_partner_date',
-                  'unicef_manager', 'signed_by_unicef_date', 'days_from_submission_to_signed',
-                  'days_from_review_to_signed', 'fr_numbers'
+                  'unicef_manager', 'signed_by_unicef_date', 'days_from_submission_to_signed', 'programme_focals',
+                  'cso_authorized_officials', 'days_from_review_to_signed', 'fr_numbers', 'planned_budget_local',
+                  'partner_contribution_local', 'unicef_cash_local'
                   )
 
     def get_locations(self, obj):
-        return ', '.join([' - '.join(l.location.name, l.location.p_code) for l in obj.locations.all() if l.location])
+        return ', '.join([l.location.name for l in obj.locations.all() if l.location])
+
+    def get_programme_focals(self, obj):
+        return ', '.join([pf.get_full_name() for pf in obj.programme_focal_points.all()])

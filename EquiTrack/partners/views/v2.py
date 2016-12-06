@@ -19,6 +19,7 @@ from partners.serializers.v2 import (
     InterventionListSerializer,
     InterventionDetailSerializer,
     InterventionCreateUpdateSerializer,
+    InterventionExportSerializer
 )
 from partners.filters import PartnerScopeFilter
 
@@ -42,8 +43,7 @@ class InterventionListAPIView(ListCreateAPIView):
             query_params = self.request.query_params
             if "format" in query_params.keys():
                 if query_params.get("format") == 'csv':
-                    return InterventionListSerializer
-            return InterventionListSerializer
+                    return InterventionExportSerializer
         if self.request.method == "POST":
             return InterventionCreateUpdateSerializer
         return super(InterventionListAPIView, self).get_serializer_class()
@@ -112,7 +112,7 @@ class InterventionListAPIView(ListCreateAPIView):
         response = super(InterventionListAPIView, self).list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
-                response['Content-Disposition'] = "attachment;filename=partner.csv"
+                response['Content-Disposition'] = "attachment;filename=interventions.csv"
 
         return response
 
