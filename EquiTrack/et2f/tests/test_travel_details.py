@@ -23,25 +23,27 @@ class TravelDetails(APITenantTestCase):
                                     supervisor=self.unicef_staff)
 
     def test_urls(self):
-        details_url = reverse('et2f:travels:details', kwargs={'pk': 1})
+        details_url = reverse('et2f:travels:details:index', kwargs={'travel_pk': 1})
         self.assertEqual(details_url, '/api/et2f/travels/1/')
 
-        attachments_url = reverse('et2f:travels:attachments', kwargs={'travel_pk': 1})
+        attachments_url = reverse('et2f:travels:details:attachments', kwargs={'travel_pk': 1})
         self.assertEqual(attachments_url, '/api/et2f/travels/1/attachments/')
 
-        attachment_details_url = reverse('et2f:travels:attachment_details', kwargs={'travel_pk': 1, 'pk': 1})
+        attachment_details_url = reverse('et2f:travels:details:attachment_details',
+                                         kwargs={'travel_pk': 1, 'attachment_pk': 1})
         self.assertEqual(attachment_details_url, '/api/et2f/travels/1/attachments/1/')
 
-        add_driver_url = reverse('et2f:travels:clone_for_driver', kwargs={'pk': 1})
+        add_driver_url = reverse('et2f:travels:details:clone_for_driver', kwargs={'travel_pk': 1})
         self.assertEqual(add_driver_url, '/api/et2f/travels/1/add_driver/')
 
-        duplicate_travel_url = reverse('et2f:travels:clone_for_secondary_traveler', kwargs={'pk': 1})
+        duplicate_travel_url = reverse('et2f:travels:details:clone_for_secondary_traveler', kwargs={'travel_pk': 1})
         self.assertEqual(duplicate_travel_url, '/api/et2f/travels/1/duplicate_travel/')
 
     @skip('fix this somehow. query count vaires between 21 and 40 queries...')
     def test_list_view(self):
         with self.assertNumQueries(29):
-            response = self.forced_auth_req('get', reverse('et2f:travels:details', kwargs={'pk': self.travel.id}),
+            response = self.forced_auth_req('get', reverse('et2f:travels:details:index',
+                                                           kwargs={'travel_pk': self.travel.id}),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -63,7 +65,7 @@ class TravelDetails(APITenantTestCase):
         data = {'name': 'second',
                 'type': 'something',
                 'file': fakefile}
-        response = self.forced_auth_req('post', reverse('et2f:travels:attachments',
+        response = self.forced_auth_req('post', reverse('et2f:travels:details:attachments',
                                                         kwargs={'travel_pk': travel.id}),
                                         data=data, user=self.unicef_staff, request_format='multipart')
         response_json = json.loads(response.rendered_content)
@@ -71,23 +73,23 @@ class TravelDetails(APITenantTestCase):
         expected_keys = ['file', 'id', 'name', 'type', 'url']
         self.assertKeysIn(expected_keys, response_json)
 
-        response = self.forced_auth_req('delete', reverse('et2f:travels:attachment_details',
+        response = self.forced_auth_req('delete', reverse('et2f:travels:details:attachment_details',
                                                           kwargs={'travel_pk': travel.id,
-                                                                  'pk': response_json['id']}),
+                                                                  'attachment_pk': response_json['id']}),
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 204)
 
     def test_duplication(self):
         data = {'traveler': self.unicef_staff.id}
-        response = self.forced_auth_req('post', reverse('et2f:travels:clone_for_driver',
-                                                        kwargs={'pk': self.travel.id}),
+        response = self.forced_auth_req('post', reverse('et2f:travels:details:clone_for_driver',
+                                                        kwargs={'travel_pk': self.travel.id}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('id', response_json)
 
         data = {'traveler': self.unicef_staff.id}
-        response = self.forced_auth_req('post', reverse('et2f:travels:clone_for_secondary_traveler',
-                                                        kwargs={'pk': self.travel.id}),
+        response = self.forced_auth_req('post', reverse('et2f:travels:details:clone_for_secondary_traveler',
+                                                        kwargs={'travel_pk': self.travel.id}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('id', response_json)

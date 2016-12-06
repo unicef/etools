@@ -100,6 +100,7 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     serializer_class = TravelDetailsSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdminUser,)
+    lookup_url_kwarg = 'travel_pk'
 
     def get_serializer_context(self):
         context = super(TravelDetailsViewSet, self).get_serializer_context()
@@ -148,6 +149,7 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
     parser_classes = (FormParser, MultiPartParser, FileUploadParser)
     permission_classes = (IsAdminUser,)
     filter_backends = (TravelAttachmentFilter,)
+    lookup_url_kwarg = 'attachment_pk'
 
     def get_serializer_context(self):
         context = super(TravelAttachmentViewSet, self).get_serializer_context()
