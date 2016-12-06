@@ -835,14 +835,18 @@ class PCA(AdminURLMixin, models.Model):
     Relates to :model:`partners.PartnerStaffMember`
     """
 
+    DRAFT = u'draft'
     IN_PROCESS = u'in_process'
     ACTIVE = u'active'
     IMPLEMENTED = u'implemented'
+    SUSPENDED = u'suspended'
     CANCELLED = u'cancelled'
     PCA_STATUS = (
+        (DRAFT, u"Draft"),
         (IN_PROCESS, u"In Process"),
         (ACTIVE, u"Active"),
         (IMPLEMENTED, u"Implemented"),
+        (SUSPENDED, u"Suspended"),
         (CANCELLED, u"Cancelled"),
     )
     PD = u'PD'
@@ -996,7 +1000,7 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def sector_children(self):
-        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
+        sectors = self.pcasectors.all().values_list('sector__id', flat=True)
         return Sector.objects.filter(id__in=sectors)
 
     @property
@@ -1142,9 +1146,8 @@ class PCA(AdminURLMixin, models.Model):
     def save(self, **kwargs):
 
         # commit the referece number to the database once the intervention is signed
-        if self.signed_by_unicef_date and not self.number:
+        if self.status != PCA.DRAFT and self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
-            self.save()
 
         if not self.pk:
             if self.partnership_type != self.PD:
@@ -1393,6 +1396,14 @@ class AmendmentLog(TimeStampedModel):
             'Cost',
             'Activity',
             'Other',
+            'Change in Programme Result',
+            'Change in Population Focus',
+            'Change in Georgraphical Coverage',
+            'Change in Total Budget >20%',
+            'Change in Total Budget <=20%',
+            'Changes in Activity Budget <=20% - No Change in Total Budget',
+            'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE',
+            'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE',
         ))
     amended_at = models.DateField(null=True, verbose_name='Signed At')
     amendment_number = models.IntegerField(default=0)
@@ -1610,13 +1621,16 @@ class GwPCALocation(models.Model):
 class PCASector(TimeStampedModel):
     """
     Represents a sector for the partner intervention, which links a sector to a partnership
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`users.Sector`
     Relates to :model:`partners.AmendmentLog`
     """
 
-    pca = models.ForeignKey(PCA)
+    pca = models.ForeignKey(
+        PCA,
+        related_name='pcasectors',
+    )
     sector = models.ForeignKey(Sector)
     amendment = models.ForeignKey(
         AmendmentLog,
@@ -1638,7 +1652,7 @@ class PCASector(TimeStampedModel):
 class PCASectorGoal(models.Model):
     """
     Represents a goal for the partner intervention sector, which links a sector to a partnership
-    
+
     Relates to :model:`partners.PCASector`
     Relates to :model:`reports.Goal`
     """
@@ -1675,7 +1689,7 @@ def get_file_path(instance, filename):
 class PCAFile(models.Model):
     """
     Represents a file for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`partners.FileType`
     """
@@ -1702,7 +1716,7 @@ class PCAFile(models.Model):
 class RAMIndicator(models.Model):
     """
     Represents a RAM Indicator for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`reports.Result`
     Relates to :model:`reports.Indicator`
@@ -1739,7 +1753,7 @@ class ResultChain(models.Model):
     """
     Represents a result chain for the partner intervention,
     Connects Results and Indicators to interventions
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`reports.ResultType`
     Relates to :model:`reports.Result`
@@ -1788,7 +1802,7 @@ class ResultChain(models.Model):
 class IndicatorDueDates(models.Model):
     """
     Represents an indicator due date for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     """
 
@@ -1808,7 +1822,7 @@ class IndicatorDueDates(models.Model):
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
-    
+
     Relates to :model:`partners.ResultChain`
     Relates to :model:`partners.PartnerStaffMember`
     Relates to :model:`results.Indicator`
@@ -1850,7 +1864,7 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 class SupplyPlan(models.Model):
     """
     Represents a supply plan for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     """
@@ -1868,7 +1882,7 @@ class SupplyPlan(models.Model):
 class DistributionPlan(models.Model):
     """
     Represents a distribution plan for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     Relates to :model:`locations.Location`
@@ -1919,7 +1933,7 @@ class FCManager(models.Manager):
 class FundingCommitment(TimeFramedModel):
     """
     Represents a funding commitment for the grant
-    
+
     Relates to :model:`funds.Grant`
     """
 

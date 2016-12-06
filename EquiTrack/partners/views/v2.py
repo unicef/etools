@@ -15,24 +15,28 @@ from django.http import HttpResponse, StreamingHttpResponse
 from partners.models import PartnerOrganization, PCA
 from partners.permissions import PartnerPermission
 from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
-from partners.serializers.v2 import InterventionListSerializer
+from partners.serializers.v2 import (
+    InterventionListSerializer,
+    InterventionDetailSerializer,
+    InterventionCreateUpdateSerializer,
+)
 from partners.filters import PartnerScopeFilter
 
 
 class InterventionListAPIView(ListCreateAPIView):
     """
-    Create new Partners.
-    Returns a list of Partners.
+    Create new Interventions.
+    Returns a list of Interventions.
     """
     queryset = PCA.objects.all()
-    serializer_class = InterventionSerializer
+    serializer_class = InterventionListSerializer
     permission_classes = (PartnerPermission,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, r.CSVRenderer)
 
     def get_serializer_class(self):
         """
-        Use restriceted field set for listing
+        Use different serilizers for methods
         """
         if self.request.method == "GET":
             query_params = self.request.query_params
@@ -40,12 +44,13 @@ class InterventionListAPIView(ListCreateAPIView):
                 if query_params.get("format") == 'csv':
                     return InterventionListSerializer
             return InterventionListSerializer
-        else:
-            return super(InterventionListAPIView, self).get_serializer_class()
+        if self.request.method == "POST":
+            return InterventionCreateUpdateSerializer
+        return super(InterventionListAPIView, self).get_serializer_class()
 
     def create(self, request, *args, **kwargs):
         """
-        Add a new Partner
+        Add a new Intervention
         :return: JSON
         """
         serializer = self.get_serializer(data=request.data)
@@ -69,16 +74,17 @@ class InterventionListAPIView(ListCreateAPIView):
 
             if "partnership_type" in query_params.keys():
                 queries.append(Q(partnership_type=query_params.get("partnership_type")))
+            # TODO whats this?
             if "country_programme" in query_params.keys():
                 queries.append(Q(country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
-                queries.append(Q(sector=query_params.get("sector")))
+                queries.append(Q(pcasectors__sector=int(query_params.get("sector"))))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "unicef_managers" in query_params.keys():
                 queries.append(Q(unicef_managers=query_params.get("unicef_managers")))
             if "sector" in query_params.keys():
-                queries.append(Q(sector=query_params.get("sector")))
+                queries.append(Q(pcasectors=query_params.get("sector")))
             if "start_date" in query_params.keys():
                 queries.append(Q(start_date__gte=query_params.get("start_date")))
             if "end_date" in query_params.keys():
@@ -89,9 +95,8 @@ class InterventionListAPIView(ListCreateAPIView):
                 queries.append(Q(location=query_params.get("location")))
             if "search" in query_params.keys():
                 queries.append(
-                    Q(name__icontains=query_params.get("search")) |
-                    Q(vendor_number__icontains=query_params.get("search")) |
-                    Q(short_name__icontains=query_params.get("search"))
+                    Q(title__icontains=query_params.get("search")) |
+                    Q(partner___name__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
@@ -112,24 +117,31 @@ class InterventionListAPIView(ListCreateAPIView):
         return response
 
 
-
 class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
-    queryset = PartnerOrganization.objects.all()
-    serializer_class = PartnerOrganizationSerializer
+    queryset = PCA.objects.all()
+    serializer_class = InterventionDetailSerializer
     permission_classes = (PartnerPermission,)
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        if self.request.method == "PUT":
+            return InterventionCreateUpdateSerializer
+        return super(InterventionDetailAPIView, self).get_serializer_class()
 
     def retrieve(self, request, pk=None, format=None):
         """
-        Returns an Partner object for this partner PK
+        Returns an Intervention object for this PK
         """
         try:
             queryset = self.queryset.get(id=pk)
             serializer = self.serializer_class(queryset)
             data = serializer.data
-        except PartnerOrganization.DoesNotExist:
+        except PCA.DoesNotExist:
             data = {}
         return Response(
             data,
@@ -152,6 +164,3 @@ class PartnerInterventionListAPIView(ListAPIView):
             serializer.data,
             status=status.HTTP_200_OK
         )
-
-
-
