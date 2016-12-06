@@ -11,8 +11,9 @@ from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
+from django.db.models import F, FloatField, Sum
 
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
 from model_utils.models import (
@@ -975,8 +976,9 @@ class PCA(AdminURLMixin, models.Model):
         blank=True,
     )
     office = models.ManyToManyField(Office, blank=True, related_name='+')
-
-    fr_number = models.CharField(max_length=50, null=True, blank=True)
+    # TODO remove fr_number field
+    fr_number = models.CharField(max_length=50, blank=True, null=True)
+    fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), null=True)
     planned_visits = models.IntegerField(default=0)
     population_focus = models.CharField(max_length=130, null=True, blank=True)
 
@@ -1044,7 +1046,7 @@ class PCA(AdminURLMixin, models.Model):
     def amendment_num(self):
         return self.amendments_log.all().count()
 
-    @property
+    @cached_property
     def total_partner_contribution(self):
 
         if self.budget_log.exists():
@@ -1054,17 +1056,17 @@ class PCA(AdminURLMixin, models.Model):
                  ])
         return 0
 
-    @property
+    @cached_property
     def total_unicef_cash(self):
 
         if self.budget_log.exists():
-            return sum([b['unicef_cash'] for b in
+            return sum([b['unicef_cash'] + b['in_kind_amount'] for b in
                  self.budget_log.values('created', 'year', 'unicef_cash').
                  order_by('year', '-created').distinct('year').all()
                  ])
         return 0
 
-    @property
+    @cached_property
     def total_budget(self):
 
         if self.budget_log.exists():
@@ -1072,6 +1074,36 @@ class PCA(AdminURLMixin, models.Model):
                  self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount', 'partner_contribution').
                  order_by('year','-created').distinct('year').all()])
         return 0
+
+    @cached_property
+    def total_partner_contribution_local(self):
+
+        if self.budget_log.exists():
+            return sum([b['partner_contribution_local'] for b in
+                 self.budget_log.values('created', 'year', 'partner_contribution_local').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
+        return 0
+
+    @cached_property
+    def total_unicef_cash_local(self):
+
+        if self.budget_log.exists():
+            return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash_local').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
+        return 0
+
+    @cached_property
+    def total_budget_local(self):
+
+        if self.budget_log.exists():
+            return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] + b['partner_contribution_local'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local', 'partner_contribution_local').
+                 order_by('year','-created').distinct('year').all()])
+        return 0
+
 
     @property
     def year(self):
@@ -1495,12 +1527,13 @@ class PartnershipBudget(TimeStampedModel):
     unicef_cash_local = models.IntegerField(default=0)
     in_kind_amount_local = models.IntegerField(
         default=0,
-        verbose_name='UNICEF Supplies'
+        verbose_name='UNICEF Supplies Local'
     )
     year = models.CharField(
         max_length=5,
         blank=True, null=True
     )
+    # TODO add Currency field
     total = models.IntegerField(default=0)
     amendment = models.ForeignKey(
         AmendmentLog,

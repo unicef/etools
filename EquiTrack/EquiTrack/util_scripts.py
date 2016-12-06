@@ -1,11 +1,12 @@
 from __future__ import print_function
+from string import translate
 from django.db import connection
 from django.db.models import Count
 import time
 from datetime import datetime, timedelta
 from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure
-from partners.models import FundingCommitment
+from partners.models import FundingCommitment, PCA
 
 def printtf(*args):
     print([arg for arg in args])
@@ -352,7 +353,6 @@ def all_countries_do(function, name):
         function(cntry.name)
 
 
-
 def before_code_merge():
     # Clean results
     all_countries_do(fix_duplicate_results, 'Result Cleaning')
@@ -371,6 +371,7 @@ def before_code_merge():
 
     print('FINISHED WITH BEFORE MERGE')
 
+
 def after_code_merge(): #and after migrations
 
     # set up country programme
@@ -380,3 +381,22 @@ def after_code_merge(): #and after migrations
     all_countries_do(dissasociate_result_structures, 'Dissasociate Result Structure')
 
     print("don't forget to sync")
+
+
+def normalize_fr_numbers():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry.name)
+        pcas = PCA.objects.all()
+        for pca in pcas:
+            if pca.fr_number:
+                pca.fr_numbers = [pca.fr_number]
+                pca.save()
+                print(pca.fr_numbers)
+
+
+
+
+
+        # pca.fr_number = fr_number_array
+        # pca.save()
