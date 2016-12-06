@@ -31,6 +31,7 @@ from partners.serializers.v2 import (
     PartnerStaffMemberUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PartnerStaffMemberPropertiesSerializer,
+    PartnerStaffMemberExportSerializer,
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
     PartnerOrganizationDetailSerializer,
@@ -51,7 +52,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, r.CSVRenderer)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self, format=None):
         """
         Use restriceted field set for listing
         """
@@ -94,7 +95,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                 q = q.filter(expression)
         return q
 
-    def list(self, request):
+    def list(self, request, format=None):
         """
         Checks for format query parameter
         :returns: JSON or CSV file
@@ -116,7 +117,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (PartnerPermission,)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerOrganizationCreateUpdateSerializer
         else:
@@ -165,7 +166,7 @@ class AgreementListAPIView(ListCreateAPIView):
     permission_classes = (PartneshipManagerPermission,)
     renderer_classes = (r.JSONRenderer, r.CSVRenderer)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self, format=None):
         """
         Use restriceted field set for listing
         """
@@ -179,7 +180,7 @@ class AgreementListAPIView(ListCreateAPIView):
             return AgreementCreateUpdateSerializer
         return super(AgreementListAPIView, self).get_serializer_class()
 
-    def get_queryset(self):
+    def get_queryset(self, format=None):
         q = Agreement.view_objects
         query_params = self.request.query_params
 
@@ -209,7 +210,7 @@ class AgreementListAPIView(ListCreateAPIView):
                 q = q.all()
         return q
 
-    def list(self, request, partner_pk=None):
+    def list(self, request, partner_pk=None, format=None):
         """
             Checks for format query parameter
             :returns: JSON or CSV file
@@ -228,7 +229,7 @@ class AgreementInterventionsListAPIView(ListAPIView):
     filter_backends = (PartnerScopeFilter,)
     permission_classes = (PartneshipManagerPermission,)
 
-    def list(self, request, partner_pk=None, pk=None):
+    def list(self, request, partner_pk=None, pk=None, format=None):
         """
         Return All Interventions for Partner and Agreement
         """
@@ -251,7 +252,7 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = AgreementRetrieveSerializer
     permission_classes = (PartneshipManagerPermission,)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self, format=None):
         """
         Use restriceted field set for listing
         """
@@ -261,7 +262,7 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
             return AgreementCreateUpdateSerializer
         return super(AgreementDetailAPIView, self).get_serializer_class()
 
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk=None, format=None):
         """
         Returns an Agreement object for this Agreement PK
         """
@@ -286,10 +287,27 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self, format=None):
+        if self.request.method == "GET":
+            query_params = self.request.query_params
+            if "format" in query_params.keys():
+                if query_params.get("format") == 'csv':
+                    return PartnerStaffMemberExportSerializer
         if self.request.method == "POST":
             return PartnerStaffMemberCreateSerializer
         return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
+
+    def list(self, request, partner_pk=None, format=None):
+        """
+            Checks for format query parameter
+            :returns: JSON or CSV file
+        """
+        query_params = self.request.query_params
+        response = super(PartnerStaffMemberListAPIVIew, self).list(request)
+        if "format" in query_params.keys():
+            if query_params.get("format") == 'csv':
+                response['Content-Disposition'] = "attachment;filename=staff-members.csv"
+        return response
 
 
 class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -298,7 +316,7 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
     permission_classes = (PartneshipManagerPermission,)
     filter_backends = (PartnerScopeFilter,)
 
-    def get_serializer_class(self):
+    def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerStaffMemberUpdateSerializer
         return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()

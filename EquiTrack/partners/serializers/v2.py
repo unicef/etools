@@ -225,6 +225,8 @@ class AgreementExportSerializer(serializers.ModelSerializer):
 
     staff_members = serializers.SerializerMethodField()
     partner_name = serializers.CharField(source='partner.name', read_only=True)
+    partner_manager_name = serializers.CharField(source='partner_manager.get_full_name')
+    signed_by_name = serializers.CharField(source='signed_by.get_full_name')
 
     class Meta:
         model = Agreement
@@ -235,9 +237,9 @@ class AgreementExportSerializer(serializers.ModelSerializer):
             "agreement_type",
             "start",
             "end",
-            "partner_manager",
+            "partner_manager_name",
             "signed_by_partner_date",
-            "signed_by",
+            "signed_by_name",
             "signed_by_unicef_date",
             "staff_members",
         )
@@ -317,3 +319,11 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
+
+
+class PartnerStaffMemberExportSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = "__all__"
+

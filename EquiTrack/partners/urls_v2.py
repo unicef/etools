@@ -29,4 +29,5 @@ urlpatterns = (
     url(r'^staff-members/(?P<pk>\d+)/properties/$', view=PartnerStaffMemberPropertiesAPIView.as_view(), name='staff-member-properties'),
 )
 
+# http://www.django-rest-framework.org/api-guide/format-suffixes/
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'csv'])
