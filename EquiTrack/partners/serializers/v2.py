@@ -74,7 +74,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
                   'office', 'locations', 'unicef_focal_points', 'programme_focal_points', 'population_focus',
                   'initiation_date', 'submission_date', 'review_date', 'partner_manager', 'signed_by_partner_date',
                   'unicef_manager', 'signed_by_unicef_date', 'days_from_submission_to_signed',
-                  'days_from_review_to_signed',
+                  'days_from_review_to_signed', 'fr_numbers'
                   )
 
     def get_locations(self, obj):
