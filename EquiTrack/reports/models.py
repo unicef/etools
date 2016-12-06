@@ -287,7 +287,7 @@ class Unit(models.Model):
         return self.type
 
 
-class IndicatorNormalized(models.Model):
+class IndicatorBlueprint(models.Model):
     name = models.CharField(max_length=1024)
     unit = models.ForeignKey(Unit, null=True, blank=True)
     description = models.CharField(max_length=3072, null=True, blank=True)
@@ -307,12 +307,12 @@ class IndicatorNormalized(models.Model):
         # Prevent from saving empty strings as code because of the unique together constraint
         if not self.code:
             self.code = None
-        super(IndicatorNormalized, self).save(*args, **kwargs)
+        super(IndicatorBlueprint, self).save(*args, **kwargs)
 
 
 class AppliedIndicator(models.Model):
 
-    indicator = models.ForeignKey(IndicatorNormalized)
+    indicator = models.ForeignKey(IndicatorBlueprint)
     lower_result = models.ForeignKey(LowerResult, related_name='indicators')
 
     context_code = models.CharField(max_length=50, null=True, blank=True,

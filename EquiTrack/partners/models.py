@@ -1885,7 +1885,7 @@ post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 class FCManager(models.Manager):
     def get_queryset(self):
-        return super(FCManager, self).get_queryset().select_related('grant__donor__name')
+        return super(FCManager, self).get_queryset().select_related('grant__donor')
 
 
 class FundingCommitment(TimeFramedModel):

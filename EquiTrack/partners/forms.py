@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-__author__ = 'jcranwellward'
-
 import pandas
 import logging
 from datetime import date

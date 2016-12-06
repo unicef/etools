@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 from partners.exports import PartnerExport, GovernmentExport, InterventionExport, AgreementExport
 
-__author__ = 'jcranwellward'
-
 from django.db import connection
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
