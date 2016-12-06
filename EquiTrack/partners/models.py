@@ -62,6 +62,26 @@ RISK_RATINGS = (
 )
 
 
+class PartnerType(object):
+    BILATERAL_MULTILATERAL = u'Bilateral / Multilateral'
+    CIVIL_SOCIETY_ORGANIZATION = u'Civil Society Organization'
+    GOVERNMENT = u'Government'
+    UN_AGENCY = u'UN Agency'
+
+    CHOICES = Choices(BILATERAL_MULTILATERAL,
+                      CIVIL_SOCIETY_ORGANIZATION,
+                      GOVERNMENT,
+                      UN_AGENCY)
+
+
+CSO_TYPES = Choices(
+    u'International',
+    u'National',
+    u'Community Based Organisation',
+    u'Academic Institution',
+)
+
+
 class PartnerOrganization(AdminURLMixin, models.Model):
     """
     Represents a partner organization
@@ -69,21 +89,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     partner_type = models.CharField(
         max_length=50,
-        choices=Choices(
-            u'Bilateral / Multilateral',
-            u'Civil Society Organization',
-            u'Government',
-            u'UN Agency',
-        )
+        choices=PartnerType.CHOICES
     )
     cso_type = models.CharField(
         max_length=50,
-        choices=Choices(
-            u'International',
-            u'National',
-            u'Community Based Organisation',
-            u'Academic Institution',
-        ),
+        choices=CSO_TYPES,
         verbose_name=u'CSO Type',
         blank=True, null=True
     )
@@ -467,7 +477,7 @@ class PartnerStaffMember(models.Model):
     Relates to :model:`partners.PartnerOrganization`
     """
 
-    partner = models.ForeignKey(PartnerOrganization)
+    partner = models.ForeignKey(PartnerOrganization, related_name='staff_members')
     title = models.CharField(max_length=64L)
     first_name = models.CharField(max_length=64L)
     last_name = models.CharField(max_length=64L)
@@ -476,6 +486,10 @@ class PartnerStaffMember(models.Model):
     active = models.BooleanField(
         default=True
     )
+
+    def get_full_name(self):
+        full_name = '%s %s' % (self.first_name, self.last_name)
+        return full_name.strip()
 
     def __unicode__(self):
         return u'{} {} ({})'.format(
@@ -1492,8 +1506,7 @@ class PCAGrant(TimeStampedModel):
     Relates to :model:`funds.Grant`
     Relates to :model:`partners.AmendmentLog`
     """
-    
-    partnership = models.ForeignKey(PCA)
+    partnership = models.ForeignKey(PCA, related_name='grants')
     grant = models.ForeignKey(Grant)
     funds = models.IntegerField(null=True, blank=True)
     # TODO: Add multi-currency support

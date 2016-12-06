@@ -1,3 +1,4 @@
+
 __author__ = 'jcranwellward'
 
 import json
@@ -23,8 +24,11 @@ from .models import (
     ResultChain,
     IndicatorReport,
     DistributionPlan,
+    RISK_RATINGS,
+    CSO_TYPES,
+    PartnerType,
+    GovernmentIntervention,
 )
-
 
 class PCASectorGoalSerializer(serializers.ModelSerializer):
 
@@ -173,7 +177,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         # we could allow superusers by checking for superusers first
         if not (user or rc) or \
                 (user.profile.partner_staff_member not in
-                    rc.partnership.partner.partnerstaffmember_set.values_list('id', flat=True)):
+                    rc.partnership.partner.staff_members.values_list('id', flat=True)):
             raise Exception('hell')
 
         return data
@@ -237,6 +241,12 @@ class InterventionSerializer(serializers.ModelSerializer):
     class Meta:
         model = PCA
         fields = '__all__'
+
+
+class GovernmentInterventionSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GovernmentIntervention
 
 
 class GWLocationSerializer(serializers.ModelSerializer):
@@ -310,3 +320,41 @@ class RapidProRequest(serializers.Serializer):
         if restored_data['values']:
             restored_data['values'] = json.loads(restored_data['values'])
         return restored_data
+
+
+class PartnershipExportFilterSerializer(serializers.Serializer):
+    MARKED_FOR_DELETION = 'marked_for_deletion'
+    search = serializers.CharField(default='', required=False)
+    partner_type = serializers.ChoiceField(PartnerType.CHOICES, required=False)
+    cso_type = serializers.ChoiceField(CSO_TYPES, required=False)
+    risk_rating = serializers.ChoiceField(RISK_RATINGS, required=False)
+    flagged = serializers.ChoiceField((MARKED_FOR_DELETION,), required=False)
+    show_hidden = serializers.BooleanField(default=False, required=False)
+
+
+class AgreementExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    agreement_type = serializers.ChoiceField(Agreement.AGREEMENT_TYPES, required=False)
+    starts_after = serializers.DateField(required=False)
+    ends_before = serializers.DateField(required=False)
+
+
+class InterventionExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    document_type = serializers.ChoiceField(PCA.PARTNERSHIP_TYPES, required=False)
+    country_programme = serializers.CharField(required=False)
+    result_structure = serializers.CharField(required=False)
+    sector = serializers.CharField(required=False)
+    status = serializers.ChoiceField(PCA.PCA_STATUS, required=False)
+    unicef_focal_point = serializers.CharField(required=False)
+    donor = serializers.CharField(required=False)
+    grant = serializers.CharField(required=False)
+    starts_after = serializers.DateField(required=False)
+    ends_before = serializers.DateField(required=False)
+
+
+class GovernmentInterventionExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    result_structure = serializers.CharField(required=False)
+    country_programme = serializers.CharField(required=False)
+    year = serializers.IntegerField(required=False)

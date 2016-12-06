@@ -7,7 +7,7 @@ class PartnerPermission(permissions.BasePermission):
     def _has_access_permissions(self, user, object):
         if user.is_staff or \
                 user.profile.partner_staff_member in \
-                object.partner.partnerstaffmember_set.values_list('id', flat=True):
+                object.partner.staff_members.values_list('id', flat=True):
             return True
 
     def has_object_permission(self, request, view, obj):
@@ -26,7 +26,7 @@ class ResultChainPermission(permissions.BasePermission):
     def _has_access_permissions(self, user, result_chain):
         if user.is_staff or \
                 user.profile.partner_staff_member in \
-                result_chain.partnership.partner.partnerstaffmember_set.values_list('id', flat=True):
+                result_chain.partnership.partner.staff_members.values_list('id', flat=True):
             return True
 
     def has_object_permission(self, request, view, obj):
