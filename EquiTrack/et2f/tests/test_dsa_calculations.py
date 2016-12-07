@@ -54,13 +54,13 @@ class TestDSACalculations(APITenantTestCase):
                                     'end_date': date(2017, 3, 11),
                                     'night_count': Decimal('69'),
                                     'start_date': date(2017, 1, 1),
-                                    'total_amount_usd': Decimal('10170.0000')}, # 150 * 60 + 130 * 9 == 9000 + 1170
+                                    'amount_usd': Decimal('10170.0000')}, # 150 * 60 + 130 * 9 == 9000 + 1170
                                    {'daily_rate_usd': Decimal('61.6667'),
                                     'dsa_region': hungary_region.id,
                                     'dsa_region_name': 'Hungary',
                                     'end_date': date(2017, 3, 13),
                                     'night_count': Decimal('3'),
                                     'start_date': date(2017, 3, 11),
-                                    'total_amount_usd': Decimal('185.0000')}], # 100 * (1 + 0.45 + 0.4)
+                                    'amount_usd': Decimal('185.0000')}], # 100 * (1 + 0.45 + 0.4)
                           'dsa_total': Decimal('10355.0000'),
                           'expenses_total': Decimal('0.0000')})

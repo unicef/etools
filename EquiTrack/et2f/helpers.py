@@ -120,7 +120,7 @@ class CostSummaryCalculator(object):
         daily_rate_usd = total_amount_usd / night_count
 
         dsa['daily_rate_usd'] = daily_rate_usd.quantize(Decimal('1.0000'))
-        dsa['total_amount_usd'] = total_amount_usd.quantize(Decimal('1.0000'))
+        dsa['amount_usd'] = total_amount_usd.quantize(Decimal('1.0000'))
         self._dsa_data.append(dsa)
         self._dsa_total += total_amount_usd
 

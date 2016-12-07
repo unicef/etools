@@ -49,16 +49,6 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {})
 
-    def test_cost_summary(self):
-        response = self.forced_auth_req('get', reverse('et2f:travels:details:index',
-                                                       kwargs={'travel_pk': self.travel.id}),
-                                        user=self.unicef_staff)
-
-        response_json = json.loads(response.rendered_content)
-        cost_summary = response_json['cost_summary']
-        self.assertEqual(cost_summary,
-                         {})
-
     def test_file_attachments(self):
         class FakeFile(StringIO):
             def size(self):
