@@ -1,5 +1,8 @@
 import datetime
 
+from actstream import action
+from actstream.models import model_stream
+
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
 from funds.models import Donor, Grant
@@ -557,9 +560,21 @@ class TestAgreementModel(TenantTestCase):
             partner=self.partner_organization,
         )
 
+        # Trigger created event activity stream
+        action.send(self.partner_organization, verb="created", target=self.agreement)
+
     def test_reference_number(self):
         year = datetime.datetime.today().year
         self.assertEqual(self.agreement.reference_number, "/PCA{}01".format(year))
+
+    def test_snapshot_activity_stream(self):
+        self.agreement.bank_name = "Bank A"
+        self.agreement.bank_address = "1234 St, City A, State B, 00000, USA"
+
+        Agreement.create_snapshot_activity_stream(self.partner_organization, self.agreement)
+        self.agreement.save()
+
+        self.assertEquals(model_stream(Agreement).count(), 2)
 
 class TestPCAModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
