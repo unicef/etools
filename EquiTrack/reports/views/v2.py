@@ -2,25 +2,17 @@ import operator
 import functools
 
 from django.db.models import Q
-from rest_framework.generics import (
-    ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
-)
+from rest_framework.generics import ListAPIView
 from rest_framework.permissions import IsAdminUser
 
 from reports.models import Result, CountryProgramme
-from reports.serializers.v2 import ResultListSerializer, ResultCreateSerializer
+from reports.serializers.v2 import ResultListSerializer
 
 
-class ResultListAPIView(ListCreateAPIView):
+class ResultListAPIView(ListAPIView):
     queryset = Result.objects.all()
     serializer_class = ResultListSerializer
     permission_classes = (IsAdminUser,)
-
-    def get_serializer_class(self, format=None):
-        if self.request.method == "POST":
-            return ResultCreateSerializer
-        return super(ResultListAPIView, self).get_serializer_class()
 
     def get_queryset(self):
         current_cp = CountryProgramme.current()
@@ -41,14 +33,3 @@ class ResultListAPIView(ListCreateAPIView):
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
         return q
-
-
-class ResultDetailAPIView(RetrieveUpdateDestroyAPIView):
-    queryset = Result.objects.all()
-    serializer_class = ResultListSerializer
-    permission_classes = (IsAdminUser,)
-
-    def get_serializer_class(self, format=None):
-        if self.request.method in ["PUT", "PATCH"]:
-            return ResultCreateSerializer
-        return super(ResultListAPIView, self).get_serializer_class()

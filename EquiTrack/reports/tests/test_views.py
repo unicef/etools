@@ -137,34 +137,3 @@ class TestReportViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["id"]), self.result1.id)
-
-    def test_apiv2_results_create(self):
-        data = {
-            "name": "Result1",
-            "result_type": self.result_type.id,
-            "wbs": "WBS",
-            "result_structure": ResultStructureFactory().id,
-            "country_programme": CountryProgrammeFactory().id,
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/reports/results/',
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-    def test_apiv2_results_patch(self):
-        data = {
-            "name": "patched name",
-        }
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/reports/results/{}/'.format(self.result1.id),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["name"], "patched name")
