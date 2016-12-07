@@ -5,7 +5,7 @@ from rest_framework import serializers
 from users.serializers import UserProfileSerializer
 from workplan.serializers import ResultWorkplanPropertySerializer
 from workplan.models import ResultWorkplanProperty
-from .models import (
+from reports.models import (
     ResultStructure,
     ResultType,
     Unit,

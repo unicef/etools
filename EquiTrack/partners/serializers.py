@@ -5,7 +5,7 @@ import json
 from django.db import transaction
 from rest_framework import serializers
 
-from reports.serializers import IndicatorSerializer, OutputSerializer
+from reports.serializers.v1 import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
 from .models import (
