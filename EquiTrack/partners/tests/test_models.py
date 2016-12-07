@@ -574,7 +574,16 @@ class TestAgreementModel(TenantTestCase):
         Agreement.create_snapshot_activity_stream(self.partner_organization, self.agreement)
         self.agreement.save()
 
+        # Check if new activity action has been created
         self.assertEquals(model_stream(Agreement).count(), 2)
+
+        # Check the snapshot content
+        snapshot = model_stream(Agreement).first().data['snapshot']
+        self.assertNotEquals(snapshot, {})
+
+        # Check if the snapshot had the empty entries for bank information when initially created
+        self.assertEquals(snapshot['bank_name'], 'None')
+        self.assertEquals(snapshot['bank_address'], '')
 
 class TestPCAModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
