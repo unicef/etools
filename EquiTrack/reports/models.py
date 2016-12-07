@@ -229,10 +229,16 @@ class LowerResult(MPTTModel):
 
     intervention = models.ForeignKey(to="partners.PCA")
     result_type = models.ForeignKey(ResultType)
-    sector = models.ForeignKey(Sector, null=True, blank=True)
-    name = models.TextField()
-    code = models.CharField(max_length=50, null=True, blank=True)
-    quarters = models.ManyToManyField(Quarter, related_name="lowerresults+", blank=True)
+
+    # link to Higher level result only valid to have at the output level
+    cp_result = models.ForeignKey(Result, related_name='lower_results')
+
+    name = models.CharField(max_length=500)
+
+    # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
+    code = models.CharField(max_length=50)
+
+    quarters = models.ManyToManyField(Quarter, related_name="lower_results+", blank=True)
     parent = TreeForeignKey(
         'self',
         null=True, blank=True,
@@ -247,9 +253,14 @@ class LowerResult(MPTTModel):
 
     def __unicode__(self):
         return u'{}: {}'.format(
-            self.code if self.code else self.result_type.name,
+            self.code,
             self.name
         )
+
+    class Meta:
+        unique_together = (('intervention', 'cp_result', 'code'),)
+
+
 
 
 class Goal(models.Model):
@@ -335,9 +346,6 @@ class AppliedIndicator(models.Model):
 
     class Meta:
         unique_together = (("indicator", "lower_result"),)
-
-
-
 
 
 class Indicator(models.Model):

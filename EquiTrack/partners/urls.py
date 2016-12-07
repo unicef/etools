@@ -83,7 +83,8 @@ bulk_reports_api.register(r'bulk_reports', IndicatorReportViewSet, base_name='bu
 
 urlpatterns = patterns(
     '',
-    url(r'^$', PortalDashView.as_view()),
+    # remove partner portal for now:
+    # url(r'^$', PortalDashView.as_view()),
 
     url(r'^my_interventions/', InterventionsViewSet.as_view({'get': 'retrieve'}), name='interventions'),
     # url(r'^interventions/(?P<intervention_pk>\d+)/reports/', IndicatorReportViewSet.as_view(), name='interventions'),
