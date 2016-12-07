@@ -60,6 +60,9 @@ class CostSummaryCalculator(object):
         self._init_values()
         self._total_expenses = self._calculate_total_expenses()
 
+        if not self._itinerary_items:
+            return 
+
         # All but last travel
         for item_id, itinerary_item in enumerate(self._itinerary_items[:-1]):
             dsa_region = itinerary_item.dsa_region
@@ -74,8 +77,6 @@ class CostSummaryCalculator(object):
         # +1 day because of the < comparison
         end_date = itinerary_item.arrival_date.date()
         self._calculate_dsa_rate_for_timeframe(dsa_region, start_date, end_date, True)
-
-        # TODO last day 0.4 szorzo
 
     def _calculate_dsa_rate_for_timeframe(self, dsa_region, start_date, end_date, count_last_day=False):
         delta_day = timedelta(days=1)
