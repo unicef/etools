@@ -250,9 +250,8 @@ class AgreementViewSet(
 
         # TODO: Use a different action verb for each status choice in Agreement
         # Draft, Active, Expired, Suspended, Terminated
-        action.send(request.user, verb="created", target=serializer.instance)
-
         serializer.instance = serializer.save()
+        action.send(request.user, verb="created", target=serializer.instance)
 
         headers = self.get_success_headers(serializer.data)
         return Response(

@@ -4,6 +4,8 @@ import json
 
 from rest_framework import status
 
+from actstream.models import model_stream
+
 from EquiTrack.factories import (
     PartnershipFactory,
     PartnerFactory,
@@ -95,6 +97,9 @@ class TestPartnershipViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        
+        # Check for activity action created
+        self.assertEquals(model_stream(Agreement).count(), 1)
 
     def test_api_agreements_list(self):
 
