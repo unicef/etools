@@ -8,6 +8,8 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from et2f.models import DSARegion, ModeOfTravel
+from et2f.tests.factories import AirlineCompanyFactory
 
 from .factories import TravelFactory
 
@@ -122,3 +124,29 @@ class TravelDetails(APITenantTestCase):
                           'approval_date',
                           'is_driver',
                           'attachment_count'])
+
+    def test_travel_creation(self):
+        dsaregion = DSARegion.objects.first()
+        airlines = AirlineCompanyFactory()
+        airlines2 = AirlineCompanyFactory()
+        mode_of_travel = ModeOfTravel.objects.first()
+
+        data = {'cost_assignments': [],
+                'deductions': [{'date': '2016-11-03',
+                                'breakfast': True,
+                                'lunch': True,
+                                'dinner': False,
+                                'accomodation': True}],
+                'expenses': [],
+                'itinerary': [{'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-16T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': mode_of_travel.id,
+                               'airlines': [airlines.id, airlines2.id]}],
+                'activities': []}
+
+        self.forced_auth_req('post', reverse('et2f:travels:list:index'),
+                             data=data, user=self.unicef_staff)

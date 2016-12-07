@@ -118,7 +118,10 @@ class CostSummaryCalculator(object):
             current_day += delta_day
             day_count += 1
 
-        daily_rate_usd = total_amount_usd / night_count
+        if night_count:
+            daily_rate_usd = total_amount_usd / night_count
+        else:
+            daily_rate_usd = total_amount_usd
 
         dsa['daily_rate_usd'] = daily_rate_usd.quantize(Decimal('1.0000'))
         dsa['amount_usd'] = total_amount_usd.quantize(Decimal('1.0000'))
