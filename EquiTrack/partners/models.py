@@ -1681,7 +1681,7 @@ class RAMIndicator(models.Model):
     Relates to :model:`reports.Result`
     Relates to :model:`reports.Indicator`
     """
-
+    # TODO: Remove This indicator and connect direcly to higher indicators M2M related
     intervention = models.ForeignKey(PCA, related_name='indicators')
     result = models.ForeignKey(Result)
     indicator = ChainedForeignKey(
@@ -1782,9 +1782,8 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
 
-    Relates to :model:`partners.ResultChain`
+    Relates to :model:`partners.AppliedIndicator`
     Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`results.Indicator`
     Relates to :model:`locations.Location`
     """
 

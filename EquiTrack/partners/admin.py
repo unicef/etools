@@ -48,7 +48,9 @@ from .models import (
     AgreementAmendmentLog,
     GovernmentIntervention,
     GovernmentInterventionResult,
-    IndicatorDueDates
+    IndicatorDueDates,
+    IndicatorReport,
+
 )
 from .filters import (
     PCASectorFilter,
@@ -820,3 +822,4 @@ admin.site.register(FileType)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
+admin.site.register(IndicatorReport)

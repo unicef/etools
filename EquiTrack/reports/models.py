@@ -313,19 +313,24 @@ class IndicatorBlueprint(models.Model):
 class AppliedIndicator(models.Model):
 
     indicator = models.ForeignKey(IndicatorBlueprint)
+
+    # the result this indicator is contributing to.
     lower_result = models.ForeignKey(LowerResult, related_name='indicators')
 
+    # unique code for this indicator within the current context
+    # eg: (1.1) result code 1 - indicator code 1
     context_code = models.CharField(max_length=50, null=True, blank=True,
                                     verbose_name="Code in current context")
-
     target = models.CharField(max_length=255, null=True, blank=True)
     baseline = models.CharField(max_length=255, null=True, blank=True)
     assumptions = models.TextField(null=True, blank=True)
 
+    # current total, transactional and dynamically calculated based on IndicatorReports
     total = models.IntegerField(null=True, blank=True, default=0,
                                 verbose_name="Current Total")
 
     # variable disaggregation's that may be present in the work plan
+    # this can only be present if the indicatorBlueprint has dissagregatable = true
     disaggregation_logic = JSONField(null=True)
 
     class Meta:
@@ -344,6 +349,7 @@ class Indicator(models.Model):
     Relates to :model:`reports.Result`
     Relates to :model:`activityinfo.Indicator`
     """
+    # TODO: rename this to RAMIndicator and rename/remove RAMIndicator
 
     sector = models.ForeignKey(
         Sector,

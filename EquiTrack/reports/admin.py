@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.contrib import admin
 
 from import_export.admin import ImportExportModelAdmin
@@ -18,6 +16,8 @@ from reports.models import (
     Result,
     CountryProgramme,
     LowerResult,
+    IndicatorBlueprint,
+    AppliedIndicator
 )
 from .forms import IndicatorAdminForm
 
@@ -235,3 +235,5 @@ admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)
 admin.site.register(LowerResult)
 #admin.site.register(ResultType)
+admin.site.register(IndicatorBlueprint)
+admin.site.register(AppliedIndicator)
