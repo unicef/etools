@@ -864,6 +864,7 @@ class PCA(AdminURLMixin, models.Model):
         PartnerOrganization,
         related_name='documents',
     )
+    # TODO: remove chained foreign key
     agreement = ChainedForeignKey(
         Agreement,
         related_name='interventions',
@@ -880,6 +881,7 @@ class PCA(AdminURLMixin, models.Model):
         max_length=255,
         verbose_name=u'Document type'
     )
+    # TODO: rename result_structure to hrp
     result_structure = models.ForeignKey(
         ResultStructure,
         blank=True, null=True, on_delete=models.DO_NOTHING,
@@ -948,6 +950,7 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
+    # TODO: remove chainedForeignKEy
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         verbose_name=u'Signed by partner',
@@ -958,6 +961,7 @@ class PCA(AdminURLMixin, models.Model):
         auto_choose=False,
         blank=True, null=True,
     )
+    # TODO: remove chainedForeignKEy
     partner_focal_point = ChainedForeignKey(
         PartnerStaffMember,
         related_name='my_partnerships',
