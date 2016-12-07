@@ -1982,6 +1982,7 @@ class FundingCommitment(TimeFramedModel):
 
     objects = FCManager()
 
+
 class DirectCashTransfer(models.Model):
     """
     Represents a direct cash transfer
@@ -1995,3 +1996,14 @@ class DirectCashTransfer(models.Model):
     amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
     amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
     amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+
+
+class PlannedVisits(models.Model):
+    """
+    Represents planned visits for the intervention
+    """
+    partnership = models.ForeignKey(PCA, related_name='visits')
+    year = models.IntegerField(default=datetime.datetime.now().year)
+    programmatic = models.IntegerField(default=0)
+    spot_checks = models.IntegerField(default=0)
+    audit = models.IntegerField(default=0)
