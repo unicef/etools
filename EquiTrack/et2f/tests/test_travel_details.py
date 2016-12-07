@@ -40,7 +40,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(duplicate_travel_url, '/api/et2f/travels/1/duplicate_travel/')
 
     @skip('fix this somehow. query count vaires between 21 and 40 queries...')
-    def test_list_view(self):
+    def test_details_view(self):
         with self.assertNumQueries(29):
             response = self.forced_auth_req('get', reverse('et2f:travels:details:index',
                                                            kwargs={'travel_pk': self.travel.id}),
@@ -48,6 +48,16 @@ class TravelDetails(APITenantTestCase):
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {})
+
+    def test_cost_summary(self):
+        response = self.forced_auth_req('get', reverse('et2f:travels:details:index',
+                                                       kwargs={'travel_pk': self.travel.id}),
+                                        user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+        cost_summary = response_json['cost_summary']
+        self.assertEqual(cost_summary,
+                         {})
 
     def test_file_attachments(self):
         class FakeFile(StringIO):

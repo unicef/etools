@@ -3,10 +3,10 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
-from rest_framework import serializers
+from rest_framework import serializers, ISO_8601
 
 from et2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelPermission, TravelAttachment, AirlineCompany, get_assigned_roles, ModeOfTravel
+    TravelPermission, TravelAttachment, AirlineCompany, get_assigned_roles, ModeOfTravel, DSARegion
 
 
 class PermissionBasedModelSerializer(serializers.ModelSerializer):
@@ -103,10 +103,21 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
         return super(TravelAttachmentSerializer, self).create(validated_data)
 
 
+class DSASerializer(serializers.Serializer):
+    start_date = serializers.DateTimeField(format=ISO_8601)
+    end_date = serializers.DateTimeField(format=ISO_8601)
+    daily_rate_usd = serializers.DecimalField(max_digits=20, decimal_places=4)
+    night_count = serializers.IntegerField()
+    amount_usd = serializers.DecimalField(max_digits=20, decimal_places=4)
+    dsa_region = serializers.IntegerField()
+    dsa_region_name = serializers.CharField()
+
+
 class CostSummarySerializer(serializers.Serializer):
     dsa_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
     expenses_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
     deductions_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
+    dsa = DSASerializer(many=True)
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):

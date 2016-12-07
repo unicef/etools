@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from datetime import timedelta, datetime
 from decimal import Decimal
+from pytz import UTC
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -33,9 +34,25 @@ class CostSummaryCalculator(object):
         self._dsa_region_cache = {}
 
     def calculate_cost_summary(self):
+        now = datetime.now(tz=UTC).isoformat()
+        daily_rate_usd = Decimal('123.99')
         result = {'dsa_total': self.calculate_total_dsa(),
                   'expenses_total': self.calculate_total_expenses(),
-                  'deductions_total': self.calculate_total_deductions()}
+                  'deductions_total': self.calculate_total_deductions(),
+                  'dsa': [{'start_date': now,
+                           'end_date': now,
+                           'daily_rate_usd': daily_rate_usd,
+                           'night_count': 5,
+                           'amount_usd': daily_rate_usd * 5,
+                           'dsa_region': 2,
+                           'dsa_region_name': ''},
+                          {'start_date': now,
+                           'end_date': now,
+                           'daily_rate_usd': daily_rate_usd,
+                           'night_count': 3,
+                           'amount_usd': daily_rate_usd * 2,
+                           'dsa_region': 1,
+                           'dsa_region_name': ''}]}
         return result
 
     def _get_dsa_region_at(self, date):
