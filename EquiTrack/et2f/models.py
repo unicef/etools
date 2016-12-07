@@ -188,7 +188,8 @@ class Travel(models.Model):
     @property
     def cost_summary(self):
         calculator = CostSummaryCalculator(self)
-        return calculator.calculate_cost_summary()
+        calculator.calculate_cost_summary()
+        return calculator.get_cost_summary()
 
     # State machine transitions
     def check_completion_conditions(self):

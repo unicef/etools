@@ -1,8 +1,9 @@
 from __future__ import unicode_literals
 
-from datetime import timedelta, datetime
+from datetime import timedelta
 from decimal import Decimal
-from pytz import UTC
+
+from django.utils.functional import cached_property
 
 from django.core.exceptions import ObjectDoesNotExist
 
@@ -32,54 +33,110 @@ class CostSummaryCalculator(object):
     def __init__(self, travel):
         self.travel = travel
         self._dsa_region_cache = {}
+        self._calculated = False
 
-    def calculate_cost_summary(self):
-        now = datetime.now(tz=UTC).isoformat()
-        daily_rate_usd = Decimal('123.99')
-        result = {'dsa_total': self.calculate_total_dsa(),
-                  'expenses_total': self.calculate_total_expenses(),
-                  'deductions_total': self.calculate_total_deductions(),
-                  'dsa': [{'start_date': now,
-                           'end_date': now,
-                           'daily_rate_usd': daily_rate_usd,
-                           'night_count': 5,
-                           'amount_usd': daily_rate_usd * 5,
-                           'dsa_region': 2,
-                           'dsa_region_name': ''},
-                          {'start_date': now,
-                           'end_date': now,
-                           'daily_rate_usd': daily_rate_usd,
-                           'night_count': 3,
-                           'amount_usd': daily_rate_usd * 2,
-                           'dsa_region': 1,
-                           'dsa_region_name': ''}]}
+    def _init_values(self):
+        self._dsa_data = []
+        self._dsa_total = Decimal(0)
+        self._total_deductions = Decimal(0)
+        self._total_expenses = Decimal(0)
+
+    @cached_property
+    def _itinerary_items(self):
+        return list(self.travel.itinerary.order_by('departure_date'))
+
+    @cached_property
+    def _deductions(self):
+        return {d.date: d for d in self.travel.deductions.all()}
+
+    def get_cost_summary(self):
+        result = {'dsa_total': self._dsa_total.quantize(Decimal('1.0000')),
+                  'expenses_total': self._total_expenses.quantize(Decimal('1.0000')),
+                  'deductions_total': self._total_deductions.quantize(Decimal('1.0000')),
+                  'dsa': self._dsa_data}
         return result
 
-    def _get_dsa_region_at(self, date):
-        """
-        :type date: datetime.date
-        :rtype: et2f.models.DSARegion | None
-        """
-        if date not in self._dsa_region_cache:
-            start_date = datetime(date.year, date.month, date.day)
-            last_itinerary_item = self.travel.itinerary.filter(arrival_date__gte=start_date).last()
-            self._dsa_region_cache[date] = getattr(last_itinerary_item, 'dsa_region', None)
-        return self._dsa_region_cache[date]
+    def calculate_cost_summary(self):
+        self._init_values()
+        self._total_expenses = self._calculate_total_expenses()
 
-    def _get_dsa_rate_at(self, date, since=1):
-        dsa_region = self._get_dsa_region_at(date)
-        if dsa_region is None:
-            return Decimal(0)
-        if since <= 60:
-            return dsa_region.dsa_amount_usd
-        return dsa_region.dsa_amount_60plus_usd
+        # All but last travel
+        for item_id, itinerary_item in enumerate(self._itinerary_items[:-1]):
+            dsa_region = itinerary_item.dsa_region
+            start_date = itinerary_item.departure_date.date()
+            end_date = self._itinerary_items[item_id+1].departure_date.date()
+            self._calculate_dsa_rate_for_timeframe(dsa_region, start_date, end_date)
+
+        # Last travel
+        itinerary_item = self._itinerary_items[-1]
+        dsa_region = itinerary_item.dsa_region
+        start_date = itinerary_item.departure_date.date()
+        # +1 day because of the < comparison
+        end_date = itinerary_item.arrival_date.date()
+        self._calculate_dsa_rate_for_timeframe(dsa_region, start_date, end_date, True)
+
+        # TODO last day 0.4 szorzo
+
+    def _calculate_dsa_rate_for_timeframe(self, dsa_region, start_date, end_date, count_last_day=False):
+        delta_day = timedelta(days=1)
+
+        dsa = {'start_date': start_date,
+               'end_date': end_date,
+               'dsa_region': dsa_region.id,
+               'dsa_region_name': dsa_region.name}
+
+        if count_last_day:
+            end_date += delta_day
+
+        night_count = Decimal((end_date - start_date).days)
+        dsa['night_count'] = night_count
+
+        total_amount_usd = Decimal(0)
+        current_day = start_date
+        day_count = 1
+        while current_day < end_date:
+            last_day = (current_day+delta_day) >= end_date
+
+            if day_count <= 60:
+                daily_rate = dsa_region.dsa_amount_usd
+            else:
+                daily_rate = dsa_region.dsa_amount_60plus_usd
+
+            if count_last_day and last_day:
+                deduction_multiplier = Decimal('0.6')
+            else:
+                deduction_multiplier = self._get_deduction_multiplier_at(current_day)
+
+            deduction = daily_rate * deduction_multiplier
+            daily_rate -= deduction
+
+            total_amount_usd += daily_rate
+            if not count_last_day and not last_day:
+                self._total_deductions += deduction
+
+            current_day += delta_day
+            day_count += 1
+
+        daily_rate_usd = total_amount_usd / night_count
+
+        dsa['daily_rate_usd'] = daily_rate_usd.quantize(Decimal('1.0000'))
+        dsa['total_amount_usd'] = total_amount_usd.quantize(Decimal('1.0000'))
+        self._dsa_data.append(dsa)
+        self._dsa_total += total_amount_usd
+
+    def _calculate_total_expenses(self):
+        # TODO: DB sum should be used
+        total = Decimal(0)
+        for expense in self.travel.expenses.all():
+            total += expense.amount
+        return total
 
     def _get_deduction_multiplier_at(self, date):
         multiplier = Decimal(0)
 
         try:
-            deduction = self.travel.deductions.get(date=date)
-        except ObjectDoesNotExist:
+            deduction = self._deductions[date]
+        except KeyError:
             return multiplier
 
         # TODO handle overnight
@@ -96,66 +153,6 @@ class CostSummaryCalculator(object):
 
         # Handle if it goes above 1
         return min(multiplier, 1)
-
-    def _get_deduction_at(self, date):
-        dsa_rate = self._get_dsa_rate_at(date)
-        multiplier = self._get_deduction_multiplier_at(date)
-        return dsa_rate * multiplier
-
-    def calculate_total_dsa(self):
-        if self.travel.start_date is None or self.travel.end_date is None:
-            return Decimal(0)
-
-        current_date = self.travel.start_date.date()
-        end_date = self.travel.end_date.date()
-        step = timedelta(days=1)
-
-        previous_region = None
-        previous_region_since = 0
-
-        total = Decimal(0)
-        while current_date <= end_date:
-            dsa_region = self._get_dsa_region_at(current_date)
-            if dsa_region == previous_region:
-                previous_region_since += 1
-            else:
-                previous_region = dsa_region
-                previous_region_since = 1
-
-            dsa_rate = self._get_dsa_rate_at(current_date, previous_region_since)
-            if current_date == end_date:
-                dsa_rate *= Decimal('0.4')
-            else:
-                deductions = self._get_deduction_at(current_date)
-                dsa_rate -= deductions
-
-            total += dsa_rate
-
-            current_date += step
-
-        return total
-
-    def calculate_total_expenses(self):
-        # TODO: figure out how to handle different currencies
-        total = Decimal(0)
-        for expense in self.travel.expenses.all():
-            total += expense.amount
-        return total
-
-    def calculate_total_deductions(self):
-        if self.travel.start_date is None or self.travel.end_date is None:
-            return Decimal(0)
-
-        current_date = self.travel.start_date.date()
-        end_date = self.travel.end_date.date()
-        step = timedelta(days=1)
-
-        total = Decimal(0)
-        while current_date <= end_date:
-            total += self._get_deduction_at(current_date)
-            current_date += step
-
-        return total
 
 
 class CloneTravelHelper(object):
