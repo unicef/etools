@@ -769,7 +769,7 @@ class Agreement(TimeStampedModel):
             changes = target.tracker.changed()
             snapshot = dict(model_to_dict(target).items() + changes.items())
 
-            # Stringify any datetime data types in order to be JSON serializer
+            # Stringify any non-JSON Serializeable data types
             for key, value in snapshot.items():
                 if type(value) not in [int, float, bool, str]:
                     snapshot[key] = str(snapshot[key])
