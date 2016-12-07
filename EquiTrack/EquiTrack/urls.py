@@ -133,6 +133,9 @@ urlpatterns = patterns(
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
 
+    # API v2 urls
+    url(r'^api/v2/', include('reports.urls_v2')),
+
     url(r'^api/', include(api.urls)),
     url(r'^api/', include(partners_api.urls)),
     url(r'^api/', include(staffm_api.urls)),
