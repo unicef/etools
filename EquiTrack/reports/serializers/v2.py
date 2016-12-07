@@ -6,7 +6,7 @@ from workplan.models import ResultWorkplanProperty
 from reports.models import Result
 
 
-class ResultSerializer(serializers.ModelSerializer):
+class ResultCreateSerializer(serializers.ModelSerializer):
 
     milestones = MilestoneSerializer(many=True, read_only=True)
     workplan_properties = ResultWorkplanPropertySerializer(many=True, read_only=True)
@@ -21,3 +21,14 @@ class ResultSerializer(serializers.ModelSerializer):
         for workplan_property in workplan_properties:
             ResultWorkplanProperty.objects.create(result=result, **workplan_property)
         return result
+
+
+class ResultListSerializer(serializers.ModelSerializer):
+
+    milestones = MilestoneSerializer(many=True, read_only=True)
+    workplan_properties = ResultWorkplanPropertySerializer(many=True, read_only=True)
+    result_type = serializers.SlugRelatedField(slug_field="name", read_only=True)
+
+    class Meta:
+        model = Result
+        fields = '__all__'

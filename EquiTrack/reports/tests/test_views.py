@@ -4,7 +4,7 @@ import random
 
 from rest_framework import status
 
-from reports.models import ResultType
+from reports.models import ResultType, CountryProgramme
 from EquiTrack.factories import (
     UserFactory,
     ResultFactory,
@@ -24,7 +24,11 @@ class TestReportViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
         self.workplan = WorkplanFactory()
-        self.result1 = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
+        self.result1 = ResultFactory(
+            result_type=self.result_type,
+            result_structure=ResultStructureFactory(),
+            country_programme=CountryProgrammeFactory(wbs="/A0/"),
+        )
         self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan, result=self.result1)
 
         # Additional data to use in tests
@@ -80,6 +84,16 @@ class TestReportViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["id"]), self.result1.id)
+
+    def test_apiv2_results_list_current_cp(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/results/',
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(int(response.data[0]["country_programme"]), CountryProgramme.current().id)
 
     def test_apiv2_results_create(self):
         data = {
