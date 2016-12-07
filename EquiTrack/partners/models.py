@@ -760,8 +760,8 @@ class Agreement(TimeStampedModel):
         """
         Create activity stream for Agreement in order to keep track of field changes
 
-        actor: An activity trigger - Any Python object or value
-        target: An action target for the activity - Django ORM with FieldTracker
+        actor: An activity trigger - Any Python object
+        target: An action target for the activity - Django ORM with FieldTracker before calling save() method
         """
 
         if hasattr(target, 'tracker'):
