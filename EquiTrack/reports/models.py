@@ -10,12 +10,10 @@ class CountryProgramme(models.Model):
     """
     Represents a country programme cycle
     """
-
     name = models.CharField(max_length=150)
     wbs = models.CharField(max_length=30, unique=True)
     from_date = models.DateField()
     to_date = models.DateField()
-
 
     def __unicode__(self):
         return ' '.join([self.name, self.wbs])
@@ -24,6 +22,12 @@ class CountryProgramme(models.Model):
     def current(cls):
         today = datetime.now()
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
+        return cps.first()
+
+    @classmethod
+    def by_year(cls, year):
+        year_date = datetime.strptime(year, "%Y").date()
+        cps = cls.objects.filter(wbs__contains='/A0/', from_date__lte=year_date, to_date__gte=year_date).order_by('-to_date')
         return cps.first()
 
 

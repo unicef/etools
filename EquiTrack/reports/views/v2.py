@@ -1,3 +1,7 @@
+import operator
+import functools
+
+from django.db.models import Q
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -26,12 +30,12 @@ class ResultListAPIView(ListCreateAPIView):
         if query_params:
             queries = []
 
-            if "partner_type" in query_params.keys():
-                queries.append(Q(partner_type=query_params.get("partner_type")))
-            if "cso_type" in query_params.keys():
-                queries.append(Q(cso_type=query_params.get("cso_type")))
-            if "hidden" in query_params.keys():
-                queries.append(Q(cso_type=query_params.get("cso_type")))
+            if "country_programme" in query_params.keys():
+                cp_year = query_params.get("country_programme")
+                cp = CountryProgramme.by_year(cp_year)
+                queries.append(Q(country_programme=cp))
+            if "result_type" in query_params.keys():
+                queries.append(Q(result_type__name=query_params.get("result_type")))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
