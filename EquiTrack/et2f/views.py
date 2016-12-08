@@ -24,8 +24,8 @@ from users.models import Office, Section
 from et2f.exports import TravelListExporter
 from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
     TravelAttachment, TravelType, ModeOfTravel
-from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, CurrentUserSerializer, \
-    TravelAttachmentSerializer, CloneParameterSerializer, CloneOutputSerializer
+from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
+    CloneParameterSerializer, CloneOutputSerializer
 from et2f.serializers.static_data import StaticDataSerializer
 from et2f.serializers.permission_matrix import PermissionMatrixSerializer
 from et2f.helpers import PermissionMatrix, CloneTravelHelper
@@ -199,11 +199,3 @@ class PermissionMatrixView(generics.GenericAPIView):
             permission_matrix_data = serializer.data
             cache.set('permssion_matrix_data', permission_matrix_data, self.cache_timeout)
         return Response(permission_matrix_data, status.HTTP_200_OK)
-
-
-class CurrentUserView(generics.GenericAPIView):
-    serializer_class = CurrentUserSerializer
-
-    def get(self, request):
-        serializer = self.get_serializer(request.user)
-        return Response(serializer.data, status.HTTP_200_OK)

@@ -1,7 +1,7 @@
 
 from django.conf.urls import url, patterns, include
 
-from et2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, CurrentUserView,\
+from et2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, \
     TravelAttachmentViewSet
 
 
@@ -58,5 +58,4 @@ urlpatterns = patterns(
     url(r'^travels/', include(travel_pattens, namespace='travels')),
     url(r'^static_data/$', StaticDataView.as_view(), name='static_data'),
     url(r'^permission_matrix/$', PermissionMatrixView.as_view(), name='permission_matrix'),
-    url(r'^me/$', CurrentUserView.as_view(), name='current_user'),
 )

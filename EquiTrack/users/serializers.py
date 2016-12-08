@@ -39,22 +39,19 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
-    # profile = serializers.SerializerMethodField('get_profile')
-    # It is redundant to specify `get_profile` on SerializerMethodField
-    # because it is the same as the default method name.
-    profile = serializers.SerializerMethodField()
-
-    def get_profile(self, user):
-        return UserProfileSerializer(user.profile).data
+    profile = UserProfileSerializer(read_only=True)
+    full_name = serializers.CharField(source='get_full_name')
+    roles = serializers.SerializerMethodField('get_assigned_roles')
 
     class Meta:
         model = User
-        exclude = (
-            'password',
-            'groups',
-            'user_permissions'
-        )
+        exclude = ('password', 'groups', 'user_permissions')
+
+    def get_assigned_roles(self, obj):
+        roles = [UserTypes.ANYONE]
+        if obj.groups.filter(name='Representative Office').exists():
+            roles.append(UserTypes.REPRESENTATIVE)
+        return roles
 
 
 class SectionSerializer(serializers.ModelSerializer):

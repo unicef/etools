@@ -31,14 +31,6 @@ class UserTypes(object):
         (REPRESENTATIVE, _('Representative')),
     )
 
-
-def get_assigned_roles(user):
-        roles = [UserTypes.ANYONE]
-        if user.groups.filter(name='Representative Office').exists():
-            roles.append(UserTypes.REPRESENTATIVE)
-        return roles
-
-
 class WBS(models.Model):
     name = models.CharField(max_length=25)
 
