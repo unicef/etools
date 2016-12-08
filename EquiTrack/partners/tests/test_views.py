@@ -376,6 +376,13 @@ class TestPCAViews(APITenantTestCase):
             "amended_at": today,
             "type": "Change in Programme Result",
         }
+        unicef_manager = UserFactory()
+        result_structure = ResultStructureFactory()
+        office = OfficeFactory()
+        location = LocationFactory()
+        gwpcalocation = {
+            "location": location.id,
+        }
         data = {
             "partner": self.partner.id,
             "title": "PCA 2",
@@ -383,9 +390,10 @@ class TestPCAViews(APITenantTestCase):
             "initiation_date": datetime.date.today(),
             "status": PCA.ACTIVE,
             "partnership_type": PCA.PD,
-            "office": [OfficeFactory().id],
+            "result_structure": result_structure.id,
+            "office": [office.id],
             "programme_focal_points": [UserFactory().id],
-            "unicef_managers": [UserFactory().id],
+            "unicef_managers": [unicef_manager.id],
             "partner_focal_point": [partner_staff.id],
             "partner_manager": partner_staff.id,
             "unicef_manager": self.unicef_staff.id,
@@ -395,9 +403,11 @@ class TestPCAViews(APITenantTestCase):
             "signed_by_partner_date": datetime.date(today.year-2, 1, 1),
             "population_focus": "focus1",
             "pcasectors": [pcasector],
+            "locations": [gwpcalocation],
             "budget_log": [budget_log],
             "supply_plans": [supply_plan],
             "distribution_plans": [distribution_plan],
+            "fr_numbers": ["Grant"],
             "amendments_log": [amendment_log],
         }
         response = self.forced_auth_req(
@@ -416,6 +426,8 @@ class TestPCAViews(APITenantTestCase):
         data.update(distribution_plans=[distribution_plan, distribution_plan])
         data.update(amendments_log=[amendment_log, amendment_log])
         data.update(pcasectors=[pcasector, pcasector])
+        data.update(locations=[gwpcalocation, gwpcalocation])
+        data.update(fr_numbers=["Grant", "WBS"])
 
         response = self.forced_auth_req(
             'put',
@@ -430,10 +442,19 @@ class TestPCAViews(APITenantTestCase):
         self.assertEquals(len(response.data["distribution_plans"]), 2)
         self.assertEquals(len(response.data["amendments_log"]), 2)
         self.assertEquals(len(response.data["pcasectors"]), 2)
-        #print(PCA.objects.filter(pcasectors__sector=sector.id))
+        self.assertEquals(len(response.data["locations"]), 2)
+        self.assertEquals(len(response.data["fr_numbers"]), 2)
+
         params = {
             "partnership_type": PCA.PD,
-            #"sector": sector.id,
+            "sector": sector.id,
+            "location": location.id,
+            "status": PCA.ACTIVE,
+            "unicef_managers": unicef_manager.id,
+            "start_date": datetime.date(today.year-1, 1, 1),
+            "end_date": datetime.date(today.year+1, 1, 1),
+            "office": office.id,
+            "search": "PCA 2",
         }
         response = self.forced_auth_req(
             'get',

@@ -13,6 +13,7 @@ from partners.models import (
     DistributionPlan,
     AmendmentLog,
     PCASector,
+    GwPCALocation,
 )
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
 
@@ -41,7 +42,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = PCA
         fields = (
-            'id', 'reference_number', 'partnership_type', 'partner_name', 'status', 'title', 'start_date', 'end_date',
+            'id', 'reference_number', 'number', 'partnership_type', 'partner_name', 'status', 'title', 'start_date', 'end_date',
             'pcasector_set', 'unicef_budget', 'cso_contribution',
         )
 
@@ -162,18 +163,37 @@ class AmendmentLogNestedSerializer(serializers.ModelSerializer):
         )
 
 
+class GwPCALocationCreateUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GwPCALocation
+        fields = "__all__"
+
+
+class GwPCALocationNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GwPCALocation
+        fields = (
+            "sector",
+            "governorate",
+            "region",
+            "locality",
+            "location",
+            "tpm_visit",
+        )
+
+
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     # TODO
-    # Locations? m2m?
-    # Humanitarian response plan? equals resultstructure?
     # Planned visits: which field is writable? Whats partner risk rating and audit?
-    # Fr number is charfield, is that ok?
     budget_log = PartnershipBudgetNestedSerializer(many=True)
     supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
     distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
     amendments_log = AmendmentLogNestedSerializer(many=True, required=False)
     pcasectors = PCASectorNestedSerializer(many=True, required=False)
+    locations = GwPCALocationNestedSerializer(many=True, required=False)
 
     class Meta:
         model = PCA
@@ -182,9 +202,9 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
             "title", "project_type", "status", "start_date", "end_date", "initiation_date",
             "submission_date", "review_date", "signed_by_unicef_date", "signed_by_partner_date",
             "unicef_manager", "unicef_managers", "programme_focal_points", "partner_manager",
-            "partner_focal_point", "office", "fr_number", "planned_visits", "population_focus",
+            "partner_focal_point", "office", "fr_numbers", "planned_visits", "population_focus",
             "sectors", "current", "created_at", "updated_at", "budget_log", "supply_plans",
-            "distribution_plans", "amendments_log", "pcasectors",
+            "distribution_plans", "amendments_log", "pcasectors", "locations",
         )
         read_only_fields = ("id",)
 
@@ -195,6 +215,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         distribution_plans = validated_data.pop("distribution_plans", [])
         amendments_log = validated_data.pop("amendments_log", [])
         pcasectors = validated_data.pop("pcasectors", [])
+        locations = validated_data.pop("locations", [])
 
         intervention = super(InterventionCreateUpdateSerializer, self).create(validated_data)
 
@@ -202,6 +223,13 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
             item["pca"] = intervention.id
             item["sector"] = item["sector"].id
             serializer = PCASectorCreateUpdateSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        for item in locations:
+            item["pca"] = intervention.id
+            item["location"] = item["location"].id
+            serializer = GwPCALocationCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
@@ -237,6 +265,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def update(self, instance, validated_data):
         pcasectors = validated_data.pop("pcasectors", [])
+        locations = validated_data.pop("locations", [])
         budget_log = validated_data.pop("budget_log", [])
         supply_plans = validated_data.pop("supply_plans", [])
         distribution_plans = validated_data.pop("distribution_plans", [])
@@ -254,6 +283,19 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
             item["pca"] = instance.id
             item["sector"] = item["sector"].id
             serializer = PCASectorCreateUpdateSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        # Locations
+        ids = [x["id"] for x in locations if "id" in x.keys()]
+        for item in instance.locations.all():
+            if item.id not in ids:
+                item.delete()
+
+        for item in locations:
+            item["pca"] = instance.id
+            item["location"] = item["location"].id
+            serializer = GwPCALocationCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
@@ -383,6 +425,10 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         if not pcasectors and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
             errors.update(pcasectors="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
 
+        locations = data.get("locations", "")
+        if not locations and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+            errors.update(locations="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+
         if errors:
             raise serializers.ValidationError(errors)
 
@@ -392,24 +438,25 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 class InterventionDetailSerializer(serializers.ModelSerializer):
 
     # TODO
-    # Humanitarian response plan
-    # Locations
-    # Budget log
     # Planned visits
-
-    pca_id = serializers.CharField(source='id', read_only=True)
-    pca_title = serializers.CharField(source='title')
-    pca_number = serializers.CharField(source='reference_number')
-    partner_name = serializers.CharField(source='partner.name')
-    partner_id = serializers.CharField(source='partner.id')
-    pcasector_set = PCASectorSerializer(many=True, read_only=True)
-    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
-    total_budget = serializers.CharField(read_only=True)
+    budget_log = PartnershipBudgetNestedSerializer(many=True)
+    supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
+    distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
+    amendments_log = AmendmentLogNestedSerializer(many=True, required=False)
+    pcasectors = PCASectorNestedSerializer(many=True, required=False)
+    locations = GwPCALocationNestedSerializer(many=True, required=False)
 
     class Meta:
         model = PCA
-        fields = '__all__'
-
+        fields = (
+            "id", "partner", "agreement", "partnership_type", "result_structure", "number",
+            "title", "project_type", "status", "start_date", "end_date", "initiation_date",
+            "submission_date", "review_date", "signed_by_unicef_date", "signed_by_partner_date",
+            "unicef_manager", "unicef_managers", "programme_focal_points", "partner_manager",
+            "partner_focal_point", "office", "fr_numbers", "planned_visits", "population_focus",
+            "sectors", "current", "created_at", "updated_at", "budget_log", "supply_plans",
+            "distribution_plans", "amendments_log", "pcasectors", "locations",
+        )
 
 # to be done
 # CP Outputs

@@ -78,25 +78,23 @@ class InterventionListAPIView(ListCreateAPIView):
             if "country_programme" in query_params.keys():
                 queries.append(Q(country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
-                queries.append(Q(pcasectors__sector=int(query_params.get("sector"))))
+                queries.append(Q(pcasectors__sector=query_params.get("sector")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "unicef_managers" in query_params.keys():
-                queries.append(Q(unicef_managers=query_params.get("unicef_managers")))
-            if "sector" in query_params.keys():
-                queries.append(Q(pcasectors=query_params.get("sector")))
+                queries.append(Q(unicef_managers__in=[query_params.get("unicef_managers")]))
             if "start_date" in query_params.keys():
                 queries.append(Q(start_date__gte=query_params.get("start_date")))
             if "end_date" in query_params.keys():
                 queries.append(Q(end_date__lte=query_params.get("end_date")))
             if "office" in query_params.keys():
-                queries.append(Q(office=query_params.get("office")))
+                queries.append(Q(office__in=[query_params.get("office")]))
             if "location" in query_params.keys():
-                queries.append(Q(location=query_params.get("location")))
+                queries.append(Q(locations__location=query_params.get("location")))
             if "search" in query_params.keys():
                 queries.append(
                     Q(title__icontains=query_params.get("search")) |
-                    Q(partner___name__icontains=query_params.get("search"))
+                    Q(partner__name__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
