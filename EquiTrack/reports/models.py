@@ -24,11 +24,6 @@ class CountryProgramme(models.Model):
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
         return cps.first()
 
-    @classmethod
-    def by_year(cls, year):
-        cps = cls.objects.filter(wbs__contains='/A0/', from_date__year__lte=year, to_date__year__gte=year).order_by('-to_date')
-        return cps.first()
-
 
 class ResultStructure(models.Model):
     """

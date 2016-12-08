@@ -24,8 +24,9 @@ class ResultListAPIView(ListAPIView):
 
             if "country_programme" in query_params.keys():
                 cp_year = query_params.get("country_programme")
-                cp = CountryProgramme.by_year(cp_year)
-                queries.append(Q(country_programme=cp))
+                queries.append(Q(country_programme__wbs__contains='/A0/'))
+                queries.append(Q(country_programme__from_date__year__lte=cp_year))
+                queries.append(Q(country_programme__to_date__year__gte=cp_year))
             if "result_type" in query_params.keys():
                 queries.append(Q(result_type__name=query_params.get("result_type")))
 
