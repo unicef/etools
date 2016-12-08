@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+
 
 from rest_framework import serializers
 
@@ -12,7 +12,8 @@ from .models import (
     Sector,
     Goal,
     Indicator,
-    Result
+    Result,
+    CountryProgramme
 )
 
 
@@ -113,4 +114,11 @@ class UnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
+        fields = '__all__'
+
+
+class CountryProgrammeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CountryProgramme
         fields = '__all__'

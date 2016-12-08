@@ -1,6 +1,6 @@
-__author__ = 'achamseddine'
 
 from rest_framework import viewsets, mixins
+from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAdminUser
 from .models import (
     ResultStructure,
@@ -8,7 +8,8 @@ from .models import (
     Result,
     Sector,
     Indicator,
-    Unit
+    Unit,
+    CountryProgramme
 )
 from .serializers import (
     ResultStructureSerializer,
@@ -16,7 +17,8 @@ from .serializers import (
     ResultSerializer,
     SectorCreateSerializer,
     IndicatorCreateSerializer,
-    UnitSerializer
+    UnitSerializer,
+    CountryProgrammeSerializer
 )
 
 
@@ -89,3 +91,18 @@ class UnitViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+
+
+class CountryProgrammeRetrieveView(RetrieveAPIView):
+    """
+    Returns a list of all Country Programmes
+    """
+    queryset = CountryProgramme.objects.all()
+    serializer_class = CountryProgrammeSerializer
+
+class CountryProgrammeListView(ListAPIView):
+    """
+    Returns a list of all Country Programmes
+    """
+    queryset = CountryProgramme.objects.all()
+    serializer_class = CountryProgrammeSerializer
