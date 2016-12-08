@@ -289,7 +289,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         # Sectors
         ids = [x["id"] for x in pcasectors if "id" in x.keys()]
         for item in instance.pcasectors.all():
-            if item.id not in ids:
+            if item.sector.id not in ids:
                 item.delete()
 
         for item in pcasectors:
@@ -302,7 +302,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         # Locations
         ids = [x["id"] for x in locations if "id" in x.keys()]
         for item in instance.locations.all():
-            if item.id not in ids:
+            if item.location.id not in ids:
                 item.delete()
 
         for item in locations:
