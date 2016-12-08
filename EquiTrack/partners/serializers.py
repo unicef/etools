@@ -188,7 +188,7 @@ class InterventionSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
     pcasector_set = PCASectorSerializer(many=True, read_only=True)
-    results = LowerOutputStructuredSerializer(many=True, read_only=True)
+    lower_results = LowerOutputStructuredSerializer(many=True, read_only=True)
     distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
     total_budget = serializers.CharField(read_only=True)
 
