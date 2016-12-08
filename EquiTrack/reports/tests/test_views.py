@@ -8,10 +8,8 @@ from reports.models import ResultType, CountryProgramme
 from EquiTrack.factories import (
     UserFactory,
     ResultFactory,
-    ResultWorkplanPropertyFactory,
     SectionFactory,
     LocationFactory,
-    WorkplanFactory,
     ResultStructureFactory,
     CountryProgrammeFactory,
 )
@@ -23,13 +21,11 @@ class TestReportViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.result_type = ResultType.objects.get(id=random.choice([1,2,3]))
-        self.workplan = WorkplanFactory()
         self.result1 = ResultFactory(
             result_type=self.result_type,
             result_structure=ResultStructureFactory(),
             country_programme=CountryProgrammeFactory(wbs="/A0/"),
         )
-        self.resultworkplanproperty = ResultWorkplanPropertyFactory(workplan=self.workplan, result=self.result1)
 
         # Additional data to use in tests
         self.location1 = LocationFactory()
