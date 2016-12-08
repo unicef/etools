@@ -1,7 +1,9 @@
+
 __author__ = 'jcranwellward'
 
 from rest_framework import serializers
 
+from et2f.models import UserTypes
 from .models import User, UserProfile, Group, Office, Section
 
 
