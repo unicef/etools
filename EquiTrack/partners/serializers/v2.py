@@ -14,6 +14,7 @@ from partners.models import (
     AmendmentLog,
     PCASector,
     GwPCALocation,
+    PlannedVisits,
 )
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
 
@@ -170,16 +171,34 @@ class GwPCALocationNestedSerializer(serializers.ModelSerializer):
         )
 
 
+class PlannedVisitsCreateUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PlannedVisits
+        fields = "__all__"
+
+
+class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PlannedVisits
+        fields = (
+            "year",
+            "programmatic",
+            "spot_checks",
+            "audit",
+        )
+
+
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
-    # TODO
-    # Planned visits: which field is writable? Whats partner risk rating and audit?
     budget_log = PartnershipBudgetNestedSerializer(many=True)
     supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
     distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
     amendments_log = AmendmentLogNestedSerializer(many=True, required=False)
     pcasectors = PCASectorNestedSerializer(many=True, required=False)
     locations = GwPCALocationNestedSerializer(many=True, required=False)
+    visits = PlannedVisitsNestedSerializer(many=True, required=False)
 
     class Meta:
         model = PCA
@@ -190,7 +209,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
             "unicef_manager", "unicef_managers", "programme_focal_points", "partner_manager",
             "partner_focal_point", "office", "fr_numbers", "planned_visits", "population_focus",
             "sectors", "current", "created_at", "updated_at", "budget_log", "supply_plans",
-            "distribution_plans", "amendments_log", "pcasectors", "locations",
+            "distribution_plans", "amendments_log", "pcasectors", "locations", "visits",
         )
         read_only_fields = ("id",)
 
@@ -202,6 +221,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         amendments_log = validated_data.pop("amendments_log", [])
         pcasectors = validated_data.pop("pcasectors", [])
         locations = validated_data.pop("locations", [])
+        visits = validated_data.pop("visits", [])
 
         intervention = super(InterventionCreateUpdateSerializer, self).create(validated_data)
 
@@ -246,6 +266,12 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
+        for item in visits:
+            item["partnership"] = intervention.id
+            serializer = PlannedVisitsCreateUpdateSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
         return intervention
 
     @transaction.atomic
@@ -256,6 +282,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         supply_plans = validated_data.pop("supply_plans", [])
         distribution_plans = validated_data.pop("distribution_plans", [])
         amendments_log = validated_data.pop("amendments_log", [])
+        visits = validated_data.pop("visits", [])
 
         updated = super(InterventionCreateUpdateSerializer, self).update(instance, validated_data)
 
@@ -333,6 +360,18 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         for item in amendments_log:
             item["partnership"] = instance.id
             serializer = AmendmentLogCreateUpdateSerializer(data=item)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        # Planned visits
+        ids = [x["id"] for x in visits if "id" in x.keys()]
+        for item in instance.visits.all():
+            if item.id not in ids:
+                item.delete()
+
+        for item in visits:
+            item["partnership"] = instance.id
+            serializer = PlannedVisitsCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
@@ -423,14 +462,13 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
 
-    # TODO
-    # Planned visits
     budget_log = PartnershipBudgetNestedSerializer(many=True)
     supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
     distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
     amendments_log = AmendmentLogNestedSerializer(many=True, required=False)
     pcasectors = PCASectorNestedSerializer(many=True, required=False)
     locations = GwPCALocationNestedSerializer(many=True, required=False)
+    visits = PlannedVisitsNestedSerializer(many=True, required=False)
 
     class Meta:
         model = PCA
@@ -441,7 +479,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_manager", "unicef_managers", "programme_focal_points", "partner_manager",
             "partner_focal_point", "office", "fr_numbers", "planned_visits", "population_focus",
             "sectors", "current", "created_at", "updated_at", "budget_log", "supply_plans",
-            "distribution_plans", "amendments_log", "pcasectors", "locations",
+            "distribution_plans", "amendments_log", "pcasectors", "locations", "visits",
         )
 
 # to be done

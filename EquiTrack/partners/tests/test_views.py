@@ -383,6 +383,12 @@ class TestPCAViews(APITenantTestCase):
         gwpcalocation = {
             "location": location.id,
         }
+        visit = {
+            "year": 2016,
+            "programmatic": 1,
+            "spot_checks": 1,
+            "audit": 1,
+        }
         data = {
             "partner": self.partner.id,
             "title": "PCA 2",
@@ -409,6 +415,7 @@ class TestPCAViews(APITenantTestCase):
             "distribution_plans": [distribution_plan],
             "fr_numbers": ["Grant"],
             "amendments_log": [amendment_log],
+            "visits": [visit],
         }
         response = self.forced_auth_req(
             'post',
@@ -428,6 +435,7 @@ class TestPCAViews(APITenantTestCase):
         data.update(pcasectors=[pcasector, pcasector])
         data.update(locations=[gwpcalocation, gwpcalocation])
         data.update(fr_numbers=["Grant", "WBS"])
+        data.update(visits=[visit, visit])
 
         response = self.forced_auth_req(
             'put',
@@ -444,7 +452,9 @@ class TestPCAViews(APITenantTestCase):
         self.assertEquals(len(response.data["pcasectors"]), 2)
         self.assertEquals(len(response.data["locations"]), 2)
         self.assertEquals(len(response.data["fr_numbers"]), 2)
+        self.assertEquals(len(response.data["visits"]), 2)
 
+        # Test filter
         params = {
             "partnership_type": PCA.PD,
             "sector": sector.id,
