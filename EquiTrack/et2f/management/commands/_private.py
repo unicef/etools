@@ -177,6 +177,7 @@ class PermissionMatrixSetter(object):
                                        Travel.CERTIFICATION_REJECTED,
                                        Travel.CERTIFICATION_APPROVED,
                                        Travel.SENT_FOR_PAYMENT,
+                                       Travel.APPROVED,
                                        Travel.COMPLETED])
         self.revoke_edit(sub_qs)
 

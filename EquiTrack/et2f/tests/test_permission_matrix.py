@@ -26,7 +26,7 @@ class TestPermissionMatrix(APITenantTestCase):
     def test_permission_matrix(self):
         # Check the effect of caching
         with self.assertNumQueries(1):
-            response = self.forced_auth_req('get', reverse('et2f:permission_matrix'), user=self.unicef_staff)
+            self.forced_auth_req('get', reverse('et2f:permission_matrix'), user=self.unicef_staff)
 
         with self.assertNumQueries(0):
-            response = self.forced_auth_req('get', reverse('et2f:permission_matrix'), user=self.unicef_staff)
+            self.forced_auth_req('get', reverse('et2f:permission_matrix'), user=self.unicef_staff)
