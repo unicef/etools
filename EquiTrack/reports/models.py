@@ -26,8 +26,7 @@ class CountryProgramme(models.Model):
 
     @classmethod
     def by_year(cls, year):
-        year_date = datetime.strptime(year, "%Y").date()
-        cps = cls.objects.filter(wbs__contains='/A0/', from_date__lte=year_date, to_date__gte=year_date).order_by('-to_date')
+        cps = cls.objects.filter(wbs__contains='/A0/', from_date__year__lte=year, to_date__year__gte=year).order_by('-to_date')
         return cps.first()
 
 
