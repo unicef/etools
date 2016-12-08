@@ -18,20 +18,6 @@ from partners.models import (
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
 
 
-# Reference Number - DONE
-# PD/SSFA Type - DONE
-# Partner Full Name - DONE
-# Status - DONE
-# Title - DONE
-# Start Date - DONE
-# End Date - DONE
-#    in the drop-down
-# HRP, blank if null
-# Sectors - DONE
-# Total CSO Contribution (USD) - DONE
-# Total UNICEF Budget (USD) - DONE
-
-
 class InterventionListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name')
