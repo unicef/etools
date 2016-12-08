@@ -6,6 +6,9 @@ from rest_framework import serializers
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
+
+from reports.models import LowerResult
+
 from .models import (
     FileType,
     GwPCALocation,
@@ -157,6 +160,7 @@ class ResultChainDetailsSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultChain
+        fields = ('indicator', 'disaggregation', 'result')
 
 
 class DistributionPlanSerializer(serializers.ModelSerializer):
@@ -170,14 +174,13 @@ class DistributionPlanSerializer(serializers.ModelSerializer):
         fields = ('item', 'site', 'quantity', 'delivered')
 
 
-from reports.models import LowerResult
 
 
 class LowerOutputStructuredSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = LowerResult
-        queryset = LowerResult.objects.filter(result_type__name="Output")
-        fields = ('name', 'indicators')
+        fields = ('id', 'name')
 
 
 class InterventionSerializer(serializers.ModelSerializer):
@@ -188,13 +191,19 @@ class InterventionSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='partner.name')
     partner_id = serializers.CharField(source='partner.id')
     pcasector_set = PCASectorSerializer(many=True, read_only=True)
-    lower_results = LowerOutputStructuredSerializer(many=True, read_only=True)
+    lowerresult_set = serializers.SerializerMethodField()
     distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
     total_budget = serializers.CharField(read_only=True)
 
+    def get_lowerresult_set(self, obj):
+        qs = obj.lowerresult_set.filter(result_type__name="Output")
+        serializer = LowerOutputStructuredSerializer(instance=qs, many=True)
+        return serializer.data
+
     class Meta:
         model = PCA
-        fields = '__all__'
+        fields = ('pca_id', 'pca_title', 'pca_number', 'partner_id', 'partner_name', 'pcasector_set',
+                  'distribution_plans', 'total_budget', 'lowerresult_set')
 
 
 class IndicatorReportSerializer(serializers.ModelSerializer):

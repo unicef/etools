@@ -316,7 +316,7 @@ class IndicatorBlueprint(models.Model):
 
     def save(self, *args, **kwargs):
         # Prevent from saving empty strings as code because of the unique together constraint
-        if not self.code:
+        if self.code == '':
             self.code = None
         super(IndicatorBlueprint, self).save(*args, **kwargs)
 
@@ -326,7 +326,7 @@ class AppliedIndicator(models.Model):
     indicator = models.ForeignKey(IndicatorBlueprint)
 
     # the result this indicator is contributing to.
-    lower_result = models.ForeignKey(LowerResult, related_name='indicators')
+    lower_result = models.ForeignKey(LowerResult, related_name='applied_indicators')
 
     # unique code for this indicator within the current context
     # eg: (1.1) result code 1 - indicator code 1

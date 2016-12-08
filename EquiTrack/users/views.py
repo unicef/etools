@@ -210,6 +210,7 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
     def get_queryset(self):
         return Office.objects.all()
 
+
 class SectionViewSet(mixins.RetrieveModelMixin,
                            mixins.ListModelMixin,
                            mixins.CreateModelMixin,
@@ -217,7 +218,6 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Sections
     """
-    queryset = Section.objects.all()
     serializer_class = SectionSerializer
     permission_classes = (IsSuperUser,)
 

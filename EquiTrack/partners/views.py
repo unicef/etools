@@ -916,3 +916,11 @@ class FileTypeViewSet(
     """
     queryset = FileType.objects.all()
     serializer_class = FileTypeSerializer
+
+
+class InterventionsView(ListAPIView):
+    '''
+    returns a list of all interventions
+    '''
+    queryset = PCA.objects.all()
+    serializer_class = InterventionSerializer

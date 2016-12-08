@@ -95,10 +95,11 @@ class UnitViewSet(mixins.RetrieveModelMixin,
 
 class CountryProgrammeRetrieveView(RetrieveAPIView):
     """
-    Returns a list of all Country Programmes
+    Returns one Country Programme by pk
     """
     queryset = CountryProgramme.objects.all()
     serializer_class = CountryProgrammeSerializer
+
 
 class CountryProgrammeListView(ListAPIView):
     """

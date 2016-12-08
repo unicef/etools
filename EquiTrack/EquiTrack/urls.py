@@ -161,6 +161,7 @@ urlpatterns = patterns(
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
     url(r'^api/v2/', include('reports.urls_v2')),
+    url(r'^api/v2/', include('partners.urls_v2')),
     url(r'^api/docs/', schema_view),
 
     # Uncomment the next line to enable the admin:
