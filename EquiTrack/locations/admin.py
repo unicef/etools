@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 from django.contrib.gis import admin
 

@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model

@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 import os
 from django.contrib.gis.gdal import DataSource

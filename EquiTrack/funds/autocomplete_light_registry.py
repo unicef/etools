@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 
 from autocomplete_light import shortcuts as autocomplete_light
