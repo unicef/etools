@@ -194,7 +194,7 @@ class InterventionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
-
+        fields = '__all__'
 
 
 class IndicatorReportSerializer(serializers.ModelSerializer):

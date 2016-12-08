@@ -4,7 +4,7 @@ from django.db.models import Count
 import time
 from datetime import datetime, timedelta
 from users.models import Country
-from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult, LowerIndicator
+from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
 from partners.models import FundingCommitment, ResultChain
 
 def printtf(*args):
