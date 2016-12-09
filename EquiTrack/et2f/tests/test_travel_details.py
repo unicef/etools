@@ -9,6 +9,7 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from et2f.models import TravelAttachment
+from et2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 
 from .factories import TravelFactory
 
@@ -89,3 +90,45 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('id', response_json)
+
+    def test_preserved_expenses(self):
+        currency = CurrencyFactory()
+        expense_type = ExpenseTypeFactory()
+
+        data = {'cost_assignments': [],
+                'deductions': [{'date': '2016-11-03',
+                                'breakfast': True,
+                                'lunch': True,
+                                'dinner': False,
+                                'accomodation': True}],
+                'expenses': [{'amount': '120',
+                              'type': expense_type.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id}]}
+        response = self.forced_auth_req('post', reverse('et2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+
+        travel_id = response_json['id']
+
+        response = self.forced_auth_req('post', reverse('et2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'submit_for_approval'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+
+        response = self.forced_auth_req('post', reverse('et2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'approve'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+
+        response = self.forced_auth_req('post', reverse('et2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=data, user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.0000')

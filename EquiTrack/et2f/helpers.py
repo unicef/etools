@@ -53,7 +53,8 @@ class CostSummaryCalculator(object):
         result = {'dsa_total': self._dsa_total.quantize(Decimal('1.0000')),
                   'expenses_total': self._total_expenses.quantize(Decimal('1.0000')),
                   'deductions_total': self._total_deductions.quantize(Decimal('1.0000')),
-                  'dsa': self._dsa_data}
+                  'dsa': self._dsa_data,
+                  'preserved_expenses': self.travel.preserved_expenses}
         return result
 
     def calculate_cost_summary(self):

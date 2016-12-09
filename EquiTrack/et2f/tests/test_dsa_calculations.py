@@ -63,4 +63,5 @@ class TestDSACalculations(APITenantTestCase):
                                     'start_date': date(2017, 3, 11),
                                     'amount_usd': Decimal('185.0000')}], # 100 * (1 + 0.45 + 0.4)
                           'dsa_total': Decimal('10355.0000'),
-                          'expenses_total': Decimal('0.0000')})
+                          'expenses_total': Decimal('0.0000'),
+                          'preserved_expenses': None})

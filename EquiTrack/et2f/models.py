@@ -262,12 +262,12 @@ class Travel(models.Model):
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities')
     travel_type = models.ForeignKey('TravelType', related_name='+')
-    partner = models.ForeignKey('partners.PartnerOrganization', related_name='+')
-    partnership = models.ForeignKey('partners.PCA', related_name='+')
-    result = models.ForeignKey('reports.Result', related_name='+')
+    partner = models.ForeignKey('partners.PartnerOrganization', null=True, related_name='+')
+    partnership = models.ForeignKey('partners.PCA', null=True, related_name='+')
+    result = models.ForeignKey('reports.Result', null=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.BooleanField(default=True)
-    date = models.DateTimeField()
+    date = models.DateTimeField(null=True)
 
 
 class IteneraryItem(models.Model):
