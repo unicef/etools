@@ -49,21 +49,21 @@ class ExpenseType(models.Model):
 
 
 class TravelType(models.Model):
-    PROGRAMME_MONITORING = 'programme_monitoring'
-    SPOT_CHECK = 'spot_check'
-    ADVOCACY = 'advocacy'
-    TECHNICAL_SUPPORT = 'technical_support'
-    MEETING = 'meeting'
-    STAFF_DEVELOPMENT = 'staff_development'
-    STAFF_ENTITLEMENT = 'staff_entitlement'
+    PROGRAMME_MONITORING = 'Programmatic Visit'
+    SPOT_CHECK = 'Spot Check'
+    ADVOCACY = 'Advocacy'
+    TECHNICAL_SUPPORT = 'Technical Support'
+    MEETING = 'Meeting'
+    STAFF_DEVELOPMENT = 'Staff Development'
+    STAFF_ENTITLEMENT = 'Staff Entitlement'
     CHOICES = (
-        (PROGRAMME_MONITORING, 'PROGRAMMATIC VISIT'),
-        (SPOT_CHECK, 'SPOT CHECK'),
-        (ADVOCACY, 'ADVOCACY'),
-        (TECHNICAL_SUPPORT, 'TECHNICAL SUPPORT'),
-        (MEETING, 'MEETING'),
-        (STAFF_DEVELOPMENT, 'STAFF DEVELOPMENT'),
-        (STAFF_ENTITLEMENT, 'STAFF ENTITLEMENT'),
+        (PROGRAMME_MONITORING, 'Programmatic Visit'),
+        (SPOT_CHECK, 'Spot Check'),
+        (ADVOCACY, 'Advocacy'),
+        (TECHNICAL_SUPPORT, 'Technical Support'),
+        (MEETING, 'Meeting'),
+        (STAFF_DEVELOPMENT, 'Staff Development'),
+        (STAFF_ENTITLEMENT, 'Staff Entitlement'),
     )
 
     name = models.CharField(max_length=32, choices=CHOICES)

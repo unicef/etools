@@ -6,10 +6,8 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from et2f.models import Currency, AirlineCompany, DSARegion, Fund, ExpenseType
-from funds.models import Donor, Grant
+from et2f.models import Currency, AirlineCompany, DSARegion, ExpenseType, WBS, Grant, Fund
 from partners.models import PartnerOrganization
-from reports.models import Result, ResultType
 from users.models import Country, Office
 
 from _private import populate_permission_matrix
@@ -36,6 +34,9 @@ class Command(BaseCommand):
         self._load_dsa_regions()
         self._load_permission_matrix()
         self._add_wbs()
+        self._add_grants()
+        self._add_funds()
+        self._add_expense_types()
 
     def _get_or_create_admin_user(self, username, password):
         User = get_user_model()
@@ -201,44 +202,36 @@ class Command(BaseCommand):
         populate_permission_matrix(self)
 
     def _add_wbs(self):
-        Result.objects.all().delete()
-
-        result_type = ResultType.objects.get(name=ResultType.ACTIVITY)
-
         wbs_data_list = [
-            {'name': 'WBS #1',
-             'wbs': 'wbs_1',
-             'result_type': result_type},
-            {'name': 'WBS #2',
-             'wbs': 'wbs_2',
-             'result_type': result_type},
-            {'name': 'WBS #3',
-             'wbs': 'wbs_3',
-             'result_type': result_type},
+            {'name': 'WBS #1'},
+            {'name': 'WBS #2'},
+            {'name': 'WBS #3'},
         ]
 
         for data in wbs_data_list:
-            wbs = data.pop('wbs')
-            r, created = Result.objects.get_or_create(wbs=wbs, defaults=data)
+            name = data.pop('name')
+            r, created = WBS.objects.get_or_create(name=name)
             if created:
-                self.stdout.write('WBS created: {}'.format(data['name']))
+                self.stdout.write('WBS created: {}'.format(name))
             else:
-                self.stdout.write('WBS found: {}'.format(data['name']))
+                self.stdout.write('WBS found: {}'.format(name))
 
     def _add_grants(self):
-        donor, c = Donor.objects.get_or_create(name='Donor')
+        wbs_1 = WBS.objects.get(name='WBS #1')
+        wbs_2 = WBS.objects.get(name='WBS #2')
+        wbs_3 = WBS.objects.get(name='WBS #3')
 
         grant_data_list = [
             {'name': 'Grant #1',
-             'donor': donor},
+             'wbs': wbs_1},
             {'name': 'Grant #2',
-             'donor': donor},
+             'wbs': wbs_1},
             {'name': 'Grant #3',
-             'donor': donor},
+             'wbs': wbs_2},
             {'name': 'Grant #4',
-             'donor': donor},
+             'wbs': wbs_2},
             {'name': 'Grant #5',
-             'donor': donor}
+             'wbs': wbs_3}
         ]
 
         for data in grant_data_list:
@@ -250,11 +243,33 @@ class Command(BaseCommand):
                 self.stdout.write('Grant found: {}'.format(name))
 
     def _add_funds(self):
+        grant_1 = Grant.objects.get(name='Grant #1')
+        grant_2 = Grant.objects.get(name='Grant #2')
+        grant_3 = Grant.objects.get(name='Grant #3')
+        grant_4 = Grant.objects.get(name='Grant #4')
+        grant_5 = Grant.objects.get(name='Grant #5')
+
         fund_data_list = [
-            {'name': 'Fund #1'},
-            {'name': 'Fund #2'},
-            {'name': 'Fund #3'},
-            {'name': 'Fund #4'},
+            {'name': 'Fund #1',
+             'grant': grant_1},
+            {'name': 'Fund #2',
+             'grant': grant_1},
+            {'name': 'Fund #3',
+             'grant': grant_2},
+            {'name': 'Fund #4',
+             'grant': grant_3},
+            {'name': 'Fund #5',
+             'grant': grant_3},
+            {'name': 'Fund #6',
+             'grant': grant_4},
+            {'name': 'Fund #7',
+             'grant': grant_4},
+            {'name': 'Fund #8',
+             'grant': grant_5},
+            {'name': 'Fund #4',
+             'grant': grant_5},
+            {'name': 'Fund #4',
+             'grant': grant_5},
         ]
 
         for data in fund_data_list:
