@@ -864,10 +864,6 @@ class PCA(AdminURLMixin, models.Model):
         (IC, u'IC TOR'),
     )
 
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        related_name='documents',
-    )
     # TODO: remove chained foreign key
     agreement = ChainedForeignKey(
         Agreement,
@@ -945,18 +941,19 @@ class PCA(AdminURLMixin, models.Model):
     # managers and focal points
     unicef_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='approved_partnerships',
+        related_name='+',
         verbose_name=u'Signed by',
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         verbose_name='Unicef focal points',
-        blank=True
+        blank=True,
+        related_name='+'
     )
-    $ programme intervention_focal_points = models.ManyToManyField(
+    programme_intervention_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        related_name='intervention_focal_points',
+        related_name='+',
         blank=True
     )
     partner_manager = ChainedForeignKey(
@@ -1251,7 +1248,7 @@ class PCA(AdminURLMixin, models.Model):
             )
 
         # attach any FCs immediately
-        commitments = FundingCommitment.objects.filter(fr_number=instance.fr_number)
+        commitments = FundingCommitment.objects.filter(fr_numbers=instance.fr_numbers)
         for commit in commitments:
             commit.intervention = instance
             commit.save()

@@ -6,11 +6,9 @@ from rest_framework import serializers
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
-from partners.models import (
-
 from reports.models import LowerResult
 
-from .models import (
+from partners.models import (
     FileType,
     GwPCALocation,
     PCA,
