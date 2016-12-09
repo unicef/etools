@@ -3,8 +3,6 @@ Model factories used for generating models dynamically for tests
 """
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
-__author__ = 'jcranwellward'
-
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
@@ -216,14 +214,6 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
-class MilestoneFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Milestone
-
-    result = factory.SubFactory(ResultFactory)
-    description = factory.Sequence(lambda n: 'Description {}'.format(n))
-    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
-
 
 class WorkplanFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -312,6 +302,13 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
             for label in extracted:
                 self.labels.add(label)
 
+class MilestoneFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Milestone
+
+    result_wp_property = factory.SubFactory(ResultWorkplanPropertyFactory)
+    description = factory.Sequence(lambda n: 'Description {}'.format(n))
+    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
 
 class CoverPageBudgetFactory(factory.DjangoModelFactory):
     class Meta:

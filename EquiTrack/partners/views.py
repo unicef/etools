@@ -382,6 +382,11 @@ class InterventionsViewSet(
         """
         Returns an Intervention object for this Intervention PK and partner
         """
+        # if not pk or partner_pk:
+        #     psm = self.request.user.profile.partner_staff_member
+        #     if psm:
+        #         try:
+        #             PartnerStaffMember.get(psm)
         try:
             queryset = self.queryset.get(partner_id=partner_pk, id=pk)
             serializer = self.serializer_class(queryset)
@@ -437,7 +442,6 @@ class ResultChainViewSet(
             status=status.HTTP_200_OK
         )
 
-
 class IndicatorReportViewSet(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
@@ -467,7 +471,7 @@ class IndicatorReportViewSet(
                 pk=self.request.user.profile.partner_staff_member
             )
         except PartnerStaffMember.DoesNotExist:
-            raise Exception('Hell')
+            raise Exception('User without partnerstaffmember set is trying to submit a report')
 
         serializer.save(partner_staff_member=partner_staff_member)
 
@@ -485,7 +489,6 @@ class IndicatorReportViewSet(
             data,
             status=status.HTTP_200_OK
         )
-
 
 class PCASectorViewSet(
     mixins.RetrieveModelMixin,
@@ -913,3 +916,11 @@ class FileTypeViewSet(
     """
     queryset = FileType.objects.all()
     serializer_class = FileTypeSerializer
+
+
+class InterventionsView(ListAPIView):
+    '''
+    returns a list of all interventions
+    '''
+    queryset = PCA.objects.all()
+    serializer_class = InterventionSerializer
