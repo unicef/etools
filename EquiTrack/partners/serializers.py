@@ -202,8 +202,7 @@ class InterventionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
-        fields = ('pca_id', 'pca_title', 'pca_number', 'partner_id', 'partner_name', 'pcasector_set',
-                  'distribution_plans', 'total_budget', 'lowerresult_set')
+        fields = '__all__'
 
 
 class IndicatorReportSerializer(serializers.ModelSerializer):
