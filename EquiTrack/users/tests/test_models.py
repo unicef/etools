@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 

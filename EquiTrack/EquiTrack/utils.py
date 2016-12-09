@@ -1,7 +1,7 @@
 """
 Project wide base classes and utility functions for apps
 """
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 import tablib
 import traceback

@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 from django.conf.urls import patterns, url
 from django.contrib.auth.decorators import login_required

@@ -5,7 +5,7 @@ from partners.filters import PartnerOrganizationExportFilter, AgreementExportFil
     GovernmentInterventionExportFilter, PartnerScopeFilter
 from partners.models import GovernmentIntervention
 
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 import datetime
 

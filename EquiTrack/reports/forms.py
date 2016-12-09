@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 from django import forms
 from suit.widgets import AutosizedTextarea

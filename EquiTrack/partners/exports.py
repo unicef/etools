@@ -1,6 +1,6 @@
 from partners.models import GovernmentIntervention
 
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 try:
     from cStringIO import StringIO

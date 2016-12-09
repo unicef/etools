@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-__author__ = 'jcranwellward'
+__author__ = 'unicef'
 
 from django.db import models
 
