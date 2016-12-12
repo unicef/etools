@@ -8,6 +8,7 @@ from locations.models import Location
 
 from reports.models import LowerResult
 
+
 from partners.models import (
     FileType,
     GwPCALocation,

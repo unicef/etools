@@ -941,7 +941,7 @@ class PCA(AdminURLMixin, models.Model):
     # managers and focal points
     unicef_manager = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='+',
+        related_name='unicef_manager+',
         verbose_name=u'Signed by',
         blank=True, null=True
     )
@@ -949,11 +949,12 @@ class PCA(AdminURLMixin, models.Model):
         settings.AUTH_USER_MODEL,
         verbose_name='Unicef focal points',
         blank=True,
-        related_name='+'
+        related_name='unicef_managers+'
     )
-    programme_intervention_focal_points = models.ManyToManyField(
+    # Programme focal points for this intervention
+    intervention_programme_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        related_name='+',
+        related_name='intervention_focal_points+',
         blank=True
     )
     partner_manager = ChainedForeignKey(
@@ -1998,7 +1999,7 @@ class PlannedVisits(models.Model):
     """
     Represents planned visits for the intervention
     """
-    partnership = models.ForeignKey(PCA, related_name='visits')
+    intervention = models.ForeignKey(PCA, related_name='visits')
     year = models.IntegerField(default=datetime.datetime.now().year)
     programmatic = models.IntegerField(default=0)
     spot_checks = models.IntegerField(default=0)
