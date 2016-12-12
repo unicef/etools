@@ -172,8 +172,7 @@ class PermissionMatrixSetter(object):
         self.revoke_view(sub_qs)
         self.revoke_edit(sub_qs)
 
-        sub_qs = qs.filter(status__in=[Travel.SUBMITTED,
-                                       Travel.CERTIFICATION_SUBMITTED,
+        sub_qs = qs.filter(status__in=[Travel.CERTIFICATION_SUBMITTED,
                                        Travel.CERTIFICATION_REJECTED,
                                        Travel.CERTIFICATION_APPROVED,
                                        Travel.SENT_FOR_PAYMENT,
@@ -182,7 +181,8 @@ class PermissionMatrixSetter(object):
         self.revoke_edit(sub_qs)
 
         sub_qs = qs.filter(self.get_related_q(['activities']), status__in=[Travel.SENT_FOR_PAYMENT,
-                                                                           Travel.CERTIFICATION_REJECTED])
+                                                                           Travel.CERTIFICATION_REJECTED,
+                                                                           Travel.APPROVED])
         self.grant_edit(sub_qs)
 
     def set_up_travel_administrator(self):
@@ -193,7 +193,7 @@ class PermissionMatrixSetter(object):
         self.revoke_edit(sub_qs)
 
         sub_qs = qs.filter(status__in=[Travel.SENT_FOR_PAYMENT,
-                                      Travel.CERTIFICATION_REJECTED])
+                                       Travel.CERTIFICATION_REJECTED])
         sub_qs = sub_qs.exclude(self.get_related_q(['activities']))
         self.revoke_edit(sub_qs)
 
@@ -244,11 +244,16 @@ class PermissionMatrixSetter(object):
         sub_qs = qs.filter(q)
         self.grant_edit(sub_qs)
 
-        sub_qs = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency']).exclude(
+        sub_qs = qs.filter(model='travel', field__in=['estimated_travel_cost', 'currency', 'attachments']).exclude(
             status__in=[Travel.COMPLETED,
                         Travel.CERTIFICATION_SUBMITTED,
                         Travel.CERTIFICATION_APPROVED,
-                        Travel.CERTIFICATION_REJECTED])
+                        Travel.CERTIFICATION_REJECTED,
+                        Travel.CANCELLED,
+                        Travel.PLANNED,
+                        Travel.SUBMITTED,
+                        Travel.REJECTED,
+                        Travel.SENT_FOR_PAYMENT])
         self.grant_edit(sub_qs)
 
     def set_up_representative(self):
