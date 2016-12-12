@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db import connection
@@ -37,6 +38,7 @@ class Command(BaseCommand):
         self._add_grants()
         self._add_funds()
         self._add_expense_types()
+        self._add_user_groups()
 
     def _get_or_create_admin_user(self, username, password):
         User = get_user_model()
@@ -297,5 +299,17 @@ class Command(BaseCommand):
                 self.stdout.write('Expense type created: {}'.format(title))
             else:
                 self.stdout.write('Expense type found: {}'.format(title))
+
+    def _add_user_groups(self):
+        group_names = ['Representative Office',
+                       'Finance Focal Point',
+                       'Travel Focal Point',
+                       'Travel Administrator']
+        for name in group_names:
+            g, created = Group.objects.get_or_create(name=name)
+            if created:
+                self.stdout.write('Group created: {}'.format(name))
+            else:
+                self.stdout.write('Group found: {}'.format(name))
 
 # DEVELOPMENT CODE - END

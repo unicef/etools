@@ -181,8 +181,8 @@ class PermissionMatrixSetter(object):
         self.revoke_edit(sub_qs)
 
         sub_qs = qs.filter(self.get_related_q(['activities']), status__in=[Travel.SENT_FOR_PAYMENT,
-                                                                           Travel.CERTIFICATION_REJECTED,
-                                                                           Travel.APPROVED])
+                                                                           Travel.APPROVED,
+                                                                           Travel.SUBMITTED])
         self.grant_edit(sub_qs)
 
     def set_up_travel_administrator(self):
