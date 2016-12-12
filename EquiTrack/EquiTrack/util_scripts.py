@@ -1,12 +1,13 @@
 from __future__ import print_function
 from string import translate
+import json
 from django.db import connection
 from django.db.models import Count
 import time
 from datetime import datetime, timedelta
 from users.models import Country
-from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
-from partners.models import FundingCommitment
+from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure
+from partners.models import FundingCommitment, PCA, PlannedVisits
 
 def printtf(*args):
     print([arg for arg in args])
@@ -383,20 +384,49 @@ def after_code_merge(): #and after migrations
     print("don't forget to sync")
 
 
-def normalize_fr_numbers():
+def export_old_pca_fields():
+    pca_fields = {}
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
-        print(cntry.name)
         pcas = PCA.objects.all()
+        numbers = []
         for pca in pcas:
-            if pca.fr_number:
-                pca.fr_numbers = [pca.fr_number]
-                pca.save()
-                print(pca.fr_numbers)
+            if pca.fr_number or pca.planned_visits > 0:
+                pca_numbers = {}
+                pca_numbers['pca'] = pca.id
+                pca_numbers['fr_number'] = pca.fr_number or 0
+                pca_numbers['planned_visits'] = pca.planned_visits
+                numbers.append(pca_numbers)
+        print(numbers)
+        if numbers.count > 0:
+            pca_fields[cntry.name] = numbers
+    print(pca_fields)
+
+    with open('pca_numbers.json', 'w') as fp:
+        json.dump(pca_fields, fp)
 
 
+def import_fr_numbers():
+    with open('pca_numbers.json') as data_file:
+        data = json.load(data_file)
+        for country, array in data.items():
+            if array:
+                set_country(country)
+                for row in array:
+                    pca = PCA.objects.get(id=row['pca'])
+                    pca.fr_numbers = [row['fr_number']]
+                    pca.save()
 
 
-
-        # pca.fr_number = fr_number_array
-        # pca.save()
+def import_planned_visits():
+    with open('pca_numbers.json') as data_file:
+        data = json.load(data_file)
+        for country, array in data.items():
+            if array:
+                set_country(country)
+                for row in array:
+                    pca = PCA.objects.get(id=row['pca'])
+                    if pca.start_date:
+                        PlannedVisits.objects.get_or_create(intervention=pca,
+                                                            year=pca.start_date.year,
+                                                            programmatic=row['planned_visits'])

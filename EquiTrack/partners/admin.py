@@ -50,6 +50,7 @@ from .models import (
     GovernmentInterventionResult,
     IndicatorDueDates,
     IndicatorReport,
+    PlannedVisits,
 
 )
 from .filters import (
@@ -826,3 +827,4 @@ admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(IndicatorReport)
+admin.site.register(PlannedVisits)

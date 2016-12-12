@@ -487,17 +487,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
 # RAM Indicators
 
 
-# FR Number(s)
 # Fund Commitment(s)
-
-# how to calculate local currency
-# Local Currency of Planned Budget
-# Total UNICEF Budget (Local)
-# Total CSO Budget (Local)
-
-# Planned Programmatic Visits
-# Planned Spot Checks
-# Planned Audits
 
 # Supply Plan
 # Distribution Plan

@@ -863,7 +863,11 @@ class PCA(AdminURLMixin, models.Model):
         (SSFA, u'SSFA TOR'),
         (IC, u'IC TOR'),
     )
-
+    # TODO: remove partner foreign key, already on the agreement model
+    partner = models.ForeignKey(
+        PartnerOrganization,
+        related_name='documents',
+    )
     # TODO: remove chained foreign key
     agreement = ChainedForeignKey(
         Agreement,
@@ -978,6 +982,8 @@ class PCA(AdminURLMixin, models.Model):
         blank=True,
     )
     office = models.ManyToManyField(Office, blank=True, related_name='+')
+    # TODO remove fr_number field
+    fr_number = models.CharField(max_length=50, blank=True, null=True)
     fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), null=True)
     planned_visits = models.IntegerField(default=0)
     population_focus = models.CharField(max_length=130, null=True, blank=True)
@@ -1089,7 +1095,7 @@ class PCA(AdminURLMixin, models.Model):
     def total_unicef_cash_local(self):
 
         if self.budget_log.exists():
-            return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] for b in
+            return sum([b['unicef_cash_local'] for b in
                  self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local').
                  order_by('year', '-created').distinct('year').all()
                  ])
@@ -1249,10 +1255,11 @@ class PCA(AdminURLMixin, models.Model):
             )
 
         # attach any FCs immediately
-        commitments = FundingCommitment.objects.filter(fr_numbers=instance.fr_numbers)
-        for commit in commitments:
-            commit.intervention = instance
-            commit.save()
+        for fr_number in instance.fr_numbers:
+            commitments = FundingCommitment.objects.filter(fr_number=fr_number)
+            for commit in commitments:
+                commit.intervention = instance
+                commit.save()
 
 
 post_save.connect(PCA.send_changes, sender=PCA)
@@ -1782,6 +1789,7 @@ class RAMIndicator(models.Model):
         )
 
 
+#TODO Remove entire resultchain model
 class ResultChain(models.Model):
     """
     Represents a result chain for the partner intervention,
@@ -1899,7 +1907,7 @@ class SupplyPlan(models.Model):
     Relates to :model:`supplies.SupplyItem`
     """
 
-    partnership = models.ForeignKey(
+    intervention = models.ForeignKey(
         PCA,
         related_name='supply_plans'
     )
@@ -1918,7 +1926,7 @@ class DistributionPlan(models.Model):
     Relates to :model:`locations.Location`
     """
 
-    partnership = models.ForeignKey(
+    intervention = models.ForeignKey(
         PCA,
         related_name='distribution_plans'
     )
@@ -1937,11 +1945,21 @@ class DistributionPlan(models.Model):
 
     def __unicode__(self):
         return u'{}-{}-{}-{}'.format(
-            self.partnership,
+            self.intervention,
             self.item,
             self.site,
             self.quantity
         )
+
+    def save(self, **kwargs):
+        sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity
+        dp_quantity = DistributionPlan.objects.filter(
+                        intervention=self.intervention, item=self.item).aggregate(
+                        models.Sum('quantity'))['quantity__sum'] + self.quantity or 0
+        if dp_quantity <= sp_quantity:
+            super(DistributionPlan, self).save(**kwargs)
+
+
 
     @classmethod
     def send_distribution(cls, sender, instance, created, **kwargs):
@@ -1960,6 +1978,7 @@ class FCManager(models.Manager):
         return super(FCManager, self).get_queryset().select_related('grant__donor')
 
 
+# TODO rename class to FundReservations
 class FundingCommitment(TimeFramedModel):
     """
     Represents a funding commitment for the grant
@@ -2004,3 +2023,6 @@ class PlannedVisits(models.Model):
     programmatic = models.IntegerField(default=0)
     spot_checks = models.IntegerField(default=0)
     audit = models.IntegerField(default=0)
+
+    class Meta:
+        unique_together = ('intervention', 'year')
