@@ -51,8 +51,19 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_assigned_roles(self, obj):
         roles = [UserTypes.ANYONE]
+
         if obj.groups.filter(name='Representative Office').exists():
             roles.append(UserTypes.REPRESENTATIVE)
+
+        if obj.groups.filter(name='Finance Focal Point').exists():
+            roles.append(UserTypes.FINANCE_FOCAL_POINT)
+
+        if obj.groups.filter(name='Travel Focal Point').exists():
+            roles.append(UserTypes.TRAVEL_FOCAL_POINT)
+
+        if obj.groups.filter(name='Travel Administrator').exists():
+            roles.append(UserTypes.TRAVEL_ADMINISTRATOR)
+
         return roles
 
 
