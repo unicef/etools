@@ -16,7 +16,7 @@ def transform_travel_types(apps, schema_edito):
 
     TravelType = apps.get_model('et2f', 'TravelType')
     for travel_type in TravelType.objects.all():
-        travel_type.name = mapping[travel_type.name]
+        travel_type.name = mapping.get(travel_type.name, travel_type.name)
         travel_type.save()
 
 
