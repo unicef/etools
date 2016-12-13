@@ -11,7 +11,7 @@ import mptt.fields
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0002_auto_20161118_2316'),
+        ('partners', '0003_auto_20161209_2030'),
         ('reports', '0001_initial'),
     ]
 

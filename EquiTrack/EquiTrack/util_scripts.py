@@ -435,7 +435,7 @@ def import_planned_visits():
 def populate_reference_numbers():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
-        pcas = PCA.objects.filter(number__isnull=True).exclude(
+        pcas = PCA.objects.filter(number__isnull=True, signed_by_unicef_date__isnull=False).exclude(
             status=PCA.DRAFT)
         print(cntry.name)
         print(pcas)

@@ -1255,11 +1255,12 @@ class PCA(AdminURLMixin, models.Model):
             )
 
         # attach any FCs immediately
-        for fr_number in instance.fr_numbers:
-            commitments = FundingCommitment.objects.filter(fr_number=fr_number)
-            for commit in commitments:
-                commit.intervention = instance
-                commit.save()
+        if instance:
+            for fr_number in instance.fr_numbers:
+                commitments = FundingCommitment.objects.filter(fr_number=fr_number)
+                for commit in commitments:
+                    commit.intervention = instance
+                    commit.save()
 
 
 post_save.connect(PCA.send_changes, sender=PCA)
@@ -1877,7 +1878,7 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 
     # FOR WHOM / Beneficiary
     #  -  AppliedIndicator
-    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
+    indicator = models.ForeignKey(AppliedIndicator, related_name='indicators_reports')
 
     # WHO
     #  -  Implementing Partner
