@@ -133,6 +133,9 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     report = serializers.CharField(source='report_note', required=False, default='')
     mode_of_travel = serializers.PrimaryKeyRelatedField(queryset=ModeOfTravel.objects.all(), required=False, many=True)
 
+    # Fix because of a frontend validation failure (fix it on the frontend first)
+    estimated_travel_cost = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
+
     class Meta:
         model = Travel
         fields = ('reference_number', 'supervisor', 'office', 'end_date', 'section', 'international_travel',
