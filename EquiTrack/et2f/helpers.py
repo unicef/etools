@@ -42,10 +42,6 @@ class CostSummaryCalculator(object):
         self._total_expenses = Decimal(0)
 
     @cached_property
-    def _itinerary_items(self):
-        return list(self.travel.itinerary.order_by('departure_date'))
-
-    @cached_property
     def _deductions(self):
         return {d.date: d for d in self.travel.deductions.all()}
 
@@ -61,26 +57,27 @@ class CostSummaryCalculator(object):
         self._init_values()
         self._total_expenses = self._calculate_total_expenses()
 
-        if not self._itinerary_items:
+        itinerary_items_list = list(self.travel.itinerary.order_by('departure_date'))
+
+        if not itinerary_items_list:
             return 
 
         # All but last travel
-        for item_id, itinerary_item in enumerate(self._itinerary_items[:-1]):
-            dsa_region = itinerary_item.dsa_region
+        for item_id, itinerary_item in enumerate(itinerary_items_list[:-1]):
             start_date = itinerary_item.departure_date.date()
-            end_date = self._itinerary_items[item_id+1].departure_date.date()
-            self._calculate_dsa_rate_for_timeframe(dsa_region, start_date, end_date)
+            end_date = itinerary_items_list[item_id+1].departure_date.date()
+            self._calculate_dsa_rate_for_timeframe(itinerary_item, start_date, end_date)
 
         # Last travel
-        itinerary_item = self._itinerary_items[-1]
-        dsa_region = itinerary_item.dsa_region
+        itinerary_item = itinerary_items_list[-1]
         start_date = itinerary_item.departure_date.date()
         # +1 day because of the < comparison
         end_date = itinerary_item.arrival_date.date()
-        self._calculate_dsa_rate_for_timeframe(dsa_region, start_date, end_date, True)
+        self._calculate_dsa_rate_for_timeframe(itinerary_item, start_date, end_date, True)
 
-    def _calculate_dsa_rate_for_timeframe(self, dsa_region, start_date, end_date, count_last_day=False):
+    def _calculate_dsa_rate_for_timeframe(self, itinerary_item, start_date, end_date, count_last_day=False):
         delta_day = timedelta(days=1)
+        dsa_region = itinerary_item.dsa_region
 
         dsa = {'start_date': start_date,
                'end_date': end_date,
@@ -107,7 +104,11 @@ class CostSummaryCalculator(object):
             if count_last_day and last_day:
                 deduction_multiplier = Decimal('0.6')
             else:
-                deduction_multiplier = self._get_deduction_multiplier_at(current_day)
+                if itinerary_item.overnight_travel and current_day <= itinerary_item.departure_date.date():
+                    overnight_travel = True
+                else:
+                    overnight_travel = False
+                deduction_multiplier = self._get_deduction_multiplier_at(current_day, overnight_travel)
 
             deduction = daily_rate * deduction_multiplier
             daily_rate -= deduction
@@ -136,7 +137,7 @@ class CostSummaryCalculator(object):
             total += expense.amount
         return total
 
-    def _get_deduction_multiplier_at(self, date):
+    def _get_deduction_multiplier_at(self, date, overnight_travel=False):
         multiplier = Decimal(0)
 
         try:
@@ -144,7 +145,6 @@ class CostSummaryCalculator(object):
         except KeyError:
             return multiplier
 
-        # TODO handle overnight
         if deduction.no_dsa:
             multiplier += Decimal(1)
         if deduction.breakfast:
@@ -155,9 +155,11 @@ class CostSummaryCalculator(object):
             multiplier += Decimal('0.15')
         if deduction.accomodation:
             multiplier += Decimal('0.5')
+        if overnight_travel:
+            multiplier += Decimal(1)
 
         # Handle if it goes above 1
-        return min(multiplier, 1)
+        return min(multiplier, Decimal(1))
 
 
 class CloneTravelHelper(object):
