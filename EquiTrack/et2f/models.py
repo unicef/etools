@@ -31,12 +31,15 @@ class UserTypes(object):
         (REPRESENTATIVE, _('Representative')),
     )
 
+
 class WBS(models.Model):
     name = models.CharField(max_length=25)
+
 
 class Grant(models.Model):
     wbs = models.ForeignKey('WBS', related_name='grants')
     name = models.CharField(max_length=25)
+
 
 class Fund(models.Model):
     grant = models.ForeignKey('Grant', related_name='funds')
@@ -92,7 +95,10 @@ class Currency(models.Model):
 class AirlineCompany(models.Model):
     # This will be populated from vision
     name = models.CharField(max_length=255)
-    code = models.CharField(max_length=12)
+    code = models.IntegerField()
+    iata = models.CharField(max_length=3)
+    icao = models.CharField(max_length=3)
+    country = models.CharField(max_length=255)
 
 
 class DSARegion(models.Model):
