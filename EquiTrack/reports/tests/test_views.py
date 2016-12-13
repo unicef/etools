@@ -81,6 +81,16 @@ class TestReportViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["id"]), self.result1.id)
 
+    def test_apiv2_results_retrieve(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/results/{}/'.format(self.result1.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(int(response.data["id"]), self.result1.id)
+
     def test_apiv2_results_list_current_cp(self):
         response = self.forced_auth_req(
             'get',

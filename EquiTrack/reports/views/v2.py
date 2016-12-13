@@ -2,7 +2,7 @@ import operator
 import functools
 
 from django.db.models import Q
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
 
 from reports.models import Result, CountryProgramme
@@ -33,3 +33,9 @@ class ResultListAPIView(ListAPIView):
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
         return q
+
+
+class ResultDetailAPIView(RetrieveAPIView):
+    queryset = Result.objects.all()
+    serializer_class = ResultListSerializer
+    permission_classes = (IsAdminUser,)
