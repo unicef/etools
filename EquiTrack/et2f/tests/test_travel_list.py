@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from et2f.models import DSARegion, ModeOfTravel
+from et2f.models import DSARegion, ModeOfTravel, make_reference_number
 from et2f.tests.factories import AirlineCompanyFactory
 
 from .factories import TravelFactory
@@ -19,7 +19,7 @@ class TravelDetails(APITenantTestCase):
         super(TravelDetails, self).setUp()
         self.traveler = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(reference_number='REF1',
+        self.travel = TravelFactory(reference_number=make_reference_number(),
                                     traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
@@ -62,8 +62,8 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_sorting(self):
-        TravelFactory(reference_number='ref2', traveler=self.traveler, supervisor=self.unicef_staff)
-        TravelFactory(reference_number='REF3', traveler=self.traveler, supervisor=self.unicef_staff)
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
 
         response = self.forced_auth_req('get', reverse('et2f:travels:list:index'), data={'sort_by': 'reference_number',
                                                                                          'reverse': False},
@@ -71,7 +71,7 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIn('data', response_json)
         reference_numbers = [e['reference_number'] for e in response_json['data']]
-        self.assertEqual(reference_numbers, ['REF1', 'ref2', 'REF3'])
+        self.assertEqual(reference_numbers, ['2016/000001', '2016/000002', '2016/000003'])
 
         response = self.forced_auth_req('get', reverse('et2f:travels:list:index'), data={'sort_by': 'reference_number',
                                                                                          'reverse': True},
@@ -79,7 +79,7 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIn('data', response_json)
         reference_numbers = [e['reference_number'] for e in response_json['data']]
-        self.assertEqual(reference_numbers, ['REF3', 'ref2', 'REF1'])
+        self.assertEqual(reference_numbers, ['2016/000003', '2016/000002', '2016/000001'])
 
     def test_searching(self):
         TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff)
@@ -90,7 +90,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_show_hidden(self):
-        TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff, hidden=True)
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, hidden=True)
 
         response = self.forced_auth_req('get', reverse('et2f:travels:list:index'), data={'show_hidden': True},
                                         user=self.unicef_staff)

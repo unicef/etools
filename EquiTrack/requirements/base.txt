@@ -64,6 +64,7 @@ django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we
 # Testing packages
 coverage==4.2
 factory-boy==2.7.0
+freezegun==0.3.8
 
 # Git python packages
 git+https://github.com/robertavram/djangosaml2.git#egg=djangosaml2

@@ -6,7 +6,7 @@ from factory import fuzzy
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
     PartnershipFactory, ResultFactory, LocationFactory
 from et2f.models import DSARegion, Currency, AirlineCompany, Travel, TravelActivity, IteneraryItem, Expense, Deduction,\
-    CostAssignment, Clearances, ExpenseType, Fund, Grant, WBS, TravelType, ModeOfTravel
+    CostAssignment, Clearances, ExpenseType, Fund, Grant, WBS, TravelType, ModeOfTravel, make_reference_number
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
@@ -171,7 +171,7 @@ class TravelFactory(factory.DjangoModelFactory):
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True
-    reference_number = fuzzy.FuzzyText()
+    reference_number = factory.Sequence(lambda n: make_reference_number())
     currency = factory.SubFactory(CurrencyFactory)
 
     itinerary = factory.RelatedFactory(IteneraryItemFactory, 'travel')

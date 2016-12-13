@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import json
 from StringIO import StringIO
-from unittest.case import skip
 
 from django.core.urlresolvers import reverse
 
@@ -19,8 +18,7 @@ class TravelDetails(APITenantTestCase):
         super(TravelDetails, self).setUp()
         self.traveler = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(reference_number='REF1',
-                                    traveler=self.traveler,
+        self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
     def test_urls(self):

@@ -105,7 +105,15 @@ class DSARegion(models.Model):
 
 
 def make_reference_number():
-    return datetime.now().strftime('%H-%M-%S')
+    year = datetime.now().year
+    last_travel = Travel.objects.filter(created__year=year).order_by('reference_number').last()
+    if last_travel:
+        reference_number = last_travel.reference_number
+        reference_number = int(reference_number.split('/')[1])
+        reference_number += 1
+    else:
+        reference_number = 1
+    return '{}/{:06d}'.format(year, reference_number)
 
 
 class Travel(models.Model):
@@ -168,10 +176,6 @@ class Travel(models.Model):
 
     # When the travel is sent for payment, the expenses should be saved for later use
     preserved_expenses = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
-
-    @property
-    def ta_reference_number(self):
-        return ''
 
     @property
     def approval_date(self):

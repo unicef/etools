@@ -141,7 +141,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                   'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
                   'cost_summary', 'certification_note', 'report', 'additional_note')
         # Review this, as a developer could be confusing why the status field is not saved during an update
-        read_only_fields = ('status',)
+        read_only_fields = ('status', 'reference_number')
 
     def __init__(self, *args, **kwargs):
         data = kwargs.get('data', {})
