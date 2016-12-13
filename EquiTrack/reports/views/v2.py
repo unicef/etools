@@ -10,7 +10,6 @@ from reports.serializers.v2 import ResultListSerializer
 
 
 class ResultListAPIView(ListAPIView):
-    queryset = Result.objects.all()
     serializer_class = ResultListSerializer
     permission_classes = (IsAdminUser,)
 
@@ -23,7 +22,7 @@ class ResultListAPIView(ListAPIView):
             queries = []
 
             if "country_programme" in query_params.keys():
-                cp_year = query_params.get("country_programme")
+                cp_year = query_params.get("country_programme", None)
                 queries.append(Q(country_programme__wbs__contains='/A0/'))
                 queries.append(Q(country_programme__from_date__year__lte=cp_year))
                 queries.append(Q(country_programme__to_date__year__gte=cp_year))
