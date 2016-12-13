@@ -53,7 +53,7 @@ class PartnershipSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PCA
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'partner')
 
 
 class ResultSerializer(serializers.ModelSerializer):
