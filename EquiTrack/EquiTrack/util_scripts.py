@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timedelta
 from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure
-from partners.models import FundingCommitment, PCA, PlannedVisits
+from partners.models import FundingCommitment, PCA, PlannedVisits, Agreement
 
 def printtf(*args):
     print([arg for arg in args])
@@ -426,7 +426,24 @@ def import_planned_visits():
                 set_country(country)
                 for row in array:
                     pca = PCA.objects.get(id=row['pca'])
-                    if pca.start_date:
+                    if pca.planned_visits > 0 and pca.start_date:
                         PlannedVisits.objects.get_or_create(intervention=pca,
                                                             year=pca.start_date.year,
                                                             programmatic=row['planned_visits'])
+
+
+def populate_reference_numbers():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        pcas = PCA.objects.filter(number__isnull=True).exclude(
+            status=PCA.DRAFT)
+        print(cntry.name)
+        print(pcas)
+        for pca in pcas:
+            pca.number = pca.reference_number
+            pca.save()
+
+        agreements = Agreement.objects.filter(signed_by_unicef_date__isnull=False, agreement_number__isnull=True)
+        for agr in agreements:
+            agr.agreement_number = agr.reference_number
+            agr.save()
