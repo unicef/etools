@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 
 from rest_framework import serializers
 
-from et2f.models import UserTypes
+from et2f.serializers.user_data import T2FUserDataSerializer
 from .models import User, UserProfile, Group, Office, Section
 
 
@@ -43,28 +43,11 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     full_name = serializers.CharField(source='get_full_name')
-    roles = serializers.SerializerMethodField('get_assigned_roles')
+    t2f = T2FUserDataSerializer(source='*')
 
     class Meta:
         model = User
         exclude = ('password', 'groups', 'user_permissions')
-
-    def get_assigned_roles(self, obj):
-        roles = [UserTypes.ANYONE]
-
-        if obj.groups.filter(name='Representative Office').exists():
-            roles.append(UserTypes.REPRESENTATIVE)
-
-        if obj.groups.filter(name='Finance Focal Point').exists():
-            roles.append(UserTypes.FINANCE_FOCAL_POINT)
-
-        if obj.groups.filter(name='Travel Focal Point').exists():
-            roles.append(UserTypes.TRAVEL_FOCAL_POINT)
-
-        if obj.groups.filter(name='Travel Administrator').exists():
-            roles.append(UserTypes.TRAVEL_ADMINISTRATOR)
-
-        return roles
 
 
 class SectionSerializer(serializers.ModelSerializer):
