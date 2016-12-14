@@ -1,24 +1,24 @@
-__author__ = 'achamseddine'
 
 from rest_framework import viewsets, mixins
+from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAdminUser
 from .models import (
     ResultStructure,
     ResultType,
     Result,
-    Milestone,
     Sector,
     Indicator,
-    Unit
+    Unit,
+    CountryProgramme
 )
 from .serializers import (
     ResultStructureSerializer,
     ResultTypeSerializer,
     ResultSerializer,
-    MilestoneSerializer,
     SectorCreateSerializer,
     IndicatorCreateSerializer,
-    UnitSerializer
+    UnitSerializer,
+    CountryProgrammeSerializer
 )
 
 
@@ -63,15 +63,6 @@ class SectorViewSet(mixins.RetrieveModelMixin,
 #     serializer_class = GoalCreateSerializer
 
 
-class MilestoneViewSet(viewsets.ModelViewSet):
-    """
-    CRUD api for Milestones
-    """
-    queryset = Milestone.objects.all()
-    serializer_class = MilestoneSerializer
-    permission_classes = (IsAdminUser,)
-
-
 class ResultViewSet(viewsets.ModelViewSet):
     """
     Returns a list of all Results
@@ -79,6 +70,7 @@ class ResultViewSet(viewsets.ModelViewSet):
     queryset = Result.objects.all()
     serializer_class = ResultSerializer
     permission_classes = (IsAdminUser,)
+
 
 
 class IndicatorViewSet(viewsets.ModelViewSet):
@@ -99,3 +91,19 @@ class UnitViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Unit.objects.all()
     serializer_class = UnitSerializer
+
+
+class CountryProgrammeRetrieveView(RetrieveAPIView):
+    """
+    Returns one Country Programme by pk
+    """
+    queryset = CountryProgramme.objects.all()
+    serializer_class = CountryProgrammeSerializer
+
+
+class CountryProgrammeListView(ListAPIView):
+    """
+    Returns a list of all Country Programmes
+    """
+    queryset = CountryProgramme.objects.all()
+    serializer_class = CountryProgrammeSerializer

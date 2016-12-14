@@ -1,5 +1,3 @@
-__author__ = 'unicef-leb-inn'
-
 from rest_framework import status
 
 from EquiTrack.factories import TripFactory, UserFactory

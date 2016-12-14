@@ -1,7 +1,7 @@
 """
 Project wide mixins for models and classes
 """
-__author__ = 'jcranwellward'
+
 
 import logging
 

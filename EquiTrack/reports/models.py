@@ -1,9 +1,46 @@
 from datetime import datetime
 from django.db import models
+from django.contrib.postgres.fields import JSONField
+
+from django.utils.functional import cached_property
+from django.utils.translation import ugettext as _
+
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
 
-from django.utils.functional import cached_property
+from model_utils import Choices
+from model_utils.models import (
+    TimeFramedModel,
+    TimeStampedModel,
+)
+
+
+
+
+class Quarter(models.Model):
+
+    Q1 = 'Q1'
+    Q2 = 'Q2'
+    Q3 = 'Q3'
+    Q4 = 'Q4'
+
+    QUARTER_CHOICES = (
+        (Q1, 'Quarter 1'),
+        (Q2, 'Quarter 2'),
+        (Q3, 'Quarter 3'),
+        (Q4, 'Quarter 4'),
+    )
+
+    name = models.CharField(max_length=64, choices=QUARTER_CHOICES)
+    year = models.CharField(max_length=4)
+    start_date = models.DateTimeField()
+    end_date = models.DateTimeField()
+
+    def __repr__(self):
+        return '{}-{}'.format(self.name, self.year)
+
+    def save(self, *args, **kwargs):
+        super(Quarter, self).save(*args, **kwargs)
 
 
 class CountryProgramme(models.Model):
@@ -188,16 +225,42 @@ class Result(MPTTModel):
                 node.save()
 
 
-class Milestone(models.Model):
-    """
-    Represents a milestone for the result
+class LowerResult(MPTTModel):
 
-    Relates to :model:`reports.Result`
-    """
+    intervention = models.ForeignKey(to="partners.PCA")
+    result_type = models.ForeignKey(ResultType)
 
-    result = models.ForeignKey(Result, related_name="milestones")
-    description = models.TextField()
-    assumptions = models.TextField(null=True, blank=True)
+    # link to Higher level result only valid to have at the output level
+    cp_result = models.ForeignKey(Result, related_name='lower_results')
+
+    name = models.CharField(max_length=500)
+
+    # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
+    code = models.CharField(max_length=50)
+
+    quarters = models.ManyToManyField(Quarter, related_name="lower_results+", blank=True)
+    parent = TreeForeignKey(
+        'self',
+        null=True, blank=True,
+        related_name='children',
+        db_index=True
+    )
+
+    # Lower Activity level attributes
+    partner_contribution = models.IntegerField(default=0, null=True, blank=True)
+    unicef_cash = models.IntegerField(default=0, null=True, blank=True)
+    in_kind_amount = models.IntegerField(default=0, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'{}: {}'.format(
+            self.code,
+            self.name
+        )
+
+    class Meta:
+        unique_together = (('intervention', 'cp_result', 'code'),)
+
+
 
 
 class Goal(models.Model):
@@ -235,6 +298,56 @@ class Unit(models.Model):
         return self.type
 
 
+class IndicatorBlueprint(models.Model):
+    name = models.CharField(max_length=1024)
+    unit = models.ForeignKey(Unit, null=True, blank=True)
+    description = models.CharField(max_length=3072, null=True, blank=True)
+    code = models.CharField(max_length=50, null=True, blank=True, unique=True)
+    subdomain = models.CharField(max_length=255, null=True, blank=True)
+    disaggregatable = models.BooleanField(default=False)
+
+    # TODO: add:
+    # siblings (similar inidcators to this indicator)
+    # other_representation (exact copies with different names for some random reason)
+    # children (indicators that aggregate up to this or contribute to this indicator through a formula)
+    # aggregation_types (potential aggregation types: geographic, time-periods ?)
+    # calculation_formula (how the children totals add up to this indicator's total value)
+    # aggregation_formulas (how the total value is aggregated from the reports if possible)
+
+    def save(self, *args, **kwargs):
+        # Prevent from saving empty strings as code because of the unique together constraint
+        if self.code == '':
+            self.code = None
+        super(IndicatorBlueprint, self).save(*args, **kwargs)
+
+
+class AppliedIndicator(models.Model):
+
+    indicator = models.ForeignKey(IndicatorBlueprint)
+
+    # the result this indicator is contributing to.
+    lower_result = models.ForeignKey(LowerResult, related_name='applied_indicators')
+
+    # unique code for this indicator within the current context
+    # eg: (1.1) result code 1 - indicator code 1
+    context_code = models.CharField(max_length=50, null=True, blank=True,
+                                    verbose_name="Code in current context")
+    target = models.CharField(max_length=255, null=True, blank=True)
+    baseline = models.CharField(max_length=255, null=True, blank=True)
+    assumptions = models.TextField(null=True, blank=True)
+
+    # current total, transactional and dynamically calculated based on IndicatorReports
+    total = models.IntegerField(null=True, blank=True, default=0,
+                                verbose_name="Current Total")
+
+    # variable disaggregation's that may be present in the work plan
+    # this can only be present if the indicatorBlueprint has dissagregatable = true
+    disaggregation_logic = JSONField(null=True)
+
+    class Meta:
+        unique_together = (("indicator", "lower_result"),)
+
+
 class Indicator(models.Model):
     """
     Represents an indicator
@@ -244,6 +357,7 @@ class Indicator(models.Model):
     Relates to :model:`reports.Result`
     Relates to :model:`activityinfo.Indicator`
     """
+    # TODO: rename this to RAMIndicator and rename/remove RAMIndicator
 
     sector = models.ForeignKey(
         Sector,

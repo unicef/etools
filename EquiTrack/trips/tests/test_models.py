@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from datetime import datetime
 
 from django.core import mail
