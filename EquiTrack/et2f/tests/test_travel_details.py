@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from et2f.models import TravelAttachment
-from et2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
+from et2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory
 
 from .factories import TravelFactory
 
@@ -130,3 +130,16 @@ class TravelDetails(APITenantTestCase):
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.0000')
+
+    def test_cost_assignments(self):
+        fund = FundFactory()
+        grant = fund.grant
+        wbs = grant.wbs
+
+        data = {'cost_assignments': [{'wbs': wbs.id,
+                                      'fund': fund.id,
+                                      'grant': grant.id,
+                                      'share': 55}]}
+        response = self.forced_auth_req('post', reverse('et2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {'cost_assignments': ['Shares should add up to 100%']})

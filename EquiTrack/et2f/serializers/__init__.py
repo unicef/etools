@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
 from rest_framework import serializers, ISO_8601
+from rest_framework.exceptions import ValidationError
 
 from et2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     TravelPermission, TravelAttachment, AirlineCompany, ModeOfTravel
@@ -151,6 +152,17 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         self.transition_name = data.get('transition_name', None)
         super(TravelDetailsSerializer, self).__init__(*args, **kwargs)
 
+    # -------- Validation method --------
+    def validate_cost_assignments(self, value):
+        if not value:
+            return value
+
+        share_sum = sum([ca['share'] for ca in value])
+        if share_sum != 100:
+            raise ValidationError('Shares should add up to 100%')
+        return value
+
+    # -------- Create and update methods --------
     def create(self, validated_data):
         itinerary = validated_data.pop('itinerary', [])
         expenses = validated_data.pop('expenses', [])

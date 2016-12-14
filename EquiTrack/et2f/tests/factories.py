@@ -67,7 +67,7 @@ class CurrencyFactory(factory.DjangoModelFactory):
 
 class AirlineCompanyFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=32)
-    code = fuzzy.FuzzyText()
+    code = factory.Sequence(lambda n: n)
 
     class Meta:
         model = AirlineCompany
