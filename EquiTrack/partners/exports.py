@@ -137,7 +137,6 @@ class PCAResource(BaseExportResource):
         for num, location in enumerate(pca.locations.all()):
             num += 1
 
-            self.insert_column(row, 'Locality {}'.format(num), location.locality.name)
             self.insert_column(row, 'Location Type {}'.format(num), location.gateway.name)
             self.insert_column(row, 'Location Name {}'.format(num), location.location.name)
 

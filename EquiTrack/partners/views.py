@@ -115,10 +115,8 @@ class InterventionLocationView(ListAPIView):
         result_structure = self.request.query_params.get('result_structure', None)
         sector = self.request.query_params.get('sector', None)
         gateway = self.request.query_params.get('gateway', None)
-        governorate = self.request.query_params.get('governorate', None)
         donor = self.request.query_params.get('donor', None)
         partner = self.request.query_params.get('partner', None)
-        district = self.request.query_params.get('district', None)
 
         queryset = self.model.objects.filter(
             pca__status=status,
@@ -127,14 +125,6 @@ class InterventionLocationView(ListAPIView):
         if gateway is not None:
             queryset = queryset.filter(
                 location__gateway__id=int(gateway)
-            )
-        if governorate is not None:
-            queryset = queryset.filter(
-                governorate__id=int(governorate)
-            )
-        if district is not None:
-            queryset = queryset.filter(
-                region__id=int(district)
             )
         if result_structure is not None:
             queryset = queryset.filter(
