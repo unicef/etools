@@ -72,8 +72,8 @@ class FilterBoxFilter(BaseFilterBackend):
         # Construct a backend readable date
         year = data.pop('year', None)
         month = data.pop('month', None)
-        if year is not None:
-            if month is not None:
+        if year:
+            if month:
                 start_date = date(year, month, 1)
                 last_day_of_month = calendar.monthrange(year, month)[1]
                 end_date = date(year, month, last_day_of_month)

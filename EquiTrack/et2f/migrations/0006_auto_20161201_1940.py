@@ -15,7 +15,6 @@ def reset_travel_type_relations(apps, schema_editor):
     TravelType = apps.get_model('et2f', 'TravelType')
 
     mode_of_travel = ModeOfTravel.objects.last()
-    travel_type = TravelType.objects.last()
     for t in Travel.objects.all():
         t.mode_of_travel.clear()
     IteneraryItem.objects.all().update(mode_of_travel=mode_of_travel)

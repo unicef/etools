@@ -26,7 +26,7 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
 
         permission_matrix = self.context.get('permission_matrix')
 
-        if permission_matrix is None:
+        if not permission_matrix:
             return True
 
         return permission_matrix.has_permission(permission_type, model_name, field_name)

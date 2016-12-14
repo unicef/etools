@@ -55,6 +55,7 @@ class TravelDetails(APITenantTestCase):
                                                      name='test_attachment',
                                                      type='document')
         attachment.file.save('fake.txt', fakefile)
+        self.assertGreater(fakefile.len, 0)
         fakefile.seek(0)
 
         data = {'name': 'second',
