@@ -11,6 +11,8 @@ from et2f.helpers import CostSummaryCalculator
 
 
 class UserTypes(object):
+
+    #TODO: remove God
     GOD = 'God'
     ANYONE = 'Anyone'
     TRAVELER = 'Traveler'
@@ -341,7 +343,13 @@ class Clearances(models.Model):
 
 
 def determine_file_upload_path(instance, filename):
-    # TODO: CONFIRM THIS PLEASE
+    # TODO: add business area in there
+    # return '/'.join(
+    #         [connection.schema_name,
+    #          'travels',
+    #          instance.travel.id,
+    #          filename]
+    #     )
     return 'travels/{}/{}'.format(instance.travel.id, filename)
 
 
@@ -354,6 +362,7 @@ class TravelAttachment(models.Model):
 
 
 class TravelPermission(models.Model):
+    # TODO: handle this without a model
     GOD = 'God'
     ANYONE = 'Anyone'
     TRAVELER = 'Traveler'

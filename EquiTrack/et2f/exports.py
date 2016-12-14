@@ -4,6 +4,7 @@ from import_export import resources
 
 from et2f.models import Travel
 
+#TODO move this away from importexport to regular serializer and export like that.. talk with Zoli or Nik for examples
 
 class TravelListExporter(resources.ModelResource):
     is_driver = resources.Field(attribute='get_is_driver')
