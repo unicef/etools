@@ -74,6 +74,8 @@ class TravelType(models.Model):
     name = models.CharField(max_length=32, choices=CHOICES)
 
 
+# TODO: all of these models that only have 1 field should be a choice field on the models that are using it
+# for many-to-many arrayfields are recommended
 class ModeOfTravel(models.Model):
     PLANE = 'Plane'
     BUS = 'Bus'
