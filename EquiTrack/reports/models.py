@@ -16,7 +16,6 @@ from model_utils.models import (
 
 
 
-
 class Quarter(models.Model):
 
     Q1 = 'Q1'
@@ -145,6 +144,7 @@ class Sector(models.Model):
             self.name
         )
 
+
 class ResultManager(models.Manager):
     def get_queryset(self):
         return super(ResultManager, self).get_queryset().select_related('country_programme', 'result_structure', 'result_type')
@@ -227,11 +227,10 @@ class Result(MPTTModel):
 
 class LowerResult(MPTTModel):
 
-    intervention = models.ForeignKey(to="partners.PCA")
     result_type = models.ForeignKey(ResultType)
 
-    # link to Higher level result only valid to have at the output level
-    cp_result = models.ForeignKey(Result, related_name='lower_results')
+    # link to intermediary model to intervention and cp ouptut
+    result_link = models.ForeignKey('partners.InterventionResultLink', related_name='ll_results', null=True)
 
     name = models.CharField(max_length=500)
 
@@ -258,9 +257,7 @@ class LowerResult(MPTTModel):
         )
 
     class Meta:
-        unique_together = (('intervention', 'cp_result', 'code'),)
-
-
+        unique_together = (('result_link', 'code'),)
 
 
 class Goal(models.Model):
