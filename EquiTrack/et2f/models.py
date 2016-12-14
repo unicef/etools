@@ -77,11 +77,13 @@ class ModeOfTravel(models.Model):
     BUS = 'Bus'
     CAR = 'Car'
     BOAT = 'Boat'
+    RAIL = 'Rail'
     CHOICES = (
         (PLANE, 'Plane'),
         (BUS, 'Bus'),
         (CAR, 'Car'),
         (BOAT, 'Boat'),
+        (RAIL, 'Rail')
     )
     name = models.CharField(max_length=8, choices=CHOICES)
 
