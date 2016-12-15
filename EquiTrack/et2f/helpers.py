@@ -114,8 +114,7 @@ class CostSummaryCalculator(object):
             daily_rate -= deduction
 
             total_amount_usd += daily_rate
-            if not count_last_day and not last_day:
-                self._total_deductions += deduction
+            self._total_deductions += deduction
 
             current_day += delta_day
             day_count += 1
