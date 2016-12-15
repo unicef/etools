@@ -167,6 +167,7 @@ class Travel(models.Model):
     cancellation_note = models.TextField(null=True)
     certification_note = models.TextField(null=True)
     report_note = models.TextField(null=True)
+    misc_expenses = models.TextField(null=True)
 
     status = FSMField(default=PLANNED, choices=CHOICES, protected=True)
     traveler = models.ForeignKey(User, null=True, blank=True, related_name='travels')
