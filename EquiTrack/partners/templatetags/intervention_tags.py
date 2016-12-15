@@ -11,6 +11,7 @@ from partners.models import (
     FundingCommitment,
     DirectCashTransfer,
     GovernmentIntervention,
+    Intervention,
 )
 from trips.models import Trip
 
@@ -107,7 +108,7 @@ def show_fr_fc(value):
     if not value:
         return ''
 
-    intervention = PCA.objects.get(id=int(value))
+    intervention = Intervention.objects.get(id=int(value))
     commitments = FundingCommitment.objects.filter(fr_number__in=intervention.fr_numbers)
     data = tablib.Dataset()
     fr_fc_summary = []
@@ -183,7 +184,7 @@ def show_dct(value):
     if not value:
         return ''
 
-    intervention = PCA.objects.get(id=int(value))
+    intervention = Intervention.objects.get(id=int(value))
     # fr_number = intervention.fr_number
     data = tablib.Dataset()
     dct_summary = []

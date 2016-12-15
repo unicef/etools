@@ -12,7 +12,7 @@ from rest_framework.generics import (
 )
 from django.http import HttpResponse, StreamingHttpResponse
 
-from partners.models import PartnerOrganization, PCA
+from partners.models import PartnerOrganization, Intervention
 from partners.permissions import PartnerPermission
 from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
 from partners.serializers.v2 import (
@@ -29,7 +29,7 @@ class InterventionListAPIView(ListCreateAPIView):
     Create new Interventions.
     Returns a list of Interventions.
     """
-    queryset = PCA.objects.all()
+    queryset = Intervention.objects.all()
     serializer_class = InterventionListSerializer
     permission_classes = (PartnerPermission,)
     filter_backends = (PartnerScopeFilter,)
@@ -66,7 +66,7 @@ class InterventionListAPIView(ListCreateAPIView):
         )
 
     def get_queryset(self, format=None):
-        q = PCA.objects.all()
+        q = Intervention.objects.all()
         query_params = self.request.query_params
 
         if query_params:
@@ -119,7 +119,7 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
-    queryset = PCA.objects.all()
+    queryset = Intervention.objects.all()
     serializer_class = InterventionDetailSerializer
     permission_classes = (PartnerPermission,)
 
@@ -139,7 +139,7 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
             queryset = self.queryset.get(id=pk)
             serializer = self.serializer_class(queryset)
             data = serializer.data
-        except PCA.DoesNotExist:
+        except Intervention.DoesNotExist:
             data = {}
         return Response(
             data,
@@ -148,7 +148,7 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
 
 
 class PartnerInterventionListAPIView(ListAPIView):
-    queryset = PCA.objects.all()
+    queryset = Intervention.objects.all()
     serializer_class = InterventionSerializer
     permission_classes = (PartnerPermission,)
 
@@ -156,7 +156,7 @@ class PartnerInterventionListAPIView(ListAPIView):
         """
         Return All Interventions for Partner
         """
-        interventions = PCA.objects.filter(partner_id=pk)
+        interventions = Intervention.objects.filter(partner_id=pk)
         serializer = InterventionSerializer(interventions, many=True)
         return Response(
             serializer.data,

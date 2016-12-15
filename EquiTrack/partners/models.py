@@ -1256,13 +1256,13 @@ def get_intervention_file_path(instance, filename):
         [connection.schema_name,
          'file_attachments',
          'interventions',
-         str(instance.intervention.id)]
+         ]
     )
 
     if isinstance(instance, Intervention):
-        return '/'.join([file_path, filename])
+        return '/'.join([str(instance.id), file_path, filename])
     else:
-        return '/'.join([file_path, str(type(instance)), filename])
+        return '/'.join([str(instance.intervention.id), file_path, str(type(instance)), filename])
 
 
 class Intervention(AdminURLMixin, models.Model):
@@ -1303,6 +1303,9 @@ class Intervention(AdminURLMixin, models.Model):
         blank=True, null=True,
         max_length=255,
         verbose_name=u'Document type'
+    )
+    agreement = models.ForeignKey(
+        Agreement, blank=True, null=True,
     )
     hrp = models.ForeignKey(
         ResultStructure,
@@ -1385,7 +1388,6 @@ class Intervention(AdminURLMixin, models.Model):
     )
     office = models.ManyToManyField(Office, blank=True, related_name='+')
     fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), null=True)
-    planned_visits = models.IntegerField(default=0)
     population_focus = models.CharField(max_length=130, null=True, blank=True)
     sector = models.ManyToManyField(Sector, blank=True, related_name='sector_interventions')
     location = models.ManyToManyField(Location, blank=True, related_name='loc_interventions')
@@ -1512,14 +1514,14 @@ class Intervention(AdminURLMixin, models.Model):
             number = self.number
         else:
             objects = list(Intervention.objects.filter(
-                partner=self.partner,
+                agreement__partner=self.agreement.partner,
                 created_at__year=self.year,
                 document_type=self.document_type
             ).order_by('created_at').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
             number = u'{agreement}/{type}{year}{seq}'.format(
                 agreement=self.agreement.reference_number if self.id and self.agreement else '',
-                type=self.partnership_type,
+                type=self.document_type,
                 year=self.year,
                 seq=sequence
             )
@@ -1898,14 +1900,6 @@ class PartnershipBudget(TimeStampedModel):
         self.total = \
             self.total_unicef_contribution() \
             + self.partner_contribution
-
-        if self.unicef_cash:
-            if self.pk:
-                prev_result = PartnershipBudget.objects.get(id=self.id)
-                if prev_result.unicef_cash != self.unicef_cash:
-                    PartnerOrganization.planned_cash_transfers(self.partnership.partner, self)
-            else:
-                PartnerOrganization.planned_cash_transfers(self.partnership.partner, self)
 
         super(PartnershipBudget, self).save(**kwargs)
 

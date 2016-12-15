@@ -51,6 +51,7 @@ from .models import (
     IndicatorDueDates,
     IndicatorReport,
     PlannedVisits,
+    Intervention,
 
 )
 from .filters import (
@@ -167,9 +168,6 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
         'partner_contribution',
         'unicef_cash',
         'in_kind_amount',
-        'unicef_cash_local',
-        'in_kind_amount_local',
-        'partner_contribution_local',
         'total',
         'year',
         'amendment',
@@ -340,7 +338,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                  'unicef_managers',
                  ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start_date', 'end_date', 'duration',),
-                 'fr_number', 'fr_numbers'),
+                 'fr_number',),
         }),
         (_('Add sites by P Code'), {
             u'classes': (u'suit-tab suit-tab-locations',),
@@ -828,3 +826,5 @@ admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(IndicatorReport)
 admin.site.register(PlannedVisits)
+admin.site.register(Intervention)
+admin.site.register(PartnershipBudget)
