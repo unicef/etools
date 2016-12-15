@@ -289,6 +289,7 @@ class Command(BaseCommand):
         for office_name in offices:
             o, created = Office.objects.get_or_create(name=office_name)
             if created:
+                o.offices.add(connection.tenant)
                 self.stdout.write('Office created: {}'.format(office_name))
             else:
                 self.stdout.write('Office found: {}'.format(office_name))
