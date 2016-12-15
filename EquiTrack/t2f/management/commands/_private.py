@@ -169,7 +169,6 @@ class PermissionMatrixSetter(object):
 
         q = Q(status__in=status_where_hide) & self.get_related_q(['deductions', 'expenses'])
         sub_qs = qs.filter(q)
-        self.revoke_view(sub_qs)
         self.revoke_edit(sub_qs)
 
         sub_qs = qs.filter(status__in=[Travel.CERTIFICATION_SUBMITTED,
