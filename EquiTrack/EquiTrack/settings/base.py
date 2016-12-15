@@ -383,7 +383,6 @@ SHARED_APPS = (
     'generic_links',
     'gunicorn',
     'post_office',
-    'django_fsm',
     'djrill',
     'djcelery',
     'djcelery_email',
@@ -416,6 +415,7 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # Apps specific for this project go here.
 TENANT_APPS = (
+    'django_fsm',
     'logentry_admin',
     'reversion',
     'funds',
