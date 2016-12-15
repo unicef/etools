@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from et2f.models import UserTypes, Travel
+from t2f.models import UserTypes, Travel
 
 
 class T2FUserDataSerializer(serializers.ModelSerializer):

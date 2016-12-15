@@ -13,7 +13,7 @@ class StaticDataEndpointTest(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_static_data_endpoint(self):
-        response = self.forced_auth_req('get', '/api/et2f/static_data/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/t2f/static_data/', user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         expected_keys = ['dsa_regions', 'currencies', 'users', 'travel_types', 'partners', 'funds', 'results',
                          'airlines', 'locations', 'travel_modes', 'grants', 'offices', 'expense_types', 'sections',

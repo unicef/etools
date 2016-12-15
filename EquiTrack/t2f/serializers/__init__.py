@@ -6,7 +6,9 @@ from django.utils.functional import cached_property
 from rest_framework import serializers, ISO_8601
 from rest_framework.exceptions import ValidationError
 
-from et2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
+
+from locations.models import Location
+from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     TravelPermission, TravelAttachment, AirlineCompany, ModeOfTravel
 from locations.models import Location
 

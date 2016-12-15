@@ -29,7 +29,7 @@ class UserT2FData(APITenantTestCase):
                          {'roles': ['Anyone'],
                           'travel_count': 1})
 
-        self.forced_auth_req('post', reverse('et2f:travels:details:state_change',
+        self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                              kwargs={'travel_pk': self.travel.id,
                                                      'transition_name': 'cancel'}),
                              user=self.unicef_staff)

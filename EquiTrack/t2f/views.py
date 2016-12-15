@@ -15,20 +15,20 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from et2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter, TravelAttachmentFilter
+from t2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter, TravelAttachmentFilter
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
 from users.models import Office, Section
 
-from et2f.exports import TravelListExporter
-from et2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
+from t2f.exports import TravelListExporter
+from t2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
     TravelAttachment, TravelType, ModeOfTravel
-from et2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
+from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer
-from et2f.serializers.static_data import StaticDataSerializer
-from et2f.serializers.permission_matrix import PermissionMatrixSerializer
-from et2f.helpers import PermissionMatrix, CloneTravelHelper
+from t2f.serializers.static_data import StaticDataSerializer
+from t2f.serializers.permission_matrix import PermissionMatrixSerializer
+from t2f.helpers import PermissionMatrix, CloneTravelHelper
 
 
 class TravelPagePagination(PageNumberPagination):

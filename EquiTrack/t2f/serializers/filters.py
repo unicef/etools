@@ -4,7 +4,7 @@ import six
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from et2f.serializers import TravelListSerializer
+from t2f.serializers import TravelListSerializer
 
 
 class SearchFilterSerializer(serializers.Serializer):

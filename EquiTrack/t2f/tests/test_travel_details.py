@@ -7,8 +7,8 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from et2f.models import TravelAttachment
-from et2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory
+from t2f.models import TravelAttachment
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory
 
 from .factories import TravelFactory
 
@@ -22,25 +22,25 @@ class TravelDetails(APITenantTestCase):
                                     supervisor=self.unicef_staff)
 
     def test_urls(self):
-        details_url = reverse('et2f:travels:details:index', kwargs={'travel_pk': 1})
-        self.assertEqual(details_url, '/api/et2f/travels/1/')
+        details_url = reverse('t2f:travels:details:index', kwargs={'travel_pk': 1})
+        self.assertEqual(details_url, '/api/t2f/travels/1/')
 
-        attachments_url = reverse('et2f:travels:details:attachments', kwargs={'travel_pk': 1})
-        self.assertEqual(attachments_url, '/api/et2f/travels/1/attachments/')
+        attachments_url = reverse('t2f:travels:details:attachments', kwargs={'travel_pk': 1})
+        self.assertEqual(attachments_url, '/api/t2f/travels/1/attachments/')
 
-        attachment_details_url = reverse('et2f:travels:details:attachment_details',
+        attachment_details_url = reverse('t2f:travels:details:attachment_details',
                                          kwargs={'travel_pk': 1, 'attachment_pk': 1})
-        self.assertEqual(attachment_details_url, '/api/et2f/travels/1/attachments/1/')
+        self.assertEqual(attachment_details_url, '/api/t2f/travels/1/attachments/1/')
 
-        add_driver_url = reverse('et2f:travels:details:clone_for_driver', kwargs={'travel_pk': 1})
-        self.assertEqual(add_driver_url, '/api/et2f/travels/1/add_driver/')
+        add_driver_url = reverse('t2f:travels:details:clone_for_driver', kwargs={'travel_pk': 1})
+        self.assertEqual(add_driver_url, '/api/t2f/travels/1/add_driver/')
 
-        duplicate_travel_url = reverse('et2f:travels:details:clone_for_secondary_traveler', kwargs={'travel_pk': 1})
-        self.assertEqual(duplicate_travel_url, '/api/et2f/travels/1/duplicate_travel/')
+        duplicate_travel_url = reverse('t2f:travels:details:clone_for_secondary_traveler', kwargs={'travel_pk': 1})
+        self.assertEqual(duplicate_travel_url, '/api/t2f/travels/1/duplicate_travel/')
 
     def test_details_view(self):
         with self.assertNumQueries(17):
-            self.forced_auth_req('get', reverse('et2f:travels:details:index',
+            self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                 kwargs={'travel_pk': self.travel.id}),
                                  user=self.unicef_staff)
 
@@ -61,7 +61,7 @@ class TravelDetails(APITenantTestCase):
         data = {'name': 'second',
                 'type': 'something',
                 'file': fakefile}
-        response = self.forced_auth_req('post', reverse('et2f:travels:details:attachments',
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:attachments',
                                                         kwargs={'travel_pk': travel.id}),
                                         data=data, user=self.unicef_staff, request_format='multipart')
         response_json = json.loads(response.rendered_content)
@@ -69,7 +69,7 @@ class TravelDetails(APITenantTestCase):
         expected_keys = ['file', 'id', 'name', 'type', 'url']
         self.assertKeysIn(expected_keys, response_json)
 
-        response = self.forced_auth_req('delete', reverse('et2f:travels:details:attachment_details',
+        response = self.forced_auth_req('delete', reverse('t2f:travels:details:attachment_details',
                                                           kwargs={'travel_pk': travel.id,
                                                                   'attachment_pk': response_json['id']}),
                                         user=self.unicef_staff)
@@ -77,14 +77,14 @@ class TravelDetails(APITenantTestCase):
 
     def test_duplication(self):
         data = {'traveler': self.unicef_staff.id}
-        response = self.forced_auth_req('post', reverse('et2f:travels:details:clone_for_driver',
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_driver',
                                                         kwargs={'travel_pk': self.travel.id}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('id', response_json)
 
         data = {'traveler': self.unicef_staff.id}
-        response = self.forced_auth_req('post', reverse('et2f:travels:details:clone_for_secondary_traveler',
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_secondary_traveler',
                                                         kwargs={'travel_pk': self.travel.id}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -104,27 +104,27 @@ class TravelDetails(APITenantTestCase):
                               'type': expense_type.id,
                               'account_currency': currency.id,
                               'document_currency': currency.id}]}
-        response = self.forced_auth_req('post', reverse('et2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
         travel_id = response_json['id']
 
-        response = self.forced_auth_req('post', reverse('et2f:travels:details:state_change',
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
-        response = self.forced_auth_req('post', reverse('et2f:travels:details:state_change',
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'approve'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
 
-        response = self.forced_auth_req('post', reverse('et2f:travels:details:state_change',
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
                                         data=data, user=self.unicef_staff)
@@ -141,7 +141,7 @@ class TravelDetails(APITenantTestCase):
                                       'fund': fund.id,
                                       'grant': grant.id,
                                       'share': 55}]}
-        response = self.forced_auth_req('post', reverse('et2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'cost_assignments': ['Shares should add up to 100%']})
 
@@ -152,13 +152,13 @@ class TravelDetails(APITenantTestCase):
 
         data = {'cost_assignments': [],
                 'activities': [{'locations': [location.id, location_2.id]}]}
-        response = self.forced_auth_req('post', reverse('et2f:travels:list:index'), data=data,
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
         data = response_json
         data['activities'].append({'locations': [location_3.id]})
-        response = self.forced_auth_req('patch', reverse('et2f:travels:details:index',
+        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                         kwargs={'travel_pk': response_json['id']}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)

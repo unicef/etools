@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from et2f.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant, TravelType, ModeOfTravel
+from t2f.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant, TravelType, ModeOfTravel
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result

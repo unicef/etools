@@ -426,7 +426,7 @@ TENANT_APPS = (
     'trips',
     'tpm',
     'supplies',
-    'et2f',
+    't2f',
     'workplan',
 )
 

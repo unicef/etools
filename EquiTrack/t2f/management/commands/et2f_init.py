@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from et2f.models import Currency, AirlineCompany, DSARegion, ExpenseType, WBS, Grant, Fund, TravelType, ModeOfTravel
+from t2f.models import Currency, AirlineCompany, DSARegion, ExpenseType, WBS, Grant, Fund, TravelType, ModeOfTravel
 from partners.models import PartnerOrganization
 from users.models import Country, Office
 

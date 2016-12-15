@@ -5,9 +5,9 @@ from unittest.case import skip
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from et2f.models import TravelPermission, DSARegion, Travel, TravelAttachment, UserTypes
-from et2f.serializers.filters import SearchFilterSerializer
-from et2f.tests.factories import AirlineCompanyFactory, CurrencyFactory
+from t2f.models import TravelPermission, DSARegion, Travel, TravelAttachment, UserTypes
+from t2f.serializers.filters import SearchFilterSerializer
+from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory
 
 from .factories import TravelFactory
 
@@ -113,7 +113,7 @@ class TravelViews(APITenantTestCase):
                 "estimated_travel_cost": "0.0000",
                 "currency": currency.id}
 
-        response = self.forced_auth_req('post', '/api/et2f/travels/', data=data,
+        response = self.forced_auth_req('post', '/api/t2f/travels/', data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {})
@@ -121,7 +121,7 @@ class TravelViews(APITenantTestCase):
 
         second_traveler = UserFactory()
         data = {'traveler': second_traveler.id}
-        response = self.forced_auth_req('post', '/api/et2f/travels/{}/duplicate_travel/'.format(new_travel_id),
+        response = self.forced_auth_req('post', '/api/t2f/travels/{}/duplicate_travel/'.format(new_travel_id),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertNotEqual(response_json['id'], new_travel_id)
@@ -132,6 +132,6 @@ class TravelViews(APITenantTestCase):
         TravelPermission.objects.create(name='afds', code='can_see_travel_status', user_type='God', status='planned')
 
         travel = TravelFactory()
-        response = self.forced_auth_req('get', '/api/et2f/travels/{}/'.format(travel.id), user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/t2f/travels/{}/'.format(travel.id), user=self.unicef_staff)
         self.assertEqual(json.loads(response.rendered_content), {})
 

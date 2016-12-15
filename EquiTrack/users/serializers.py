@@ -3,7 +3,7 @@ __author__ = 'jcranwellward'
 
 from rest_framework import serializers
 
-from et2f.serializers.user_data import T2FUserDataSerializer
+from t2f.serializers.user_data import T2FUserDataSerializer
 from .models import User, UserProfile, Group, Office, Section
 
 

@@ -7,8 +7,8 @@ from decimal import Decimal
 from pytz import UTC
 
 from EquiTrack.tests.mixins import APITenantTestCase
-from et2f.helpers import CostSummaryCalculator
-from et2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory
+from t2f.helpers import CostSummaryCalculator
+from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory
 
 
 class TestDSACalculations(APITenantTestCase):

@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
-from et2f.helpers import CostSummaryCalculator
+from t2f.helpers import CostSummaryCalculator
 
 
 class UserTypes(object):

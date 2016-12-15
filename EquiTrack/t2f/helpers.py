@@ -16,12 +16,12 @@ class PermissionMatrix(object):
         self._permission_dict = self.get_permission_dict()
 
     def get_user_type(self):
-        from et2f.models import UserTypes
+        from t2f.models import UserTypes
         return UserTypes.GOD
 
     def get_permission_dict(self):
         # TODO simon: this is bad. fix it somehow
-        from et2f.models import TravelPermission
+        from t2f.models import TravelPermission
         permissions = TravelPermission.objects.filter(status=self.travel.status, user_type=self._user_type)
         return {(p.model, p.field, p.permission_type): p.value for p in permissions}
 

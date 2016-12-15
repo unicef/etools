@@ -20,13 +20,13 @@ class TestPermissionMatrix(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
-        list_url = reverse('et2f:permission_matrix')
-        self.assertEqual(list_url, '/api/et2f/permission_matrix/')
+        list_url = reverse('t2f:permission_matrix')
+        self.assertEqual(list_url, '/api/t2f/permission_matrix/')
 
     def test_permission_matrix(self):
         # Check the effect of caching
         with self.assertNumQueries(1):
-            self.forced_auth_req('get', reverse('et2f:permission_matrix'), user=self.unicef_staff)
+            self.forced_auth_req('get', reverse('t2f:permission_matrix'), user=self.unicef_staff)
 
         with self.assertNumQueries(0):
-            self.forced_auth_req('get', reverse('et2f:permission_matrix'), user=self.unicef_staff)
+            self.forced_auth_req('get', reverse('t2f:permission_matrix'), user=self.unicef_staff)

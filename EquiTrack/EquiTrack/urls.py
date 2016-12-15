@@ -80,7 +80,7 @@ from workplan.views import (
     MilestoneViewSet
 )
 
-from et2f.urls import urlpatterns as et2f_patterns
+from t2f.urls import urlpatterns as et2f_patterns
 
 schema_view = get_swagger_view(title='eTools API')
 
@@ -162,7 +162,7 @@ urlpatterns = patterns(
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
-    url(r'^api/et2f/', include(et2f_patterns, namespace='et2f')),
+    url(r'^api/t2f/', include(et2f_patterns, namespace='t2f')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
     url(r'^api/docs/', schema_view),

@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from import_export import resources
 
-from et2f.models import Travel
+from t2f.models import Travel
 
 #TODO move this away from importexport to regular serializer and export like that.. talk with Zoli or Nik for examples
 

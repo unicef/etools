@@ -17,7 +17,7 @@ class TestReferenceNumber(APITenantTestCase):
 
     def _create_travel(self):
         data = {'traveler': self.unicef_staff.id}
-        response = self.forced_auth_req('post', reverse('et2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         return response_json
 

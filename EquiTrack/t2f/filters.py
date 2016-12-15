@@ -6,8 +6,8 @@ from datetime import date
 from django.db.models.query_utils import Q
 from rest_framework.filters import BaseFilterBackend
 
-from et2f.models import Travel
-from et2f.serializers.filters import SearchFilterSerializer, ShowHiddenFilterSerializer, SortFilterSerializer, \
+from t2f.models import Travel
+from t2f.serializers.filters import SearchFilterSerializer, ShowHiddenFilterSerializer, SortFilterSerializer, \
     FilterBoxFilterSerializer
 
 

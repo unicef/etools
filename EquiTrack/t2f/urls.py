@@ -1,7 +1,7 @@
 
 from django.conf.urls import url, patterns, include
 
-from et2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, \
+from t2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, \
     TravelAttachmentViewSet
 
 

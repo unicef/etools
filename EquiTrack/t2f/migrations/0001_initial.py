@@ -6,7 +6,7 @@ from django.conf import settings
 from django.db import migrations, models
 import django.db.models.deletion
 import django_fsm
-import et2f.models
+import t2f.models
 
 
 class Migration(migrations.Migration):
@@ -86,8 +86,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('amount', models.DecimalField(decimal_places=4, max_digits=10)),
-                ('account_currency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.Currency')),
-                ('document_currency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.Currency')),
+                ('account_currency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.Currency')),
+                ('document_currency', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.Currency')),
             ],
         ),
         migrations.CreateModel(
@@ -121,8 +121,8 @@ class Migration(migrations.Migration):
                 ('departure_date', models.DateTimeField()),
                 ('arrival_date', models.DateTimeField()),
                 ('overnight_travel', models.BooleanField(default=False)),
-                ('airlines', models.ManyToManyField(related_name='_iteneraryitem_airlines_+', to='et2f.AirlineCompany')),
-                ('dsa_region', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.DSARegion')),
+                ('airlines', models.ManyToManyField(related_name='_iteneraryitem_airlines_+', to='t2f.AirlineCompany')),
+                ('dsa_region', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.DSARegion')),
             ],
         ),
         migrations.CreateModel(
@@ -154,13 +154,13 @@ class Migration(migrations.Migration):
                 ('additional_note', models.TextField(blank=True, null=True)),
                 ('international_travel', models.NullBooleanField(default=False)),
                 ('ta_required', models.NullBooleanField(default=True)),
-                ('reference_number', models.CharField(default=et2f.models.make_reference_number, max_length=12)),
+                ('reference_number', models.CharField(default=t2f.models.make_reference_number, max_length=12)),
                 ('hidden', models.BooleanField(default=False)),
                 ('estimated_travel_cost', models.DecimalField(decimal_places=4, default=0, max_digits=20)),
                 ('is_driver', models.BooleanField(default=False)),
                 ('preserved_expenses', models.DecimalField(decimal_places=4, default=None, max_digits=20, null=True)),
-                ('currency', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.Currency')),
-                ('mode_of_travel', models.ManyToManyField(related_name='_travel_mode_of_travel_+', to='et2f.ModeOfTravel')),
+                ('currency', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.Currency')),
+                ('mode_of_travel', models.ManyToManyField(related_name='_travel_mode_of_travel_+', to='t2f.ModeOfTravel')),
                 ('office', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='users.Office')),
                 ('section', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='users.Section')),
                 ('supervisor', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to=settings.AUTH_USER_MODEL)),
@@ -185,8 +185,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('type', models.CharField(max_length=64)),
                 ('name', models.CharField(max_length=255)),
-                ('file', models.FileField(upload_to=et2f.models.determine_file_upload_path)),
-                ('travel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attachments', to='et2f.Travel')),
+                ('file', models.FileField(upload_to=t2f.models.determine_file_upload_path)),
+                ('travel', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attachments', to='t2f.Travel')),
             ],
         ),
         migrations.CreateModel(
@@ -220,71 +220,71 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='travelactivity',
             name='travel_type',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.TravelType'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.TravelType'),
         ),
         migrations.AddField(
             model_name='travelactivity',
             name='travels',
-            field=models.ManyToManyField(related_name='activities', to='et2f.Travel'),
+            field=models.ManyToManyField(related_name='activities', to='t2f.Travel'),
         ),
         migrations.AddField(
             model_name='iteneraryitem',
             name='mode_of_travel',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.ModeOfTravel'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.ModeOfTravel'),
         ),
         migrations.AddField(
             model_name='iteneraryitem',
             name='travel',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='itinerary', to='et2f.Travel'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='itinerary', to='t2f.Travel'),
         ),
         migrations.AddField(
             model_name='grant',
             name='wbs',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='grants', to='et2f.WBS'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='grants', to='t2f.WBS'),
         ),
         migrations.AddField(
             model_name='fund',
             name='grant',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='funds', to='et2f.Grant'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='funds', to='t2f.Grant'),
         ),
         migrations.AddField(
             model_name='expense',
             name='travel',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='expenses', to='et2f.Travel'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='expenses', to='t2f.Travel'),
         ),
         migrations.AddField(
             model_name='expense',
             name='type',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.ExpenseType'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.ExpenseType'),
         ),
         migrations.AddField(
             model_name='deduction',
             name='travel',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='deductions', to='et2f.Travel'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='deductions', to='t2f.Travel'),
         ),
         migrations.AddField(
             model_name='costassignment',
             name='fund',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.Fund'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.Fund'),
         ),
         migrations.AddField(
             model_name='costassignment',
             name='grant',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.Grant'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.Grant'),
         ),
         migrations.AddField(
             model_name='costassignment',
             name='travel',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='cost_assignments', to='et2f.Travel'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='cost_assignments', to='t2f.Travel'),
         ),
         migrations.AddField(
             model_name='costassignment',
             name='wbs',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='et2f.WBS'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='+', to='t2f.WBS'),
         ),
         migrations.AddField(
             model_name='clearances',
             name='travel',
-            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='clearances', to='et2f.Travel'),
+            field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='clearances', to='t2f.Travel'),
         ),
     ]

@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from rest_framework import serializers
 
-from et2f.models import UserTypes, Travel
+from t2f.models import UserTypes, Travel
 
 
 class PermissionMatrixSerializer(serializers.Serializer):

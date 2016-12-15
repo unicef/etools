@@ -1,7 +1,7 @@
 from django.db.models.query_utils import Q
 
-from et2f.models import UserTypes
-from et2f.models import TravelPermission, Travel
+from t2f.models import UserTypes
+from t2f.models import TravelPermission, Travel
 
 
 def make_permissions_for_model(user_type, status, model_name, fields):
