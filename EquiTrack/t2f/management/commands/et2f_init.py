@@ -7,10 +7,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
+from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from t2f.models import Currency, AirlineCompany, DSARegion, ExpenseType, WBS, Grant, Fund, TravelType, ModeOfTravel
 from partners.models import PartnerOrganization
-from users.models import Country, Office
+from users.models import Country, Office, Section
 
 from _private import populate_permission_matrix
 
@@ -23,6 +24,7 @@ class Command(BaseCommand):
         parser.add_argument('-u', '--with_users', action='store_true', default=False)
         parser.add_argument('-o', '--with_offices', action='store_true', default=False)
         parser.add_argument('-p', '--with_partners', action='store_true', default=False)
+        parser.add_argument('-s', '--assign_sections', action='store_true', default=False)
 
     @atomic
     def handle(self, *args, **options):
@@ -45,6 +47,9 @@ class Command(BaseCommand):
 
         if options.get('with_partners'):
             self._load_partners()
+
+        if options.get('with_partners'):
+            self._assign_sections()
 
         self._load_dsa_regions()
         self._load_permission_matrix()
@@ -94,6 +99,13 @@ class Command(BaseCommand):
                 self.stdout.write('Travel mode created: {}'.format(travel_mode[0]))
             else:
                 self.stdout.write('Travel mode found: {}'.format(travel_mode[0]))
+
+    def _assign_sections(self):
+        tenant = connection.tenant
+        connection.set_tenant(FakeTenant('public'))
+        for s in Section.objects.all():
+            s.sections.add(tenant)
+        connection.set_tenant(tenant)
 
     def _load_currencies(self):
         data = [('United States dollar', 'USD'),
