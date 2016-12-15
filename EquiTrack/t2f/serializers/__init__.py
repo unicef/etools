@@ -54,6 +54,7 @@ class IteneraryItemSerializer(PermissionBasedModelSerializer):
 
 class ExpenseSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
+    amount = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
 
     class Meta:
         model = Expense
