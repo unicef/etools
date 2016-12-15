@@ -186,7 +186,6 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         travel_activities = self.create_related_models(TravelActivity, activities)
         for activity in travel_activities:
             activity.travels.add(instance)
-        self.create_related_models(IteneraryItem, itinerary, travel=instance)
 
         # O2O relations
         clearances['travel'] = instance
