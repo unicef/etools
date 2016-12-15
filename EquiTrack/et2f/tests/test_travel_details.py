@@ -5,7 +5,7 @@ from StringIO import StringIO
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory
+from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from et2f.models import TravelAttachment
 from et2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory
@@ -144,3 +144,24 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('et2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'cost_assignments': ['Shares should add up to 100%']})
+
+    def test_activity_location(self):
+        location = LocationFactory()
+        location_2 = LocationFactory()
+        location_3 = LocationFactory()
+
+        data = {'cost_assignments': [],
+                'activities': [{'locations': [location.id, location_2.id]}]}
+        response = self.forced_auth_req('post', reverse('et2f:travels:list:index'), data=data,
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        data = response_json
+        data['activities'].append({'locations': [location_3.id]})
+        response = self.forced_auth_req('patch', reverse('et2f:travels:details:index',
+                                                        kwargs={'travel_pk': response_json['id']}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response_json['activities'][0]['locations'], [location.id, location_2.id])
+        self.assertEqual(response_json['activities'][1]['locations'], [location_3.id])
