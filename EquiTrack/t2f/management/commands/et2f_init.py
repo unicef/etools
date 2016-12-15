@@ -18,6 +18,18 @@ from _private import populate_permission_matrix
 
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
+    """
+    Usage:
+    manage.py et2f_init [--with_users, --with_partners, --assign_sections, --with_offices] <username> <password>
+
+    Username and password required to create a user for testing and look up the proper schema.
+
+    -u | --with_users : Import sample users
+    -o | --with_offices : Import sample offices
+    -p | --with_partners : Import sample partners
+    -s | --assign_sections : Assign all sections to the current schema !Use only on local dev machine!
+    """
+
     def add_arguments(self, parser):
         parser.add_argument('username', nargs=1)
         parser.add_argument('password', nargs=1, default='password')
