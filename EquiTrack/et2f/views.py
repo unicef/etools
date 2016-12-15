@@ -165,7 +165,9 @@ class StaticDataView(generics.GenericAPIView):
 
     def get(self, request):
         User = get_user_model()
-
+        # TODO: this is not only static data some of the data changes,
+        # there should be calls to individual endpoints for:
+        # users, partners, partnerships, results, locations, wbs, grants, funds
         data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all(),
                 'airlines': AirlineCompany.objects.all(),

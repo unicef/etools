@@ -11,6 +11,8 @@ from et2f.helpers import CostSummaryCalculator
 
 
 class UserTypes(object):
+
+    #TODO: remove God
     GOD = 'God'
     ANYONE = 'Anyone'
     TRAVELER = 'Traveler'
@@ -72,6 +74,8 @@ class TravelType(models.Model):
     name = models.CharField(max_length=32, choices=CHOICES)
 
 
+# TODO: all of these models that only have 1 field should be a choice field on the models that are using it
+# for many-to-many arrayfields are recommended
 class ModeOfTravel(models.Model):
     PLANE = 'Plane'
     BUS = 'Bus'
@@ -341,7 +345,13 @@ class Clearances(models.Model):
 
 
 def determine_file_upload_path(instance, filename):
-    # TODO: CONFIRM THIS PLEASE
+    # TODO: add business area in there
+    # return '/'.join(
+    #         [connection.schema_name,
+    #          'travels',
+    #          instance.travel.id,
+    #          filename]
+    #     )
     return 'travels/{}/{}'.format(instance.travel.id, filename)
 
 
@@ -354,6 +364,7 @@ class TravelAttachment(models.Model):
 
 
 class TravelPermission(models.Model):
+    # TODO: handle this without a model
     GOD = 'God'
     ANYONE = 'Anyone'
     TRAVELER = 'Traveler'
