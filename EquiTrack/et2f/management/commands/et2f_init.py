@@ -8,7 +8,7 @@ from django.core.management.base import BaseCommand
 from django.db import connection
 from django.db.transaction import atomic
 
-from et2f.models import Currency, AirlineCompany, DSARegion, ExpenseType, WBS, Grant, Fund
+from et2f.models import Currency, AirlineCompany, DSARegion, ExpenseType, WBS, Grant, Fund, TravelType, ModeOfTravel
 from partners.models import PartnerOrganization
 from users.models import Country, Office
 
@@ -31,6 +31,8 @@ class Command(BaseCommand):
         user = self._get_or_create_admin_user(username, password)
         connection.set_tenant(user.profile.country)
 
+        self._load_travel_types()
+        self._load_travel_modes()
         self._load_currencies()
 
         if options.get('with_users'):
@@ -76,6 +78,22 @@ class Command(BaseCommand):
 
         self.stdout.write('User was successfully created.')
         return user
+
+    def _load_travel_types(self):
+        for travel_type in TravelType.CHOICES:
+            tt, created = TravelType.objects.get_or_create(name=travel_type[0])
+            if created:
+                self.stdout.write('Travel type created: {}'.format(travel_type[0]))
+            else:
+                self.stdout.write('Travel type found: {}'.format(travel_type[0]))
+
+    def _load_travel_modes(self):
+        for travel_mode in ModeOfTravel.CHOICES:
+            mot, created = ModeOfTravel.objects.get_or_create(name=travel_mode[0])
+            if created:
+                self.stdout.write('Travel mode created: {}'.format(travel_mode[0]))
+            else:
+                self.stdout.write('Travel mode found: {}'.format(travel_mode[0]))
 
     def _load_currencies(self):
         data = [('United States dollar', 'USD'),
