@@ -45,6 +45,7 @@ $ wget http://download.redis.io/redis-stable.tar.gz
 $ tar xvzf redis-stable.tar.gz
 $ cd redis-stable
 $ cd deps
+$ # Dependencies have to be built before
 $ make hiredis lua jemalloc linenoise geohash-int
 $ cd ..
 $ sudo make install

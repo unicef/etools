@@ -20,6 +20,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('username', nargs=1)
         parser.add_argument('password', nargs=1, default='password')
+        parser.add_argument('-u', '--with_users', action='store_true', default=False)
+        parser.add_argument('-o', '--with_offices', action='store_true', default=False)
+        parser.add_argument('-p', '--with_partners', action='store_true', default=False)
 
     @atomic
     def handle(self, *args, **options):
@@ -29,10 +32,18 @@ class Command(BaseCommand):
         connection.set_tenant(user.profile.country)
 
         self._load_currencies()
-        self._load_users()
+
+        if options.get('with_users'):
+            self._load_users()
+
         self._load_airlines()
-        self._load_offices()
-        self._load_partners()
+
+        if options.get('with_offices'):
+            self._load_offices()
+
+        if options.get('with_partners'):
+            self._load_partners()
+
         self._load_dsa_regions()
         self._load_permission_matrix()
         self._add_wbs()
