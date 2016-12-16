@@ -1,4 +1,3 @@
-__author__ = 'jcranwellward'
 
 from autocomplete_light import shortcuts as autocomplete_light
 
