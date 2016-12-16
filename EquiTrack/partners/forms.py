@@ -42,7 +42,6 @@ from .models import (
     AmendmentLog,
     AgreementAmendmentLog,
     Agreement,
-    AuthorizedOfficer,
     PartnerStaffMember,
     SupplyItem,
     DistributionPlan,
@@ -211,31 +210,6 @@ class PartnerStaffMemberForm(forms.ModelForm):
         return cleaned_data
 
 
-class AuthorizedOfficersForm(forms.ModelForm):
-
-    class Meta:
-        model = AuthorizedOfficer
-        fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        """
-        Only display the officers of the partner related to the agreement
-        """
-        if 'parent_object' in kwargs:
-            self.parent_agreement = kwargs.pop('parent_object')
-
-        super(AuthorizedOfficersForm, self).__init__(*args, **kwargs)
-
-        self.fields['officer'].queryset = PartnerStaffMember.objects.filter(
-            partner=self.parent_agreement.partner
-        ) if hasattr(self, 'parent_agreement') \
-            and hasattr(self.parent_agreement, 'partner') else PartnerStaffMember.objects.none()
-
-        self.fields['amendment'].queryset = self.parent_agreement.amendments_log \
-            if hasattr(self, 'parent_agreement') else AgreementAmendmentLog.objects.none()
-        self.fields['amendment'].empty_label = u'Original'
-
-
 class DistributionPlanForm(auto_forms.ModelForm):
 
     class Meta:
@@ -296,6 +270,14 @@ class AgreementForm(UserGroupForm):
 
     user_field = u'signed_by'
     group_name = u'Senior Management Team'
+
+    def __init__(self, *args, **kwargs):
+        super(AgreementForm, self).__init__(*args, **kwargs)
+        if kwargs.get('instance', None) and kwargs["instance"].partner:
+            self.fields['authorized_officers'].queryset = PartnerStaffMember.objects.filter(partner=kwargs["instance"].partner)
+        else:
+            self.fields['authorized_officers'].disabled = True
+            self.fields['authorized_officers'].queryset = PartnerStaffMember.objects.none()
 
     class Meta:
         model = Agreement

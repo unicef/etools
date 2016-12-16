@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timedelta
 from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure
-from partners.models import FundingCommitment, PCA, PlannedVisits, Agreement
+from partners.models import FundingCommitment, PCA, PlannedVisits, Agreement, AuthorizedOfficer
 
 def printtf(*args):
     print([arg for arg in args])
@@ -382,6 +382,20 @@ def after_code_merge(): #and after migrations
     all_countries_do(dissasociate_result_structures, 'Dissasociate Result Structure')
 
     print("don't forget to sync")
+
+def migrate_authorized_officers():
+    """
+    Migrates AuthorizedOfficer from schema  , cntryinstances back to the Agreement as a M2M field
+    to PartnerStaffMember
+    """
+    for cntry in Country.objects.order_by('name').exclude(name='Global'):
+        set_country(cntry.name)
+        authorized_officers = AuthorizedOfficer.objects.all()
+        for item in authorized_officers:
+            agreement = item.agreement
+            officer = item.officer
+            agreement.authorized_officers.add(officer)
+            agreement.save()
 
 
 def export_old_pca_fields():

@@ -40,7 +40,6 @@ from .models import (
     ResultChain,
     PartnerStaffMember,
     PartnershipBudget,
-    AuthorizedOfficer,
     AmendmentLog,
     SupplyPlan,
     DistributionPlan,
@@ -68,7 +67,6 @@ from .forms import (
     AmendmentForm,
     AgreementForm,
     AgreementAmendmentForm,
-    AuthorizedOfficersForm,
     DistributionPlanForm,
     DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
@@ -688,24 +686,6 @@ class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
         return 0
 
 
-class AuthorizedOfficersInlineAdmin(admin.TabularInline):
-    model = AuthorizedOfficer
-    form = AuthorizedOfficersForm
-    formset = ParentInlineAdminFormSet
-    verbose_name = "Partner Authorized Officer"
-    verbose_name_plural = "Partner Authorized Officers"
-    extra = 1
-
-    def get_max_num(self, request, obj=None, **kwargs):
-        """
-        Overriding here to disable adding offices to new agreements
-        """
-        if obj:
-            return self.max_num
-
-        return 0
-
-
 class BankDetailsInlineAdmin(admin.StackedInline):
     model = BankDetails
     form = AgreementAmendmentForm
@@ -741,6 +721,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
                     u'partner_manager',
                     u'signed_by_unicef_date',
                     u'signed_by',
+                    u'authorized_officers',
                 )
         }),
         # (_('Bank Details'), {
@@ -760,10 +741,12 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         u'download_url',
         u'reference_number',
     )
+    filter_horizontal = (
+        u'authorized_officers',
+    )
     inlines = [
         AgreementAmendmentLogInlineAdmin,
         BankDetailsInlineAdmin,
-        AuthorizedOfficersInlineAdmin,
     ]
 
     def download_url(self, obj):
@@ -775,13 +758,6 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         return u''
     download_url.allow_tags = True
     download_url.short_description = 'PDF Agreement'
-
-    def get_formsets(self, request, obj=None):
-        # display the inline only if the agreement was saved
-        for inline in self.get_inline_instances(request, obj):
-            if isinstance(inline, AuthorizedOfficersInlineAdmin) and obj is None:
-                continue
-            yield inline.get_formset(request, obj)
 
 
 class FundingCommitmentAdmin(admin.ModelAdmin):
