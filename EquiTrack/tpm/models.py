@@ -12,6 +12,13 @@ from EquiTrack.mixins import AdminURLMixin
 
 
 class TPMVisit(AdminURLMixin, models.Model):
+    """
+    Represents a third-party organization visit for the intervention
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`partners.GwPCALocation`
+    Relates to :model:`auth.User`
+    """
 
     PLANNED = u'planned'
     COMPLETED = u'completed'

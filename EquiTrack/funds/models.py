@@ -4,6 +4,10 @@ from django.db import models
 
 
 class Donor(models.Model):
+    """
+    Represents Donor for a Grant.
+    """
+
     name = models.CharField(max_length=45L, unique=True)
 
     class Meta:
@@ -14,16 +18,16 @@ class Donor(models.Model):
 
 
 class GrantManager(models.Manager):
-
     def get_queryset(self):
         return super(GrantManager, self).get_queryset().select_related('donor')
 
-
-class GrantManager(models.Manager):
-    def get_queryset(self):
-        return super(GrantManager, self).get_queryset().select_related('donor')
 
 class Grant(models.Model):
+    """
+    Represents the name of a Grant with expiration date, and Donor name.
+
+    Relates to :model:`funds.Donor`
+    """
 
     donor = models.ForeignKey(Donor)
     name = models.CharField(max_length=128L, unique=True)

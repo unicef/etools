@@ -66,8 +66,6 @@ SUIT_CONFIG = {
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
-        #{'app': 'filer', 'label': 'Files', 'icon': 'icon-file'},
-
         {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
@@ -141,7 +139,7 @@ if isinstance(DEBUG, str):
 POSTGIS_VERSION = (2, 1)
 db_config = dj_database_url.config(
     env="DATABASE_URL",
-    default='postgis:///postgres'
+    default='postgis:///etools'
 )
 ORIGINAL_BACKEND = 'django.contrib.gis.db.backends.postgis'
 db_config['ENGINE'] = 'tenant_schemas.postgresql_backend'
@@ -341,6 +339,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
+    'EquiTrack.mixins.CSRFExemptMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
@@ -374,7 +373,6 @@ SHARED_APPS = (
     'mathfilters',
 
     'easy_thumbnails',
-    'filer',
     'storages',
     'rest_framework',
     'rest_framework_swagger',
@@ -417,6 +415,7 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # Apps specific for this project go here.
 TENANT_APPS = (
+    'django_fsm',
     'logentry_admin',
     'reversion',
     'funds',
@@ -427,6 +426,7 @@ TENANT_APPS = (
     'trips',
     'tpm',
     'supplies',
+    't2f',
     'workplan',
 )
 

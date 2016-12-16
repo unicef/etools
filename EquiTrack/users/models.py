@@ -21,6 +21,14 @@ logger = logging.getLogger('users.models')
 
 
 class Country(TenantMixin):
+    """
+    Tenant Schema
+    Represents a country which has many offices and sections
+
+    Relates to :model:`users.Office`
+    Relates to :model:`users.Section`
+    """
+
     name = models.CharField(max_length=100)
     country_short_code = models.CharField(
         max_length=10,
@@ -44,6 +52,7 @@ class Country(TenantMixin):
     vision_sync_enabled = models.BooleanField(default=True)
     vision_last_synced = models.DateTimeField(null=True, blank=True)
 
+    # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
     offices = models.ManyToManyField('Office', related_name='offices')
     sections = models.ManyToManyField('Section', related_name='sections')
 
@@ -52,11 +61,22 @@ class Country(TenantMixin):
 
 
 class CountryOfficeManager(models.Manager):
-    def get_query_set(self):
-        return connection.tenant.offices.all()
+    def get_queryset(self):
+        if hasattr(connection.tenant, 'id'):
+            return super(CountryOfficeManager, self).get_queryset().filter(offices=connection.tenant)
+        else:
+            #this only gets called on initialization because FakeTenant does not have the model attrs
+            # see: https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
+            return super(CountryOfficeManager, self).get_queryset()
 
 
 class Office(models.Model):
+    """
+    Represents an office for the country
+
+    Relates to :model:`auth.User`
+    """
+
     name = models.CharField(max_length=254)
     zonal_chief = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -72,11 +92,20 @@ class Office(models.Model):
 
 
 class CountrySectionManager(models.Manager):
-    def get_query_set(self):
-        return connection.tenant.sections.all()
+    def get_queryset(self):
+        if hasattr(connection.tenant, 'id'):
+            return super(CountrySectionManager, self).get_queryset().filter(sections=connection.tenant)
+        else:
+            #this only gets called on initialization because FakeTenant does not have the model attrs
+            # see: https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
+            return super(CountrySectionManager, self).get_queryset()
 
 
 class Section(models.Model):
+    """
+    Represents a section for the country
+    """
+
     name = models.CharField(max_length=50, unique=True)
 
     objects = CountrySectionManager()
@@ -91,6 +120,14 @@ class UserProfileManager(models.Manager):
 
 
 class UserProfile(models.Model):
+    """
+    Represents a user profile that can have access to many Countries but to one active Country at a time
+
+    Relates to :model:`auth.User`
+    Relates to :model:`users.Country`
+    Relates to :model:`users.Section`
+    Relates to :model:`users.Office`
+    """
 
     user = models.OneToOneField(User, related_name='profile')
     partner_staff_member = models.IntegerField(

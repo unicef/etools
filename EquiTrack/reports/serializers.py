@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+
 
 from rest_framework import serializers
 
@@ -13,7 +13,7 @@ from .models import (
     Goal,
     Indicator,
     Result,
-    Milestone
+    CountryProgramme
 )
 
 
@@ -58,14 +58,10 @@ class SectorCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Sector
+        fields = '__all__'
 
 
-# class GoalCreateSerializer(serializers.ModelSerializer):
-#
-#     id = serializers.CharField(read_only=True)
-#
-#     class Meta:
-#         model = Goal
+
 
 
 class IndicatorCreateSerializer(serializers.ModelSerializer):
@@ -74,23 +70,17 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indicator
-
-
-class MilestoneSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Milestone
-        fields = ("id", "description", "assumptions",)
+        fields = '__all__'
 
 
 class ResultSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-    milestones = MilestoneSerializer(many=True)
     workplan_properties = ResultWorkplanPropertySerializer(many=True)
 
     class Meta:
         model = Result
+        fields = '__all__'
 
     def create(self, validated_data):
         workplan_properties = validated_data.pop("workplan_properties")
@@ -106,6 +96,7 @@ class ResultStructureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultStructure
+        fields = '__all__'
 
 
 class ResultTypeSerializer(serializers.ModelSerializer):
@@ -114,6 +105,7 @@ class ResultTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ResultType
+        fields = '__all__'
 
 
 class UnitSerializer(serializers.ModelSerializer):
@@ -122,3 +114,11 @@ class UnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
+        fields = '__all__'
+
+
+class CountryProgrammeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CountryProgramme
+        fields = '__all__'

@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-__author__ = 'jcranwellward'
-
 import pandas
 import logging
 from datetime import date
@@ -34,7 +32,7 @@ from reports.models import (
     ResultStructure,
 )
 from locations.models import Location
-from reports.models import Sector, Result, ResultType, Indicator
+from reports.models import Sector, Result, ResultType, Indicator, LowerResult
 from .models import (
     PCA,
     PartnerOrganization,
@@ -383,9 +381,6 @@ class AgreementForm(UserGroupForm):
             )
 
 
-
-
-
         # TODO: prevent more than one agreement being created for the current period
         # agreements = Agreement.objects.filter(
         #     partner=partner,
@@ -531,12 +526,11 @@ class PartnershipForm(UserGroupForm):
                 else:
                     # we are dealing with a result statement
                     # now we try to look up the result based on the statement
-                    result, created = Result.objects.get_or_create(
+                    result, created = LowerResult.objects.get_or_create(
                         result_structure=result_structure,
                         result_type=result_type,
                         name=statement,
                         code=label,
-                        hidden=True,
                     )
                     if result_type.name == 'Output':
                         current_output = result
@@ -553,8 +547,7 @@ class PartnershipForm(UserGroupForm):
                 check_and_return_value('Total', row, row_num, number=True)  # ignore value as we calculate this
 
                 if 'indicator' in label:
-                    indicator, created = Indicator.objects.get_or_create(
-                        result=result,
+                    indicator, created = LowerIndicator.objects.get_or_create(
                         code=label,
                         name=statement
                     )
@@ -679,7 +672,7 @@ class PartnershipForm(UserGroupForm):
                 u'Please select the date {} signed the partnership'.format(partner_manager)
             )
 
-        if signed_by_partner_date and signed_by_partner_date < initiation_date:
+        if signed_by_partner_date and initiation_date and signed_by_partner_date < initiation_date:
             raise ValidationError({'signed_by_partner_date': self.ERROR_MESSAGES['signed_by_partner']})
 
         if signed_by_partner_date and not partner_manager:

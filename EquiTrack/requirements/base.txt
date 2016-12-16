@@ -1,65 +1,72 @@
-Django==1.8.9
-django-braces==1.8.1
-django-model-utils==2.3.1
+# Django packages
+Django==1.9.10
+django-braces==1.10.0
+django-model-utils==2.6
+dj-database-url==0.4.1
+dj-static==0.0.6
+django-easy-pdf==0.1.0
+django-logentry-admin==1.0.2
+djrill==2.1.0
+django-autocomplete-light==2.3.1
+django-smart-selects==1.2.6
+django-hstore==1.4.2
+django-redis-cache==1.7.1
+django-smtp-ssl==1.0
+django-datetime-widget==0.9.3
+django-leaflet==0.19.0
+django-geojson==2.9.1
+django-post_office==2.0.8
+django-cors-headers==1.3.1
+django-mathfilters==0.4.0
+django-tenant-schemas==1.6.4
+django-allauth==0.28.0
+django-analytical==2.2.2
+django-celery==3.1.17
+django-fsm==2.4.0
+django-celery-email==1.1.5
+django-suit==0.2.21
+django-suit-ckeditor==0.0.2
+django-import-export==0.5.1
+django-reversion==1.10.1
+django-generic-links==0.4.0
+
+# Django REST Framework packages
+djangorestframework==3.5.3
+djangorestframework-csv==2.0.0
+djangorestframework-jwt==1.8.0
+djangorestframework-hstore==1.3
+django-mptt==0.8.6
+drf-nested-routers==0.11.1
+django-rest-swagger==2.1.0
+
+# Other Python packages
 logutils==0.3.3
 psycopg2==2.6.2
-dj-database-url==0.3.0
-django-celery==3.1.17
-django-celery-email==1.1.3
-django-filer==1.0.5
-#django-storages-redux==1.3
-django-suit==0.2.16
-django-suit-ckeditor==0.0.2
-django-reversion==1.10.1
-django-import-export==0.3.1
-django-autocomplete-light==2.2.10
-django-generic-links==0.4.0
-jsonfield==1.0.3
-django-logentry-admin==0.1.5
-djrill==2.0
-django-smart-selects==1.2.2
-djangorestframework==3.3.2
-djangorestframework-csv==1.3.3
-djangorestframework-jwt==1.7.2
-djangorestframework-hstore==1.3
-django-hstore==1.4.1
-django-rest-swagger==0.3.5
-django-redis-cache==1.6.4
-django-smtp-ssl==1.0
+celery==3.1.23
 hiredis==0.2.0
-GDAL==1.10.0
-# Fiona==1.5.0
-# Shapely==1.5.7
+GDAL==1.10.0           # DO NOT USE GDAL <= 2.1.0
 cartodb==0.8.1
-gunicorn==19.4.1
-django-datetime-widget==0.9.3
-django-leaflet==0.17.0
-django-geojson==2.9.0
-django-post_office==2.0.5
-django-cors-headers==1.1.0
-django-mathfilters==0.3.0
-django-tenant-schemas==1.5.7
-django-allauth==0.24.1
+gunicorn==19.6.0
 tenant-schemas-celery==0.1.5
-django-debug-toolbar==1.4
-sqlparse==0.1.19  # for django debug toolbar to not break admin
-drf-nested-routers==0.11.1
+sqlparse==0.2.2  # for django debug toolbar to not break admin
 azure-storage==0.20.2
-pandas==0.17.1
-requests==2.8.1
-django-analytical==2.0.0
-xlrd==0.9.3
-dj-static==0.0.6
-django-easy-pdf
-xhtml2pdf==0.0.6
-html5lib==0.9999999 #must be added after xhtml2pdf
-reportlab
+pandas==0.19.1
+requests==2.11.1
+xlrd==1.0.0
+xhtml2pdf==0.1b3
+html5lib==1.0b8 #must be added after xhtml2pdf
+reportlab==3.3.0
 flower==0.9.1
+easy-thumbnails==2.3
+dateutils==0.6.6
+django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we have the current docker build
 
-# testing libs
-coverage==4.0
-factory_boy==2.5.2
+# Testing packages
+coverage==4.2
+factory-boy==2.7.0
+freezegun==0.3.8
 
+# Git python packages
 git+https://github.com/robertavram/djangosaml2.git#egg=djangosaml2
 git+https://github.com/robertavram/django-storages.git#egg=django-storages
 git+https://github.com/jamescw/django-paintstore.git
