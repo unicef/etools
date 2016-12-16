@@ -2,8 +2,6 @@ from __future__ import absolute_import
 
 from partners.exports import PartnerExport, GovernmentExport, InterventionExport, AgreementExport
 
-__author__ = 'jcranwellward'
-
 from django.db import connection
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
@@ -49,7 +47,9 @@ from .models import (
     AgreementAmendmentLog,
     GovernmentIntervention,
     GovernmentInterventionResult,
-    IndicatorDueDates
+    IndicatorDueDates,
+    IndicatorReport,
+
 )
 from .filters import (
     PCASectorFilter,
@@ -798,3 +798,4 @@ admin.site.register(FileType)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
+admin.site.register(IndicatorReport)

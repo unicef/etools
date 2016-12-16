@@ -34,6 +34,8 @@ from reports.models import (
     ResultType,
     Result,
     CountryProgramme,
+    LowerResult,
+    AppliedIndicator
 )
 from locations.models import (
     Governorate,
@@ -467,12 +469,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 instance.alternate_name
             )
 
-    def save(self, **kwargs):
-        if self.blocked or self.deleted_flag:
-            self.hidden = True
-
-        return super(PartnerOrganization, self).save(**kwargs)
-
 post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 
 
@@ -685,7 +681,7 @@ class Agreement(TimeStampedModel):
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
         blank=True,
-        related_name="staff_members")
+        related_name="agreements")
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES
@@ -785,7 +781,7 @@ class Agreement(TimeStampedModel):
 
     @transaction.atomic
     def save(self, **kwargs):
-
+        # TODO: figure out reference number
         # commit the reference number to the database once the agreement is signed
         if self.status != Agreement.DRAFT and self.signed_by_unicef_date and not self.agreement_number:
             self.agreement_number = self.reference_number
@@ -852,7 +848,6 @@ class AuthorizedOfficer(models.Model):
 
     agreement = models.ForeignKey(
         Agreement,
-        related_name='__authorized_officers'
     )
     officer = models.ForeignKey(
         PartnerStaffMember
@@ -877,6 +872,7 @@ class AuthorizedOfficer(models.Model):
             cls.objects.create(agreement=instance,
                                officer=instance.partner_manager)
 
+post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 class PCA(AdminURLMixin, models.Model):
     """
@@ -921,6 +917,7 @@ class PCA(AdminURLMixin, models.Model):
         PartnerOrganization,
         related_name='documents',
     )
+    # TODO: remove chained foreign key
     agreement = ChainedForeignKey(
         Agreement,
         related_name='interventions',
@@ -937,6 +934,7 @@ class PCA(AdminURLMixin, models.Model):
         max_length=255,
         verbose_name=u'Document type'
     )
+    # TODO: rename result_structure to hrp
     result_structure = models.ForeignKey(
         ResultStructure,
         blank=True, null=True, on_delete=models.DO_NOTHING,
@@ -1005,6 +1003,7 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
+    # TODO: remove chainedForeignKEy
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         verbose_name=u'Signed by partner',
@@ -1015,6 +1014,7 @@ class PCA(AdminURLMixin, models.Model):
         auto_choose=False,
         blank=True, null=True,
     )
+    # TODO: remove chainedForeignKEy
     partner_focal_point = ChainedForeignKey(
         PartnerStaffMember,
         related_name='my_partnerships',
@@ -1738,7 +1738,7 @@ class RAMIndicator(models.Model):
     Relates to :model:`reports.Result`
     Relates to :model:`reports.Indicator`
     """
-
+    # TODO: Remove This indicator and connect direcly to higher indicators M2M related
     intervention = models.ForeignKey(PCA, related_name='indicators')
     result = models.ForeignKey(Result)
     indicator = ChainedForeignKey(
@@ -1787,7 +1787,6 @@ class ResultChain(models.Model):
         Indicator,
         blank=True, null=True
     )
-
     # fixed columns
     target = models.PositiveIntegerField(
         blank=True, null=True
@@ -1840,9 +1839,8 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
 
-    Relates to :model:`partners.ResultChain`
+    Relates to :model:`partners.AppliedIndicator`
     Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`results.Indicator`
     Relates to :model:`locations.Location`
     """
 
@@ -1854,23 +1852,22 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     )
 
     # FOR WHOM / Beneficiary
-    #  -  ResultChain
-    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
+    #  -  AppliedIndicator
+    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
 
     # WHO
     #  -  Implementing Partner
-    partner_staff_member = models.ForeignKey(PartnerStaffMember, related_name='indicator_reports')
+    partner_staff_member = models.ForeignKey('partners.PartnerStaffMember', related_name='indicator_reports')
 
     # WHAT
     #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
-    indicator = models.ForeignKey(Indicator, related_name='reports')  # this should always be computed from result_chain
     total = models.PositiveIntegerField()
-    disaggregated = models.BooleanField(default=False)
-    disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
+    disaggregated = models.BooleanField(default=False)  # is this a disaggregated report?
+    disaggregation = JSONField(default=dict)  # the structure should always be computed from applied_indicator
 
     # WHERE
     #  -  Location
-    location = models.ForeignKey(Location, blank=True, null=True)
+    location = models.ForeignKey('locations.Location', blank=True, null=True)
 
     # Metadata
     #  - Remarks, Report Status
@@ -1944,7 +1941,7 @@ post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 class FCManager(models.Manager):
     def get_queryset(self):
-        return super(FCManager, self).get_queryset().select_related('grant__donor__name')
+        return super(FCManager, self).get_queryset().select_related('grant__donor')
 
 
 class FundingCommitment(TimeFramedModel):

@@ -1,6 +1,7 @@
 from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
 
+from .views.v1 import InterventionsView
 from .views.v2 import (
     PartnerOrganizationListAPIView,
     PartnerOrganizationDetailAPIView,
@@ -27,6 +28,9 @@ urlpatterns = (
     url(r'^staff-members/$', view=PartnerStaffMemberListAPIVIew.as_view(), name='staff-member-list'),
     url(r'^staff-members/(?P<pk>\d+)/$', view=PartnerStaffMemberDetailAPIView.as_view(), name='staff-member-detail'),
     url(r'^staff-members/(?P<pk>\d+)/properties/$', view=PartnerStaffMemberPropertiesAPIView.as_view(), name='staff-member-properties'),
+    # TODO: figure this out
+    url(r'^partners/interventions/$', view=InterventionsView.as_view(), name='interventions-list'),
+
 )
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/

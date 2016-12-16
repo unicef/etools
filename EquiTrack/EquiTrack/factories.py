@@ -3,8 +3,6 @@ Model factories used for generating models dynamically for tests
 """
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
-__author__ = 'jcranwellward'
-
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
@@ -19,7 +17,9 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
+from funds.models import Grant, Donor
 from workplan import models as workplan_models
+from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
 
 class GovernorateFactory(factory.django.DjangoModelFactory):
@@ -225,14 +225,6 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
     to_date = date(date.today().year, 12, 31)
 
 
-class MilestoneFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = report_models.Milestone
-
-    result = factory.SubFactory(ResultFactory)
-    description = factory.Sequence(lambda n: 'Description {}'.format(n))
-    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
-
 
 class WorkplanFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -321,6 +313,13 @@ class ResultWorkplanPropertyFactory(factory.django.DjangoModelFactory):
             for label in extracted:
                 self.labels.add(label)
 
+class MilestoneFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = workplan_models.Milestone
+
+    result_wp_property = factory.SubFactory(ResultWorkplanPropertyFactory)
+    description = factory.Sequence(lambda n: 'Description {}'.format(n))
+    assumptions = factory.Sequence(lambda n: 'Assumptions {}'.format(n))
 
 class CoverPageBudgetFactory(factory.DjangoModelFactory):
     class Meta:
@@ -354,6 +353,21 @@ class WorkplanProjectFactory(factory.DjangoModelFactory):
 
     workplan = factory.SubFactory(WorkplanFactory)
     cover_page = factory.RelatedFactory(CoverPageFactory, 'workplan_project')
+
+
+class DonorFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=45)
+
+    class Meta:
+        model = Donor
+
+
+class GrantFactory(factory.DjangoModelFactory):
+    donor = factory.SubFactory(DonorFactory)
+    name = fuzzy.FuzzyText(length=32)
+
+    class Meta:
+        model = Grant
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
