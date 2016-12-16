@@ -339,6 +339,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
+    'EquiTrack.mixins.CSRFExemptMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
@@ -414,6 +415,7 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # Apps specific for this project go here.
 TENANT_APPS = (
+    'django_fsm',
     'logentry_admin',
     'reversion',
     'funds',
@@ -424,6 +426,7 @@ TENANT_APPS = (
     'trips',
     'tpm',
     'supplies',
+    't2f',
     'workplan',
 )
 

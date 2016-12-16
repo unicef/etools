@@ -21,6 +21,7 @@ class GrantManager(models.Manager):
     def get_queryset(self):
         return super(GrantManager, self).get_queryset().select_related('donor')
 
+
 class Grant(models.Model):
     """
     Represents the name of a Grant with expiration date, and Donor name.
