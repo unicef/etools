@@ -213,3 +213,13 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Travel must have at least one itinerary item']})
+
+    def test_activity_locations(self):
+        data = {'cost_assignments': [],
+                'deductions': [],
+                'expenses': [],
+                'itinerary': [],
+                'activities': [{}]}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201)
