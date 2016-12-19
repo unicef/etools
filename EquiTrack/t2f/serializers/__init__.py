@@ -121,11 +121,11 @@ class DSASerializer(serializers.Serializer):
 
 
 class CostSummarySerializer(serializers.Serializer):
-    dsa_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
-    expenses_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
-    deductions_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
+    dsa_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    expenses_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    deductions_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     dsa = DSASerializer(many=True)
-    preserved_expenses = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
+    preserved_expenses = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):
