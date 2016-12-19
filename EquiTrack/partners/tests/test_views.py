@@ -148,20 +148,22 @@ class TestPartnershipViews(APITenantTestCase):
         self.assertIn("Windu", response.data[0]["last_name"])
         self.assertEqual(True, response.data[0]["active"])
 
-    def test_api_interventions_results_list(self):
 
-        response = self.forced_auth_req('get',
-                                        '/'.join([
-                                            '/api/partners',
-                                            str(self.intervention.partner.id),
-                                            'interventions',
-                                            str(self.intervention.id),
-                                            'results/'
-                                        ]), user=self.unicef_staff)
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertIn("Result", response.data[0]["result"]["name"])
+    # TODO: removed intervention results until after R3
+    # def test_api_interventions_results_list(self):
+    #
+    #     response = self.forced_auth_req('get',
+    #                                     '/'.join([
+    #                                         '/api/partners',
+    #                                         str(self.intervention.partner.id),
+    #                                         'interventions',
+    #                                         str(self.intervention.id),
+    #                                         'results/'
+    #                                     ]), user=self.unicef_staff)
+    #
+    #     self.assertEquals(response.status_code, status.HTTP_200_OK)
+    #     self.assertEquals(len(response.data), 1)
+    #     self.assertIn("Result", response.data[0]["result"]["name"])
 
     def test_api_interventions_sectors_list(self):
 

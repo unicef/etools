@@ -52,6 +52,7 @@ class WorkplanProject(models.Model):
 
 
 class Quarter(models.Model):
+    # TODO: refactor this to use the country Quarters
     """
     Represents a quarter for the work plan
 
@@ -135,6 +136,12 @@ class ResultWorkplanProperty(models.Model):
         """
         return cls.objects.filter(labels__id=label_id).exists()
 
+
+class Milestone(models.Model):
+
+    result_wp_property = models.ForeignKey(ResultWorkplanProperty, related_name="milestones")
+    description = models.TextField()
+    assumptions = models.TextField(null=True, blank=True)
 
 class CoverPage(models.Model):
     """
