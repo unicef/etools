@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from datetime import timedelta
 from decimal import Decimal
 
+from django.db.models import Sum
 from django.utils.functional import cached_property
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -131,10 +132,7 @@ class CostSummaryCalculator(object):
 
     def _calculate_total_expenses(self):
         # TODO: DB sum should be used
-        total = Decimal(0)
-        for expense in self.travel.expenses.all():
-            total += expense.amount
-        return total
+        return self.travel.expenses.all().aggregate(Sum('amount'))['amount__sum']
 
     def _get_deduction_multiplier_at(self, date, overnight_travel=False):
         multiplier = Decimal(0)
