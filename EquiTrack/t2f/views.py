@@ -105,8 +105,13 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     def get_serializer_context(self):
         context = super(TravelDetailsViewSet, self).get_serializer_context()
 
-        obj = self.get_object()
-        context['permission_matrix'] = PermissionMatrix(obj, self.request.user)
+        # TODO simon: this is a dirty fix. Swagger fails because it will not populate self.kwargs with the required
+        # arguments to fetch the object. Would be lovely to find a nicer solution.
+        try:
+            obj = self.get_object()
+            context['permission_matrix'] = PermissionMatrix(obj, self.request.user)
+        except AssertionError:
+            pass
 
         return context
 
