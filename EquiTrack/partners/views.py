@@ -2,6 +2,7 @@ from __future__ import absolute_import
 import datetime
 
 from django.conf import settings
+from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
@@ -251,7 +252,9 @@ class AgreementViewSet(
         # TODO: Use a different action verb for each status choice in Agreement
         # Draft, Active, Expired, Suspended, Terminated
         serializer.instance = serializer.save()
-        action.send(request.user, verb="created", target=serializer.instance)
+
+        with transaction.atomic():
+            action.send(request.user, verb="created", target=serializer.instance)
 
         headers = self.get_success_headers(serializer.data)
         return Response(
