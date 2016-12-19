@@ -138,8 +138,7 @@ class CostSummaryCalculator(object):
         self._dsa_total += total_amount_usd
 
     def _calculate_total_expenses(self):
-        # TODO: DB sum should be used
-        return self.travel.expenses.all().aggregate(Sum('amount'))['amount__sum']
+        return self.travel.expenses.all().aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
 
     def _get_deduction_multiplier_at(self, date, overnight_travel=False):
         multiplier = Decimal(0)
