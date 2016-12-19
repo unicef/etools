@@ -131,7 +131,7 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.0000')
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.00')
 
     def test_cost_assignments(self):
         fund = FundFactory()
@@ -160,7 +160,7 @@ class TravelDetails(APITenantTestCase):
         data = response_json
         data['activities'].append({'locations': [location_3.id]})
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
-                                                        kwargs={'travel_pk': response_json['id']}),
+                                                         kwargs={'travel_pk': response_json['id']}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 

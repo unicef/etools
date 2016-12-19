@@ -4,7 +4,6 @@ from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.http.response import HttpResponse
 from django_fsm import TransitionNotAllowed
 
 from rest_framework import generics, viewsets, mixins, status
@@ -15,13 +14,15 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
+from rest_framework_csv import renderers
+
 from t2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter, TravelAttachmentFilter
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
+from t2f.serializers.export import TravelListExportSerializer
 from users.models import Office, Section
 
-from t2f.exports import TravelListExporter
 from t2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
     TravelAttachment, TravelType, ModeOfTravel
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
@@ -64,6 +65,7 @@ class TravelListViewSet(mixins.ListModelMixin,
     pagination_class = TravelPagePagination
     permission_classes = (IsAdminUser,)
     filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
+    renderer_classes = (renderers.JSONRenderer, renderers.CSVRenderer)
 
     _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
 
@@ -83,13 +85,11 @@ class TravelListViewSet(mixins.ListModelMixin,
         run_transition(serializer)
 
     def export(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        dataset = TravelListExporter().export(queryset)
+        queryset = self.filter_queryset(self.get_queryset())
+        serialzier = TravelListExportSerializer(queryset, many=True, context=self.get_serializer_context())
 
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="ModelExportPartners.csv"'
-        response.write(dataset.csv)
-
+        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
+        response['Content-Disposition'] = 'attachment; filename="TravelListExport.csv"'
         return response
 
 
