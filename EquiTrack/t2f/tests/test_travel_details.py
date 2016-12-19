@@ -192,7 +192,24 @@ class TravelDetails(APITenantTestCase):
                                'mode_of_travel': mode_of_travel.id,
                                'airlines': [airlines.id]}],
                 'activities': []}
-        response = self.forced_auth_req('post', '/api/t2f/travels/', data=data,
+        response = self.forced_auth_req('post',  reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
+
+    def test_itinerary(self):
+        data = {'cost_assignments': [],
+                'deductions': [],
+                'expenses': [],
+                'itinerary': [],
+                'activities': []}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': response_json['id'],
+                                                                'transition_name': 'submit_for_approval'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {'itinerary': ['Travel must have at least one itinerary item']})
