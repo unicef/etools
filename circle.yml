@@ -26,7 +26,7 @@ test:
      - sudo bash -c "echo \"listen_addresses = '*'\" >>
        /etc/postgresql/9.5/main/postgresql.conf"  # 9.4 works only on CI Ubuntu 12.04
      - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
-       /etc/postgresql/9.4/main/pg_hba.conf"
+       /etc/postgresql/9.5/main/pg_hba.conf"
      - sudo /etc/init.d/postgresql restart
      - psql -d template1 -c 'create extension hstore;' # needed for django hstore
    override:
