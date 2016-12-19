@@ -29,7 +29,7 @@ from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, Trave
     CloneParameterSerializer, CloneOutputSerializer
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.serializers.permission_matrix import PermissionMatrixSerializer
-from t2f.helpers import PermissionMatrix, CloneTravelHelper
+from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 
 
 class TravelPagePagination(PageNumberPagination):
@@ -105,8 +105,14 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     def get_serializer_context(self):
         context = super(TravelDetailsViewSet, self).get_serializer_context()
 
-        obj = self.get_object()
-        context['permission_matrix'] = PermissionMatrix(obj, self.request.user)
+        # This will prevent Swagger error because it will not populate self.kwargs with the required arguments to fetch
+        # the object.
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        if lookup_url_kwarg in self.kwargs:
+            obj = self.get_object()
+            context['permission_matrix'] = PermissionMatrix(obj, self.request.user)
+        else:
+            context['permission_matrix'] = FakePermissionMatrix(self.request.user)
 
         return context
 
