@@ -129,6 +129,7 @@ class LocationFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Location {}'.format(n))
     gateway = factory.SubFactory(GatewayTypeFactory)
     point = GEOSGeometry("POINT(20 20)")
+    p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
 
 
 class LinkedLocationFactory(factory.django.DjangoModelFactory):
