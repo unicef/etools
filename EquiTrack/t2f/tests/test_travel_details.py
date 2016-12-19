@@ -197,7 +197,7 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
 
-    def test_itinerary(self):
+    def test_itinerary_couny(self):
         data = {'cost_assignments': [],
                 'deductions': [],
                 'expenses': [],
@@ -213,6 +213,36 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Travel must have at least one itinerary item']})
+
+    def test_itinerary_origin_destination(self):
+        dsaregion = DSARegion.objects.first()
+        airlines = AirlineCompanyFactory()
+        mode_of_travel = ModeOfTravelFactory()
+
+        data = {'cost_assignments': [],
+                'deductions': [],
+                'expenses': [],
+                'itinerary': [{'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2016-11-15T12:06:55.821490',
+                               'arrival_date': '2016-11-16T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': mode_of_travel.id,
+                               'airlines': [airlines.id]},
+                              {'origin': 'Something else',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-17T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': mode_of_travel.id,
+                               'airlines': [airlines.id]}],
+                'activities': []}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {'itinerary': ['Origin should match with the previous destination']})
 
     def test_activity_locations(self):
         data = {'cost_assignments': [],

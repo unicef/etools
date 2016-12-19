@@ -177,6 +177,15 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         if not value:
             return value
 
+        # Check destination-origin relation
+        previous_destination = value[0]['destination']
+
+        for itinerary_item in value[1:]:
+            if itinerary_item['origin'] != previous_destination:
+                raise ValidationError('Origin should match with the previous destination')
+            previous_destination = itinerary_item['destination']
+
+        # Check date integrity
         dates_iterator = chain((i['departure_date'], i['arrival_date']) for i in value)
 
         current_date = dates_iterator.next()
