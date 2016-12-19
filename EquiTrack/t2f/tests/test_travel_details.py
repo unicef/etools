@@ -7,8 +7,9 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import TravelAttachment
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory
+from t2f.models import TravelAttachment, DSARegion
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
+    ModeOfTravelFactory
 
 from .factories import TravelFactory
 
@@ -165,3 +166,33 @@ class TravelDetails(APITenantTestCase):
 
         self.assertEqual(response_json['activities'][0]['locations'], [location.id, location_2.id])
         self.assertEqual(response_json['activities'][1]['locations'], [location_3.id])
+
+    def test_itinerary_dates(self):
+        dsaregion = DSARegion.objects.first()
+        airlines = AirlineCompanyFactory()
+        mode_of_travel = ModeOfTravelFactory()
+
+        data = {'cost_assignments': [],
+                'deductions': [],
+                'expenses': [],
+                'itinerary': [{'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-17T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': mode_of_travel.id,
+                               'airlines': [airlines.id]},
+                              {'origin': 'Berlin',
+                               'destination': 'Budapest',
+                               'departure_date': '2016-11-15T12:06:55.821490',
+                               'arrival_date': '2016-11-16T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': mode_of_travel.id,
+                               'airlines': [airlines.id]}],
+                'activities': []}
+        response = self.forced_auth_req('post', '/api/t2f/travels/', data=data,
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})

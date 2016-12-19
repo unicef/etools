@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from itertools import chain
+
 from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
@@ -166,6 +168,23 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         share_sum = sum([ca['share'] for ca in value])
         if share_sum != 100:
             raise ValidationError('Shares should add up to 100%')
+        return value
+
+    def validate_itinerary(self, value):
+        if not value:
+            return value
+
+        dates_iterator = chain((i['departure_date'], i['arrival_date']) for i in value)
+
+        current_date = dates_iterator.next()
+        for date in dates_iterator:
+            if date is None:
+                continue
+
+            if date < current_date:
+                raise ValidationError('Itinerary items have to be ordered by date')
+            current_date = date
+
         return value
 
     # -------- Create and update methods --------
