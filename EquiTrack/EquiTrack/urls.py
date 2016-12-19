@@ -33,7 +33,7 @@ from locations.views import (
     LocationsViewSet
 )
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
-from partners.views import (
+from partners.views.v1 import (
     PartnerOrganizationsViewSet,
     AgreementViewSet,
     PartnerStaffMembersViewSet,

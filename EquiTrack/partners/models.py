@@ -1234,6 +1234,18 @@ class GovernmentIntervention(models.Model):
             u'{}: {}'.format(self.pk,
                              self.reference_number)
 
+    @property
+    def years(self):
+        years = ""
+        for result in self.results.all():
+            years.join("{}, ".format(result.year))
+
+    @property
+    def sectors(self):
+        years = ""
+        for result in self.results.all():
+            years.join("{}, ".format(result.sector))
+
     #country/partner/year/#
     @property
     def reference_number(self):
@@ -1318,11 +1330,11 @@ class GovernmentInterventionResult(models.Model):
         if self.pk:
             prev_result = GovernmentInterventionResult.objects.get(id=self.id)
             if prev_result.planned_amount != self.planned_amount:
-                PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+                PartnerOrganization.planned_cash_transfers(self.intervention.partner)
             if prev_result.planned_visits != self.planned_visits:
                 PartnerOrganization.planned_visits(self.intervention.partner, self)
         else:
-            PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            PartnerOrganization.planned_cash_transfers(self.intervention.partner)
             PartnerOrganization.planned_visits(self.intervention.partner, self)
 
         super(GovernmentInterventionResult, self).save(**kwargs)
