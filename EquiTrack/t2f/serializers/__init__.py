@@ -188,7 +188,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             previous_destination = itinerary_item['destination']
 
         # Check date integrity
-        dates_iterator = chain((i['departure_date'], i['arrival_date']) for i in value)
+        dates_iterator = chain.from_iterable((i['departure_date'], i['arrival_date']) for i in value)
 
         current_date = dates_iterator.next()
         for date in dates_iterator:
