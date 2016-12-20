@@ -40,7 +40,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(duplicate_travel_url, '/api/t2f/travels/1/duplicate_travel/')
 
     def test_details_view(self):
-        with self.assertNumQueries(17):
+        with self.assertNumQueries(18):
             self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                 kwargs={'travel_pk': self.travel.id}),
                                  user=self.unicef_staff)
@@ -144,7 +144,9 @@ class TravelDetails(APITenantTestCase):
                                       'fund': fund.id,
                                       'grant': grant.id,
                                       'share': 55}]}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
+                                                        kwargs={'transition_name': 'save_and_submit'}),
+                                        data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'cost_assignments': ['Shares should add up to 100%']})
 
