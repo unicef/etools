@@ -85,10 +85,12 @@ class CostSummaryCalculator(object):
         region_to_daterange_mapping = self.get_dsa_region_collection(itinerary)
 
         counter = 0
-        for itinerary_item, rd_mapping in zip(itinerary, region_to_daterange_mapping):
+        for dto in region_to_daterange_mapping:
             counter += 1
-            region, daterange = rd_mapping
-            start_date, end_date = daterange
+
+            itinerary_item = dto.itinerary_item
+            region = dto.region
+            start_date, end_date = dto.date_range
             night_count = (end_date - start_date).days + 1  # Last night should be counted too
 
             # Deduct overnight travels
@@ -166,51 +168,67 @@ class CostSummaryCalculator(object):
         return {d.date: d.multiplier for d in deductions_list}
 
     def get_date_dsa_region_mapping(self, itinerary):
-        mapping = OrderedDict()
-        iterator = iter(itinerary)
-        itinerary_item = iterator.next()
-        current_date = itinerary_item.departure_date.date()
-        current_region = itinerary_item.dsa_region
+        if not itinerary:
+            return []
 
-        for itinerary_item in iterator:
+        class DateRegionMapDTO(object):
+            def __init__(self, itinerary_item, region, date):
+                self.itinerary_item = itinerary_item
+                self.region = region
+                self.date = date
+
+        mapping = OrderedDict()
+
+        current_itinerary_item = itinerary[0]
+        current_date = current_itinerary_item.departure_date.date()
+        current_region = current_itinerary_item.dsa_region
+
+        for itinerary_item in itinerary[1:]:
             end_date = itinerary_item.departure_date.date()
 
             while current_date < end_date:
-                mapping[current_date] = current_region
+                mapping[current_date] = DateRegionMapDTO(current_itinerary_item, current_region, current_date)
                 current_date += timedelta(days=1)
 
+            current_itinerary_item = itinerary_item
             current_region = itinerary_item.dsa_region
 
-        end_date = itinerary_item.arrival_date.date()
+        end_date = current_itinerary_item.arrival_date.date()
         while current_date <= end_date:
-            mapping[current_date] = current_region
+            mapping[current_date] = DateRegionMapDTO(current_itinerary_item, current_region, current_date)
             current_date += timedelta(days=1)
 
-        return mapping
+        return [dto for dto in mapping.values()]
 
     def get_dsa_region_collection(self, itinerary):
+        class DSARegionDateRangeDTO(object):
+            def __init__(self, itinerary_item, region, date_range):
+                self.itinerary_item = itinerary_item
+                self.region = region
+                self.date_range = date_range
+
         date_dsa_region_mapping = self.get_date_dsa_region_mapping(itinerary)
 
         if not date_dsa_region_mapping:
             return []
 
-        iterator = iter(date_dsa_region_mapping.items())
-        date, region = iterator.next()
-        current_region = region
-        date_range = [date, date]
+        iterator = iter(date_dsa_region_mapping)
+        dto = iterator.next()
+        current_dto = dto
+        date_range = [dto.date, dto.date]
 
         collection = []
 
-        for date, region in iterator:
-            if region == current_region:
-                date_range[1] = date
+        for dto in iterator:
+            if dto.region == current_dto.region:
+                date_range[1] = dto.date
                 continue
 
-            collection.append((current_region, date_range))
-            current_region = region
-            date_range = [date, date]
+            collection.append(DSARegionDateRangeDTO(current_dto.itinerary_item, current_dto.region, date_range))
+            current_dto = dto
+            date_range = [dto.date, dto.date]
 
-        collection.append((region, date_range))
+        collection.append(DSARegionDateRangeDTO(current_dto.itinerary_item, current_dto.region, date_range))
         return collection
 
 

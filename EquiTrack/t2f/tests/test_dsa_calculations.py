@@ -5,22 +5,25 @@ import json
 from datetime import datetime, date
 from decimal import Decimal
 
+from django.core.urlresolvers import reverse
 from pytz import UTC
 
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from t2f.helpers import CostSummaryCalculator
 from t2f.models import Expense
 from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory, \
-    ExpenseTypeFactory, CurrencyFactory
+    ExpenseTypeFactory, CurrencyFactory, ModeOfTravelFactory
 
 
 class TestDSACalculations(APITenantTestCase):
     def setUp(self):
         super(TestDSACalculations, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
         self.hungary_region = DSARegionFactory(country='Hungary',
                                                region='Budapest',
                                                dsa_amount_usd=100,
-                                               dsa_amount_60plus_usd = 80)
+                                               dsa_amount_60plus_usd=80)
         self.united_states_region = DSARegionFactory(country='United States',
                                                      region='New York',
                                                      dsa_amount_usd=150,
@@ -56,21 +59,21 @@ class TestDSACalculations(APITenantTestCase):
         cost_summary = calculator.get_cost_summary()
         self.assertEqual(cost_summary,
                          {'deductions_total': Decimal('55.0000'),
-                          'dsa': [{'amount_usd': Decimal('8850.0000'), # 150 * 60 == 9000
+                          'dsa': [{'amount_usd': Decimal('8850.0000'),  # 150 * 60 == 9000
                                    'daily_rate_usd': Decimal('150.0000'),
                                    'dsa_region': self.united_states_region.id,
                                    'dsa_region_name': 'United States - New York',
                                    'end_date': date(2017, 3, 1),
                                    'night_count': 60,
                                    'start_date': date(2017, 1, 1)},
-                                  {'amount_usd': Decimal('1170.0000'), # 130 * 9 = 1170
+                                  {'amount_usd': Decimal('1170.0000'),  # 130 * 9 = 1170
                                    'daily_rate_usd': Decimal('130.0000'),
                                    'dsa_region': self.united_states_region.id,
                                    'dsa_region_name': 'United States - New York',
                                    'end_date': date(2017, 3, 10),
                                    'night_count': 9,
                                    'start_date': date(2017, 3, 2)},
-                                  {'amount_usd': Decimal('185.0000'), # 100 * (1 + 0.45 + 0.4)
+                                  {'amount_usd': Decimal('185.0000'),  # 100 * (1 + 0.45 + 0.4)
                                    'daily_rate_usd': Decimal('100.0000'),
                                    'dsa_region': self.hungary_region.id,
                                    'dsa_region_name': 'Hungary - Budapest',
@@ -121,7 +124,7 @@ class TestDSACalculations(APITenantTestCase):
         calculator.calculate_cost_summary()
 
         cost_summary = calculator.get_cost_summary()
-        self.assertEqual(cost_summary['expenses_total'], Decimal('312.13')) # 89 + 123.14 + 99.99
+        self.assertEqual(cost_summary['expenses_total'], Decimal('312.13'))  # 89 + 123.14 + 99.99
 
     def test_get_dsa_region_collection(self):
         IteneraryItemFactory(travel=self.travel,
@@ -137,6 +140,7 @@ class TestDSACalculations(APITenantTestCase):
 
         itinerary = list(self.travel.itinerary.order_by('departure_date'))
         mapping = calculator.get_date_dsa_region_mapping(itinerary)
+        mapping = {dto.date: dto.region for dto in mapping}
         self.assertEqual(mapping,
                          {date(2017, 1, 1): self.united_states_region,
                           date(2017, 1, 2): self.united_states_region,
@@ -153,10 +157,7 @@ class TestDSACalculations(APITenantTestCase):
                           date(2017, 1, 13): self.hungary_region})
 
         collection = calculator.get_dsa_region_collection(itinerary)
+        collection = [(dto.region, dto.date_range) for dto in collection]
         self.assertEqual(collection,
                          [(self.united_states_region, [date(2017, 1, 1), date(2017, 1, 10)]),
                           (self.hungary_region, [date(2017, 1, 11), date(2017, 1, 13)])])
-
-        # calculator.calculate_cost_summary()
-        # cost_summary = calculator.get_cost_summary()
-        # self.assertEqual(cost_summary, {})
