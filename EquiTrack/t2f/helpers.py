@@ -124,6 +124,7 @@ class CostSummaryCalculator(object):
 
         if not last_day:
             deduction_multiplier = self.get_deduction_multiplier(start_date, end_date)
+            deduction_multiplier = min(deduction_multiplier, accounted_night_count)
             deduction_amount = daily_rate * deduction_multiplier
             amount = daily_rate * accounted_night_count - deduction_amount
         else:
@@ -136,7 +137,7 @@ class CostSummaryCalculator(object):
 
             last_day_multiplier = self.get_deduction_multiplier(end_date, end_date)
             last_day_rate = daily_rate * Decimal('0.4')
-            last_day_deduction_amount = daily_rate * last_day_multiplier
+            last_day_deduction_amount = last_day_rate * last_day_multiplier
             deduction_amount += last_day_deduction_amount
             # The inverted math is here because we are not deducting the deductions, rather multiplying the value with
             # the deductions multiplier

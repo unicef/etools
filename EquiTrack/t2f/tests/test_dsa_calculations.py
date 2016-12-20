@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from unittest import skip
 import json
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from decimal import Decimal
 
 from django.core.urlresolvers import reverse
