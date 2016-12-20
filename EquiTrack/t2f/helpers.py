@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from collections import defaultdict, OrderedDict
 from datetime import timedelta
 from decimal import Decimal
 
@@ -49,10 +50,6 @@ class CostSummaryCalculator(object):
         self._total_deductions = Decimal(0)
         self._total_expenses = Decimal(0)
 
-    @cached_property
-    def _deductions(self):
-        return {d.date: d for d in self.travel.deductions.all()}
-
     def get_cost_summary(self):
         expenses = self._total_expenses.quantize(Decimal('1.0000'))
         if self.travel.preserved_expenses is not None:
@@ -67,108 +64,236 @@ class CostSummaryCalculator(object):
                   'expenses_delta': expenses_delta}
         return result
 
+    @cached_property
+    def _itinerary(self):
+        return list(self.travel.itinerary.all())
+
+    @cached_property
+    def date_deduction_mapping(self):
+        deductions = self.travel.deductions.all()
+        return self.get_date_deduction_mapping(deductions)
+
     def calculate_cost_summary(self):
         self._init_values()
         self._total_expenses = self._calculate_total_expenses()
 
-        itinerary_items_list = list(self.travel.itinerary.order_by('departure_date'))
+        if not self._itinerary:
+            return
 
-        if not itinerary_items_list:
-            return 
+        itinerary = list(self.travel.itinerary.order_by('departure_date'))
 
-        # All but last travel
-        for item_id, itinerary_item in enumerate(itinerary_items_list[:-1]):
-            start_date = itinerary_item.departure_date.date()
-            end_date = itinerary_items_list[item_id+1].departure_date.date()
-            self._calculate_dsa_rate_for_timeframe(itinerary_item, start_date, end_date)
+        region_to_daterange_mapping = self.get_dsa_region_collection(itinerary)
 
-        # Last travel
-        itinerary_item = itinerary_items_list[-1]
-        start_date = itinerary_item.departure_date.date()
-        # +1 day because of the < comparison
-        end_date = itinerary_item.arrival_date.date()
-        self._calculate_dsa_rate_for_timeframe(itinerary_item, start_date, end_date, True)
+        counter = 0
+        for itinerary_item, rd_mapping in zip(itinerary, region_to_daterange_mapping):
+            counter += 1
+            region, daterange = rd_mapping
+            start_date, end_date = daterange
+            night_count = (end_date - start_date).days + 1  # Last night should be counted too
 
-    def _calculate_dsa_rate_for_timeframe(self, itinerary_item, start_date, end_date, count_last_day=False):
-        delta_day = timedelta(days=1)
-        dsa_region = itinerary_item.dsa_region
+            # Deduct overnight travels
+            if itinerary_item.overnight_travel:
+                overnight_count = (itinerary_item.arrival_date.date() - itinerary_item.departure_date.date()).days
+            else:
+                overnight_count = 0
+
+            last_day = counter == len(itinerary)
+
+            if night_count <= 60:
+                accounted_night_count = night_count - overnight_count
+                self.calculate_dsa(start_date, end_date, region, region.dsa_amount_usd, accounted_night_count, last_day)
+            else:
+                # Overnight count should be taken into account here since it affects the first days of travel and
+                # not last
+                # Edge case: overnight_count bigger than 60: user error
+                accounted_night_count = 60 - overnight_count
+                accounted_over60_nights_count = night_count - 60
+
+                split_date = start_date + timedelta(days=59) # -1 because 60 days has 59 nights in between
+                self.calculate_dsa(start_date, split_date, region, region.dsa_amount_usd,
+                                   accounted_night_count, False) # Last day will be counted in the next call
+
+                split_date += timedelta(days=1)
+                self.calculate_dsa(split_date, end_date, region, region.dsa_amount_60plus_usd,
+                                   accounted_over60_nights_count, last_day)
+
+    def calculate_dsa(self, start_date, end_date, region, daily_rate, accounted_night_count, last_day):
+        deduction_multiplier = self.get_deduction_multiplier(start_date, end_date)
+
+        if last_day:
+            deduction_multiplier += Decimal('0.6')
+
+        night_count = (end_date - start_date).days + 1
+        deduction_amount = daily_rate * deduction_multiplier
+        amount = daily_rate * accounted_night_count - deduction_amount
 
         dsa = {'start_date': start_date,
                'end_date': end_date,
-               'dsa_region': dsa_region.id,
-               'dsa_region_name': dsa_region.name}
+               'dsa_region': region.id,
+               'dsa_region_name': region.name,
+               'night_count': night_count,
+               'daily_rate_usd': daily_rate,
+               'amount_usd': amount}
 
-        if count_last_day:
-            end_date += delta_day
-
-        night_count = Decimal((end_date - start_date).days)
-        dsa['night_count'] = night_count
-
-        total_amount_usd = Decimal(0)
-        current_day = start_date
-        day_count = 1
-        while current_day < end_date:
-            last_day = (current_day+delta_day) >= end_date
-
-            if day_count <= 60:
-                daily_rate = dsa_region.dsa_amount_usd
-            else:
-                daily_rate = dsa_region.dsa_amount_60plus_usd
-
-            if count_last_day and last_day:
-                deduction_multiplier = Decimal('0.6')
-            else:
-                if itinerary_item.overnight_travel and current_day <= itinerary_item.departure_date.date():
-                    overnight_travel = True
-                else:
-                    overnight_travel = False
-                deduction_multiplier = self._get_deduction_multiplier_at(current_day, overnight_travel)
-
-            deduction = daily_rate * deduction_multiplier
-            daily_rate -= deduction
-
-            total_amount_usd += daily_rate
-            self._total_deductions += deduction
-
-            current_day += delta_day
-            day_count += 1
-
-        if night_count:
-            daily_rate_usd = total_amount_usd / night_count
-        else:
-            daily_rate_usd = total_amount_usd
-
-        dsa['daily_rate_usd'] = daily_rate_usd.quantize(Decimal('1.0000'))
-        dsa['amount_usd'] = total_amount_usd.quantize(Decimal('1.0000'))
         self._dsa_data.append(dsa)
-        self._dsa_total += total_amount_usd
+        self._dsa_total += amount
+        self._total_deductions += deduction_amount
+
+    def get_deduction_multiplier(self, start_date, end_date):
+        current_date = start_date
+        multiplier = Decimal(0)
+
+        while current_date <= end_date:
+            multiplier += self.date_deduction_mapping.get(current_date, Decimal(0))
+            current_date += timedelta(days=1)
+
+        return multiplier
+
+    def get_date_deduction_mapping(self, deductions_list):
+        return {d.date: d.multiplier for d in deductions_list}
+
+    def get_date_dsa_region_mapping(self, itinerary):
+        mapping = OrderedDict()
+        iterator = iter(itinerary)
+        itinerary_item = iterator.next()
+        current_date = itinerary_item.departure_date.date()
+        current_region = itinerary_item.dsa_region
+
+        for itinerary_item in iterator:
+            end_date = itinerary_item.departure_date.date()
+
+            while current_date < end_date:
+                mapping[current_date] = current_region
+                current_date += timedelta(days=1)
+
+            current_region = itinerary_item.dsa_region
+
+        end_date = itinerary_item.arrival_date.date()
+        while current_date <= end_date:
+            mapping[current_date] = current_region
+            current_date += timedelta(days=1)
+
+        return mapping
+
+    def get_dsa_region_collection(self, itinerary):
+        date_dsa_region_mapping = self.get_date_dsa_region_mapping(itinerary)
+
+        iterator = iter(date_dsa_region_mapping.items())
+        date, region = iterator.next()
+        current_region = region
+        date_range = [date, date]
+
+        collection = []
+
+        for date, region in iterator:
+            if region == current_region:
+                date_range[1] = date
+                continue
+
+            collection.append((current_region, date_range))
+            current_region = region
+            date_range = [date, date]
+
+        collection.append((region, date_range))
+        return collection
+
+
+# ==========================================================================================================
+    #     # All but last travel
+    #     for item_id, itinerary_item in enumerate(itinerary_items_list[:-1]):
+    #         start_date = itinerary_item.departure_date
+    #         end_date = itinerary_items_list[item_id+1].departure_date
+    #         self._calculate_dsa_for_timeframe(itinerary_item, start_date, end_date)
+    #
+    #     # Last travel
+    #     # itinerary_item = itinerary_items_list[-1]
+    #     # start_date = itinerary_item.departure_date.date()
+    #     # # +1 day because of the < comparison
+    #     # end_date = itinerary_item.arrival_date.date()
+    #     # self._calculate_dsa_for_timeframe(itinerary_item, start_date, end_date, True)
+    #
+    # def _calculate_dsa_for_timeframe(self, itinerary_item, start_date, end_date, count_last_day=False):
+    #     dsa_region = itinerary_item.dsa_region
+    #
+    #     timeframe_lenght = end_date - start_date
+    #
+    #     # First up to 60 days
+    #     dsa = {'start_date': start_date,
+    #            'end_date': end_date,
+    #            'dsa_region': dsa_region.id,
+    #            'dsa_region_name': dsa_region.name,
+    #            'night_count': 0,
+    #            'daily_rate_usd': Decimal(0),
+    #            'amount_usd': Decimal(0)}
+    #
+    #     if timeframe_lenght.days > 60:
+    #         # After 60th day
+    #         dsa = {'start_date': start_date,
+    #                'end_date': end_date,
+    #                'dsa_region': dsa_region.id,
+    #                'dsa_region_name': dsa_region.name,
+    #                'night_count': 0,
+    #                'daily_rate_usd': Decimal(0),
+    #                'amount_usd': Decimal(0)}
+    #
+    #
+    #
+    #     # Old shit
+    #     delta_day = timedelta(days=1)
+    #
+    #     dsa = {'start_date': start_date,
+    #            'end_date': end_date,
+    #            'dsa_region': dsa_region.id,
+    #            'dsa_region_name': dsa_region.name}
+    #
+    #     if count_last_day:
+    #         end_date += delta_day
+    #
+    #     night_count = Decimal((end_date - start_date).days)
+    #     dsa['night_count'] = night_count
+    #
+    #     total_amount_usd = Decimal(0)
+    #     current_day = start_date
+    #     day_count = 1
+    #     while current_day < end_date:
+    #         last_day = (current_day+delta_day) >= end_date
+    #
+    #         if day_count <= 60:
+    #             daily_rate = dsa_region.dsa_amount_usd
+    #         else:
+    #             daily_rate = dsa_region.dsa_amount_60plus_usd
+    #
+    #         if count_last_day and last_day:
+    #             deduction_multiplier = Decimal('0.6')
+    #         else:
+    #             if itinerary_item.overnight_travel and current_day <= itinerary_item.departure_date.date():
+    #                 overnight_travel = True
+    #             else:
+    #                 overnight_travel = False
+    #             deduction_multiplier = self._get_deduction_multiplier_at(current_day, overnight_travel)
+    #
+    #         deduction = daily_rate * deduction_multiplier
+    #         daily_rate -= deduction
+    #
+    #         total_amount_usd += daily_rate
+    #         self._total_deductions += deduction
+    #
+    #         current_day += delta_day
+    #         day_count += 1
+    #
+    #     if night_count:
+    #         daily_rate_usd = total_amount_usd / night_count
+    #     else:
+    #         daily_rate_usd = total_amount_usd
+    #
+    #     dsa['daily_rate_usd'] = daily_rate_usd.quantize(Decimal('1.0000'))
+    #     dsa['amount_usd'] = total_amount_usd.quantize(Decimal('1.0000'))
+    #     self._dsa_data.append(dsa)
+    #     self._dsa_total += total_amount_usd
+    #
 
     def _calculate_total_expenses(self):
         return self.travel.expenses.all().aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
-
-    def _get_deduction_multiplier_at(self, date, overnight_travel=False):
-        multiplier = Decimal(0)
-
-        try:
-            deduction = self._deductions[date]
-        except KeyError:
-            return multiplier
-
-        if deduction.no_dsa:
-            multiplier += Decimal(1)
-        if deduction.breakfast:
-            multiplier += Decimal('0.05')
-        if deduction.lunch:
-            multiplier += Decimal('0.1')
-        if deduction.dinner:
-            multiplier += Decimal('0.15')
-        if deduction.accomodation:
-            multiplier += Decimal('0.5')
-        if overnight_travel:
-            multiplier += Decimal(1)
-
-        # Handle if it goes above 1
-        return min(multiplier, Decimal(1))
 
 
 class CloneTravelHelper(object):

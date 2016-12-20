@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+from decimal import Decimal
 from email.mime.image import MIMEImage
 import os
 
@@ -379,6 +380,24 @@ class Deduction(models.Model):
     @property
     def day_of_the_week(self):
         return self.date.strftime('%a')
+
+    @property
+    def multiplier(self):
+        multiplier = Decimal(0)
+
+        if self.no_dsa:
+            multiplier += Decimal(1)
+        if self.breakfast:
+            multiplier += Decimal('0.05')
+        if self.lunch:
+            multiplier += Decimal('0.1')
+        if self.dinner:
+            multiplier += Decimal('0.15')
+        if self.accomodation:
+            multiplier += Decimal('0.5')
+
+        # Handle if it goes above 1
+        return min(multiplier, Decimal(1))
 
 
 class CostAssignment(models.Model):
