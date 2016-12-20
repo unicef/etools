@@ -189,6 +189,9 @@ class CostSummaryCalculator(object):
     def get_dsa_region_collection(self, itinerary):
         date_dsa_region_mapping = self.get_date_dsa_region_mapping(itinerary)
 
+        if not date_dsa_region_mapping:
+            return []
+
         iterator = iter(date_dsa_region_mapping.items())
         date, region = iterator.next()
         current_region = region
