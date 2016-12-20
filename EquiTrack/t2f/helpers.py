@@ -118,17 +118,25 @@ class CostSummaryCalculator(object):
                                    accounted_over60_nights_count, last_day)
 
     def calculate_dsa(self, start_date, end_date, region, daily_rate, accounted_night_count, last_day):
-        deduction_multiplier = self.get_deduction_multiplier(start_date, end_date)
-
         night_count = (end_date - start_date).days + 1
-        deduction_amount = daily_rate * deduction_multiplier
 
-        # This for last day and other special cases
-        extra_deductions = Decimal(0)
-        if last_day:
-            extra_deductions += daily_rate * Decimal('0.6')
+        if not last_day:
+            deduction_multiplier = self.get_deduction_multiplier(start_date, end_date)
+            deduction_amount = daily_rate * deduction_multiplier
+            amount = daily_rate * accounted_night_count - deduction_amount
+        else:
+            # -1 because last day will be treated differently
+            accounted_night_count -= 1
 
-        amount = daily_rate * accounted_night_count - deduction_amount - extra_deductions
+            deduction_multiplier = self.get_deduction_multiplier(start_date, end_date-timedelta(days=1))
+            deduction_amount = daily_rate * deduction_multiplier
+            amount = daily_rate * accounted_night_count - deduction_amount
+
+            last_day_multiplier = self.get_deduction_multiplier(end_date, end_date)
+            last_day_rate = daily_rate * Decimal('0.4')
+            # The inverted math is here because we are not deducting the deductions, rather multiplying the value with
+            # the deductions multiplier
+            amount += last_day_rate * (Decimal(1) - last_day_multiplier)
 
         dsa = {'start_date': start_date,
                'end_date': end_date,

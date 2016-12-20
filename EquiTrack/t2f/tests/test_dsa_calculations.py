@@ -77,7 +77,7 @@ class TestDSACalculations(APITenantTestCase):
                                    'end_date': date(2017, 3, 13),
                                    'night_count': 3,
                                    'start_date': date(2017, 3, 11)}],
-                          'dsa_total': Decimal('10205.0000'),
+                          'dsa_total': Decimal('10260.0000'),
                           'expenses_delta': Decimal('0'),
                           'expenses_total': Decimal('0.0000'),
                           'preserved_expenses': None})
