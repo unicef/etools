@@ -163,7 +163,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
     # -------- Validation method --------
     def validate_cost_assignments(self, value):
-        if not value:
+        # If transition is None, it's a normal save (not an action) and we don't have to validate this
+        if not value or self.transition_name is None:
             return value
 
         share_sum = sum([ca['share'] for ca in value])
