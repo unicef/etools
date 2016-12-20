@@ -55,7 +55,7 @@ class TestDSACalculations(APITenantTestCase):
 
         cost_summary = calculator.get_cost_summary()
         self.assertEqual(cost_summary,
-                         {'deductions_total': Decimal('115.0000'),
+                         {'deductions_total': Decimal('55.0000'),
                           'dsa': [{'amount_usd': Decimal('8850.0000'), # 150 * 60 == 9000
                                    'daily_rate_usd': Decimal('150.0000'),
                                    'dsa_region': self.united_states_region.id,

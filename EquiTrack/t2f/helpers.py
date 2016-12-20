@@ -120,12 +120,15 @@ class CostSummaryCalculator(object):
     def calculate_dsa(self, start_date, end_date, region, daily_rate, accounted_night_count, last_day):
         deduction_multiplier = self.get_deduction_multiplier(start_date, end_date)
 
-        if last_day:
-            deduction_multiplier += Decimal('0.6')
-
         night_count = (end_date - start_date).days + 1
         deduction_amount = daily_rate * deduction_multiplier
-        amount = daily_rate * accounted_night_count - deduction_amount
+
+        # This for last day and other special cases
+        extra_deductions = Decimal(0)
+        if last_day:
+            extra_deductions += daily_rate * Decimal('0.6')
+
+        amount = daily_rate * accounted_night_count - deduction_amount - extra_deductions
 
         dsa = {'start_date': start_date,
                'end_date': end_date,
