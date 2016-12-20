@@ -327,13 +327,15 @@ class Travel(models.Model):
                                      sender, [recipient])
         msg.attach_alternative(html_content, 'text/html')
 
-        for filename in ['emails/logo-etools.png', 'emails/logo-unicef.png']:
-            path = finders.find(filename)
-            with open(path, 'rb') as fp:
-                msg_img = MIMEImage(fp.read())
-
-            msg_img.add_header('Content-ID', '<{}>'.format(filename))
-            msg.attach(msg_img)
+        # Core mailing is broken. Multiple headers will throw an exception
+        # https://bugs.python.org/issue28881
+        # for filename in ['emails/logo-etools.png', 'emails/logo-unicef.png']:
+        #     path = finders.find(filename)
+        #     with open(path, 'rb') as fp:
+        #         msg_img = MIMEImage(fp.read())
+        #
+        #     msg_img.add_header('Content-ID', '<{}>'.format(filename))
+        #     msg.attach(msg_img)
 
         msg.send(fail_silently=False)
 
