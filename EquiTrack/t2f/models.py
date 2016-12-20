@@ -304,7 +304,7 @@ class Travel(models.Model):
     def reset_status(self):
         pass
 
-    def send_notification_email(self, recipient, subject, template_name):
+    def send_notification_email(self, subject, recipient, template_name):
         from t2f.serializers.mailing import TravelMailSerializer
         serializer = TravelMailSerializer(self, context={})
 
