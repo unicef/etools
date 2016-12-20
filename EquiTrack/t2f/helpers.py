@@ -139,7 +139,7 @@ class CostSummaryCalculator(object):
                'amount_usd': amount}
 
         self._dsa_data.append(dsa)
-        self._dsa_total += amount
+        self._dsa_total += amount + deduction_amount
         self._total_deductions += deduction_amount
 
     def get_deduction_multiplier(self, start_date, end_date):
