@@ -337,6 +337,8 @@ class Command(BaseCommand):
                 self.stdout.write('Partner found: {}'.format(partner_name))
 
     def _load_dsa_regions(self, country):
+        DSARegion.objects.all().delete()
+        
         dsa_region_data = [{'dsa_amount_usd': 300,
                             'country': 'Hungary',
                             'region': 'Budapest',
