@@ -175,10 +175,8 @@ class StaticDataView(generics.GenericAPIView):
         # there should be calls to individual endpoints for:
         # users, partners, partnerships, results, locations, wbs, grants, funds
 
-        # TODO uncomment and update this according to the spec
-        # country = request.user.profile.country
-        # dsa_regions = DSARegion.objects.filter(business_area_code=country.business_area_code)
-        dsa_regions = DSARegion.objects.all()
+        country = request.user.profile.country
+        dsa_regions = DSARegion.objects.filter(business_area_code=country.business_area_code)
 
         data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all(),

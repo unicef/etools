@@ -45,7 +45,8 @@ class Command(BaseCommand):
         username = options['username']
         password = options['password']
         user = self._get_or_create_admin_user(username, password)
-        connection.set_tenant(user.profile.country)
+        country = user.profile.country
+        connection.set_tenant(country)
 
         self._load_travel_types()
         self._load_travel_modes()
@@ -65,7 +66,7 @@ class Command(BaseCommand):
         if options.get('with_partners'):
             self._assign_sections()
 
-        self._load_dsa_regions()
+        self._load_dsa_regions(country)
         self._load_permission_matrix()
         self._add_wbs()
         self._add_grants()
@@ -335,7 +336,7 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('Partner found: {}'.format(partner_name))
 
-    def _load_dsa_regions(self):
+    def _load_dsa_regions(self, country):
         dsa_region_data = [{'dsa_amount_usd': 300,
                             'country': 'Hungary',
                             'region': 'Budapest',
@@ -344,7 +345,8 @@ class Command(BaseCommand):
                             'dsa_amount_60plus_local': 56000,
                             'dsa_amount_local': 84000,
                             'finalization_date': datetime.now().date(),
-                            'eff_date': datetime.now().date()},
+                            'eff_date': datetime.now().date(),
+                            'business_area_code': country.business_area_code},
                            {'dsa_amount_usd': 400,
                             'country': 'Germany',
                             'region': 'Berlin',
@@ -353,7 +355,8 @@ class Command(BaseCommand):
                             'dsa_amount_60plus_local': 238.68,
                             'dsa_amount_local': 367.21,
                             'finalization_date': datetime.now().date(),
-                            'eff_date': datetime.now().date()}]
+                            'eff_date': datetime.now().date(),
+                            'business_area_code': country.business_area_code}]
         for data in dsa_region_data:
             name = data.pop('country')
             d, created = DSARegion.objects.get_or_create(country=name, defaults=data)

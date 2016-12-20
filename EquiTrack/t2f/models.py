@@ -125,6 +125,7 @@ class DSARegion(models.Model):
     room_rate = models.DecimalField(max_digits=20, decimal_places=4)
     finalization_date = models.DateField()
     eff_date = models.DateField()
+    business_area_code = models.CharField(max_length=10, null=True)
 
     @property
     def name(self):
