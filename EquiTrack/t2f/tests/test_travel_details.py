@@ -101,6 +101,8 @@ class TravelDetails(APITenantTestCase):
                                 'lunch': True,
                                 'dinner': False,
                                 'accomodation': True}],
+                'traveler': self.traveler.id,
+                'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
                               'account_currency': currency.id,

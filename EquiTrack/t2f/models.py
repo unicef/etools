@@ -115,12 +115,19 @@ class AirlineCompany(models.Model):
 
 
 class DSARegion(models.Model):
-    name = models.CharField(max_length=255)
+    country = models.CharField(max_length=255)
+    region = models.CharField(max_length=255)
     dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
     dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
     dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
     dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
     room_rate = models.DecimalField(max_digits=20, decimal_places=4)
+    finalization_date = models.DateField()
+    eff_date = models.DateField()
+
+    @property
+    def name(self):
+        return '{} - {}'.format(self.country, self.region)
 
 
 def make_reference_number():
@@ -294,6 +301,7 @@ class Travel(models.Model):
     @transition(status, target=PLANNED)
     def reset_status(self):
         pass
+
     def send_notification_email(self, recipient, subject, template_name):
         from t2f.serializers.mailing import TravelMailSerializer
         serializer = TravelMailSerializer(self, context={})
@@ -305,7 +313,6 @@ class Travel(models.Model):
                                             kwargs={'travel_pk': self.id,
                                                     'transition_name': 'approve_certificate'})
         context = Context({'travel': serializer.data,
-                           # TODO fix this to be absolute
                            'url': url,
                            'approve_url': approve_url,
                            'approve_certification_url': approve_certification_url})

@@ -15,10 +15,12 @@ from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFa
 
 class TestDSACalculations(APITenantTestCase):
     def test_calculation(self):
-        hungary_region = DSARegionFactory(name='Hungary',
+        hungary_region = DSARegionFactory(country='Hungary',
+                                          region='Budapest',
                                           dsa_amount_usd=100,
                                           dsa_amount_60plus_usd = 80)
-        united_states_region = DSARegionFactory(name='United States',
+        united_states_region = DSARegionFactory(country='United States',
+                                                region='New York',
                                                 dsa_amount_usd=150,
                                                 dsa_amount_60plus_usd=130)
 
@@ -52,20 +54,21 @@ class TestDSACalculations(APITenantTestCase):
                          {'deductions_total': Decimal('115.0000'),
                           'dsa': [{'daily_rate_usd': Decimal('147.3913'),
                                     'dsa_region': united_states_region.id,
-                                    'dsa_region_name': 'United States',
+                                    'dsa_region_name': 'United States - New York',
                                     'end_date': date(2017, 3, 11),
                                     'night_count': Decimal('69'),
                                     'start_date': date(2017, 1, 1),
                                     'amount_usd': Decimal('10170.0000')}, # 150 * 60 + 130 * 9 == 9000 + 1170
                                    {'daily_rate_usd': Decimal('61.6667'),
                                     'dsa_region': hungary_region.id,
-                                    'dsa_region_name': 'Hungary',
+                                    'dsa_region_name': 'Hungary - Budapest',
                                     'end_date': date(2017, 3, 13),
                                     'night_count': Decimal('3'),
                                     'start_date': date(2017, 3, 11),
                                     'amount_usd': Decimal('185.0000')}], # 100 * (1 + 0.45 + 0.4)
                           'dsa_total': Decimal('10355.0000'),
-                          'expenses_total': Decimal('0.0000'),
+                          'expenses_delta': Decimal('0'),
+                          'expenses_total': Decimal('0'),
                           'preserved_expenses': None})
 
     def test_expenses(self):

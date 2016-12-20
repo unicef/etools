@@ -174,6 +174,12 @@ class StaticDataView(generics.GenericAPIView):
         # TODO: this is not only static data some of the data changes,
         # there should be calls to individual endpoints for:
         # users, partners, partnerships, results, locations, wbs, grants, funds
+
+        # TODO uncomment and update this according to the spec
+        # country = request.user.profile.country
+        # dsa_regions = DSARegion.objects.filter(business_area_code=country.business_area_code)
+        dsa_regions = DSARegion.objects.all()
+
         data = {'users': User.objects.exclude(first_name='', last_name=''),
                 'currencies': Currency.objects.all(),
                 'airlines': AirlineCompany.objects.all(),
@@ -183,7 +189,7 @@ class StaticDataView(generics.GenericAPIView):
                 'partnerships': PCA.objects.all(),
                 'results': Result.objects.all(),
                 'locations': Location.objects.all(),
-                'dsa_regions': DSARegion.objects.all(),
+                'dsa_regions': dsa_regions,
                 'wbs': WBS.objects.all(),
                 'grants': Grant.objects.all(),
                 'funds': Fund.objects.all(),
