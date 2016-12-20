@@ -2,9 +2,9 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from decimal import Decimal
-from email.mime.image import MIMEImage
-import os
+import logging
 
+from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -16,6 +16,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
 from t2f.helpers import CostSummaryCalculator
+
+log = logging.getLogger(__name__)
 
 
 class UserTypes(object):
@@ -337,7 +339,10 @@ class Travel(models.Model):
         #     msg_img.add_header('Content-ID', '<{}>'.format(filename))
         #     msg.attach(msg_img)
 
-        msg.send(fail_silently=False)
+        try:
+            msg.send(fail_silently=False)
+        except ValidationError as exc:
+            log.error('Was not able to send the email. Exception: %s', exc.message)
 
 
 class TravelActivity(models.Model):
