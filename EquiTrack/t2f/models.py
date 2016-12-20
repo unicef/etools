@@ -1,9 +1,16 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+from email.mime.image import MIMEImage
+import os
 
+from django.core.mail.message import EmailMultiAlternatives
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.staticfiles import finders
+from django.template.context import Context
+from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
@@ -208,17 +215,23 @@ class Travel(models.Model):
 
     @transition(status, source=[PLANNED, REJECTED], target=SUBMITTED)
     def submit_for_approval(self):
-        self.send_notification('Travel #{} was sent for approval.'.format(self.id))
+        self.send_notification_email('Travel #{} was sent for approval.'.format(self.id),
+                                     self.supervisor.email,
+                                     'emails/submit_for_approval.html')
 
     @transition(status, source=[SUBMITTED], target=APPROVED)
     def approve(self):
         self.approved_at = datetime.now()
-        self.send_notification('Travel #{} was approved.'.format(self.id))
+        self.send_notification_email('Travel #{} was approved.'.format(self.id),
+                                     self.traveler.email,
+                                     'emails/approved.html')
 
     @transition(status, source=[SUBMITTED], target=REJECTED)
     def reject(self):
         self.rejected_at = datetime.now()
-        self.send_notification('Travel #{} was rejected.'.format(self.id))
+        self.send_notification_email('Travel #{} was rejected.'.format(self.id),
+                                     self.traveler.email,
+                                     'emails/rejected.html')
 
     @transition(status, source=[PLANNED,
                                 SUBMITTED,
@@ -228,6 +241,9 @@ class Travel(models.Model):
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = datetime.now()
+        self.send_notification_email('Travel #{} was cancelled.'.format(self.id),
+                                     self.traveler.email,
+                                     'emails/cancelled.html')
 
     @transition(status, source=[CANCELLED, REJECTED], target=PLANNED)
     def plan(self):
@@ -236,44 +252,81 @@ class Travel(models.Model):
     @transition(status, source=[APPROVED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
-        self.send_notification('Travel #{} was sent for payment.'.format(self.id))
+        self.send_notification_email('Travel #{} sent for payment.'.format(self.id),
+                                     self.traveler.email,
+                                     'emails/sent_for_payment.html')
 
     @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED],
                 target=CERTIFICATION_SUBMITTED)
     def submit_certificate(self):
-        self.send_notification('Travel #{} certification was submitted.'.format(self.id))
+        self.send_notification_email('Travel #{} certification was submitted.'.format(self.id),
+                                     self.supervisor.email,
+                                     'emails/certificate_submitted.html')
 
     @transition(status, source=[CERTIFICATION_SUBMITTED], target=CERTIFICATION_APPROVED)
     def approve_certificate(self):
-        self.send_notification('Travel #{} certification was approved.'.format(self.id))
+        self.send_notification_email('Travel #{} certification was approved.'.format(self.id),
+                                     self.traveler.email,
+                                     'emails/certificate_approved.html')
 
     @transition(status, source=[CERTIFICATION_APPROVED, CERTIFICATION_SUBMITTED],
                 target=CERTIFICATION_REJECTED)
     def reject_certificate(self):
-        self.send_notification('Travel #{} certification was rejected.'.format(self.id))
+        self.send_notification_email('Travel #{} certification was rejected.'.format(self.id),
+                                     self.traveler.email,
+                                     'emails/certificate_rejected.html')
 
     @transition(status, source=[CERTIFICATION_APPROVED, SENT_FOR_PAYMENT],
                 target=CERTIFIED)
     def mark_as_certified(self):
-        pass
+        self.send_notification_email('Travel #{} certification was certified.'.format(self.id),
+                                     self.traveler.email,
+                                     'emails/certified.html')
 
     @transition(status, source=[CERTIFIED, SUBMITTED], target=COMPLETED,
                 conditions=[check_completion_conditions])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
+        self.send_notification_email('Travel #{} was completed.'.format(self.id),
+                                     self.supervisor.email,
+                                     'emails/trip_completed.html')
 
     @transition(status, target=PLANNED)
     def reset_status(self):
         pass
+    def send_notification_email(self, recipient, subject, template_name):
+        from t2f.serializers.mailing import TravelMailSerializer
+        serializer = TravelMailSerializer(self, context={})
 
-    def send_notification(self, message):
-        # TODO do this
-        pass
-        # send_mail('Travel #{} state changed'.format(self.id),
-        #           message,
-        #           'simon+test@pulilab.com',
-        #           ['simon+test@pulilab.com', 'nico+test@pulilab.com'],
-        #           fail_silently=False)
+        url = reverse('t2f:travels:details:index', kwargs={'travel_pk': self.id})
+        approve_url = reverse('t2f:travels:details:state_change', kwargs={'travel_pk': self.id,
+                                                                          'transition_name': 'approve'})
+        approve_certification_url = reverse('t2f:travels:details:state_change',
+                                            kwargs={'travel_pk': self.id,
+                                                    'transition_name': 'approve_certificate'})
+        context = Context({'travel': serializer.data,
+                           # TODO fix this to be absolute
+                           'url': url,
+                           'approve_url': approve_url,
+                           'approve_certification_url': approve_certification_url})
+        html_content = render_to_string(template_name, context)
+
+
+        # TODO what should be used?
+        sender = ''
+        msg = EmailMultiAlternatives(subject, '',
+                                     sender, [recipient])
+        msg.attach_alternative(html_content, 'text/html')
+
+        for filename in ['emails/logo-etools.png', 'emails/logo-unicef.png']:
+            path = finders.find(filename)
+            with open(path, 'rb') as fp:
+                msg_img = MIMEImage(fp.read())
+
+            msg_img.add_header('Content-ID', '<{}>'.format(filename))
+            msg.attach(msg_img)
+
+        msg.send(fail_silently=False)
 
 
 class TravelActivity(models.Model):

@@ -54,11 +54,17 @@ class CostSummaryCalculator(object):
         return {d.date: d for d in self.travel.deductions.all()}
 
     def get_cost_summary(self):
+        expenses = self._total_expenses.quantize(Decimal('1.0000'))
+        if self.travel.preserved_expenses is not None:
+            expenses_delta = self.travel.preserved_expenses - expenses
+        else:
+            expenses_delta = Decimal(0)
         result = {'dsa_total': self._dsa_total.quantize(Decimal('1.0000')),
-                  'expenses_total': self._total_expenses.quantize(Decimal('1.0000')),
+                  'expenses_total': expenses,
                   'deductions_total': self._total_deductions.quantize(Decimal('1.0000')),
                   'dsa': self._dsa_data,
-                  'preserved_expenses': self.travel.preserved_expenses}
+                  'preserved_expenses': self.travel.preserved_expenses,
+                  'expenses_delta': expenses_delta}
         return result
 
     def calculate_cost_summary(self):
