@@ -87,12 +87,45 @@ CSO_TYPES = Choices(
 class PartnerOrganization(AdminURLMixin, models.Model):
     """
     Represents a partner organization
-    """
 
+    related models:
+        Assesment: "assesments"
+        PartnerStaffMember: "staff_members"
+
+
+    """
+    AGENCY_CHOICES = Choices(
+        ('DPKO', 'DPKO'),
+        ('ECA', 'ECA'),
+        ('ECLAC', 'ECLAC'),
+        ('ESCWA', 'ESCWA'),
+        ('FAO', 'FAO'),
+        ('ILO', 'ILO'),
+        ('IOM', 'IOM'),
+        ('OHCHR', 'OHCHR'),
+        ('UN', 'UN'),
+        ('Women', 'Women'),
+        ('UNAIDS', 'UNAIDS'),
+        ('UNDP', 'UNDP'),
+        ('UNESCO', 'UNESCO'),
+        ('UNFPA', 'UNFPA'),
+        ('UN - Habitat', 'UN - Habitat'),
+        ('UNHCR', 'UNHCR'),
+        ('UNODC', 'UNODC'),
+        ('UNOPS', 'UNOPS'),
+        ('UNRWA', 'UNRWA'),
+        ('UNSC', 'UNSC'),
+        ('UNU', 'UNU'),
+        ('WB', 'WB'),
+        ('WFP', 'WFP'),
+        ('WHO', 'WHO')
+    )
     partner_type = models.CharField(
         max_length=50,
         choices=PartnerType.CHOICES
     )
+
+    # this is only applicable if type is CSO
     cso_type = models.CharField(
         max_length=50,
         choices=CSO_TYPES,
@@ -112,6 +145,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=256L,
         blank=True
     )
+    shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True)
+
+    # TODO remove this after migration to shared_with + add calculation to hact_field
     shared_partner = models.CharField(
         help_text=u'Partner shared with UNDP or UNFPA?',
         choices=Choices(
@@ -123,10 +159,31 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         default=u'No',
         max_length=50
     )
+    street_address = models.CharField(
+        max_length=500L,
+        blank=True, null=True
+    )
+    city = models.CharField(
+        max_length=32L,
+        blank=True, null=True
+    )
+    postal_code = models.CharField(
+        max_length=32L,
+        blank=True, null=True
+    )
+    country = models.CharField(
+        max_length=32L,
+        blank=True, null=True
+    )
+
+    # TODO: remove this when migration to the new fields is done. check for references
+    # BEGIN REMOVE
     address = models.TextField(
         blank=True,
         null=True
     )
+    # END REMOVE
+
     email = models.CharField(
         max_length=255,
         blank=True, null=True
@@ -135,6 +192,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=32L,
         blank=True, null=True
     )
+
+
     vendor_number = models.CharField(
         blank=True,
         null=True,
@@ -184,7 +243,18 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         decimal_places=2, max_digits=12, blank=True, null=True,
         help_text='Total Cash Transferred per Current Year'
     )
+
+    # TODO: add shared partner on hact_values: boolean, yes if shared with any of: [UNDP, UNFPA]
+    #     {"audits_done": 0,
+    #     "planned_visits": 0,
+    #     "spot_checks": 0,
+    #     "programmatic_visits": 0,
+    #     "follow_up_flags": 0,
+    #     "planned_cash_transfer": 0,
+    #     "micro_assessment_needed": "Missing",
+    #     "audits_mr": 0}
     hact_values = JSONField(blank=True, null=True, default={})
+
 
     class Meta:
         ordering = ['name']
@@ -462,7 +532,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
-
+        '''
+        Used for UNI_SUPPLY
+        '''
         if instance.short_name and instance.alternate_name:
             set_unisupply_user.delay(
                 instance.short_name,
@@ -478,6 +550,10 @@ class PartnerStaffMember(models.Model):
     A User is created for each staff member
 
     Relates to :model:`partners.PartnerOrganization`
+
+    related models:
+        Agreement: "agreement_authorizations" (m2m - all agreements this user is authorized for)
+        Agreement: "agreements_signed" (refers to all the agreements this user signed)
     """
 
     partner = models.ForeignKey(PartnerOrganization, related_name='staff_members')
@@ -501,6 +577,7 @@ class PartnerStaffMember(models.Model):
             self.partner.name
         )
 
+    # TODO: instead of signals we need this transactional
     def reactivate_signal(self):
         # sends a signal to activate the user
         post_save.send(PartnerStaffMember, instance=self, created=True)
@@ -522,6 +599,16 @@ class PartnerStaffMember(models.Model):
         return super(PartnerStaffMember, self).save(**kwargs)
 
 
+def get_assesment_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_organizations',
+         str(instance.partner.id),
+         'assesments',
+         str(instance.id),
+         filename]
+    )
 class Assessment(models.Model):
     """
     Represents an assessment for a partner organization.
@@ -585,10 +672,12 @@ class Assessment(models.Model):
         choices=RISK_RATINGS,
         default=HIGH,
     )
+    # Assesment Report
     report = models.FileField(
         blank=True, null=True,
-        upload_to='assessments'
+        upload_to=get_assesment_path
     )
+    # Basis for Risk Rating
     current = models.BooleanField(
         default=False,
         verbose_name=u'Basis for risk rating'
@@ -632,6 +721,8 @@ def get_agreement_path(instance, filename):
     return '/'.join(
         [connection.schema_name,
          'file_attachments',
+         'partner_organization',
+         str(instance.partner.id),
          'agreements',
          str(instance.id),
          filename]
@@ -684,7 +775,7 @@ class Agreement(TimeStampedModel):
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
         blank=True,
-        related_name="agreements")
+        related_name="agreement_authorizations")
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES
@@ -702,17 +793,21 @@ class Agreement(TimeStampedModel):
     end = models.DateField(null=True, blank=True)
 
     signed_by_unicef_date = models.DateField(null=True, blank=True)
+
     # Unicef staff members that sign the agreemetns
     # this user needs to be in the partnership management group
     signed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='signed_pcas',
+        related_name='signed_agreements',
         null=True, blank=True
     )
 
     signed_by_partner_date = models.DateField(null=True, blank=True)
+
+    # Signatory on behalf of the PartnerOrganization
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
+        related_name='agreements_signed',
         verbose_name=u'Signed by partner',
         chained_field="partner",
         chained_model_field="partner",
@@ -795,10 +890,8 @@ class Agreement(TimeStampedModel):
             if self.amendments_log.last() else ''
         )
 
-    @transaction.atomic
-    def save(self, **kwargs):
-        # TODO: figure out reference number
 
+    def update_reference_number(self, **kwargs):
         # # commit the reference number to the database once the agreement is signed
         # if self.status != Agreement.DRAFT and self.signed_by_unicef_date and not self.agreement_number:
         #     self.agreement_number = self.reference_number
@@ -813,16 +906,6 @@ class Agreement(TimeStampedModel):
         #     if cp:
         #         self.end = cp.to_date
 
-        if self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
-            interventions = PCA.objects.filter(
-                                partner_id=self.partner.id,
-                                agreement_id=self.id,
-                                partnership_type__in=[PCA.PD, PCA.SHPD])
-            for item in interventions:
-                if item.status != self.status:
-                    item.status = self.status
-                    item.save()
-
         # to create a reference number we need a pk
         if not self.pk:
             super(Agreement, self).save(**kwargs)
@@ -830,6 +913,34 @@ class Agreement(TimeStampedModel):
 
         if self.status not in [self.CANCELLED, self.DRAFT] and self.agreement_number.startswith('TempRef'):
             self.agreement_number = self.reference_number
+
+    def update_related_interventions(self, **kwargs):
+        '''
+        When suspending or terminating an agreement we need to suspend or terminate all interventions related
+        this should only be called in a transaction with agreement save
+        '''
+
+        if self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
+            interventions = self.interventions.filter(
+                partnership_type__in=[Intervention.PD, Intervention.SHPD]
+            )
+            for item in interventions:
+                if item.status != self.status:
+                    item.status = self.status
+                    item.save()
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        # TODO: figure out reference number
+
+        if self.pk:
+            # load from DB
+            old_agreement = Agreement.objects.get(pk=self.pk)
+            if old_agreement.status != self.status:
+                self.update_related_interventions()
+        # Update interventions if needed
+
+
 
         super(Agreement, self).save(**kwargs)
 
@@ -842,7 +953,10 @@ class BankDetails(models.Model):
     Relates to :model:`partners.AgreementAmendmentLog`
     """
 
+    #TODO: remove agreement field when possible since we're adding it on the partner Org
     agreement = models.ForeignKey(Agreement, related_name='bank_details')
+
+    partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details')
     bank_name = models.CharField(max_length=255, null=True, blank=True)
     bank_address = models.CharField(
         max_length=256L,
@@ -857,6 +971,8 @@ class BankDetails(models.Model):
         help_text='Routing Details, including SWIFT/IBAN (if applicable)'
     )
     bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
+    # TODO: remove this field as amendments are handled differently
     amendment = models.ForeignKey(
         'AgreementAmendmentLog',
         blank=True, null=True,
@@ -1385,7 +1501,9 @@ class Intervention(AdminURLMixin, models.Model):
         verbose_name=u'Document type'
     )
     agreement = models.ForeignKey(
-        Agreement, blank=True, null=True,
+        Agreement,
+        related_name='interventions',
+        blank=True, null=True,
     )
     hrp = models.ForeignKey(
         ResultStructure,
