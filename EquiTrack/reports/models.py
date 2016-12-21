@@ -355,6 +355,7 @@ class Indicator(models.Model):
     Relates to :model:`reports.ResultStructure`
     Relates to :model:`reports.Sector`
     Relates to :model:`reports.Result`
+    Relates to :model:`activityinfo.Indicator`
     """
     # TODO: rename this to RAMIndicator and rename/remove RAMIndicator
 
@@ -384,6 +385,12 @@ class Indicator(models.Model):
     ram_indicator = models.BooleanField(default=False)
 
     view_on_dashboard = models.BooleanField(default=False)
+
+    in_activity_info = models.BooleanField(default=False)
+    activity_info_indicators = models.ManyToManyField(
+        'activityinfo.Indicator',
+        blank=True
+    )
 
     class Meta:
         ordering = ['name']
