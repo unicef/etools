@@ -172,6 +172,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         help_text=u'Only required for CSO partners'
     )
     vision_synced = models.BooleanField(default=False)
+    blocked = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     deleted_flag = models.BooleanField(default=False, verbose_name=u'Marked for deletion')
 
@@ -637,6 +638,12 @@ def get_agreement_path(instance, filename):
     )
 
 
+class AgreementManager(models.Manager):
+    def get_queryset(self):
+        return super(AgreementManager, self).get_queryset().select_related('partner')
+
+
+
 class Agreement(TimeStampedModel):
     """
     Represents an agreement with the partner organization.
@@ -653,11 +660,31 @@ class Agreement(TimeStampedModel):
         (PCA, u"Programme Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
+        # TODO Remove these two with data migration
         (IC, u'Institutional Contract'),
         (AWP, u"Work Plan"),
     )
 
+    DRAFT = "draft"
+    CANCELLED = "cancelled"
+    ACTIVE = "active"
+    ENDED = "ended"
+    SUSPENDED = "suspended"
+    TERMINATED = "terminated"
+    STATUS_CHOICES = (
+        (DRAFT, "Draft"),
+        (DRAFT, "Cancelled"),
+        (ACTIVE, "Active"),
+        (ENDED, "Ended"),
+        (SUSPENDED, "Suspended"),
+        (TERMINATED, "Terminated"),
+    )
+
     partner = models.ForeignKey(PartnerOrganization)
+    authorized_officers = models.ManyToManyField(
+        PartnerStaffMember,
+        blank=True,
+        related_name="agreements")
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES
@@ -675,6 +702,8 @@ class Agreement(TimeStampedModel):
     end = models.DateField(null=True, blank=True)
 
     signed_by_unicef_date = models.DateField(null=True, blank=True)
+    # Unicef staff members that sign the agreemetns
+    # this user needs to be in the partnership management group
     signed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name='signed_pcas',
@@ -692,6 +721,16 @@ class Agreement(TimeStampedModel):
         blank=True, null=True,
     )
 
+    # TODO: Write a script that sets a status to each existing record
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=STATUS_CHOICES,
+    )
+
+    # TODO REMOVE THIS FROM THE MODEL SINCE WE HAVE BankDetails
+    # START REMOVE
+    # Write migration scripts to move the details over
     # bank information
     bank_name = models.CharField(max_length=255, null=True, blank=True)
     bank_address = models.CharField(
@@ -706,6 +745,12 @@ class Agreement(TimeStampedModel):
         help_text='Routing Details, including SWIFT/IBAN (if applicable)'
     )
     bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
+    # END REMOVE
+
+
+    view_objects = AgreementManager()
+    objects = models.Manager()
 
     def __unicode__(self):
         return u'{} for {} ({} - {})'.format(
@@ -727,14 +772,16 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.agreement_number:
-            number = self.agreement_number
+        if self.status in [self.DRAFT, self.CANCELLED]:
+            number = 'TempRef:{}'.format(self.id)
         else:
-            objects = list(Agreement.objects.filter(
+            agreements_count = Agreement.objects.filter(
+                status__in=[self.ACTIVE, self.SUSPENDED, self.TERMINATED, self.ENDED],
                 created__year=self.year,
                 agreement_type=self.agreement_type
-            ).order_by('created').values_list('id', flat=True))
-            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            ).count()
+
+            sequence = '{0:02d}'.format(agreements_count+1)
             number = u'{code}/{type}{year}{seq}'.format(
                 code=connection.tenant.country_short_code or '',
                 type=self.agreement_type,
@@ -743,14 +790,45 @@ class Agreement(TimeStampedModel):
             )
         return u'{}{}'.format(
             number,
+            # TODO: amendments_log.last() might return an amendment that has a lower ref number
             u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
             if self.amendments_log.last() else ''
         )
 
+    @transaction.atomic
     def save(self, **kwargs):
+        # TODO: figure out reference number
 
-        # commit the reference number to the database once the agreement is signed
-        if self.signed_by_unicef_date and not self.agreement_number:
+        # # commit the reference number to the database once the agreement is signed
+        # if self.status != Agreement.DRAFT and self.signed_by_unicef_date and not self.agreement_number:
+        #     self.agreement_number = self.reference_number
+
+        if self.status == Agreement.DRAFT and self.start and self.end and \
+                self.signed_by_unicef_date and self.signed_by_partner_date and \
+                self.signed_by and self.partner_manager:
+            self.status = Agreement.ACTIVE
+
+        # if self.agreement_type == Agreement.PCA and not self.end:
+        #     cp = CountryProgramme.current()
+        #     if cp:
+        #         self.end = cp.to_date
+
+        if self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
+            interventions = PCA.objects.filter(
+                                partner_id=self.partner.id,
+                                agreement_id=self.id,
+                                partnership_type__in=[PCA.PD, PCA.SHPD])
+            for item in interventions:
+                if item.status != self.status:
+                    item.status = self.status
+                    item.save()
+
+        # to create a reference number we need a pk
+        if not self.pk:
+            super(Agreement, self).save(**kwargs)
+            self.agreement_number = self.reference_number
+
+        if self.status not in [self.CANCELLED, self.DRAFT] and self.agreement_number.startswith('TempRef'):
             self.agreement_number = self.reference_number
 
         super(Agreement, self).save(**kwargs)
@@ -796,7 +874,6 @@ class AuthorizedOfficer(models.Model):
 
     agreement = models.ForeignKey(
         Agreement,
-        related_name='authorized_officers'
     )
     officer = models.ForeignKey(
         PartnerStaffMember
@@ -821,9 +898,7 @@ class AuthorizedOfficer(models.Model):
             cls.objects.create(agreement=instance,
                                officer=instance.partner_manager)
 
-
 post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
-
 
 class PCA(AdminURLMixin, models.Model):
     """
@@ -841,11 +916,15 @@ class PCA(AdminURLMixin, models.Model):
     ACTIVE = u'active'
     IMPLEMENTED = u'implemented'
     CANCELLED = u'cancelled'
+    SUSPENDED = u'suspended'
+    TERMINATED = u'terminated'
     PCA_STATUS = (
         (IN_PROCESS, u"In Process"),
         (ACTIVE, u"Active"),
         (IMPLEMENTED, u"Implemented"),
         (CANCELLED, u"Cancelled"),
+        (SUSPENDED, u"Suspended"),
+        (TERMINATED, u"Terminated"),
     )
     PD = u'PD'
     SHPD = u'SHPD'
@@ -1065,6 +1144,7 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def reference_number(self):
+
         if self.partnership_type in [Agreement.SSFA, Agreement.MOU]:
             number = self.agreement.reference_number
         elif self.number:
@@ -1077,7 +1157,7 @@ class PCA(AdminURLMixin, models.Model):
             ).order_by('created_at').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
             number = u'{agreement}/{type}{year}{seq}'.format(
-                agreement=self.agreement.reference_number if self.id and self.agreement else '',
+                agreement=self.agreement.reference_number.split("-")[0] if self.id and self.agreement else '',
                 type=self.partnership_type,
                 year=self.year,
                 seq=sequence
@@ -1406,6 +1486,20 @@ class AmendmentLog(TimeStampedModel):
         return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
 
 
+def get_ageement_amd_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_org',
+         str(instance.agreement.partner.id),
+         'agreements',
+         str(instance.agreement.id),
+         'amendments',
+         str(instance.id),
+         filename]
+    )
+
+
 class AgreementAmendmentLog(TimeStampedModel):
     """
     Represents an amendment log for the partner agreement.
@@ -1423,7 +1517,13 @@ class AgreementAmendmentLog(TimeStampedModel):
             'Additional Clauses',
         ))
     amended_at = models.DateField(null=True, verbose_name='Signed At')
+
     amendment_number = models.IntegerField(default=0)
+
+    signed_document = models.FileField(
+        max_length=255,
+        upload_to=get_ageement_amd_file_path
+    )
     status = models.CharField(
         max_length=32L,
         blank=True,
@@ -1644,6 +1744,10 @@ def get_file_path(instance, filename):
     return '/'.join(
         [connection.schema_name,
          'file_attachments',
+         'partner_org',
+         str(instance.pca.agreement.partner.id),
+         'agreements',
+         str(instance.pca.agreement.id),
          'interventions',
          str(instance.pca.id),
          filename]
