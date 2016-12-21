@@ -37,6 +37,9 @@ class FakePermissionMatrix(PermissionMatrix):
     def has_permission(self, permission_type, model_name, field_name):
         return True
 
+    def get_permission_dict(self):
+        return {}
+
 
 class CostSummaryCalculator(object):
     def __init__(self, travel):

@@ -159,6 +159,10 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
 
     def get_serializer_context(self):
         context = super(TravelAttachmentViewSet, self).get_serializer_context()
+        # TODO: figure out a better solution for this:
+        # Hack to prevent swagger from crashing
+        if 'travel_pk' not in self.kwargs:
+            return context
         # TODO filter out the travels which cannot be edited (permission check)
         queryset = Travel.objects.all()
         travel = get_object_or_404(queryset, pk=self.kwargs['travel_pk'])
