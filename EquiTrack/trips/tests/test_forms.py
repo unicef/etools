@@ -1,5 +1,3 @@
-__author__ = 'unicef-leb-inn'
-
 from datetime import timedelta, datetime
 from django.db.models.fields.related import ManyToManyField
 

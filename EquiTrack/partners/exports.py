@@ -1,125 +1,25 @@
-__author__ = 'jcranwellward'
+from partners.models import GovernmentIntervention
 
-# import tablib
-# import tempfile
-# import zipfile
-# import datetime
-# from pytz import timezone
-# from lxml import etree
+__author__ = 'jcranwellward'
 
 try:
     from cStringIO import StringIO
 except ImportError:
     from StringIO import StringIO
 
-from collections import OrderedDict as SortedDict
+from collections import OrderedDict
 
 from import_export import resources
-# from import_export.formats.base_formats import Format
-
-# import fiona
-# from shapely.geometry import Point, mapping
-# from pykml.factory import KML_ElementMaker as KML
 
 from EquiTrack.utils import BaseExportResource
-# from locations.models import Location
 from .models import (
     PCA,
-    GwPCALocation,
     PartnerOrganization,
     PartnershipBudget,
-    AmendmentLog
+    AmendmentLog,
+    PartnerType,
+    Agreement
 )
-
-# TODO: Following export has been disabled until formats content is reviewed
-# class SHPFormat(Format):
-#
-#     def get_title(self):
-#         return 'shp'
-#
-#     def prepare_shapefile(self, dataset):
-#
-#         tmp = tempfile.NamedTemporaryFile(suffix='.shp', mode='w')
-#         # we must close the file for GDAL to be able to open and write to it
-#         tmp.close()
-#
-#         attributes = {}
-#         for key in dataset.headers:
-#             attributes[key] = 'str'
-#
-#         schema = {'geometry': 'Point', 'properties': attributes}
-#         with fiona.open(tmp.name, 'w', 'ESRI Shapefile', schema) as output:
-#
-#             for data in dataset.dict:
-#
-#                 point = Point(data['x'], data['y'])
-#                 output.write({'properties': data, 'geometry': mapping(point)})
-#
-#         return tmp.name
-#
-#     def zip_response(self, shapefile_path, file_name, readme=None):
-#
-#         buffer = StringIO()
-#         zip = zipfile.ZipFile(buffer, 'a', zipfile.ZIP_DEFLATED)
-#         files = ['shp', 'shx', 'dbf']
-#         for item in files:
-#             filename = '{}.{}'.format(shapefile_path.replace('.shp', ''), item)
-#             zip.write(filename, arcname='{}.{}'.format(file_name.replace('.shp', ''), item))
-#         if readme:
-#             zip.writestr('README.txt', readme)
-#         zip.close()
-#
-#         buffer.seek(0)
-#         return buffer.read()
-#
-#     def get_extension(self):
-#         """
-#         Returns extension for this format files.
-#         """
-#         return "zip"
-#
-#     def can_export(self):
-#         return True
-#
-
-# TODO: Following export has been disabled until formats content is reviewed
-# class DonorsFormat(SHPFormat):
-#
-#     def get_title(self):
-#         return 'by donors'
-#
-#     def export_data(self, dataset):
-#
-#         locs = []
-#
-#         if dataset.csv != '':
-#             pcas = PCA.objects.filter(
-#                 id__in=dataset['ID']
-#             )
-#             for pca in pcas:
-#                 donors = set(pca.pcagrant_set.all().values_list('grant__donor__name', flat=True))
-#                 for loc in pca.locations.filter(location__point__isnull=False):
-#                     locs.append(
-#                         {
-#                             'Donors': ', '.join([d for d in donors]),
-#                             'Gateway Type': loc.location.gateway.name,
-#                             'PCode': loc.location.p_code,
-#                             'Locality': loc.locality.name,
-#                             'Cad Code': loc.locality.cad_code,
-#                             'x': loc.location.point.x,
-#                             'y': loc.location.point.y
-#                         }
-#                     )
-#
-#         data = tablib.Dataset(headers=locs[0].keys()) if locs \
-#             else tablib.Dataset(headers=['Donors', 'Gateway Type', 'Locality', 'PCode', 'y', 'x', 'Cad Code'])
-#
-#         for loc in {v['PCode']: v for v in locs}.values():
-#             data.append(loc.values())
-#
-#         shpfile = self.prepare_shapefile(data)
-#         return self.zip_response(shpfile, 'Donors')
-
 
 class PartnerResource(resources.ModelResource):
 
@@ -134,9 +34,9 @@ class PCAResource(BaseExportResource):
 
     def fill_pca_grants(self, row, pca):
 
-        for num, grant in enumerate(pca.pcagrant_set.all()):
+        for num, grant in enumerate(pca.grants.all()):
             num += 1
-            values = SortedDict()
+            values = OrderedDict()
 
             self.insert_column(values, 'Donor {}'.format(num), grant.grant.donor.name)
             self.insert_column(values, 'Grant {}'.format(num), grant.grant.name)
@@ -152,7 +52,7 @@ class PCAResource(BaseExportResource):
         sector_name = sector.sector.name
         for num, output in enumerate(sector.pcasectoroutput_set.all()):
             num += 1
-            values = SortedDict()
+            values = OrderedDict()
 
             self.insert_column(values, '{} RRP output {}'.format(sector_name, num), output.output.name)
 
@@ -167,7 +67,7 @@ class PCAResource(BaseExportResource):
         sector_name = sector.sector.name
         for num, goal in enumerate(sector.pcasectorgoal_set.all()):
             num += 1
-            values = SortedDict()
+            values = OrderedDict()
 
             self.insert_column(values, '{} CCC {}'.format(sector_name, num), goal.goal.name)
 
@@ -182,7 +82,7 @@ class PCAResource(BaseExportResource):
         sector_name = sector.sector.name
         for num, indicator in enumerate(sector.indicatorprogress_set.all()):
             num += 1
-            values = SortedDict()
+            values = OrderedDict()
 
             self.insert_column(values, '{} Indicator {}'.format(sector_name, num), indicator.indicator.name)
             self.insert_column(values, '{} Unit {}'.format(sector_name, num), indicator.unit())
@@ -206,7 +106,7 @@ class PCAResource(BaseExportResource):
 
         for num, wbs in enumerate(wbs_set):
             num += 1
-            values = SortedDict()
+            values = OrderedDict()
 
             self.insert_column(values, '{} WBS/Activity {}'.format(sector_name, num), wbs)
 
@@ -221,7 +121,7 @@ class PCAResource(BaseExportResource):
         sector_name = sector.sector.name
         for num, activity in enumerate(sector.pcasectoractivity_set.all()):
             num += 1
-            values = SortedDict()
+            values = OrderedDict()
 
             self.insert_column(values, '{} Activity {}'.format(sector_name, num), activity.activity.name)
 
@@ -316,3 +216,162 @@ class PCAResource(BaseExportResource):
         #     self.fill_sector_wbs(row, sector)
         #     self.fill_sector_activities(row, sector)
 
+
+# ---- NEW EXPORTS STARTS HERE ----
+
+class PartnerExport(resources.ModelResource):
+    risk_rating = resources.Field()
+    agreement_count = resources.Field()
+    intervention_count = resources.Field()
+    active_staff_members = resources.Field()
+
+    class Meta:
+        model = PartnerOrganization
+        # TODO add missing fields:
+        #   Blocked Flag (new property)
+        #   Bank Info (just the number of accounts synced from VISION)
+        fields = ('vendor_number', 'vision_synced', 'deleted_flag', 'name', 'short_name', 'alternate_id',
+                  'alternate_name', 'partner_type', 'cso_type', 'shared_partner', 'address', 'email', 'phone_number',
+                  'risk_rating', 'type_of_assessment', 'last_assessment_date', 'total_ct_cp', 'total_ct_cy',
+                  'agreement_count', 'intervention_count', 'active_staff_members')
+        export_order = fields
+
+    def dehydrate_risk_rating(self, partner_organization):
+        return partner_organization.rating
+
+    def dehydrate_agreement_count(self, partner_organization):
+        return partner_organization.agreement_set.count()
+
+    def dehydrate_intervention_count(self, partner_organization):
+        if partner_organization.partner_type == PartnerType.GOVERNMENT:
+            return partner_organization.work_plans.count()
+        return partner_organization.documents.count()
+
+    def dehydrate_active_staff_members(self, partner_organization):
+        return ', '.join([sm.get_full_name() for sm in partner_organization.staff_members.all()])
+
+
+class AgreementExport(resources.ModelResource):
+    reference_number = resources.Field()
+    signed_by_partner = resources.Field()
+    signed_by_unicef = resources.Field()
+    authorized_officers = resources.Field()
+    start_date = resources.Field()
+    end_date = resources.Field()
+
+    class Meta:
+        model = Agreement
+        # TODO add missing fields:
+        #   Attached Signed Agreement Link
+        #   Amendments (comma separated list of amended fields)
+        fields = ('reference_number', 'partner__vendor_number', 'partner__name', 'partner__short_name',
+                  'start_date', 'end_date', 'signed_by_partner', 'signed_by_partner_date',
+                  'signed_by_unicef', 'signed_by_unicef_date', 'authorized_officers')
+        export_order = fields
+
+    def dehydrate_reference_number(self, agreement):
+        return agreement.reference_number
+
+    def dehydrate_signed_by_partner(self, agreement):
+        if agreement.partner_manager:
+            return agreement.partner_manager.get_full_name()
+        return None
+
+    def dehydrate_signed_by_unicef(self, agreement):
+        if agreement.signed_by:
+            return agreement.signed_by.get_full_name()
+        return ''
+
+    def dehydrate_authorized_officers(self, agreement):
+        names = [ao.officer.get_full_name() for ao in agreement.authorized_officers.all()]
+        return ', '.join(names)
+
+    def dehydrate_start_date(self, agreement):
+        return agreement.start
+
+    def dehydrate_end_date(self, agreement):
+        return agreement.end
+
+
+class InterventionExport(resources.ModelResource):
+    reference_number = resources.Field()
+    locations = resources.Field()
+    sectors = resources.Field()
+    partner_manager_name = resources.Field()
+    unicef_manager_name = resources.Field()
+    supplies = resources.Field()
+    days_from_submission_to_signed = resources.Field()
+    days_from_review_to_signed = resources.Field()
+    total_unicef_cash = resources.Field()
+    total_budget = resources.Field()
+
+    class Meta:
+        model = PCA
+        # TODO add missin fields:
+        #   UNICEF Office (new property)
+        #   Completed Visits (# of completed trips)
+        #   FR Numbers (comma separated)
+        #   Number of Active Action Points
+        fields = ('title', 'reference_number', 'status', 'partner__name', 'partnership_type', 'sectors', 'start_date',
+                  'end_date', 'result_structure__name', 'locations', 'initiation_date', 'submission_date',
+                  'review_date', 'days_from_submission_to_signed', 'days_from_review_to_signed',
+                  'signed_by_partner_date', 'partner_manager_name', 'signed_by_unicef_date', 'unicef_manager_name',
+                  'total_unicef_cash', 'supplies', 'total_budget', 'planned_visits')
+        export_order = fields
+
+    def dehydrate_reference_number(self, intervention):
+        return intervention.reference_number
+
+    def dehydrate_locations(self, intervention):
+        location_names = [l.location.name for l in intervention.locations.all() if l.location]
+        return ', '.join(location_names)
+
+    def dehydrate_sectors(self, intervention):
+        return intervention.sector_names
+
+    def dehydrate_partner_manager_name(self, intervention):
+        if intervention.partner_manager:
+            return intervention.partner_manager.get_full_name()
+        return ''
+
+    def dehydrate_unicef_manager_name(self, intervention):
+        if intervention.unicef_manager:
+            return intervention.unicef_manager.get_full_name()
+        return ''
+
+    def dehydrate_supplies(self, intervention):
+        supply_names = [sp.item.name for sp in intervention.supply_plans.all()]
+        return ', '.join(supply_names)
+
+    def dehydrate_days_from_submission_to_signed(self, intervention):
+        return intervention.days_from_submission_to_signed
+
+    def dehydrate_days_from_review_to_signed(self, intervention):
+        return intervention.days_from_review_to_signed
+
+    def dehydrate_total_unicef_cash(self, intervention):
+        return intervention.total_unicef_cash
+
+    def dehydrate_total_budget(self, intervention):
+        return intervention.total_budget
+
+
+class GovernmentExport(resources.ModelResource):
+    sectors = resources.Field()
+    cash_transfer = resources.Field()
+    year = resources.Field()
+
+    class Meta:
+        model = GovernmentIntervention
+        fields = ('number', 'partner__name', 'result_structure__name', 'sectors', 'cash_transfer',
+                  'year')
+        export_order = fields
+
+    def dehydrate_sectors(self, government):
+        return ''
+
+    def dehydrate_cash_transfer(self, government):
+        return sum([r.planned_amount for r in government.results.all()])
+
+    def dehydrate_year(self, government):
+        return government.result_structure.to_date.year

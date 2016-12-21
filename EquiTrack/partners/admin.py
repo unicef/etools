@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-__author__ = 'jcranwellward'
+from partners.exports import PartnerExport, GovernmentExport, InterventionExport, AgreementExport
 
 from django.db import connection
 from django.contrib import admin
@@ -48,7 +48,9 @@ from .models import (
     AgreementAmendmentLog,
     GovernmentIntervention,
     GovernmentInterventionResult,
-    IndicatorDueDates
+    IndicatorDueDates,
+    IndicatorReport,
+
 )
 from .filters import (
     PCASectorFilter,
@@ -261,7 +263,7 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
 
 class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
     form = PartnershipForm
-    resource_class = PCAResource
+    resource_class = InterventionExport
     # Add custom exports
     formats = (
         base_formats.CSV,
@@ -459,7 +461,8 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
         )
 
 
-class GovernmentInterventionAdmin(admin.ModelAdmin):
+class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
+    resource_class = GovernmentExport
     fieldsets = (
         (_('Government Intervention Details'), {
             'fields':
@@ -574,7 +577,7 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
-    resource_class = PartnerResource
+    resource_class = PartnerExport
     search_fields = (
         u'name',
         u'vendor_number',
@@ -709,7 +712,8 @@ class BankDetailsInlineAdmin(admin.StackedInline):
     extra = 1
 
 
-class AgreementAdmin(HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
+class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
+    resource_class = AgreementExport
     form = AgreementForm
     list_filter = (
         u'partner',
@@ -818,3 +822,4 @@ admin.site.register(FileType)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
+admin.site.register(IndicatorReport)

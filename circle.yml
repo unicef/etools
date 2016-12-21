@@ -1,32 +1,32 @@
- machine:
+machine:
    services:
      - docker
      - postgresql
      - redis
 
- dependencies:
-   cache_directories:
-     - "~/docker"
-     - "wheelhouse"
-     - "node_modules"
+dependencies:
+  cache_directories:
+    - "~/docker"
 
-   override:
-     - if [[ -e ~/docker/base_image.tar ]]; then docker load -i ~/docker/base_image.tar; fi
-     - docker build -t unicef/etools:base -f etools-base.docker .
-     - mkdir -p ~/docker; docker save unicef/etools:base > ~/docker/base_image.tar
-     - if [[ -e ~/docker/buildbase_image.tar ]]; then docker load -i ~/docker/buildbase_image.tar; fi
-     - docker build -t unicef/etools:buildbase -f etools-build-base.docker .
-     - docker save unicef/etools:buildbase > ~/docker/buildbase_image.tar
-     - docker build -t unicef/etools:builder -f etools-build.docker .
-     - docker run --rm -v "$(pwd)":/application -v "$(pwd)"/wheelhouse:/wheelhouse -v "$(pwd)"/node_modules:/node_modules -e "CIRCLE_BRANCH=$CIRCLE_BRANCH" unicef/etools:builder
-     - docker build -t unicef/etools:$CIRCLE_BRANCH -f etools-run.docker .
+  override:
+    # https://discuss.circleci.com/t/request-postgres-9-5/2611/2
+    # Just to be 100% certian you are using 9.5, and save a bit of memory.
+#    - sudo service postgresql stop 9.4
+#
+#    # The 9.4 instance has been configured to work with Docker. Just
+#    # copy that over to 9.5 and restart.
+#    - sudo cp -v /etc/postgresql/9.{4,5}/main/pg_hba.conf && sudo service postgresql restart 9.5
 
- test:
+    - if [[ -e ~/docker/image.tar ]]; then docker load -i ~/docker/image.tar; fi
+    - docker build --rm=false -t unicef/etools:$CIRCLE_BRANCH .
+    - mkdir -p ~/docker; docker save unicef/etools > ~/docker/image.tar
+
+test:
    pre: # bootstrap postgres to accept connections from our container
      - sudo bash -c "echo \"listen_addresses = '*'\" >>
-       /etc/postgresql/9.4/main/postgresql.conf" #9.4 works only on CI Ubuntu 12.04
+       /etc/postgresql/9.5/main/postgresql.conf"  # 9.4 works only on CI Ubuntu 12.04
      - sudo bash -c "echo \"host all all 0.0.0.0/0 trust\" >>
-       /etc/postgresql/9.4/main/pg_hba.conf"
+       /etc/postgresql/9.5/main/pg_hba.conf"
      - sudo /etc/init.d/postgresql restart
      - psql -d template1 -c 'create extension hstore;' # needed for django hstore
    override:
@@ -34,7 +34,7 @@
        docker run -it -e "DATABASE_URL=postgis://ubuntu@docker:5432/circle_test" --add-host=docker:${HOSTIP} unicef/etools:$CIRCLE_BRANCH
        coverage run manage.py test --keepdb --settings=EquiTrack.settings.test
 
- deployment:
+deployment:
    hub:
      branch: [develop, staging, master]
      commands:

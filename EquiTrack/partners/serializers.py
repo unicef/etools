@@ -1,4 +1,3 @@
-__author__ = 'jcranwellward'
 
 import json
 from django.db import transaction
@@ -6,6 +5,9 @@ from rest_framework import serializers
 
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
+
+
+from reports.models import LowerResult
 
 from .models import (
     FileType,
@@ -23,8 +25,11 @@ from .models import (
     ResultChain,
     IndicatorReport,
     DistributionPlan,
+    RISK_RATINGS,
+    CSO_TYPES,
+    PartnerType,
+    GovernmentIntervention,
 )
-
 
 class PCASectorGoalSerializer(serializers.ModelSerializer):
 
@@ -147,7 +152,61 @@ class LocationSerializer(serializers.Serializer):
         fields = '__all__'
 
 
+class ResultChainDetailsSerializer(serializers.ModelSerializer):
+    indicator = IndicatorSerializer()
+    disaggregation = serializers.JSONField()
+    result = OutputSerializer()
+    #indicator_reports = IndicatorReportSerializer(many=True)
+
+    class Meta:
+        model = ResultChain
+        fields = ('indicator', 'disaggregation', 'result')
+
+
+class DistributionPlanSerializer(serializers.ModelSerializer):
+    item = serializers.CharField(source='item.name')
+    site = serializers.CharField(source='site.name')
+    quantity = serializers.IntegerField()
+    delivered = serializers.IntegerField()
+
+    class Meta:
+        model = DistributionPlan
+        fields = ('item', 'site', 'quantity', 'delivered')
+
+
+
+
+class LowerOutputStructuredSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = LowerResult
+        fields = ('id', 'name')
+
+
+class InterventionSerializer(serializers.ModelSerializer):
+
+    pca_id = serializers.CharField(source='id', read_only=True)
+    pca_title = serializers.CharField(source='title')
+    pca_number = serializers.CharField(source='reference_number')
+    partner_name = serializers.CharField(source='partner.name')
+    partner_id = serializers.CharField(source='partner.id')
+    pcasector_set = PCASectorSerializer(many=True, read_only=True)
+    lowerresult_set = serializers.SerializerMethodField()
+    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
+    total_budget = serializers.CharField(read_only=True)
+
+    def get_lowerresult_set(self, obj):
+        qs = obj.lowerresult_set.filter(result_type__name="Output")
+        serializer = LowerOutputStructuredSerializer(instance=qs, many=True)
+        return serializer.data
+
+    class Meta:
+        model = PCA
+        fields = '__all__'
+
+
 class IndicatorReportSerializer(serializers.ModelSerializer):
+
     disaggregated = serializers.BooleanField(read_only=True)
     partner_staff_member = serializers.SerializerMethodField(read_only=True)
     indicator = serializers.SerializerMethodField(read_only=True)
@@ -173,7 +232,7 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         # we could allow superusers by checking for superusers first
         if not (user or rc) or \
                 (user.profile.partner_staff_member not in
-                    rc.partnership.partner.partnerstaffmember_set.values_list('id', flat=True)):
+                    rc.partnership.partner.staff_members.values_list('id', flat=True)):
             raise Exception('hell')
 
         return data
@@ -200,43 +259,10 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         raise serializers.ValidationError({'result_chain': "Creation halted for now"})
 
 
-class ResultChainDetailsSerializer(serializers.ModelSerializer):
-    indicator = IndicatorSerializer()
-    disaggregation = serializers.JSONField()
-    result = OutputSerializer()
-    indicator_reports = IndicatorReportSerializer(many=True)
+class GovernmentInterventionSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = ResultChain
-        fields = '__all__'
-
-
-class DistributionPlanSerializer(serializers.ModelSerializer):
-    item = serializers.CharField(source='item.name')
-    site = serializers.CharField(source='site.name')
-    quantity = serializers.IntegerField()
-    delivered = serializers.IntegerField()
-
-    class Meta:
-        model = DistributionPlan
-        fields = ('item', 'site', 'quantity', 'delivered')
-
-
-class InterventionSerializer(serializers.ModelSerializer):
-
-    pca_id = serializers.CharField(source='id', read_only=True)
-    pca_title = serializers.CharField(source='title')
-    pca_number = serializers.CharField(source='reference_number')
-    partner_name = serializers.CharField(source='partner.name')
-    partner_id = serializers.CharField(source='partner.id')
-    pcasector_set = PCASectorSerializer(many=True, read_only=True)
-    results = ResultChainSerializer(many=True, read_only=True)
-    distribution_plans = DistributionPlanSerializer(many=True, read_only=True)
-    total_budget = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = PCA
-        fields = '__all__'
+        model = GovernmentIntervention
 
 
 class GWLocationSerializer(serializers.ModelSerializer):
@@ -310,3 +336,41 @@ class RapidProRequest(serializers.Serializer):
         if restored_data['values']:
             restored_data['values'] = json.loads(restored_data['values'])
         return restored_data
+
+
+class PartnershipExportFilterSerializer(serializers.Serializer):
+    MARKED_FOR_DELETION = 'marked_for_deletion'
+    search = serializers.CharField(default='', required=False)
+    partner_type = serializers.ChoiceField(PartnerType.CHOICES, required=False)
+    cso_type = serializers.ChoiceField(CSO_TYPES, required=False)
+    risk_rating = serializers.ChoiceField(RISK_RATINGS, required=False)
+    flagged = serializers.ChoiceField((MARKED_FOR_DELETION,), required=False)
+    show_hidden = serializers.BooleanField(default=False, required=False)
+
+
+class AgreementExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    agreement_type = serializers.ChoiceField(Agreement.AGREEMENT_TYPES, required=False)
+    starts_after = serializers.DateField(required=False)
+    ends_before = serializers.DateField(required=False)
+
+
+class InterventionExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    document_type = serializers.ChoiceField(PCA.PARTNERSHIP_TYPES, required=False)
+    country_programme = serializers.CharField(required=False)
+    result_structure = serializers.CharField(required=False)
+    sector = serializers.CharField(required=False)
+    status = serializers.ChoiceField(PCA.PCA_STATUS, required=False)
+    unicef_focal_point = serializers.CharField(required=False)
+    donor = serializers.CharField(required=False)
+    grant = serializers.CharField(required=False)
+    starts_after = serializers.DateField(required=False)
+    ends_before = serializers.DateField(required=False)
+
+
+class GovernmentInterventionExportFilterSerializer(serializers.Serializer):
+    search = serializers.CharField(default='', required=False)
+    result_structure = serializers.CharField(required=False)
+    country_programme = serializers.CharField(required=False)
+    year = serializers.IntegerField(required=False)
