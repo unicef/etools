@@ -428,6 +428,7 @@ TENANT_APPS = (
     'supplies',
     't2f',
     'workplan',
+    'notification',
 )
 
 
