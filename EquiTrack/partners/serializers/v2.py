@@ -41,6 +41,10 @@ class GovernmentInterventionResultCreateUpdateSerializer(serializers.ModelSerial
             errors.update(planned_amount=["This field is required."])
         if not data.get("year", None):
             errors.update(year=["This field is required."])
+        if not data.get("sector", None):
+            errors.update(result=["This field is required."])
+        if not data.get("section", None):
+            errors.update(result=["This field is required."])
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -88,6 +92,10 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         for item in results:
             item["intervention"] = gov_intervention.id
             item["result"] = item["result"].id
+            item["sector"] = item["sector"].id
+            item["section"] = item["section"].id
+            item["result"] = item["result"].id
+            item["unicef_managers"] = [x.id for x in item["unicef_managers"]]
             serializer = GovernmentInterventionResultCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()
@@ -111,6 +119,9 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         for item in results:
             item["intervention"] = instance.id
             item["result"] = item["result"].id
+            item["sector"] = item["sector"].id
+            item["section"] = item["section"].id
+            item["unicef_managers"] = [x.id for x in item["unicef_managers"]]
             serializer = GovernmentInterventionResultCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()

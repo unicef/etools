@@ -59,13 +59,13 @@ class GovernmentInterventionListAPIView(ListCreateAPIView):
             if "partner_name" in query_params.keys():
                 queries.append(Q(partner__name=query_params.get("partner_name")))
             if "result" in query_params.keys():
-                queries.append(Q(results__in=[query_params.get("result")]))
+                queries.append(Q(results__result__in=[query_params.get("result")]))
             if "sector" in query_params.keys():
-                queries.append(Q(results__sector=query_params.get("sector")))
-            if "unicef_managers" in query_params.keys():
-                queries.append(Q(results__unicef_managers__in=[query_params.get("unicef_managers")]))
+                queries.append(Q(results__sector__in=[query_params.get("sector")]))
+            if "unicef_manager" in query_params.keys():
+                queries.append(Q(results__unicef_managers__id=query_params.get("unicef_manager")))
             if "year" in query_params.keys():
-                queries.append(Q(results__year__in=query_params.get("end")))
+                queries.append(Q(results__year__in=[query_params.get("year")]))
             if "search" in query_params.keys():
                 queries.append(
                     Q(partner__name__icontains=query_params.get("search")) |

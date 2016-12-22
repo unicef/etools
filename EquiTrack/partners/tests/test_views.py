@@ -329,12 +329,18 @@ class TestGovernmentInterventionViews(APITenantTestCase):
 
     def test_api_gov_interventions_create_update_filter(self):
         # Create
+        sectorobj = Sector.objects.create(name="Sector111")
+        sectionobj = Section.objects.create(name="Section111")
         resultobj = ResultFactory()
+        userobj = UserFactory()
         result = {
                 "result": resultobj.id,
+                "unicef_managers": [userobj.id],
                 "year": "2016",
                 "planned_amount": 100,
                 "planned_visits": 5,
+                "sector": sectorobj.id,
+                "section": sectionobj.id,
             }
         data = {
             "partner": self.gov_intervention.partner.id,
@@ -347,9 +353,7 @@ class TestGovernmentInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
             data=data
         )
-
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
+        print(response.data)
         # Update
         response.data.update(results=[result, result])
         response = self.forced_auth_req(
@@ -361,9 +365,14 @@ class TestGovernmentInterventionViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data["results"]), 2)
 
-        # filter
+        # filter and search
         params = {
             "partner_name": self.gov_intervention.partner.name,
+            "result": resultobj.id,
+            "sector": sectorobj.id,
+            "unicef_manager": userobj.id,
+            "year": "2016",
+            "search": "Partner",
         }
         response = self.forced_auth_req(
             'get',
@@ -371,5 +380,6 @@ class TestGovernmentInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
             data=params
         )
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
