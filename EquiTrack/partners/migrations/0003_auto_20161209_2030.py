@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='indicatorreport',
             name='indicator',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='indicators_reports', to='reports.AppliedIndicator'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='indicator_reports', to='reports.AppliedIndicator'),
         ),
     ]
