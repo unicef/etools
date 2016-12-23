@@ -1372,12 +1372,11 @@ class InterventionAmendment(TimeStampedModel):
             self.type,
             self.amended_at
         )
-
-class PlannedVisits(models.Model):
+class InterventionPlannedVisits(models.Model):
     """
     Represents planned visits for the intervention
     """
-    intervention = models.ForeignKey(Intervention, related_name='visits')
+    intervention = models.ForeignKey(Intervention, related_name='planned_visits')
     year = models.IntegerField(default=datetime.datetime.now().year)
     programmatic = models.IntegerField(default=0)
     spot_checks = models.IntegerField(default=0)
@@ -1385,11 +1384,10 @@ class PlannedVisits(models.Model):
 
     class Meta:
         unique_together = ('intervention', 'year')
-
 class InterventionResultLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='result_links')
     cp_output = models.ForeignKey(Result, related_name='intervention_links')
-    ram_indicators = models.ManyToManyField(Indicator)
+    ram_indicators = models.ManyToManyField(Indicator, blank=True)
 class InterventionBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
