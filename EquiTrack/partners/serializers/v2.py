@@ -94,7 +94,6 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
             item["result"] = item["result"].id
             item["sector"] = item["sector"].id
             item["section"] = item["section"].id
-            item["result"] = item["result"].id
             item["unicef_managers"] = [x.id for x in item["unicef_managers"]]
             serializer = GovernmentInterventionResultCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)

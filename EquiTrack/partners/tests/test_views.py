@@ -2,6 +2,7 @@ __author__ = 'unicef-leb-inn'
 
 import json
 
+from django.db import connection
 from rest_framework import status
 
 from EquiTrack.factories import (
@@ -330,7 +331,7 @@ class TestGovernmentInterventionViews(APITenantTestCase):
     def test_api_gov_interventions_create_update_filter(self):
         # Create
         sectorobj = Sector.objects.create(name="Sector111")
-        sectionobj = Section.objects.create(name="Section111")
+        sectionobj = connection.tenant.sections.create(name="Section111")
         resultobj = ResultFactory()
         userobj = UserFactory()
         result = {
@@ -353,7 +354,7 @@ class TestGovernmentInterventionViews(APITenantTestCase):
             user=self.unicef_staff,
             data=data
         )
-        print(response.data)
+
         # Update
         response.data.update(results=[result, result])
         response = self.forced_auth_req(
