@@ -1462,7 +1462,7 @@ class InterventionAttachment(models.Model):
     def __unicode__(self):
         return self.attachment.name
 
-
+# TODO: check this for sanity
 class GovernmentIntervention(models.Model):
     """
     Represents a government intervention.
@@ -1616,8 +1616,6 @@ class GovernmentInterventionResult(models.Model):
                                 self.result)
 
 
-
-# TODO: check this for sanity and adapt it to Intervention model
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
@@ -1663,7 +1661,7 @@ class SupplyPlan(models.Model):
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     """
-
+    # TODO: remove partnership when model is ready
     partnership = models.ForeignKey(
         PCA,
         related_name='supply_plans', null=True, blank=True
@@ -1684,7 +1682,7 @@ class DistributionPlan(models.Model):
     Relates to :model:`supplies.SupplyItem`
     Relates to :model:`locations.Location`
     """
-
+    # TODO: remove partnership when model is ready
     partnership = models.ForeignKey(
         PCA,
         related_name='distribution_plans', null=True, blank=True
@@ -1734,6 +1732,8 @@ class DistributionPlan(models.Model):
             instance.sent = False
             instance.save()
 post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
+
+
 
 # TODO: Move to funds
 class FCManager(models.Manager):
