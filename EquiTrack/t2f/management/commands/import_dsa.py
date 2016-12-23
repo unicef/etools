@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import csv
+from datetime import datetime
 from decimal import Decimal
 
 from django.core.management.base import BaseCommand
@@ -48,24 +49,28 @@ class Command(BaseCommand):
         DSARegion.objects.all().delete()
 
         for line in sheet:
-            line = line[:6]
+            line = line[:8]
 
             # Filter out empty and not fully filled lines
             if not line or not all(line):
                 continue
 
-            country, region, amount_usd, amount_local, amount_60plus_local, room_rate = line
+            country, region, amount_usd, amount_local, amount_60plus_local, room_rate, eff_date, finalization_date = line
 
-            name = force_text(b'{} - {}'.format(country, region))
             amount_usd = Decimal(amount_usd.replace(',', ''))
             amount_local = Decimal(amount_local.replace(',', ''))
             amount_60plus_local = Decimal(amount_60plus_local.replace(',', ''))
             room_rate = Decimal(room_rate.replace(',', ''))
+            eff_date = datetime.strptime(eff_date, '%d/%m/%y').date()
+            finalization_date = datetime.strptime(finalization_date, '%d/%m/%y').date()
 
-            DSARegion.objects.create(name=name,
+            DSARegion.objects.create(country=country,
+                                     region=region,
                                      dsa_amount_usd=amount_usd,
                                      dsa_amount_60plus_usd=amount_usd,
                                      dsa_amount_local=amount_local,
                                      dsa_amount_60plus_local=amount_60plus_local,
-                                     room_rate=room_rate)
-            self.stdout.write('DSA region created: {}'.format(name))
+                                     room_rate=room_rate,
+                                     eff_date=eff_date,
+                                     finalization_date=finalization_date)
+            self.stdout.write('DSA region created: {} - {}'.format(force_text(country), force_text(region)))
