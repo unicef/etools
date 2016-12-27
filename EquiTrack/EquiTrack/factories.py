@@ -16,7 +16,9 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
+from funds.models import Grant, Donor
 from workplan import models as workplan_models
+from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
 
 class GovernorateFactory(factory.django.DjangoModelFactory):
@@ -119,6 +121,7 @@ class LocationFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Location {}'.format(n))
     gateway = factory.SubFactory(GatewayTypeFactory)
     point = GEOSGeometry("POINT(20 20)")
+    p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
 
 
 class LinkedLocationFactory(factory.django.DjangoModelFactory):
@@ -342,6 +345,21 @@ class WorkplanProjectFactory(factory.DjangoModelFactory):
 
     workplan = factory.SubFactory(WorkplanFactory)
     cover_page = factory.RelatedFactory(CoverPageFactory, 'workplan_project')
+
+
+class DonorFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=45)
+
+    class Meta:
+        model = Donor
+
+
+class GrantFactory(factory.DjangoModelFactory):
+    donor = factory.SubFactory(DonorFactory)
+    name = fuzzy.FuzzyText(length=32)
+
+    class Meta:
+        model = Grant
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):
