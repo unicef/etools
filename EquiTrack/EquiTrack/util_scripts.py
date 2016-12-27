@@ -6,7 +6,7 @@ from django.db.models import Count
 import time
 from datetime import datetime, timedelta
 from users.models import Country
-from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure
+from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, Agreement, AuthorizedOfficer
 
 def printtf(*args):
@@ -397,6 +397,7 @@ def migrate_authorized_officers():
             agreement.authorized_officers.add(officer)
             agreement.save()
 
+from partners.models import Agreement
 
 def export_old_pca_fields():
     pca_fields = {}
@@ -471,4 +472,15 @@ def agreement_unique_reference_number():
             if agr.number == '':
                 print(agr)
                 agr.agreement_number = None
+                agr.save()
+
+def agreement_unique_reference_number():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry.name)
+        agreements = Agreement.objects.all()
+        for agr in agreements:
+            if agr.agreement_number == '':
+                print(agr)
+                agr.agreement_number = 'blk:{}'.format(agr.id)
                 agr.save()

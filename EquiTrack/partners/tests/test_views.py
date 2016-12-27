@@ -28,7 +28,6 @@ from partners.models import (
     Agreement,
     PartnerOrganization,
     PartnerType,
-    ResultChain,
     PCASector,
     PartnershipBudget,
     PCAGrant,
@@ -301,11 +300,6 @@ class TestPartnershipViews(APITenantTestCase):
 
         self.result_type = ResultType.objects.get(id=1)
         self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
-        self.resultchain = ResultChain.objects.create(
-            result=self.result,
-            result_type=self.result_type,
-            partnership=self.intervention,
-        )
         self.pcasector = PCASector.objects.create(
             pca=self.intervention,
             sector=Sector.objects.create(name="Sector 1")
