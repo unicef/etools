@@ -69,9 +69,11 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class DSARegionSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+
     class Meta:
         model = DSARegion
-        fields = ('id', 'name', 'dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local',
+        fields = ('id', 'name', 'country', 'region', 'dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local',
                   'dsa_amount_60plus_local', 'room_rate')
 
 
