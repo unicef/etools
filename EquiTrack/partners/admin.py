@@ -37,7 +37,6 @@ from .models import (
     Agreement,
     BankDetails,
     RAMIndicator,
-    ResultChain,
     PartnerStaffMember,
     PartnershipBudget,
     AuthorizedOfficer,
