@@ -39,8 +39,8 @@ from partners.serializers.v1 import (
     PCAFileSerializer,
     GovernmentInterventionSerializer,
 )
-from .permissions import PartnerPermission
-from .filters import PartnerScopeFilter
+from partners.permissions import PartnerPermission
+from partners.filters import PartnerScopeFilter
 
 from partners.models import (
     FileType,
