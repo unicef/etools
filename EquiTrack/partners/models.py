@@ -1630,7 +1630,7 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 
     # FOR WHOM / Beneficiary
     #  -  AppliedIndicator
-    indicator = models.ForeignKey(AppliedIndicator, related_name='indicator_reports')
+    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
 
     # WHO
     #  -  Implementing Partner
