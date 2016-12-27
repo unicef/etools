@@ -17,7 +17,7 @@ from .views.v1 import (
     PCAGrantViewSet,
     AmendmentLogViewSet,
     GwPCALocationViewSet,
-    ResultChainViewSet,
+    # ResultChainViewSet,
     IndicatorReportViewSet,
     PcaPDFView,
     PartnerOrganizationsViewSet,

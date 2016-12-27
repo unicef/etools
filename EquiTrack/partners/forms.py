@@ -38,7 +38,7 @@ from .models import (
     PartnerOrganization,
     Assessment,
     GwPCALocation,
-    ResultChain,
+    #ResultChain,
     AmendmentLog,
     AgreementAmendmentLog,
     Agreement,
@@ -467,116 +467,117 @@ class PartnershipForm(UserGroupForm):
         Will try to match indicators one to one or by name, this can be ran
         multiple times to continually update the work plan
         """
-        try:  # first try to grab the excel as a table...
-            data = pandas.read_excel(work_plan, index_col=0)
-        except Exception as exp:
-            raise ValidationError(exp.message)
-
-        data.fillna('', inplace=True)
-        current_output = None
-        result_structure = self.obj.result_structure or ResultStructure.current()
-        imported = found = not_found = row_num = 0
-        # TODO: make sure to check all the expected columns are in
-
-        for label, series in data.iterrows():
-            create_args = dict(
-                partnership=self.obj
-            )
-            row_num += 1
-            row = series.to_dict()
-            labels = list(series.axes[0])  # get the labels in order
-
-            # check if there are correct time frames set on activities:
-            at_least_one_tf = [x for x in labels if 'TF_' in str(x)]
-            if not at_least_one_tf:
-                raise ValidationError('There are no valid time frames for the activities,'
-                                      'please prefix activities with "TF_')
-
-            try:
-                type = label.split()[0].strip()
-                statement = row.pop('Details').strip()
-                try:
-                    result_type = ResultType.objects.get(
-                        name__icontains=type
-                    )
-                except ResultType.DoesNotExist as exp:
-                    # we can interpret the type we are dealing with by its label
-                    if 'indicator' not in type and current_output:
-                        raise ValidationError(
-                            _(u"The value of the first column must be one of: Output, Indicator or Activity."
-                              u"The value received for row {} was: {}".format(row_num, type)))
-                else:
-                    # we are dealing with a result statement
-                    # now we try to look up the result based on the statement
-                    result, created = LowerResult.objects.get_or_create(
-                        result_structure=result_structure,
-                        result_type=result_type,
-                        name=statement,
-                        code=label,
-                    )
-                    if result_type.name == 'Output':
-                        current_output = result
-                    elif result_type.name == 'Activity' and current_output:
-                        result.parent = current_output
-                        result.save()
-
-                create_args['result'] = result
-                create_args['result_type'] = result.result_type
-                create_args['partner_contribution'] = check_and_return_value('CSO', row, row_num, number=True)
-                create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, row_num, number=True)
-                create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, row_num, number=True)
-                target = check_and_return_value('Targets', row, row_num, number=True)
-                check_and_return_value('Total', row, row_num, number=True)  # ignore value as we calculate this
-
-                if 'indicator' in label:
-                    indicator, created = LowerIndicator.objects.get_or_create(
-                        code=label,
-                        name=statement
-                    )
-                    create_args['indicator'] = indicator
-                    create_args['target'] = target
-
-                    for key in row.keys():
-                        # "TP_" refers to activity time periods
-                        if 'Unnamed' in key or \
-                                'TF_' in key or \
-                                pandas.isnull(row[key]) or \
-                                not row[key]:
-                            del row[key]
-                            continue
-                        row[key] = parse_disaggregate_val(row[key])
-
-                    create_args['disaggregation'] = None
-                    if row:
-                        order = [e for e in labels if row.get(e)]
-                        row['order'] = order
-                        create_args['disaggregation'] = row.copy()
-                else:
-                    # this is an activity
-                    for key in row.keys():
-                        if 'Unnamed' in key or 'TF_' not in key:
-                            del row[key]
-                        elif pandas.isnull(row[key]):
-                            row[key] = ''
-
-                    create_args['disaggregation'] = row.copy() if row else None
-
-                result_chain, new = ResultChain.objects.get_or_create(**create_args)
-
-                if new:
-                    imported += 1
-                else:
-                    found += 1
-
-            except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
-                not_found += 1
-                raise ValidationError(exp.message)
-
-        messages.info(
-            self.request,
-            u'Imported {} results, {} were imported already and {} were not found'.format(
-                imported, found, not_found
-            ))
+        raise ValidationError('Importing deprecated for now. Coming back soon!')
+        # try:  # first try to grab the excel as a table...
+        #     data = pandas.read_excel(work_plan, index_col=0)
+        # except Exception as exp:
+        #     raise ValidationError(exp.message)
+        #
+        # data.fillna('', inplace=True)
+        # current_output = None
+        # result_structure = self.obj.result_structure or ResultStructure.current()
+        # imported = found = not_found = row_num = 0
+        # # TODO: make sure to check all the expected columns are in
+        #
+        # for label, series in data.iterrows():
+        #     create_args = dict(
+        #         partnership=self.obj
+        #     )
+        #     row_num += 1
+        #     row = series.to_dict()
+        #     labels = list(series.axes[0])  # get the labels in order
+        #
+        #     # check if there are correct time frames set on activities:
+        #     at_least_one_tf = [x for x in labels if 'TF_' in str(x)]
+        #     if not at_least_one_tf:
+        #         raise ValidationError('There are no valid time frames for the activities,'
+        #                               'please prefix activities with "TF_')
+        #
+        #     try:
+        #         type = label.split()[0].strip()
+        #         statement = row.pop('Details').strip()
+        #         try:
+        #             result_type = ResultType.objects.get(
+        #                 name__icontains=type
+        #             )
+        #         except ResultType.DoesNotExist as exp:
+        #             # we can interpret the type we are dealing with by its label
+        #             if 'indicator' not in type and current_output:
+        #                 raise ValidationError(
+        #                     _(u"The value of the first column must be one of: Output, Indicator or Activity."
+        #                       u"The value received for row {} was: {}".format(row_num, type)))
+        #         else:
+        #             # we are dealing with a result statement
+        #             # now we try to look up the result based on the statement
+        #             result, created = LowerResult.objects.get_or_create(
+        #                 result_structure=result_structure,
+        #                 result_type=result_type,
+        #                 name=statement,
+        #                 code=label,
+        #             )
+        #             if result_type.name == 'Output':
+        #                 current_output = result
+        #             elif result_type.name == 'Activity' and current_output:
+        #                 result.parent = current_output
+        #                 result.save()
+        #
+        #         create_args['result'] = result
+        #         create_args['result_type'] = result.result_type
+        #         create_args['partner_contribution'] = check_and_return_value('CSO', row, row_num, number=True)
+        #         create_args['unicef_cash'] = check_and_return_value('UNICEF Cash', row, row_num, number=True)
+        #         create_args['in_kind_amount'] = check_and_return_value('UNICEF Supplies', row, row_num, number=True)
+        #         target = check_and_return_value('Targets', row, row_num, number=True)
+        #         check_and_return_value('Total', row, row_num, number=True)  # ignore value as we calculate this
+        #
+        #         if 'indicator' in label:
+        #             indicator, created = LowerIndicator.objects.get_or_create(
+        #                 code=label,
+        #                 name=statement
+        #             )
+        #             create_args['indicator'] = indicator
+        #             create_args['target'] = target
+        #
+        #             for key in row.keys():
+        #                 # "TP_" refers to activity time periods
+        #                 if 'Unnamed' in key or \
+        #                         'TF_' in key or \
+        #                         pandas.isnull(row[key]) or \
+        #                         not row[key]:
+        #                     del row[key]
+        #                     continue
+        #                 row[key] = parse_disaggregate_val(row[key])
+        #
+        #             create_args['disaggregation'] = None
+        #             if row:
+        #                 order = [e for e in labels if row.get(e)]
+        #                 row['order'] = order
+        #                 create_args['disaggregation'] = row.copy()
+        #         else:
+        #             # this is an activity
+        #             for key in row.keys():
+        #                 if 'Unnamed' in key or 'TF_' not in key:
+        #                     del row[key]
+        #                 elif pandas.isnull(row[key]):
+        #                     row[key] = ''
+        #
+        #             create_args['disaggregation'] = row.copy() if row else None
+        #
+        #         result_chain, new = ResultChain.objects.get_or_create(**create_args)
+        #
+        #         if new:
+        #             imported += 1
+        #         else:
+        #             found += 1
+        #
+        #     except (ObjectDoesNotExist, MultipleObjectsReturned) as exp:
+        #         not_found += 1
+        #         raise ValidationError(exp.message)
+        #
+        # messages.info(
+        #     self.request,
+        #     u'Imported {} results, {} were imported already and {} were not found'.format(
+        #         imported, found, not_found
+        #     ))
 
     def clean(self):
         """
