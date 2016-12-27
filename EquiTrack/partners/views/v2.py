@@ -21,13 +21,14 @@ from partners.models import (
     PartnerStaffMember,
 )
 from partners.serializers.v1 import InterventionSerializer
-from partners.serializers.v2 import (
+from partners.serializers.agreements_v2 import (
     AgreementListSerializer,
     AgreementExportSerializer,
     AgreementCreateUpdateSerializer,
-    AgreementRetrieveSerializer,
-    PartnerStaffMemberCreateSerializer,
-    PartnerStaffMemberUpdateSerializer,
+    AgreementRetrieveSerializer
+)
+from partners.serializers.partner_organization_v2 import (
+
     PartnerStaffMemberDetailSerializer,
     PartnerStaffMemberPropertiesSerializer,
     PartnerStaffMemberExportSerializer,
@@ -35,6 +36,10 @@ from partners.serializers.v2 import (
     PartnerOrganizationListSerializer,
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
+    PartnerStaffMemberCreateSerializer,
+    PartnerStaffMemberUpdateSerializer,
+)
+from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionDetailSerializer,
     InterventionCreateUpdateSerializer,
@@ -49,12 +54,7 @@ from django.http import HttpResponse, StreamingHttpResponse
 from partners.models import PartnerOrganization, Intervention
 from partners.permissions import PartnerPermission
 from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
-from partners.serializers.v2 import (
-    InterventionListSerializer,
-    InterventionDetailSerializer,
-    InterventionCreateUpdateSerializer,
-    InterventionExportSerializer
-)
+
 from partners.filters import PartnerScopeFilter
 
 class InterventionListAPIView(ListCreateAPIView):

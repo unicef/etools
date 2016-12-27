@@ -49,7 +49,7 @@ from .models import (
     GovernmentInterventionResult,
     IndicatorDueDates,
     IndicatorReport,
-    PlannedVisits,
+    InterventionPlannedVisits,
     Intervention,
 
 )
@@ -801,6 +801,6 @@ admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(IndicatorReport)
-admin.site.register(PlannedVisits)
+admin.site.register(InterventionPlannedVisits)
 admin.site.register(Intervention)
 admin.site.register(PartnershipBudget)

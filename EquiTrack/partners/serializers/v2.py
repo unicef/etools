@@ -17,10 +17,10 @@ from locations.models import Location
 
 from partners.models import (
     PCA,
-    PartnershipBudget,
+    InterventionBudget,
     SupplyPlan,
     DistributionPlan,
-    PlannedVisits,
+    InterventionPlannedVisits,
     Intervention,
     InterventionAmendment,
     PartnerOrganization,
@@ -34,10 +34,10 @@ from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSeriali
 
 
 
-class PartnershipBudgetNestedSerializer(serializers.ModelSerializer):
+class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = PartnershipBudget
+        model = InterventionBudget
         fields = (
             "partner_contribution",
             "unicef_cash",
@@ -50,17 +50,17 @@ class PartnershipBudgetNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class PartnershipBudgetCreateUpdateSerializer(serializers.ModelSerializer):
+class InterventionBudgetCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = PartnershipBudget
+        model = InterventionBudget
         fields = "__all__"
 
     def validate(self, data):
         errors = {}
         try:
-            data = super(PartnershipBudgetCreateUpdateSerializer, self).validate(data)
-        except ValidationError, e:
+            data = super(InterventionBudgetCreateUpdateSerializer, self).validate(data)
+        except ValidationError as e:
             errors.update(e)
 
         status = data.get("status", "")
@@ -117,14 +117,14 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class AmendmentLogCreateUpdateSerializer(serializers.ModelSerializer):
+class InterventionAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
 
 
-class AmendmentLogNestedSerializer(serializers.ModelSerializer):
+class InterventionAmendmentNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterventionAmendment

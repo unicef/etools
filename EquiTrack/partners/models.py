@@ -806,7 +806,7 @@ class BankDetails(models.Model):
     """
 
     #TODO: remove agreement field when possible since we're adding it on the partner Org
-    agreement = models.ForeignKey(Agreement, related_name='bank_details')
+    agreement = models.ForeignKey('partners.Agreement', related_name='bank_details')
 
     partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details')
     bank_name = models.CharField(max_length=255, null=True, blank=True)
@@ -870,7 +870,7 @@ class Agreement(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
 
-    partner = models.ForeignKey(PartnerOrganization)
+    partner = models.ForeignKey(PartnerOrganization, related_name="agrements")
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
         blank=True,
@@ -899,7 +899,7 @@ class Agreement(TimeStampedModel):
     # this user needs to be in the partnership management group
     signed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='signed_agreements',
+        related_name='agreements_signed+',
         null=True, blank=True
     )
 
@@ -1416,11 +1416,6 @@ class InterventionBudget(TimeStampedModel):
     )
     # TODO add Currency field
     total = models.DecimalField(max_digits=20, decimal_places=2)
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='budgets',
-        blank=True, null=True,
-    )
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
@@ -1663,7 +1658,7 @@ class SupplyPlan(models.Model):
     """
     # TODO: remove partnership when model is ready
     partnership = models.ForeignKey(
-        PCA,
+        'partners.PCA',
         related_name='supply_plans', null=True, blank=True
     )
     intervention = models.ForeignKey(
@@ -1684,7 +1679,7 @@ class DistributionPlan(models.Model):
     """
     # TODO: remove partnership when model is ready
     partnership = models.ForeignKey(
-        PCA,
+        'partners.PCA',
         related_name='distribution_plans', null=True, blank=True
     )
     intervention = models.ForeignKey(
@@ -1774,401 +1769,6 @@ class DirectCashTransfer(models.Model):
 
 
 #TODO: remove these models
-
-class RAMIndicator(models.Model):
-    """
-    Represents a RAM Indicator for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`reports.Result`
-    Relates to :model:`reports.Indicator`
-    """
-    # TODO: Remove This indicator and connect direcly to higher indicators M2M related
-    intervention = models.ForeignKey(PCA, related_name='indicators')
-    result = models.ForeignKey(Result)
-    indicator = ChainedForeignKey(
-        Indicator,
-        chained_field="result",
-        chained_model_field="result",
-        show_all=False,
-        auto_choose=True,
-        blank=True,
-        null=True
-    )
-
-    @property
-    def baseline(self):
-        return self.indicator.baseline
-
-    @property
-    def target(self):
-        return self.indicator.target
-
-    def __unicode__(self):
-        return u'{} -> {}'.format(
-            self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
-        )
-
-class FileType(models.Model):
-    """
-    Represents a file type
-    """
-
-    name = models.CharField(max_length=64L, unique=True)
-
-    def __unicode__(self):
-        return self.name
-def get_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'partner_org',
-         str(instance.pca.agreement.partner.id),
-         'agreements',
-         str(instance.pca.agreement.id),
-         'interventions',
-         str(instance.pca.id),
-         filename]
-    )
-class PCAFile(models.Model):
-    """
-    Represents a file for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.FileType`
-    """
-
-    pca = models.ForeignKey(PCA, related_name='attachments')
-    type = models.ForeignKey(FileType)
-    attachment = models.FileField(
-        max_length=255,
-        upload_to=get_file_path
-    )
-
-    def __unicode__(self):
-        return self.attachment.name
-
-    def download_url(self):
-        if self.file:
-            return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" >Download</a>'.format(self.file.file.url)
-        return u''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Files'
-class PCAGrant(TimeStampedModel):
-    """
-    Represents a grant for the partner intervention, which links a grant to a partnership with a specified amount
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`funds.Grant`
-    Relates to :model:`partners.AmendmentLog`
-    """
-    partnership = models.ForeignKey(PCA, related_name='grants')
-    grant = models.ForeignKey(Grant)
-    funds = models.IntegerField(null=True, blank=True)
-    # TODO: Add multi-currency support
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='grants',
-        blank=True, null=True,
-    )
-
-    class Meta:
-        ordering = ['-funds']
-
-    def __unicode__(self):
-        return u'{}: {}'.format(
-            self.grant,
-            self.funds
-        )
-class GwPCALocation(models.Model):
-    """
-    Represents a location for the partner intervention, which links a location to a partnership
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`users.Sector`
-    Relates to :model:`locations.Governorate`
-    Relates to :model:`locations.Region`
-    Relates to :model:`locations.Locality`
-    Relates to :model:`locations.Location`
-    """
-
-    pca = models.ForeignKey(PCA, related_name='locations')
-    sector = models.ForeignKey(Sector, null=True, blank=True)
-    governorate = models.ForeignKey(
-        Governorate,
-        null=True,
-        blank=True
-    )
-    region = models.ForeignKey(
-        Region,
-        null=True,
-        blank=True
-    )
-    locality = models.ForeignKey(
-        Locality,
-        null=True,
-        blank=True
-    )
-    location = models.ForeignKey(
-        Location,
-        null=True,
-        blank=True
-    )
-    tpm_visit = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = 'Partnership Location'
-
-    def __unicode__(self):
-        return u'{} -> {}{}{}'.format(
-            self.governorate.name if self.governorate else u'',
-            self.region.name if self.region else u'',
-            u'-> {}'.format(self.locality.name) if self.locality else u'',
-            self.location.__unicode__() if self.location else u'',
-        )
-
-    def view_location(self):
-        return get_changeform_link(self)
-    view_location.allow_tags = True
-    view_location.short_description = 'View Location'
-class PCASector(TimeStampedModel):
-    """
-    Represents a sector for the partner intervention, which links a sector to a partnership
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`users.Sector`
-    Relates to :model:`partners.AmendmentLog`
-    """
-
-    pca = models.ForeignKey(PCA)
-    sector = models.ForeignKey(Sector)
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='sectors',
-        blank=True, null=True,
-    )
-
-    class Meta:
-        verbose_name = 'PCA Sector'
-
-    def __unicode__(self):
-        return u'{}: {}: {}'.format(
-            self.pca.partner.name,
-            self.pca.number,
-            self.sector.name,
-        )
-class PCASectorGoal(models.Model):
-    """
-    Represents a goal for the partner intervention sector, which links a sector to a partnership
-
-    Relates to :model:`partners.PCASector`
-    Relates to :model:`reports.Goal`
-    """
-
-    pca_sector = models.ForeignKey(PCASector)
-    goal = models.ForeignKey(Goal)
-
-    class Meta:
-        verbose_name = 'CCC'
-        verbose_name_plural = 'CCCs'
-
-class IndicatorDueDates(models.Model):
-    """
-    Represents an indicator due date for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    """
-
-    intervention = models.ForeignKey(
-        'PCA',
-        blank=True, null=True,
-        related_name='indicator_due_dates'
-    )
-    due_date = models.DateField(blank=True, null=True)
-
-    class Meta:
-        verbose_name = 'Report Due Date'
-        verbose_name_plural = 'Report Due Dates'
-        ordering = ['-due_date']
-class PartnershipBudget(TimeStampedModel):
-    """
-    Represents a budget for the intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.AmendmentLog`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='budget_log', null=True, blank=True)
-    partner_contribution = models.IntegerField(default=0)
-    unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(
-        default=0,
-        verbose_name='UNICEF Supplies'
-    )
-    year = models.CharField(
-        max_length=5,
-        blank=True, null=True
-    )
-    # TODO add Currency field
-    total = models.IntegerField(default=0)
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='budgets',
-        blank=True, null=True,
-    )
-
-    def total_unicef_contribution(self):
-        return self.unicef_cash + self.in_kind_amount
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        """
-        Calculate total budget on save
-        """
-        self.total = \
-            self.total_unicef_contribution() \
-            + self.partner_contribution
-
-        super(PartnershipBudget, self).save(**kwargs)
-
-    def __unicode__(self):
-        return u'{}: {}'.format(
-            self.partnership,
-            self.total
-        )
-class AgreementAmendmentLog(TimeStampedModel):
-    """
-    Represents an amendment log for the partner agreement.
-
-    Relates to :model:`partners.Agreement`
-    """
-
-    agreement = models.ForeignKey(Agreement, related_name='amendments_log')
-    type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            'Authorised Officers',
-            'Banking Info',
-            'Agreement Changes',
-            'Additional Clauses',
-        ))
-    amended_at = models.DateField(null=True, verbose_name='Signed At')
-
-    amendment_number = models.IntegerField(default=0)
-
-    signed_document = models.FileField(
-        max_length=255,
-        upload_to=get_ageement_amd_file_path
-    )
-    status = models.CharField(
-        max_length=32L,
-        blank=True,
-        choices=PCA.PCA_STATUS,
-    )
-
-    def __unicode__(self):
-        return u'{}: {} - {}'.format(
-            self.amendment_number,
-            self.type,
-            self.amended_at
-        )
-
-    @property
-    def amendment_number(self):
-        """
-        Increment amendment number automatically
-        """
-        objects = list(AgreementAmendmentLog.objects.filter(
-            agreement=self.agreement
-        ).order_by('created').values_list('id', flat=True))
-
-        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-class ResultChain(models.Model):
-    """
-    Represents a result chain for the partner intervention,
-    Connects Results and Indicators to interventions
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`reports.ResultType`
-    Relates to :model:`reports.Result`
-    Relates to :model:`reports.Indicator`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='results')
-    code = models.CharField(max_length=50, null=True, blank=True)
-    result_type = models.ForeignKey(ResultType)
-    result = models.ForeignKey(
-        Result,
-    )
-    indicator = models.ForeignKey(
-        Indicator,
-        blank=True, null=True
-    )
-    # fixed columns
-    target = models.PositiveIntegerField(
-        blank=True, null=True
-    )
-    current_progress = models.PositiveIntegerField(
-        default=0
-    )
-    partner_contribution = models.IntegerField(default=0)
-    unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(default=0)
-
-    # variable disaggregation's that may be present in the work plan
-    disaggregation = JSONField(null=True)
-
-
-    @property
-    def total(self):
-
-        return self.unicef_cash + self.in_kind_amount + self.partner_contribution
-
-    def __unicode__(self):
-        return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name if self.result.result_structure else '',
-            self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
-        )
-class AuthorizedOfficer(models.Model):
-    # TODO: write a script to move this to authorized officers on the model
-    # TODO: change on admin to use the model
-    """
-    Represents an authorized UNICEF officer on the partner agreement.
-
-    Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`partners.AgreementAmendmentLog`
-    """
-
-    agreement = models.ForeignKey(
-        Agreement,
-    )
-    officer = models.ForeignKey(
-        PartnerStaffMember
-    )
-    amendment = models.ForeignKey(
-        'AgreementAmendmentLog',
-        blank=True, null=True,
-    )
-
-    def __unicode__(self):
-        return self.officer.__unicode__()
-
-    @classmethod
-    def create_officer(cls, sender, instance, created, **kwargs):
-        """
-        Signal handler to create authorized_officers automatically
-        """
-        if instance.partner_manager and \
-                instance.partner_manager.id not in \
-                instance.authorized_officers.values_list('officer', flat=True):
-
-            cls.objects.create(agreement=instance,
-                               officer=instance.partner_manager)
-post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 class PCA(AdminURLMixin, models.Model):
     """
     Represents a partner intervention.
@@ -2215,7 +1815,7 @@ class PCA(AdminURLMixin, models.Model):
     # TODO: remove chained foreign key
     agreement = ChainedForeignKey(
         Agreement,
-        related_name='interventions',
+        related_name='pca_interventions',
         chained_field="partner",
         chained_model_field="partner",
         show_all=False,
@@ -2595,7 +2195,40 @@ class PCA(AdminURLMixin, models.Model):
                 for commit in commitments:
                     commit.intervention = instance
                     commit.save()
-post_save.connect(PCA.send_changes, sender=PCA)
+class RAMIndicator(models.Model):
+    """
+    Represents a RAM Indicator for the partner intervention
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`reports.Result`
+    Relates to :model:`reports.Indicator`
+    """
+    # TODO: Remove This indicator and connect direcly to higher indicators M2M related
+    intervention = models.ForeignKey(PCA, related_name='indicators')
+    result = models.ForeignKey(Result)
+    indicator = ChainedForeignKey(
+        Indicator,
+        chained_field="result",
+        chained_model_field="result",
+        show_all=False,
+        auto_choose=True,
+        blank=True,
+        null=True
+    )
+
+    @property
+    def baseline(self):
+        return self.indicator.baseline
+
+    @property
+    def target(self):
+        return self.indicator.target
+
+    def __unicode__(self):
+        return u'{} -> {}'.format(
+            self.result.sector.name if self.result.sector else '',
+            self.result.__unicode__(),
+        )
 class AmendmentLog(TimeStampedModel):
     """
     Represents an amendment log for the partner intervention.
@@ -2638,6 +2271,368 @@ class AmendmentLog(TimeStampedModel):
         ).order_by('created').values_list('id', flat=True))
 
         return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
+class FileType(models.Model):
+    """
+    Represents a file type
+    """
+
+    name = models.CharField(max_length=64L, unique=True)
+
+    def __unicode__(self):
+        return self.name
+def get_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_org',
+         str(instance.pca.agreement.partner.id),
+         'agreements',
+         str(instance.pca.agreement.id),
+         'interventions',
+         str(instance.pca.id),
+         filename]
+    )
+class PCAFile(models.Model):
+    """
+    Represents a file for the partner intervention
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`partners.FileType`
+    """
+
+    pca = models.ForeignKey(PCA, related_name='attachments')
+    type = models.ForeignKey(FileType)
+    attachment = models.FileField(
+        max_length=255,
+        upload_to=get_file_path
+    )
+
+    def __unicode__(self):
+        return self.attachment.name
+
+    def download_url(self):
+        if self.file:
+            return u'<a class="btn btn-primary default" ' \
+                   u'href="{}" >Download</a>'.format(self.file.file.url)
+        return u''
+    download_url.allow_tags = True
+    download_url.short_description = 'Download Files'
+class PCAGrant(TimeStampedModel):
+    """
+    Represents a grant for the partner intervention, which links a grant to a partnership with a specified amount
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`funds.Grant`
+    Relates to :model:`partners.AmendmentLog`
+    """
+    partnership = models.ForeignKey(PCA, related_name='grants')
+    grant = models.ForeignKey(Grant)
+    funds = models.IntegerField(null=True, blank=True)
+    # TODO: Add multi-currency support
+    amendment = models.ForeignKey(
+        AmendmentLog,
+        related_name='grants',
+        blank=True, null=True,
+    )
+
+    class Meta:
+        ordering = ['-funds']
+
+    def __unicode__(self):
+        return u'{}: {}'.format(
+            self.grant,
+            self.funds
+        )
+class GwPCALocation(models.Model):
+    """
+    Represents a location for the partner intervention, which links a location to a partnership
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`users.Sector`
+    Relates to :model:`locations.Governorate`
+    Relates to :model:`locations.Region`
+    Relates to :model:`locations.Locality`
+    Relates to :model:`locations.Location`
+    """
+
+    pca = models.ForeignKey(PCA, related_name='locations')
+    sector = models.ForeignKey(Sector, null=True, blank=True)
+    governorate = models.ForeignKey(
+        Governorate,
+        null=True,
+        blank=True
+    )
+    region = models.ForeignKey(
+        Region,
+        null=True,
+        blank=True
+    )
+    locality = models.ForeignKey(
+        Locality,
+        null=True,
+        blank=True
+    )
+    location = models.ForeignKey(
+        Location,
+        null=True,
+        blank=True
+    )
+    tpm_visit = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = 'Partnership Location'
+
+    def __unicode__(self):
+        return u'{} -> {}{}{}'.format(
+            self.governorate.name if self.governorate else u'',
+            self.region.name if self.region else u'',
+            u'-> {}'.format(self.locality.name) if self.locality else u'',
+            self.location.__unicode__() if self.location else u'',
+        )
+
+    def view_location(self):
+        return get_changeform_link(self)
+    view_location.allow_tags = True
+    view_location.short_description = 'View Location'
+class PCASector(TimeStampedModel):
+    """
+    Represents a sector for the partner intervention, which links a sector to a partnership
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`users.Sector`
+    Relates to :model:`partners.AmendmentLog`
+    """
+
+    pca = models.ForeignKey(PCA)
+    sector = models.ForeignKey(Sector)
+    amendment = models.ForeignKey(
+        AmendmentLog,
+        related_name='sectors',
+        blank=True, null=True,
+    )
+
+    class Meta:
+        verbose_name = 'PCA Sector'
+
+    def __unicode__(self):
+        return u'{}: {}: {}'.format(
+            self.pca.partner.name,
+            self.pca.number,
+            self.sector.name,
+        )
+class PCASectorGoal(models.Model):
+    """
+    Represents a goal for the partner intervention sector, which links a sector to a partnership
+
+    Relates to :model:`partners.PCASector`
+    Relates to :model:`reports.Goal`
+    """
+
+    pca_sector = models.ForeignKey(PCASector)
+    goal = models.ForeignKey(Goal)
+
+    class Meta:
+        verbose_name = 'CCC'
+        verbose_name_plural = 'CCCs'
+
+class IndicatorDueDates(models.Model):
+    """
+    Represents an indicator due date for the partner intervention
+
+    Relates to :model:`partners.PCA`
+    """
+
+    intervention = models.ForeignKey(
+        'PCA',
+        blank=True, null=True,
+        related_name='indicator_due_dates'
+    )
+    due_date = models.DateField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = 'Report Due Date'
+        verbose_name_plural = 'Report Due Dates'
+        ordering = ['-due_date']
+class PartnershipBudget(TimeStampedModel):
+    """
+    Represents a budget for the intervention
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`partners.AmendmentLog`
+    """
+
+    partnership = models.ForeignKey(PCA, related_name='budget_log', null=True, blank=True)
+    partner_contribution = models.IntegerField(default=0)
+    unicef_cash = models.IntegerField(default=0)
+    in_kind_amount = models.IntegerField(
+        default=0,
+        verbose_name='UNICEF Supplies'
+    )
+    year = models.CharField(
+        max_length=5,
+        blank=True, null=True
+    )
+    # TODO add Currency field
+    total = models.IntegerField(default=0)
+    amendment = models.ForeignKey(
+        AmendmentLog,
+        related_name='budgets',
+        blank=True, null=True,
+    )
+
+    def total_unicef_contribution(self):
+        return self.unicef_cash + self.in_kind_amount
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        """
+        Calculate total budget on save
+        """
+        self.total = \
+            self.total_unicef_contribution() \
+            + self.partner_contribution
+
+        super(PartnershipBudget, self).save(**kwargs)
+
+    def __unicode__(self):
+        return u'{}: {}'.format(
+            self.partnership,
+            self.total
+        )
+class AgreementAmendmentLog(TimeStampedModel):
+    """
+    Represents an amendment log for the partner agreement.
+
+    Relates to :model:`partners.Agreement`
+    """
+
+    agreement = models.ForeignKey(Agreement, related_name='amendments_log')
+    type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            'Authorised Officers',
+            'Banking Info',
+            'Agreement Changes',
+            'Additional Clauses',
+        ))
+    amended_at = models.DateField(null=True, verbose_name='Signed At')
+
+    amendment_number = models.IntegerField(default=0)
+
+    signed_document = models.FileField(
+        max_length=255,
+        upload_to=get_ageement_amd_file_path
+    )
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=PCA.PCA_STATUS,
+    )
+
+    def __unicode__(self):
+        return u'{}: {} - {}'.format(
+            self.amendment_number,
+            self.type,
+            self.amended_at
+        )
+
+    @property
+    def amendment_number(self):
+        """
+        Increment amendment number automatically
+        """
+        objects = list(AgreementAmendmentLog.objects.filter(
+            agreement=self.agreement
+        ).order_by('created').values_list('id', flat=True))
+
+        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
+class ResultChain(models.Model):
+    """
+    Represents a result chain for the partner intervention,
+    Connects Results and Indicators to interventions
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`reports.ResultType`
+    Relates to :model:`reports.Result`
+    Relates to :model:`reports.Indicator`
+    """
+
+    partnership = models.ForeignKey(PCA, related_name='results')
+    code = models.CharField(max_length=50, null=True, blank=True)
+    result_type = models.ForeignKey(ResultType)
+    result = models.ForeignKey(
+        Result,
+    )
+    indicator = models.ForeignKey(
+        Indicator,
+        blank=True, null=True
+    )
+    # fixed columns
+    target = models.PositiveIntegerField(
+        blank=True, null=True
+    )
+    current_progress = models.PositiveIntegerField(
+        default=0
+    )
+    partner_contribution = models.IntegerField(default=0)
+    unicef_cash = models.IntegerField(default=0)
+    in_kind_amount = models.IntegerField(default=0)
+
+    # variable disaggregation's that may be present in the work plan
+    disaggregation = JSONField(null=True)
+
+
+    @property
+    def total(self):
+
+        return self.unicef_cash + self.in_kind_amount + self.partner_contribution
+
+    def __unicode__(self):
+        return u'{} -> {} -> {}'.format(
+            self.result.result_structure.name if self.result.result_structure else '',
+            self.result.sector.name if self.result.sector else '',
+            self.result.__unicode__(),
+        )
+class AuthorizedOfficer(models.Model):
+    # TODO: write a script to move this to authorized officers on the model
+    # TODO: change on admin to use the model
+    """
+    Represents an authorized UNICEF officer on the partner agreement.
+
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`partners.PartnerStaffMember`
+    Relates to :model:`partners.AgreementAmendmentLog`
+    """
+
+    agreement = models.ForeignKey(
+        Agreement,
+    )
+    officer = models.ForeignKey(
+        PartnerStaffMember
+    )
+    amendment = models.ForeignKey(
+        'AgreementAmendmentLog',
+        blank=True, null=True,
+    )
+
+    def __unicode__(self):
+        return self.officer.__unicode__()
+
+    @classmethod
+    def create_officer(cls, sender, instance, created, **kwargs):
+        """
+        Signal handler to create authorized_officers automatically
+        """
+        if instance.partner_manager and \
+                instance.partner_manager.id not in \
+                instance.authorized_officers.values_list('officer', flat=True):
+
+            cls.objects.create(agreement=instance,
+                               officer=instance.partner_manager)
+post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
+
+post_save.connect(PCA.send_changes, sender=PCA)
+
 
 
 

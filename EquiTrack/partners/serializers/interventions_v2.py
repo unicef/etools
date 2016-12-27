@@ -1,18 +1,140 @@
+import json
+from operator import xor
 
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from rest_framework import serializers
+
+
+from partners.models import (
+    PCA,
+    InterventionBudget,
+    SupplyPlan,
+    DistributionPlan,
+    InterventionPlannedVisits,
+    Intervention,
+    InterventionAmendment,
+    PartnerOrganization,
+    PartnerType,
+    Agreement,
+    PartnerStaffMember,
+
+)
+from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
+
+
+class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InterventionBudget
+        fields = (
+            "partner_contribution",
+            "unicef_cash",
+            "in_kind_amount",
+            "partner_contribution_local",
+            "unicef_cash_local",
+            "in_kind_amount_local",
+            "year",
+            "total",
+        )
+
+
+class InterventionBudgetCreateUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InterventionBudget
+        fields = "__all__"
+
+    def validate(self, data):
+        errors = {}
+        try:
+            data = super(InterventionBudgetCreateUpdateSerializer, self).validate(data)
+        except ValidationError as e:
+            errors.update(e)
+
+        status = data.get("status", "")
+        year = data.get("year", "")
+        if not year and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+            errors.update(year="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+
+        partner_contribution = data.get("partner_contribution", "")
+        if not partner_contribution and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+            errors.update(partner_contribution="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+
+        unicef_cash = data.get("unicef_cash", "")
+        if not unicef_cash and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+            errors.update(unicef_cash="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
+
+
+class SupplyPlanCreateUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SupplyPlan
+        fields = "__all__"
+
+
+class SupplyPlanNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SupplyPlan
+        fields = (
+            "item",
+            "quantity",
+        )
+
+
+class DistributionPlanCreateUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DistributionPlan
+        fields = "__all__"
+
+
+class DistributionPlanNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DistributionPlan
+        fields = (
+            "item",
+            "quantity",
+            "site",
+        )
+
+
+class InterventionAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InterventionAmendment
+        fields = "__all__"
+
+
+class InterventionAmendmentNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InterventionAmendment
+        fields = (
+            "amended_at",
+            "type",
+        )
 
 
 
 class PlannedVisitsCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = PlannedVisits
+        model = InterventionPlannedVisits
         fields = "__all__"
 
 
 class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = PlannedVisits
+        model = InterventionPlannedVisits
         fields = (
             "year",
             "programmatic",
@@ -38,11 +160,11 @@ class InterventionListSerializer(serializers.ModelSerializer):
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
-    budget_log = PartnershipBudgetNestedSerializer(many=True)
+    budget_log = InterventionBudgetNestedSerializer(many=True)
     partner = serializers.CharField(source='agreement.partner.name')
     supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
     distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
-    amendments = AmendmentLogNestedSerializer(many=True, required=False)
+    amendments = InterventionAmendmentNestedSerializer(many=True, required=False)
     visits = PlannedVisitsNestedSerializer(many=True, required=False)
 
     class Meta:
@@ -84,7 +206,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
         for item in budget_log:
             item["partnership"] = intervention.id
-            serializer = PartnershipBudgetCreateUpdateSerializer(data=item)
+            serializer = InterventionBudgetCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
@@ -105,7 +227,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
         for item in amendments:
             item["partnership"] = intervention.id
-            serializer = AmendmentLogCreateUpdateSerializer(data=item)
+            serializer = InterventionAmendmentCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
@@ -163,7 +285,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
         for item in budget_log:
             item["partnership"] = instance.id
-            serializer = PartnershipBudgetCreateUpdateSerializer(data=item)
+            serializer = InterventionBudgetCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
@@ -202,7 +324,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
         for item in amendments_log:
             item["partnership"] = instance.id
-            serializer = AmendmentLogCreateUpdateSerializer(data=item)
+            serializer = InterventionAmendmentCreateUpdateSerializer(data=item)
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
@@ -305,10 +427,10 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
 
-    budget_log = PartnershipBudgetNestedSerializer(many=True)
+    budget_log = InterventionBudgetNestedSerializer(many=True)
     supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
     distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
-    amendments_log = AmendmentLogNestedSerializer(many=True, required=False)
+    amendments_log = InterventionAmendmentNestedSerializer(many=True, required=False)
     visits = PlannedVisitsNestedSerializer(many=True, required=False)
     partner = serializers.CharField(source='agreement.partner')
 
