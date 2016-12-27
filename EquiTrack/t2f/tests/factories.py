@@ -74,12 +74,15 @@ class AirlineCompanyFactory(factory.DjangoModelFactory):
 
 
 class DSARegionFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=32)
+    country = fuzzy.FuzzyText(length=32)
+    region = fuzzy.FuzzyText(length=32)
     dsa_amount_usd = 100
     dsa_amount_60plus_usd = 80
     dsa_amount_local = 200
     dsa_amount_60plus_local = 160
     room_rate = 150
+    eff_date = datetime.now().date()
+    finalization_date = datetime.now().date()
 
     class Meta:
         model = DSARegion
