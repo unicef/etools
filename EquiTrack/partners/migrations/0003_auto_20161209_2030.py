@@ -5,30 +5,30 @@ from __future__ import unicode_literals
 from django.db import migrations, models
 import django.db.models.deletion
 
-def forwards(apps, schema_editor):
-    migrations.RemoveField(
-        model_name='indicatorreport',
-        name='result_chain',
-    ),
-    migrations.AlterField(
-        model_name='indicatorreport',
-        name='indicator',
-        field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports',
-                                to='reports.AppliedIndicator'),
-    ),
-
-def backwards(apps, schema_editor):
-    migrations.AddField(
-        model_name='indicatorreport',
-        name='result_chain',
-        field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='indicator_reports',
-                                to='partners.ResultChain', blank=True, null=True),
-    ),
-    migrations.AlterField(
-        model_name='indicatorreport',
-        name='indicator',
-        field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports',
-                                to='reports.Indicator'))
+# def forwards(apps, schema_editor):
+#     migrations.RemoveField(
+#         model_name='indicatorreport',
+#         name='result_chain',
+#     ),
+#     migrations.AlterField(
+#         model_name='indicatorreport',
+#         name='indicator',
+#         field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports',
+#                                 to='reports.AppliedIndicator'),
+#     ),
+#
+# def backwards(apps, schema_editor):
+#     migrations.AddField(
+#         model_name='indicatorreport',
+#         name='result_chain',
+#         field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='indicator_reports',
+#                                 to='partners.ResultChain', blank=True, null=True),
+#     ),
+#     migrations.AlterField(
+#         model_name='indicatorreport',
+#         name='indicator',
+#         field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports',
+#                                 to='reports.Indicator'))
 
 
 class Migration(migrations.Migration):
@@ -38,6 +38,16 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(forwards, reverse_code=backwards),
+        migrations.RemoveField(
+            model_name='indicatorreport',
+            name='result_chain',
+        ),
+        migrations.AlterField(
+            model_name='indicatorreport',
+            name='indicator',
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reports',
+                                    to='reports.AppliedIndicator'),
+        ),
+        #migrations.RunPython(forwards, reverse_code=backwards),
 
     ]

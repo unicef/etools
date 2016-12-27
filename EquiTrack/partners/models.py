@@ -242,7 +242,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=256L,
         blank=True
     )
-    shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True)
+    shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True, null=True)
 
     # TODO remove this after migration to shared_with + add calculation to hact_field
     shared_partner = models.CharField(
@@ -808,7 +808,8 @@ class BankDetails(models.Model):
     #TODO: remove agreement field when possible since we're adding it on the partner Org
     agreement = models.ForeignKey('partners.Agreement', related_name='bank_details')
 
-    partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details')
+    # TODO: remove the ability to add blank for the partner_organization field
+    partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details', null=True, blank=True)
     bank_name = models.CharField(max_length=255, null=True, blank=True)
     bank_address = models.CharField(
         max_length=256L,
@@ -2521,7 +2522,9 @@ class AgreementAmendmentLog(TimeStampedModel):
 
     signed_document = models.FileField(
         max_length=255,
-        upload_to=get_ageement_amd_file_path
+        upload_to=get_ageement_amd_file_path,
+        blank=True,
+        null=True,
     )
     status = models.CharField(
         max_length=32L,
