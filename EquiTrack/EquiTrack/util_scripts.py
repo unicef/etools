@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
-from partners.models import FundingCommitment, ResultChain
+from partners.models import FundingCommitment
 
 def printtf(*args):
     print([arg for arg in args])
@@ -382,4 +382,15 @@ def after_code_merge(): #and after migrations
     print("don't forget to sync")
 
 
+from partners.models import Agreement
 
+def agreement_unique_reference_number():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry.name)
+        agreements = Agreement.objects.all()
+        for agr in agreements:
+            if agr.agreement_number == '':
+                print(agr)
+                agr.agreement_number = 'blk:{}'.format(agr.id)
+                agr.save()
