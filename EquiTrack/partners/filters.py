@@ -20,7 +20,7 @@ from partners.models import (
     GwPCALocation,
     #IndicatorProgress,
 )
-from partners.serializers import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
+from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
     InterventionExportFilterSerializer, GovernmentInterventionExportFilterSerializer
 from reports.admin import SectorListFilter
 from reports.models import Sector, Indicator

@@ -2,6 +2,7 @@ __author__ = 'unicef-leb-inn'
 
 import json
 
+from django.db import connection
 from rest_framework import status
 
 from EquiTrack.factories import (
@@ -12,8 +13,10 @@ from EquiTrack.factories import (
     ResultStructureFactory,
     LocationFactory,
     AgreementFactory,
+    GovernmentInterventionFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
+from users.models import Section
 from reports.models import ResultType, Sector
 from funds.models import Grant, Donor
 from partners.models import (
@@ -277,3 +280,107 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+
+class TestGovernmentInterventionViews(APITenantTestCase):
+
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.gov_intervention = GovernmentInterventionFactory()
+
+    def test_api_gov_interventions_list(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/interventions/',
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+
+    def test_api_gov_interventions_retrieve(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/interventions/{}/'.format(self.gov_intervention.id),
+            user=self.unicef_staff
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["id"], self.gov_intervention.id)
+
+    def test_api_gov_interventions_create_validation(self):
+        result = {
+                "planned_visits": 5,
+            }
+        data = {
+            "partner": self.gov_intervention.partner.id,
+            "result_structure": self.gov_intervention.result_structure.id,
+            "results": [result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/partners/interventions/',
+            user=self.unicef_staff,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data["results"][0]["result"], ["This field is required."])
+        self.assertEquals(response.data["results"][0]["year"], ["This field is required."])
+
+    def test_api_gov_interventions_create_update_filter(self):
+        # Create
+        sectorobj = Sector.objects.create(name="Sector111")
+        sectionobj = connection.tenant.sections.create(name="Section111")
+        resultobj = ResultFactory()
+        userobj = UserFactory()
+        result = {
+                "result": resultobj.id,
+                "unicef_managers": [userobj.id],
+                "year": "2016",
+                "planned_amount": 100,
+                "planned_visits": 5,
+                "sector": sectorobj.id,
+                "section": sectionobj.id,
+            }
+        data = {
+            "partner": self.gov_intervention.partner.id,
+            "result_structure": self.gov_intervention.result_structure.id,
+            "results": [result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/partners/interventions/',
+            user=self.unicef_staff,
+            data=data
+        )
+
+        # Update
+        response.data.update(results=[result, result])
+        response = self.forced_auth_req(
+            'put',
+            '/api/v2/partners/interventions/{}/'.format(response.data["id"]),
+            user=self.unicef_staff,
+            data=response.data
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data["results"]), 2)
+
+        # filter and search
+        params = {
+            "partner_name": self.gov_intervention.partner.name,
+            "result": resultobj.id,
+            "sector": sectorobj.id,
+            "unicef_manager": userobj.id,
+            "year": "2016",
+            "search": "Partner",
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/interventions/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
