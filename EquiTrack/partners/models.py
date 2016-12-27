@@ -1713,53 +1713,53 @@ class RAMIndicator(models.Model):
         )
 
 
-class ResultChain(models.Model):
-    """
-    Represents a result chain for the partner intervention,
-    Connects Results and Indicators to interventions
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`reports.ResultType`
-    Relates to :model:`reports.Result`
-    Relates to :model:`reports.Indicator`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='results')
-    code = models.CharField(max_length=50, null=True, blank=True)
-    result_type = models.ForeignKey(ResultType)
-    result = models.ForeignKey(
-        Result,
-    )
-    indicator = models.ForeignKey(
-        Indicator,
-        blank=True, null=True
-    )
-    # fixed columns
-    target = models.PositiveIntegerField(
-        blank=True, null=True
-    )
-    current_progress = models.PositiveIntegerField(
-        default=0
-    )
-    partner_contribution = models.IntegerField(default=0)
-    unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(default=0)
-
-    # variable disaggregation's that may be present in the work plan
-    disaggregation = JSONField(null=True)
-
-
-    @property
-    def total(self):
-
-        return self.unicef_cash + self.in_kind_amount + self.partner_contribution
-
-    def __unicode__(self):
-        return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name if self.result.result_structure else '',
-            self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
-        )
+# class ResultChain(models.Model):
+#     """
+#     Represents a result chain for the partner intervention,
+#     Connects Results and Indicators to interventions
+#
+#     Relates to :model:`partners.PCA`
+#     Relates to :model:`reports.ResultType`
+#     Relates to :model:`reports.Result`
+#     Relates to :model:`reports.Indicator`
+#     """
+#
+#     partnership = models.ForeignKey(PCA, related_name='results')
+#     code = models.CharField(max_length=50, null=True, blank=True)
+#     result_type = models.ForeignKey(ResultType)
+#     result = models.ForeignKey(
+#         Result,
+#     )
+#     indicator = models.ForeignKey(
+#         Indicator,
+#         blank=True, null=True
+#     )
+#     # fixed columns
+#     target = models.PositiveIntegerField(
+#         blank=True, null=True
+#     )
+#     current_progress = models.PositiveIntegerField(
+#         default=0
+#     )
+#     partner_contribution = models.IntegerField(default=0)
+#     unicef_cash = models.IntegerField(default=0)
+#     in_kind_amount = models.IntegerField(default=0)
+#
+#     # variable disaggregation's that may be present in the work plan
+#     disaggregation = JSONField(null=True)
+#
+#
+#     @property
+#     def total(self):
+#
+#         return self.unicef_cash + self.in_kind_amount + self.partner_contribution
+#
+#     def __unicode__(self):
+#         return u'{} -> {} -> {}'.format(
+#             self.result.result_structure.name if self.result.result_structure else '',
+#             self.result.sector.name if self.result.sector else '',
+#             self.result.__unicode__(),
+#         )
 
 
 class IndicatorDueDates(models.Model):
