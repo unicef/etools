@@ -3,7 +3,9 @@ import functools
 
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, StreamingHttpResponse
+from django.db import transaction
 from django.db.models import Q
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
@@ -127,10 +129,25 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
 
         return response
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
+        # get all staff members
+        staff_members = request.data.pop('staff_members')
+
+        # validate and save partner org
+        po_serializer = self.get_serializer(data=request.data)
+        po_serializer.is_valid(raise_exception=True)
+        partner = po_serializer.save()
+
+
+        if staff_members:
+            for item in staff_members:
+                item.update({"partner": partner.pk})
+            staff_members_serializer = PartnerStaffMemberUpdateSerializer(data=staff_members, many=True)
+            staff_members_serializer.is_valid(raise_exception=True)
+            staff_members_serializer.save()
+
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

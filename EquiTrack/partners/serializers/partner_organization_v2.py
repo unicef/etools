@@ -171,7 +171,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
-    staff_members = PartnerStaffMemberNestedSerializer(many=True)
+    staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
 
     class Meta:
         model = PartnerOrganization
