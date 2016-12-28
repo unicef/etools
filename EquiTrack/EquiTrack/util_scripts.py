@@ -521,6 +521,29 @@ def bank_details_to_partner():
                 if created:
                     print(bd.partner_organization)
 
+def agreement_amendments_copy():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry.name)
+        agr_amds = AgreementAmendmentLog.objects.all()
+        amd_type = ''
+        for agr in agr_amds:
+            if agr.type == 'Authorised Officers':
+                amd_type = 'Change authorized officer'
+            elif agr.type == 'Banking Info':
+                amd_type = 'Change banking info'
+            elif agr.type == 'Agreement Changes':
+                amd_type = 'Amend existing clause'
+            elif agr.type == 'Additional Clauses':
+                amd_type = 'Additional clause'
+
+            amd, created = AgreementAmendment.objects.get_or_create(number=agr.amendment_number,
+                                                     agreement=agr,
+                                                     type=amd_type,
+                                                     signed_amendment=agr.signed_document,
+                                                     signed_date=agr.amended_at, )
+            if created:
+                print({}-{}.format(amd.number, amd.agreement))
 
 
 

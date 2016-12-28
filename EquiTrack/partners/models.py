@@ -1052,7 +1052,7 @@ class AgreementAmendment(TimeStampedModel):
         ('Change authorized officer', 'Change Authorized Officer'),
         ('Change banking info', 'Banking Information'),
         ('Additional clause', 'Additional Clause'),
-        ('Amend existing clause', 'Amend Existing Clause')
+        ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
     )
     number = models.CharField(max_length=5, unique=True)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
