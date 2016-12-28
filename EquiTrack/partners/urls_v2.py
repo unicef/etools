@@ -2,9 +2,8 @@ from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views.v1 import InterventionsView
+from .views.partner_organization_v2 import PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView
 from .views.v2 import (
-    PartnerOrganizationListAPIView,
-    PartnerOrganizationDetailAPIView,
     PartnerInterventionListAPIView,
     AgreementListAPIView,
     AgreementDetailAPIView,

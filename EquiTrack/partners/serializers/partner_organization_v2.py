@@ -17,6 +17,8 @@ from locations.models import Location
 
 from .v1 import PartnerStaffMemberSerializer
 
+
+
 from partners.models import (
     Assessment,
     PCA,
@@ -128,6 +130,12 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         return ', '.join([sm.get_full_name() for sm in obj.staff_members.filter(active=True).all()])
 
 
+class AssessmentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assessment
+        fields = "__all__"
+
+
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -150,10 +158,6 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "total_ct_cy",
         )
 
-class AssessmentDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Assessment
-        fields = "__all__"
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 

@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
+from reports.serializers import SectorLightSerializer
+from locations.models import Location
 
 from partners.models import (
     PCA,
@@ -18,8 +20,10 @@ from partners.models import (
     PartnerType,
     Agreement,
     PartnerStaffMember,
-
+    InterventionSectorLocationLink
 )
+from locations.serializers import LocationLightSerializer
+
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
 
 
@@ -142,6 +146,15 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
             "audit",
         )
 
+class InterventionSectorLocationSerializer(serializers.ModelSerializer):
+
+    sector = SectorLightSerializer()
+    locations = LocationLightSerializer(many=True)
+    class Meta:
+        model = InterventionSectorLocationLink
+        fields = (
+            "id", "sector", "location"
+        )
 
 class InterventionListSerializer(serializers.ModelSerializer):
 
@@ -149,12 +162,16 @@ class InterventionListSerializer(serializers.ModelSerializer):
 
     unicef_budget = serializers.IntegerField(source='total_unicef_cash')
     cso_contribution = serializers.IntegerField(source='total_partner_contribution')
+    sectors = serializers.SerializerMethodField()
+
+    def get_sectors(self, obj):
+        return [l.sector for l in obj.sector_locations.all()]
 
     class Meta:
         model = Intervention
         fields = (
-            'id', 'reference_number', 'number', 'document_type', 'partner_name', 'status', 'title', 'start_date', 'end_date',
-            'sector', 'unicef_budget', 'cso_contribution',
+            'id', 'reference_number', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
+            'unicef_budget', 'cso_contribution',
         )
 
 
@@ -171,12 +188,12 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             "id", "partner", "agreement", "document_type", "hrp", "number",
-            "title", "status", "start_date", "end_date", "submission_date_prc", "review_date_prc",
-            "prc_review_document", "signed_by_unicef", "unicef_focal_points",
-            "submission_date", "signed_by_unicef_date", "signed_by_partner_date", "intervention_programme_focal_points",
-            "partner_authorized_officials", "office", "fr_numbers", "planned_visits", "population_focus",
-            "created_at", "updated_at", "budget_log", "supply_plans",
-            "distribution_plans", "amendments", "sector", "location", "visits",
+            "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
+            "prc_review_document", "unicef_signatory", "unicef_focal_points",
+            "submission_date", "signed_by_unicef_date", "signed_by_partner_date", "partner_focal_points",
+            "partner_authorized_officer_signatory", "office", "fr_numbers", "planned_visits", "population_focus",
+            "created", "modified", "budget_log", "supply_plans",
+            "distribution_plans", "amendments", "visits",
         )
         read_only_fields = ("id",)
 
@@ -241,8 +258,8 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        pcasectors = validated_data.pop("pcasectors", [])
-        locations = validated_data.pop("locations", [])
+        # pcasectors = validated_data.pop("pcasectors", [])
+        # locations = validated_data.pop("locations", [])
         budget_log = validated_data.pop("budget_log", [])
         supply_plans = validated_data.pop("supply_plans", [])
         distribution_plans = validated_data.pop("distribution_plans", [])
@@ -252,10 +269,10 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         updated = super(InterventionCreateUpdateSerializer, self).update(instance, validated_data)
 
         # Sectors
-        ids = [x["id"] for x in pcasectors if "id" in x.keys()]
-        for item in instance.pcasectors.all():
-            if item.sector.id not in ids:
-                item.delete()
+        # ids = [x["id"] for x in pcasectors if "id" in x.keys()]
+        # for item in instance.pcasectors.all():
+        #     if item.sector.id not in ids:
+        #         item.delete()
 
         # for item in pcasectors:
         #     item["pca"] = instance.id
@@ -387,7 +404,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
             errors.update(signed_by_unicef_date=["signed_by_unicef_date and unicef_manager must be provided."])
 
         start_date_errors = []
-        start_date = data.get("start_date", None)
+        start_date = data.get("start", None)
         signed_by_unicef_date = data.get("signed_by_unicef_date", None)
         signed_by_partner_date = data.get("signed_by_partner_date", None)
         if not start_date and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
@@ -399,7 +416,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
             errors.update(start_date=start_date_errors)
 
         end_date_errors = []
-        end_date = data.get("end_date", None)
+        end_date = data.get("end", None)
         if not end_date and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
             end_date_errors.append("This field is required.")
         if end_date and start_date and end_date < start_date:
@@ -411,13 +428,13 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         if not population_focus and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
             errors.update(population_focus="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
 
-        pcasectors = data.get("pcasectors", "")
-        if not pcasectors and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(pcasectors="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+        # pcasectors = data.get("pcasectors", "")
+        # if not pcasectors and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+        #     errors.update(pcasectors="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
 
-        locations = data.get("locations", "")
-        if not locations and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(locations="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+        # locations = data.get("locations", "")
+        # if not locations and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+        #     errors.update(locations="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -438,12 +455,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             "id", "partner", "agreement", "document_type", "hrp", "number",
-            "title", "status", "start_date", "end_date", "submission_date_prc", "review_date_prc",
+            "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "signed_by_unicef_date", "signed_by_partner_date",
-            "signed_by_unicef", "unicef_focal_points", "intervention_programme_focal_points", "partner_authorized_officials",
+            "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "office", "fr_numbers", "planned_visits", "population_focus",
-            "created_at", "updated_at", "budget_log", "supply_plans",
-            "distribution_plans", "amendments_log", "sector", "location", "visits",
+            "created", "modified", "budget_log", "supply_plans",
+            "distribution_plans", "amendments_log", "visits"
         )
 
 
@@ -462,45 +479,48 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     cso_contribution = serializers.IntegerField(source='total_partner_contribution')
     partner_contribution_local = serializers.IntegerField(source='total_partner_contribution_local')
     unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
-    signed_by_unicef_name = serializers.SerializerMethodField()
+    unicef_signatory = serializers.SerializerMethodField()
     hrp_name = serializers.CharField(source='hrp.name')
-    intervention_programme_focals = serializers.SerializerMethodField()
+    partner_focal_points = serializers.SerializerMethodField()
     visits = PlannedVisitsNestedSerializer(many=True, required=False)
     supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
     distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
-    unicef_focals = serializers.SerializerMethodField()
+    unicef_focal_points = serializers.SerializerMethodField()
     fr_numbers_list = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
         fields = (
             "id", "status", "partner_name", "agreement_name", "document_type", "number", "title",
-            "start_date", "end_date", "offices", "sectors", "locations", "unicef_focals",
+            "start", "end", "offices", "unicef_focals",
             "partner_auth_officials", "unicef_focals", "intervention_programme_focals", "population_focus",
             "hrp_name", "fr_numbers_list", "planned_budget_local", "unicef_budget", "unicef_cash_local", "cso_contribution",
             "partner_contribution_local", "visits", "submission_date", "submission_date_prc", "review_date_prc",
-            "signed_by_unicef_name", "signed_by_unicef_date", "signed_by_partner_date", "supply_plans", "distribution_plans",
+            "unicef_signatory", "signed_by_unicef_date", "signed_by_partner_date", "supply_plans", "distribution_plans",
         )
 
-    def get_signed_by_unicef_name(self, obj):
-        return obj.signed_by_unicef.get_full_name()
+    def get_unicef_signatory(self, obj):
+        return obj.unicef_signatory.get_full_name()
 
     def get_offices(self, obj):
         return ', '.join([o.name for o in obj.office.all()])
 
     def get_sectors(self, obj):
-        return ', '.join([l.name for l in obj.sector.all()])
+        return ', '.join([l.sector.name for l in obj.sector_locations.all()])
 
     def get_locations(self, obj):
-        return ', '.join([l.name for l in obj.location.all() if l.name])
+        ll = Location.objects.\
+            filter(intervention_sector_locations__intervention=obj.id).order_by('name').\
+            value_list('name', flat=True).distinct()
+        return ', '.join(ll)
 
-    def get_partner_auth_officials(self, obj):
-        return ', '.join([pf.get_full_name() for pf in obj.partner_authorized_officials.all()])
+    def get_partner_authorized_officer_signatory(self, obj):
+        return obj.partner_authorized_officer_signatory.get_full_name()
 
-    def get_intervention_programme_focals(self, obj):
-        return ', '.join([pf.get_full_name() for pf in obj.intervention_programme_focal_points.all()])
+    def get_partner_focal_points(self, obj):
+        return ', '.join([pf.get_full_name() for pf in obj.partner_focal_points.all()])
 
-    def get_unicef_focals(self, obj):
+    def get_unicef_focal_points(self, obj):
         return ', '.join([pf.get_full_name() for pf in obj.unicef_focal_points.all()])
 
     def get_fr_numbers_list(self, obj):
