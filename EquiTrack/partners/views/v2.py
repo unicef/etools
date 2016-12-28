@@ -36,8 +36,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationListSerializer,
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
-    PartnerStaffMemberCreateSerializer,
-    PartnerStaffMemberUpdateSerializer,
+    PartnerStaffMemberCreateUpdateSerializer,
 )
 from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
@@ -336,7 +335,7 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
                 if query_params.get("format") == 'csv':
                     return PartnerStaffMemberExportSerializer
         if self.request.method == "POST":
-            return PartnerStaffMemberCreateSerializer
+            return PartnerStaffMemberCreateUpdateSerializer
         return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
 
     def list(self, request, partner_pk=None, format=None):
@@ -360,7 +359,7 @@ class PartnerStaffMemberDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
-            return PartnerStaffMemberUpdateSerializer
+            return PartnerStaffMemberCreateUpdateSerializer
         return super(PartnerStaffMemberDetailAPIView, self).get_serializer_class()
 
 

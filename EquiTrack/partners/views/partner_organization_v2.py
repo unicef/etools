@@ -9,6 +9,7 @@ from django.db.models import Q
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 from rest_framework.generics import (
@@ -41,7 +42,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateSerializer,
-    PartnerStaffMemberUpdateSerializer,
+    PartnerStaffMemberCreateUpdateSerializer,
 )
 from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
@@ -131,25 +132,29 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        # TODO: on create we should call the insight API with the vendor number and use that information to populate:
         # get all staff members
-        staff_members = request.data.pop('staff_members')
+        staff_members = request.data.pop('staff_members', None)
 
         # validate and save partner org
         po_serializer = self.get_serializer(data=request.data)
         po_serializer.is_valid(raise_exception=True)
         partner = po_serializer.save()
 
-
         if staff_members:
             for item in staff_members:
-                item.update({"partner": partner.pk})
-            staff_members_serializer = PartnerStaffMemberUpdateSerializer(data=staff_members, many=True)
-            staff_members_serializer.is_valid(raise_exception=True)
+                item.update({u"partner": partner.pk})
+            staff_members_serializer = PartnerStaffMemberCreateUpdateSerializer(data=staff_members, many=True)
+            try:
+                staff_members_serializer.is_valid(raise_exception=True)
+            except ValidationError as e:
+                e.detail = {'staff_members': e.detail}
+                raise e
             staff_members_serializer.save()
 
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        headers = self.get_success_headers(po_serializer.data)
+        return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
@@ -180,3 +185,45 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             data,
             status=status.HTTP_200_OK
         )
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+
+        partial = kwargs.pop('partial', False)
+        staff_members = request.data.pop('staff_members', None)
+        instance = self.get_object()
+        po_serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        po_serializer.is_valid(raise_exception=True)
+        partner = po_serializer.save()
+
+        if staff_members:
+            for item in staff_members:
+                item.update({u"partner": partner.pk})
+                if item.get('id', None):
+                    try:
+                        sm_instance = PartnerStaffMember.objects.get(id=item['id'])
+                    except PartnerStaffMember.DoesNotExist:
+                        sm_instance = None
+
+                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance,
+                                                                                       data=item,
+                                                                                       partial=partial)
+                else:
+                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(data=item)
+
+                try:
+                    staff_member_serializer.is_valid(raise_exception=True)
+                except ValidationError as e:
+                    e.detail = {'staff_members': e.detail}
+                    raise e
+
+                staff_member_serializer.save()
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
+            po_serializer = self.get_serializer(instance)
+
+        return Response(po_serializer.data)
+
