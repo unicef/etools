@@ -15,6 +15,8 @@ from partners.serializers.v1 import (
 )
 from locations.models import Location
 
+from users.serializers import SimpleProfileSerializer
+
 from .v1 import PartnerStaffMemberSerializer
 
 from partners.models import (
@@ -36,11 +38,13 @@ from partners.models import (
 class AgreementListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
+    signed_by = SimpleProfileSerializer()
 
     class Meta:
         model = Agreement
         fields = (
             "id",
+            "partner",
             "reference_number",
             "partner_name",
             "agreement_type",
@@ -49,7 +53,6 @@ class AgreementListSerializer(serializers.ModelSerializer):
             "signed_by_unicef_date",
             "signed_by_partner_date",
             "status",
-            "partner_manager",
             "signed_by",
         )
 
