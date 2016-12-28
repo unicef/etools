@@ -17,6 +17,8 @@ from locations.models import Location
 
 from .v1 import PartnerStaffMemberSerializer
 
+
+
 from partners.models import (
     Assessment,
     PCA,
@@ -67,6 +69,7 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = (
+            "id",
             "title",
             "first_name",
             "last_name",
@@ -76,31 +79,42 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
         )
 
 
-class PartnerStaffMemberUpdateSerializer(serializers.ModelSerializer):
+class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
 
     def validate(self, data):
-        data = super(PartnerStaffMemberUpdateSerializer, self).validate(data)
+        data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
-        existing_user = None
+
+        try:
+            existing_user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # this is a new user
+            existing_user = None
+
+        if existing_user and not self.instance and existing_user.profile.partner_staff_member:
+            raise ValidationError(
+                {'active': 'The Partner Staff member you are '
+                           'trying to add is associated with a different partnership: {}'.format(email)})
 
         # make sure email addresses are not editable after creation.. user must be removed and re-added
-        if email != self.instance.email:
-            raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
+        if self.instance:
+            if email != self.instance.email:
+                raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
 
-        # when adding the active tag to a previously untagged user
-        # make sure this user has not already been associated with another partnership.
-        # TODO: check this.. it will always fail because existing user is manyally set to NONE
-        if active and not self.instance.active and \
-                existing_user and existing_user.partner_staff_member and \
-                existing_user.partner_staff_member != self.instance.pk:
-            raise ValidationError(
-                {'active': 'The Partner Staff member you are trying to activate is associated with a different partnership'}
-            )
+            # when adding the active tag to a previously untagged user
+            # make sure this user has not already been associated with another partnership.
+            # TODO: Users should have a json field with country partnerhip pairs not just partnerships
+            if active and not self.instance.active and \
+                    existing_user and existing_user.profile.partner_staff_member and \
+                    existing_user.profile.partner_staff_member != self.instance.pk:
+                raise ValidationError(
+                    {'active': 'The Partner Staff member you are trying to activate is associated with a different partnership'}
+                )
 
         return data
 
@@ -128,6 +142,12 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         return ', '.join([sm.get_full_name() for sm in obj.staff_members.filter(active=True).all()])
 
 
+class AssessmentDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Assessment
+        fields = "__all__"
+
+
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -150,10 +170,6 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "total_ct_cy",
         )
 
-class AssessmentDetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Assessment
-        fields = "__all__"
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
@@ -167,43 +183,11 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
-    staff_members = PartnerStaffMemberNestedSerializer(many=True)
+    staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
 
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
-
-    @transaction.atomic
-    def create(self, validated_data):
-        staff_members = validated_data.pop("staff_members", [])
-        partner = super(PartnerOrganizationCreateUpdateSerializer, self).create(validated_data)
-        for item in staff_members:
-            item["partner"] = partner.id
-            # Utilize extra validation logic in this serializer
-            serializer = PartnerStaffMemberCreateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-        return partner
-
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        staff_members = validated_data.pop("staff_members", [])
-        updated = PartnerOrganization(id=instance.id, **validated_data)
-        updated.save()
-
-        # Create or update new/changed members.
-        for item in staff_members:
-            item["partner"] = instance.id
-            if "id" in item.keys():
-                # Utilize extra validation logic in this serializer
-                serializer = PartnerStaffMemberUpdateSerializer(data=item)
-            else:
-                # Utilize extra validation logic in this serializer
-                serializer = PartnerStaffMemberCreateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        return updated
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):

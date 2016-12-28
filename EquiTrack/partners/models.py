@@ -1216,7 +1216,6 @@ class Intervention(TimeStampedModel):
     office = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
     fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), null=True)
     population_focus = models.CharField(max_length=130, null=True, blank=True)
-    sector = models.ManyToManyField(Sector, blank=True, related_name='sector_interventions')
 
 
     class Meta:
@@ -1413,10 +1412,6 @@ class InterventionBudget(TimeStampedModel):
             self.partnership,
             self.total
         )
-class InterventionLocationsLink(models.Model):
-    intervention_result_link = models.ForeignKey(InterventionResultLink, related_name='location_link')
-    location = models.ForeignKey(Location)
-    sectors = models.ManyToManyField(Sector, blank=True, related_name='intervention_result_locations')
 class InterventionAttachment(models.Model):
     """
     Represents a file for the partner intervention
@@ -1433,6 +1428,10 @@ class InterventionAttachment(models.Model):
     )
     def __unicode__(self):
         return self.attachment.name
+class InterventionSectorLocationLink(models.Model):
+    intervention = models.ForeignKey(Intervention, related_name='sector_locations')
+    sector = models.ForeignKey(Sector, related_name='intervention_locations')
+    locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
 
 # TODO: check this for sanity
 class GovernmentIntervention(models.Model):

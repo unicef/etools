@@ -37,6 +37,12 @@ class SectorSerializer(serializers.ModelSerializer):
         model = Sector
         fields = ('sector_id', 'name', 'description', 'goals')
 
+class SectorLightSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Sector
+        fields = ('id', 'name')
+
 
 class IndicatorSerializer(serializers.ModelSerializer):
 

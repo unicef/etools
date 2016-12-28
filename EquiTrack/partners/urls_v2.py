@@ -2,9 +2,8 @@ from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views.v1 import InterventionsView
+from .views.partner_organization_v2 import PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView
 from .views.v2 import (
-    PartnerOrganizationListAPIView,
-    PartnerOrganizationDetailAPIView,
     PartnerInterventionListAPIView,
     AgreementListAPIView,
     AgreementDetailAPIView,
@@ -21,8 +20,11 @@ urlpatterns = (
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
     url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
     url(r'^agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='agreement-interventions-list'),
-    url(r'^partners/$', view=PartnerOrganizationListAPIView.as_view(), name='partner-list'),
-    url(r'^partners/(?P<pk>\d+)/$', view=PartnerOrganizationDetailAPIView.as_view(), name='partner-detail'),
+
+    url(r'^partners/$', view=PartnerOrganizationListAPIView.as_view(http_method_names=['get', 'post']), name='partner-list'),
+    url(r'^partners/(?P<pk>\d+)/$', view=PartnerOrganizationDetailAPIView.as_view(http_method_names=['get', 'patch']), name='partner-detail'),
+
+
     url(r'^partners/(?P<pk>\d+)/interventions/$', view=PartnerInterventionListAPIView.as_view(), name='partner-interventions-list'),
     url(r'^partners/(?P<partner_pk>\d+)/agreements/$', view=AgreementListAPIView.as_view(), name='parter-agreement-list'),
     url(r'^partners/(?P<partner_pk>\d+)/agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='partner-agreement-interventions-list'),
