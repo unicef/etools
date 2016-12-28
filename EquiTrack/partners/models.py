@@ -62,7 +62,7 @@ def get_agreement_path(instance, filename):
          'partner_organization',
          str(instance.partner.id),
          'agreements',
-         str(instance.id),
+         str(instance.agreement_number),
          filename]
     )
 def get_assesment_path(instance, filename):
@@ -128,16 +128,16 @@ def get_intervention_attachments_file_path(instance, filename):
          str(instance.id),
          filename]
     )
-def get_ageement_amd_file_path(instance, filename):
+def get_agreement_amd_file_path(instance, filename):
     return '/'.join(
         [connection.schema_name,
          'file_attachments',
          'partner_org',
          str(instance.agreement.partner.id),
          'agreements',
-         str(instance.agreement.id),
+         instance.agreement.base_number,
          'amendments',
-         str(instance.id),
+         str(instance.number),
          filename]
     )
 
@@ -366,7 +366,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def get_last_pca(self):
         # exclude Agreements that were not signed
-        return self.agreement_set.filter(
+        return self.agreements.filter(
             agreement_type=Agreement.PCA
         ).exclude(
             signed_by_unicef_date__isnull=True,
@@ -805,7 +805,7 @@ class BankDetails(models.Model):
     Relates to :model:`partners.AgreementAmendmentLog`
     """
 
-    #TODO: remove agreement field when possible since we're adding it on the partner Org
+    #TODO: remove agreement field after running util_scripts.bank_details_to_partner()
     agreement = models.ForeignKey('partners.Agreement', related_name='bank_details')
 
     # TODO: remove the ability to add blank for the partner_organization field
@@ -824,12 +824,6 @@ class BankDetails(models.Model):
         help_text='Routing Details, including SWIFT/IBAN (if applicable)'
     )
     bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
-
-    # TODO: remove this field as amendments are handled differently
-    amendment = models.ForeignKey(
-        'AgreementAmendmentLog',
-        blank=True, null=True,
-    )
 
 
 class AgreementManager(models.Manager):
@@ -871,7 +865,7 @@ class Agreement(TimeStampedModel):
         (TERMINATED, "Terminated"),
     )
 
-    partner = models.ForeignKey(PartnerOrganization, related_name="agrements")
+    partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
         blank=True,
@@ -926,26 +920,6 @@ class Agreement(TimeStampedModel):
         default=DRAFT
     )
 
-    # TODO REMOVE THIS FROM THE MODEL SINCE WE HAVE BankDetails
-    # START REMOVE
-    # Write migration scripts to move the details over
-    # bank information
-    bank_name = models.CharField(max_length=255, null=True, blank=True)
-    bank_address = models.CharField(
-        max_length=256,
-        blank=True)
-    account_title = models.CharField(max_length=255, null=True, blank=True)
-    account_number = models.CharField(max_length=50, null=True, blank=True)
-    routing_details = models.CharField(
-        max_length=255,
-        null=True,
-        blank=True,
-        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
-    )
-    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
-
-    # END REMOVE
-
 
     view_objects = AgreementManager()
     objects = models.Manager()
@@ -989,6 +963,10 @@ class Agreement(TimeStampedModel):
         # assuming in tempRef (status Draft or Cancelled we don't have amendments)
         return u'{}'.format(number)
 
+    @property
+    def base_number(self):
+        return self.agreement_number.split('-')[0]
+
     def check_status_auto_updates(self):
         # commit the reference number to the database once the agreement is signed
         if self.status == Agreement.DRAFT and self.start and self.end and \
@@ -996,7 +974,7 @@ class Agreement(TimeStampedModel):
                 self.signed_by and self.partner_manager:
             self.status = Agreement.ACTIVE
             return
-        today = datetime.datetime.now()
+        today = datetime.date.today()
         if self.end < today:
             self.status = Agreement.ENDED
             return
@@ -1006,7 +984,6 @@ class Agreement(TimeStampedModel):
         if amendment_number:
             self.agreement_number = u'{}-{}'.format(self.agreement_number.split('-')[0], amendment_number)
             return
-
         # to create a reference number we need a pk
         elif not oldself:
             super(Agreement, self).save(**kwargs)
@@ -1057,13 +1034,12 @@ class Agreement(TimeStampedModel):
             oldself = Agreement.objects.get(pk=self.pk)
 
         # update reference number if needed
-        amendment_number = kwargs.get('amendment_number', None)
+        amendment_number = kwargs.pop('amendment_number', None)
         if amendment_number:
             self.update_reference_number(oldself, amendment_number)
         else:
             self.update_reference_number(oldself)
         self.update_related_interventions(oldself)
-
 
         super(Agreement, self).save(**kwargs)
 class AgreementAmendment(TimeStampedModel):
@@ -1084,7 +1060,7 @@ class AgreementAmendment(TimeStampedModel):
     signed_amendment = models.FileField(
         max_length=255,
         null=True, blank=True,
-        upload_to=get_ageement_amd_file_path
+        upload_to=get_agreement_amd_file_path
     )
     signed_date = models.DateField(null=True, blank=True)
 
@@ -2522,7 +2498,7 @@ class AgreementAmendmentLog(TimeStampedModel):
 
     signed_document = models.FileField(
         max_length=255,
-        upload_to=get_ageement_amd_file_path,
+        upload_to=get_agreement_amd_file_path,
         blank=True,
         null=True,
     )
@@ -2581,11 +2557,11 @@ class AuthorizedOfficer(models.Model):
         """
         if instance.partner_manager and \
                 instance.partner_manager.id not in \
-                instance.authorized_officers.values_list('officer', flat=True):
+                instance.authorized_officers:
 
             cls.objects.create(agreement=instance,
                                officer=instance.partner_manager)
-post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
+# post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 post_save.connect(PCA.send_changes, sender=PCA)
 

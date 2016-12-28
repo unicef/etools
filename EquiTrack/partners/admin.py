@@ -50,6 +50,7 @@ from .models import (
     IndicatorReport,
     InterventionPlannedVisits,
     Intervention,
+    AgreementAmendment,
 
 )
 from .filters import (
@@ -574,6 +575,14 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         return queryset.filter(hidden=False)
 
 
+class BankDetailsInlineAdmin(admin.StackedInline):
+    model = BankDetails
+    # form = AgreementAmendmentForm
+    # formset = ParentInlineAdminFormSet
+    verbose_name_plural = "Bank Details"
+    extra = 1
+
+
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
     resource_class = PartnerExport
@@ -602,6 +611,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'last_assessment_date',
         u'core_values_assessment_date',
         u'deleted_flag',
+        u'blocked'
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -609,17 +619,25 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 ((u'name', u'vision_synced',),
                  u'short_name',
                  (u'partner_type', u'cso_type',),
+                 # TODO remove field
                  u'shared_partner',
+                 u'shared_with',
                  u'vendor_number',
                  u'rating',
                  u'type_of_assessment',
                  u'last_assessment_date',
+                 # TODO remove field
                  u'address',
+                 u'street_address',
+                 u'city',
+                 u'postal_code',
+                 u'country',
                  u'phone_number',
                  u'email',
                  u'core_values_assessment_date',
                  u'core_values_assessment',
                  u'deleted_flag',
+                 u'blocked',
                  )
         }),
         (_('Alternate Name'), {
@@ -630,6 +648,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     )
     inlines = [
         AssessmentAdminInline,
+        BankDetailsInlineAdmin,
         PartnerStaffMemberInlineAdmin,
         DocumentInlineAdmin,
     ]
@@ -685,12 +704,28 @@ class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
         return 0
 
 
-class BankDetailsInlineAdmin(admin.StackedInline):
-    model = BankDetails
-    form = AgreementAmendmentForm
-    formset = ParentInlineAdminFormSet
-    verbose_name_plural = "Bank Details"
-    extra = 1
+class AgreementAmendmentInlineAdmin(admin.TabularInline):
+    verbose_name = u'Amendment'
+    model = AgreementAmendment
+    extra = 0
+    fields = (
+        'type',
+        'signed_amendment',
+        'signed_date',
+        'number',
+    )
+    readonly_fields = [
+        'number',
+    ]
+
+    def get_max_num(self, request, obj=None, **kwargs):
+        """
+        Overriding here to disable adding amendments to non-active partnerships
+        """
+        if obj and obj.agreement_type == Agreement.PCA:
+            return self.max_num
+
+        return 0
 
 
 class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
@@ -701,7 +736,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         u'agreement_type',
     )
     list_display = (
-        u'reference_number',
+        u'agreement_number',
         u'partner',
         u'agreement_type',
         u'signed_by_unicef_date',
@@ -714,6 +749,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
                     u'partner',
                     u'agreement_type',
                     u'agreement_number',
+                    u'status',
                     u'attached_agreement',
                     (u'start', u'end',),
                     u'signed_by_partner_date',
@@ -723,29 +759,18 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
                     u'authorized_officers',
                 )
         }),
-        # (_('Bank Details'), {
-        #     u'classes': (u'collapse',),
-        #     'fields':
-        #         (
-        #             u'bank_name',
-        #             u'bank_address',
-        #             u'account_title',
-        #             u'account_number',
-        #             u'routing_details',
-        #             u'bank_contact_person',
-        #         )
-        # })
     )
     readonly_fields = (
         u'download_url',
-        u'reference_number',
+        u'agreement_number',
+        u'status'
     )
     filter_horizontal = (
         u'authorized_officers',
     )
     inlines = [
         AgreementAmendmentLogInlineAdmin,
-        BankDetailsInlineAdmin,
+        AgreementAmendmentInlineAdmin,
     ]
 
     def download_url(self, obj):
