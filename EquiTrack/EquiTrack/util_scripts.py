@@ -36,6 +36,7 @@ def fix_duplicate_indicators(country_name):
         time.sleep(3)
     fix_indicator_code()
 
+
     def relates_to_anything(cobj):
         for a in fattrs:
             if getattr(cobj, a).count():
@@ -400,6 +401,7 @@ def migrate_authorized_officers():
 
 from partners.models import Agreement
 
+
 def populate_reference_numbers():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -432,6 +434,25 @@ def agreement_unique_reference_number():
             cdupes = Agreement.objects.filter(agreement_number=dup['agreement_number'])
             for cdup in cdupes:
                 cdup.agreement_number = '{}|{}'.format(cdup.agreement_number, cdup.id)
+                print(cdup)
+                cdup.save()
+
+def pca_unique_reference_number():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry.name)
+        pcas = PCA.objects.all()
+        for pca in pcas:
+            if pca.number == '':
+                print(pca)
+                pca.agreement_number = 'blk:{}'.format(pca.id)
+                pca.save()
+        dupes = PCA.objects.values('number').annotate(
+            Count('number')).order_by().filter(number__count__gt=1).all()
+        for dup in dupes:
+            cdupes = PCA.objects.filter(number=dup['number'])
+            for cdup in cdupes:
+                cdup.number = '{}|{}'.format(cdup.number, cdup.id)
                 print(cdup)
                 cdup.save()
 
@@ -492,23 +513,23 @@ def agreement_amendments_copy():
 
 def copy_pca_fields_to_intervention():
     MAPPING = {
-        'created': 'created_at',
-        'modified': 'updated_at',
-        'document_type': 'partnership_type',
+        'created_at': 'created',
+        'updated_at': 'modified',
+        'partnership_type': 'document_type',
         'number': 'number',
         'title': 'title',
         'status': 'status',
-        'start': 'start_date',
-        'end': 'end_date',
-        'submission_date': 'initiation_date',
-        'submission_date_prc': 'submission_date',
-        'review_date_prc': 'review_date',
+        'start_date': 'start',
+        'end_date': 'end',
+        'initiation_date': 'submission_date',
+        'submission_date': 'submission_date_prc',
+        'review_date': 'review_date_prc',
         'signed_by_unicef_date': 'signed_by_unicef_date',
         'signed_by_partner_date': 'signed_by_partner_date',
         'agreement': 'agreement',
-        'hrp': 'result_structure',
-        'partner_authorized_officer_signatory': 'partner_manager',
-        'unicef_signatory': 'unicef_manager',
+        'result_structure': 'hrp',
+        'partner_manager': 'partner_authorized_officer_signatory',
+        'unicef_manager': 'unicef_signatory',
     }
     pca_attrs = ['created_at', 'updated_at', 'partnership_type', 'number', 'title', 'status', 'start_date', 'end_date',
                  'initiation_date', 'submission_date', 'review_date', 'signed_by_unicef_date', 'signed_by_partner_date',
@@ -521,9 +542,16 @@ def copy_pca_fields_to_intervention():
         for pca in pcas:
             intervention = Intervention()
             for attr in pca_attrs:
-                setattr(intervention, MAPPING[attr], getattr(pca,attr))
+                setattr(intervention, MAPPING[attr], getattr(pca, attr))
+            if not intervention.document_type:
+                continue
             intervention.save()
 
+
+def clean_interventions():
+    for country in Country.objects.exclude(name='Global'):
+        set_country(country)
+        Intervention.objects.all().delete()
 
 
 def export_old_pca_fields():

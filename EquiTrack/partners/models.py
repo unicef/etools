@@ -1157,7 +1157,10 @@ class Intervention(TimeStampedModel):
     )
     number = models.CharField(
         max_length=64,
-        verbose_name=u'Reference Number'
+        blank=True,
+        verbose_name=u'Reference Number',
+        # TODO: write a script to insure this before merging.
+        unique=True,
     )
     title = models.CharField(max_length=256)
     status = models.CharField(
@@ -1265,10 +1268,10 @@ class Intervention(TimeStampedModel):
         if self.status in [self.DRAFT, self.CANCELLED]:
             number = u'{}/TempRef:{}'.format(self.agreement.agreement_number, self.id)
         else:
-            interventions_count = Agreement.objects.filter(
+            interventions_count = Intervention.objects.filter(
                 status__in=[self.ACTIVE, self.SUSPENDED, self.TERMINATED, self.IMPLEMENTED],
                 created__year=self.year,
-                agreement_type=self.agreement_type
+                document_type=self.document_type
             ).count()
 
             sequence = '{0:02d}'.format(interventions_count + 1)
@@ -1289,8 +1292,8 @@ class Intervention(TimeStampedModel):
                 self.signed_by and self.partner_manager:
             self.status = Intervention.ACTIVE
             return
-        today = datetime.datetime.now()
-        if self.end < today:
+        today = datetime.date.today()
+        if self.end and self.end < today:
             self.status = Intervention.IMPLEMENTED
             return
 
@@ -1302,7 +1305,7 @@ class Intervention(TimeStampedModel):
 
         # to create a reference number we need a pk
         elif not oldself:
-            super(Intervention, self).save(**kwargs)
+            super(Intervention, self).save()
             self.number = self.reference_number
 
         elif self.status != oldself.status:
@@ -1327,7 +1330,7 @@ class Intervention(TimeStampedModel):
         else:
             self.update_reference_number(oldself)
 
-        super(Intervention, self).save(**kwargs)
+        super(Intervention, self).save()
 class InterventionAmendment(TimeStampedModel):
     """
     Represents an amendment for the partner intervention.
