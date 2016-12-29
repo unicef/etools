@@ -1,64 +1,34 @@
 import operator
 import functools
 
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse, StreamingHttpResponse
 from django.db import transaction
 from django.db.models import Q
 
 from rest_framework import status
 from rest_framework.response import Response
-from rest_framework.settings import api_settings
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
-    ListAPIView,
-    RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 
 from partners.models import (
-    PartnerOrganization,
-    PCA,
-    Agreement,
     PartnerStaffMember,
 )
-from partners.serializers.v1 import InterventionSerializer
-from partners.serializers.agreements_v2 import (
-    AgreementListSerializer,
-    AgreementExportSerializer,
-    AgreementCreateUpdateSerializer,
-    AgreementRetrieveSerializer
-)
 from partners.serializers.partner_organization_v2 import (
-
-    PartnerStaffMemberDetailSerializer,
-    PartnerStaffMemberPropertiesSerializer,
-    PartnerStaffMemberExportSerializer,
     PartnerOrganizationExportSerializer,
     PartnerOrganizationListSerializer,
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
-    PartnerStaffMemberCreateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
 )
-from partners.serializers.interventions_v2 import (
-    InterventionListSerializer,
-    InterventionDetailSerializer,
-    InterventionCreateUpdateSerializer,
-    InterventionExportSerializer
 
-)
-from partners.permissions import PartnerPermission, PartneshipManagerPermission
-from partners.filters import PartnerScopeFilter
 
-from django.http import HttpResponse, StreamingHttpResponse
-
-from partners.models import PartnerOrganization, Intervention
+from partners.models import PartnerOrganization
 from partners.permissions import PartnerPermission
-from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
+
 
 from partners.filters import PartnerScopeFilter
 
@@ -163,28 +133,13 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationDetailSerializer
-    permission_classes = (PartnerPermission,)
+    permission_classes = (IsAdminUser,)
 
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
             return PartnerOrganizationCreateUpdateSerializer
         else:
             return super(PartnerOrganizationDetailAPIView, self).get_serializer_class()
-
-    def retrieve(self, request, pk=None, format=None):
-        """
-        Returns an Partner object for this partner PK
-        """
-        try:
-            queryset = self.queryset.get(id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except PartnerOrganization.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -226,4 +181,5 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             po_serializer = self.get_serializer(instance)
 
         return Response(po_serializer.data)
+
 

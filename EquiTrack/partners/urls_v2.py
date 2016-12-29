@@ -2,11 +2,15 @@ from django.conf.urls import patterns, url
 from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views.v1 import InterventionsView
-from .views.partner_organization_v2 import PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView
+from .views.partner_organization_v2 import (
+    PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView
+)
+from .views.agreements_v2 import (
+    AgreementListAPIView,
+    AgreementDetailAPIView
+)
 from .views.v2 import (
     PartnerInterventionListAPIView,
-    AgreementListAPIView,
-    AgreementDetailAPIView,
     AgreementInterventionsListAPIView,
     PartnerStaffMemberListAPIVIew,
     PartnerStaffMemberDetailAPIView,
@@ -18,6 +22,7 @@ from .views.v2 import (
 urlpatterns = (
 
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
+
     url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
     url(r'^agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='agreement-interventions-list'),
 

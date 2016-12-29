@@ -59,6 +59,20 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
 
         return data
 
+class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
+    """
+    A serilizer to be used for nested staff member handling. The 'partner' field
+    is removed in this case to avoid validation errors for e.g. when creating
+    the partner and the member at the same time.
+    """
+    class Meta:
+        model = PartnerStaffMember
+        fields = (
+            "id",
+            "title",
+            "first_name",
+            "last_name"
+        )
 
 class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
     """

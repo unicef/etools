@@ -196,75 +196,6 @@ class PartnerInterventionListAPIView(ListAPIView):
         )
 
 
-
-class AgreementListAPIView(ListCreateAPIView):
-    """
-    Create new Agreements.
-    Returns a list of Agreements.
-    """
-    serializer_class = AgreementListSerializer
-    filter_backends = (PartnerScopeFilter,)
-    permission_classes = (PartneshipManagerPermission,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
-
-    def get_serializer_class(self, format=None):
-        """
-        Use restriceted field set for listing
-        """
-        if self.request.method == "GET":
-            query_params = self.request.query_params
-            if "format" in query_params.keys():
-                if query_params.get("format") == 'csv':
-                    return AgreementExportSerializer
-            return AgreementListSerializer
-        elif self.request.method == "POST":
-            return AgreementCreateUpdateSerializer
-        return super(AgreementListAPIView, self).get_serializer_class()
-
-    def get_queryset(self, format=None):
-        q = Agreement.view_objects
-        query_params = self.request.query_params
-
-        if query_params:
-            queries = []
-
-            if "agreement_type" in query_params.keys():
-                queries.append(Q(agreement_type=query_params.get("agreement_type")))
-            if "status" in query_params.keys():
-                queries.append(Q(status=query_params.get("status")))
-            if "partner_name" in query_params.keys():
-                queries.append(Q(partner__name=query_params.get("partner_name")))
-            if "start" in query_params.keys():
-                queries.append(Q(start__gt=query_params.get("start")))
-            if "end" in query_params.keys():
-                queries.append(Q(end__lte=query_params.get("end")))
-            if "search" in query_params.keys():
-                queries.append(
-                    Q(partner__name__icontains=query_params.get("search")) |
-                    Q(agreement_number__icontains=query_params.get("search"))
-                )
-
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
-            else:
-                q = q.all()
-        return q
-
-    def list(self, request, partner_pk=None, format=None):
-        """
-            Checks for format query parameter
-            :returns: JSON or CSV file
-        """
-        query_params = self.request.query_params
-        response = super(AgreementListAPIView, self).list(request)
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                response['Content-Disposition'] = "attachment;filename=agreements.csv"
-
-        return response
-
-
 class AgreementInterventionsListAPIView(ListAPIView):
     serializer_class = InterventionSerializer
     filter_backends = (PartnerScopeFilter,)
@@ -285,38 +216,6 @@ class AgreementInterventionsListAPIView(ListAPIView):
         )
 
 
-class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve and Update Agreement.
-    """
-    queryset = Agreement.objects.all()
-    serializer_class = AgreementRetrieveSerializer
-    permission_classes = (PartneshipManagerPermission,)
-
-    def get_serializer_class(self, format=None):
-        """
-        Use restriceted field set for listing
-        """
-        if self.request.method == "GET":
-            return AgreementRetrieveSerializer
-        elif self.request.method in ["POST", "PUT", "PATCH"]:
-            return AgreementCreateUpdateSerializer
-        return super(AgreementDetailAPIView, self).get_serializer_class()
-
-    def retrieve(self, request, pk=None, format=None):
-        """
-        Returns an Agreement object for this Agreement PK
-        """
-        try:
-            queryset = self.queryset.get(id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except Agreement.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
 
 
 class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
