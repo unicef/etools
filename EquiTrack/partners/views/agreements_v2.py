@@ -1,8 +1,6 @@
 import operator
 import functools
 
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse, StreamingHttpResponse
 from rest_framework import status
 
 from django.db import transaction
@@ -11,12 +9,9 @@ from rest_framework.response import Response
 
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
-from rest_framework.settings import api_settings
 from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
-    ListAPIView,
-    RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 
@@ -24,7 +19,6 @@ from partners.models import (
     Agreement,
     AgreementAmendment,
 )
-from partners.serializers.v1 import InterventionSerializer
 from partners.serializers.agreements_v2 import (
     AgreementListSerializer,
     AgreementExportSerializer,
@@ -32,32 +26,6 @@ from partners.serializers.agreements_v2 import (
     AgreementRetrieveSerializer,
     AgreementAmendmentCreateUpdateSerializer
 )
-from partners.serializers.partner_organization_v2 import (
-
-    PartnerStaffMemberDetailSerializer,
-    PartnerStaffMemberPropertiesSerializer,
-    PartnerStaffMemberExportSerializer,
-    PartnerOrganizationExportSerializer,
-    PartnerOrganizationListSerializer,
-    PartnerOrganizationDetailSerializer,
-    PartnerOrganizationCreateUpdateSerializer,
-    PartnerStaffMemberCreateUpdateSerializer,
-)
-from partners.serializers.interventions_v2 import (
-    InterventionListSerializer,
-    InterventionDetailSerializer,
-    InterventionCreateUpdateSerializer,
-    InterventionExportSerializer
-
-)
-from partners.permissions import PartnerPermission, PartneshipManagerPermission
-from partners.filters import PartnerScopeFilter
-
-from django.http import HttpResponse, StreamingHttpResponse
-
-from partners.models import PartnerOrganization, Intervention
-from partners.permissions import PartnerPermission
-from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
 
 from partners.filters import PartnerScopeFilter
 
