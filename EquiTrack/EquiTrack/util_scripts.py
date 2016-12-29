@@ -527,23 +527,23 @@ def agreement_amendments_copy():
         print(cntry.name)
         agr_amds = AgreementAmendmentLog.objects.all()
         amd_type = ''
-        for agr in agr_amds:
-            if agr.type == 'Authorised Officers':
+        for amd in agr_amds:
+            if amd.type == 'Authorised Officers':
                 amd_type = 'Change authorized officer'
-            elif agr.type == 'Banking Info':
+            elif amd.type == 'Banking Info':
                 amd_type = 'Change banking info'
-            elif agr.type == 'Agreement Changes':
+            elif amd.type == 'Agreement Changes':
                 amd_type = 'Amend existing clause'
-            elif agr.type == 'Additional Clauses':
+            elif amd.type == 'Additional Clauses':
                 amd_type = 'Additional clause'
 
-            amd, created = AgreementAmendment.objects.get_or_create(number=agr.amendment_number,
-                                                     agreement=agr,
-                                                     type=amd_type,
-                                                     signed_amendment=agr.signed_document,
-                                                     signed_date=agr.amended_at, )
+            agr_amd, created = AgreementAmendment.objects.get_or_create(number=amd.amendment_number,
+                                                                        agreement=amd.agreement,
+                                                                        type=amd_type,
+                                                                        signed_amendment=amd.signed_document,
+                                                                        signed_date=amd.amended_at )
             if created:
-                print({}-{}.format(amd.number, amd.agreement))
+                print('{}-{}'.format(agr_amd.number, agr_amd.agreement))
 
 
 

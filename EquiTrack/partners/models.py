@@ -1054,7 +1054,7 @@ class AgreementAmendment(TimeStampedModel):
         ('Additional clause', 'Additional Clause'),
         ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
     )
-    number = models.CharField(max_length=5, unique=True)
+    number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
     type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
     signed_amendment = models.FileField(
@@ -1065,14 +1065,14 @@ class AgreementAmendment(TimeStampedModel):
     signed_date = models.DateField(null=True, blank=True)
 
     def compute_reference_number(self):
-        if self.signed_amendment:
+        if self.signed_date:
             return '{0:02d}'.format(self.agreement.amendments.filter(signed_date__isnull=False).count() + 1)
         else:
-            seq = self.agreement.amendments.objects.filter(signed_date__isnull=True).count() + 1
+            seq = self.agreement.amendments.filter(signed_date__isnull=True).count() + 1
             return 'tmp{0:02d}'.format(seq)
 
     @transaction.atomic
-    def save(self):
+    def save(self, **kwargs):
         # TODO: make the folowing scenario work:
         # agreement amendment and agreement are saved in the same time... avoid race conditions for reference number
         # TODO: validation don't allow save on objects that have attached signed amendment but don't have a signed date
@@ -1090,7 +1090,7 @@ class AgreementAmendment(TimeStampedModel):
 
         if update_agreement_number_needed:
             self.agreement.save(amendment_number=self.number)
-        return super(AgreementAmendment, self).save()
+        return super(AgreementAmendment, self).save(**kwargs)
 
 
 
