@@ -62,6 +62,18 @@ class CountryProgramme(models.Model):
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
         return cps.first()
 
+    @classmethod
+    def encapsulates(cls, date_from, date_to):
+        '''
+        :param date_from:
+        :param date_to:
+        :return: CountryProgramme instance - Country programme that contains the dates specified
+        raises cls.DoesNotExist if the dates span outside existing country programmes
+        raises cls.MultipleObjectsReturned if the dates span multiple country programmes
+        '''
+
+        return cls.objects.get(wbs__contains='/A0/', from_date__lte=date_from, to_date__gte=date_to)
+
 
 class ResultStructure(models.Model):
     """

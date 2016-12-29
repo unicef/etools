@@ -4,6 +4,9 @@ import functools
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, StreamingHttpResponse
 from rest_framework import status
+
+from django.db import transaction
+from django.db.models import Q
 from rest_framework.response import Response
 
 from rest_framework.exceptions import ValidationError
@@ -127,6 +130,14 @@ class AgreementListAPIView(ListCreateAPIView):
 
         return response
 
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        serialier = self.get_serializer(data=request.data)
+        serialier.is_valid(raise_exception=True)
+        agreement = serialier.save()
+
+        headers = self.get_success_headers(serialier.data)
+        return Response(serialier.data, status=status.HTTP_201_CREATED, headers=headers)
 
 class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
@@ -134,7 +145,7 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementRetrieveSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (IsAdminUser,)
 
     def get_serializer_class(self, format=None):
         """

@@ -1,5 +1,5 @@
 from __future__ import absolute_import
-
+import logging
 import datetime
 from dateutil.relativedelta import relativedelta
 
@@ -866,6 +866,7 @@ class Agreement(TimeStampedModel):
     )
 
     partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
+    country_programme = models.ForeignKey('reports.CountryProgramme', related_name='agreements', blank=True, null=True)
     authorized_officers = models.ManyToManyField(
         PartnerStaffMember,
         blank=True,
@@ -975,7 +976,7 @@ class Agreement(TimeStampedModel):
             self.status = Agreement.ACTIVE
             return
         today = datetime.date.today()
-        if self.end < today:
+        if self.end and self.end < today:
             self.status = Agreement.ENDED
             return
 
@@ -986,7 +987,7 @@ class Agreement(TimeStampedModel):
             return
         # to create a reference number we need a pk
         elif not oldself:
-            super(Agreement, self).save(**kwargs)
+            super(Agreement, self).save()
             self.agreement_number = self.reference_number
 
         elif self.status != oldself.status:
@@ -1022,11 +1023,22 @@ class Agreement(TimeStampedModel):
         # mess up the reference numbers.
         pass
 
+    def check_auto_updates(self):
+        self.check_status_auto_updates()
+
+        #auto-update country programme:
+        if self.start and self.end:
+            try:
+                self.country_programme = CountryProgramme.encapsulates(self.start, self.end)
+            except (CountryProgramme.MultipleObjectsReturned, CountryProgramme.DoesNotExist):
+                logging.warn('CountryProgramme not found for agreement {} in country {}'.
+                             format(self.id, connection.tenant))
+
     @transaction.atomic
     def save(self, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
-        self.check_status_auto_updates()
+        self.check_auto_updates()
 
         oldself = None
         if self.pk:
@@ -1041,7 +1053,7 @@ class Agreement(TimeStampedModel):
             self.update_reference_number(oldself)
         self.update_related_interventions(oldself)
 
-        super(Agreement, self).save(**kwargs)
+        return super(Agreement, self).save()
 class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
