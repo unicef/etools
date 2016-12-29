@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, editable=False, verbose_name='modified')),
                 ('number', models.CharField(max_length=5, unique=True)),
                 ('type', models.CharField(choices=[(b'Change IP name', b'Change in Legal Name of Implementing Partner'), (b'CP extension', b'Extension of Country Programme Cycle'), (b'Change authorized officer', b'Change Authorized Officer'), (b'Change banking info', b'Banking Information'), (b'Additional clause', b'Additional Clause'), (b'Amend existing clause', b'Amend Existing Clause')], max_length=64)),
-                ('signed_amendment', models.FileField(blank=True, max_length=255, null=True, upload_to=partners.models.get_ageement_amd_file_path)),
+                ('signed_amendment', models.FileField(blank=True, max_length=255, null=True, upload_to=partners.models.get_agreement_amd_file_path)),
                 ('signed_date', models.DateField(blank=True, null=True)),
             ],
             options={
@@ -161,7 +161,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='agreementamendmentlog',
             name='signed_document',
-            field=models.FileField(blank=True, max_length=255, null=True, upload_to=partners.models.get_ageement_amd_file_path),
+            field=models.FileField(blank=True, max_length=255, null=True, upload_to=partners.models.get_agreement_amd_file_path),
         ),
         migrations.AddField(
             model_name='bankdetails',
