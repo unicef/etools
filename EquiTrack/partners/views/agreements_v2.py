@@ -18,17 +18,16 @@ from rest_framework.generics import (
 )
 
 from partners.models import (
-    PartnerOrganization,
-    PCA,
     Agreement,
-    PartnerStaffMember,
+    AgreementAmendment,
 )
 from partners.serializers.v1 import InterventionSerializer
 from partners.serializers.agreements_v2 import (
     AgreementListSerializer,
     AgreementExportSerializer,
     AgreementCreateUpdateSerializer,
-    AgreementRetrieveSerializer
+    AgreementRetrieveSerializer,
+    AgreementAmendmentCreateUpdateSerializer
 )
 from partners.serializers.partner_organization_v2 import (
 
@@ -146,3 +145,45 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
         elif self.request.method in ["PATCH"]:
             return AgreementCreateUpdateSerializer
         return super(AgreementDetailAPIView, self).get_serializer_class()
+
+    def update(self, request, *args, **kwargs):
+
+        partial = kwargs.pop('partial', False)
+        amendments = request.data.pop('amendments', None)
+
+        instance = self.get_object()
+        agreement_serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        agreement_serializer.is_valid(raise_exception=True)
+        agreement = agreement_serializer.save()
+
+        if amendments:
+            for item in amendments:
+                item.update({u"agreement": agreement.pk})
+                if item.get('id', None):
+                    try:
+                        amd_instance = AgreementAmendment.objects.get(id=item['id'])
+                    except AgreementAmendment.DoesNotExist:
+                        amd_instance = None
+
+                    amd_serializer = AgreementAmendmentCreateUpdateSerializer(instance=amd_instance,
+                                                                                       data=item,
+                                                                                       partial=partial)
+                else:
+                    amd_serializer = AgreementAmendmentCreateUpdateSerializer(data=item)
+
+                try:
+                    amd_serializer.is_valid(raise_exception=True)
+                except ValidationError as e:
+                    e.detail = {'amendments': e.detail}
+                    raise e
+
+                amd_serializer.save()
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
+            amd_serializer = self.get_serializer(instance)
+
+        return Response(agreement_serializer.data)
+

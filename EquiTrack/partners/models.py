@@ -858,7 +858,7 @@ class Agreement(TimeStampedModel):
     TERMINATED = "terminated"
     STATUS_CHOICES = (
         (DRAFT, "Draft"),
-        (DRAFT, "Cancelled"),
+        (CANCELLED, "Cancelled"),
         (ACTIVE, "Active"),
         (ENDED, "Ended"),
         (SUSPENDED, "Suspended"),

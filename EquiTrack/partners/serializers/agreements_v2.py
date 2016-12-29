@@ -1,6 +1,7 @@
 import json
 from operator import xor
-
+from django.db import transaction
+from django.db.models import Q
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -13,9 +14,10 @@ from partners.serializers.v1 import (
     PartnerStaffMemberEmbedSerializer,
     InterventionSerializer,
 )
+from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
 from locations.models import Location
 
-from users.serializers import SimpleProfileSerializer
+from users.serializers import SimpleUserSerializer
 
 from .v1 import PartnerStaffMemberSerializer
 
@@ -30,22 +32,31 @@ from partners.models import (
     PartnerOrganization,
     PartnerType,
     Agreement,
+    AgreementAmendment,
     PartnerStaffMember,
 
 )
+
+class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
+    number = serializers.CharField(read_only=True)
+    created = serializers.DateTimeField(read_only=True)
+    modified = serializers.DateTimeField(read_only=True)
+    class Meta:
+        model = AgreementAmendment
+        fields = "__all__"
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
-    signed_by = SimpleProfileSerializer()
+
 
     class Meta:
         model = Agreement
         fields = (
             "id",
             "partner",
-            "reference_number",
+            "agreement_number",
             "partner_name",
             "agreement_type",
             "end",
@@ -87,31 +98,24 @@ class AgreementExportSerializer(serializers.ModelSerializer):
 class AgreementRetrieveSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
-    authorized_officers = PartnerStaffMemberEmbedSerializer(many=True)
+    authorized_officers = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
+    unicef_signatory = SimpleUserSerializer(source='signed_by')
+    partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
 
     class Meta:
         model = Agreement
-        fields = (
-            "id",
-            "partner",
-            "authorized_officers",
-            "partner_name",
-            "agreement_type",
-            "agreement_number",
-            "attached_agreement",
-            "start",
-            "end",
-            "signed_by_unicef_date",
-            "signed_by",
-            "signed_by_partner_date",
-            "partner_manager",
-            "status",
-            "year",
-            "reference_number",
-        )
+        fields = "__all__"
 
 
 class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
+
+    partner_name = serializers.CharField(source='partner.name', read_only=True)
+
+    amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
+    unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
+    partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
+    agreement_number = serializers.CharField(read_only=True)
 
     class Meta:
         model = Agreement
@@ -145,4 +149,3 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
         if errors:
             raise serializers.ValidationError(errors)
         return data
-
