@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
-    AgreementAmendmentLog, AgreementAmendment
+    AgreementAmendmentLog, AgreementAmendment, Intervention
 
 def printtf(*args):
     print([arg for arg in args])
@@ -400,54 +400,6 @@ def migrate_authorized_officers():
 
 from partners.models import Agreement
 
-def export_old_pca_fields():
-    pca_fields = {}
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        pcas = PCA.objects.all()
-        numbers = []
-        for pca in pcas:
-            if pca.fr_number or pca.planned_visits > 0:
-                pca_numbers = {}
-                pca_numbers['pca'] = pca.id
-                pca_numbers['fr_number'] = pca.fr_number or 0
-                pca_numbers['planned_visits'] = pca.planned_visits
-                numbers.append(pca_numbers)
-        print(numbers)
-        if numbers.count > 0:
-            pca_fields[cntry.name] = numbers
-    print(pca_fields)
-
-    with open('pca_numbers.json', 'w') as fp:
-        json.dump(pca_fields, fp)
-
-
-def import_fr_numbers():
-    with open('pca_numbers.json') as data_file:
-        data = json.load(data_file)
-        for country, array in data.items():
-            if array:
-                set_country(country)
-                for row in array:
-                    pca = PCA.objects.get(id=row['pca'])
-                    pca.fr_numbers = [row['fr_number']]
-                    pca.save()
-
-
-def import_planned_visits():
-    with open('pca_numbers.json') as data_file:
-        data = json.load(data_file)
-        for country, array in data.items():
-            if array:
-                set_country(country)
-                for row in array:
-                    pca = PCA.objects.get(id=row['pca'])
-                    if pca.planned_visits > 0 and pca.start_date:
-                        InterventionPlannedVisits.objects.get_or_create(intervention=pca,
-                                                            year=pca.start_date.year,
-                                                            programmatic=row['planned_visits'])
-
-
 def populate_reference_numbers():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -464,17 +416,7 @@ def populate_reference_numbers():
             agr.agreement_number = agr.reference_number
             agr.save()
 
-def agreement_unique_reference_number():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        print(cntry.name)
-        agreements = Agreement.objects.all()
-        for agr in agreements:
-            if agr.number == '':
-                print(agr)
-                agr.agreement_number = None
-                agr.save()
-
+# run this before migration partners_0005
 def agreement_unique_reference_number():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -493,6 +435,7 @@ def agreement_unique_reference_number():
                 print(cdup)
                 cdup.save()
 
+#run this after migration partners_0006
 def bank_details_to_partner():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -521,6 +464,7 @@ def bank_details_to_partner():
                 if created:
                     print(bd.partner_organization)
 
+#run this after migration partners_0007
 def agreement_amendments_copy():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
@@ -546,5 +490,85 @@ def agreement_amendments_copy():
                 print('{}-{}'.format(agr_amd.number, agr_amd.agreement))
 
 
+def copy_pca_fields_to_intervention():
+    MAPPING = {
+        'created': 'created_at',
+        'modified': 'updated_at',
+        'document_type': 'partnership_type',
+        'number': 'number',
+        'title': 'title',
+        'status': 'status',
+        'start': 'start_date',
+        'end': 'end_date',
+        'submission_date': 'initiation_date',
+        'submission_date_prc': 'submission_date',
+        'review_date_prc': 'review_date',
+        'signed_by_unicef_date': 'signed_by_unicef_date',
+        'signed_by_partner_date': 'signed_by_partner_date',
+        'agreement': 'agreement',
+        'hrp': 'result_structure',
+        'partner_authorized_officer_signatory': 'partner_manager',
+        'unicef_signatory': 'unicef_manager',
+    }
+    pca_attrs = ['created_at', 'updated_at', 'partnership_type', 'number', 'title', 'status', 'start_date', 'end_date',
+                 'initiation_date', 'submission_date', 'review_date', 'signed_by_unicef_date', 'signed_by_partner_date',
+                 'agreement', 'result_structure', 'partner_manager', 'unicef_manager']
+
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        pcas = PCA.objects.all()
+        numbers = []
+        for pca in pcas:
+            intervention = Intervention()
+            for attr in pca_attrs:
+                setattr(intervention, MAPPING[attr], getattr(pca,attr))
+            intervention.save()
 
 
+
+def export_old_pca_fields():
+    pca_fields = {}
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        pcas = PCA.objects.all()
+        numbers = []
+        for pca in pcas:
+            if pca.fr_number or pca.planned_visits > 0:
+                pca_numbers = {}
+                pca_numbers['pca'] = pca.id
+                pca_numbers['fr_number'] = pca.fr_number or 0
+                pca_numbers['planned_visits'] = pca.planned_visits
+                numbers.append(pca_numbers)
+        print(numbers)
+        if numbers.count > 0:
+            pca_fields[cntry.name] = numbers
+    print(pca_fields)
+
+    with open('pca_numbers.json', 'w') as fp:
+        json.dump(pca_fields, fp)
+
+
+def import_planned_visits():
+    with open('pca_numbers.json') as data_file:
+        data = json.load(data_file)
+        for country, array in data.items():
+            if array:
+                set_country(country)
+                for row in array:
+                    pca = PCA.objects.get(id=row['pca'])
+                    if pca.planned_visits > 0 and pca.start_date:
+                        InterventionPlannedVisits.objects.get_or_create(intervention=pca,
+                                                            year=pca.start_date.year,
+                                                            programmatic=row['planned_visits'])
+
+
+def import_fr_numbers():
+    with open('pca_numbers.json') as data_file:
+        data = json.load(data_file)
+        for country, array in data.items():
+            if array:
+                set_country(country)
+                for row in array:
+                    pca = PCA.objects.get(id=row['pca'])
+                    pca.fr_numbers = [row['fr_number']]
+                    pca.save()
