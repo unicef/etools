@@ -50,6 +50,7 @@ from .models import (
     IndicatorReport,
     InterventionPlannedVisits,
     Intervention,
+    AgreementAmendment,
 
 )
 from .filters import (
@@ -432,6 +433,176 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                         )
 
 
+class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
+    form = PartnershipForm
+    resource_class = InterventionExport
+    # Add custom exports
+    formats = (
+        base_formats.CSV,
+    )
+    date_hierarchy = 'start_date'
+    list_display = (
+        'reference_number',
+        'partnership_type',
+        'status',
+        'created_date',
+        'signed_by_unicef_date',
+        'start_date',
+        'end_date',
+        'partner',
+        'result_structure',
+        'sector_names',
+        'title',
+        'total_unicef_cash',
+        'total_budget',
+    )
+    list_filter = (
+        'partnership_type',
+        'result_structure',
+        PCASectorFilter,
+        'status',
+        'current',
+        'partner',
+        PCADonorFilter,
+        PCAGatewayTypeFilter,
+        PCAGrantFilter,
+    )
+    search_fields = (
+        'number',
+        'title',
+    )
+    readonly_fields = (
+        'reference_number',
+        'total_budget',
+        'days_from_submission_to_signed',
+        'days_from_review_to_signed',
+        'duration',
+        'work_plan_template',
+    )
+    filter_horizontal = (
+        'unicef_managers',
+    )
+    fieldsets = (
+        (_('Intervention Details'), {
+            u'classes': (u'suit-tab suit-tab-info',),
+            'fields':
+                ('partner',
+                 'agreement',
+                 'partnership_type',
+                 'number',
+                 'result_structure',
+                 ('title', 'project_type',),
+                 'status',
+                 'initiation_date',)
+        }),
+        (_('Dates and Signatures'), {
+            u'classes': (u'suit-tab suit-tab-info',),
+            'fields':
+                (('submission_date',),
+                 'review_date',
+                 ('partner_manager', 'signed_by_partner_date',),
+                 ('unicef_manager', 'signed_by_unicef_date',),
+                 ('partner_focal_point', 'planned_visits',),
+                 'unicef_managers',
+                 ('days_from_submission_to_signed', 'days_from_review_to_signed',),
+                 ('start_date', 'end_date', 'duration',),
+                 'fr_number',),
+        }),
+        (_('Add sites by P Code'), {
+            u'classes': (u'suit-tab suit-tab-locations',),
+            'fields': ('location_sector', 'p_codes',),
+        }),
+        (_('Import work plan'), {
+            u'classes': (u'suit-tab suit-tab-results',),
+            'fields': ('work_plan', 'work_plan_template'),
+        }),
+    )
+    remove_fields_if_read_only = (
+        'location_sector',
+        'p_codes',
+        'work_plan',
+    )
+
+    inlines = (
+        AmendmentLogInlineAdmin,
+        PcaSectorInlineAdmin,
+        PartnershipBudgetInlineAdmin,
+        PcaGrantInlineAdmin,
+        IndicatorsInlineAdmin,
+        PcaLocationInlineAdmin,
+        PCAFileInline,
+        LinksInlineAdmin,
+        #ResultsInlineAdmin,
+        SupplyPlanInlineAdmin,
+        DistributionPlanInlineAdmin,
+        IndicatorDueDatesAdmin,
+    )
+
+    suit_form_tabs = (
+        (u'info', u'Info'),
+        (u'results', u'Results'),
+        (u'locations', u'Locations'),
+        (u'trips', u'Trips'),
+        (u'supplies', u'Supplies'),
+        (u'attachments', u'Attachments')
+    )
+
+    suit_form_includes = (
+        ('admin/partners/funding_summary.html', 'middle', 'info'),
+        ('admin/partners/work_plan.html', 'bottom', 'results'),
+        ('admin/partners/trip_summary.html', 'top', 'trips'),
+        ('admin/partners/attachments_note.html', 'top', 'attachments'),
+    )
+
+    def work_plan_template(self, obj):
+        return u'<a class="btn btn-primary default" ' \
+               u'href="{}" >Download Template</a>'.format(
+                get_staticfile_link('partner/templates/workplan_template.xlsx')
+        )
+    work_plan_template.allow_tags = True
+    work_plan_template.short_description = 'Template'
+
+    def created_date(self, obj):
+        return obj.created_at.strftime('%d-%m-%Y')
+    created_date.admin_order_field = '-created_at'
+
+    def get_form(self, request, obj=None, **kwargs):
+        """
+        Set up the form with extra data and initial values
+        """
+        form = super(PartnershipAdmin, self).get_form(request, obj, **kwargs)
+
+        # add the current request and object to the form
+        form.request = request
+        form.obj = obj
+
+        if obj and obj.sector_children:
+            form.base_fields['location_sector'].queryset = obj.sector_children
+
+        return form
+
+    def save_formset(self, request, form, formset, change):
+        """
+        Overriding this to create TPM visits on location records
+        """
+        formset.save()
+        if change:
+            for form in formset.forms:
+                obj = form.instance
+                if isinstance(obj, GwPCALocation) and obj.tpm_visit:
+                    visits = TPMVisit.objects.filter(
+                        pca=obj.pca,
+                        pca_location=obj,
+                        completed_date__isnull=True
+                    )
+                    if not visits:
+                        TPMVisit.objects.create(
+                            pca=obj.pca,
+                            pca_location=obj,
+                            assigned_by=request.user
+                        )
+
+
 class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.StackedInline):
     model = GovernmentInterventionResult
     form = GovernmentInterventionAdminForm
@@ -574,6 +745,14 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         return queryset.filter(hidden=False)
 
 
+class BankDetailsInlineAdmin(admin.StackedInline):
+    model = BankDetails
+    # form = AgreementAmendmentForm
+    # formset = ParentInlineAdminFormSet
+    verbose_name_plural = "Bank Details"
+    extra = 1
+
+
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     form = PartnersAdminForm
     resource_class = PartnerExport
@@ -602,6 +781,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         u'last_assessment_date',
         u'core_values_assessment_date',
         u'deleted_flag',
+        u'blocked'
     )
     fieldsets = (
         (_('Partner Details'), {
@@ -609,17 +789,25 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 ((u'name', u'vision_synced',),
                  u'short_name',
                  (u'partner_type', u'cso_type',),
+                 # TODO remove field
                  u'shared_partner',
+                 u'shared_with',
                  u'vendor_number',
                  u'rating',
                  u'type_of_assessment',
                  u'last_assessment_date',
+                 # TODO remove field
                  u'address',
+                 u'street_address',
+                 u'city',
+                 u'postal_code',
+                 u'country',
                  u'phone_number',
                  u'email',
                  u'core_values_assessment_date',
                  u'core_values_assessment',
                  u'deleted_flag',
+                 u'blocked',
                  )
         }),
         (_('Alternate Name'), {
@@ -630,6 +818,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
     )
     inlines = [
         AssessmentAdminInline,
+        BankDetailsInlineAdmin,
         PartnerStaffMemberInlineAdmin,
         DocumentInlineAdmin,
     ]
@@ -685,12 +874,28 @@ class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
         return 0
 
 
-class BankDetailsInlineAdmin(admin.StackedInline):
-    model = BankDetails
-    form = AgreementAmendmentForm
-    formset = ParentInlineAdminFormSet
-    verbose_name_plural = "Bank Details"
-    extra = 1
+class AgreementAmendmentInlineAdmin(admin.TabularInline):
+    verbose_name = u'Amendment'
+    model = AgreementAmendment
+    extra = 0
+    fields = (
+        'type',
+        'signed_amendment',
+        'signed_date',
+        'number',
+    )
+    readonly_fields = [
+        'number',
+    ]
+
+    def get_max_num(self, request, obj=None, **kwargs):
+        """
+        Overriding here to disable adding amendments to non-active partnerships
+        """
+        if obj and obj.agreement_type == Agreement.PCA:
+            return self.max_num
+
+        return 0
 
 
 class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, admin.ModelAdmin):
@@ -701,7 +906,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         u'agreement_type',
     )
     list_display = (
-        u'reference_number',
+        u'agreement_number',
         u'partner',
         u'agreement_type',
         u'signed_by_unicef_date',
@@ -714,6 +919,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
                     u'partner',
                     u'agreement_type',
                     u'agreement_number',
+                    u'status',
                     u'attached_agreement',
                     (u'start', u'end',),
                     u'signed_by_partner_date',
@@ -723,29 +929,18 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
                     u'authorized_officers',
                 )
         }),
-        # (_('Bank Details'), {
-        #     u'classes': (u'collapse',),
-        #     'fields':
-        #         (
-        #             u'bank_name',
-        #             u'bank_address',
-        #             u'account_title',
-        #             u'account_number',
-        #             u'routing_details',
-        #             u'bank_contact_person',
-        #         )
-        # })
     )
     readonly_fields = (
         u'download_url',
-        u'reference_number',
+        u'agreement_number',
+        u'status'
     )
     filter_horizontal = (
         u'authorized_officers',
     )
     inlines = [
         AgreementAmendmentLogInlineAdmin,
-        BankDetailsInlineAdmin,
+        AgreementAmendmentInlineAdmin,
     ]
 
     def download_url(self, obj):

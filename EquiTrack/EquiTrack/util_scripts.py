@@ -7,7 +7,8 @@ import time
 from datetime import datetime, timedelta
 from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
-from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, Agreement, AuthorizedOfficer
+from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
+    AgreementAmendmentLog, AgreementAmendment
 
 def printtf(*args):
     print([arg for arg in args])
@@ -491,3 +492,59 @@ def agreement_unique_reference_number():
                 cdup.agreement_number = '{}|{}'.format(cdup.agreement_number, cdup.id)
                 print(cdup)
                 cdup.save()
+
+def bank_details_to_partner():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry.name)
+        bds = BankDetails.objects.all()
+        if bds.count() > 0:
+            for bd in bds:
+                if not bd.partner_organization:
+                    bd.partner_organization = bd.agreement.partner
+                    print(bd.partner_organization.name)
+                    bd.save()
+
+        # agreement model bank details
+        agreements = Agreement.objects.filter(bank_name__isnull=False).exclude(bank_name='')
+        if agreements.count() > 0:
+            print("================ AGREEMENTS MODEL ================================")
+            for agr in agreements:
+                bd, created = BankDetails.objects.get_or_create(agreement=agr,
+                                                                partner_organization=agr.partner,
+                                                                bank_name=agr.bank_name,
+                                                                bank_address= agr.bank_address,
+                                                                account_title=agr.account_title,
+                                                                account_number=agr.account_number,
+                                                                routing_details=agr.routing_details,
+                                                                bank_contact_person=agr.bank_contact_person)
+                if created:
+                    print(bd.partner_organization)
+
+def agreement_amendments_copy():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry.name)
+        agr_amds = AgreementAmendmentLog.objects.all()
+        amd_type = ''
+        for amd in agr_amds:
+            if amd.type == 'Authorised Officers':
+                amd_type = 'Change authorized officer'
+            elif amd.type == 'Banking Info':
+                amd_type = 'Change banking info'
+            elif amd.type == 'Agreement Changes':
+                amd_type = 'Amend existing clause'
+            elif amd.type == 'Additional Clauses':
+                amd_type = 'Additional clause'
+
+            agr_amd, created = AgreementAmendment.objects.get_or_create(number=amd.amendment_number,
+                                                                        agreement=amd.agreement,
+                                                                        type=amd_type,
+                                                                        signed_amendment=amd.signed_document,
+                                                                        signed_date=amd.amended_at )
+            if created:
+                print('{}-{}'.format(agr_amd.number, agr_amd.agreement))
+
+
+
+
