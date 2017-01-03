@@ -1,62 +1,33 @@
 import operator
 import functools
 
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponse, StreamingHttpResponse
-from rest_framework import status
-from rest_framework.response import Response
-
 from django.db import transaction
 from django.db.models import Q
+
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
-from rest_framework.settings import api_settings
 from rest_framework_csv import renderers as r
+
 from rest_framework.generics import (
     ListCreateAPIView,
-    ListAPIView,
-    RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
 
 from partners.models import (
-    Agreement,
-    AgreementAmendment,
-)
-from partners.serializers.v1 import InterventionSerializer
-from partners.serializers.agreements_v2 import (
-    AgreementListSerializer,
-    AgreementExportSerializer,
-    AgreementCreateUpdateSerializer,
-    AgreementRetrieveSerializer,
-    AgreementAmendmentCreateUpdateSerializer
-)
-from partners.serializers.partner_organization_v2 import (
-
-    PartnerStaffMemberDetailSerializer,
-    PartnerStaffMemberPropertiesSerializer,
-    PartnerStaffMemberExportSerializer,
-    PartnerOrganizationExportSerializer,
-    PartnerOrganizationListSerializer,
-    PartnerOrganizationDetailSerializer,
-    PartnerOrganizationCreateUpdateSerializer,
-    PartnerStaffMemberCreateUpdateSerializer,
+    InterventionBudget,
+    Intervention
 )
 from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionDetailSerializer,
     InterventionCreateUpdateSerializer,
-    InterventionExportSerializer
+    InterventionExportSerializer,
+    InterventionBudgetCUSerializer
+
 
 )
-from partners.permissions import PartnerPermission, PartneshipManagerPermission
-from partners.filters import PartnerScopeFilter
-
-from django.http import HttpResponse, StreamingHttpResponse
-
-from partners.models import PartnerOrganization, Intervention
-from partners.permissions import PartnerPermission
-from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionSerializer
 
 from partners.filters import PartnerScopeFilter
 
@@ -84,19 +55,34 @@ class InterventionListAPIView(ListCreateAPIView):
             return InterventionCreateUpdateSerializer
         return super(InterventionListAPIView, self).get_serializer_class()
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         """
         Add a new Intervention
         :return: JSON
         """
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
 
-        serializer.instance = serializer.save()
+        planned_budget = request.data.pop("planned_budget", [])
+        attachements = request.data.pop("attachments", [])
+        planned_visits = request.data.pop("planned_visits", [])
+        amendments = request.data.pop("amendments", [])
 
-        headers = self.get_success_headers(serializer.data)
+        # TODO: rename these
+        supplies = request.data.pop("supplies", [])
+        distributions = request.data.pop("distributions", [])
+
+
+        intervention_serializer = self.get_serializer(data=request.data)
+        intervention_serializer.is_valid(raise_exception=True)
+        intervention = intervention_serializer.save()
+
+        # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
+
+
+
+        headers = self.get_success_headers(intervention_serializer.data)
         return Response(
-            serializer.data,
+            intervention_serializer.data,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
@@ -149,3 +135,93 @@ class InterventionListAPIView(ListCreateAPIView):
                 response['Content-Disposition'] = "attachment;filename=interventions.csv"
 
         return response
+
+
+class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
+    """
+    Retrieve and Update Agreement.
+    """
+    queryset = Intervention.objects.all()
+    serializer_class = InterventionDetailSerializer
+    permission_classes = (IsAdminUser,)
+
+    def get_serializer_class(self):
+        """
+        Use different serilizers for methods
+        """
+        if self.request.method == "PUT":
+            return InterventionCreateUpdateSerializer
+        return super(InterventionDetailAPIView, self).get_serializer_class()
+
+    def retrieve(self, request, pk=None, format=None):
+        """
+        Returns an Intervention object for this PK
+        """
+        try:
+            queryset = self.queryset.get(id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except Intervention.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
+    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name, partial=False):
+        if not field:
+            return
+        for item in field:
+            item.update({reverse_name: mother_obj.pk})
+            if item.get('id', None):
+                try:
+                    instance = fieldClass.objects.get(id=item['id'])
+                except fieldClass.DoesNotExist:
+                    instance = None
+
+                instance_serializer = fieldSerializer(instance=instance,
+                                                      data=item,
+                                                      partial=partial)
+            else:
+                instance_serializer = fieldSerializer(data=item)
+
+            try:
+                instance_serializer.is_valid(raise_exception=True)
+            except ValidationError as e:
+                e.detail = {rel_prop_name: e.detail}
+                raise e
+            instance_serializer.save()
+
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+
+        partial = kwargs.pop('partial', False)
+        planned_budget = request.data.pop("planned_budget", False)
+        attachements = request.data.pop("attachments", [])
+        planned_visits = request.data.pop("planned_visits", [])
+        amendments = request.data.pop("amendments", [])
+        instance = self.get_object()
+
+        # TODO: rename these
+        supplies = request.data.pop("supplies", [])
+        distributions = request.data.pop("distributions", [])
+
+        intervention_serializer = self.get_serializer(instance, data=request.data)
+        intervention_serializer.is_valid(raise_exception=True)
+        intervention = intervention_serializer.save()
+
+        # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
+        self.up_related_field(intervention, planned_budget,
+                              InterventionBudget, InterventionBudgetCUSerializer,
+                              'planned_budget', 'intervention', partial)
+
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
+            intervention_serializer = self.get_serializer(instance)
+
+        return Response(
+            intervention_serializer.data
+        )

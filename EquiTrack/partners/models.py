@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 from django_fsm import FSMField, transition
 
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.conf import settings
 from django.db import models, connection, transaction
 from django.contrib.auth.models import Group
@@ -1184,6 +1184,7 @@ class Intervention(TimeStampedModel):
         help_text=u'The date the Intervention will end'
     )
     submission_date = models.DateField(
+        null=True, blank=True,
         help_text=u'The date the partner submitted complete PD/SSFA documents to Unicef',
     )
     submission_date_prc = models.DateField(
@@ -1198,6 +1199,7 @@ class Intervention(TimeStampedModel):
     )
     prc_review_document = models.FileField(
         max_length=255,
+        null=True, blank=True,
         upload_to=get_prc_intervention_file_path
     )
 
@@ -1229,7 +1231,7 @@ class Intervention(TimeStampedModel):
         blank=True
     )
 
-    office = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
+    offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
     fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), null=True)
     population_focus = models.CharField(max_length=130, null=True, blank=True)
 
@@ -1241,6 +1243,28 @@ class Intervention(TimeStampedModel):
         return u'{}'.format(
             self.number
         )
+
+    @cached_property
+    def total_partner_contribution(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            # return sum([b['partner_contribution'] for b in
+            #             self.budget_log.values('created', 'year', 'partner_contribution').
+            #            order_by('year', '-created').distinct('year').all()
+            #             ])
+            return self.planned_budget.aggregate(Sum('partner_contribution'))
+        return 0
+
+    @cached_property
+    def total_unicef_cash(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            # return sum([b['unicef_cash'] for b in
+            #             self.budget_log.values('created', 'year', 'unicef_cash').
+            #            order_by('year', '-created').distinct('year').all()
+            #             ])
+            return self.planned_budget.aggregate(Sum('unicef_cash'))
+        return 0
 
     @property
     def year(self):
@@ -1412,7 +1436,7 @@ class InterventionBudget(TimeStampedModel):
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
 
-    @transaction.atomic
+
     def save(self, **kwargs):
         """
         Calculate total budget on save
@@ -1420,14 +1444,14 @@ class InterventionBudget(TimeStampedModel):
         self.total = \
             self.total_unicef_contribution() \
             + self.partner_contribution
-
-        super(PartnershipBudget, self).save(**kwargs)
+        super(InterventionBudget, self).save(**kwargs)
 
     def __unicode__(self):
         return u'{}: {}'.format(
-            self.partnership,
+            self.intervention,
             self.total
         )
+
 class InterventionAttachment(models.Model):
     """
     Represents a file for the partner intervention

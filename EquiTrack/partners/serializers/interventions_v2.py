@@ -43,31 +43,53 @@ class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionBudgetCreateUpdateSerializer(serializers.ModelSerializer):
+class InterventionBudgetCUSerializer(serializers.ModelSerializer):
+    total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    partner_contribution = serializers.DecimalField(max_digits=20, decimal_places=2)
+    unicef_cash = serializers.DecimalField(max_digits=20, decimal_places=2)
+    in_kind_amount = serializers.DecimalField(max_digits=20, decimal_places=2)
+    partner_contribution_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    unicef_cash_local = serializers.DecimalField(max_digits=20, decimal_places=2)
+    in_kind_amount_local = serializers.DecimalField(max_digits=20, decimal_places=2)
 
     class Meta:
         model = InterventionBudget
-        fields = "__all__"
+        fields = (
+            "intervention",
+            "partner_contribution",
+            "unicef_cash",
+            "in_kind_amount",
+            "partner_contribution_local",
+            "unicef_cash_local",
+            "in_kind_amount_local",
+            "year",
+            "total",
+        )
+        #read_only_fields = [u'total']
 
+    # def create(self, validated_data):
+    #     print validated_data
+    #     return InterventionBudget.objects.create(**validated_data)
     def validate(self, data):
         errors = {}
         try:
-            data = super(InterventionBudgetCreateUpdateSerializer, self).validate(data)
+            data = super(InterventionBudgetCUSerializer, self).validate(data)
         except ValidationError as e:
             errors.update(e)
 
-        status = data.get("status", "")
-        year = data.get("year", "")
-        if not year and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(year="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-
-        partner_contribution = data.get("partner_contribution", "")
-        if not partner_contribution and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(partner_contribution="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-
-        unicef_cash = data.get("unicef_cash", "")
-        if not unicef_cash and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(unicef_cash="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+        # TODO: this will not work.. refactor!
+        # status = data.get("status", "")
+        # year = data.get("year", "")
+        # if not year and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+        #     errors.update(year="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+        #
+        # partner_contribution = data.get("partner_contribution", "")
+        # if not partner_contribution and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+        #     errors.update(partner_contribution="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+        #
+        # unicef_cash = data.get("unicef_cash", "")
+        # if not unicef_cash and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+        #     errors.update(unicef_cash="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -110,7 +132,7 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
         )
 
 
-class InterventionAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
+class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterventionAmendment
@@ -128,7 +150,7 @@ class InterventionAmendmentNestedSerializer(serializers.ModelSerializer):
 
 
 
-class PlannedVisitsCreateUpdateSerializer(serializers.ModelSerializer):
+class PlannedVisitsCUSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InterventionPlannedVisits
@@ -156,6 +178,15 @@ class InterventionSectorLocationSerializer(serializers.ModelSerializer):
             "id", "sector", "location"
         )
 
+
+class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = InterventionSectorLocationLink
+        fields = '__all__'
+
+
+
 class InterventionListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='agreement.partner.name')
@@ -171,100 +202,101 @@ class InterventionListSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             'id', 'reference_number', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
-            'unicef_budget', 'cso_contribution',
+            'unicef_budget', 'cso_contribution', 'sectors'
         )
 
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
-    budget_log = InterventionBudgetNestedSerializer(many=True)
-    partner = serializers.CharField(source='agreement.partner.name')
-    supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
-    distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
-    amendments = InterventionAmendmentNestedSerializer(many=True, required=False)
-    visits = PlannedVisitsNestedSerializer(many=True, required=False)
+    planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
+    partner = serializers.CharField(source='agreement.partner.name', read_only=True)
+
+    #supply_plans = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
+    #distribution_plans = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
+    amendments = InterventionAmendmentNestedSerializer(many=True, read_only=True, required=False)
+    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Intervention
-        fields = (
-            "id", "partner", "agreement", "document_type", "hrp", "number",
-            "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
-            "prc_review_document", "unicef_signatory", "unicef_focal_points",
-            "submission_date", "signed_by_unicef_date", "signed_by_partner_date", "partner_focal_points",
-            "partner_authorized_officer_signatory", "office", "fr_numbers", "planned_visits", "population_focus",
-            "created", "modified", "budget_log", "supply_plans",
-            "distribution_plans", "amendments", "visits",
-        )
-        read_only_fields = ("id",)
+        # fields = (
+        #     "id", "partner", "agreement", "document_type", "hrp", "number",
+        #     "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
+        #     "prc_review_document", "unicef_signatory", "unicef_focal_points",
+        #     "submission_date", "signed_by_unicef_date", "signed_by_partner_date", "partner_focal_points",
+        #     "partner_authorized_officer_signatory", "office", "fr_numbers", "planned_visits", "population_focus",
+        #     "created", "modified", "planned_budget", #"supply_plans", "distribution_plans",
+        #     "amendments"
+        # )
+        fields = "__all__"
 
-    @transaction.atomic
-    def create(self, validated_data):
-        budget_log = validated_data.pop("budget_log", [])
-        supply_plans = validated_data.pop("supply_plans", [])
-        distribution_plans = validated_data.pop("distribution_plans", [])
-        amendments = validated_data.pop("amendments", [])
-        visits = validated_data.pop("visits", [])
-
-        intervention = super(InterventionCreateUpdateSerializer, self).create(validated_data)
-
-        # for item in pcasectors:
-        #     item["pca"] = intervention.id
-        #     item["sector"] = item["sector"].id
-        #     serializer = PCASectorCreateUpdateSerializer(data=item)
-        #     serializer.is_valid(raise_exception=True)
-        #     serializer.save()
-        #
-        # for item in locations:
-        #     item["pca"] = intervention.id
-        #     item["location"] = item["location"].id
-        #     serializer = GwPCALocationCreateUpdateSerializer(data=item)
-        #     serializer.is_valid(raise_exception=True)
-        #     serializer.save()
-
-        for item in budget_log:
-            item["partnership"] = intervention.id
-            serializer = InterventionBudgetCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        for item in supply_plans:
-            item["partnership"] = intervention.id
-            item["item"] = item["item"].id
-            serializer = SupplyPlanCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        for item in distribution_plans:
-            item["partnership"] = intervention.id
-            item["item"] = item["item"].id
-            item["site"] = item["site"].id
-            serializer = DistributionPlanCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        for item in amendments:
-            item["partnership"] = intervention.id
-            serializer = InterventionAmendmentCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        for item in visits:
-            item["partnership"] = intervention.id
-            serializer = PlannedVisitsCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        return intervention
+    # @transaction.atomic
+    # def create(self, validated_data):
+    #     budget_log = validated_data.pop("budget_log", [])
+    #     supply_plans = validated_data.pop("supply_plans", [])
+    #     distribution_plans = validated_data.pop("distribution_plans", [])
+    #     amendments = validated_data.pop("amendments", [])
+    #     visits = validated_data.pop("visits", [])
+    #
+    #     intervention = super(InterventionCreateUpdateSerializer, self).create(validated_data)
+    #
+    #     # for item in pcasectors:
+    #     #     item["pca"] = intervention.id
+    #     #     item["sector"] = item["sector"].id
+    #     #     serializer = PCASectorCreateUpdateSerializer(data=item)
+    #     #     serializer.is_valid(raise_exception=True)
+    #     #     serializer.save()
+    #     #
+    #     # for item in locations:
+    #     #     item["pca"] = intervention.id
+    #     #     item["location"] = item["location"].id
+    #     #     serializer = GwPCALocationCreateUpdateSerializer(data=item)
+    #     #     serializer.is_valid(raise_exception=True)
+    #     #     serializer.save()
+    #
+    #     for item in budget_log:
+    #         item["partnership"] = intervention.id
+    #         serializer = InterventionBudgetCreateUpdateSerializer(data=item)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #
+    #     for item in supply_plans:
+    #         item["partnership"] = intervention.id
+    #         item["item"] = item["item"].id
+    #         serializer = SupplyPlanCreateUpdateSerializer(data=item)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #
+    #     for item in distribution_plans:
+    #         item["partnership"] = intervention.id
+    #         item["item"] = item["item"].id
+    #         item["site"] = item["site"].id
+    #         serializer = DistributionPlanCreateUpdateSerializer(data=item)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #
+    #     for item in amendments:
+    #         item["partnership"] = intervention.id
+    #         serializer = InterventionAmendmentCreateUpdateSerializer(data=item)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #
+    #     for item in visits:
+    #         item["partnership"] = intervention.id
+    #         serializer = PlannedVisitsCreateUpdateSerializer(data=item)
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #
+    #     return intervention
 
     @transaction.atomic
     def update(self, instance, validated_data):
         # pcasectors = validated_data.pop("pcasectors", [])
         # locations = validated_data.pop("locations", [])
-        budget_log = validated_data.pop("budget_log", [])
-        supply_plans = validated_data.pop("supply_plans", [])
-        distribution_plans = validated_data.pop("distribution_plans", [])
-        amendments_log = validated_data.pop("amendments_log", [])
-        visits = validated_data.pop("visits", [])
+        # budget_log = validated_data.pop("budget_log", [])
+        # supply_plans = validated_data.pop("supply_plans", [])
+        # distribution_plans = validated_data.pop("distribution_plans", [])
+        # amendments_log = validated_data.pop("amendments_log", [])
+        # visits = validated_data.pop("visits", [])
 
         updated = super(InterventionCreateUpdateSerializer, self).update(instance, validated_data)
 
@@ -295,161 +327,161 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
         #     serializer.save()
 
         # Budget Log
-        ids = [x["id"] for x in budget_log if "id" in x.keys()]
-        for item in instance.budget_log.all():
-            if item.id not in ids:
-                item.delete()
-
-        for item in budget_log:
-            item["partnership"] = instance.id
-            serializer = InterventionBudgetCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        # Supply Plan
-        ids = [x["id"] for x in supply_plans if "id" in x.keys()]
-        for item in instance.supply_plans.all():
-            if item.id not in ids:
-                item.delete()
-
-        for item in supply_plans:
-            item["partnership"] = instance.id
-            item["item"] = item["item"].id
-            serializer = SupplyPlanCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        # Distribution Plan
-        ids = [x["id"] for x in distribution_plans if "id" in x.keys()]
-        for item in instance.distribution_plans.all():
-            if item.id not in ids:
-                item.delete()
-
-        for item in distribution_plans:
-            item["partnership"] = instance.id
-            item["item"] = item["item"].id
-            item["site"] = item["site"].id
-            serializer = DistributionPlanCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        # Amendments log
-        ids = [x["id"] for x in amendments_log if "id" in x.keys()]
-        for item in instance.amendments_log.all():
-            if item.id not in ids:
-                item.delete()
-
-        for item in amendments_log:
-            item["partnership"] = instance.id
-            serializer = InterventionAmendmentCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        # Planned visits
-        ids = [x["id"] for x in visits if "id" in x.keys()]
-        for item in instance.visits.all():
-            if item.id not in ids:
-                item.delete()
-
-        for item in visits:
-            item["partnership"] = instance.id
-            serializer = PlannedVisitsCreateUpdateSerializer(data=item)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
+        # ids = [x["id"] for x in budget_log if "id" in x.keys()]
+        # for item in instance.budget_log.all():
+        #     if item.id not in ids:
+        #         item.delete()
+        #
+        # for item in budget_log:
+        #     item["partnership"] = instance.id
+        #     serializer = InterventionBudgetCreateUpdateSerializer(data=item)
+        #     serializer.is_valid(raise_exception=True)
+        #     serializer.save()
+        #
+        # # Supply Plan
+        # ids = [x["id"] for x in supply_plans if "id" in x.keys()]
+        # for item in instance.supply_plans.all():
+        #     if item.id not in ids:
+        #         item.delete()
+        #
+        # for item in supply_plans:
+        #     item["partnership"] = instance.id
+        #     item["item"] = item["item"].id
+        #     serializer = SupplyPlanCreateUpdateSerializer(data=item)
+        #     serializer.is_valid(raise_exception=True)
+        #     serializer.save()
+        #
+        # # Distribution Plan
+        # ids = [x["id"] for x in distribution_plans if "id" in x.keys()]
+        # for item in instance.distribution_plans.all():
+        #     if item.id not in ids:
+        #         item.delete()
+        #
+        # for item in distribution_plans:
+        #     item["partnership"] = instance.id
+        #     item["item"] = item["item"].id
+        #     item["site"] = item["site"].id
+        #     serializer = DistributionPlanCreateUpdateSerializer(data=item)
+        #     serializer.is_valid(raise_exception=True)
+        #     serializer.save()
+        #
+        # # Amendments log
+        # ids = [x["id"] for x in amendments_log if "id" in x.keys()]
+        # for item in instance.amendments_log.all():
+        #     if item.id not in ids:
+        #         item.delete()
+        #
+        # for item in amendments_log:
+        #     item["partnership"] = instance.id
+        #     serializer = InterventionAmendmentCreateUpdateSerializer(data=item)
+        #     serializer.is_valid(raise_exception=True)
+        #     serializer.save()
+        #
+        # # Planned visits
+        # ids = [x["id"] for x in visits if "id" in x.keys()]
+        # for item in instance.visits.all():
+        #     if item.id not in ids:
+        #         item.delete()
+        #
+        # for item in visits:
+        #     item["partnership"] = instance.id
+        #     serializer = PlannedVisitsCreateUpdateSerializer(data=item)
+        #     serializer.is_valid(raise_exception=True)
+        #     serializer.save()
 
         return updated
-
-    def validate(self, data):
-        errors = {}
-        try:
-            data = super(InterventionCreateUpdateSerializer, self).validate(data)
-        except ValidationError as e:
-            errors.update(e)
-
-        document_type_errors = []
-        document_type = data.get("document_type", "")
-        agreement = data.get("agreement", "")
-        if not document_type:
-            document_type_errors.append("This field is required.")
-        if agreement.agreement_type == Agreement.PCA and document_type not in [PCA.PD, PCA.SHPD]:
-            document_type_errors.append("This field must be PD or SHPD in case of agreement is PCA.")
-        if agreement.agreement_type == Agreement.SSFA and document_type != PCA.SSFA:
-            document_type_errors.append("This field must be SSFA in case of agreement is SSFA.")
-        if document_type_errors:
-            errors.update(document_type=document_type_errors)
-
-        office = data.get("office", "")
-        if not office:
-            errors.update(office="This field is required.")
-
-        programme_focal_points = data.get("programme_focal_points", "")
-        status = data.get("status", "")
-        if not programme_focal_points and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(programme_focal_points="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-
-        unicef_managers = data.get("unicef_managers", "")
-        if not unicef_managers and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(unicef_managers="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-
-        partner_focal_point = data.get("partner_focal_point", "")
-        if not partner_focal_point and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(partner_focal_point="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-
-        if xor(bool(data.get("signed_by_partner_date", None)), bool(data.get("partner_manager", None))):
-            errors.update(partner_manager=["partner_manager and signed_by_partner_date must be provided."])
-            errors.update(signed_by_partner_date=["signed_by_partner_date and partner_manager must be provided."])
-
-        if xor(bool(data.get("signed_by_unicef_date", None)), bool(data.get("unicef_manager", None))):
-            errors.update(unicef_manager=["unicef_manager and signed_by_unicef_date must be provided."])
-            errors.update(signed_by_unicef_date=["signed_by_unicef_date and unicef_manager must be provided."])
-
-        start_date_errors = []
-        start_date = data.get("start", None)
-        signed_by_unicef_date = data.get("signed_by_unicef_date", None)
-        signed_by_partner_date = data.get("signed_by_partner_date", None)
-        if not start_date and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            start_date_errors.append("This field is required.")
-        if start_date and (signed_by_unicef_date or signed_by_partner_date) and \
-                start_date < max(signed_by_unicef_date, signed_by_partner_date):
-            start_date_errors.append("Start date must be after the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).")
-        if start_date_errors:
-            errors.update(start_date=start_date_errors)
-
-        end_date_errors = []
-        end_date = data.get("end", None)
-        if not end_date and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            end_date_errors.append("This field is required.")
-        if end_date and start_date and end_date < start_date:
-            end_date_errors.append("End date must be after the start date.")
-        if end_date_errors:
-            errors.update(end_date=end_date_errors)
-
-        population_focus = data.get("population_focus", "")
-        if not population_focus and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-            errors.update(population_focus="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-
-        # pcasectors = data.get("pcasectors", "")
-        # if not pcasectors and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-        #     errors.update(pcasectors="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-
-        # locations = data.get("locations", "")
-        # if not locations and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-        #     errors.update(locations="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-
-        if errors:
-            raise serializers.ValidationError(errors)
-
-        return data
+    #
+    # def validate(self, data):
+    #     errors = {}
+    #     try:
+    #         data = super(InterventionCreateUpdateSerializer, self).validate(data)
+    #     except ValidationError as e:
+    #         errors.update(e)
+    #
+    #     document_type_errors = []
+    #     document_type = data.get("document_type", "")
+    #     agreement = data.get("agreement", "")
+    #     if not document_type:
+    #         document_type_errors.append("This field is required.")
+    #     if agreement.agreement_type == Agreement.PCA and document_type not in [PCA.PD, PCA.SHPD]:
+    #         document_type_errors.append("This field must be PD or SHPD in case of agreement is PCA.")
+    #     if agreement.agreement_type == Agreement.SSFA and document_type != PCA.SSFA:
+    #         document_type_errors.append("This field must be SSFA in case of agreement is SSFA.")
+    #     if document_type_errors:
+    #         errors.update(document_type=document_type_errors)
+    #
+    #     office = data.get("office", "")
+    #     if not office:
+    #         errors.update(office="This field is required.")
+    #
+    #     programme_focal_points = data.get("programme_focal_points", "")
+    #     status = data.get("status", "")
+    #     if not programme_focal_points and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+    #         errors.update(programme_focal_points="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+    #
+    #     unicef_managers = data.get("unicef_managers", "")
+    #     if not unicef_managers and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+    #         errors.update(unicef_managers="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+    #
+    #     partner_focal_point = data.get("partner_focal_point", "")
+    #     if not partner_focal_point and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+    #         errors.update(partner_focal_point="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+    #
+    #     if xor(bool(data.get("signed_by_partner_date", None)), bool(data.get("partner_manager", None))):
+    #         errors.update(partner_manager=["partner_manager and signed_by_partner_date must be provided."])
+    #         errors.update(signed_by_partner_date=["signed_by_partner_date and partner_manager must be provided."])
+    #
+    #     if xor(bool(data.get("signed_by_unicef_date", None)), bool(data.get("unicef_manager", None))):
+    #         errors.update(unicef_manager=["unicef_manager and signed_by_unicef_date must be provided."])
+    #         errors.update(signed_by_unicef_date=["signed_by_unicef_date and unicef_manager must be provided."])
+    #
+    #     start_date_errors = []
+    #     start_date = data.get("start", None)
+    #     signed_by_unicef_date = data.get("signed_by_unicef_date", None)
+    #     signed_by_partner_date = data.get("signed_by_partner_date", None)
+    #     if not start_date and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+    #         start_date_errors.append("This field is required.")
+    #     if start_date and (signed_by_unicef_date or signed_by_partner_date) and \
+    #             start_date < max(signed_by_unicef_date, signed_by_partner_date):
+    #         start_date_errors.append("Start date must be after the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).")
+    #     if start_date_errors:
+    #         errors.update(start_date=start_date_errors)
+    #
+    #     end_date_errors = []
+    #     end_date = data.get("end", None)
+    #     if not end_date and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+    #         end_date_errors.append("This field is required.")
+    #     if end_date and start_date and end_date < start_date:
+    #         end_date_errors.append("End date must be after the start date.")
+    #     if end_date_errors:
+    #         errors.update(end_date=end_date_errors)
+    #
+    #     population_focus = data.get("population_focus", "")
+    #     if not population_focus and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+    #         errors.update(population_focus="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+    #
+    #     # pcasectors = data.get("pcasectors", "")
+    #     # if not pcasectors and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+    #     #     errors.update(pcasectors="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+    #
+    #     # locations = data.get("locations", "")
+    #     # if not locations and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+    #     #     errors.update(locations="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+    #
+    #     if errors:
+    #         raise serializers.ValidationError(errors)
+    #
+    #     return data
 
 
 class InterventionDetailSerializer(serializers.ModelSerializer):
+    planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
+    partner = serializers.CharField(source='agreement.partner.name')
 
-    budget_log = InterventionBudgetNestedSerializer(many=True)
-    supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
-    distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
-    amendments_log = InterventionAmendmentNestedSerializer(many=True, required=False)
-    visits = PlannedVisitsNestedSerializer(many=True, required=False)
-    partner = serializers.CharField(source='agreement.partner')
+    # supply_plans = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
+    # distribution_plans = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
+    amendments = InterventionAmendmentNestedSerializer(many=True, read_only=True, required=False)
+    planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Intervention
@@ -458,9 +490,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "signed_by_unicef_date", "signed_by_partner_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "office", "fr_numbers", "planned_visits", "population_focus",
-            "created", "modified", "budget_log", "supply_plans",
-            "distribution_plans", "amendments_log", "visits"
+            "offices", "fr_numbers", "planned_visits", "population_focus",
+            "created", "modified", "planned_budget",  # "supply_plans", "distribution_plans",
+            "amendments", "planned_visits"
         )
 
 
