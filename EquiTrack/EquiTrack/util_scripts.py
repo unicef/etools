@@ -443,7 +443,7 @@ def pca_unique_reference_number():
         print(cntry.name)
         pcas = PCA.objects.all()
         for pca in pcas:
-            if pca.number == '':
+            if not pca.number:
                 print(pca)
                 pca.agreement_number = 'blk:{}'.format(pca.id)
                 pca.save()
@@ -452,6 +452,8 @@ def pca_unique_reference_number():
         for dup in dupes:
             cdupes = PCA.objects.filter(number=dup['number'])
             for cdup in cdupes:
+                if len(cdup.number) > 40:
+                    cdup.number = cdup.number[len(cdup.number)-40:]
                 cdup.number = '{}|{}'.format(cdup.number, cdup.id)
                 print(cdup)
                 cdup.save()
@@ -531,22 +533,49 @@ def copy_pca_fields_to_intervention():
         'partner_manager': 'partner_authorized_officer_signatory',
         'unicef_manager': 'unicef_signatory',
     }
+    status_map = {
+        'in_proccess': 'Draft'
+    }
     pca_attrs = ['created_at', 'updated_at', 'partnership_type', 'number', 'title', 'status', 'start_date', 'end_date',
                  'initiation_date', 'submission_date', 'review_date', 'signed_by_unicef_date', 'signed_by_partner_date',
                  'agreement', 'result_structure', 'partner_manager', 'unicef_manager']
-
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
+        print(cntry)
         pcas = PCA.objects.all()
-        numbers = []
+        interventions_to_save = []
         for pca in pcas:
             intervention = Intervention()
             for attr in pca_attrs:
-                setattr(intervention, MAPPING[attr], getattr(pca, attr))
+                if attr == 'status' and pca.status == u'in_process':
+                    setattr(intervention, 'status', u'draft')
+                elif attr == 'agreement' and not getattr(pca, attr):
+                    break
+                else:
+                    setattr(intervention, MAPPING[attr], getattr(pca, attr))
             if not intervention.document_type:
                 continue
-            intervention.save()
-
+            try:
+                if intervention.status in \
+                        [intervention.ACTIVE, intervention.SUSPENDED, intervention.TERMINATED, intervention.IMPLEMENTED] \
+                        and \
+                        not intervention.signed_by_unicef_date:
+                    if intervention.start:
+                        intervention.signed_by_unicef_date = intervention.start
+                    elif intervention.signed_by_partner_date:
+                        intervention.signed_by_unicef_date = intervention.signed_by_partner_date
+                    else:
+                        intervention.signed_by_unicef_date = intervention.created
+                print('before', intervention, intervention.status, intervention.document_type)
+                if not intervention.agreement:
+                    continue
+                interventions_to_save.append(intervention)
+            except Exception as e:
+                print(pca.number)
+                print(intervention.number)
+                raise e
+            print('after', intervention, intervention.status, intervention.document_type)
+        Intervention.objects.bulk_create(interventions_to_save)
 
 def clean_interventions():
     for country in Country.objects.exclude(name='Global'):
@@ -600,3 +629,9 @@ def import_fr_numbers():
                     pca = PCA.objects.get(id=row['pca'])
                     pca.fr_numbers = [row['fr_number']]
                     pca.save()
+
+
+def local_country_keep():
+    set_country('Global')
+    keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border']
+    Country.objects.exclude(name__in=keeping).all().delete()

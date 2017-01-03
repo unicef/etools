@@ -950,7 +950,7 @@ class Agreement(TimeStampedModel):
         else:
             agreements_count = Agreement.objects.filter(
                 status__in=[self.ACTIVE, self.SUSPENDED, self.TERMINATED, self.ENDED],
-                created__year=self.year,
+                signed_by_unicef_date__year=self.year,
                 agreement_type=self.agreement_type
             ).count()
 
@@ -1158,6 +1158,7 @@ class Intervention(TimeStampedModel):
     number = models.CharField(
         max_length=64,
         blank=True,
+        null=True,
         verbose_name=u'Reference Number',
         # TODO: write a script to insure this before merging.
         unique=True,
@@ -1270,13 +1271,13 @@ class Intervention(TimeStampedModel):
         else:
             interventions_count = Intervention.objects.filter(
                 status__in=[self.ACTIVE, self.SUSPENDED, self.TERMINATED, self.IMPLEMENTED],
-                created__year=self.year,
+                signed_by_unicef_date__year=self.year,
                 document_type=self.document_type
-            ).count()
+            ).exclude(id=self.pk).count()
 
             sequence = '{0:02d}'.format(interventions_count + 1)
             number = u'{agreement}/{type}{year}{seq}'.format(
-                agreement = self.agreement.agreement_number,
+                agreement=self.agreement.agreement_number,
                 code=connection.tenant.country_short_code or '',
                 type=self.document_type,
                 year=self.year,
@@ -1289,11 +1290,11 @@ class Intervention(TimeStampedModel):
 
         if self.status == Intervention.DRAFT and self.start and self.end and \
                 self.signed_by_unicef_date and self.signed_by_partner_date and \
-                self.signed_by and self.partner_manager:
+                self.unicef_signatory and self.partner_authorized_officer_signatory:
             self.status = Intervention.ACTIVE
             return
         today = datetime.date.today()
-        if self.end and self.end < today:
+        if self.end and self.status == self.ACTIVE and self.end < today:
             self.status = Intervention.IMPLEMENTED
             return
 
