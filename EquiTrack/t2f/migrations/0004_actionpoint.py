@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
             name='ActionPoint',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('action_point_number', models.CharField(default=t2f.models.make_action_point_number, max_length=11)),
+                ('reference_number', models.CharField(default=t2f.models.make_action_point_number, max_length=11)),
                 ('description', models.CharField(max_length=254)),
                 ('due_date', models.DateTimeField()),
                 ('status', models.CharField(choices=[('closed', 'Closed'), ('ongoing', 'On-going'), ('open', 'Open'), ('cancelled', 'Cancelled')], max_length=254, null=True, verbose_name='Status')),
