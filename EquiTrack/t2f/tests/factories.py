@@ -171,6 +171,7 @@ class ActionPointFactory(factory.DjangoModelFactory):
     description = fuzzy.FuzzyText(length=128)
     due_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
     person_responsible = factory.SubFactory(UserFactory)
+    assigned_by = factory.SubFactory(UserFactory)
     status = 'open'
     created_at = datetime.now(tz=UTC)
 

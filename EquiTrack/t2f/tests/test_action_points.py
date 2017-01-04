@@ -25,7 +25,7 @@ class ActionPoints(APITenantTestCase):
         self.assertEqual(details_url, '/api/t2f/action_points/1/')
 
     def test_list_view(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('t2f:action_points:list'), user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -45,8 +45,8 @@ class ActionPoints(APITenantTestCase):
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
-        self.assertEqual(response_json.keys(),
-                         ['status',
+        self.assertEqual(set(response_json.keys()),
+                         {'status',
                           'trip_reference_number',
                           'action_point_number',
                           'description',
@@ -57,4 +57,4 @@ class ActionPoints(APITenantTestCase):
                           'completed_at',
                           'follow_up',
                           'person_responsible',
-                          'id'])
+                          'id'})

@@ -339,4 +339,4 @@ class ActionPointSerializer(serializers.ModelSerializer):
     class Meta:
         model = ActionPoint
         fields = ('id', 'action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
-                  'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at')
+                  'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at', 'assigned_by')
