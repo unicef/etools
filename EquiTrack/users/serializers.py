@@ -98,6 +98,10 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
             'user',
         )
 
+class OfficeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = "__all__"
 
 class GroupSerializer(serializers.ModelSerializer):
 

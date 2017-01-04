@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 
 from django_fsm import FSMField, transition
 
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.conf import settings
 from django.db import models, connection, transaction
 from django.contrib.auth.models import Group
@@ -969,6 +969,7 @@ class Agreement(TimeStampedModel):
         return self.agreement_number.split('-')[0]
 
     def check_status_auto_updates(self):
+        # TODO: make sure that all related models are valid the moment status changes
         # commit the reference number to the database once the agreement is signed
         if self.status == Agreement.DRAFT and self.start and self.end and \
                 self.signed_by_unicef_date and self.signed_by_partner_date and \
@@ -999,6 +1000,7 @@ class Agreement(TimeStampedModel):
         When suspending or terminating an agreement we need to suspend or terminate all interventions related
         this should only be called in a transaction with agreement save
         '''
+        #TODO: question: should reactivated agreements reactivate interventions?
 
         if oldself and oldself.status != self.status and \
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
@@ -1007,7 +1009,8 @@ class Agreement(TimeStampedModel):
                 partnership_type__in=[Intervention.PD, Intervention.SHPD]
             )
             for item in interventions:
-                if item.status != self.status:
+                if item.status not in [Intervention.DRAFT, Intervention.CANCELLED, Intervention.IMPLEMENTED] and \
+                                item.status != self.status:
                     item.status = self.status
                     item.save()
 
@@ -1184,6 +1187,7 @@ class Intervention(TimeStampedModel):
         help_text=u'The date the Intervention will end'
     )
     submission_date = models.DateField(
+        null=True, blank=True,
         help_text=u'The date the partner submitted complete PD/SSFA documents to Unicef',
     )
     submission_date_prc = models.DateField(
@@ -1198,6 +1202,7 @@ class Intervention(TimeStampedModel):
     )
     prc_review_document = models.FileField(
         max_length=255,
+        null=True, blank=True,
         upload_to=get_prc_intervention_file_path
     )
 
@@ -1229,7 +1234,7 @@ class Intervention(TimeStampedModel):
         blank=True
     )
 
-    office = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
+    offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
     fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), null=True)
     population_focus = models.CharField(max_length=130, null=True, blank=True)
 
@@ -1241,6 +1246,28 @@ class Intervention(TimeStampedModel):
         return u'{}'.format(
             self.number
         )
+
+    @cached_property
+    def total_partner_contribution(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            # return sum([b['partner_contribution'] for b in
+            #             self.budget_log.values('created', 'year', 'partner_contribution').
+            #            order_by('year', '-created').distinct('year').all()
+            #             ])
+            return self.planned_budget.aggregate(Sum('partner_contribution'))
+        return 0
+
+    @cached_property
+    def total_unicef_cash(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            # return sum([b['unicef_cash'] for b in
+            #             self.budget_log.values('created', 'year', 'unicef_cash').
+            #            order_by('year', '-created').distinct('year').all()
+            #             ])
+            return self.planned_budget.aggregate(Sum('unicef_cash'))
+        return 0
 
     @property
     def year(self):
@@ -1423,7 +1450,7 @@ class InterventionBudget(TimeStampedModel):
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
 
-    @transaction.atomic
+
     def save(self, **kwargs):
         """
         Calculate total budget on save
@@ -1432,13 +1459,17 @@ class InterventionBudget(TimeStampedModel):
             self.total_unicef_contribution() \
             + self.partner_contribution
 
-        super(PartnershipBudget, self).save(**kwargs)
+        super(InterventionBudget, self).save(**kwargs)
 
     def __unicode__(self):
         return u'{}: {}'.format(
-            self.partnership,
+            self.intervention,
             self.total
         )
+
+    class Meta:
+        unique_together = (('year', 'intervention'),)
+
 class InterventionAttachment(models.Model):
     """
     Represents a file for the partner intervention
@@ -1709,7 +1740,7 @@ class DistributionPlan(models.Model):
             self.site,
             self.quantity
         )
-
+    #TODO: this whole logic around supply plans and distribution plans needs to be revisited
     def save(self, **kwargs):
         if self.intervention:
             sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity
@@ -1718,6 +1749,8 @@ class DistributionPlan(models.Model):
                             models.Sum('quantity'))['quantity__sum'] + self.quantity or 0
         if dp_quantity <= sp_quantity:
             super(DistributionPlan, self).save(**kwargs)
+        else:
+            raise ValueError('Distribution plan quantity exceeds supply plan quantity')
 
 
 
@@ -2590,7 +2623,3 @@ class AuthorizedOfficer(models.Model):
 # post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 post_save.connect(PCA.send_changes, sender=PCA)
-
-
-
-
