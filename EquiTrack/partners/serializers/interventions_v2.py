@@ -231,6 +231,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionSectorLocationCUSerializer(many=True, read_only=True, required=False)
+    result_links = InterventionResultCUSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Intervention
@@ -500,6 +501,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
+    result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
     class Meta:
         model = Intervention
         fields = (
@@ -508,7 +510,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "submission_date", "prc_review_document", "signed_by_unicef_date", "signed_by_partner_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations",
-            "created", "modified", "planned_budget",
+            "created", "modified", "planned_budget", "result_links",
             "amendments", "planned_visits", "attachments", "supplies", "distributions"
         )
 
