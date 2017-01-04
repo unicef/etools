@@ -5,7 +5,7 @@ from mptt.admin import MPTTModelAdmin
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
-from partners.models import ResultChain
+
 from reports.models import (
     Sector,
     Goal,
