@@ -180,6 +180,15 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     initiation_date = datetime.today()
 
 
+class InterventionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Intervention
+
+    agreement = factory.SubFactory(AgreementFactory)
+    title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
+    submission_date = datetime.today()
+
+
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.ResultType

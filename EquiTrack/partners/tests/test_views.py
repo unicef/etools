@@ -18,6 +18,7 @@ from EquiTrack.factories import (
     PartnerStaffFactory,
     CountryProgrammeFactory,
     GroupFactory,
+    InterventionFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
@@ -35,6 +36,10 @@ from partners.models import (
     GwPCALocation,
     SupplyPlan,
     DistributionPlan,
+    Intervention,
+    InterventionSectorLocationLink,
+    InterventionBudget,
+    InterventionAmendment,
 )
 
 
@@ -121,7 +126,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             "staff_members": staff_members,
         }
         response = self.forced_auth_req(
-            'put',
+            'patch',
             '/api/v2/partners/{}/'.format(self.partner.id),
             user=self.unicef_staff,
             data=data,
@@ -295,42 +300,34 @@ class TestPartnershipViews(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory()
         agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
-        self.intervention = PartnershipFactory(partner=self.partner, agreement=agreement)
-        assert self.partner == self.intervention.partner
+        self.intervention = InterventionFactory(agreement=agreement)
 
         self.result_type = ResultType.objects.get(id=1)
         self.result = ResultFactory(result_type=self.result_type, result_structure=ResultStructureFactory())
-        self.pcasector = PCASector.objects.create(
-            pca=self.intervention,
+        self.pcasector = InterventionSectorLocationLink.objects.create(
+            intervention=self.intervention,
             sector=Sector.objects.create(name="Sector 1")
         )
-        self.partnership_budget = PartnershipBudget.objects.create(
-            partnership=self.intervention,
-            unicef_cash=100
+        self.partnership_budget = InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
         )
-        self.grant = Grant.objects.create(
-            donor=Donor.objects.create(
-                name="Donor 1"
-            ),
-            name="Grant 1"
+        self.amendment = InterventionAmendment.objects.create(
+            intervention=self.intervention,
+            type="Change in Programme Result",
         )
-        self.pcagrant = PCAGrant.objects.create(
-            partnership=self.intervention,
-            grant=self.grant,
-            funds=100
-        )
-        self.amendment = AmendmentLog.objects.create(
-            partnership=self.intervention,
-            type="Cost",
-        )
-        self.location = GwPCALocation.objects.create(
-            pca=self.intervention,
-            location=LocationFactory()
+        self.location = InterventionSectorLocationLink.objects.create(
+            intervention=self.intervention,
+            sector=Sector.objects.create(name="Sector 2")
         )
 
 
     def test_api_partners_list(self):
-        response = self.forced_auth_req('get', '/api/partners/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
@@ -340,12 +337,12 @@ class TestPartnershipViews(APITenantTestCase):
 
         data = {
             "agreement_type": "PCA",
-            "partner": self.intervention.partner.id,
+            "partner": self.partner.id,
             "status": "active"
         }
         response = self.forced_auth_req(
             'post',
-            '/api/partners/'+str(self.intervention.partner.id)+'/agreements/',
+            '/api/v2/partners/'+str(self.partner.id)+'/agreements/',
             user=self.unicef_staff,
             data=data
         )
@@ -354,16 +351,16 @@ class TestPartnershipViews(APITenantTestCase):
 
     def test_api_agreements_list(self):
 
-        response = self.forced_auth_req('get', '/api/partners/'+str(self.intervention.partner.id)+'/agreements/', user=self.unicef_staff)
+        response = self.forced_auth_req('get', '/api/partners/'+str(self.partner.id)+'/agreements/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
         self.assertIn("PCA", response.data[0]["agreement_type"])
 
     def test_api_interventions_list(self):
+        response = self.forced_auth_req('get', '/api/partners/'+str(self.partner.id)+'/interventions/', user=self.unicef_staff)
 
-        response = self.forced_auth_req('get', '/api/partners/'+str(self.intervention.partner.id)+'/interventions/', user=self.unicef_staff)
-
+        print(response)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
         self.assertIn("galaxy", response.data[0]["pca_title"])
@@ -375,8 +372,8 @@ class TestPartnershipViews(APITenantTestCase):
 
         response = self.forced_auth_req('get',
                                         '/'.join([
-                                            '/api/partners',
-                                            str(self.intervention.partner.id),
+                                            '/api/v2/partners',
+                                            str(self.partner.id),
                                             'agreements',
                                             str(self.intervention.agreement.id),
                                             'interventions/'
@@ -421,7 +418,7 @@ class TestPartnershipViews(APITenantTestCase):
         response = self.forced_auth_req('get',
                                         '/'.join([
                                             '/api/partners',
-                                            str(self.intervention.partner.id),
+                                            str(self.partner.id),
                                             'interventions',
                                             str(self.intervention.id),
                                             'sectors/'
@@ -436,7 +433,7 @@ class TestPartnershipViews(APITenantTestCase):
         response = self.forced_auth_req('get',
                                         '/'.join([
                                             '/api/partners',
-                                            str(self.intervention.partner.id),
+                                            str(self.partner.id),
                                             'interventions',
                                             str(self.intervention.id),
                                             'budgets/'
@@ -452,7 +449,7 @@ class TestPartnershipViews(APITenantTestCase):
         response = self.forced_auth_req('get',
                                         '/'.join([
                                             '/api/partners',
-                                            str(self.intervention.partner.id),
+                                            str(self.partner.id),
                                             'interventions',
                                             str(self.intervention.id),
                                             'files/'
@@ -460,28 +457,12 @@ class TestPartnershipViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-    def test_api_interventions_grants_list(self):
-
-        response = self.forced_auth_req('get',
-                                        '/'.join([
-                                            '/api/partners',
-                                            str(self.intervention.partner.id),
-                                            'interventions',
-                                            str(self.intervention.id),
-                                            'grants/'
-                                        ]), user=self.unicef_staff)
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["grant"], self.grant.id)
-        self.assertEquals(response.data[0]["funds"], 100)
-
     def test_api_interventions_amendments_list(self):
 
         response = self.forced_auth_req('get',
                                         '/'.join([
                                             '/api/partners',
-                                            str(self.intervention.partner.id),
+                                            str(self.partner.id),
                                             'interventions',
                                             str(self.intervention.id),
                                             'amendments/'
@@ -496,7 +477,7 @@ class TestPartnershipViews(APITenantTestCase):
         response = self.forced_auth_req('get',
                                         '/'.join([
                                             '/api/partners',
-                                            str(self.intervention.partner.id),
+                                            str(self.partner.id),
                                             'interventions',
                                             str(self.intervention.id),
                                             'locations/'
@@ -536,7 +517,7 @@ class TestAgreementAPIView(APITenantTestCase):
                                 agreement_type="MOU",
                                 status="draft"
                             )
-        self.intervention = PartnershipFactory(partner=self.partner, agreement=self.agreement)
+        self.intervention = InterventionFactory(agreement=self.agreement)
         today = datetime.date.today()
         self.country_programme = CountryProgrammeFactory(
                                         wbs='/A0/',
@@ -590,7 +571,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partner_staff_user,
             data=data
         )
-
+        print(response)
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_agreements_update(self):
@@ -615,7 +596,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["reference_number"], "/PCA{}01".format(datetime.date.today().year))
+        self.assertEquals(response.data["agreement_number"], self.agreement.agreement_number)
 
     def test_agreements_retrieve_staff_members(self):
         response = self.forced_auth_req(
@@ -743,14 +724,14 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
-        self.assertEquals(response.data[0]["reference_number"], "/PCA{}01".format(datetime.date.today().year))
+        self.assertEquals(response.data[0]["agreement_number"], self.agreement.agreement_number)
 
     def test_api_agreement_partner_nterventions_list(self):
 
         response = self.forced_auth_req('get',
                                         '/'.join([
                                             '/api/v2/partners',
-                                            str(self.intervention.partner.id),
+                                            str(self.partner.id),
                                             'agreements',
                                             str(self.intervention.agreement.id),
                                             'interventions/'
@@ -900,7 +881,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "suspended")
-        self.assertEquals(PCA.objects.get(id=self.intervention.id).status, "suspended")
+        self.assertEquals(Intervention.objects.get(id=self.intervention.id).status, "suspended")
 
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):
@@ -976,7 +957,7 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("This user already exists under a different partnership", response.data["non_field_errors"][0])
+        self.assertIn("The Partner Staff member you are trying to add is associated with a different partnership", response.data["non_field_errors"][0])
 
 
     def test_partner_staffmember_create(self):
@@ -1063,7 +1044,6 @@ class TestPartnerStaffMemberAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertIn("agreement_set", response.data)
 
 
 class TestPCAViews(APITenantTestCase):

@@ -1421,7 +1421,7 @@ class InterventionBudget(TimeStampedModel):
             self.total_unicef_contribution() \
             + self.partner_contribution
 
-        super(PartnershipBudget, self).save(**kwargs)
+        super(InterventionBudget, self).save(**kwargs)
 
     def __unicode__(self):
         return u'{}: {}'.format(
@@ -2579,7 +2579,3 @@ class AuthorizedOfficer(models.Model):
 # post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
 post_save.connect(PCA.send_changes, sender=PCA)
-
-
-
-
