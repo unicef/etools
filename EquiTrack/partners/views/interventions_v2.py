@@ -22,6 +22,7 @@ from partners.models import (
     InterventionAttachment,
     InterventionAmendment,
     InterventionSectorLocationLink,
+    InterventionResultLink
 )
 from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
@@ -32,7 +33,8 @@ from partners.serializers.interventions_v2 import (
     PlannedVisitsCUSerializer,
     InterventionAttachmentSerializer,
     InterventionAmendmentCUSerializer,
-    InterventionSectorLocationCUSerializer
+    InterventionSectorLocationCUSerializer,
+    InterventionResultCUSerializer
 )
 
 from partners.filters import PartnerScopeFilter
@@ -213,6 +215,9 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
         supplies = request.data.pop("supplies", [])
         distributions = request.data.pop("distributions", [])
 
+
+        result_links = request.data.pop("result_links", [])
+
         intervention_serializer = self.get_serializer(instance, data=request.data)
         intervention_serializer.is_valid(raise_exception=True)
         intervention = intervention_serializer.save()
@@ -232,6 +237,9 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
                               'amendments', 'intervention', partial)
         self.up_related_field(intervention, sector_locations,
                               InterventionSectorLocationLink, InterventionSectorLocationCUSerializer,
+                              'sector_locations', 'intervention', partial)
+        self.up_related_field(intervention, result_links,
+                              InterventionResultLink, InterventionResultCUSerializer,
                               'sector_locations', 'intervention', partial)
 
 
