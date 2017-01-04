@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.tests.factories import TravelFactory
+from t2f.tests.factories import TravelFactory, ActionPointFactory
 
 
 class ActionPoints(APITenantTestCase):
@@ -71,3 +71,23 @@ class ActionPoints(APITenantTestCase):
                           'follow_up',
                           'person_responsible',
                           'id'})
+
+    def test_searching(self):
+        ActionPointFactory(travel=self.travel, description='search_in_desc')
+        ap_2 = ActionPointFactory(travel=self.travel)
+
+        response = self.forced_auth_req('get', reverse('t2f:action_points:list'), user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 3)
+
+        response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
+                                        data={'search': 'search_in_desc'},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 1)
+
+        response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
+                                        data={'search': ap_2.action_point_number},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 1)

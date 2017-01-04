@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework_csv import renderers
 
 from t2f.filters import TravelRelatedModelFilter
-from t2f.filters.travel_list import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter
+from t2f.filters import travel_list, action_points
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -65,7 +65,10 @@ class TravelListViewSet(mixins.ListModelMixin,
     serializer_class = TravelListSerializer
     pagination_class = T2FPagePagination
     permission_classes = (IsAdminUser,)
-    filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
+    filter_backends = (travel_list.SearchFilter,
+                       travel_list.ShowHiddenFilter,
+                       travel_list.SortFilter,
+                       travel_list.FilterBoxFilter)
     renderer_classes = (renderers.JSONRenderer, renderers.CSVRenderer)
 
     _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
@@ -178,6 +181,9 @@ class ActionPointViewSet(mixins.ListModelMixin,
     serializer_class = ActionPointSerializer
     pagination_class = T2FPagePagination
     permission_classes = (IsAdminUser,)
+    filter_backends = (action_points.SearchFilter,
+                       action_points.SortFilter,
+                       action_points.FilterBoxFilter)
     lookup_url_kwarg = 'action_point_pk'
 
 
