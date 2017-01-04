@@ -16,7 +16,7 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
-from t2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter, TravelAttachmentFilter
+from t2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter, TravelRelatedModelFilter
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -24,15 +24,15 @@ from t2f.serializers.export import TravelListExportSerializer
 from users.models import Office, Section
 
 from t2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
-    TravelAttachment, TravelType, ModeOfTravel
+    TravelAttachment, TravelType, ModeOfTravel, ActionPoint
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
-    CloneParameterSerializer, CloneOutputSerializer
+    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.serializers.permission_matrix import PermissionMatrixSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 
 
-class TravelPagePagination(PageNumberPagination):
+class T2FPagePagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = 'page_size'
     page_query_param = 'page'
@@ -62,7 +62,7 @@ class TravelListViewSet(mixins.ListModelMixin,
                         viewsets.GenericViewSet):
     queryset = Travel.objects.all()
     serializer_class = TravelListSerializer
-    pagination_class = TravelPagePagination
+    pagination_class = T2FPagePagination
     permission_classes = (IsAdminUser,)
     filter_backends = (SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter)
     renderer_classes = (renderers.JSONRenderer, renderers.CSVRenderer)
@@ -154,7 +154,7 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
     serializer_class = TravelAttachmentSerializer
     parser_classes = (FormParser, MultiPartParser, FileUploadParser)
     permission_classes = (IsAdminUser,)
-    filter_backends = (TravelAttachmentFilter,)
+    filter_backends = (TravelRelatedModelFilter,)
     lookup_url_kwarg = 'attachment_pk'
 
     def get_serializer_context(self):
@@ -168,6 +168,19 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
         travel = get_object_or_404(queryset, pk=self.kwargs['travel_pk'])
         context['travel'] = travel
         return context
+
+
+class ActionPointViewSet(mixins.ListModelMixin,
+                         mixins.CreateModelMixin,
+                         mixins.RetrieveModelMixin,
+                         mixins.DestroyModelMixin,
+                         viewsets.GenericViewSet):
+    queryset = ActionPoint.objects.all()
+    serializer_class = ActionPointSerializer
+    pagination_class = T2FPagePagination
+    permission_classes = (IsAdminUser,)
+    filter_backends = (TravelRelatedModelFilter,)
+    lookup_ulr_kwarg = 'action_trip_pk'
 
 
 class StaticDataView(generics.GenericAPIView):

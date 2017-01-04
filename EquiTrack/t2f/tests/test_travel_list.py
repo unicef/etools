@@ -4,12 +4,13 @@ import json
 import csv
 from cStringIO import StringIO
 from unittest import skip
+from freezegun import freeze_time
 
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import DSARegion, ModeOfTravel, make_reference_number
+from t2f.models import DSARegion, ModeOfTravel, make_travel_reference_number, Travel
 from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, FundFactory, TravelTypeFactory, \
     ModeOfTravelFactory
 
@@ -21,7 +22,7 @@ class TravelDetails(APITenantTestCase):
         super(TravelDetails, self).setUp()
         self.traveler = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.travel = TravelFactory(reference_number=make_reference_number(),
+        self.travel = TravelFactory(reference_number=make_travel_reference_number(),
                                     traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
@@ -63,7 +64,13 @@ class TravelDetails(APITenantTestCase):
         self.assertIn('data', response_json)
         self.assertEqual(len(response_json['data']), 1)
 
+    @freeze_time('2016-12-14')
     def test_sorting(self):
+        # Travels have to be deleted here to avoid reference numbers generated ouf of the desired time range
+        # (setUp is not covered by the freezegun decorator)
+        Travel.objects.all().delete()
+
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
 

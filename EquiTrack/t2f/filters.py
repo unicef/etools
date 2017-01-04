@@ -90,7 +90,7 @@ class FilterBoxFilter(BaseFilterBackend):
         return queryset.filter(**data)
 
 
-class TravelAttachmentFilter(BaseFilterBackend):
+class TravelRelatedModelFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         # This should be attached only to viewsets which gets travel_pk
         return queryset.filter(travel__pk=view.kwargs['travel_pk'])

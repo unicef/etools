@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 
 from locations.models import Location
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelPermission, TravelAttachment, AirlineCompany, ModeOfTravel
+    TravelPermission, TravelAttachment, AirlineCompany, ModeOfTravel, ActionPoint
 from locations.models import Location
 
 
@@ -331,3 +331,10 @@ class CloneParameterSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('traveler',)
+
+
+class ActionPointSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActionPoint
+        fields = ('id', 'reference_number', 'description', 'due_date', 'person_responsible', 'status', 'completed_at',
+                  'actions_taken', 'follow_up', 'comments', 'created_at')

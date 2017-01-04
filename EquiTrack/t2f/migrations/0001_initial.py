@@ -154,7 +154,7 @@ class Migration(migrations.Migration):
                 ('additional_note', models.TextField(blank=True, null=True)),
                 ('international_travel', models.NullBooleanField(default=False)),
                 ('ta_required', models.NullBooleanField(default=True)),
-                ('reference_number', models.CharField(default=t2f.models.make_reference_number, max_length=12)),
+                ('reference_number', models.CharField(default=t2f.models.make_travel_reference_number, max_length=12)),
                 ('hidden', models.BooleanField(default=False)),
                 ('estimated_travel_cost', models.DecimalField(decimal_places=4, default=0, max_digits=20)),
                 ('is_driver', models.BooleanField(default=False)),

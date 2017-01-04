@@ -2,11 +2,13 @@
 from datetime import datetime, timedelta
 import factory
 from factory import fuzzy
+from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
     PartnershipFactory, ResultFactory, LocationFactory
 from t2f.models import DSARegion, Currency, AirlineCompany, Travel, TravelActivity, IteneraryItem, Expense, Deduction,\
-    CostAssignment, Clearances, ExpenseType, Fund, Grant, WBS, TravelType, ModeOfTravel, make_reference_number
+    CostAssignment, Clearances, ExpenseType, Fund, Grant, WBS, TravelType, ModeOfTravel, make_travel_reference_number, \
+    ActionPoint, make_action_point_reference_number
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
@@ -164,6 +166,18 @@ class ClearanceFactory(factory.DjangoModelFactory):
         model = Clearances
 
 
+class ActionPointFactory(factory.DjangoModelFactory):
+    reference_number = factory.Sequence(lambda n: make_action_point_reference_number())
+    description = fuzzy.FuzzyText(length=128)
+    due_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
+    person_responsible = factory.SubFactory(UserFactory)
+    status = 'open'
+    created_at = datetime.now(tz=UTC)
+
+    class Meta:
+        model = ActionPoint
+
+
 class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
@@ -174,7 +188,7 @@ class TravelFactory(factory.DjangoModelFactory):
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True
-    reference_number = factory.Sequence(lambda n: make_reference_number())
+    reference_number = factory.Sequence(lambda n: make_travel_reference_number())
     currency = factory.SubFactory(CurrencyFactory)
 
     itinerary = factory.RelatedFactory(IteneraryItemFactory, 'travel')
@@ -182,6 +196,7 @@ class TravelFactory(factory.DjangoModelFactory):
     deductions = factory.RelatedFactory(DeductionFactory, 'travel')
     cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')
     clearances = factory.RelatedFactory(ClearanceFactory, 'travel')
+    action_points = factory.RelatedFactory(ActionPointFactory, 'travel')
 
     @factory.post_generation
     def populate_activities(self, create, extracted, **kwargs):

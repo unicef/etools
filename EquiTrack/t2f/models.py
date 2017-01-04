@@ -7,9 +7,9 @@ import logging
 from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
-from django.db import models
 from django.contrib.auth.models import User
-from django.contrib.staticfiles import finders
+from django.conf import settings
+from django.db import models
 from django.template.context import Context
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
@@ -134,7 +134,7 @@ class DSARegion(models.Model):
         return '{} - {}'.format(self.country, self.region)
 
 
-def make_reference_number():
+def make_travel_reference_number():
     year = datetime.now().year
     last_travel = Travel.objects.filter(created__year=year).order_by('reference_number').last()
     if last_travel:
@@ -198,7 +198,7 @@ class Travel(models.Model):
     additional_note = models.TextField(null=True, blank=True)
     international_travel = models.NullBooleanField(default=False, null=True, blank=True)
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
-    reference_number = models.CharField(max_length=12, default=make_reference_number)
+    reference_number = models.CharField(max_length=12, default=make_travel_reference_number)
     hidden = models.BooleanField(default=False)
     mode_of_travel = models.ManyToManyField('ModeOfTravel', related_name='+')
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
@@ -488,3 +488,43 @@ class TravelPermission(models.Model):
     field = models.CharField(max_length=64)
     permission_type = models.CharField(max_length=5, choices=PERMISSION_TYPE_CHOICES)
     value = models.BooleanField(default=False)
+
+
+def make_action_point_reference_number():
+    year = datetime.now().year
+    last_travel = Travel.objects.filter(created__year=year).order_by('reference_number').last()
+    if last_travel:
+        reference_number = last_travel.reference_number
+        reference_number = int(reference_number.split('/')[1])
+        reference_number += 1
+    else:
+        reference_number = 1
+    return '{}/{:06d}'.format(year, reference_number)
+
+
+class ActionPoint(models.Model):
+    """
+    Represents an action point for the trip
+
+    Relates to :model:`trips.Trip`
+    Relates to :model:`auth.User`
+    """
+
+    STATUS = (
+        ('closed', 'Closed'),
+        ('ongoing', 'On-going'),
+        ('open', 'Open'),
+        ('cancelled', 'Cancelled')
+    )
+
+    travel = models.ForeignKey('Travel', related_name='action_points')
+    reference_number = models.CharField(max_length=11, default=make_action_point_reference_number)
+    description = models.CharField(max_length=254)
+    due_date = models.DateTimeField()
+    person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL)
+    status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
+    completed_at = models.DateField(blank=True, null=True)
+    actions_taken = models.TextField(blank=True, null=True)
+    follow_up = models.BooleanField(default=False)
+    comments = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)

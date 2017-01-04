@@ -2,8 +2,7 @@
 from django.conf.urls import url, patterns, include
 
 from t2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, \
-    TravelAttachmentViewSet
-
+    TravelAttachmentViewSet, ActionPointViewSet
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
@@ -23,9 +22,19 @@ travel_attachment_details = TravelAttachmentViewSet.as_view({'delete': 'destroy'
 clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clone_for_secondary_traveler'})
 clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
 
+action_point_list = ActionPointViewSet.as_view({'get': 'list',
+                                                'post': 'create'})
+action_point_details = ActionPointViewSet.as_view({'get': 'retrieve'})
+
 details_state_changes_pattern = r'^(?P<transition_name>submit_for_approval|approve|reject|cancel|plan|' \
                                 r'send_for_payment|submit_certificate|approve_certificate|reject_certificate|' \
                                 r'mark_as_certified|mark_as_completed)/$'
+
+action_points_patters = patterns(
+    '',
+    url(r'^$', action_point_list, name='index'),
+    url(r'^(?P<action_point_pk>[0-9]+)/', action_point_details, name='details'),
+)
 
 travel_details_patterns = patterns(
     '',
@@ -37,6 +46,7 @@ travel_details_patterns = patterns(
     url(r'duplicate_travel/$', clone_travel_for_secondary_traveler,
         name='clone_for_secondary_traveler'),
     url(r'^add_driver/$', clone_travel_for_driver, name='clone_for_driver'),
+    url(r'^action_points/', include(action_points_patters, namespace='action_points')),
 )
 
 travel_list_patterns = patterns(
