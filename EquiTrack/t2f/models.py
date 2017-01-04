@@ -490,7 +490,7 @@ class TravelPermission(models.Model):
     value = models.BooleanField(default=False)
 
 
-def make_action_point_reference_number():
+def make_action_point_number():
     year = datetime.now().year
     last_travel = Travel.objects.filter(created__year=year).order_by('reference_number').last()
     if last_travel:
@@ -518,7 +518,7 @@ class ActionPoint(models.Model):
     )
 
     travel = models.ForeignKey('Travel', related_name='action_points')
-    reference_number = models.CharField(max_length=11, default=make_action_point_reference_number)
+    action_point_number = models.CharField(max_length=11, default=make_action_point_number)
     description = models.CharField(max_length=254)
     due_date = models.DateTimeField()
     person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL)

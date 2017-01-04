@@ -37,3 +37,24 @@ class ActionPoints(APITenantTestCase):
         expected_keys = ['id', 'reference_number', 'description', 'due_date', 'person_responsible', 'status',
                          'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at']
         self.assertKeysIn(expected_keys, action_point_data)
+
+    def test_details(self):
+        action_point_pk = self.travel.action_points.first().pk
+        response = self.forced_auth_req('get', reverse('t2f:action_points:details',
+                                                       kwargs={'action_point_pk': action_point_pk}),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response_json.keys(),
+                         ['status',
+                          'trip_reference_number',
+                          'action_point_number',
+                          'description',
+                          'due_date',
+                          'actions_taken',
+                          'created_at',
+                          'comments',
+                          'completed_at',
+                          'follow_up',
+                          'person_responsible',
+                          'id'])

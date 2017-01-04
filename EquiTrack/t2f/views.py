@@ -171,12 +171,13 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
 
 
 class ActionPointViewSet(mixins.ListModelMixin,
+                         mixins.RetrieveModelMixin,
                          viewsets.GenericViewSet):
     queryset = ActionPoint.objects.all()
     serializer_class = ActionPointSerializer
     pagination_class = T2FPagePagination
     permission_classes = (IsAdminUser,)
-    lookup_ulr_kwarg = 'action_point_pk'
+    lookup_url_kwarg = 'action_point_pk'
 
 
 class StaticDataView(generics.GenericAPIView):

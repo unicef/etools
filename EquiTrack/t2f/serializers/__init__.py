@@ -334,7 +334,9 @@ class CloneParameterSerializer(serializers.Serializer):
 
 
 class ActionPointSerializer(serializers.ModelSerializer):
+    trip_reference_number = serializers.CharField(source='travel.reference_number')
+
     class Meta:
         model = ActionPoint
-        fields = ('id', 'reference_number', 'description', 'due_date', 'person_responsible', 'status', 'completed_at',
-                  'actions_taken', 'follow_up', 'comments', 'created_at')
+        fields = ('id', 'action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
+                  'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at')

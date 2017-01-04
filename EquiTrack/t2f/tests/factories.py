@@ -8,7 +8,7 @@ from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, Part
     PartnershipFactory, ResultFactory, LocationFactory
 from t2f.models import DSARegion, Currency, AirlineCompany, Travel, TravelActivity, IteneraryItem, Expense, Deduction,\
     CostAssignment, Clearances, ExpenseType, Fund, Grant, WBS, TravelType, ModeOfTravel, make_travel_reference_number, \
-    ActionPoint, make_action_point_reference_number
+    ActionPoint, make_action_point_number
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
@@ -167,7 +167,7 @@ class ClearanceFactory(factory.DjangoModelFactory):
 
 
 class ActionPointFactory(factory.DjangoModelFactory):
-    reference_number = factory.Sequence(lambda n: make_action_point_reference_number())
+    action_point_number = factory.Sequence(lambda n: make_action_point_number())
     description = fuzzy.FuzzyText(length=128)
     due_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
     person_responsible = factory.SubFactory(UserFactory)
