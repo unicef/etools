@@ -32,6 +32,7 @@ class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionBudget
         fields = (
+            "id",
             "partner_contribution",
             "unicef_cash",
             "in_kind_amount",
@@ -55,6 +56,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionBudget
         fields = (
+            "id",
             "intervention",
             "partner_contribution",
             "unicef_cash",
@@ -67,9 +69,6 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         )
         #read_only_fields = [u'total']
 
-    # def create(self, validated_data):
-    #     print validated_data
-    #     return InterventionBudget.objects.create(**validated_data)
     def validate(self, data):
         errors = {}
         try:
@@ -77,19 +76,12 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
         except ValidationError as e:
             errors.update(e)
 
-        # TODO: this will not work.. refactor!
-        # status = data.get("status", "")
-        # year = data.get("year", "")
-        # if not year and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-        #     errors.update(year="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-        #
-        # partner_contribution = data.get("partner_contribution", "")
-        # if not partner_contribution and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-        #     errors.update(partner_contribution="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
-        #
-        # unicef_cash = data.get("unicef_cash", "")
-        # if not unicef_cash and status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-        #     errors.update(unicef_cash="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
+        intervention = data.get('intervention', None)
+
+        year = data.get("year", "")
+        # To avoid any confusion.. budget year will always be required
+        if not year:
+            errors.update(year="Budget year is required")
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -109,6 +101,7 @@ class SupplyPlanNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupplyPlan
         fields = (
+            'id',
             "item",
             "quantity",
         )
@@ -126,6 +119,7 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = DistributionPlan
         fields = (
+            "id,"
             "item",
             "quantity",
             "site",
@@ -162,6 +156,7 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionPlannedVisits
         fields = (
+            "id",
             "year",
             "programmatic",
             "spot_checks",
@@ -205,16 +200,41 @@ class InterventionListSerializer(serializers.ModelSerializer):
             'unicef_budget', 'cso_contribution', 'sectors'
         )
 
+class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
+    locations = LocationLightSerializer(many=True)
+    sector = SectorLightSerializer()
+    class Meta:
+        model = Intervention
+        fields = (
+            'id', 'sector', 'locations'
+        )
+
+class InterventionLocationSectorCUSerializer(serializers.ModelSerializer):
+    locations = LocationLightSerializer(many=True)
+    class Meta:
+        model = Intervention
+        fields = (
+            'id', 'intervention', 'sector', 'locations'
+        )
+
+class InterventionAttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Intervention
+        fields = (
+            'id', 'intervention', 'type', 'attachment'
+        )
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
 
-    #supply_plans = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
-    #distribution_plans = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
-    amendments = InterventionAmendmentNestedSerializer(many=True, read_only=True, required=False)
+    supplies = SupplyPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
+    distributions = DistributionPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
+    amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
+    attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
+    sector_locations = InterventionSectorLocationCUSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Intervention
@@ -478,11 +498,12 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
 
-    # supply_plans = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
-    # distribution_plans = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
+    supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
+    distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentNestedSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
-
+    sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
+    attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     class Meta:
         model = Intervention
         fields = (
@@ -490,11 +511,10 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "signed_by_unicef_date", "signed_by_partner_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
-            "offices", "fr_numbers", "planned_visits", "population_focus",
-            "created", "modified", "planned_budget",  # "supply_plans", "distribution_plans",
-            "amendments", "planned_visits"
+            "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations",
+            "created", "modified", "planned_budget",
+            "amendments", "planned_visits", "attachments", "supplies", "distributions"
         )
-
 
 class InterventionExportSerializer(serializers.ModelSerializer):
 

@@ -969,6 +969,7 @@ class Agreement(TimeStampedModel):
         return self.agreement_number.split('-')[0]
 
     def check_status_auto_updates(self):
+        # TODO: make sure that all related models are valid the moment status changes
         # commit the reference number to the database once the agreement is signed
         if self.status == Agreement.DRAFT and self.start and self.end and \
                 self.signed_by_unicef_date and self.signed_by_partner_date and \
@@ -999,6 +1000,7 @@ class Agreement(TimeStampedModel):
         When suspending or terminating an agreement we need to suspend or terminate all interventions related
         this should only be called in a transaction with agreement save
         '''
+        #TODO: question: should reactivated agreements reactivate interventions?
 
         if oldself and oldself.status != self.status and \
                 self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
@@ -1007,7 +1009,8 @@ class Agreement(TimeStampedModel):
                 partnership_type__in=[Intervention.PD, Intervention.SHPD]
             )
             for item in interventions:
-                if item.status != self.status:
+                if item.status not in [Intervention.DRAFT, Intervention.CANCELLED, Intervention.IMPLEMENTED] and \
+                                item.status != self.status:
                     item.status = self.status
                     item.save()
 
@@ -1453,6 +1456,9 @@ class InterventionBudget(TimeStampedModel):
             self.total
         )
 
+    class Meta:
+        unique_together = (('year', 'intervention'),)
+
 class InterventionAttachment(models.Model):
     """
     Represents a file for the partner intervention
@@ -1723,7 +1729,7 @@ class DistributionPlan(models.Model):
             self.site,
             self.quantity
         )
-
+    #TODO: this whole logic around supply plans and distribution plans needs to be revisited
     def save(self, **kwargs):
         if self.intervention:
             sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity
@@ -1732,6 +1738,8 @@ class DistributionPlan(models.Model):
                             models.Sum('quantity'))['quantity__sum'] + self.quantity or 0
         if dp_quantity <= sp_quantity:
             super(DistributionPlan, self).save(**kwargs)
+        else:
+            raise ValueError('Distribution plan quantity exceeds supply plan quantity')
 
 
 

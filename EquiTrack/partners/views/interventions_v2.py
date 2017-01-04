@@ -17,16 +17,22 @@ from rest_framework.generics import (
 
 from partners.models import (
     InterventionBudget,
-    Intervention
+    Intervention,
+    InterventionPlannedVisits,
+    InterventionAttachment,
+    InterventionAmendment,
+    InterventionSectorLocationLink,
 )
 from partners.serializers.interventions_v2 import (
     InterventionListSerializer,
     InterventionDetailSerializer,
     InterventionCreateUpdateSerializer,
     InterventionExportSerializer,
-    InterventionBudgetCUSerializer
-
-
+    InterventionBudgetCUSerializer,
+    PlannedVisitsCUSerializer,
+    InterventionAttachmentSerializer,
+    InterventionAmendmentCUSerializer,
+    InterventionSectorLocationCUSerializer
 )
 
 from partners.filters import PartnerScopeFilter
@@ -196,10 +202,11 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
 
         partial = kwargs.pop('partial', False)
-        planned_budget = request.data.pop("planned_budget", False)
+        planned_budget = request.data.pop("planned_budget", [])
         attachements = request.data.pop("attachments", [])
         planned_visits = request.data.pop("planned_visits", [])
         amendments = request.data.pop("amendments", [])
+        sector_locations = request.data.pop("sector_locations", [])
         instance = self.get_object()
 
         # TODO: rename these
@@ -210,10 +217,22 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
         intervention_serializer.is_valid(raise_exception=True)
         intervention = intervention_serializer.save()
 
-        # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
+        # TODO: test attachements, amendments, supplies, distributions
         self.up_related_field(intervention, planned_budget,
                               InterventionBudget, InterventionBudgetCUSerializer,
                               'planned_budget', 'intervention', partial)
+        self.up_related_field(intervention, planned_visits,
+                              InterventionPlannedVisits, PlannedVisitsCUSerializer,
+                              'planned_visits', 'intervention', partial)
+        self.up_related_field(intervention, attachements,
+                              InterventionAttachment, InterventionAttachmentSerializer,
+                              'attachments', 'intervention', partial)
+        self.up_related_field(intervention, amendments,
+                              InterventionAmendment, InterventionAmendmentCUSerializer,
+                              'amendments', 'intervention', partial)
+        self.up_related_field(intervention, sector_locations,
+                              InterventionSectorLocationLink, InterventionSectorLocationCUSerializer,
+                              'sector_locations', 'intervention', partial)
 
 
         if getattr(instance, '_prefetched_objects_cache', None):
@@ -222,6 +241,4 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
             instance = self.get_object()
             intervention_serializer = self.get_serializer(instance)
 
-        return Response(
-            intervention_serializer.data
-        )
+        return Response(intervention_serializer.data)
