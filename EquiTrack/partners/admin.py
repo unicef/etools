@@ -51,6 +51,7 @@ from .models import (
     InterventionPlannedVisits,
     Intervention,
     AgreementAmendment,
+    InterventionAmendment,
 
 )
 from .filters import (
@@ -272,7 +273,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     )
     date_hierarchy = 'start_date'
     list_display = (
-        'reference_number',
+        'number',
         'partnership_type',
         'status',
         'created_date',
@@ -302,7 +303,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         'title',
     )
     readonly_fields = (
-        'reference_number',
+        'number',
         'total_budget',
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
@@ -442,7 +443,7 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
     )
     date_hierarchy = 'start_date'
     list_display = (
-        'reference_number',
+        'number',
         'partnership_type',
         'status',
         'created_date',
@@ -472,7 +473,7 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
         'title',
     )
     readonly_fields = (
-        'reference_number',
+        'number',
         'total_budget',
         'days_from_submission_to_signed',
         'days_from_review_to_signed',
@@ -703,7 +704,7 @@ class DocumentInlineAdmin(admin.TabularInline):
     verbose_name_plural = 'Interventions'
     extra = 0
     fields = (
-        'reference_number',
+        'number',
         'status',
         'start_date',
         'end_date',
@@ -997,4 +998,5 @@ admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(IndicatorReport)
 admin.site.register(InterventionPlannedVisits)
 admin.site.register(Intervention)
+admin.site.register(InterventionAmendment)
 admin.site.register(PartnershipBudget)

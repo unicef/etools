@@ -1338,19 +1338,30 @@ class InterventionAmendment(TimeStampedModel):
 
     Relates to :model:`partners.Interventions`
     """
+    CPR = u'CPR'
+    CPF = u'CPF'
+    CGC = u'CGC'
+    CTBGT20 = u'CTBGT20'
+    CTBLT20 = u'CTBLT20'
+    CABLT20 = u'CABLT20'
+    CABGT20 = u'CABGT20'
+    CABGT20FACE = u'CABGT20FACE'
+
+    AMENDMENT_TYPES = (
+        (CPR, 'Change in Programme Result'),
+        (CPF, 'Change in Population Focus'),
+        (CGC, 'Change in Georgraphical Coverage'),
+        (CTBGT20, 'Change in Total Budget >20%'),
+        (CTBLT20, 'Change in Total Budget <=20%'),
+        (CABLT20, 'Changes in Activity Budget <=20% - No Change in Total Budget'),
+        (CABGT20, 'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'),
+        (CABGT20FACE, 'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE'),
+    )
+
     intervention = models.ForeignKey(Intervention, related_name='amendments')
     type = models.CharField(
         max_length=50,
-        choices=Choices(
-            'Change in Programme Result',
-            'Change in Population Focus',
-            'Change in Georgraphical Coverage',
-            'Change in Total Budget >20%',
-            'Change in Total Budget <=20%',
-            'Changes in Activity Budget <=20% - No Change in Total Budget',
-            'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE',
-            'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE',
-        ))
+        choices=AMENDMENT_TYPES)
     signed_date = models.DateField(null=True)
     amendment_number = models.IntegerField(default=0)
     signed_amendment = models.FileField(
@@ -1362,7 +1373,7 @@ class InterventionAmendment(TimeStampedModel):
         return u'{}: {} - {}'.format(
             self.amendment_number,
             self.type,
-            self.amended_at
+            self.signed_date
         )
 class InterventionPlannedVisits(models.Model):
     """
@@ -1933,7 +1944,7 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def sector_children(self):
-        sectors = self.pcasectors.all().values_list('sector__id', flat=True)
+        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
         return Sector.objects.filter(id__in=sectors)
 
     @property
@@ -2110,7 +2121,7 @@ class PCA(AdminURLMixin, models.Model):
     def save(self, **kwargs):
 
         # commit the referece number to the database once the intervention is signed
-        if self.status != PCA.DRAFT and self.signed_by_unicef_date and not self.number:
+        if self.status != PCA.IN_PROCESS and self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
 
         if not self.pk:
@@ -2181,12 +2192,12 @@ class PCA(AdminURLMixin, models.Model):
             )
 
         # attach any FCs immediately
-        if instance:
-            for fr_number in instance.fr_numbers:
-                commitments = FundingCommitment.objects.filter(fr_number=fr_number)
-                for commit in commitments:
-                    commit.intervention = instance
-                    commit.save()
+        # if instance:
+        #     for fr_number in instance.fr_numbers:
+        #         commitments = FundingCommitment.objects.filter(fr_number=fr_number)
+        #         for commit in commitments:
+        #             commit.intervention = instance
+        #             commit.save()
 class RAMIndicator(models.Model):
     """
     Represents a RAM Indicator for the partner intervention
