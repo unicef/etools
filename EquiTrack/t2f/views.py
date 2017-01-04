@@ -16,7 +16,8 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
-from t2f.filters import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter, TravelRelatedModelFilter
+from t2f.filters import TravelRelatedModelFilter
+from t2f.filters.travel_list import SearchFilter, ShowHiddenFilter, SortFilter, FilterBoxFilter
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result

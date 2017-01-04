@@ -7,8 +7,8 @@ from django.db.models.query_utils import Q
 from rest_framework.filters import BaseFilterBackend
 
 from t2f.models import Travel
-from t2f.serializers.filters import SearchFilterSerializer, ShowHiddenFilterSerializer, SortFilterSerializer, \
-    FilterBoxFilterSerializer
+from t2f.serializers.filters.travel_list import SearchFilterSerializer, ShowHiddenFilterSerializer,\
+    SortFilterSerializer, FilterBoxFilterSerializer
 
 
 class SearchFilter(BaseFilterBackend):
@@ -88,9 +88,3 @@ class FilterBoxFilter(BaseFilterBackend):
         data.pop('cp_output', None)
 
         return queryset.filter(**data)
-
-
-class TravelRelatedModelFilter(BaseFilterBackend):
-    def filter_queryset(self, request, queryset, view):
-        # This should be attached only to viewsets which gets travel_pk
-        return queryset.filter(travel__pk=view.kwargs['travel_pk'])

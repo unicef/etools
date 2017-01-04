@@ -34,9 +34,20 @@ class ActionPoints(APITenantTestCase):
 
         self.assertEqual(len(response_json['data']), 1)
         action_point_data = response_json['data'][0]
-        expected_keys = ['id', 'reference_number', 'description', 'due_date', 'person_responsible', 'status',
-                         'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at']
-        self.assertKeysIn(expected_keys, action_point_data)
+        self.assertEqual(set(action_point_data.keys()),
+                         {'id',
+                          'action_point_number',
+                          'trip_reference_number',
+                          'description',
+                          'assigned_by',
+                          'due_date',
+                          'comments',
+                          'person_responsible',
+                          'status',
+                          'completed_at',
+                          'actions_taken',
+                          'follow_up',
+                          'created_at'})
 
     def test_details(self):
         action_point_pk = self.travel.action_points.first().pk
@@ -49,6 +60,8 @@ class ActionPoints(APITenantTestCase):
                          {'status',
                           'trip_reference_number',
                           'action_point_number',
+                          'actions_taken',
+                          'assigned_by',
                           'description',
                           'due_date',
                           'actions_taken',

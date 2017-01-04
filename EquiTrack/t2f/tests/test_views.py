@@ -1,12 +1,10 @@
 import json
 
-from StringIO import StringIO
 from unittest.case import skip
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import TravelPermission, DSARegion, Travel, TravelAttachment, UserTypes
-from t2f.serializers.filters import SearchFilterSerializer
+from t2f.models import TravelPermission, DSARegion
 from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory
 
 from .factories import TravelFactory

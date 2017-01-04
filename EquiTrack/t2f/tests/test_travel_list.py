@@ -106,9 +106,10 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_searching(self):
-        TravelFactory(reference_number='REF2', traveler=self.traveler, supervisor=self.unicef_staff)
+        travel = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
 
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'search': 'REF2'},
+        response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
+                                        data={'search': travel.reference_number},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['data']), 1)
