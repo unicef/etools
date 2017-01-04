@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
-from reports.serializers import SectorLightSerializer
+from reports.serializers import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
 from locations.models import Location
 
 from partners.models import (
@@ -20,7 +20,8 @@ from partners.models import (
     PartnerType,
     Agreement,
     PartnerStaffMember,
-    InterventionSectorLocationLink
+    InterventionSectorLocationLink,
+    InterventionResultLink
 )
 from locations.serializers import LocationLightSerializer
 
@@ -163,24 +164,6 @@ class PlannedVisitsNestedSerializer(serializers.ModelSerializer):
             "audit",
         )
 
-class InterventionSectorLocationSerializer(serializers.ModelSerializer):
-
-    sector = SectorLightSerializer()
-    locations = LocationLightSerializer(many=True)
-    class Meta:
-        model = InterventionSectorLocationLink
-        fields = (
-            "id", "sector", "location"
-        )
-
-
-class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = InterventionSectorLocationLink
-        fields = '__all__'
-
-
 
 class InterventionListSerializer(serializers.ModelSerializer):
 
@@ -204,15 +187,14 @@ class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
     locations = LocationLightSerializer(many=True)
     sector = SectorLightSerializer()
     class Meta:
-        model = Intervention
+        model = InterventionSectorLocationLink
         fields = (
             'id', 'sector', 'locations'
         )
 
-class InterventionLocationSectorCUSerializer(serializers.ModelSerializer):
-    locations = LocationLightSerializer(many=True)
+class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Intervention
+        model = InterventionSectorLocationLink
         fields = (
             'id', 'intervention', 'sector', 'locations'
         )
@@ -223,6 +205,20 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'intervention', 'type', 'attachment'
         )
+
+class InterventionResultNestedSerializer(serializers.ModelSerializer):
+    cp_output = ResultLightSerializer()
+    ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    class Meta:
+        model = InterventionResultLink
+        fields = (
+            'id', 'intervention', 'cp_output', 'ram_indicators'
+        )
+class InterventionResultCUSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InterventionResultLink
+        fields = "__all__"
+
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 

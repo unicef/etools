@@ -1407,6 +1407,7 @@ class InterventionResultLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='result_links')
     cp_output = models.ForeignKey(Result, related_name='intervention_links')
     ram_indicators = models.ManyToManyField(Indicator, blank=True)
+
 class InterventionBudget(TimeStampedModel):
     """
     Represents a budget for the intervention
