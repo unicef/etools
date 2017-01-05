@@ -109,6 +109,8 @@ def show_fr_fc(value):
         return ''
 
     intervention = Intervention.objects.get(id=int(value))
+    if not intervention.fr_numbers:
+        return ''
     commitments = FundingCommitment.objects.filter(fr_number__in=intervention.fr_numbers)
     data = tablib.Dataset()
     fr_fc_summary = []

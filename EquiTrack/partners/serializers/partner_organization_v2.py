@@ -188,7 +188,7 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
-    assesments = AssessmentDetailSerializer(many=True, read_only=True)
+    assessments = AssessmentDetailSerializer(many=True, read_only=True)
 
     class Meta:
         model = PartnerOrganization
