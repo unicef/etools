@@ -850,19 +850,19 @@ class Agreement(TimeStampedModel):
         (AWP, u"Work Plan"),
     )
 
-    DRAFT = "draft"
-    CANCELLED = "cancelled"
-    ACTIVE = "active"
-    ENDED = "ended"
-    SUSPENDED = "suspended"
-    TERMINATED = "terminated"
+    DRAFT = u"draft"
+    CANCELLED = u"cancelled"
+    ACTIVE = u"active"
+    ENDED = u"ended"
+    SUSPENDED = u"suspended"
+    TERMINATED = u"terminated"
     STATUS_CHOICES = (
-        (DRAFT, "Draft"),
-        (CANCELLED, "Cancelled"),
-        (ACTIVE, "Active"),
-        (ENDED, "Ended"),
-        (SUSPENDED, "Suspended"),
-        (TERMINATED, "Terminated"),
+        (DRAFT, u"Draft"),
+        (CANCELLED, u"Cancelled"),
+        (ACTIVE, u"Active"),
+        (ENDED, u"Ended"),
+        (SUSPENDED, u"Suspended"),
+        (TERMINATED, u"Terminated"),
     )
 
     partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
@@ -1255,10 +1255,6 @@ class Intervention(TimeStampedModel):
     def total_partner_contribution(self):
         # TODO: test this
         if self.planned_budget.exists():
-            # return sum([b['partner_contribution'] for b in
-            #             self.budget_log.values('created', 'year', 'partner_contribution').
-            #            order_by('year', '-created').distinct('year').all()
-            #             ])
             return self.planned_budget.aggregate(mysum=Sum('partner_contribution'))['mysum']
         return 0
 
@@ -1266,10 +1262,6 @@ class Intervention(TimeStampedModel):
     def total_unicef_cash(self):
         # TODO: test this
         if self.planned_budget.exists():
-            # return sum([b['unicef_cash'] for b in
-            #             self.budget_log.values('created', 'year', 'unicef_cash').
-            #            order_by('year', '-created').distinct('year').all()
-            #             ])
             return self.planned_budget.aggregate(mysum=Sum('unicef_cash'))['mysum']
         return 0
 

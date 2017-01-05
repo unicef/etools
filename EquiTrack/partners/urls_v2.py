@@ -41,7 +41,7 @@ urlpatterns = (
     url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(http_method_names=['get', 'patch']), name='intervention-detail'),
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
     # TODO: figure this out
-    url(r'^partners/interventions/$', view=InterventionsView.as_view()),
+    # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
 
 )
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'csv'])

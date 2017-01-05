@@ -218,7 +218,7 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
 
         result_links = request.data.pop("result_links", [])
 
-        intervention_serializer = self.get_serializer(instance, data=request.data)
+        intervention_serializer = self.get_serializer(instance, data=request.data, partial=partial)
         intervention_serializer.is_valid(raise_exception=True)
         intervention = intervention_serializer.save()
 
