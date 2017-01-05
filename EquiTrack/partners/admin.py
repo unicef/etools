@@ -250,19 +250,19 @@ class PlannedVisitsInline(admin.TabularInline):
     model = InterventionPlannedVisits
     fields = (
         'year',
-        'cp_output',
-        'ram_indicators'
+        'programmatic',
+        'spot_checks',
+        'audit'
     )
+
     extra = 0
 
 class ResultsLinkInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
     model = InterventionResultLink
     fields = (
-        'year',
-        'programmatic',
-        'spot_checks',
-        'audit'
+        'cp_output',
+        'ram_indicators'
     )
     extra = 0
 
