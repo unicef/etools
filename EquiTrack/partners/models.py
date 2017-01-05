@@ -1427,18 +1427,18 @@ class InterventionBudget(TimeStampedModel):
     Relates to :model:`partners.AmendmentLog`
     """
     intervention = models.ForeignKey(Intervention, related_name='planned_budget', null=True, blank=True)
-    partner_contribution = models.DecimalField(max_digits=20, decimal_places=2)
-    unicef_cash = models.DecimalField(max_digits=20, decimal_places=2)
+    partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount = models.DecimalField(
         max_digits=20,
         decimal_places=2,
         default=0,
         verbose_name='UNICEF Supplies'
     )
-    partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2)
-    unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2)
+    partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount_local = models.DecimalField(
-        max_digits=20, decimal_places=2,
+        max_digits=20, decimal_places=2, default=0,
         verbose_name='UNICEF Supplies Local'
     )
     year = models.CharField(
@@ -1471,6 +1471,16 @@ class InterventionBudget(TimeStampedModel):
     class Meta:
         unique_together = (('year', 'intervention'),)
 
+class FileType(models.Model):
+    """
+    Represents a file type
+    """
+
+    name = models.CharField(max_length=64L, unique=True)
+
+    def __unicode__(self):
+        return self.name
+
 class InterventionAttachment(models.Model):
     """
     Represents a file for the partner intervention
@@ -1479,7 +1489,7 @@ class InterventionAttachment(models.Model):
     Relates to :model:`partners.WorkspaceFileType`
     """
     intervention = models.ForeignKey(Intervention, related_name='attachments')
-    type = models.ForeignKey(WorkspaceFileType, related_name='itervention_attachments+')
+    type = models.ForeignKey(FileType, related_name='+')
 
     attachment = models.FileField(
         max_length=255,
@@ -2308,15 +2318,6 @@ class AmendmentLog(TimeStampedModel):
         ).order_by('created').values_list('id', flat=True))
 
         return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-class FileType(models.Model):
-    """
-    Represents a file type
-    """
-
-    name = models.CharField(max_length=64L, unique=True)
-
-    def __unicode__(self):
-        return self.name
 def get_file_path(instance, filename):
     return '/'.join(
         [connection.schema_name,

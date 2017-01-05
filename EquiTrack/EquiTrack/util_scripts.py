@@ -9,7 +9,7 @@ from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
-    InterventionResultLink
+    InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile
 
 def printtf(*args):
     print([arg for arg in args])
@@ -675,14 +675,60 @@ def copy_pca_results_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
         print(cntry)
-        for intr in PCA.objects.all():
-            result_ids = intr.indicators.order_by().values_list('result__id', flat=True).distinct()
+        for pca in PCA.objects.all():
+            result_ids = pca.indicators.order_by().values_list('result__id', flat=True).distinct()
             for result_id in result_ids:
                 result = Result.objects.get(id=result_id)
-                ram_inds = intr.indicators.filter(result=result)
-                InterventionResultLink.objects.get_or_create(intervention__number=intr.number,
-                                                             result=result,
-                                                             ram_indicators=ram_inds)
+                ram_inds = pca.indicators.filter(result=result)
+                indicators = []
+                for ram_ind in ram_inds:
+                    if ram_ind.indicator:
+                        indicators.append(ram_ind.indicator)
+                try:
+                    intervention = Intervention.objects.get(number=pca.number)
+                except Intervention.DoesNotExist:
+                    print(pca.number)
+                    continue
+                irl, created = InterventionResultLink.objects.get_or_create(intervention=intervention, cp_output=result)
+                irl.ram_indicators.add(*indicators)
+
+
+def copy_pca_budgets_to_intervention():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry)
+        for pca in PCA.objects.all():
+            pb_years = pca.budget_log.values_list('year', flat=True).distinct()
+            if not pb_years:
+                continue
+            try:
+                intervention = Intervention.objects.get(number=pca.number)
+            except Intervention.DoesNotExist:
+                print(pca.number)
+                continue
+            print(pb_years)
+            for pb_year in pb_years:
+                if pb_year:
+                    pb = pca.budget_log.filter(year=pb_year).order_by('-created').first()
+                    InterventionBudget.objects.get_or_create(intervention=intervention,
+                                                            partner_contribution=pb.partner_contribution,
+                                                            unicef_cash=pb.unicef_cash,
+                                                            in_kind_amount=pb.in_kind_amount,
+                                                            year=pb.year)
+
+def copy_pca_attachments_to_intervention():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry)
+        for pca_file in PCAFile.objects.all():
+            try:
+                intervention = Intervention.objects.get(number=pca_file.pca.number)
+            except Intervention.DoesNotExist:
+                print(pca_file.pca.number)
+                continue
+            InterventionAttachment.objects.get_or_create(intervention=intervention,
+                                                         type=pca_file.type,
+                                                         attachment=pca_file.attachment)
 
 
 def local_country_keep():
