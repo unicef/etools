@@ -3,6 +3,7 @@ __author__ = 'unicef-leb-inn'
 import tablib
 
 from django import template
+from django.template.loader import render_to_string
 from django.utils.datastructures import OrderedDict as SortedDict
 
 from partners.models import (
@@ -15,8 +16,17 @@ from partners.models import (
 )
 from trips.models import Trip
 
+from django.shortcuts import render
 
 register = template.Library()
+
+@register.simple_tag
+def get_interventions(partner_id):
+    interventions = Intervention.objects.filter(agreement__partner__pk=partner_id)
+
+    return render_to_string('admin/partners/interventions_table.html', {'interventions':interventions} )
+
+
 
 
 @register.simple_tag

@@ -52,6 +52,7 @@ from .models import (
     Intervention,
     AgreementAmendment,
     InterventionAmendment,
+    InterventionSectorLocationLink
 
 )
 from .filters import (
@@ -380,7 +381,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
     suit_form_includes = (
         ('admin/partners/funding_summary.html', 'middle', 'info'),
-        ('admin/partners/work_plan.html', 'bottom', 'results'),
+        #('admin/partners/work_plan.html', 'bottom', 'results'),
         ('admin/partners/trip_summary.html', 'top', 'trips'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
@@ -697,28 +698,31 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
     )
 
 
-class DocumentInlineAdmin(admin.TabularInline):
-    model = PCA
+class InterventionInlineAdmin(admin.TabularInline):
+    model = Intervention
     can_delete = False
     verbose_name = 'Intervention'
     verbose_name_plural = 'Interventions'
+    #fk_name = 'agreement.partner'
     extra = 0
     fields = (
         'number',
         'status',
-        'start_date',
-        'end_date',
-        'result_structure',
-        'sector_names',
-        'title',
-        'total_budget',
-        'changeform_link',
+        'start',
+        'end',
+        # 'result_structure',
+        # 'sector_names',
+        # 'title',
+        # 'total_budget',
+        # 'changeform_link',
     )
     readonly_fields = fields
 
     def has_add_permission(self, request):
         return False
 
+    def get_queryset(self, request):
+        return Intervention.objects.all()
     def changeform_link(self, obj):
         return get_changeform_link(obj, link_name='View Intervention')
 
@@ -821,9 +825,12 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         AssessmentAdminInline,
         BankDetailsInlineAdmin,
         PartnerStaffMemberInlineAdmin,
-        DocumentInlineAdmin,
+        # TODO: create an html table
+        #InterventionInlineAdmin,
     ]
     suit_form_includes = (
+        ('admin/partners/interventions_inline.html', '', ''),
+        #TODO: Nik get this working
         ('admin/partners/assurance_table.html', '', ''),
     )
 
@@ -940,7 +947,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         u'authorized_officers',
     )
     inlines = [
-        AgreementAmendmentLogInlineAdmin,
+        #AgreementAmendmentLogInlineAdmin,
         AgreementAmendmentInlineAdmin,
     ]
 
@@ -1000,3 +1007,4 @@ admin.site.register(InterventionPlannedVisits)
 admin.site.register(Intervention)
 admin.site.register(InterventionAmendment)
 admin.site.register(PartnershipBudget)
+admin.site.register(InterventionSectorLocationLink)
