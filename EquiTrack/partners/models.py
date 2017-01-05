@@ -1753,11 +1753,13 @@ class DistributionPlan(models.Model):
         )
     #TODO: this whole logic around supply plans and distribution plans needs to be revisited
     def save(self, **kwargs):
-        if self.intervention:
-            sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity
+        if self.intervention and self.item:
+            sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity or 0
             dp_quantity = DistributionPlan.objects.filter(
                             intervention=self.intervention, item=self.item).aggregate(
-                            models.Sum('quantity'))['quantity__sum'] + self.quantity or 0
+                            models.Sum('quantity'))['quantity__sum'] or 0
+            if not self.pk and self.quantity:
+                dp_quantity += self.quantity
         if dp_quantity <= sp_quantity:
             super(DistributionPlan, self).save(**kwargs)
         else:

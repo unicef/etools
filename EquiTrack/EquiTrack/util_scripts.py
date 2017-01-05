@@ -9,7 +9,8 @@ from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
-    InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile
+    InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
+    InterventionSectorLocationLink, SupplyPlan, DistributionPlan
 
 def printtf(*args):
     print([arg for arg in args])
@@ -729,6 +730,59 @@ def copy_pca_attachments_to_intervention():
             InterventionAttachment.objects.get_or_create(intervention=intervention,
                                                          type=pca_file.type,
                                                          attachment=pca_file.attachment)
+
+def copy_pca_sector_locations_to_intervention():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry)
+        for pca in PCA.objects.all():
+            sector_ids = pca.locations.order_by().values_list('sector__id', flat=True).distinct()
+            for sector_id in sector_ids:
+                if not sector_id:
+                    continue
+                sector = Sector.objects.get(id=sector_id)
+                gwpc_locations = pca.locations.filter(sector=sector)
+                locations = []
+                for location in gwpc_locations:
+                    if location.location:
+                        locations.append(location.location)
+                try:
+                    intervention = Intervention.objects.get(number=pca.number)
+                except Intervention.DoesNotExist:
+                    print(pca.number)
+                    continue
+                isl, created = InterventionSectorLocationLink.objects.get_or_create(intervention=intervention,
+                                                                                    sector=sector)
+                isl.locations.add(*locations)
+
+def copy_pca_supply_plan_to_intervention():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry)
+        for sp in SupplyPlan.objects.all():
+            try:
+                intervention = Intervention.objects.get(number=sp.partnership.number)
+            except Intervention.DoesNotExist:
+                print(sp.partnership.number)
+                continue
+            sp.intervention = intervention
+            sp.save()
+
+def copy_pca_distribution_plan_to_intervention():
+    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
+        set_country(cntry)
+        print(cntry)
+        if cntry == 'Nigeria':
+            print('Debug')
+
+        for dp in DistributionPlan.objects.all():
+            try:
+                intervention = Intervention.objects.get(number=dp.partnership.number)
+            except Intervention.DoesNotExist:
+                print(dp.partnership.number)
+                continue
+            dp.intervention = intervention
+            dp.save()
 
 
 def local_country_keep():
