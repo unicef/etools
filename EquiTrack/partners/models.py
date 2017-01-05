@@ -1365,19 +1365,30 @@ class InterventionAmendment(TimeStampedModel):
 
     Relates to :model:`partners.Interventions`
     """
+    CPR = u'CPR'
+    CPF = u'CPF'
+    CGC = u'CGC'
+    CTBGT20 = u'CTBGT20'
+    CTBLT20 = u'CTBLT20'
+    CABLT20 = u'CABLT20'
+    CABGT20 = u'CABGT20'
+    CABGT20FACE = u'CABGT20FACE'
+
+    AMENDMENT_TYPES = (
+        (CPR, 'Change in Programme Result'),
+        (CPF, 'Change in Population Focus'),
+        (CGC, 'Change in Georgraphical Coverage'),
+        (CTBGT20, 'Change in Total Budget >20%'),
+        (CTBLT20, 'Change in Total Budget <=20%'),
+        (CABLT20, 'Changes in Activity Budget <=20% - No Change in Total Budget'),
+        (CABGT20, 'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'),
+        (CABGT20FACE, 'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE'),
+    )
+
     intervention = models.ForeignKey(Intervention, related_name='amendments')
     type = models.CharField(
         max_length=50,
-        choices=Choices(
-            'Change in Programme Result',
-            'Change in Population Focus',
-            'Change in Georgraphical Coverage',
-            'Change in Total Budget >20%',
-            'Change in Total Budget <=20%',
-            'Changes in Activity Budget <=20% - No Change in Total Budget',
-            'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE',
-            'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE',
-        ))
+        choices=AMENDMENT_TYPES)
     signed_date = models.DateField(null=True)
     amendment_number = models.IntegerField(default=0)
     signed_amendment = models.FileField(
@@ -1389,7 +1400,7 @@ class InterventionAmendment(TimeStampedModel):
         return u'{}: {} - {}'.format(
             self.amendment_number,
             self.type,
-            self.amended_at
+            self.signed_date
         )
 class InterventionPlannedVisits(models.Model):
     """
@@ -1416,18 +1427,18 @@ class InterventionBudget(TimeStampedModel):
     Relates to :model:`partners.AmendmentLog`
     """
     intervention = models.ForeignKey(Intervention, related_name='planned_budget', null=True, blank=True)
-    partner_contribution = models.DecimalField(max_digits=20, decimal_places=2)
-    unicef_cash = models.DecimalField(max_digits=20, decimal_places=2)
+    partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount = models.DecimalField(
         max_digits=20,
         decimal_places=2,
         default=0,
         verbose_name='UNICEF Supplies'
     )
-    partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2)
-    unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2)
+    partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
     in_kind_amount_local = models.DecimalField(
-        max_digits=20, decimal_places=2,
+        max_digits=20, decimal_places=2, default=0,
         verbose_name='UNICEF Supplies Local'
     )
     year = models.CharField(
@@ -1460,6 +1471,16 @@ class InterventionBudget(TimeStampedModel):
     class Meta:
         unique_together = (('year', 'intervention'),)
 
+class FileType(models.Model):
+    """
+    Represents a file type
+    """
+
+    name = models.CharField(max_length=64L, unique=True)
+
+    def __unicode__(self):
+        return self.name
+
 class InterventionAttachment(models.Model):
     """
     Represents a file for the partner intervention
@@ -1468,7 +1489,7 @@ class InterventionAttachment(models.Model):
     Relates to :model:`partners.WorkspaceFileType`
     """
     intervention = models.ForeignKey(Intervention, related_name='attachments')
-    type = models.ForeignKey(WorkspaceFileType, related_name='itervention_attachments+')
+    type = models.ForeignKey(FileType, related_name='+')
 
     attachment = models.FileField(
         max_length=255,
@@ -1732,11 +1753,13 @@ class DistributionPlan(models.Model):
         )
     #TODO: this whole logic around supply plans and distribution plans needs to be revisited
     def save(self, **kwargs):
-        if self.intervention:
-            sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity
+        if self.intervention and self.item:
+            sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity or 0
             dp_quantity = DistributionPlan.objects.filter(
                             intervention=self.intervention, item=self.item).aggregate(
-                            models.Sum('quantity'))['quantity__sum'] + self.quantity or 0
+                            models.Sum('quantity'))['quantity__sum'] or 0
+            if not self.pk and self.quantity:
+                dp_quantity += self.quantity
         if dp_quantity <= sp_quantity:
             super(DistributionPlan, self).save(**kwargs)
         else:
@@ -1967,7 +1990,7 @@ class PCA(AdminURLMixin, models.Model):
 
     @property
     def sector_children(self):
-        sectors = self.pcasectors.all().values_list('sector__id', flat=True)
+        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
         return Sector.objects.filter(id__in=sectors)
 
     @property
@@ -2144,7 +2167,7 @@ class PCA(AdminURLMixin, models.Model):
     def save(self, **kwargs):
 
         # commit the referece number to the database once the intervention is signed
-        if self.status != PCA.DRAFT and self.signed_by_unicef_date and not self.number:
+        if self.status != PCA.IN_PROCESS and self.signed_by_unicef_date and not self.number:
             self.number = self.reference_number
 
         if not self.pk:
@@ -2215,12 +2238,12 @@ class PCA(AdminURLMixin, models.Model):
             )
 
         # attach any FCs immediately
-        if instance:
-            for fr_number in instance.fr_numbers:
-                commitments = FundingCommitment.objects.filter(fr_number=fr_number)
-                for commit in commitments:
-                    commit.intervention = instance
-                    commit.save()
+        # if instance:
+        #     for fr_number in instance.fr_numbers:
+        #         commitments = FundingCommitment.objects.filter(fr_number=fr_number)
+        #         for commit in commitments:
+        #             commit.intervention = instance
+        #             commit.save()
 class RAMIndicator(models.Model):
     """
     Represents a RAM Indicator for the partner intervention
@@ -2297,15 +2320,6 @@ class AmendmentLog(TimeStampedModel):
         ).order_by('created').values_list('id', flat=True))
 
         return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-class FileType(models.Model):
-    """
-    Represents a file type
-    """
-
-    name = models.CharField(max_length=64L, unique=True)
-
-    def __unicode__(self):
-        return self.name
 def get_file_path(instance, filename):
     return '/'.join(
         [connection.schema_name,
