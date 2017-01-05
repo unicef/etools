@@ -52,7 +52,8 @@ from .models import (
     Intervention,
     AgreementAmendment,
     InterventionAmendment,
-    InterventionSectorLocationLink
+    InterventionSectorLocationLink,
+    InterventionResultLink
 
 )
 from .filters import (
@@ -243,9 +244,35 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         )
 
 
+
+class PlannedVisitsInline(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-info'
+    model = InterventionPlannedVisits
+    fields = (
+        'year',
+        'cp_output',
+        'ram_indicators'
+    )
+    extra = 0
+
+class ResultsLinkInline(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-results'
+    model = InterventionResultLink
+    fields = (
+        'year',
+        'programmatic',
+        'spot_checks',
+        'audit'
+    )
+    extra = 0
+
 class SupplyPlanInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-supplies'
     model = SupplyPlan
+    fields = (
+        'item',
+        'quantity'
+    )
     extra = 1
 
 
@@ -556,7 +583,8 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
         #ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
-        #PlannedVisitsInline
+        PlannedVisitsInline,
+        ResultsLinkInline
     )
 
     suit_form_tabs = (

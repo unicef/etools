@@ -638,6 +638,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 instance.alternate_name
             )
 post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
+
+class PartnerStaffMemberManager(models.Manager):
+    def get_queryset(self):
+        return super(PartnerStaffMemberManager, self).get_queryset().select_related('partner')
+
 class PartnerStaffMember(models.Model):
     """
     Represents a staff member at the partner organization.
@@ -659,6 +664,8 @@ class PartnerStaffMember(models.Model):
     active = models.BooleanField(
         default=True
     )
+
+    objects = PartnerStaffMemberManager()
 
     def get_full_name(self):
         full_name = '%s %s' % (self.first_name, self.last_name)
