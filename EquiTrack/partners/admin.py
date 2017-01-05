@@ -130,6 +130,32 @@ class PCAFileInline(admin.TabularInline):
         'download_url',
     )
 
+class InterventionAmendmentsInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-info'
+    verbose_name = u'Amendment'
+    model = InterventionAmendment
+    extra = 0
+    fields = (
+        'type',
+        'signed_date',
+        'signed_amendment',
+        'amendment_number',
+    )
+    readonly_fields = [
+        'amendment_number',
+    ]
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def get_max_num(self, request, obj=None, **kwargs):
+        """
+        Overriding here to disable adding amendments to non-active partnerships
+        """
+        if obj and obj.status == Intervention.ACTIVE:
+            return self.max_num
+
+        return 0
 
 class AmendmentLogInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
@@ -519,6 +545,7 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
 
     inlines = (
         #AmendmentLogInlineAdmin,
+        InterventionAmendmentsInlineAdmin,
         #PcaSectorInlineAdmin,
         #PartnershipBudgetInlineAdmin,
         #PcaGrantInlineAdmin,
