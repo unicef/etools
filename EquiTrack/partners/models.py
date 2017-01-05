@@ -1247,6 +1247,10 @@ class Intervention(TimeStampedModel):
             self.number
         )
 
+    @property
+    def sector_names(self):
+        return u', '.join(Sector.objects.filter(intervention_locations__intervention=self).values_list('name', flat=True))
+
     @cached_property
     def total_partner_contribution(self):
         # TODO: test this
@@ -1255,7 +1259,7 @@ class Intervention(TimeStampedModel):
             #             self.budget_log.values('created', 'year', 'partner_contribution').
             #            order_by('year', '-created').distinct('year').all()
             #             ])
-            return self.planned_budget.aggregate(Sum('partner_contribution'))
+            return self.planned_budget.aggregate(mysum=Sum('partner_contribution'))['mysum']
         return 0
 
     @cached_property
@@ -1266,7 +1270,15 @@ class Intervention(TimeStampedModel):
             #             self.budget_log.values('created', 'year', 'unicef_cash').
             #            order_by('year', '-created').distinct('year').all()
             #             ])
-            return self.planned_budget.aggregate(Sum('unicef_cash'))
+            return self.planned_budget.aggregate(mysum=Sum('unicef_cash'))['mysum']
+        return 0
+
+    @cached_property
+    def total_budget(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            return self.planned_budget.aggregate(mysum=Sum('in_kind_amount'))['mysum'] + \
+                   self.total_unicef_cash + self.total_partner_contribution
         return 0
 
     @property

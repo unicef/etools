@@ -246,8 +246,12 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
         :param kwargs:
         :return:
         """
-        if obj and obj.supply_plans.count():
-            return self.max_num
+        if isinstance(obj, Intervention):
+            if obj and obj.supplies.count():
+                return self.max_num
+        else:
+            if obj and obj.supply_plans.count():
+                return self.max_num
         return 0
 
     def get_readonly_fields(self, request, obj=None):
@@ -435,39 +439,33 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                         )
 
 
+
 class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
-    form = PartnershipForm
-    resource_class = InterventionExport
-    # Add custom exports
-    formats = (
-        base_formats.CSV,
-    )
-    date_hierarchy = 'start_date'
+
+    date_hierarchy = 'start'
     list_display = (
         'number',
-        'partnership_type',
+        'document_type',
         'status',
-        'created_date',
+        'created',
         'signed_by_unicef_date',
-        'start_date',
-        'end_date',
-        'partner',
-        'result_structure',
+        'start',
+        'end',
+        'hrp',
         'sector_names',
         'title',
         'total_unicef_cash',
         'total_budget',
     )
     list_filter = (
-        'partnership_type',
-        'result_structure',
-        PCASectorFilter,
+        'document_type',
+        'hrp',
+        #PCASectorFilter,
         'status',
-        'current',
-        'partner',
-        PCADonorFilter,
-        PCAGatewayTypeFilter,
-        PCAGrantFilter,
+        #'partner',
+        #PCADonorFilter,
+        #PCAGatewayTypeFilter,
+        #PCAGrantFilter,
     )
     search_fields = (
         'number',
@@ -476,68 +474,62 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
     readonly_fields = (
         'number',
         'total_budget',
-        'days_from_submission_to_signed',
-        'days_from_review_to_signed',
-        'duration',
-        'work_plan_template',
+        #'days_from_submission_to_signed',
+        #'days_from_review_to_signed',
+        #'duration',
+        #'work_plan_template',
     )
     filter_horizontal = (
-        'unicef_managers',
+        'unicef_focal_points',
     )
     fieldsets = (
         (_('Intervention Details'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
-                ('partner',
+                (
                  'agreement',
-                 'partnership_type',
+                 'document_type',
                  'number',
-                 'result_structure',
-                 ('title', 'project_type',),
+                 'hrp',
+                 'title',
                  'status',
-                 'initiation_date',)
+                 'submission_date',)
         }),
         (_('Dates and Signatures'), {
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
-                (('submission_date',),
-                 'review_date',
-                 ('partner_manager', 'signed_by_partner_date',),
-                 ('unicef_manager', 'signed_by_unicef_date',),
-                 ('partner_focal_point', 'planned_visits',),
-                 'unicef_managers',
-                 ('days_from_submission_to_signed', 'days_from_review_to_signed',),
-                 ('start_date', 'end_date', 'duration',),
-                 'fr_number',),
+                (('submission_date_prc',),
+                 'review_date_prc',
+                 ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
+                 ('unicef_signatory', 'signed_by_unicef_date',),
+                 'partner_focal_points',
+                 'unicef_focal_points',
+                 #('days_from_submission_to_signed', 'days_from_review_to_signed',),
+                 ('start', 'end'),
+                 'fr_numbers',),
         }),
-        (_('Add sites by P Code'), {
-            u'classes': (u'suit-tab suit-tab-locations',),
-            'fields': ('location_sector', 'p_codes',),
-        }),
-        (_('Import work plan'), {
-            u'classes': (u'suit-tab suit-tab-results',),
-            'fields': ('work_plan', 'work_plan_template'),
-        }),
+        # (_('Add sites by P Code'), {
+        #     u'classes': (u'suit-tab suit-tab-locations',),
+        #     'fields': ('location_sector', 'p_codes',),
+        # }),
     )
     remove_fields_if_read_only = (
-        'location_sector',
-        'p_codes',
-        'work_plan',
+        'sector_locations',
     )
 
     inlines = (
-        AmendmentLogInlineAdmin,
-        PcaSectorInlineAdmin,
-        PartnershipBudgetInlineAdmin,
-        PcaGrantInlineAdmin,
-        IndicatorsInlineAdmin,
-        PcaLocationInlineAdmin,
-        PCAFileInline,
-        LinksInlineAdmin,
+        #AmendmentLogInlineAdmin,
+        #PcaSectorInlineAdmin,
+        #PartnershipBudgetInlineAdmin,
+        #PcaGrantInlineAdmin,
+        #IndicatorsInlineAdmin,
+        #PcaLocationInlineAdmin,
+        #PCAFileInline,
+        #LinksInlineAdmin,
         #ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
-        IndicatorDueDatesAdmin,
+        #PlannedVisitsInline
     )
 
     suit_form_tabs = (
@@ -551,58 +543,52 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
 
     suit_form_includes = (
         ('admin/partners/funding_summary.html', 'middle', 'info'),
-        ('admin/partners/work_plan.html', 'bottom', 'results'),
-        ('admin/partners/trip_summary.html', 'top', 'trips'),
-        ('admin/partners/attachments_note.html', 'top', 'attachments'),
+        #('admin/partners/work_plan.html', 'bottom', 'results'),
+        #('admin/partners/trip_summary.html', 'top', 'trips'),
+        #('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 
-    def work_plan_template(self, obj):
-        return u'<a class="btn btn-primary default" ' \
-               u'href="{}" >Download Template</a>'.format(
-                get_staticfile_link('partner/templates/workplan_template.xlsx')
-        )
-    work_plan_template.allow_tags = True
-    work_plan_template.short_description = 'Template'
+
 
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
-    created_date.admin_order_field = '-created_at'
+    created_date.admin_order_field = '-created'
 
-    def get_form(self, request, obj=None, **kwargs):
-        """
-        Set up the form with extra data and initial values
-        """
-        form = super(PartnershipAdmin, self).get_form(request, obj, **kwargs)
-
-        # add the current request and object to the form
-        form.request = request
-        form.obj = obj
-
-        if obj and obj.sector_children:
-            form.base_fields['location_sector'].queryset = obj.sector_children
-
-        return form
-
-    def save_formset(self, request, form, formset, change):
-        """
-        Overriding this to create TPM visits on location records
-        """
-        formset.save()
-        if change:
-            for form in formset.forms:
-                obj = form.instance
-                if isinstance(obj, GwPCALocation) and obj.tpm_visit:
-                    visits = TPMVisit.objects.filter(
-                        pca=obj.pca,
-                        pca_location=obj,
-                        completed_date__isnull=True
-                    )
-                    if not visits:
-                        TPMVisit.objects.create(
-                            pca=obj.pca,
-                            pca_location=obj,
-                            assigned_by=request.user
-                        )
+    # def get_form(self, request, obj=None, **kwargs):
+    #     """
+    #     Set up the form with extra data and initial values
+    #     """
+    #     form = super(PartnershipAdmin, self).get_form(request, obj, **kwargs)
+    #
+    #     # add the current request and object to the form
+    #     form.request = request
+    #     form.obj = obj
+    #
+    #     if obj and obj.sector_children:
+    #         form.base_fields['location_sector'].queryset = obj.sector_children
+    #
+    #     return form
+    #
+    # def save_formset(self, request, form, formset, change):
+    #     """
+    #     Overriding this to create TPM visits on location records
+    #     """
+    #     formset.save()
+    #     if change:
+    #         for form in formset.forms:
+    #             obj = form.instance
+    #             if isinstance(obj, GwPCALocation) and obj.tpm_visit:
+    #                 visits = TPMVisit.objects.filter(
+    #                     pca=obj.pca,
+    #                     pca_location=obj,
+    #                     completed_date__isnull=True
+    #                 )
+    #                 if not visits:
+    #                     TPMVisit.objects.create(
+    #                         pca=obj.pca,
+    #                         pca_location=obj,
+    #                         assigned_by=request.user
+    #                     )
 
 
 class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.StackedInline):
@@ -697,37 +683,6 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
         'email',
     )
 
-
-class InterventionInlineAdmin(admin.TabularInline):
-    model = Intervention
-    can_delete = False
-    verbose_name = 'Intervention'
-    verbose_name_plural = 'Interventions'
-    #fk_name = 'agreement.partner'
-    extra = 0
-    fields = (
-        'number',
-        'status',
-        'start',
-        'end',
-        # 'result_structure',
-        # 'sector_names',
-        # 'title',
-        # 'total_budget',
-        # 'changeform_link',
-    )
-    readonly_fields = fields
-
-    def has_add_permission(self, request):
-        return False
-
-    def get_queryset(self, request):
-        return Intervention.objects.all()
-    def changeform_link(self, obj):
-        return get_changeform_link(obj, link_name='View Intervention')
-
-    changeform_link.allow_tags = True
-    changeform_link.short_description = 'View Intervention Details'
 
 
 class HiddenPartnerFilter(admin.SimpleListFilter):
@@ -995,6 +950,7 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
 
 admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
+admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
@@ -1004,7 +960,7 @@ admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(IndicatorReport)
 admin.site.register(InterventionPlannedVisits)
-admin.site.register(Intervention)
+#admin.site.register(Intervention)
 admin.site.register(InterventionAmendment)
 admin.site.register(PartnershipBudget)
 admin.site.register(InterventionSectorLocationLink)

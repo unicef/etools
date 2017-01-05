@@ -47,6 +47,7 @@ from .models import (
     DistributionPlan,
     PartnershipBudget,
     GovernmentIntervention,
+    Intervention
 )
 
 logger = logging.getLogger('partners.forms')
@@ -227,8 +228,10 @@ class DistributionPlanForm(auto_forms.ModelForm):
 
         queryset = SupplyItem.objects.none()
         if hasattr(self, 'parent_partnership'):
-
-            items = self.parent_partnership.supply_plans.all().values_list('item__id', flat=True)
+            if isinstance(self.parent_partnership, Intervention):
+                items = self.parent_partnership.supplies.all().values_list('item__id', flat=True)
+            else:
+                items = self.parent_partnership.supply_plans.all().values_list('item__id', flat=True)
             queryset = SupplyItem.objects.filter(id__in=items)
 
         self.fields['item'].queryset = queryset
@@ -242,21 +245,38 @@ class DistributionPlanFormSet(ParentInlineAdminFormSet):
         """
         cleaned_data = super(DistributionPlanFormSet, self).clean()
 
-        if self.instance:
-            for plan in self.instance.supply_plans.all():
-                total_quantity = 0
-                for form in self.forms:
-                    if form.cleaned_data.get('DELETE', False):
-                        continue
-                    data = form.cleaned_data
-                    if plan.item == data.get('item', 0):
-                        total_quantity += data.get('quantity', 0)
+        if isinstance(self.instance, Intervention):
+            if self.instance:
+                for plan in self.instance.supplies.all():
+                    total_quantity = 0
+                    for form in self.forms:
+                        if form.cleaned_data.get('DELETE', False):
+                            continue
+                        data = form.cleaned_data
+                        if plan.item == data.get('item', 0):
+                            total_quantity += data.get('quantity', 0)
 
-                if total_quantity > plan.quantity:
-                    raise ValidationError(
-                        _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
-                            total_quantity, plan.item, plan.quantity))
-                    )
+                    if total_quantity > plan.quantity:
+                        raise ValidationError(
+                            _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
+                                total_quantity, plan.item, plan.quantity))
+                        )
+        else:
+            if self.instance:
+                for plan in self.instance.supply_plans.all():
+                    total_quantity = 0
+                    for form in self.forms:
+                        if form.cleaned_data.get('DELETE', False):
+                            continue
+                        data = form.cleaned_data
+                        if plan.item == data.get('item', 0):
+                            total_quantity += data.get('quantity', 0)
+
+                    if total_quantity > plan.quantity:
+                        raise ValidationError(
+                            _(u'The total quantity ({}) of {} exceeds the planned amount of {}'.format(
+                                total_quantity, plan.item, plan.quantity))
+                        )
 
         return cleaned_data
 
