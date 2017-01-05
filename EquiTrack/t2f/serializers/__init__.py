@@ -43,6 +43,15 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
         return self._check_permission(TravelPermission.EDIT, field.field_name)
 
 
+class ActionPointSerializer(serializers.ModelSerializer):
+    trip_reference_number = serializers.CharField(source='travel.reference_number')
+
+    class Meta:
+        model = ActionPoint
+        fields = ('id', 'action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
+                  'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at', 'assigned_by')
+
+
 class IteneraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.objects.all(), required=False,
@@ -142,6 +151,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     cost_summary = CostSummarySerializer(read_only=True)
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
     mode_of_travel = serializers.PrimaryKeyRelatedField(queryset=ModeOfTravel.objects.all(), required=False, many=True)
+    action_points = ActionPointSerializer(many=True, required=False)
 
     # Fix because of a frontend validation failure (fix it on the frontend first)
     estimated_travel_cost = serializers.DecimalField(max_digits=18, decimal_places=2, required=False)
@@ -152,7 +162,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                   'traveler', 'start_date', 'ta_required', 'purpose', 'id', 'itinerary', 'expenses', 'deductions',
                   'cost_assignments', 'clearances', 'status', 'activities', 'mode_of_travel', 'estimated_travel_cost',
                   'currency', 'completed_at', 'canceled_at', 'rejection_note', 'cancellation_note', 'attachments',
-                  'cost_summary', 'certification_note', 'report', 'additional_note', 'misc_expenses')
+                  'cost_summary', 'certification_note', 'report', 'additional_note', 'misc_expenses', 'action_points')
         # Review this, as a developer could be confusing why the status field is not saved during an update
         read_only_fields = ('status', 'reference_number')
 
@@ -331,12 +341,3 @@ class CloneParameterSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('traveler',)
-
-
-class ActionPointSerializer(serializers.ModelSerializer):
-    trip_reference_number = serializers.CharField(source='travel.reference_number')
-
-    class Meta:
-        model = ActionPoint
-        fields = ('id', 'action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
-                  'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at', 'assigned_by')

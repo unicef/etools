@@ -274,3 +274,30 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
+
+    def test_action_points(self):
+        response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': self.travel.id}),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(len(response_json['action_points']), 1)
+
+        action_point_list = response_json['action_points']
+        action_point_list.append({'status': 'open',
+                                  'due_date': '2017-01-02T20:20:19.565210Z',
+                                  'description': 'desc',
+                                  'follow_up': True,
+                                  'actions_taken': None,
+                                  'assigned_by': 1216,
+                                  'comments': None,
+                                  'completed_at': None,
+                                  'person_responsible': 1217})
+        data = {'action_points': action_point_list}
+        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
+                                                         kwargs={'travel_pk': self.travel.id}),
+                                        data=data,
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(len(response_json['action_points']), 2)
