@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import TravelAttachment, DSARegion
+from t2f.models import TravelAttachment, DSARegion, Travel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
     ModeOfTravelFactory
 
@@ -83,6 +83,9 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('id', response_json)
+
+        cloned_travel = Travel.objects.get(id=response_json['id'])
+        self.assertNotEqual(cloned_travel.reference_number, self.travel.reference_number)
 
         data = {'traveler': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_secondary_traveler',

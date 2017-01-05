@@ -391,7 +391,12 @@ class CloneTravelHelper(object):
         return map(self._clone_model, model_list)
 
     def _clone_model(self, model):
+        from t2f.models import make_travel_reference_number
+
         new_instance = model.__class__.objects.get(pk=model.pk)
         new_instance.pk = None
         new_instance.id = None
+
+        # TODO fix concurency
+        new_instance.reference_number = make_travel_reference_number()
         return new_instance
