@@ -33,3 +33,6 @@ class Notification(models.Model):
 
     def __unicode__(self):
         return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
+    
+    def send_notification(self):
+        pass
