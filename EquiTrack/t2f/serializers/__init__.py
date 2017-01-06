@@ -356,11 +356,12 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
 class InvoiceSerializer(serializers.ModelSerializer):
     message = serializers.SerializerMethodField()
     vision_fi_id = serializers.SerializerMethodField()
+    ta_number = serializers.CharField(source='travel.reference_number', read_only=True)
 
     class Meta:
         model = Invoice
         fields = ('id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
-                  'message', 'vision_fi_id')
+                  'message', 'vision_fi_id', 'ta_number')
 
     def get_message(self, obj):
         return ''

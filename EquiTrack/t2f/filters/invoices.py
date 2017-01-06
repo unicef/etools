@@ -3,12 +3,12 @@ from __future__ import unicode_literals
 from django.db.models.query_utils import Q
 from rest_framework.filters import BaseFilterBackend
 
-from t2f.serializers.filters.action_points import SearchFilterSerializer, SortFilterSerializer,\
+from t2f.serializers.filters.invoices import SearchFilterSerializer, SortFilterSerializer,\
     FilterBoxFilterSerializer
 
 
 class SearchFilter(BaseFilterBackend):
-    _search_fields = ('action_point_number', 'travel__reference_number', 'description')
+    _search_fields = ('reference_number', 'vendor_number', 'vision_fi_id')
 
     def filter_queryset(self, request, queryset, view):
         serializer = SearchFilterSerializer(data=request.GET)

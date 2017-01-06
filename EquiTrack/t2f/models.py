@@ -545,6 +545,7 @@ class Invoice(models.Model):
     currency = models.ForeignKey('Currency', related_name='+')
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
+    vision_fi_id = models.CharField(max_length=16)
 
     def save(self, **kwargs):
         if self.pk is None:

@@ -33,7 +33,7 @@ class InvoiceEndpoints(APITenantTestCase):
         self.assertEqual(details_url, '/api/t2f/invoices/1/')
 
     def test_invoice_list(self):
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(4):
             response = self.forced_auth_req('get', reverse('t2f:invoices:list'), user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -55,3 +55,19 @@ class InvoiceEndpoints(APITenantTestCase):
         expected_keys = ['id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
                          'message', 'vision_fi_id']
         self.assertKeysIn(expected_keys, response_json)
+
+    def test_filtering(self):
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        data={'f_vendor_number': '12',
+                                              'f_ta_number': '12',
+                                              'f_vision_fi_id': '12'},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 0)
+
+    def test_search(self):
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        data={'search': '12'},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 0)
