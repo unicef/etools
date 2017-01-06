@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from collections import defaultdict, OrderedDict
+from copy import deepcopy
 from datetime import timedelta
 from decimal import Decimal
 
@@ -400,3 +401,102 @@ class CloneTravelHelper(object):
         # TODO fix concurency
         new_instance.reference_number = make_travel_reference_number()
         return new_instance
+
+
+class InvoiceMaker(object):
+    USER_VENDOR_NUMBER = 'user'
+
+    def __init__(self, travel):
+        self.travel = travel
+
+    def do_invoicing(self):
+        existing_values = self.load_existing_invoices()
+        current_values = self.get_current_values()
+        delta_values = self.calculate_delta(existing_values, current_values)
+
+        self.make_invoices(delta_values)
+
+    def load_existing_invoices(self):
+        vendor_grouping = defaultdict(lambda: defaultdict(Decimal))
+
+        for invoice in self.travel.invoices.filter(status='success'):
+            for item in invoice.items.all():
+                key = (item.wbs.id, item.grant.id, item.fund.id)
+                vendor_grouping[invoice.vendor_number][key] += item.amount
+
+        return vendor_grouping
+
+    def get_current_values(self):
+        vendor_grouping = defaultdict(lambda: defaultdict(Decimal))
+        cost_assignment_list = self.travel.cost_assignments.all()
+
+        for expense in self.travel.expenses.all():
+            vendor_number = expense.type.code
+
+            # Parking expense
+            if not vendor_number:
+                continue
+
+            if vendor_number.startswith('t_'):
+                vendor_number = self.USER_VENDOR_NUMBER
+
+            amount = expense.amount
+
+            for ca in cost_assignment_list:
+                key = (ca.wbs.id, ca.grant.id, ca.fund.id)
+                share = Decimal(ca.share) / Decimal(100)
+                vendor_grouping[vendor_number][key] += share * amount
+
+        return vendor_grouping
+
+    def calculate_delta(self, existing_values, current_values):
+        vendor_grouping = deepcopy(current_values)
+
+        for vendor_number in existing_values:
+            for key, amount in existing_values[vendor_number].items():
+                vendor_grouping[vendor_number][key] -= amount
+
+        return vendor_grouping
+
+    def make_invoices(self, vendor_grouping):
+        from t2f.models import Invoice, InvoiceItem, WBS, Grant, Fund
+
+        for vendor_number in vendor_grouping:
+            if vendor_number == self.USER_VENDOR_NUMBER:
+                currency = self.travel.currency
+            else:
+                expense = self.travel.expenses.get(type__code=vendor_number)
+                currency = expense.account_currency
+
+            invoice_kwargs = {'travel': self.travel,
+                              'business_area': self.travel.traveler.profile.country.business_area_code,
+                              'vendor_number': vendor_number,
+                              'currency': currency,
+                              'amount': Decimal(0),
+                              'status': 'success'}
+
+            items_list = []
+            for key, amount in vendor_grouping[vendor_number].items():
+                if amount == 0:
+                    continue
+
+                wbs_id, grant_id, fund_id = key
+                wbs = WBS.objects.get(id=wbs_id)
+                grant = Grant.objects.get(id=grant_id)
+                fund = Fund.objects.get(id=fund_id)
+
+                invoice_item = InvoiceItem(wbs=wbs,
+                                           grant=grant,
+                                           fund=fund,
+                                           amount=amount)
+                items_list.append(invoice_item)
+                invoice_kwargs['amount'] += amount
+
+            # Don't make zero invoices
+            if not items_list:
+                continue
+
+            invoice = Invoice.objects.create(**invoice_kwargs)
+            for item in items_list:
+                item.invoice = invoice
+                item.save()

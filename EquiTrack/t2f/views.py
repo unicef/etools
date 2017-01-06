@@ -30,7 +30,7 @@ from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, Trave
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.serializers.permission_matrix import PermissionMatrixSerializer
-from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
+from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix, InvoiceMaker
 
 
 class T2FPagePagination(PageNumberPagination):
@@ -56,6 +56,11 @@ def run_transition(serializer):
         except TransitionNotAllowed as exc:
             raise ValidationError(exc.message)
         instance.save()
+
+
+def make_invoices(travel):
+    maker = InvoiceMaker(travel)
+    maker.do_invoicing()
 
 
 class TravelListViewSet(mixins.ListModelMixin,
@@ -87,6 +92,7 @@ class TravelListViewSet(mixins.ListModelMixin,
     def perform_create(self, serializer):
         super(TravelListViewSet, self).perform_create(serializer)
         run_transition(serializer)
+        make_invoices(serializer.instance)
 
     def export(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -128,6 +134,7 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
         run_transition(serializer)
+        make_invoices(serializer.instance)
 
     def clone_for_secondary_traveler(self, request, *args, **kwargs):
         traveler = self._get_traveler_for_cloning()

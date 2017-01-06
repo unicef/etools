@@ -65,11 +65,13 @@ action_points_patterns = patterns(
     url(r'^(?P<action_point_pk>[0-9]+)/$', action_points_details, name='details'),
 )
 
+from t2f.html_views import TravelEditView
 
 urlpatterns = patterns(
     '',
     url(r'^travels/', include(travel_pattens, namespace='travels')),
     url(r'^static_data/$', StaticDataView.as_view(), name='static_data'),
     url(r'^permission_matrix/$', PermissionMatrixView.as_view(), name='permission_matrix'),
-    url(r'^action_points/', include(action_points_patterns, namespace='action_points'))
+    url(r'^action_points/', include(action_points_patterns, namespace='action_points')),
+    url(r'^invoice_calculations/(?P<travel_pk>[0-9]+)/', TravelEditView.as_view(), name='invedit'),
 )

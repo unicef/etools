@@ -15,7 +15,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
-from t2f.helpers import CostSummaryCalculator
+from t2f.helpers import CostSummaryCalculator, InvoiceMaker
 
 log = logging.getLogger(__name__)
 
@@ -106,6 +106,7 @@ class Currency(models.Model):
     # This will be populated from vision
     name = models.CharField(max_length=128)
     iso_4217 = models.CharField(max_length=3)
+    x_rate = models.DecimalField(max_digits=6, decimal_places=2)
 
 
 class AirlineCompany(models.Model):
@@ -529,3 +530,51 @@ class ActionPoint(models.Model):
     comments = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
+
+
+class Invoice(models.Model):
+    STATUS = (
+        ('processing', 'Processing'),
+        ('success', 'Success'),
+        ('error', 'Error'),
+    )
+
+    travel = models.ForeignKey('Travel', related_name='invoices')
+    reference_number = models.CharField(max_length=32)
+    business_area = models.CharField(max_length=32)
+    vendor_number = models.CharField(max_length=32)
+    currency = models.ForeignKey('Currency', related_name='+')
+    amount = models.DecimalField(max_digits=20, decimal_places=4)
+    status = models.CharField(max_length=16, choices=STATUS)
+
+    def save(self, **kwargs):
+        if self.pk is None:
+            invoice_counter = self.travel.invoices.all().count() + 1
+            self.reference_number = '{}/{}/{:02d}'.format(self.business_area,
+                                                          self.travel.reference_number,
+                                                          invoice_counter)
+        super(Invoice, self).save(**kwargs)
+
+    @property
+    def posting_key(self):
+        return 'credit' if self.amount >= 0 else 'debit'
+
+    @property
+    def normalized_amount(self):
+        return abs(self.amount.normalize())
+
+
+class InvoiceItem(models.Model):
+    invoice = models.ForeignKey('Invoice', related_name='items')
+    wbs = models.ForeignKey('WBS', related_name='+')
+    grant = models.ForeignKey('Grant', related_name='+')
+    fund = models.ForeignKey('Fund', related_name='+')
+    amount = models.DecimalField(max_digits=20, decimal_places=10)
+
+    @property
+    def posting_key(self):
+        return 'credit' if self.amount >= 0 else 'debit'
+
+    @property
+    def normalized_amount(self):
+        return abs(self.amount.normalize())
