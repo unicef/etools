@@ -440,6 +440,8 @@ def agreement_unique_reference_number():
                 cdup.save()
 
 def pca_unique_reference_number():
+    from django.db.models import signals
+    signals.post_save.disconnect(receiver=PCA.send_changes, sender=PCA)
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
         print(cntry.name)
@@ -459,6 +461,7 @@ def pca_unique_reference_number():
                 cdup.number = '{}|{}'.format(cdup.number, cdup.id)
                 print(cdup)
                 cdup.save()
+    signals.post_save.connect(receiver=PCA.send_changes, sender=PCA)
 
 #run this after migration partners_0006
 def bank_details_to_partner():
