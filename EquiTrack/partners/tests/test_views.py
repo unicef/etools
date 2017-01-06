@@ -656,7 +656,6 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    @skip("Fix this")
     def test_agreements_create_cp_todate(self):
         data = {
             "agreement_type":"PCA",
@@ -813,7 +812,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and signed_by must be provided."])
         self.assertEquals(response.data["signed_by"], ["signed_by and signed_by_unicef_date must be provided."])
 
-    @skip("Fix this")
     def test_agreements_update_validation_end_date_pca(self):
         data = {
             "signed_by": self.unicef_staff.id,
@@ -828,7 +826,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
-
+        print(response)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["end"], str(self.country_programme.to_date))
 
