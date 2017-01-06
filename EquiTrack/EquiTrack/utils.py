@@ -19,16 +19,19 @@ from post_office.models import EmailTemplate
 from post_office import mail
 
 
-def send_mail(sender, template, variables, *recipients):
+def send_mail(sender, template, variables, attachments=None, cc_list=None, bcc_list=None, recipients):
     """
     Single mail send hook that is reused across the project
     """
     try:
         mail.send(
-            [recp for recp in recipients],
+            recipients,
             sender,
             template=template,
             context=variables,
+            attachments=attachments,
+            cc=cc_list,
+            bcc=bcc_list
         )
     except Exception as exp:
         print exp.message
@@ -212,6 +215,3 @@ def set_country(user, request):
 
     request.tenant = user.profile.country or user.profile.country_override
     connection.set_tenant(request.tenant)
-
-
-
