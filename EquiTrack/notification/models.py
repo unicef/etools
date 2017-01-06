@@ -11,6 +11,8 @@ from django.contrib.contenttypes.models import ContentType
 
 from model_utils import Choices
 
+from EquiTrack.utils import send_mail
+
 
 class Notification(models.Model):
     """
@@ -33,6 +35,9 @@ class Notification(models.Model):
 
     def __unicode__(self):
         return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
-    
+
     def send_notification(self):
-        pass
+        if self.type == 'Email':
+            send_mail(self.sender, self.template_name, self.template_data, list(self.recipients.filter(email__isnull=False).value_list('email', flat=True)))
+        else:
+            pass
