@@ -2,7 +2,7 @@
 from django.conf.urls import url, patterns, include
 
 from t2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, \
-    TravelAttachmentViewSet, ActionPointViewSet
+    TravelAttachmentViewSet, ActionPointViewSet, InvoiceViewSet
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
@@ -23,8 +23,10 @@ clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clo
 clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
 
 action_points_list = ActionPointViewSet.as_view({'get': 'list'})
-
 action_points_details = ActionPointViewSet.as_view({'get': 'retrieve'})
+
+invoices_list = InvoiceViewSet.as_view({'get': 'list'})
+invoices_details = InvoiceViewSet.as_view({'get': 'retrieve'})
 
 details_state_changes_pattern = r'^(?P<transition_name>submit_for_approval|approve|reject|cancel|plan|' \
                                 r'send_for_payment|submit_certificate|approve_certificate|reject_certificate|' \
@@ -65,6 +67,12 @@ action_points_patterns = patterns(
     url(r'^(?P<action_point_pk>[0-9]+)/$', action_points_details, name='details'),
 )
 
+invoice_patterns = patterns(
+    '',
+    url(r'^$', invoices_list, name='list'),
+    url(r'^(?P<invoice_pk>[0-9]+)/$', invoices_details, name='details'),
+)
+
 from t2f.html_views import TravelEditView
 
 urlpatterns = patterns(
@@ -73,5 +81,6 @@ urlpatterns = patterns(
     url(r'^static_data/$', StaticDataView.as_view(), name='static_data'),
     url(r'^permission_matrix/$', PermissionMatrixView.as_view(), name='permission_matrix'),
     url(r'^action_points/', include(action_points_patterns, namespace='action_points')),
+    url(r'^invoices/', include(invoice_patterns, namespace='invoices')),
     url(r'^invoice_calculations/(?P<travel_pk>[0-9]+)/', TravelEditView.as_view(), name='invedit'),
 )

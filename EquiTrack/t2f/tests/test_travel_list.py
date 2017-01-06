@@ -17,9 +17,9 @@ from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, FundFact
 from .factories import TravelFactory
 
 
-class TravelDetails(APITenantTestCase):
+class TravelList(APITenantTestCase):
     def setUp(self):
-        super(TravelDetails, self).setUp()
+        super(TravelList, self).setUp()
         self.traveler = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(reference_number=make_travel_reference_number(),

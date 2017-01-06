@@ -106,7 +106,6 @@ class Currency(models.Model):
     # This will be populated from vision
     name = models.CharField(max_length=128)
     iso_4217 = models.CharField(max_length=3)
-    x_rate = models.DecimalField(max_digits=6, decimal_places=2)
 
 
 class AirlineCompany(models.Model):

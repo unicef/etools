@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 
 from locations.models import Location
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelPermission, TravelAttachment, AirlineCompany, ModeOfTravel, ActionPoint
+    TravelPermission, TravelAttachment, AirlineCompany, ModeOfTravel, ActionPoint, Invoice, InvoiceItem
 from locations.models import Location
 
 
@@ -345,3 +345,25 @@ class CloneParameterSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('traveler',)
+
+
+class InvoiceItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = InvoiceItem
+        fields = ('wbs', 'grant', 'fund', 'amount')
+
+
+class InvoiceSerializer(serializers.ModelSerializer):
+    message = serializers.SerializerMethodField()
+    vision_fi_id = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Invoice
+        fields = ('id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
+                  'message', 'vision_fi_id')
+
+    def get_message(self, obj):
+        return ''
+
+    def get_vision_fi_id(self, obj):
+        return ''

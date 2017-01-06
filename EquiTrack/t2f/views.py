@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework_csv import renderers
 
 from t2f.filters import TravelRelatedModelFilter
-from t2f.filters import travel_list, action_points
+from t2f.filters import travel_list, action_points, invoices
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -25,9 +25,9 @@ from t2f.serializers.export import TravelListExportSerializer
 from users.models import Office, Section
 
 from t2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
-    TravelAttachment, TravelType, ModeOfTravel, ActionPoint
+    TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
-    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer
+    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.serializers.permission_matrix import PermissionMatrixSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix, InvoiceMaker
@@ -192,6 +192,19 @@ class ActionPointViewSet(mixins.ListModelMixin,
                        action_points.SortFilter,
                        action_points.FilterBoxFilter)
     lookup_url_kwarg = 'action_point_pk'
+
+
+class InvoiceViewSet(mixins.ListModelMixin,
+                     mixins.RetrieveModelMixin,
+                     viewsets.GenericViewSet):
+    queryset = Invoice.objects.all()
+    serializer_class = InvoiceSerializer
+    pagination_class = T2FPagePagination
+    permission_classes = (IsAdminUser,)
+    filter_backends = (invoices.SearchFilter,
+                       invoices.SortFilter,
+                       invoices.FilterBoxFilter)
+    lookup_url_kwarg = 'invoice_pk'
 
 
 class StaticDataView(generics.GenericAPIView):
