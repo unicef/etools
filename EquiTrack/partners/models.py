@@ -34,6 +34,8 @@ from reports.models import (
     ResultType,
     Result,
     CountryProgramme,
+    LowerResult,
+    AppliedIndicator
 )
 from locations.models import (
     Governorate,
@@ -862,6 +864,7 @@ class PCA(AdminURLMixin, models.Model):
         PartnerOrganization,
         related_name='documents',
     )
+    # TODO: remove chained foreign key
     agreement = ChainedForeignKey(
         Agreement,
         related_name='interventions',
@@ -878,6 +881,7 @@ class PCA(AdminURLMixin, models.Model):
         max_length=255,
         verbose_name=u'Document type'
     )
+    # TODO: rename result_structure to hrp
     result_structure = models.ForeignKey(
         ResultStructure,
         blank=True, null=True, on_delete=models.DO_NOTHING,
@@ -946,6 +950,7 @@ class PCA(AdminURLMixin, models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
+    # TODO: remove chainedForeignKEy
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
         verbose_name=u'Signed by partner',
@@ -956,6 +961,7 @@ class PCA(AdminURLMixin, models.Model):
         auto_choose=False,
         blank=True, null=True,
     )
+    # TODO: remove chainedForeignKEy
     partner_focal_point = ChainedForeignKey(
         PartnerStaffMember,
         related_name='my_partnerships',
@@ -1582,7 +1588,7 @@ class GwPCALocation(models.Model):
 class PCASector(TimeStampedModel):
     """
     Represents a sector for the partner intervention, which links a sector to a partnership
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`users.Sector`
     Relates to :model:`partners.AmendmentLog`
@@ -1610,7 +1616,7 @@ class PCASector(TimeStampedModel):
 class PCASectorGoal(models.Model):
     """
     Represents a goal for the partner intervention sector, which links a sector to a partnership
-    
+
     Relates to :model:`partners.PCASector`
     Relates to :model:`reports.Goal`
     """
@@ -1647,7 +1653,7 @@ def get_file_path(instance, filename):
 class PCAFile(models.Model):
     """
     Represents a file for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`partners.FileType`
     """
@@ -1674,12 +1680,12 @@ class PCAFile(models.Model):
 class RAMIndicator(models.Model):
     """
     Represents a RAM Indicator for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`reports.Result`
     Relates to :model:`reports.Indicator`
     """
-
+    # TODO: Remove This indicator and connect direcly to higher indicators M2M related
     intervention = models.ForeignKey(PCA, related_name='indicators')
     result = models.ForeignKey(Result)
     indicator = ChainedForeignKey(
@@ -1707,60 +1713,59 @@ class RAMIndicator(models.Model):
         )
 
 
-class ResultChain(models.Model):
-    """
-    Represents a result chain for the partner intervention,
-    Connects Results and Indicators to interventions
-    
-    Relates to :model:`partners.PCA`
-    Relates to :model:`reports.ResultType`
-    Relates to :model:`reports.Result`
-    Relates to :model:`reports.Indicator`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='results')
-    code = models.CharField(max_length=50, null=True, blank=True)
-    result_type = models.ForeignKey(ResultType)
-    result = models.ForeignKey(
-        Result,
-    )
-    indicator = models.ForeignKey(
-        Indicator,
-        blank=True, null=True
-    )
-
-    # fixed columns
-    target = models.PositiveIntegerField(
-        blank=True, null=True
-    )
-    current_progress = models.PositiveIntegerField(
-        default=0
-    )
-    partner_contribution = models.IntegerField(default=0)
-    unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(default=0)
-
-    # variable disaggregation's that may be present in the work plan
-    disaggregation = JSONField(null=True)
-
-
-    @property
-    def total(self):
-
-        return self.unicef_cash + self.in_kind_amount + self.partner_contribution
-
-    def __unicode__(self):
-        return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name if self.result.result_structure else '',
-            self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
-        )
+# class ResultChain(models.Model):
+#     """
+#     Represents a result chain for the partner intervention,
+#     Connects Results and Indicators to interventions
+#
+#     Relates to :model:`partners.PCA`
+#     Relates to :model:`reports.ResultType`
+#     Relates to :model:`reports.Result`
+#     Relates to :model:`reports.Indicator`
+#     """
+#
+#     partnership = models.ForeignKey(PCA, related_name='results')
+#     code = models.CharField(max_length=50, null=True, blank=True)
+#     result_type = models.ForeignKey(ResultType)
+#     result = models.ForeignKey(
+#         Result,
+#     )
+#     indicator = models.ForeignKey(
+#         Indicator,
+#         blank=True, null=True
+#     )
+#     # fixed columns
+#     target = models.PositiveIntegerField(
+#         blank=True, null=True
+#     )
+#     current_progress = models.PositiveIntegerField(
+#         default=0
+#     )
+#     partner_contribution = models.IntegerField(default=0)
+#     unicef_cash = models.IntegerField(default=0)
+#     in_kind_amount = models.IntegerField(default=0)
+#
+#     # variable disaggregation's that may be present in the work plan
+#     disaggregation = JSONField(null=True)
+#
+#
+#     @property
+#     def total(self):
+#
+#         return self.unicef_cash + self.in_kind_amount + self.partner_contribution
+#
+#     def __unicode__(self):
+#         return u'{} -> {} -> {}'.format(
+#             self.result.result_structure.name if self.result.result_structure else '',
+#             self.result.sector.name if self.result.sector else '',
+#             self.result.__unicode__(),
+#         )
 
 
 class IndicatorDueDates(models.Model):
     """
     Represents an indicator due date for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     """
 
@@ -1780,10 +1785,9 @@ class IndicatorDueDates(models.Model):
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
-    
-    Relates to :model:`partners.ResultChain`
+
+    Relates to :model:`partners.AppliedIndicator`
     Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`results.Indicator`
     Relates to :model:`locations.Location`
     """
 
@@ -1795,23 +1799,22 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
     )
 
     # FOR WHOM / Beneficiary
-    #  -  ResultChain
-    result_chain = models.ForeignKey(ResultChain, related_name='indicator_reports')
+    #  -  AppliedIndicator
+    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
 
     # WHO
     #  -  Implementing Partner
-    partner_staff_member = models.ForeignKey(PartnerStaffMember, related_name='indicator_reports')
+    partner_staff_member = models.ForeignKey('partners.PartnerStaffMember', related_name='indicator_reports')
 
     # WHAT
     #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
-    indicator = models.ForeignKey(Indicator, related_name='reports')  # this should always be computed from result_chain
     total = models.PositiveIntegerField()
-    disaggregated = models.BooleanField(default=False)
-    disaggregation = JSONField(default=dict)  # the structure should always be computed from result_chain
+    disaggregated = models.BooleanField(default=False)  # is this a disaggregated report?
+    disaggregation = JSONField(default=dict)  # the structure should always be computed from applied_indicator
 
     # WHERE
     #  -  Location
-    location = models.ForeignKey(Location, blank=True, null=True)
+    location = models.ForeignKey('locations.Location', blank=True, null=True)
 
     # Metadata
     #  - Remarks, Report Status
@@ -1822,7 +1825,7 @@ class IndicatorReport(TimeStampedModel, TimeFramedModel):
 class SupplyPlan(models.Model):
     """
     Represents a supply plan for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     """
@@ -1840,7 +1843,7 @@ class SupplyPlan(models.Model):
 class DistributionPlan(models.Model):
     """
     Represents a distribution plan for the partner intervention
-    
+
     Relates to :model:`partners.PCA`
     Relates to :model:`supplies.SupplyItem`
     Relates to :model:`locations.Location`
@@ -1885,13 +1888,13 @@ post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
 
 class FCManager(models.Manager):
     def get_queryset(self):
-        return super(FCManager, self).get_queryset().select_related('grant__donor__name')
+        return super(FCManager, self).get_queryset().select_related('grant__donor')
 
 
 class FundingCommitment(TimeFramedModel):
     """
     Represents a funding commitment for the grant
-    
+
     Relates to :model:`funds.Grant`
     """
 

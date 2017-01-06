@@ -2,9 +2,9 @@ from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
 
-from .models import Workplan, Comment, ResultWorkplanProperty, WorkplanProject, Label
+from .models import Workplan, Comment, ResultWorkplanProperty, WorkplanProject, Label, Milestone
 from .serializers import CommentSerializer, WorkplanSerializer,\
-    WorkplanProjectSerializer, LabelSerializer
+    WorkplanProjectSerializer, LabelSerializer, MilestoneSerializer
 from .tasks import notify_comment_tagged_users
 
 
@@ -36,6 +36,15 @@ class TaggedNotificationMixin(object):
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+    permission_classes = (IsAdminUser,)
+
+
+class MilestoneViewSet(viewsets.ModelViewSet):
+    """
+    CRUD api for Milestones
+    """
+    queryset = Milestone.objects.all()
+    serializer_class = MilestoneSerializer
     permission_classes = (IsAdminUser,)
 
 

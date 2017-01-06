@@ -18,6 +18,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.permissions import IsAdminUser
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
@@ -28,7 +29,6 @@ from .serializers import (
     LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
-    ResultChainDetailsSerializer,
     IndicatorReportSerializer,
     PCASectorSerializer,
     PCAGrantSerializer,
@@ -41,7 +41,7 @@ from .serializers import (
     PCAFileSerializer,
     GovernmentInterventionSerializer,
 )
-from .permissions import PartnerPermission, ResultChainPermission
+from .permissions import PartnerPermission
 from .filters import PartnerScopeFilter
 
 from .models import (
@@ -57,7 +57,6 @@ from .models import (
     PCASector,
     GwPCALocation,
     PartnerStaffMember,
-    ResultChain,
     IndicatorReport
 )
 from reports.models import CountryProgramme
@@ -382,6 +381,11 @@ class InterventionsViewSet(
         """
         Returns an Intervention object for this Intervention PK and partner
         """
+        # if not pk or partner_pk:
+        #     psm = self.request.user.profile.partner_staff_member
+        #     if psm:
+        #         try:
+        #             PartnerStaffMember.get(psm)
         try:
             queryset = self.queryset.get(partner_id=partner_pk, id=pk)
             serializer = self.serializer_class(queryset)
@@ -403,39 +407,6 @@ class InterventionsViewSet(
         response['Content-Disposition'] = 'attachment; filename="ModelExportInterventions.csv"'
         response.write(dataset.csv)
         return response
-
-
-class ResultChainViewSet(
-    mixins.RetrieveModelMixin,
-    mixins.ListModelMixin,
-    viewsets.GenericViewSet):
-    """
-    Returns a list of all Result Chain for an Intervention
-    """
-    model = ResultChain
-    queryset = ResultChain.objects.all()
-    serializer_class = ResultChainDetailsSerializer
-    permission_classes = (ResultChainPermission,)
-
-    def get_queryset(self):
-        queryset = super(ResultChainViewSet, self).get_queryset()
-        intervention_id = self.kwargs.get('intervention_pk')
-        return queryset.filter(partnership_id=intervention_id)
-
-    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
-        """
-        Returns an Intervention object for this Intervention PK and partner
-        """
-        try:
-            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except ResultChain.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
 
 
 class IndicatorReportViewSet(
@@ -467,7 +438,7 @@ class IndicatorReportViewSet(
                 pk=self.request.user.profile.partner_staff_member
             )
         except PartnerStaffMember.DoesNotExist:
-            raise Exception('Hell')
+            raise Exception('User without partnerstaffmember set is trying to submit a report')
 
         serializer.save(partner_staff_member=partner_staff_member)
 
@@ -486,7 +457,6 @@ class IndicatorReportViewSet(
             status=status.HTTP_200_OK
         )
 
-
 class PCASectorViewSet(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
@@ -498,7 +468,7 @@ class PCASectorViewSet(
     model = PCASector
     queryset = PCASector.objects.all()
     serializer_class = PCASectorSerializer
-    permission_classes = (ResultChainPermission,)
+    permission_classes = (IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -551,7 +521,7 @@ class PartnershipBudgetViewSet(
     model = PartnershipBudget
     queryset = PartnershipBudget.objects.all()
     serializer_class = PartnershipBudgetSerializer
-    permission_classes = (ResultChainPermission,)
+    permission_classes = (IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -668,7 +638,7 @@ class PCAGrantViewSet(
     model = PCAGrant
     queryset = PCAGrant.objects.all()
     serializer_class = PCAGrantSerializer
-    permission_classes = (ResultChainPermission,)
+    permission_classes = (IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -724,7 +694,7 @@ class GwPCALocationViewSet(
     model = GwPCALocation
     queryset = GwPCALocation.objects.all()
     serializer_class = GWLocationSerializer
-    permission_classes = (ResultChainPermission,)
+    permission_classes = (IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -777,7 +747,7 @@ class AmendmentLogViewSet(
     model = AmendmentLog
     queryset = AmendmentLog.objects.all()
     serializer_class = AmendmentLogSerializer
-    permission_classes = (ResultChainPermission,)
+    permission_classes = (IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -913,3 +883,11 @@ class FileTypeViewSet(
     """
     queryset = FileType.objects.all()
     serializer_class = FileTypeSerializer
+
+
+class InterventionsView(ListAPIView):
+    '''
+    returns a list of all interventions
+    '''
+    queryset = PCA.objects.all()
+    serializer_class = InterventionSerializer

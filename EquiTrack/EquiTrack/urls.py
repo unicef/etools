@@ -30,10 +30,16 @@ from .views import (
 )
 from locations.views import (
     LocationTypesViewSet,
-    LocationsViewSet
+    LocationsViewSet,
+    LocationsLightViewSet,
 )
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
-from partners.views import PartnerOrganizationsViewSet, AgreementViewSet, PartnerStaffMembersViewSet, FileTypeViewSet
+from partners.views import (
+    PartnerOrganizationsViewSet,
+    AgreementViewSet,
+    PartnerStaffMembersViewSet,
+    FileTypeViewSet,
+)
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
 from reports.views import (
@@ -42,7 +48,6 @@ from reports.views import (
     SectorViewSet,
     # GoalViewSet,
     IndicatorViewSet,
-    MilestoneViewSet,
     ResultViewSet,
     UnitViewSet
 )
@@ -52,9 +57,9 @@ from partners.urls import (
     interventions_api,
     government_interventions_api,
     simple_government_interventions_api,
-    results_api,
-    simple_results_api,
-    intervention_reports_api,
+    # results_api,
+    # simple_results_api,
+    # intervention_reports_api,
     bulk_reports_api,
     pcasectors_api,
     pcabudgets_api,
@@ -73,7 +78,10 @@ from workplan.views import (
     WorkplanViewSet,
     WorkplanProjectViewSet,
     LabelViewSet,
+    MilestoneViewSet
 )
+
+from t2f.urls import urlpatterns as et2f_patterns
 
 schema_view = get_swagger_view(title='eTools API')
 
@@ -102,15 +110,16 @@ api.register(r'reports/result-structures', ResultStructureViewSet, base_name='re
 api.register(r'reports/result-types', ResultTypeViewSet, base_name='resulttypes')
 api.register(r'reports/sectors', SectorViewSet, base_name='sectors')
 api.register(r'reports/indicators', IndicatorViewSet, base_name='indicators')
-api.register(r'reports/milestones', MilestoneViewSet, base_name='milestones')
 api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
 api.register(r'locations', LocationsViewSet, base_name='locations')
+api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
 api.register(r'comments', CommentViewSet, base_name='comments')
 api.register(r'workplans', WorkplanViewSet, base_name='workplans')
+api.register(r'workplans/milestones', MilestoneViewSet, base_name='milestones')
 api.register(r'workplan_projects', WorkplanProjectViewSet, base_name='workplan_projects')
 api.register(r'labels', LabelViewSet, base_name='labels')
 
@@ -142,19 +151,23 @@ urlpatterns = patterns(
     url(r'^api/', include(government_interventions_api.urls)),
     url(r'^api/', include(simple_government_interventions_api.urls)),
     url(r'^api/', include(simple_interventions_api.urls)),
-    url(r'^api/', include(simple_results_api.urls)),
-    url(r'^api/', include(results_api.urls)),
+    # url(r'^api/', include(simple_results_api.urls)),
+    # url(r'^api/', include(results_api.urls)),
     url(r'^api/', include(pcasectors_api.urls)),
     url(r'^api/', include(pcabudgets_api.urls)),
     url(r'^api/', include(pcafiles_api.urls)),
     url(r'^api/', include(pcagrants_api.urls)),
     url(r'^api/', include(pcaamendments_api.urls)),
     url(r'^api/', include(pcalocations_api.urls)),
-    url(r'^api/', include(intervention_reports_api.urls)),
+    # url(r'^api/', include(intervention_reports_api.urls)),
     url(r'^api/', include(bulk_reports_api.urls)),
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
+    url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
+    url(r'^api/t2f/', include(et2f_patterns, namespace='t2f')),
+    url(r'^api/v2/', include('reports.urls_v2')),
+    url(r'^api/v2/', include('partners.urls_v2')),
     url(r'^api/docs/', schema_view),
 
     # Uncomment the next line to enable the admin:

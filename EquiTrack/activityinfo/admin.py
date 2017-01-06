@@ -1,4 +1,3 @@
-__author__ = 'jcranwellward'
 
 from django.contrib import admin
 

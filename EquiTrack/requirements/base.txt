@@ -22,6 +22,7 @@ django-tenant-schemas==1.6.4
 django-allauth==0.28.0
 django-analytical==2.2.2
 django-celery==3.1.17
+django-fsm==2.4.0
 django-celery-email==1.1.5
 django-suit==0.2.21
 django-suit-ckeditor==0.0.2
@@ -63,6 +64,8 @@ django-debug-toolbar==1.6 # add debug-toolbar to be able to test in dev while we
 # Testing packages
 coverage==4.2
 factory-boy==2.7.0
+Faker==0.7.4 # A temporary fix for factory-boy library until there is a new release for factory-boy
+freezegun==0.3.8
 
 # Git python packages
 git+https://github.com/robertavram/djangosaml2.git#egg=djangosaml2
