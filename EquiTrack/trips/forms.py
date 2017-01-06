@@ -9,7 +9,8 @@ from django.forms.models import BaseInlineFormSet
 from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget, DateWidget
-from autocomplete_light import forms as auto_forms
+#from autocomplete_light import forms as auto_forms
+from dal import forms as auto_forms
 
 from partners.models import PCA
 from .models import Trip, TravelRoutes, TripLocation
@@ -51,7 +52,7 @@ class TravelRoutesForm(ModelForm):
         return cleaned_data
 
 
-class TripLocationForm(auto_forms.ModelForm):
+class TripLocationForm(auto_forms.FutureModelForm):
 
     class Meta:
         model = TripLocation

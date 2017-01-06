@@ -11,7 +11,9 @@ from django.db.models import Q
 from django.db import connection
 from django.core.validators import validate_email
 
-from autocomplete_light import forms as auto_forms
+#from autocomplete_light import forms as auto_forms
+from dal import forms as auto_forms
+
 from django.core.exceptions import (
     ValidationError,
     ObjectDoesNotExist,
@@ -47,19 +49,39 @@ from .models import (
     DistributionPlan,
     PartnershipBudget,
     GovernmentIntervention,
-    Intervention
+    Intervention,
+    InterventionSectorLocationLink
 )
 
 logger = logging.getLogger('partners.forms')
 
 
-class LocationForm(auto_forms.ModelForm):
+class LocationForm(auto_forms.FutureModelForm):
 
     class Meta:
         model = GwPCALocation
         fields = ('location',)
         autocomplete_fields = ('location',)
 
+from dal import autocomplete
+class SectorLocationForm(forms.ModelForm):
+    class Meta:
+        model = InterventionSectorLocationLink
+        #fields = ('locations',)
+        fields = ('sector', 'locations')
+        #autocomplete_fields = ('locations',)
+        widgets = {
+            'locations': autocomplete.ModelSelect2Multiple(
+                url='locations-autocomplete-light',
+                attrs={
+                    # Set some placeholder
+                    'data-placeholder': 'Enter Location Name ...',
+                    # Only trigger autocompletion after 3 characters have been typed
+                    'data-minimum-input-length': 3,
+
+                },
+            )
+        }
 
 class PartnersAdminForm(AutoSizeTextForm):
 
@@ -211,7 +233,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
         return cleaned_data
 
 
-class DistributionPlanForm(auto_forms.ModelForm):
+class DistributionPlanForm(auto_forms.FutureModelForm):
 
     class Meta:
         model = DistributionPlan

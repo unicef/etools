@@ -1,12 +1,12 @@
 
-from autocomplete_light import shortcuts as autocomplete_light
-
+#from autocomplete_light import shortcuts as autocomplete_light
+from dal import autocomplete as autocomplete_light
 from .models import Location
 
-
-class AutocompleteLocation(autocomplete_light.AutocompleteModelBase):
-    search_fields = ['^name', 'gateway__name']
-    placeholder = 'Enter location name or type'
-    model = Location
-
-autocomplete_light.register(Location, AutocompleteLocation)
+#
+# class AutocompleteLocation(autocomplete_light.AutocompleteModelBase):
+#     search_fields = ['^name', 'gateway__name']
+#     placeholder = 'Enter location name or type'
+#     model = Location
+#
+# autocomplete_light.register(Location, AutocompleteLocation)

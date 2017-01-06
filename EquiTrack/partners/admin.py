@@ -7,7 +7,9 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
-import autocomplete_light
+#import autocomplete_light
+from dal import autocomplete as autocomplete_light
+from dal.forms import FutureModelForm
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
@@ -75,7 +77,8 @@ from .forms import (
     PartnershipBudgetAdminForm,
     PartnerStaffMemberForm,
     LocationForm,
-    GovernmentInterventionAdminForm
+    GovernmentInterventionAdminForm,
+    SectorLocationForm
 )
 
 
@@ -203,11 +206,12 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
         'total',
     )
 
+class GrantForm(FutureModelForm):
+    model = Grant
+    fields = ('name', 'donor')
 
 class PcaGrantInlineAdmin(admin.TabularInline):
-    form = autocomplete_light.modelform_factory(
-        Grant, fields=['name', 'donor']
-    )
+    form = GrantForm
     model = PCAGrant
     verbose_name = 'Grant'
     verbose_name_plural = 'Grants'
@@ -265,6 +269,18 @@ class ResultsLinkInline(admin.TabularInline):
         'ram_indicators'
     )
     extra = 0
+
+class SectorLocationInline(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-locations'
+    form = SectorLocationForm
+    model = InterventionSectorLocationLink
+    extra = 1
+    # fields = (
+    #     'sector',
+    #     'locations'
+    # )
+    # filter_vertical = ('locations',)
+
 
 class SupplyPlanInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-supplies'
@@ -566,9 +582,6 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
         #     'fields': ('location_sector', 'p_codes',),
         # }),
     )
-    remove_fields_if_read_only = (
-        'sector_locations',
-    )
 
     inlines = (
         #AmendmentLogInlineAdmin,
@@ -584,7 +597,8 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
         PlannedVisitsInline,
-        ResultsLinkInline
+        ResultsLinkInline,
+        SectorLocationInline,
     )
 
     suit_form_tabs = (

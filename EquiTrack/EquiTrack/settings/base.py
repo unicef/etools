@@ -359,13 +359,13 @@ SHARED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'dal',
+    'dal_select2',
     'django.contrib.gis',
     'django.contrib.postgres',
     # Useful template tags:
     # 'django.contrib.humanize',
-
-    # Admin panel and documentation:
-    'autocomplete_light',
+    #'autocomplete_light',
     'suit',
     'django.contrib.admin',
     # 'django.contrib.admindocs',
