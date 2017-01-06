@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import datetime
 from dateutil.relativedelta import relativedelta
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
@@ -38,6 +39,12 @@ class Notification(models.Model):
 
     def send_notification(self):
         if self.type == 'Email':
-            send_mail(self.sender, self.template_name, self.template_data, list(self.recipients.filter(email__isnull=False).value_list('email', flat=True)))
+            if isinstance(self.sender, User):
+                sender = self.sender
+            else:
+                sender = settings.DEFAULT_FROM_EMAIL
+
+            send_mail(sender, self.template_name, self.template_data, list(
+                self.recipients.filter(email__isnull=False).value_list('email', flat=True)))
         else:
             pass
