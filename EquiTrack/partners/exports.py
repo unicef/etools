@@ -246,6 +246,7 @@ class PartnerExport(resources.ModelResource):
         if partner_organization.partner_type == PartnerType.GOVERNMENT:
             return partner_organization.work_plans.count()
         intervention_count = 0
+        # TODO: Nik revisit this... move this into a single query
         for agr in partner_organization.agreement_set.all():
             intervention_count += agr.interventions.count()
         return intervention_count
