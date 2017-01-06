@@ -524,7 +524,7 @@ class ActionPoint(models.Model):
     due_date = models.DateTimeField()
     person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
     status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
-    completed_at = models.DateField(blank=True, null=True)
+    completed_at = models.DateTimeField(blank=True, null=True)
     actions_taken = models.TextField(blank=True, null=True)
     follow_up = models.BooleanField(default=False)
     comments = models.TextField(blank=True, null=True)

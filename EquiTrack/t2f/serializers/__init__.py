@@ -44,7 +44,8 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
 
 
 class ActionPointSerializer(serializers.ModelSerializer):
-    trip_reference_number = serializers.CharField(source='travel.reference_number')
+    trip_reference_number = serializers.CharField(source='travel.reference_number', read_only=True)
+    action_point_number = serializers.CharField(read_only=True)
 
     class Meta:
         model = ActionPoint
