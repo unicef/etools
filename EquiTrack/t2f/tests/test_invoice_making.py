@@ -6,6 +6,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from t2f.helpers import InvoiceMaker
 from t2f.models import Travel, Expense, CostAssignment, InvoiceItem
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory
+from t2f.views import make_invoices
 
 
 class TravelDetails(APITenantTestCase):
@@ -87,7 +88,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(InvoiceItem.objects.all().count(), 0)
 
         # Generate invoice
-        travel.save()
+        make_invoices(travel)
 
         self.assertEqual(travel.invoices.all().count(), 1)
         self.assertEqual(InvoiceItem.objects.all().count(), 2)
@@ -108,7 +109,7 @@ class TravelDetails(APITenantTestCase):
                                amount=500)
 
         # Generate invoice
-        travel.save()
+        make_invoices(travel)
 
         self.assertEqual(travel.invoices.all().count(), 4)
         self.assertEqual(InvoiceItem.objects.all().count(), 8)
@@ -119,4 +120,4 @@ class TravelDetails(APITenantTestCase):
         ca_2.delete()
 
         # Generate invoice
-        travel.save()
+        make_invoices(travel)

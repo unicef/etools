@@ -492,14 +492,14 @@ class TravelPermission(models.Model):
 
 def make_action_point_number():
     year = datetime.now().year
-    last_travel = Travel.objects.filter(created__year=year).order_by('reference_number').last()
-    if last_travel:
-        reference_number = last_travel.reference_number
-        reference_number = int(reference_number.split('/')[1])
-        reference_number += 1
+    last_action_point = ActionPoint.objects.filter(created_at__year=year).order_by('action_point_number').last()
+    if last_action_point:
+        action_point_number = last_action_point.action_point_number
+        action_point_number = int(action_point_number.split('/')[1])
+        action_point_number += 1
     else:
-        reference_number = 1
-    return '{}/{:06d}'.format(year, reference_number)
+        action_point_number = 1
+    return '{}/{:06d}'.format(year, action_point_number)
 
 
 class ActionPoint(models.Model):
@@ -533,6 +533,7 @@ class ActionPoint(models.Model):
 
 class Invoice(models.Model):
     STATUS = (
+        ('pending', 'Pending'),
         ('processing', 'Processing'),
         ('success', 'Success'),
         ('error', 'Error'),

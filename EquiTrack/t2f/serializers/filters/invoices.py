@@ -24,5 +24,4 @@ class SortFilterSerializer(serializers.Serializer):
 
 class FilterBoxFilterSerializer(serializers.Serializer):
     f_vendor_number = serializers.CharField(source='vendor_number', required=False)
-    f_ta_number = serializers.IntegerField(source='travel__reference_number', required=False)
     f_vision_fi_id = serializers.IntegerField(source='vision_fi_id', required=False)

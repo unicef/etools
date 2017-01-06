@@ -8,7 +8,7 @@ from t2f.serializers.filters.invoices import SearchFilterSerializer, SortFilterS
 
 
 class SearchFilter(BaseFilterBackend):
-    _search_fields = ('reference_number', 'vendor_number', 'vision_fi_id')
+    _search_fields = ('reference_number', 'vendor_number', 'travel__reference_number', 'vision_fi_id')
 
     def filter_queryset(self, request, queryset, view):
         serializer = SearchFilterSerializer(data=request.GET)
