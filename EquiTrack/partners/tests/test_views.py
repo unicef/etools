@@ -266,36 +266,6 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEquals(len(response.data), 1)
         self.assertEquals(response.data[0]["id"], self.partner.id)
 
-    @skip("Fix this")
-    def test_api_partners_update_blocked(self):
-        data = {
-            "blocked": True,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["hidden"], True)
-
-    @skip("Fix this")
-    def test_api_partners_update_deleted_flag(self):
-        data = {
-            "deleted_flag": True,
-        }
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/partners/{}/'.format(self.partner.id),
-            user=self.unicef_staff,
-            data=data,
-        )
-
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["hidden"], True)
-
 
 class TestPartnershipViews(APITenantTestCase):
     fixtures = ['initial_data.json']
