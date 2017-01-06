@@ -7,9 +7,7 @@ from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 
-#import autocomplete_light
-from dal import autocomplete as autocomplete_light
-from dal.forms import FutureModelForm
+
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
@@ -206,12 +204,9 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
         'total',
     )
 
-class GrantForm(FutureModelForm):
-    model = Grant
-    fields = ('name', 'donor')
 
 class PcaGrantInlineAdmin(admin.TabularInline):
-    form = GrantForm
+
     model = PCAGrant
     verbose_name = 'Grant'
     verbose_name_plural = 'Grants'

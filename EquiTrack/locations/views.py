@@ -1,6 +1,7 @@
 __author__ = 'unicef-leb-inn'
 import uuid
 
+from dal import autocomplete
 from django.db import connection
 from django.core.cache import cache
 from django.utils.cache import patch_cache_control
@@ -122,7 +123,7 @@ class LocationQuerySetView(ListAPIView):
         # return maximum 7 records
         return qs.all()[:7]
 
-from dal import autocomplete
+
 class LocationAutocompleteView(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         # Don't forget to filter out results depending on the visitor !

@@ -11,8 +11,7 @@ from django.db.models import Q
 from django.db import connection
 from django.core.validators import validate_email
 
-#from autocomplete_light import forms as auto_forms
-from dal import forms as auto_forms
+from dal import autocomplete
 
 from django.core.exceptions import (
     ValidationError,
@@ -56,14 +55,25 @@ from .models import (
 logger = logging.getLogger('partners.forms')
 
 
-class LocationForm(auto_forms.FutureModelForm):
+class LocationForm(forms.ModelForm):
 
     class Meta:
         model = GwPCALocation
         fields = ('location',)
-        autocomplete_fields = ('location',)
+        widgets = {
+            'location': autocomplete.ModelSelect2(
+                url='locations-autocomplete-light',
+                attrs={
+                    # Set some placeholder
+                    'data-placeholder': 'Enter Location Name ...',
+                    # Only trigger autocompletion after 3 characters have been typed
+                    'data-minimum-input-length': 3,
 
-from dal import autocomplete
+                },
+            )
+        }
+
+
 class SectorLocationForm(forms.ModelForm):
     class Meta:
         model = InterventionSectorLocationLink
@@ -233,7 +243,7 @@ class PartnerStaffMemberForm(forms.ModelForm):
         return cleaned_data
 
 
-class DistributionPlanForm(auto_forms.FutureModelForm):
+class DistributionPlanForm(forms.ModelForm):
 
     class Meta:
         model = DistributionPlan

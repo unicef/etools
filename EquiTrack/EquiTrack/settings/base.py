@@ -365,7 +365,6 @@ SHARED_APPS = (
     'django.contrib.postgres',
     # Useful template tags:
     # 'django.contrib.humanize',
-    #'autocomplete_light',
     'suit',
     'django.contrib.admin',
     # 'django.contrib.admindocs',
