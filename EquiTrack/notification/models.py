@@ -11,6 +11,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
 from model_utils import Choices
+from post_office.models import EmailTemplate
 
 from EquiTrack.utils import send_mail
 
@@ -36,6 +37,13 @@ class Notification(models.Model):
 
     def __unicode__(self):
         return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
+
+    @classmethod
+    def create_email_template(cls, type, template_name, subject, content, html_content):
+        EmailTemplate.object.create(
+            name=template_name, subject=subject,
+            content=content, html_content=html_content,
+        )
 
     def send_notification(self):
         if self.type == 'Email':
