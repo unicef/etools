@@ -607,7 +607,6 @@ class TestInterventionModel(TenantTestCase):
         self.intervention.end_date = datetime.date(datetime.date.today().year+1, 1, 1)
         # self.assertEqual(self.intervention.duration, 24)
 
-    @skip("Fix this")
     def test_total_unicef_cash(self):
         InterventionBudget.objects.create(
             intervention=self.intervention,
@@ -617,17 +616,18 @@ class TestInterventionModel(TenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.total_unicef_cash, 15000)
+        self.assertEqual(int(self.intervention.total_unicef_cash), 100000)
 
-    @skip("Fix this")
     def test_total_budget(self):
-        PartnershipBudget.objects.create(
-            partnership=self.intervention,
-            unicef_cash=15000,
-            in_kind_amount=10000,
-            partner_contribution=8000,
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.total_budget, 33000)
+        self.assertEqual(int(self.intervention.total_budget), 100200)
 
     @skip("Fix this")
     def test_reference_number(self):
@@ -635,9 +635,12 @@ class TestInterventionModel(TenantTestCase):
 
     @skip("Fix this")
     def test_planned_cash_transfers(self):
-        PartnershipBudget.objects.create(
-            partnership=self.intervention,
-            unicef_cash=15000,
-            year=datetime.date.today().year,
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.planned_cash_transfers, 15000)
+        self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)
