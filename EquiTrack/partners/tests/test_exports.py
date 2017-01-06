@@ -24,7 +24,6 @@ class TestModelExport(APITenantTestCase):
         self.intervention = InterventionFactory(agreement=self.agreement)
         self.government_intervention = GovernmentInterventionFactory(partner=self.partner)
 
-    @skip("Fix this")
     def test_partner_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/export/',

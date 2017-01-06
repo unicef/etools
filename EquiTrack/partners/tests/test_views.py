@@ -335,7 +335,6 @@ class TestPartnershipViews(APITenantTestCase):
     def test_api_interventions_list(self):
         response = self.forced_auth_req('get', '/api/partners/'+str(self.partner.id)+'/interventions/', user=self.unicef_staff)
 
-        print(response)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 1)
         self.assertIn("galaxy", response.data[0]["pca_title"])
@@ -553,7 +552,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partner_staff_user,
             data=data
         )
-        print(response)
+
         self.assertEquals(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_agreements_update(self):
@@ -796,7 +795,7 @@ class TestAgreementAPIView(APITenantTestCase):
             user=self.partnership_manager_user,
             data=data
         )
-        print(response)
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["end"], str(self.country_programme.to_date))
 
