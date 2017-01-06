@@ -219,6 +219,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         cost_assignments = validated_data.pop('cost_assignments', [])
         clearances = validated_data.pop('clearances', {})
         activities = validated_data.pop('activities', [])
+        action_points = validated_data.pop('action_points', [])
 
         instance = super(TravelDetailsSerializer, self).create(validated_data)
 
@@ -227,6 +228,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         self.create_related_models(Expense, expenses, travel=instance)
         self.create_related_models(Deduction, deductions, travel=instance)
         self.create_related_models(CostAssignment, cost_assignments, travel=instance)
+        self.create_related_models(ActionPoint, action_points, travel=instance)
         travel_activities = self.create_related_models(TravelActivity, activities)
         for activity in travel_activities:
             activity.travels.add(instance)
@@ -253,7 +255,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         related_attributes = {}
-        for attr_name in ('itinerary', 'expenses', 'deductions', 'cost_assignments', 'activities', 'clearances'):
+        for attr_name in ('itinerary', 'expenses', 'deductions', 'cost_assignments', 'activities', 'clearances',
+                          'action_points'):
             if isinstance(self._fields[attr_name], serializers.ListSerializer):
                 default = []
             elif self._fields[attr_name].allow_null:
