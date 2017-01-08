@@ -49,9 +49,7 @@ RUN pip install -f /pip -r /pip/app_requirements.txt
 
 
 ENV PYTHONUNBUFFERED 1
-ADD EquiTrack /code/
-
+VOLUME EquiTrack /code/
 WORKDIR /code/
 
 ENV DJANGO_SETTINGS_MODULE EquiTrack.settings.local
-RUN python manage.py collectstatic --noinput
