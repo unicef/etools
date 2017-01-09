@@ -32,7 +32,7 @@ from partners.models import (
     PCASector,
     GwPCALocation,
     PartnerStaffMember,
-    ResultChain,
+    # ResultChain,
     IndicatorReport,
     GovernmentIntervention
 )
@@ -47,7 +47,7 @@ from partners.filters import (
     GovernmentInterventionExportFilter,
     PartnerScopeFilter
 )
-from partners.permissions import PartnerPermission, ResultChainPermission
+from partners.permissions import PartnerPermission # ResultChainPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
     LocationSerializer,

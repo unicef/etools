@@ -611,8 +611,8 @@ class TestAgreementModel(TenantTestCase):
                          "/PCA{}01".format(year))
 
     def test_snapshot_activity_stream(self):
-        self.agreement.bank_name = "Bank A"
-        self.agreement.bank_address = "1234 St, City A, State B, 00000, USA"
+        self.agreement.start = datetime.date.today()
+        self.agreement.signed_by_unicef_date = datetime.date.today()
 
         Agreement.create_snapshot_activity_stream(
             self.partner_organization, self.agreement)
@@ -627,8 +627,8 @@ class TestAgreementModel(TenantTestCase):
 
         # Check if the snapshot had the empty entries for bank information when
         # initially created
-        self.assertEquals(snapshot['bank_name'], 'None')
-        self.assertEquals(snapshot['bank_address'], '')
+        self.assertEquals(snapshot['start'], 'None')
+        self.assertEquals(snapshot['signed_by_unicef_date'], 'None')
 
 
 class TestInterventionModel(TenantTestCase):
