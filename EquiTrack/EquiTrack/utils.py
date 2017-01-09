@@ -19,7 +19,7 @@ from post_office.models import EmailTemplate
 from post_office import mail
 
 
-def send_mail(sender, template, variables, attachments=None, cc_list=None, bcc_list=None, recipients):
+def send_mail(sender, recipients, template, variables, attachments=None, cc_list=None, bcc_list=None):
     """
     Single mail send hook that is reused across the project
     """
