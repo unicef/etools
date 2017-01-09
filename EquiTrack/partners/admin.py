@@ -2,15 +2,16 @@ from __future__ import absolute_import
 
 from partners.exports import PartnerExport, GovernmentExport, InterventionExport, AgreementExport
 
-from django.db import connection
+from django.db import connection, models
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
-
+from django.forms import SelectMultiple, TextInput, Select
 
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
+import nested_admin
 
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
@@ -18,7 +19,7 @@ from EquiTrack.utils import get_changeform_link, get_staticfile_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
 from funds.models import Grant
-from reports.models import Result, Indicator
+from reports.models import Result, Indicator, LowerResult
 from users.models import Section
 from .exports import (
     # DonorsFormat,
@@ -53,7 +54,9 @@ from .models import (
     AgreementAmendment,
     InterventionAmendment,
     InterventionSectorLocationLink,
-    InterventionResultLink
+    InterventionResultLink,
+    InterventionBudget,
+    InterventionAttachment,
 
 )
 from .filters import (
@@ -243,6 +246,22 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         )
 
 
+class BudgetInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-info'
+    model = InterventionBudget
+    fields = (
+        'year',
+        'partner_contribution',
+        'unicef_cash',
+        'in_kind_amount',
+        'partner_contribution_local',
+        'unicef_cash_local',
+        'in_kind_amount_local',
+        'total',
+    )
+    readonly_fields = ('total', )
+    extra = 0
+
 
 class PlannedVisitsInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
@@ -253,23 +272,55 @@ class PlannedVisitsInline(admin.TabularInline):
         'spot_checks',
         'audit'
     )
-
     extra = 0
+
+
+class InterventionAttachmentsInline(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-attachments'
+    model = InterventionAttachment
+    fields = (
+        'type',
+        'attachment',
+    )
+    extra = 0
+
+
+class LowerResultsInline(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-results'
+    model = LowerResult
+    fields = ('result_type', 'name')
+
 
 class ResultsLinkInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
+    # form = ResultLinkForm
     model = InterventionResultLink
     fields = (
         'cp_output',
         'ram_indicators'
     )
     extra = 0
+    formfield_overrides = {
+        models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'5', 'style': 'width:100%'})},
+    }
+    inLines = [LowerResultsInline]
+    show_change_link = True
+
+
+
 
 class SectorLocationInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-locations'
     form = SectorLocationForm
     model = InterventionSectorLocationLink
+    # fields = (
+    #     'sector',
+    #     'locations'
+    # )
     extra = 1
+    formfield_overrides = {
+        models.ManyToManyField: {'widget': Select(attrs={'style': 'width:100%'})},
+    }
     # fields = (
     #     'sector',
     #     'locations'
@@ -504,7 +555,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
 
 
-class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
+class InterventionAdmin(nested_admin.NestedModelAdmin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
 
     date_hierarchy = 'start'
     list_display = (
@@ -581,6 +632,7 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
     inlines = (
         #AmendmentLogInlineAdmin,
         InterventionAmendmentsInlineAdmin,
+        BudgetInlineAdmin,
         #PcaSectorInlineAdmin,
         #PartnershipBudgetInlineAdmin,
         #PcaGrantInlineAdmin,
@@ -594,6 +646,7 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
         PlannedVisitsInline,
         ResultsLinkInline,
         SectorLocationInline,
+        InterventionAttachmentsInline,
     )
 
     suit_form_tabs = (

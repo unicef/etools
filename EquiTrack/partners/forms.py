@@ -49,7 +49,8 @@ from .models import (
     PartnershipBudget,
     GovernmentIntervention,
     Intervention,
-    InterventionSectorLocationLink
+    InterventionSectorLocationLink,
+    InterventionResultLink,
 )
 
 logger = logging.getLogger('partners.forms')
@@ -88,9 +89,10 @@ class SectorLocationForm(forms.ModelForm):
                     'data-placeholder': 'Enter Location Name ...',
                     # Only trigger autocompletion after 3 characters have been typed
                     'data-minimum-input-length': 3,
-
+                    'style': 'width:100%'
                 },
             )
+
         }
 
 class PartnersAdminForm(AutoSizeTextForm):

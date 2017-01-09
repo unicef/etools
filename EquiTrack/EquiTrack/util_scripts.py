@@ -547,8 +547,6 @@ def copy_pca_fields_to_intervention():
         pcas = PCA.objects.all()
         interventions_to_save = []
         for pca in pcas:
-            if pca.number == '-':
-                print('-')
             if pca.partnership_type in [PCA.AWP, PCA.IC]:
                 continue
             intervention = Intervention()
@@ -772,17 +770,15 @@ def copy_pca_distribution_plan_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
         print(cntry)
-        if cntry == 'Nigeria':
-            print('Debug')
-
         for dp in DistributionPlan.objects.all():
-            try:
-                intervention = Intervention.objects.get(number=dp.partnership.number)
-            except Intervention.DoesNotExist:
-                print(dp.partnership.number)
-                continue
-            dp.intervention = intervention
-            dp.save()
+            if SupplyPlan.objects.filter(intervention=dp.intervention, item=dp.item).count():
+                try:
+                    intervention = Intervention.objects.get(number=dp.partnership.number)
+                except Intervention.DoesNotExist:
+                    print(dp.partnership.number)
+                    continue
+                dp.intervention = intervention
+                dp.save()
 
 
 def local_country_keep():
