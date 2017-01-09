@@ -5,9 +5,7 @@ from partners.filters import PartnerOrganizationExportFilter, AgreementExportFil
     GovernmentInterventionExportFilter, PartnerScopeFilter
 from partners.models import GovernmentIntervention
 
-__author__ = 'jcranwellward'
-
-import datetime
+from rest_framework.decorators import detail_route
 
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -24,7 +22,7 @@ from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
-from .serializers import (
+from partners.serializers.v1 import (
     FileTypeSerializer,
     LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,
@@ -41,14 +39,13 @@ from .serializers import (
     PCAFileSerializer,
     GovernmentInterventionSerializer,
 )
-from .permissions import PartnerPermission
-from .filters import PartnerScopeFilter
+from partners.permissions import PartnerPermission
+from partners.filters import PartnerScopeFilter
 
-from .models import (
+from partners.models import (
     FileType,
     PartnershipBudget,
     PCAFile,
-    AuthorizedOfficer,
     PCA,
     PartnerOrganization,
     Agreement,
@@ -60,6 +57,8 @@ from .models import (
     IndicatorReport
 )
 from reports.models import CountryProgramme
+from rest_framework import status
+from rest_framework.response import Response
 
 
 class PcaPDFView(PDFTemplateView):
