@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 import django.contrib.postgres.fields
 from django.db import migrations, models
+from django.db.models import Count
 import django.db.models.deletion
 import django.db.models.manager
 import django.utils.timezone
@@ -13,6 +14,44 @@ import model_utils.fields
 import partners.models
 import smart_selects.db_fields
 
+def reverse(apps, schema_editor):
+    pass
+
+def agreement_unique_reference_number(apps, schema_editor):
+    Agreement = apps.get_model('partners', 'Agreement')
+
+    agreements = Agreement.objects.all()
+    for agr in agreements:
+        if agr.agreement_number == '':
+            print(agr)
+            agr.agreement_number = 'blk:{}'.format(agr.id)
+            agr.save()
+    dupes = Agreement.objects.values('agreement_number').annotate(Count('agreement_number')).order_by().filter(agreement_number__count__gt=1).all()
+    for dup in dupes:
+        cdupes = Agreement.objects.filter(agreement_number=dup['agreement_number'])
+        for cdup in cdupes:
+            cdup.agreement_number = '{}|{}'.format(cdup.agreement_number, cdup.id)
+            print(cdup)
+            cdup.save()
+
+def pca_unique_reference_number(apps, schema_editor):
+    PCA = apps.get_model('partners', 'PCA')
+    pcas = PCA.objects.all()
+    for pca in pcas:
+        if not pca.number:
+            print(pca)
+            pca.number = 'blk:{}'.format(pca.id)
+            pca.save()
+    dupes = PCA.objects.values('number').annotate(
+        Count('number')).order_by().filter(number__count__gt=1).all()
+    for dup in dupes:
+        cdupes = PCA.objects.filter(number=dup['number'])
+        for cdup in cdupes:
+            if len(cdup.number) > 40:
+                cdup.number = cdup.number[len(cdup.number)-40:]
+            cdup.number = '{}|{}'.format(cdup.number, cdup.id)
+            print(cdup)
+            cdup.save()
 
 class Migration(migrations.Migration):
 
@@ -25,6 +64,12 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(
+            agreement_unique_reference_number, reverse_code=reverse
+        ),
+        migrations.RunPython(
+            pca_unique_reference_number, reverse_code=reverse
+        ),
         migrations.CreateModel(
             name='AgreementAmendment',
             fields=[
