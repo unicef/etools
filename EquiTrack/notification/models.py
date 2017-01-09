@@ -52,7 +52,10 @@ class Notification(models.Model):
             else:
                 sender = settings.DEFAULT_FROM_EMAIL
 
-            send_mail(sender, self.template_name, self.template_data, list(
-                self.recipients.filter(email__isnull=False).value_list('email', flat=True)))
+            recipients = list(
+                self.recipients.filter(email__isnull=False).value_list('email', flat=True))
+
+            send_mail(sender, recipients, self.template_name, self.template_data)
+
         else:
             pass
