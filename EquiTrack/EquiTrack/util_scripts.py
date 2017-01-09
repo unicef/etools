@@ -792,3 +792,13 @@ def local_country_keep():
     set_country('Global')
     keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border']
     Country.objects.exclude(name__in=keeping).all().delete()
+
+
+from partners.models import GovernmentIntervention
+def gov_int_copy_rs_to_cp():
+    for gi in GovernmentIntervention:
+        try:
+            gi.country_programme = CountryProgramme.encapsulates(gi.result_structure.from_date, gi.result_structure.to_date)
+            gi.save()
+        except:
+            pass
