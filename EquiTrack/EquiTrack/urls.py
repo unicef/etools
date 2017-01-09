@@ -178,7 +178,8 @@ urlpatterns = patterns(
     url(r'^chaining/', include('smart_selects.urls')),
     url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
     url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),  # TODO: remove this when eTrips is deployed needed
-    url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser')
+    url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
+    url(r'^nested_admin/', include('nested_admin.urls')),
 )
 
 

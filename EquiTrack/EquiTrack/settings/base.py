@@ -403,6 +403,7 @@ SHARED_APPS = (
     'mptt',
     'easy_pdf',
     'django_hstore',
+    'nested_admin',
 
     'vision',
     'management',
