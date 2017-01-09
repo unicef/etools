@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+from datetime import datetime
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
@@ -43,7 +45,8 @@ class Command(BaseCommand):
         username = options['username']
         password = options['password']
         user = self._get_or_create_admin_user(username, password)
-        connection.set_tenant(user.profile.country)
+        country = user.profile.country
+        connection.set_tenant(country)
 
         self._load_travel_types()
         self._load_travel_modes()
@@ -63,7 +66,7 @@ class Command(BaseCommand):
         if options.get('with_partners'):
             self._assign_sections()
 
-        self._load_dsa_regions()
+        self._load_dsa_regions(country)
         self._load_permission_matrix()
         self._add_wbs()
         self._add_grants()
@@ -333,22 +336,32 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('Partner found: {}'.format(partner_name))
 
-    def _load_dsa_regions(self):
+    def _load_dsa_regions(self, country):
+        DSARegion.objects.all().delete()
+        
         dsa_region_data = [{'dsa_amount_usd': 300,
-                            'name': 'Hungary',
+                            'country': 'Hungary',
+                            'region': 'Budapest',
                             'room_rate': 120,
                             'dsa_amount_60plus_usd': 200,
                             'dsa_amount_60plus_local': 56000,
-                            'dsa_amount_local': 84000},
+                            'dsa_amount_local': 84000,
+                            'finalization_date': datetime.now().date(),
+                            'eff_date': datetime.now().date(),
+                            'business_area_code': country.business_area_code},
                            {'dsa_amount_usd': 400,
-                            'name': 'Germany',
+                            'country': 'Germany',
+                            'region': 'Berlin',
                             'room_rate': 150,
                             'dsa_amount_60plus_usd': 260,
                             'dsa_amount_60plus_local': 238.68,
-                            'dsa_amount_local': 367.21}]
+                            'dsa_amount_local': 367.21,
+                            'finalization_date': datetime.now().date(),
+                            'eff_date': datetime.now().date(),
+                            'business_area_code': country.business_area_code}]
         for data in dsa_region_data:
-            name = data.pop('name')
-            d, created = DSARegion.objects.get_or_create(name=name, defaults=data)
+            name = data.pop('country')
+            d, created = DSARegion.objects.get_or_create(country=name, defaults=data)
             if created:
                 self.stdout.write('DSA Region created: {}'.format(name))
             else:

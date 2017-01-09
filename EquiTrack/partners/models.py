@@ -1,9 +1,11 @@
 from __future__ import absolute_import
-
+import logging
 import datetime
 from dateutil.relativedelta import relativedelta
 
-from django.db.models import Q
+from django_fsm import FSMField, transition
+
+from django.db.models import Q, Sum
 from django.conf import settings
 from django.db import models, connection, transaction
 from django.contrib.auth.models import Group
@@ -12,9 +14,9 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from django.contrib.postgres.fields import JSONField
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django_hstore import hstore
-from smart_selects.db_fields import ChainedForeignKey
+from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -48,10 +50,109 @@ from supplies.tasks import (
     set_unisupply_distribution,
     set_unisupply_user
 )
-from users.models import Section
+from users.models import Section, Office
 from . import emails
 
 
+# TODO: streamline this ...
+def get_agreement_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_organization',
+         str(instance.partner.id),
+         'agreements',
+         str(instance.agreement_number),
+         filename]
+    )
+def get_assesment_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_organizations',
+         str(instance.partner.id),
+         'assesments',
+         str(instance.id),
+         filename]
+    )
+def get_intervention_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_organization',
+         str(instance.agreement.partner.id),
+         'agreements',
+         str(instance.agreement.id),
+         'interventions',
+         str(instance.id),
+         filename]
+    )
+def get_prc_intervention_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_organization',
+         str(instance.agreement.partner.id),
+         'agreements',
+         str(instance.agreement.id),
+         'interventions',
+         str(instance.id),
+         'prc',
+         filename]
+    )
+def get_intervention_amendment_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_organization',
+         str(instance.intervention.agreement.partner.id),
+         'agreements',
+         str(instance.intervention.agreement.id),
+         'interventions',
+         str(instance.intervention.id),
+         'amendments',
+         str(instance.id),
+         filename]
+    )
+def get_intervention_attachments_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_organization',
+         str(instance.intervention.agreement.partner.id),
+         'agreements',
+         str(instance.intervention.agreement.id),
+         'interventions',
+         str(instance.intervention.id),
+         'attachments',
+         str(instance.id),
+         filename]
+    )
+def get_agreement_amd_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_org',
+         str(instance.agreement.partner.id),
+         'agreements',
+         instance.agreement.base_number,
+         'amendments',
+         str(instance.number),
+         filename]
+    )
+
+# TODO: move this to a workspace app for common configuration options
+class WorkspaceFileType(models.Model):
+    """
+    Represents a file type
+    """
+
+    name = models.CharField(max_length=64L, unique=True)
+
+    def __unicode__(self):
+        return self.name
+
+# TODO: move this on the models
 HIGH = u'high'
 SIGNIFICANT = u'significant'
 MEDIUM = u'medium'
@@ -62,8 +163,12 @@ RISK_RATINGS = (
     (MEDIUM, u'Medium'),
     (LOW, u'Low'),
 )
-
-
+CSO_TYPES = Choices(
+    u'International',
+    u'National',
+    u'Community Based Organisation',
+    u'Academic Institution',
+)
 class PartnerType(object):
     BILATERAL_MULTILATERAL = u'Bilateral / Multilateral'
     CIVIL_SOCIETY_ORGANIZATION = u'Civil Society Organization'
@@ -76,23 +181,48 @@ class PartnerType(object):
                       UN_AGENCY)
 
 
-CSO_TYPES = Choices(
-    u'International',
-    u'National',
-    u'Community Based Organisation',
-    u'Academic Institution',
-)
-
-
 class PartnerOrganization(AdminURLMixin, models.Model):
     """
     Represents a partner organization
-    """
 
+    related models:
+        Assesment: "assesments"
+        PartnerStaffMember: "staff_members"
+
+
+    """
+    AGENCY_CHOICES = Choices(
+        ('DPKO', 'DPKO'),
+        ('ECA', 'ECA'),
+        ('ECLAC', 'ECLAC'),
+        ('ESCWA', 'ESCWA'),
+        ('FAO', 'FAO'),
+        ('ILO', 'ILO'),
+        ('IOM', 'IOM'),
+        ('OHCHR', 'OHCHR'),
+        ('UN', 'UN'),
+        ('Women', 'Women'),
+        ('UNAIDS', 'UNAIDS'),
+        ('UNDP', 'UNDP'),
+        ('UNESCO', 'UNESCO'),
+        ('UNFPA', 'UNFPA'),
+        ('UN - Habitat', 'UN - Habitat'),
+        ('UNHCR', 'UNHCR'),
+        ('UNODC', 'UNODC'),
+        ('UNOPS', 'UNOPS'),
+        ('UNRWA', 'UNRWA'),
+        ('UNSC', 'UNSC'),
+        ('UNU', 'UNU'),
+        ('WB', 'WB'),
+        ('WFP', 'WFP'),
+        ('WHO', 'WHO')
+    )
     partner_type = models.CharField(
         max_length=50,
         choices=PartnerType.CHOICES
     )
+
+    # this is only applicable if type is CSO
     cso_type = models.CharField(
         max_length=50,
         choices=CSO_TYPES,
@@ -112,6 +242,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=256L,
         blank=True
     )
+    shared_with = ArrayField(models.CharField(max_length=20, blank=True, choices=AGENCY_CHOICES), blank=True, null=True)
+
+    # TODO remove this after migration to shared_with + add calculation to hact_field
     shared_partner = models.CharField(
         help_text=u'Partner shared with UNDP or UNFPA?',
         choices=Choices(
@@ -123,10 +256,31 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         default=u'No',
         max_length=50
     )
+    street_address = models.CharField(
+        max_length=500L,
+        blank=True, null=True
+    )
+    city = models.CharField(
+        max_length=32L,
+        blank=True, null=True
+    )
+    postal_code = models.CharField(
+        max_length=32L,
+        blank=True, null=True
+    )
+    country = models.CharField(
+        max_length=32L,
+        blank=True, null=True
+    )
+
+    # TODO: remove this when migration to the new fields is done. check for references
+    # BEGIN REMOVE
     address = models.TextField(
         blank=True,
         null=True
     )
+    # END REMOVE
+
     email = models.CharField(
         max_length=255,
         blank=True, null=True
@@ -135,6 +289,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         max_length=32L,
         blank=True, null=True
     )
+
+
     vendor_number = models.CharField(
         blank=True,
         null=True,
@@ -172,6 +328,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         help_text=u'Only required for CSO partners'
     )
     vision_synced = models.BooleanField(default=False)
+    blocked = models.BooleanField(default=False)
     hidden = models.BooleanField(default=False)
     deleted_flag = models.BooleanField(default=False, verbose_name=u'Marked for deletion')
 
@@ -183,7 +340,18 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         decimal_places=2, max_digits=12, blank=True, null=True,
         help_text='Total Cash Transferred per Current Year'
     )
+
+    # TODO: add shared partner on hact_values: boolean, yes if shared with any of: [UNDP, UNFPA]
+    #     {"audits_done": 0,
+    #     "planned_visits": 0,
+    #     "spot_checks": 0,
+    #     "programmatic_visits": 0,
+    #     "follow_up_flags": 0,
+    #     "planned_cash_transfer": 0,
+    #     "micro_assessment_needed": "Missing",
+    #     "audits_mr": 0}
     hact_values = JSONField(blank=True, null=True, default={})
+
 
     class Meta:
         ordering = ['name']
@@ -198,7 +366,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @cached_property
     def get_last_pca(self):
         # exclude Agreements that were not signed
-        return self.agreement_set.filter(
+        return self.agreements.filter(
             agreement_type=Agreement.PCA
         ).exclude(
             signed_by_unicef_date__isnull=True,
@@ -461,15 +629,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
-
+        '''
+        Used for UNI_SUPPLY
+        '''
         if instance.short_name and instance.alternate_name:
             set_unisupply_user.delay(
                 instance.short_name,
                 instance.alternate_name
             )
-
 post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 
+class PartnerStaffMemberManager(models.Manager):
+    def get_queryset(self):
+        return super(PartnerStaffMemberManager, self).get_queryset().select_related('partner')
 
 class PartnerStaffMember(models.Model):
     """
@@ -477,6 +649,10 @@ class PartnerStaffMember(models.Model):
     A User is created for each staff member
 
     Relates to :model:`partners.PartnerOrganization`
+
+    related models:
+        Agreement: "agreement_authorizations" (m2m - all agreements this user is authorized for)
+        Agreement: "agreements_signed" (refers to all the agreements this user signed)
     """
 
     partner = models.ForeignKey(PartnerOrganization, related_name='staff_members')
@@ -489,6 +665,8 @@ class PartnerStaffMember(models.Model):
         default=True
     )
 
+    objects = PartnerStaffMemberManager()
+
     def get_full_name(self):
         full_name = '%s %s' % (self.first_name, self.last_name)
         return full_name.strip()
@@ -500,6 +678,7 @@ class PartnerStaffMember(models.Model):
             self.partner.name
         )
 
+    # TODO: instead of signals we need this transactional
     def reactivate_signal(self):
         # sends a signal to activate the user
         post_save.send(PartnerStaffMember, instance=self, created=True)
@@ -519,8 +698,6 @@ class PartnerStaffMember(models.Model):
                 self.reactivate_signal()
 
         return super(PartnerStaffMember, self).save(**kwargs)
-
-
 class Assessment(models.Model):
     """
     Represents an assessment for a partner organization.
@@ -584,10 +761,12 @@ class Assessment(models.Model):
         choices=RISK_RATINGS,
         default=HIGH,
     )
+    # Assesment Report
     report = models.FileField(
         blank=True, null=True,
-        upload_to='assessments'
+        upload_to=get_assesment_path
     )
+    # Basis for Risk Rating
     current = models.BooleanField(
         default=False,
         verbose_name=u'Basis for risk rating'
@@ -625,18 +804,38 @@ class Assessment(models.Model):
 
 
         super(Assessment, self).save(**kwargs)
+class BankDetails(models.Model):
+    """
+    Represents bank information on the partner agreement and/or agreement amendment log.
 
+    Relates to :model:`partners.Agreement`
+    Relates to :model:`partners.AgreementAmendmentLog`
+    """
 
-def get_agreement_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'agreements',
-         str(instance.id),
-         filename]
+    #TODO: remove agreement field after running util_scripts.bank_details_to_partner()
+    agreement = models.ForeignKey('partners.Agreement', related_name='bank_details')
+
+    # TODO: remove the ability to add blank for the partner_organization field
+    partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details', null=True, blank=True)
+    bank_name = models.CharField(max_length=255, null=True, blank=True)
+    bank_address = models.CharField(
+        max_length=256L,
+        blank=True
     )
+    account_title = models.CharField(max_length=255, null=True, blank=True)
+    account_number = models.CharField(max_length=50, null=True, blank=True)
+    routing_details = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
+    )
+    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
 
 
+class AgreementManager(models.Manager):
+    def get_queryset(self):
+        return super(AgreementManager, self).get_queryset().select_related('partner')
 class Agreement(TimeStampedModel):
     """
     Represents an agreement with the partner organization.
@@ -653,11 +852,32 @@ class Agreement(TimeStampedModel):
         (PCA, u"Programme Cooperation Agreement"),
         (SSFA, u'Small Scale Funding Agreement'),
         (MOU, u'Memorandum of Understanding'),
+        # TODO Remove these two with data migration
         (IC, u'Institutional Contract'),
         (AWP, u"Work Plan"),
     )
 
-    partner = models.ForeignKey(PartnerOrganization)
+    DRAFT = u"draft"
+    CANCELLED = u"cancelled"
+    ACTIVE = u"active"
+    ENDED = u"ended"
+    SUSPENDED = u"suspended"
+    TERMINATED = u"terminated"
+    STATUS_CHOICES = (
+        (DRAFT, u"Draft"),
+        (CANCELLED, u"Cancelled"),
+        (ACTIVE, u"Active"),
+        (ENDED, u"Ended"),
+        (SUSPENDED, u"Suspended"),
+        (TERMINATED, u"Terminated"),
+    )
+
+    partner = models.ForeignKey(PartnerOrganization, related_name="agreements")
+    country_programme = models.ForeignKey('reports.CountryProgramme', related_name='agreements', blank=True, null=True)
+    authorized_officers = models.ManyToManyField(
+        PartnerStaffMember,
+        blank=True,
+        related_name="agreement_authorizations")
     agreement_type = models.CharField(
         max_length=10,
         choices=AGREEMENT_TYPES
@@ -665,7 +885,9 @@ class Agreement(TimeStampedModel):
     agreement_number = models.CharField(
         max_length=45L,
         blank=True,
-        verbose_name=u'Reference Number'
+        verbose_name=u'Reference Number',
+        # TODO: write a script to insure this before merging.
+        unique=True,
     )
     attached_agreement = models.FileField(
         upload_to=get_agreement_path,
@@ -675,15 +897,21 @@ class Agreement(TimeStampedModel):
     end = models.DateField(null=True, blank=True)
 
     signed_by_unicef_date = models.DateField(null=True, blank=True)
+
+    # Unicef staff members that sign the agreemetns
+    # this user needs to be in the partnership management group
     signed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='signed_pcas',
+        related_name='agreements_signed+',
         null=True, blank=True
     )
 
     signed_by_partner_date = models.DateField(null=True, blank=True)
+
+    # Signatory on behalf of the PartnerOrganization
     partner_manager = ChainedForeignKey(
         PartnerStaffMember,
+        related_name='agreements_signed',
         verbose_name=u'Signed by partner',
         chained_field="partner",
         chained_model_field="partner",
@@ -692,20 +920,17 @@ class Agreement(TimeStampedModel):
         blank=True, null=True,
     )
 
-    # bank information
-    bank_name = models.CharField(max_length=255, null=True, blank=True)
-    bank_address = models.CharField(
-        max_length=256L,
-        blank=True)
-    account_title = models.CharField(max_length=255, null=True, blank=True)
-    account_number = models.CharField(max_length=50, null=True, blank=True)
-    routing_details = models.CharField(
-        max_length=255,
-        null=True,
+    # TODO: Write a script that sets a status to each existing record
+    status = FSMField(
+        max_length=32,
         blank=True,
-        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
+        choices=STATUS_CHOICES,
+        default=DRAFT
     )
-    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
+
+
+    view_objects = AgreementManager()
+    objects = models.Manager()
 
     def __unicode__(self):
         return u'{} for {} ({} - {})'.format(
@@ -727,105 +952,171 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.agreement_number:
-            number = self.agreement_number
+        if self.status in [self.DRAFT, self.CANCELLED]:
+            number = 'TempRef:{}'.format(self.id)
         else:
-            objects = list(Agreement.objects.filter(
-                created__year=self.year,
+            agreements_count = Agreement.objects.filter(
+                status__in=[self.ACTIVE, self.SUSPENDED, self.TERMINATED, self.ENDED],
+                signed_by_unicef_date__year=self.year,
                 agreement_type=self.agreement_type
-            ).order_by('created').values_list('id', flat=True))
-            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            ).count()
+
+            sequence = '{0:02d}'.format(agreements_count+1)
             number = u'{code}/{type}{year}{seq}'.format(
                 code=connection.tenant.country_short_code or '',
                 type=self.agreement_type,
                 year=self.year,
                 seq=sequence,
             )
-        return u'{}{}'.format(
-            number,
-            u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
-            if self.amendments_log.last() else ''
-        )
+        # assuming in tempRef (status Draft or Cancelled we don't have amendments)
+        return u'{}'.format(number)
 
-    def save(self, **kwargs):
+    @property
+    def base_number(self):
+        return self.agreement_number.split('-')[0]
 
+    def check_status_auto_updates(self):
+        # TODO: make sure that all related models are valid the moment status changes
         # commit the reference number to the database once the agreement is signed
-        if self.signed_by_unicef_date and not self.agreement_number:
+        if self.status == Agreement.DRAFT and self.start and self.end and \
+                self.signed_by_unicef_date and self.signed_by_partner_date and \
+                self.signed_by and self.partner_manager:
+            self.status = Agreement.ACTIVE
+            return
+        today = datetime.date.today()
+        if self.end and self.end < today:
+            self.status = Agreement.ENDED
+            return
+
+    def update_reference_number(self, oldself=None, amendment_number=None, **kwargs):
+
+        if amendment_number:
+            self.agreement_number = u'{}-{}'.format(self.agreement_number.split('-')[0], amendment_number)
+            return
+        # to create a reference number we need a pk
+        elif not oldself:
+            super(Agreement, self).save()
             self.agreement_number = self.reference_number
 
-        super(Agreement, self).save(**kwargs)
+        elif self.status != oldself.status:
+            if self.status not in [self.CANCELLED, self.DRAFT] and self.agreement_number.startswith('TempRef'):
+                self.agreement_number = self.reference_number
 
+    def update_related_interventions(self, oldself, **kwargs):
+        '''
+        When suspending or terminating an agreement we need to suspend or terminate all interventions related
+        this should only be called in a transaction with agreement save
+        '''
+        #TODO: question: should reactivated agreements reactivate interventions?
 
-class BankDetails(models.Model):
-    """
-    Represents bank information on the partner agreement and/or agreement amendment log.
+        if oldself and oldself.status != self.status and \
+                self.status in [Agreement.SUSPENDED, Agreement.TERMINATED]:
 
-    Relates to :model:`partners.Agreement`
-    Relates to :model:`partners.AgreementAmendmentLog`
-    """
+            interventions = self.interventions.filter(
+                document_type__in=[Intervention.PD, Intervention.SHPD]
+            )
+            for item in interventions:
+                if item.status not in [Intervention.DRAFT, Intervention.CANCELLED, Intervention.IMPLEMENTED] and \
+                                item.status != self.status:
+                    item.status = self.status
+                    item.save()
 
-    agreement = models.ForeignKey(Agreement, related_name='bank_details')
-    bank_name = models.CharField(max_length=255, null=True, blank=True)
-    bank_address = models.CharField(
-        max_length=256L,
-        blank=True
+    def illegal_transitions(self):
+        return False
+
+    @transition(field=status,
+                source=[ACTIVE, ENDED, SUSPENDED, TERMINATED],
+                target=[DRAFT, CANCELLED],
+                conditions=[illegal_transitions])
+    def basic_transition(self):
+        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
+        # mess up the reference numbers.
+        pass
+
+    def check_auto_updates(self):
+        self.check_status_auto_updates()
+
+        #auto-update country programme:
+        if self.start and self.end:
+            try:
+                self.country_programme = CountryProgramme.encapsulates(self.start, self.end)
+            except (CountryProgramme.MultipleObjectsReturned, CountryProgramme.DoesNotExist):
+                logging.warn('CountryProgramme not found for agreement {} in country {}'.
+                             format(self.id, connection.tenant))
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        # check status auto updates
+        # TODO: move this outside of save in the future to properly check transitions
+        self.check_auto_updates()
+
+        oldself = None
+        if self.pk:
+            # load from DB
+            oldself = Agreement.objects.get(pk=self.pk)
+
+        # update reference number if needed
+        amendment_number = kwargs.pop('amendment_number', None)
+        if amendment_number:
+            self.update_reference_number(oldself, amendment_number)
+        else:
+            self.update_reference_number(oldself)
+        self.update_related_interventions(oldself)
+
+        return super(Agreement, self).save()
+class AgreementAmendment(TimeStampedModel):
+    '''
+    Represents an amendment to an agreement
+    '''
+    AMENDMENT_TYPES = Choices(
+        ('Change IP name', 'Change in Legal Name of Implementing Partner'),
+        ('CP extension', 'Extension of Country Programme Cycle'),
+        ('Change authorized officer', 'Change Authorized Officer'),
+        ('Change banking info', 'Banking Information'),
+        ('Additional clause', 'Additional Clause'),
+        ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
     )
-    account_title = models.CharField(max_length=255, null=True, blank=True)
-    account_number = models.CharField(max_length=50, null=True, blank=True)
-    routing_details = models.CharField(
+    number = models.CharField(max_length=5)
+    agreement = models.ForeignKey(Agreement, related_name='amendments')
+    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
+    signed_amendment = models.FileField(
         max_length=255,
-        null=True,
-        blank=True,
-        help_text='Routing Details, including SWIFT/IBAN (if applicable)'
+        null=True, blank=True,
+        upload_to=get_agreement_amd_file_path
     )
-    bank_contact_person = models.CharField(max_length=255, null=True, blank=True)
-    amendment = models.ForeignKey(
-        'AgreementAmendmentLog',
-        blank=True, null=True,
-    )
+    signed_date = models.DateField(null=True, blank=True)
+
+    def compute_reference_number(self):
+        if self.signed_date:
+            return '{0:02d}'.format(self.agreement.amendments.filter(signed_date__isnull=False).count() + 1)
+        else:
+            seq = self.agreement.amendments.filter(signed_date__isnull=True).count() + 1
+            return 'tmp{0:02d}'.format(seq)
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        # TODO: make the folowing scenario work:
+        # agreement amendment and agreement are saved in the same time... avoid race conditions for reference number
+        # TODO: validation don't allow save on objects that have attached signed amendment but don't have a signed date
+
+        # check if temporary number is needed or amendment number needs to be set
+        update_agreement_number_needed = False
+        oldself = AgreementAmendment.objects.get(id=self.pk) if self.pk else None
+        if self.signed_amendment:
+            if not oldself or not oldself.signed_amendment:
+                self.number = self.compute_reference_number()
+                update_agreement_number_needed = True
+        else:
+            if not oldself:
+                self.number = self.compute_reference_number()
+
+        if update_agreement_number_needed:
+            self.agreement.save(amendment_number=self.number)
+        return super(AgreementAmendment, self).save(**kwargs)
 
 
-class AuthorizedOfficer(models.Model):
-    """
-    Represents an authorized UNICEF officer on the partner agreement.
 
-    Relates to :model:`partners.PartnerOrganization`
-    Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`partners.AgreementAmendmentLog`
-    """
-
-    agreement = models.ForeignKey(
-        Agreement,
-        related_name='authorized_officers'
-    )
-    officer = models.ForeignKey(
-        PartnerStaffMember
-    )
-    amendment = models.ForeignKey(
-        'AgreementAmendmentLog',
-        blank=True, null=True,
-    )
-
-    def __unicode__(self):
-        return self.officer.__unicode__()
-
-    @classmethod
-    def create_officer(cls, sender, instance, created, **kwargs):
-        """
-        Signal handler to create authorized_officers automatically
-        """
-        if instance.partner_manager and \
-                instance.partner_manager.id not in \
-                instance.authorized_officers.values_list('officer', flat=True):
-
-            cls.objects.create(agreement=instance,
-                               officer=instance.partner_manager)
-
-
-post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
-
-
-class PCA(AdminURLMixin, models.Model):
+class Intervention(TimeStampedModel):
     """
     Represents a partner intervention.
 
@@ -837,220 +1128,156 @@ class PCA(AdminURLMixin, models.Model):
     Relates to :model:`partners.PartnerStaffMember`
     """
 
-    IN_PROCESS = u'in_process'
+    DRAFT = u'draft'
     ACTIVE = u'active'
     IMPLEMENTED = u'implemented'
+    SUSPENDED = u'suspended'
+    TERMINATED = u'terminated'
     CANCELLED = u'cancelled'
-    PCA_STATUS = (
-        (IN_PROCESS, u"In Process"),
+    INTERVENTION_STATUS = (
+        (DRAFT, u"Draft"),
         (ACTIVE, u"Active"),
         (IMPLEMENTED, u"Implemented"),
+        (SUSPENDED, u"Suspended"),
+        (TERMINATED, u"Terminated"),
         (CANCELLED, u"Cancelled"),
     )
     PD = u'PD'
     SHPD = u'SHPD'
-    AWP = u'AWP'
     SSFA = u'SSFA'
-    IC = u'IC'
-    PARTNERSHIP_TYPES = (
+    INTERVENTION_TYPES = (
         (PD, u'Programme Document'),
         (SHPD, u'Simplified Humanitarian Programme Document'),
-        (AWP, u'Cash Transfers to Government'),
         (SSFA, u'SSFA TOR'),
-        (IC, u'IC TOR'),
     )
-
-    partner = models.ForeignKey(
-        PartnerOrganization,
-        related_name='documents',
-    )
-    # TODO: remove chained foreign key
-    agreement = ChainedForeignKey(
-        Agreement,
-        related_name='interventions',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=True,
-        blank=True, null=True,
-    )
-    partnership_type = models.CharField(
-        choices=PARTNERSHIP_TYPES,
-        default=PD,
-        blank=True, null=True,
+    document_type = models.CharField(
+        choices=INTERVENTION_TYPES,
         max_length=255,
         verbose_name=u'Document type'
     )
-    # TODO: rename result_structure to hrp
-    result_structure = models.ForeignKey(
+    agreement = models.ForeignKey(
+        Agreement,
+        related_name='interventions'
+    )
+    hrp = models.ForeignKey(
         ResultStructure,
+        related_name='interventions',
         blank=True, null=True, on_delete=models.DO_NOTHING,
-        help_text=u'Which result structure does this partnership report under?'
+        help_text=u'Which humanitarian response plan does this PD/SSFA report under?'
     )
     number = models.CharField(
-        max_length=45L,
-        blank=True, null=True,
-        verbose_name=u'Reference Number'
+        max_length=64,
+        blank=True,
+        null=True,
+        verbose_name=u'Reference Number',
+        # TODO: write a script to insure this before merging.
+        unique=True,
     )
-    title = models.CharField(max_length=256L)
-    project_type = models.CharField(
-        max_length=20,
-        blank=True, null=True,
-        choices=Choices(
-            u'Bulk Procurement',
-            u'Construction Project',
-        )
-    )
+    title = models.CharField(max_length=256)
     status = models.CharField(
         max_length=32,
         blank=True,
-        choices=PCA_STATUS,
+        choices=INTERVENTION_STATUS,
         default=u'in_process',
-        help_text=u'In Process = In discussion with partner, '
+        help_text=u'Draft = In discussion with partner, '
                   u'Active = Currently ongoing, '
                   u'Implemented = completed, '
-                  u'Cancelled = cancelled or not approved'
+                  u'Terminated = cancelled or not approved'
     )
-
     # dates
-    start_date = models.DateField(
+    start = models.DateField(
         null=True, blank=True,
         help_text=u'The date the Intervention will start'
     )
-    end_date = models.DateField(
+    end = models.DateField(
         null=True, blank=True,
         help_text=u'The date the Intervention will end'
     )
-    initiation_date = models.DateField(
-        verbose_name=u'Submission Date',
-        help_text=u'The date the partner submitted complete partnership documents to Unicef',
-    )
     submission_date = models.DateField(
+        null=True, blank=True,
+        help_text=u'The date the partner submitted complete PD/SSFA documents to Unicef',
+    )
+    submission_date_prc = models.DateField(
         verbose_name=u'Submission Date to PRC',
         help_text=u'The date the documents were submitted to the PRC',
         null=True, blank=True,
     )
-    review_date = models.DateField(
+    review_date_prc = models.DateField(
         verbose_name=u'Review date by PRC',
         help_text=u'The date the PRC reviewed the partnership',
         null=True, blank=True,
     )
+    prc_review_document = models.FileField(
+        max_length=255,
+        null=True, blank=True,
+        upload_to=get_prc_intervention_file_path
+    )
+
     signed_by_unicef_date = models.DateField(null=True, blank=True)
     signed_by_partner_date = models.DateField(null=True, blank=True)
 
-    # managers and focal points
-    unicef_manager = models.ForeignKey(
+    # partnership managers
+    unicef_signatory = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='approved_partnerships',
-        verbose_name=u'Signed by',
+        related_name='signed_interventions+',
         blank=True, null=True
     )
-    unicef_managers = models.ManyToManyField(
+    # part of the Agreement authorized officers
+    partner_authorized_officer_signatory = models.ForeignKey(
+        PartnerStaffMember,
+        related_name='signed_interventions',
+        blank=True, null=True,
+    )
+    # anyone in unicef country office
+    unicef_focal_points = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
-        verbose_name='Unicef focal points',
+        blank=True,
+        related_name='unicef_interventions_focal_points+'
+    )
+    # any PartnerStaffMember on the ParterOrganization
+    partner_focal_points = models.ManyToManyField(
+        PartnerStaffMember,
+        related_name='interventions_focal_points+',
         blank=True
     )
-    # TODO: remove chainedForeignKEy
-    partner_manager = ChainedForeignKey(
-        PartnerStaffMember,
-        verbose_name=u'Signed by partner',
-        related_name='signed_partnerships',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
-        blank=True, null=True,
-    )
-    # TODO: remove chainedForeignKEy
-    partner_focal_point = ChainedForeignKey(
-        PartnerStaffMember,
-        related_name='my_partnerships',
-        chained_field="partner",
-        chained_model_field="partner",
-        show_all=False,
-        auto_choose=False,
-        blank=True, null=True,
-    )
 
-    fr_number = models.CharField(max_length=50, null=True, blank=True)
-    planned_visits = models.IntegerField(default=0)
+    offices = models.ManyToManyField(Office, blank=True, related_name='office_interventions+')
+    fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), blank=True, null=True)
+    population_focus = models.CharField(max_length=130, null=True, blank=True)
 
-    # meta fields
-    sectors = models.CharField(max_length=255, null=True, blank=True)
-    current = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = 'Intervention'
-        verbose_name_plural = 'Interventions'
-        ordering = ['-created_at']
+        ordering = ['-created']
 
     def __unicode__(self):
-        return u'{}: {}'.format(
-            self.partner.name,
-            self.number if self.number else self.reference_number
+        return u'{}'.format(
+            self.number
         )
 
     @property
-    def sector_children(self):
-        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
-        return Sector.objects.filter(id__in=sectors)
-
-    @property
-    def sector_id(self):
-        if self.sector_children:
-            return self.sector_children[0].id
-        return 0
-
-    @property
     def sector_names(self):
-        return u', '.join(self.sector_children.values_list('name', flat=True))
+        return u', '.join(Sector.objects.filter(intervention_locations__intervention=self).values_list('name', flat=True))
 
-    @property
-    def days_from_submission_to_signed(self):
-        if not self.submission_date:
-            return u'Not Submitted'
-        signed_date = self.signed_by_partner_date or datetime.date.today()
-        return relativedelta(signed_date - self.submission_date).days
-
-    @property
-    def days_from_review_to_signed(self):
-        if not self.submission_date or not self.review_date:
-            return u'Not Reviewed'
-        signed_date = self.signed_by_partner_date or datetime.date.today()
-        return relativedelta(signed_date - self.review_date).days
-
-    @property
-    def duration(self):
-        if self.start_date and self.end_date:
-            return u'{} Months'.format(
-                relativedelta(self.end_date - self.start_date).months
-            )
-        else:
-            return u''
-
-    @property
-    def amendment_num(self):
-        return self.amendments_log.all().count()
-
-    @property
-    def total_unicef_cash(self):
-
-        if self.budget_log.exists():
-            return sum([b['unicef_cash'] for b in
-                 self.budget_log.values('created', 'year', 'unicef_cash').
-                 order_by('year', '-created').distinct('year').all()
-                 ])
+    @cached_property
+    def total_partner_contribution(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            return self.planned_budget.aggregate(mysum=Sum('partner_contribution'))['mysum']
         return 0
 
-    @property
-    def total_budget(self):
+    @cached_property
+    def total_unicef_cash(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            return self.planned_budget.aggregate(mysum=Sum('unicef_cash'))['mysum']
+        return 0
 
-        if self.budget_log.exists():
-            return sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
-                 self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount', 'partner_contribution').
-                 order_by('year','-created').distinct('year').all()])
+    @cached_property
+    def total_budget(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            return self.planned_budget.aggregate(mysum=Sum('in_kind_amount'))['mysum'] + \
+                   self.total_unicef_cash + self.total_partner_contribution
         return 0
 
     @property
@@ -1059,154 +1286,234 @@ class PCA(AdminURLMixin, models.Model):
             if self.signed_by_unicef_date is not None:
                 return self.signed_by_unicef_date.year
             else:
-                return self.created_at.year
+                return self.created.year
         else:
             return datetime.date.today().year
 
+    def illegal_transitions(self):
+        return False
+
+    @transition(field=status,
+                source=[ACTIVE, IMPLEMENTED, SUSPENDED, TERMINATED],
+                target=[DRAFT, CANCELLED],
+                conditions=[illegal_transitions])
+    def basic_transition(self):
+        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
+        # mess up the reference numbers.
+        pass
+
     @property
     def reference_number(self):
-        if self.partnership_type in [Agreement.SSFA, Agreement.MOU]:
-            number = self.agreement.reference_number
-        elif self.number:
-            number = self.number
+        if self.status in [self.DRAFT, self.CANCELLED]:
+            number = u'{}/TempRef:{}'.format(self.agreement.agreement_number, self.id)
         else:
-            objects = list(PCA.objects.filter(
-                partner=self.partner,
-                created_at__year=self.year,
-                partnership_type=self.partnership_type
-            ).order_by('created_at').values_list('id', flat=True))
-            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            interventions_count = Intervention.objects.filter(
+                status__in=[self.ACTIVE, self.SUSPENDED, self.TERMINATED, self.IMPLEMENTED],
+                signed_by_unicef_date__year=self.year,
+                document_type=self.document_type
+            ).exclude(id=self.pk).count()
+
+            sequence = '{0:02d}'.format(interventions_count + 1)
             number = u'{agreement}/{type}{year}{seq}'.format(
-                agreement=self.agreement.reference_number if self.id and self.agreement else '',
-                type=self.partnership_type,
+                agreement=self.agreement.agreement_number,
+                code=connection.tenant.country_short_code or '',
+                type=self.document_type,
                 year=self.year,
-                seq=sequence
+                seq=sequence,
             )
-        return u'{}{}'.format(
-            number,
-            u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
-            if self.amendments_log.last() else ''
+        # assuming in tempRef (status Draft or Cancelled we don't have amendments)
+        return u'{}'.format(number)
+
+    def check_status_auto_updates(self):
+
+        if self.status == Intervention.DRAFT and self.start and self.end and \
+                self.signed_by_unicef_date and self.signed_by_partner_date and \
+                self.unicef_signatory and self.partner_authorized_officer_signatory:
+            self.status = Intervention.ACTIVE
+            return
+        today = datetime.date.today()
+        if self.end and self.status == self.ACTIVE and self.end < today:
+            self.status = Intervention.IMPLEMENTED
+            return
+
+    def update_reference_number(self, oldself=None, amendment_number=None, **kwargs):
+
+        if amendment_number:
+            self.number = u'{}-{}'.format(self.number.split('-')[0], amendment_number)
+            return
+
+        # to create a reference number we need a pk
+        elif not oldself:
+            super(Intervention, self).save()
+            self.number = self.reference_number
+
+        elif self.status != oldself.status:
+            if self.status not in [self.CANCELLED, self.DRAFT] and self.number.startswith('TempRef'):
+                self.number = self.reference_number
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        # check status auto updates
+        # TODO: move this outside of save in the future to properly check transitions
+        self.check_status_auto_updates()
+
+        oldself = None
+        if self.pk:
+            # load from DB
+            oldself = Intervention.objects.get(pk=self.pk)
+
+        # update reference number if needed
+        amendment_number = kwargs.get('amendment_number', None)
+        if amendment_number:
+            self.update_reference_number(oldself, amendment_number)
+        else:
+            self.update_reference_number(oldself)
+
+        super(Intervention, self).save()
+class InterventionAmendment(TimeStampedModel):
+    """
+    Represents an amendment for the partner intervention.
+
+    Relates to :model:`partners.Interventions`
+    """
+    CPR = u'CPR'
+    CPF = u'CPF'
+    CGC = u'CGC'
+    CTBGT20 = u'CTBGT20'
+    CTBLT20 = u'CTBLT20'
+    CABLT20 = u'CABLT20'
+    CABGT20 = u'CABGT20'
+    CABGT20FACE = u'CABGT20FACE'
+
+    AMENDMENT_TYPES = (
+        (CPR, 'Change in Programme Result'),
+        (CPF, 'Change in Population Focus'),
+        (CGC, 'Change in Georgraphical Coverage'),
+        (CTBGT20, 'Change in Total Budget >20%'),
+        (CTBLT20, 'Change in Total Budget <=20%'),
+        (CABLT20, 'Changes in Activity Budget <=20% - No Change in Total Budget'),
+        (CABGT20, 'Changes in Activity Budget >20% - No Change in Total Budget - Prior approval in authorized FACE'),
+        (CABGT20FACE, 'Changes in Activity Budget >20% - No Change in Total Budget - Reporting at FACE'),
+    )
+
+    intervention = models.ForeignKey(Intervention, related_name='amendments')
+    type = models.CharField(
+        max_length=50,
+        choices=AMENDMENT_TYPES)
+    signed_date = models.DateField(null=True)
+    amendment_number = models.IntegerField(default=0)
+    signed_amendment = models.FileField(
+        max_length=255,
+        upload_to=get_intervention_amendment_file_path
+    )
+
+    def __unicode__(self):
+        return u'{}: {} - {}'.format(
+            self.amendment_number,
+            self.type,
+            self.signed_date
         )
+class InterventionPlannedVisits(models.Model):
+    """
+    Represents planned visits for the intervention
+    """
+    intervention = models.ForeignKey(Intervention, related_name='planned_visits')
+    year = models.IntegerField(default=datetime.datetime.now().year)
+    programmatic = models.IntegerField(default=0)
+    spot_checks = models.IntegerField(default=0)
+    audit = models.IntegerField(default=0)
 
-    @property
-    def planned_cash_transfers(self):
-        """
-        Planned cash transfers for the current year
-        """
-        if not self.budget_log.exists():
-            return 0
-        year = datetime.date.today().year
-        total = self.budget_log.filter(year=year).order_by('-created').first()
-        return total.unicef_cash if total else 0
+    class Meta:
+        unique_together = ('intervention', 'year')
+class InterventionResultLink(models.Model):
+    intervention = models.ForeignKey(Intervention, related_name='result_links')
+    cp_output = models.ForeignKey(Result, related_name='intervention_links')
+    ram_indicators = models.ManyToManyField(Indicator, blank=True)
 
-    @property
-    def programmatic_visits(self):
-        year = datetime.date.today().year
-        from trips.models import LinkedPartner, Trip
-        trip_ids = LinkedPartner.objects.filter(
-            intervention=self
-        ).values_list('trip__id', flat=True)
+class InterventionBudget(TimeStampedModel):
+    """
+    Represents a budget for the intervention
 
-        trips = Trip.objects.filter(
-            Q(id__in=trip_ids),
-            Q(from_date__year=year),
-            Q(status=Trip.COMPLETED),
-            Q(travel_type=Trip.PROGRAMME_MONITORING),
-            ~Q(section__name='Drivers'),
-        )
-        return trips.count()
+    Relates to :model:`partners.PCA`
+    Relates to :model:`partners.AmendmentLog`
+    """
+    intervention = models.ForeignKey(Intervention, related_name='planned_budget', null=True, blank=True)
+    partner_contribution = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    unicef_cash = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    in_kind_amount = models.DecimalField(
+        max_digits=20,
+        decimal_places=2,
+        default=0,
+        verbose_name='UNICEF Supplies'
+    )
+    partner_contribution_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    unicef_cash_local = models.DecimalField(max_digits=20, decimal_places=2, default=0)
+    in_kind_amount_local = models.DecimalField(
+        max_digits=20, decimal_places=2, default=0,
+        verbose_name='UNICEF Supplies Local'
+    )
+    year = models.CharField(
+        max_length=5,
+        blank=True, null=True
+    )
+    # TODO add Currency field
+    total = models.DecimalField(max_digits=20, decimal_places=2)
 
-    @property
-    def spot_checks(self):
-        return self.trips.filter(
-            trip__status=u'completed',
-            trip__travel_type=u'spot_check'
-        ).count()
+    def total_unicef_contribution(self):
+        return self.unicef_cash + self.in_kind_amount
+
 
     def save(self, **kwargs):
+        """
+        Calculate total budget on save
+        """
+        self.total = \
+            self.total_unicef_contribution() \
+            + self.partner_contribution
 
-        # commit the referece number to the database once the intervention is signed
-        if self.signed_by_unicef_date and not self.number:
-            self.number = self.reference_number
-            self.save()
+        super(InterventionBudget, self).save(**kwargs)
 
-        if not self.pk:
-            if self.partnership_type != self.PD:
-                self.signed_by_partner_date = self.agreement.signed_by_partner_date
-                self.partner_manager = self.agreement.partner_manager
-                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
-                self.unicef_manager = self.agreement.signed_by
-                self.start_date = self.agreement.start
-                self.end_date = self.agreement.end
-
-            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-                PartnerOrganization.planned_visits(self.partner, self)
-        else:
-            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
-                prev_pca = PCA.objects.filter(id=self.id)[0]
-                if self.planned_visits != prev_pca.planned_visits:
-                    PartnerOrganization.planned_visits(self.partner, self)
-
-        # set start date to latest of signed by partner or unicef date
-        if self.partnership_type == self.PD:
-            if self.agreement.signed_by_unicef_date\
-                    and self.agreement.signed_by_partner_date and self.start_date is None:
-                if self.agreement.signed_by_unicef_date > self.agreement.signed_by_partner_date:
-                    self.start_date = self.agreement.signed_by_unicef_date
-                else:
-                    self.start_date = self.agreement.signed_by_partner_date
-
-            if self.agreement.signed_by_unicef_date\
-                    and not self.agreement.signed_by_partner_date and self.start_date is None:
-                self.start_date = self.agreement.signed_by_unicef_date
-
-            if not self.agreement.signed_by_unicef_date\
-                    and self.agreement.signed_by_partner_date and self.start_date is None:
-                self.start_date = self.agreement.signed_by_partner_date
-
-            if self.end_date is None and self.result_structure:
-                self.end_date = self.result_structure.to_date
-
-        super(PCA, self).save(**kwargs)
-
-
-
-    @classmethod
-    def get_active_partnerships(cls):
-        return cls.objects.filter(current=True, status=cls.ACTIVE)
-
-    @classmethod
-    def send_changes(cls, sender, instance, created, **kwargs):
-        # send emails to managers on changes
-        manager, created = Group.objects.get_or_create(
-            name=u'Partnership Manager'
+    def __unicode__(self):
+        return u'{}: {}'.format(
+            self.intervention,
+            self.total
         )
-        managers = set(manager.user_set.filter(profile__country=connection.tenant, is_staff=True) |
-                       instance.unicef_managers.all())
-        recipients = [user.email for user in managers]
 
-        if created:  # new partnership
-            emails.PartnershipCreatedEmail(instance).send(
-                settings.DEFAULT_FROM_EMAIL,
-                *recipients
-            )
+    class Meta:
+        unique_together = (('year', 'intervention'),)
 
-        else:  # change to existing
-            emails.PartnershipUpdatedEmail(instance).send(
-                settings.DEFAULT_FROM_EMAIL,
-                *recipients
-            )
+class FileType(models.Model):
+    """
+    Represents a file type
+    """
 
-        # attach any FCs immediately
-        commitments = FundingCommitment.objects.filter(fr_number=instance.fr_number)
-        for commit in commitments:
-            commit.intervention = instance
-            commit.save()
+    name = models.CharField(max_length=64L, unique=True)
 
+    def __unicode__(self):
+        return self.name
 
-post_save.connect(PCA.send_changes, sender=PCA)
+class InterventionAttachment(models.Model):
+    """
+    Represents a file for the partner intervention
 
+    Relates to :model:`partners.Intervention`
+    Relates to :model:`partners.WorkspaceFileType`
+    """
+    intervention = models.ForeignKey(Intervention, related_name='attachments')
+    type = models.ForeignKey(FileType, related_name='+')
 
+    attachment = models.FileField(
+        max_length=255,
+        upload_to=get_intervention_attachments_file_path
+    )
+    def __unicode__(self):
+        return self.attachment.name
+class InterventionSectorLocationLink(models.Model):
+    intervention = models.ForeignKey(Intervention, related_name='sector_locations')
+    sector = models.ForeignKey(Sector, related_name='intervention_locations')
+    locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
+
+# TODO: check this for sanity
 class GovernmentIntervention(models.Model):
     """
     Represents a government intervention.
@@ -1260,8 +1567,6 @@ class GovernmentIntervention(models.Model):
             self.number = self.reference_number
 
         super(GovernmentIntervention, self).save(**kwargs)
-
-
 class GovernmentInterventionResult(models.Model):
     """
     Represents an result from government intervention.
@@ -1362,6 +1667,628 @@ class GovernmentInterventionResult(models.Model):
                                 self.result)
 
 
+class IndicatorReport(TimeStampedModel, TimeFramedModel):
+    """
+    Represents an indicator report for the result chain on the location
+
+    Relates to :model:`partners.AppliedIndicator`
+    Relates to :model:`partners.PartnerStaffMember`
+    Relates to :model:`locations.Location`
+    """
+
+    STATUS_CHOICES = Choices(
+        ('ontrack', _('On Track')),
+        ('constrained', _('Constrained')),
+        ('noprogress', _('No Progress')),
+        ('targetmet', _('Target Met'))
+    )
+
+    # FOR WHOM / Beneficiary
+    #  -  AppliedIndicator
+    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
+
+    # WHO
+    #  -  Implementing Partner
+    partner_staff_member = models.ForeignKey('partners.PartnerStaffMember', related_name='indicator_reports')
+
+    # WHAT
+    #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
+    total = models.PositiveIntegerField()
+    disaggregated = models.BooleanField(default=False)  # is this a disaggregated report?
+    disaggregation = JSONField(default=dict)  # the structure should always be computed from applied_indicator
+
+    # WHERE
+    #  -  Location
+    location = models.ForeignKey('locations.Location', blank=True, null=True)
+
+    # Metadata
+    #  - Remarks, Report Status
+    remarks = models.TextField(blank=True, null=True)  # TODO: set max_length property
+    report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
+class SupplyPlan(models.Model):
+    """
+    Represents a supply plan for the partner intervention
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`supplies.SupplyItem`
+    """
+    # TODO: remove partnership when model is ready
+    partnership = models.ForeignKey(
+        'partners.PCA',
+        related_name='supply_plans', null=True, blank=True
+    )
+    intervention = models.ForeignKey(
+        Intervention,
+        related_name='supplies', null=True, blank=True
+    )
+    item = models.ForeignKey(SupplyItem)
+    quantity = models.PositiveIntegerField(
+        help_text=u'Total quantity needed for this intervention'
+    )
+class DistributionPlan(models.Model):
+    """
+    Represents a distribution plan for the partner intervention
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`supplies.SupplyItem`
+    Relates to :model:`locations.Location`
+    """
+    # TODO: remove partnership when model is ready
+    partnership = models.ForeignKey(
+        'partners.PCA',
+        related_name='distribution_plans', null=True, blank=True
+    )
+    intervention = models.ForeignKey(
+        Intervention,
+        related_name='distributions', null=True, blank=True
+    )
+    item = models.ForeignKey(SupplyItem)
+    site = models.ForeignKey(Location, null=True)
+    quantity = models.PositiveIntegerField(
+        help_text=u'Quantity required for this location'
+    )
+    send = models.BooleanField(
+        default=False,
+        verbose_name=u'Send to partner?'
+    )
+    sent = models.BooleanField(default=False)
+    document = JSONField(null=True, blank=True)
+    delivered = models.IntegerField(default=0)
+
+    def __unicode__(self):
+        return u'{}-{}-{}-{}'.format(
+            self.intervention,
+            self.item,
+            self.site,
+            self.quantity
+        )
+    #TODO: this whole logic around supply plans and distribution plans needs to be revisited
+    def save(self, **kwargs):
+        if self.intervention and self.item:
+            sp_quantity = SupplyPlan.objects.filter(intervention=self.intervention, item=self.item)[0].quantity or 0
+            dp_quantity = DistributionPlan.objects.filter(
+                            intervention=self.intervention, item=self.item).aggregate(
+                            models.Sum('quantity'))['quantity__sum'] or 0
+            if not self.pk and self.quantity:
+                dp_quantity += self.quantity
+        if dp_quantity <= sp_quantity:
+            super(DistributionPlan, self).save(**kwargs)
+        else:
+            raise ValueError('Distribution plan quantity exceeds supply plan quantity')
+
+
+
+    @classmethod
+    def send_distribution(cls, sender, instance, created, **kwargs):
+
+        if instance.send and instance.sent is False:
+            set_unisupply_distribution.delay(instance.id)
+        elif instance.send and instance.sent:
+            instance.sent = False
+            instance.save()
+post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
+
+
+
+# TODO: Move to funds
+class FCManager(models.Manager):
+    def get_queryset(self):
+        return super(FCManager, self).get_queryset().select_related('grant__donor')
+class FundingCommitment(TimeFramedModel):
+    """
+    Represents a funding commitment for the grant
+
+    Relates to :model:`funds.Grant`
+    """
+
+    grant = models.ForeignKey(Grant, null=True, blank=True)
+    fr_number = models.CharField(max_length=50)
+    wbs = models.CharField(max_length=50)
+    fc_type = models.CharField(max_length=50)
+    fc_ref = models.CharField(max_length=50, blank=True, null=True, unique=True)
+    fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
+    agreement_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
+    commitment_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
+    expenditure_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
+
+    objects = FCManager()
+class DirectCashTransfer(models.Model):
+    """
+    Represents a direct cash transfer
+    """
+
+    fc_ref = models.CharField(max_length=50)
+    amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+
+
+
+#TODO: remove these models
+class PCA(AdminURLMixin, models.Model):
+    """
+    Represents a partner intervention.
+
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`partners.Agreement`
+    Relates to :model:`reports.ResultStructure`
+    Relates to :model:`reports.CountryProgramme`
+    Relates to :model:`auth.User`
+    Relates to :model:`partners.PartnerStaffMember`
+    """
+
+    IN_PROCESS = u'in_process'
+    ACTIVE = u'active'
+    IMPLEMENTED = u'implemented'
+    CANCELLED = u'cancelled'
+    SUSPENDED = u'suspended'
+    TERMINATED = u'terminated'
+    PCA_STATUS = (
+        (IN_PROCESS, u"In Process"),
+        (ACTIVE, u"Active"),
+        (IMPLEMENTED, u"Implemented"),
+        (CANCELLED, u"Cancelled"),
+        (SUSPENDED, u"Suspended"),
+        (TERMINATED, u"Terminated"),
+    )
+    PD = u'PD'
+    SHPD = u'SHPD'
+    AWP = u'AWP'
+    SSFA = u'SSFA'
+    IC = u'IC'
+    PARTNERSHIP_TYPES = (
+        (PD, u'Programme Document'),
+        (SHPD, u'Simplified Humanitarian Programme Document'),
+        (AWP, u'Cash Transfers to Government'),
+        (SSFA, u'SSFA TOR'),
+        (IC, u'IC TOR'),
+    )
+    # TODO: remove partner foreign key, already on the agreement model
+    partner = models.ForeignKey(
+        PartnerOrganization,
+        related_name='documents',
+    )
+    # TODO: remove chained foreign key
+    agreement = ChainedForeignKey(
+        Agreement,
+        related_name='pca_interventions',
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=True,
+        blank=True, null=True,
+    )
+    partnership_type = models.CharField(
+        choices=PARTNERSHIP_TYPES,
+        default=PD,
+        blank=True, null=True,
+        max_length=255,
+        verbose_name=u'Document type'
+    )
+    # TODO: rename result_structure to hrp
+    result_structure = models.ForeignKey(
+        ResultStructure,
+        blank=True, null=True, on_delete=models.DO_NOTHING,
+        help_text=u'Which result structure does this partnership report under?'
+    )
+    number = models.CharField(
+        max_length=45L,
+        blank=True, null=True,
+        verbose_name=u'Reference Number'
+    )
+    title = models.CharField(max_length=256L)
+    project_type = models.CharField(
+        max_length=20,
+        blank=True, null=True,
+        choices=Choices(
+            u'Bulk Procurement',
+            u'Construction Project',
+        )
+    )
+    status = models.CharField(
+         max_length=32,
+         blank=True,
+         choices=PCA_STATUS,
+         default=u'in_process',
+         help_text=u'In Process = In discussion with partner, '
+                   u'Active = Currently ongoing, '
+                   u'Implemented = completed, '
+                   u'Cancelled = cancelled or not approved'
+    )
+    # dates
+    start_date = models.DateField(
+        null=True, blank=True,
+        help_text=u'The date the Intervention will start'
+    )
+    end_date = models.DateField(
+        null=True, blank=True,
+        help_text=u'The date the Intervention will end'
+    )
+    initiation_date = models.DateField(
+        verbose_name=u'Submission Date',
+        help_text=u'The date the partner submitted complete partnership documents to Unicef',
+    )
+    submission_date = models.DateField(
+        verbose_name=u'Submission Date to PRC',
+        help_text=u'The date the documents were submitted to the PRC',
+        null=True, blank=True,
+    )
+    review_date = models.DateField(
+        verbose_name=u'Review date by PRC',
+        help_text=u'The date the PRC reviewed the partnership',
+        null=True, blank=True,
+    )
+    signed_by_unicef_date = models.DateField(null=True, blank=True)
+    signed_by_partner_date = models.DateField(null=True, blank=True)
+
+    # managers and focal points
+    unicef_manager = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name='approved_partnerships',
+        verbose_name=u'Signed by',
+        blank=True, null=True
+    )
+    unicef_managers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Unicef focal points',
+        blank=True,
+    )
+    partner_manager = ChainedForeignKey(
+        PartnerStaffMember,
+        verbose_name=u'Signed by partner',
+        related_name='signed_partnerships',
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=False,
+        blank=True, null=True,
+    )
+
+    # TODO: remove chainedForeignKEy
+    partner_focal_point = ChainedForeignKey(
+        PartnerStaffMember,
+        related_name='my_partnerships',
+        chained_field="partner",
+        chained_model_field="partner",
+        show_all=False,
+        auto_choose=False,
+        blank=True, null=True,
+    )
+    fr_number = models.CharField(max_length=50, blank=True, null=True)
+    planned_visits = models.IntegerField(default=0)
+
+    # meta fields
+    sectors = models.CharField(max_length=255, null=True, blank=True)
+    current = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    class Meta:
+        verbose_name = 'Intervention'
+        verbose_name_plural = 'Interventions'
+        ordering = ['-created_at']
+
+    def __unicode__(self):
+        return u'{}: {}'.format(
+            self.partner.name,
+            self.number if self.number else self.reference_number
+        )
+
+    @property
+    def sector_children(self):
+        sectors = self.pcasector_set.all().values_list('sector__id', flat=True)
+        return Sector.objects.filter(id__in=sectors)
+
+    @property
+    def sector_id(self):
+        if self.sector_children:
+            return self.sector_children[0].id
+        return 0
+
+    @property
+    def sector_names(self):
+        return u', '.join(self.sector_children.values_list('name', flat=True))
+
+    @property
+    def days_from_submission_to_signed(self):
+        if not self.submission_date:
+            return u'Not Submitted'
+        if not self.signed_by_unicef_date or self.signed_by_partner_date:
+            return u'Not fully signed'
+        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
+        return relativedelta(signed_date - self.submission_date).days
+
+    @property
+    def days_from_review_to_signed(self):
+        if not self.review_date:
+            return u'Not Reviewed'
+        if not self.signed_by_unicef_date or self.signed_by_partner_date:
+            return u'Not fully signed'
+        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
+        return relativedelta(signed_date - self.review_date).days
+
+    @property
+    def duration(self):
+        if self.start_date and self.end_date:
+            return u'{} Months'.format(
+                relativedelta(self.end_date - self.start_date).months
+            )
+        else:
+            return u''
+
+    @property
+    def amendment_num(self):
+        return self.amendments_log.all().count()
+
+    @cached_property
+    def total_partner_contribution(self):
+
+        if self.budget_log.exists():
+            return sum([b['partner_contribution'] for b in
+                 self.budget_log.values('created', 'year', 'partner_contribution').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
+        return 0
+
+    @cached_property
+    def total_unicef_cash(self):
+
+        if self.budget_log.exists():
+            return sum([b['unicef_cash'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
+        return 0
+
+    @cached_property
+    def total_budget(self):
+
+        if self.budget_log.exists():
+            return sum([b['unicef_cash'] + b['in_kind_amount'] + b['partner_contribution'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash', 'in_kind_amount', 'partner_contribution').
+                 order_by('year','-created').distinct('year').all()])
+        return 0
+
+    @cached_property
+    def total_partner_contribution_local(self):
+
+        if self.budget_log.exists():
+            return sum([b['partner_contribution_local'] for b in
+                 self.budget_log.values('created', 'year', 'partner_contribution_local').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
+        return 0
+
+    @cached_property
+    def total_unicef_cash_local(self):
+
+        if self.budget_log.exists():
+            return sum([b['unicef_cash_local'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local').
+                 order_by('year', '-created').distinct('year').all()
+                 ])
+        return 0
+
+    @cached_property
+    def total_budget_local(self):
+
+        if self.budget_log.exists():
+            return sum([b['unicef_cash_local'] + b['in_kind_amount_local'] + b['partner_contribution_local'] for b in
+                 self.budget_log.values('created', 'year', 'unicef_cash_local', 'in_kind_amount_local', 'partner_contribution_local').
+                 order_by('year','-created').distinct('year').all()])
+        return 0
+
+
+    @property
+    def year(self):
+        if self.id:
+            if self.signed_by_unicef_date is not None:
+                return self.signed_by_unicef_date.year
+            else:
+                return self.created_at.year
+        else:
+            return datetime.date.today().year
+
+    @property
+    def reference_number(self):
+
+        if self.partnership_type in [Agreement.SSFA, Agreement.MOU]:
+            number = self.agreement.reference_number
+        elif self.number:
+            number = self.number
+        else:
+            objects = list(PCA.objects.filter(
+                partner=self.partner,
+                created_at__year=self.year,
+                partnership_type=self.partnership_type
+            ).order_by('created_at').values_list('id', flat=True))
+            sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
+            number = u'{agreement}/{type}{year}{seq}'.format(
+                agreement=self.agreement.reference_number.split("-")[0] if self.id and self.agreement else '',
+                type=self.partnership_type,
+                year=self.year,
+                seq=sequence
+            )
+        return u'{}{}'.format(
+            number,
+            u'-{0:02d}'.format(self.amendments_log.last().amendment_number)
+            if self.amendments_log.last() else ''
+        )
+
+    @property
+    def planned_cash_transfers(self):
+        """
+        Planned cash transfers for the current year
+        """
+        if not self.budget_log.exists():
+            return 0
+        year = datetime.date.today().year
+        total = self.budget_log.filter(year=year).order_by('-created').first()
+        return total.unicef_cash if total else 0
+
+    @property
+    def programmatic_visits(self):
+        year = datetime.date.today().year
+        from trips.models import LinkedPartner, Trip
+        trip_ids = LinkedPartner.objects.filter(
+            intervention=self
+        ).values_list('trip__id', flat=True)
+
+        trips = Trip.objects.filter(
+            Q(id__in=trip_ids),
+            Q(from_date__year=year),
+            Q(status=Trip.COMPLETED),
+            Q(travel_type=Trip.PROGRAMME_MONITORING),
+            ~Q(section__name='Drivers'),
+        )
+        return trips.count()
+
+    @property
+    def spot_checks(self):
+        return self.trips.filter(
+            trip__status=u'completed',
+            trip__travel_type=u'spot_check'
+        ).count()
+
+    def save(self, **kwargs):
+
+        # commit the referece number to the database once the intervention is signed
+        if self.status != PCA.IN_PROCESS and self.signed_by_unicef_date and not self.number:
+            self.number = self.reference_number
+
+        if not self.pk:
+            if self.partnership_type != self.PD:
+                self.signed_by_partner_date = self.agreement.signed_by_partner_date
+                self.partner_manager = self.agreement.partner_manager
+                self.signed_by_unicef_date = self.agreement.signed_by_unicef_date
+                self.unicef_manager = self.agreement.signed_by
+                self.start_date = self.agreement.start
+                self.end_date = self.agreement.end
+
+            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+                PartnerOrganization.planned_visits(self.partner, self)
+        else:
+            if self.planned_visits and self.status in [PCA.ACTIVE, PCA.IMPLEMENTED]:
+                prev_pca = PCA.objects.filter(id=self.id)[0]
+                if self.planned_visits != prev_pca.planned_visits:
+                    PartnerOrganization.planned_visits(self.partner, self)
+
+        # set start date to latest of signed by partner or unicef date
+        if self.partnership_type == self.PD:
+            if self.agreement.signed_by_unicef_date\
+                    and self.agreement.signed_by_partner_date and self.start_date is None:
+                if self.agreement.signed_by_unicef_date > self.agreement.signed_by_partner_date:
+                    self.start_date = self.agreement.signed_by_unicef_date
+                else:
+                    self.start_date = self.agreement.signed_by_partner_date
+
+            if self.agreement.signed_by_unicef_date\
+                    and not self.agreement.signed_by_partner_date and self.start_date is None:
+                self.start_date = self.agreement.signed_by_unicef_date
+
+            if not self.agreement.signed_by_unicef_date\
+                    and self.agreement.signed_by_partner_date and self.start_date is None:
+                self.start_date = self.agreement.signed_by_partner_date
+
+            if self.end_date is None and self.result_structure:
+                self.end_date = self.result_structure.to_date
+
+        super(PCA, self).save(**kwargs)
+
+
+
+    @classmethod
+    def get_active_partnerships(cls):
+        return cls.objects.filter(current=True, status=cls.ACTIVE)
+
+    @classmethod
+    def send_changes(cls, sender, instance, created, **kwargs):
+        # send emails to managers on changes
+        manager, created = Group.objects.get_or_create(
+            name=u'Partnership Manager'
+        )
+        managers = set(manager.user_set.filter(profile__country=connection.tenant, is_staff=True) |
+                       instance.unicef_managers.all())
+        recipients = [user.email for user in managers]
+
+        if created:  # new partnership
+            emails.PartnershipCreatedEmail(instance).send(
+                settings.DEFAULT_FROM_EMAIL,
+                *recipients
+            )
+
+        else:  # change to existing
+            emails.PartnershipUpdatedEmail(instance).send(
+                settings.DEFAULT_FROM_EMAIL,
+                *recipients
+            )
+
+        # attach any FCs immediately
+        # if instance:
+        #     for fr_number in instance.fr_numbers:
+        #         commitments = FundingCommitment.objects.filter(fr_number=fr_number)
+        #         for commit in commitments:
+        #             commit.intervention = instance
+        #             commit.save()
+class RAMIndicator(models.Model):
+    """
+    Represents a RAM Indicator for the partner intervention
+
+    Relates to :model:`partners.PCA`
+    Relates to :model:`reports.Result`
+    Relates to :model:`reports.Indicator`
+    """
+    # TODO: Remove This indicator and connect direcly to higher indicators M2M related
+    intervention = models.ForeignKey(PCA, related_name='indicators')
+    result = models.ForeignKey(Result)
+    indicator = ChainedForeignKey(
+        Indicator,
+        chained_field="result",
+        chained_model_field="result",
+        show_all=False,
+        auto_choose=True,
+        blank=True,
+        null=True
+    )
+
+    @property
+    def baseline(self):
+        return self.indicator.baseline
+
+    @property
+    def target(self):
+        return self.indicator.target
+
+    def __unicode__(self):
+        return u'{} -> {}'.format(
+            self.result.sector.name if self.result.sector else '',
+            self.result.__unicode__(),
+        )
 class AmendmentLog(TimeStampedModel):
     """
     Represents an amendment log for the partner intervention.
@@ -1404,106 +2331,43 @@ class AmendmentLog(TimeStampedModel):
         ).order_by('created').values_list('id', flat=True))
 
         return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-
-
-class AgreementAmendmentLog(TimeStampedModel):
-    """
-    Represents an amendment log for the partner agreement.
-
-    Relates to :model:`partners.Agreement`
-    """
-
-    agreement = models.ForeignKey(Agreement, related_name='amendments_log')
-    type = models.CharField(
-        max_length=50,
-        choices=Choices(
-            'Authorised Officers',
-            'Banking Info',
-            'Agreement Changes',
-            'Additional Clauses',
-        ))
-    amended_at = models.DateField(null=True, verbose_name='Signed At')
-    amendment_number = models.IntegerField(default=0)
-    status = models.CharField(
-        max_length=32L,
-        blank=True,
-        choices=PCA.PCA_STATUS,
+def get_file_path(instance, filename):
+    return '/'.join(
+        [connection.schema_name,
+         'file_attachments',
+         'partner_org',
+         str(instance.pca.agreement.partner.id),
+         'agreements',
+         str(instance.pca.agreement.id),
+         'interventions',
+         str(instance.pca.id),
+         filename]
     )
-
-    def __unicode__(self):
-        return u'{}: {} - {}'.format(
-            self.amendment_number,
-            self.type,
-            self.amended_at
-        )
-
-    @property
-    def amendment_number(self):
-        """
-        Increment amendment number automatically
-        """
-        objects = list(AgreementAmendmentLog.objects.filter(
-            agreement=self.agreement
-        ).order_by('created').values_list('id', flat=True))
-
-        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
-
-
-class PartnershipBudget(TimeStampedModel):
+class PCAFile(models.Model):
     """
-    Represents a budget for the intervention
+    Represents a file for the partner intervention
 
     Relates to :model:`partners.PCA`
-    Relates to :model:`partners.AmendmentLog`
+    Relates to :model:`partners.FileType`
     """
 
-    partnership = models.ForeignKey(PCA, related_name='budget_log')
-    partner_contribution = models.IntegerField(default=0)
-    unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(
-        default=0,
-        verbose_name='UNICEF Supplies'
+    pca = models.ForeignKey(PCA, related_name='attachments')
+    type = models.ForeignKey(FileType)
+    attachment = models.FileField(
+        max_length=255,
+        upload_to=get_file_path
     )
-    year = models.CharField(
-        max_length=5,
-        blank=True, null=True
-    )
-    total = models.IntegerField(default=0)
-    amendment = models.ForeignKey(
-        AmendmentLog,
-        related_name='budgets',
-        blank=True, null=True,
-    )
-
-    def total_unicef_contribution(self):
-        return self.unicef_cash + self.in_kind_amount
-
-    @transaction.atomic
-    def save(self, **kwargs):
-        """
-        Calculate total budget on save
-        """
-        self.total = \
-            self.total_unicef_contribution() \
-            + self.partner_contribution
-
-        if self.unicef_cash:
-            if self.pk:
-                prev_result = PartnershipBudget.objects.get(id=self.id)
-                if prev_result.unicef_cash != self.unicef_cash:
-                    PartnerOrganization.planned_cash_transfers(self.partnership.partner, self)
-            else:
-                PartnerOrganization.planned_cash_transfers(self.partnership.partner, self)
-
-        super(PartnershipBudget, self).save(**kwargs)
 
     def __unicode__(self):
-        return u'{}: {}'.format(
-            self.partnership,
-            self.total
-        )
+        return self.attachment.name
 
-
+    def download_url(self):
+        if self.file:
+            return u'<a class="btn btn-primary default" ' \
+                   u'href="{}" >Download</a>'.format(self.file.file.url)
+        return u''
+    download_url.allow_tags = True
+    download_url.short_description = 'Download Files'
 class PCAGrant(TimeStampedModel):
     """
     Represents a grant for the partner intervention, which links a grant to a partnership with a specified amount
@@ -1530,8 +2394,6 @@ class PCAGrant(TimeStampedModel):
             self.grant,
             self.funds
         )
-
-
 class GwPCALocation(models.Model):
     """
     Represents a location for the partner intervention, which links a location to a partnership
@@ -1583,8 +2445,6 @@ class GwPCALocation(models.Model):
         return get_changeform_link(self)
     view_location.allow_tags = True
     view_location.short_description = 'View Location'
-
-
 class PCASector(TimeStampedModel):
     """
     Represents a sector for the partner intervention, which links a sector to a partnership
@@ -1611,8 +2471,6 @@ class PCASector(TimeStampedModel):
             self.pca.number,
             self.sector.name,
         )
-
-
 class PCASectorGoal(models.Model):
     """
     Represents a goal for the partner intervention sector, which links a sector to a partnership
@@ -1627,140 +2485,6 @@ class PCASectorGoal(models.Model):
     class Meta:
         verbose_name = 'CCC'
         verbose_name_plural = 'CCCs'
-
-
-class FileType(models.Model):
-    """
-    Represents a file type
-    """
-
-    name = models.CharField(max_length=64L, unique=True)
-
-    def __unicode__(self):
-        return self.name
-
-
-def get_file_path(instance, filename):
-    return '/'.join(
-        [connection.schema_name,
-         'file_attachments',
-         'interventions',
-         str(instance.pca.id),
-         filename]
-    )
-
-
-class PCAFile(models.Model):
-    """
-    Represents a file for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`partners.FileType`
-    """
-
-    pca = models.ForeignKey(PCA, related_name='attachments')
-    type = models.ForeignKey(FileType)
-    attachment = models.FileField(
-        max_length=255,
-        upload_to=get_file_path
-    )
-
-    def __unicode__(self):
-        return self.attachment.name
-
-    def download_url(self):
-        if self.file:
-            return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" >Download</a>'.format(self.file.file.url)
-        return u''
-    download_url.allow_tags = True
-    download_url.short_description = 'Download Files'
-
-
-class RAMIndicator(models.Model):
-    """
-    Represents a RAM Indicator for the partner intervention
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`reports.Result`
-    Relates to :model:`reports.Indicator`
-    """
-    # TODO: Remove This indicator and connect direcly to higher indicators M2M related
-    intervention = models.ForeignKey(PCA, related_name='indicators')
-    result = models.ForeignKey(Result)
-    indicator = ChainedForeignKey(
-        Indicator,
-        chained_field="result",
-        chained_model_field="result",
-        show_all=False,
-        auto_choose=True,
-        blank=True,
-        null=True
-    )
-
-    @property
-    def baseline(self):
-        return self.indicator.baseline
-
-    @property
-    def target(self):
-        return self.indicator.target
-
-    def __unicode__(self):
-        return u'{} -> {}'.format(
-            self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
-        )
-
-
-class ResultChain(models.Model):
-    """
-    Represents a result chain for the partner intervention,
-    Connects Results and Indicators to interventions
-
-    Relates to :model:`partners.PCA`
-    Relates to :model:`reports.ResultType`
-    Relates to :model:`reports.Result`
-    Relates to :model:`reports.Indicator`
-    """
-
-    partnership = models.ForeignKey(PCA, related_name='results')
-    code = models.CharField(max_length=50, null=True, blank=True)
-    result_type = models.ForeignKey(ResultType)
-    result = models.ForeignKey(
-        Result,
-    )
-    indicator = models.ForeignKey(
-        Indicator,
-        blank=True, null=True
-    )
-    # fixed columns
-    target = models.PositiveIntegerField(
-        blank=True, null=True
-    )
-    current_progress = models.PositiveIntegerField(
-        default=0
-    )
-    partner_contribution = models.IntegerField(default=0)
-    unicef_cash = models.IntegerField(default=0)
-    in_kind_amount = models.IntegerField(default=0)
-
-    # variable disaggregation's that may be present in the work plan
-    disaggregation = JSONField(null=True)
-
-
-    @property
-    def total(self):
-
-        return self.unicef_cash + self.in_kind_amount + self.partner_contribution
-
-    def __unicode__(self):
-        return u'{} -> {} -> {}'.format(
-            self.result.result_structure.name if self.result.result_structure else '',
-            self.result.sector.name if self.result.sector else '',
-            self.result.__unicode__(),
-        )
-
 
 class IndicatorDueDates(models.Model):
     """
@@ -1780,146 +2504,137 @@ class IndicatorDueDates(models.Model):
         verbose_name = 'Report Due Date'
         verbose_name_plural = 'Report Due Dates'
         ordering = ['-due_date']
-
-
-class IndicatorReport(TimeStampedModel, TimeFramedModel):
+class PartnershipBudget(TimeStampedModel):
     """
-    Represents an indicator report for the result chain on the location
-
-    Relates to :model:`partners.AppliedIndicator`
-    Relates to :model:`partners.PartnerStaffMember`
-    Relates to :model:`locations.Location`
-    """
-
-    STATUS_CHOICES = Choices(
-        ('ontrack', _('On Track')),
-        ('constrained', _('Constrained')),
-        ('noprogress', _('No Progress')),
-        ('targetmet', _('Target Met'))
-    )
-
-    # FOR WHOM / Beneficiary
-    #  -  AppliedIndicator
-    indicator = models.ForeignKey(AppliedIndicator, related_name='reports')
-
-    # WHO
-    #  -  Implementing Partner
-    partner_staff_member = models.ForeignKey('partners.PartnerStaffMember', related_name='indicator_reports')
-
-    # WHAT
-    #  -  Indicator / Quantity / Disagreagation Flag / Dissagregation Fields
-    total = models.PositiveIntegerField()
-    disaggregated = models.BooleanField(default=False)  # is this a disaggregated report?
-    disaggregation = JSONField(default=dict)  # the structure should always be computed from applied_indicator
-
-    # WHERE
-    #  -  Location
-    location = models.ForeignKey('locations.Location', blank=True, null=True)
-
-    # Metadata
-    #  - Remarks, Report Status
-    remarks = models.TextField(blank=True, null=True)  # TODO: set max_length property
-    report_status = models.CharField(choices=STATUS_CHOICES, default=STATUS_CHOICES.ontrack, max_length=15)
-
-
-class SupplyPlan(models.Model):
-    """
-    Represents a supply plan for the partner intervention
+    Represents a budget for the intervention
 
     Relates to :model:`partners.PCA`
-    Relates to :model:`supplies.SupplyItem`
+    Relates to :model:`partners.AmendmentLog`
     """
 
-    partnership = models.ForeignKey(
-        PCA,
-        related_name='supply_plans'
+    partnership = models.ForeignKey(PCA, related_name='budget_log', null=True, blank=True)
+    partner_contribution = models.IntegerField(default=0)
+    unicef_cash = models.IntegerField(default=0)
+    in_kind_amount = models.IntegerField(
+        default=0,
+        verbose_name='UNICEF Supplies'
     )
-    item = models.ForeignKey(SupplyItem)
-    quantity = models.PositiveIntegerField(
-        help_text=u'Total quantity needed for this intervention'
+    year = models.CharField(
+        max_length=5,
+        blank=True, null=True
+    )
+    # TODO add Currency field
+    total = models.IntegerField(default=0)
+    amendment = models.ForeignKey(
+        AmendmentLog,
+        related_name='budgets',
+        blank=True, null=True,
     )
 
+    def total_unicef_contribution(self):
+        return self.unicef_cash + self.in_kind_amount
 
-class DistributionPlan(models.Model):
-    """
-    Represents a distribution plan for the partner intervention
+    @transaction.atomic
+    def save(self, **kwargs):
+        """
+        Calculate total budget on save
+        """
+        self.total = \
+            self.total_unicef_contribution() \
+            + self.partner_contribution
 
-    Relates to :model:`partners.PCA`
-    Relates to :model:`supplies.SupplyItem`
-    Relates to :model:`locations.Location`
-    """
-
-    partnership = models.ForeignKey(
-        PCA,
-        related_name='distribution_plans'
-    )
-    item = models.ForeignKey(SupplyItem)
-    site = models.ForeignKey(Location, null=True)
-    quantity = models.PositiveIntegerField(
-        help_text=u'Quantity required for this location'
-    )
-    send = models.BooleanField(
-        default=False,
-        verbose_name=u'Send to partner?'
-    )
-    sent = models.BooleanField(default=False)
-    document = JSONField(null=True, blank=True)
-    delivered = models.IntegerField(default=0)
+        super(PartnershipBudget, self).save(**kwargs)
 
     def __unicode__(self):
-        return u'{}-{}-{}-{}'.format(
+        return u'{}: {}'.format(
             self.partnership,
-            self.item,
-            self.site,
-            self.quantity
+            self.total
+        )
+class AgreementAmendmentLog(TimeStampedModel):
+    """
+    Represents an amendment log for the partner agreement.
+
+    Relates to :model:`partners.Agreement`
+    """
+
+    agreement = models.ForeignKey(Agreement, related_name='amendments_log')
+    type = models.CharField(
+        max_length=50,
+        choices=Choices(
+            'Authorised Officers',
+            'Banking Info',
+            'Agreement Changes',
+            'Additional Clauses',
+        ))
+    amended_at = models.DateField(null=True, verbose_name='Signed At')
+
+    amendment_number = models.IntegerField(default=0)
+
+    signed_document = models.FileField(
+        max_length=255,
+        upload_to=get_agreement_amd_file_path,
+        blank=True,
+        null=True,
+    )
+    status = models.CharField(
+        max_length=32L,
+        blank=True,
+        choices=PCA.PCA_STATUS,
+    )
+
+    def __unicode__(self):
+        return u'{}: {} - {}'.format(
+            self.amendment_number,
+            self.type,
+            self.amended_at
         )
 
+    @property
+    def amendment_number(self):
+        """
+        Increment amendment number automatically
+        """
+        objects = list(AgreementAmendmentLog.objects.filter(
+            agreement=self.agreement
+        ).order_by('created').values_list('id', flat=True))
+
+        return objects.index(self.id) + 1 if self.id in objects else len(objects) + 1
+class AuthorizedOfficer(models.Model):
+    # TODO: write a script to move this to authorized officers on the model
+    # TODO: change on admin to use the model
+    """
+    Represents an authorized UNICEF officer on the partner agreement.
+
+    Relates to :model:`partners.PartnerOrganization`
+    Relates to :model:`partners.PartnerStaffMember`
+    Relates to :model:`partners.AgreementAmendmentLog`
+    """
+
+    agreement = models.ForeignKey(
+        Agreement,
+    )
+    officer = models.ForeignKey(
+        PartnerStaffMember
+    )
+    amendment = models.ForeignKey(
+        'AgreementAmendmentLog',
+        blank=True, null=True,
+    )
+
+    def __unicode__(self):
+        return self.officer.__unicode__()
+
     @classmethod
-    def send_distribution(cls, sender, instance, created, **kwargs):
+    def create_officer(cls, sender, instance, created, **kwargs):
+        """
+        Signal handler to create authorized_officers automatically
+        """
+        if instance.partner_manager and \
+                instance.partner_manager.id not in \
+                instance.authorized_officers:
 
-        if instance.send and instance.sent is False:
-            set_unisupply_distribution.delay(instance.id)
-        elif instance.send and instance.sent:
-            instance.sent = False
-            instance.save()
+            cls.objects.create(agreement=instance,
+                               officer=instance.partner_manager)
+# post_save.connect(AuthorizedOfficer.create_officer, sender=Agreement)
 
-post_save.connect(DistributionPlan.send_distribution, sender=DistributionPlan)
-
-
-class FCManager(models.Manager):
-    def get_queryset(self):
-        return super(FCManager, self).get_queryset().select_related('grant__donor')
-
-
-class FundingCommitment(TimeFramedModel):
-    """
-    Represents a funding commitment for the grant
-
-    Relates to :model:`funds.Grant`
-    """
-
-    grant = models.ForeignKey(Grant, null=True, blank=True)
-    fr_number = models.CharField(max_length=50)
-    wbs = models.CharField(max_length=50)
-    fc_type = models.CharField(max_length=50)
-    fc_ref = models.CharField(max_length=50, blank=True, null=True, unique=True)
-    fr_item_amount_usd = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
-    agreement_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
-    commitment_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
-    expenditure_amount = models.DecimalField(decimal_places=2, max_digits=12, blank=True, null=True)
-
-    objects = FCManager()
-
-class DirectCashTransfer(models.Model):
-    """
-    Represents a direct cash transfer
-    """
-
-    fc_ref = models.CharField(max_length=50)
-    amount_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    liquidation_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    outstanding_balance_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    amount_less_than_3_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    amount_3_to_6_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    amount_6_to_9_months_usd = models.DecimalField(decimal_places=2, max_digits=10)
-    amount_more_than_9_Months_usd = models.DecimalField(decimal_places=2, max_digits=10)
+post_save.connect(PCA.send_changes, sender=PCA)

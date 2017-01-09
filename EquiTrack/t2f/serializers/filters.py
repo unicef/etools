@@ -34,7 +34,7 @@ class FilterBoxFilterSerializer(serializers.Serializer):
     f_month = serializers.IntegerField(source='month', required=False)
     f_office = serializers.IntegerField(source='office__pk', required=False)
     f_section = serializers.IntegerField(source='section__pk', required=False)
-    f_travel_type = serializers.CharField(source='mode_of_travel__contains', required=False)
+    f_travel_type = serializers.CharField(source='mode_of_travel__id', required=False)
     f_status = serializers.CharField(source='status', required=False)
     f_partner = serializers.IntegerField(source='activities__partner__pk', required=False)
     f_cp_output = serializers.IntegerField(source='cp_output', required=False)
@@ -47,9 +47,5 @@ class FilterBoxFilterSerializer(serializers.Serializer):
         # Adjust month because frontend sends 0-11
         if 'month' in data:
             data['month'] += 1
-
-        # Adjust travel_type because it's an array field
-        if 'mode_of_travel__contains' in data:
-            data['mode_of_travel__contains'] = [data['mode_of_travel__contains']]
 
         return data

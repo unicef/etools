@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from itertools import chain
+
 from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
@@ -121,11 +123,12 @@ class DSASerializer(serializers.Serializer):
 
 
 class CostSummarySerializer(serializers.Serializer):
-    dsa_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
-    expenses_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
-    deductions_total = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
+    dsa_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    expenses_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    deductions_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     dsa = DSASerializer(many=True)
-    preserved_expenses = serializers.DecimalField(max_digits=20, decimal_places=4, read_only=True)
+    preserved_expenses = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    expenses_delta = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):
@@ -160,12 +163,42 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
     # -------- Validation method --------
     def validate_cost_assignments(self, value):
-        if not value:
+        # If transition is None, it's a normal save (not an action) and we don't have to validate this
+        if not value or self.transition_name is None:
             return value
 
         share_sum = sum([ca['share'] for ca in value])
         if share_sum != 100:
             raise ValidationError('Shares should add up to 100%')
+        return value
+
+    def validate_itinerary(self, value):
+        if self.transition_name == 'submit_for_approval' and len(value) < 1:
+            raise ValidationError('Travel must have at least one itinerary item')
+
+        if not value:
+            return value
+
+        # Check destination-origin relation
+        previous_destination = value[0]['destination']
+
+        for itinerary_item in value[1:]:
+            if itinerary_item['origin'] != previous_destination:
+                raise ValidationError('Origin should match with the previous destination')
+            previous_destination = itinerary_item['destination']
+
+        # Check date integrity
+        dates_iterator = chain.from_iterable((i['departure_date'], i['arrival_date']) for i in value)
+
+        current_date = dates_iterator.next()
+        for date in dates_iterator:
+            if date is None:
+                continue
+
+            if date < current_date:
+                raise ValidationError('Itinerary items have to be ordered by date')
+            current_date = date
+
         return value
 
     # -------- Create and update methods --------
