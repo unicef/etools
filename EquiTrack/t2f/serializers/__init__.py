@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from decimal import Decimal
 from itertools import chain
 
 from django.contrib.auth import get_user_model
@@ -8,8 +9,6 @@ from django.utils.functional import cached_property
 from rest_framework import serializers, ISO_8601
 from rest_framework.exceptions import ValidationError
 
-
-from locations.models import Location
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     TravelPermission, TravelAttachment, AirlineCompany, ModeOfTravel, ActionPoint, Invoice, InvoiceItem
 from locations.models import Location
@@ -369,3 +368,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     def get_vision_fi_id(self, obj):
         return ''
+
+    def to_representation(self, instance):
+        ret = super(InvoiceSerializer, self).to_representation(instance)
+        ret['amount'] = Decimal(ret['amount']).quantize(Decimal('1.'+'0'*instance.currency.decimal_places))
+        return ret

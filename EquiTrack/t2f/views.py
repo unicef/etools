@@ -46,6 +46,11 @@ class T2FPagePagination(PageNumberPagination):
         ]))
 
 
+def get_filtered_users(request):
+    User = get_user_model()
+    return User.objects.exclude(first_name='', last_name='')
+
+
 def run_transition(serializer):
     transition_name = serializer.transition_name
     if transition_name:
@@ -211,7 +216,6 @@ class StaticDataView(generics.GenericAPIView):
     serializer_class = StaticDataSerializer
 
     def get(self, request):
-        User = get_user_model()
         # TODO: this is not only static data some of the data changes,
         # there should be calls to individual endpoints for:
         # users, partners, partnerships, results, locations, wbs, grants, funds
@@ -219,7 +223,7 @@ class StaticDataView(generics.GenericAPIView):
         country = request.user.profile.country
         dsa_regions = DSARegion.objects.filter(business_area_code=country.business_area_code)
 
-        data = {'users': User.objects.exclude(first_name='', last_name=''),
+        data = {'users': get_filtered_users(request),
                 'currencies': Currency.objects.all(),
                 'airlines': AirlineCompany.objects.all(),
                 'offices': Office.objects.all(),
@@ -238,6 +242,16 @@ class StaticDataView(generics.GenericAPIView):
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)
+
+
+class VendorNumberListView(generics.GenericAPIView):
+    def get(self, request):
+        vendor_numbers = [u.profile.vendor_number for u in get_filtered_users(request)]
+        # Add numbers from travel agents
+        vendor_numbers.extend([])
+        vendor_numbers = list(set(vendor_numbers))
+        vendor_numbers.sort()
+        return Response(vendor_numbers, status.HTTP_200_OK)
 
 
 class PermissionMatrixView(generics.GenericAPIView):

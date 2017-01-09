@@ -158,6 +158,10 @@ class UserProfile(models.Model):
     def last_name(self):
         return self.user.last_name
 
+    @property
+    def vendor_number(self):
+        return 'user'
+
     def __unicode__(self):
         return u'User profile for {}'.format(
             self.user.get_full_name()

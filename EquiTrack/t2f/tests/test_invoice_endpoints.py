@@ -33,7 +33,7 @@ class InvoiceEndpoints(APITenantTestCase):
         self.assertEqual(details_url, '/api/t2f/invoices/1/')
 
     def test_invoice_list(self):
-        with self.assertNumQueries(5):
+        with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('t2f:invoices:list'), user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)

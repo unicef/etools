@@ -15,7 +15,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
-from t2f.helpers import CostSummaryCalculator, InvoiceMaker
+from t2f.helpers import CostSummaryCalculator
 
 log = logging.getLogger(__name__)
 
@@ -106,6 +106,10 @@ class Currency(models.Model):
     # This will be populated from vision
     name = models.CharField(max_length=128)
     iso_4217 = models.CharField(max_length=3)
+
+    @property
+    def decimal_places(self):
+        return 4
 
 
 class AirlineCompany(models.Model):

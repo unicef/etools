@@ -2,7 +2,7 @@
 from django.conf.urls import url, patterns, include
 
 from t2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, \
-    TravelAttachmentViewSet, ActionPointViewSet, InvoiceViewSet
+    TravelAttachmentViewSet, ActionPointViewSet, InvoiceViewSet, VendorNumberListView
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
@@ -81,6 +81,7 @@ urlpatterns = patterns(
     url(r'^static_data/$', StaticDataView.as_view(), name='static_data'),
     url(r'^permission_matrix/$', PermissionMatrixView.as_view(), name='permission_matrix'),
     url(r'^action_points/', include(action_points_patterns, namespace='action_points')),
-    url(r'^invoices/', include(invoice_patterns, namespace='invoices')),
-    url(r'^invoice_calculations/(?P<travel_pk>[0-9]+)/', TravelEditView.as_view(), name='invedit'),
+    url(r'^invoices/$', include(invoice_patterns, namespace='invoices')),
+    url(r'^invoice_calculations/(?P<travel_pk>[0-9]+)/$', TravelEditView.as_view(), name='invedit'),
+    url(r'^vendor_numbers/$', VendorNumberListView.as_view(), name='vendor_numbers'),
 )
