@@ -800,3 +800,12 @@ def gov_int_copy_rs_to_cp():
             gi.save()
         except:
             pass
+
+
+def after_partner_migration():
+    copy_pca_fields_to_intervention()
+    agreement_amendments_copy()
+    copy_pca_results_to_intervention()
+    copy_pca_attachments_to_intervention()
+
+
