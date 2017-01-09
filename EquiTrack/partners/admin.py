@@ -743,6 +743,7 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
             'fields':
                 ('partner',
                  'result_structure',
+                 'country_programme',
                  'number'),
         }),
     )
@@ -750,6 +751,7 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         u'number',
         u'partner',
         u'result_structure',
+        u'country_programme'
     )
     inlines = [GovernmentInterventionResultAdminInline]
 

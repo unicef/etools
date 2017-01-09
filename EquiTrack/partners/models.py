@@ -1527,7 +1527,11 @@ class GovernmentIntervention(models.Model):
         related_name='work_plans',
     )
     result_structure = models.ForeignKey(
-        ResultStructure, on_delete=models.DO_NOTHING
+        ResultStructure, on_delete=models.DO_NOTHING, null=True, blank=True
+    )
+    country_programme = models.ForeignKey(
+        CountryProgramme, on_delete=models.DO_NOTHING, null=True, blank=True,
+        related_query_name='government_interventions'
     )
     number = models.CharField(
         max_length=45L,
@@ -1549,13 +1553,12 @@ class GovernmentIntervention(models.Model):
         else:
             objects = list(GovernmentIntervention.objects.filter(
                 partner=self.partner,
-                result_structure=self.result_structure,
+                country_programme=self.country_programme,
             ).order_by('created_at').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-            number = u'{code}/{partner}/{year}{seq}'.format(
+            number = u'{code}/{partner}/{seq}'.format(
                 code=connection.tenant.country_short_code or '',
                 partner=self.partner.short_name,
-                year=self.result_structure.to_date.year,
                 seq=sequence
             )
         return number
