@@ -6,6 +6,7 @@ from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.auth.models import Group
 
 import factory
 from factory import fuzzy
@@ -58,6 +59,13 @@ class CountryFactory(factory.django.DjangoModelFactory):
     name = "Test Country"
     schema_name = 'test'
     domain_url = 'tenant.test.com'
+
+
+class GroupFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Group
+
+    name = "Partnership Manager"
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):
@@ -157,6 +165,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
+    status = 'active'
 
 
 
@@ -169,6 +178,15 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     partnership_type = u'PD'
     title = u'To save the galaxy from the Empire'
     initiation_date = datetime.today()
+
+
+class InterventionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Intervention
+
+    agreement = factory.SubFactory(AgreementFactory)
+    title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
+    submission_date = datetime.today()
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
