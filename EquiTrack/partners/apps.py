@@ -25,7 +25,6 @@ class PartnersAppConfig(AppConfig):
         registry.register(self.get_model('FileType'))
         registry.register(self.get_model('PCAFile'))
         registry.register(self.get_model('RAMIndicator'))
-        registry.register(self.get_model('ResultChain'))
         registry.register(self.get_model('IndicatorDueDates'))
         registry.register(self.get_model('IndicatorReport'))
         registry.register(self.get_model('SupplyPlan'))

@@ -1111,30 +1111,29 @@ class Agreement(TimeStampedModel):
 
     @classmethod
     def create_snapshot_activity_stream(cls, actor, target):
-    """
-    Create activity stream for Agreement in order to keep track of field changes
+        """
+        Create activity stream for Agreement in order to keep track of field changes
 
-    actor: An activity trigger - Any Python object
-    target: An action target for the activity - Django ORM with FieldTracker
-            before calling save() method
-    """
+        actor: An activity trigger - Any Python object
+        target: An action target for the activity - Django ORM with FieldTracker before calling save() method
+        """
 
-    if hasattr(target, 'tracker'):
-        with transaction.atomic():
-            # Get the previous values for changed fields and merge it with
-            # target as dictionary
-            changes = target.tracker.changed()
-            snapshot = dict(model_to_dict(target).items() + changes.items())
+        if hasattr(target, 'tracker'):
+            with transaction.atomic():
+                # Get the previous values for changed fields and merge it with
+                # target as dictionary
+                changes = target.tracker.changed()
+                snapshot = dict(model_to_dict(target).items() + changes.items())
 
-            # Stringify any non-JSON Serializeable data types
-            for key, value in snapshot.items():
-                if type(value) not in [int, float, bool, str]:
-                    snapshot[key] = str(snapshot[key])
+                # Stringify any non-JSON Serializeable data types
+                for key, value in snapshot.items():
+                    if type(value) not in [int, float, bool, str]:
+                        snapshot[key] = str(snapshot[key])
 
-            # TODO: Use a different action verb for each status choice in Agreement
-            # Draft, Active, Expired, Suspended, Terminated
-            action.send(actor, verb="changed",
-                        target=target, snapshot=snapshot)
+                # TODO: Use a different action verb for each status choice in Agreement
+                # Draft, Active, Expired, Suspended, Terminated
+                action.send(actor, verb="changed",
+                            target=target, snapshot=snapshot)
 
 
 class AgreementAmendment(TimeStampedModel):
