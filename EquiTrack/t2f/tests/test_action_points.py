@@ -47,7 +47,8 @@ class ActionPoints(APITenantTestCase):
                           'completed_at',
                           'actions_taken',
                           'follow_up',
-                          'created_at'})
+                          'created_at',
+                          'trip_id'})
 
     def test_details(self):
         action_point_pk = self.travel.action_points.first().pk
@@ -70,7 +71,8 @@ class ActionPoints(APITenantTestCase):
                           'completed_at',
                           'follow_up',
                           'person_responsible',
-                          'id'})
+                          'id',
+                          'trip_id'})
 
     def test_searching(self):
         ActionPointFactory(travel=self.travel, description='search_in_desc')
