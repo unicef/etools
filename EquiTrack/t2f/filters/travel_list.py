@@ -79,7 +79,7 @@ class FilterBoxFilter(BaseFilterBackend):
                 end_date = date(year, month, last_day_of_month)
             else:
                 start_date = date(year, 1, 1)
-                end_date = data(year, 12, 31)
+                end_date = date(year, 12, 31)
 
             data['start_date__lte'] = end_date
             data['end_date__gte'] = start_date
