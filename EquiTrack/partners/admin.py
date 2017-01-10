@@ -710,13 +710,15 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
         'result',
         ('year', 'planned_amount',),
         'planned_visits',
-        'activities',
         'unicef_managers',
-        'sector',
-        'section',
+        'sectors',
+        'sections',
+        'activities',
     )
     filter_horizontal = (
         'unicef_managers',
+        'sectors',
+        'sections',
     )
 
     def get_extra(self, request, obj=None, **kwargs):
