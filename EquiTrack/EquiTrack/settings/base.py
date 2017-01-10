@@ -43,7 +43,7 @@ SUIT_CONFIG = {
         {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
             {'model': 'partners.partnerorganization', 'label': 'Partners'},
             {'model': 'partners.agreement'},
-            {'model': 'partners.pca'},
+            {'model': 'partners.intervention'},
             {'model': 'partners.governmentintervention', 'label': 'Government'},
         ]},
 
@@ -339,6 +339,7 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'EquiTrack.mixins.EToolsTenantMiddleware',
+    'EquiTrack.mixins.CSRFExemptMiddleware',
 )
 ########## END MIDDLEWARE CONFIGURATION
 
@@ -358,13 +359,12 @@ SHARED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'dal',
+    'dal_select2',
     'django.contrib.gis',
     'django.contrib.postgres',
     # Useful template tags:
     # 'django.contrib.humanize',
-
-    # Admin panel and documentation:
-    'autocomplete_light',
     'suit',
     'django.contrib.admin',
     # 'django.contrib.admindocs',
@@ -414,6 +414,7 @@ MPTT_ADMIN_LEVEL_INDENT = 20
 
 # Apps specific for this project go here.
 TENANT_APPS = (
+    'django_fsm',
     'logentry_admin',
     'reversion',
     'funds',
@@ -424,6 +425,7 @@ TENANT_APPS = (
     'trips',
     'tpm',
     'supplies',
+    't2f',
     'workplan',
 )
 

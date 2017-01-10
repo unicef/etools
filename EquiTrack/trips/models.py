@@ -22,7 +22,7 @@ from locations.models import Location
 from partners.models import (
     PartnerOrganization,
     PCA,
-    ResultChain,
+    #ResultChain,
     RAMIndicator,
     GovernmentIntervention,
     GovernmentInterventionResult
@@ -487,14 +487,14 @@ class LinkedPartner(models.Model):
         auto_choose=True,
         blank=True, null=True,
     )
-    result = ChainedForeignKey(
-        ResultChain,
-        chained_field="intervention",
-        chained_model_field="partnership",
-        show_all=False,
-        auto_choose=True,
-        blank=True, null=True,
-    )
+    # result = ChainedForeignKey(
+    #     ResultChain,
+    #     chained_field="intervention",
+    #     chained_model_field="partnership",
+    #     show_all=False,
+    #     auto_choose=True,
+    #     blank=True, null=True,
+    # )
 
 
 class LinkedGovernmentPartner(models.Model):

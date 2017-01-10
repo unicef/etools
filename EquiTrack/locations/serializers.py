@@ -43,5 +43,19 @@ class LocationSerializer(serializers.ModelSerializer):
             'point',
             'latitude',
             'longitude',
-            'parent'
+            'parent',
+            'geom',
+        )
+
+
+class LocationLightSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Location
+        fields = (
+            'id',
+            'name',
+            'p_code',
         )
