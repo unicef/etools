@@ -1,4 +1,4 @@
-__author__ = 'jcranwellward'
+
 
 from rest_framework import serializers
 
@@ -13,7 +13,7 @@ from reports.models import (
     Goal,
     Indicator,
     Result,
-    Milestone
+    CountryProgramme
 )
 
 
@@ -36,6 +36,12 @@ class SectorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sector
         fields = ('sector_id', 'name', 'description', 'goals')
+
+class SectorLightSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Sector
+        fields = ('id', 'name')
 
 
 class IndicatorSerializer(serializers.ModelSerializer):
@@ -61,12 +67,13 @@ class SectorCreateSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# class GoalCreateSerializer(serializers.ModelSerializer):
-#
-#     id = serializers.CharField(read_only=True)
-#
-#     class Meta:
-#         model = Goal
+
+
+class RAMIndicatorLightSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Indicator
+        fields = '__all__'
 
 
 class IndicatorCreateSerializer(serializers.ModelSerializer):
@@ -75,20 +82,12 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indicator
-        fields = '__all__'
-
-
-class MilestoneSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Milestone
-        fields = ("id", "description", "assumptions",)
+        fields = ('id', 'name', 'code')
 
 
 class ResultSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-    milestones = MilestoneSerializer(many=True)
     workplan_properties = ResultWorkplanPropertySerializer(many=True)
 
     class Meta:
@@ -102,6 +101,11 @@ class ResultSerializer(serializers.ModelSerializer):
             ResultWorkplanProperty.objects.create(result=result, **workplan_property)
         return result
 
+class ResultLightSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Result
+        fields = ('id', 'result_name')
 
 class ResultStructureSerializer(serializers.ModelSerializer):
 
@@ -127,4 +131,11 @@ class UnitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Unit
+        fields = '__all__'
+
+
+class CountryProgrammeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CountryProgramme
         fields = '__all__'

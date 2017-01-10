@@ -52,6 +52,7 @@ class Country(TenantMixin):
     vision_sync_enabled = models.BooleanField(default=True)
     vision_last_synced = models.DateTimeField(null=True, blank=True)
 
+    # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
     offices = models.ManyToManyField('Office', related_name='offices')
     sections = models.ManyToManyField('Section', related_name='sections')
 
@@ -60,8 +61,13 @@ class Country(TenantMixin):
 
 
 class CountryOfficeManager(models.Manager):
-    def get_query_set(self):
-        return connection.tenant.offices.all()
+    def get_queryset(self):
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            return super(CountryOfficeManager, self).get_queryset().filter(offices=connection.tenant)
+        else:
+            #this only gets called on initialization because FakeTenant does not have the model attrs
+            # see: https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
+            return super(CountryOfficeManager, self).get_queryset()
 
 
 class Office(models.Model):
@@ -86,8 +92,13 @@ class Office(models.Model):
 
 
 class CountrySectionManager(models.Manager):
-    def get_query_set(self):
-        return connection.tenant.sections.all()
+    def get_queryset(self):
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
+            return super(CountrySectionManager, self).get_queryset().filter(sections=connection.tenant)
+        else:
+            #this only gets called on initialization because FakeTenant does not have the model attrs
+            # see: https://github.com/bernardopires/django-tenant-schemas/blob/90f8b147adb4ea5ccc0d723f3e50bc9178857d65/tenant_schemas/postgresql_backend/base.py#L153
+            return super(CountrySectionManager, self).get_queryset()
 
 
 class Section(models.Model):
@@ -119,6 +130,9 @@ class UserProfile(models.Model):
     """
 
     user = models.OneToOneField(User, related_name='profile')
+    # TODO: after migration remove the ability to add blank=True
+    guid = models.CharField(max_length=40, unique=True, null=True)
+
     partner_staff_member = models.IntegerField(
         null=True,
         blank=True

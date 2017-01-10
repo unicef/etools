@@ -1,6 +1,7 @@
 __author__ = 'achamseddine'
 
 import random
+import datetime
 
 from rest_framework import status
 
@@ -103,7 +104,7 @@ class TestReportViews(APITenantTestCase):
 
     def test_apiv2_results_list_filter_cp(self):
         param = {
-            "country_programme": 2016,
+            "country_programme": datetime.date.today().year,
         }
         response = self.forced_auth_req(
             'get',
@@ -132,7 +133,7 @@ class TestReportViews(APITenantTestCase):
     def test_apiv2_results_list_filter_combined(self):
         param = {
             "result_type": self.result_type.name,
-            "country_programme": 2016,
+            "country_programme": datetime.date.today().year,
         }
         response = self.forced_auth_req(
             'get',

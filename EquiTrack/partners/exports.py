@@ -245,7 +245,11 @@ class PartnerExport(resources.ModelResource):
     def dehydrate_intervention_count(self, partner_organization):
         if partner_organization.partner_type == PartnerType.GOVERNMENT:
             return partner_organization.work_plans.count()
-        return partner_organization.documents.count()
+        intervention_count = 0
+        # TODO: Nik revisit this... move this into a single query
+        for agr in partner_organization.agreement_set.all():
+            intervention_count += agr.interventions.count()
+        return intervention_count
 
     def dehydrate_active_staff_members(self, partner_organization):
         return ', '.join([sm.get_full_name() for sm in partner_organization.staff_members.all()])
