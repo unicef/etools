@@ -23,7 +23,9 @@ clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clo
 clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
 
 action_points_list = ActionPointViewSet.as_view({'get': 'list'})
-action_points_details = ActionPointViewSet.as_view({'get': 'retrieve'})
+action_points_details = ActionPointViewSet.as_view({'get': 'retrieve',
+                                                    'put': 'update',
+                                                    'patch': 'partial_update'})
 
 invoices_list = InvoiceViewSet.as_view({'get': 'list'})
 invoices_details = InvoiceViewSet.as_view({'get': 'retrieve'})

@@ -188,6 +188,7 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
 
 class ActionPointViewSet(mixins.ListModelMixin,
                          mixins.RetrieveModelMixin,
+                         mixins.UpdateModelMixin,
                          viewsets.GenericViewSet):
     queryset = ActionPoint.objects.all()
     serializer_class = ActionPointSerializer
