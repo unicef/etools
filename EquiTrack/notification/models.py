@@ -39,7 +39,7 @@ class Notification(models.Model):
         return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
 
     @classmethod
-    def create_email_template(cls, type, template_name, subject, content, html_content):
+    def create_email_template(cls, template_name, subject, content, html_content):
         EmailTemplate.object.create(
             name=template_name, subject=subject,
             content=content, html_content=html_content,

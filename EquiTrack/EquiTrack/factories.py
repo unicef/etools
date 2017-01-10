@@ -18,6 +18,7 @@ from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
 from funds.models import Grant, Donor
+from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
@@ -391,3 +392,10 @@ class GrantFactory(factory.DjangoModelFactory):
 #     fr_number = models.CharField(max_length=50)
 #     wbs = models.CharField(max_length=50)
 #     fc_type = models.CharField(max_length=50)
+
+
+class NotificationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = notification_models.Notification
+
+    recipients = factory.SubFactory(UserFactory)
