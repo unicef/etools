@@ -174,7 +174,7 @@ class InterventionListSerializer(serializers.ModelSerializer):
     sectors = serializers.SerializerMethodField()
 
     def get_sectors(self, obj):
-        return [l.sector for l in obj.sector_locations.all()]
+        return [l.sector.name for l in obj.sector_locations.all()]
 
     class Meta:
         model = Intervention
