@@ -57,9 +57,6 @@ from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionS
 from partners.filters import PartnerScopeFilter
 
 
-
-
-
 class PartnerInterventionListAPIView(ListAPIView):
     queryset = Intervention.objects.all()
     serializer_class = InterventionSerializer

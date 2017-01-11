@@ -22,7 +22,8 @@ from .views import (
     CmtDashboardView,
     HACTDashboardView,
     PartnershipsView,
-    OutdatedBrowserView
+    OutdatedBrowserView,
+    MyInterventionsListAPIView,
 )
 from locations.views import (
     LocationTypesViewSet,
@@ -131,6 +132,8 @@ urlpatterns = patterns(
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
     url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
+
+    url(r'^my-interventions', login_required(MyInterventionsListAPIView.as_view()), name='interventions_dashboard'),
 
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),

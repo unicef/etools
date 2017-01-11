@@ -794,7 +794,7 @@ def local_country_keep():
 
 from partners.models import GovernmentIntervention
 def gov_int_copy_rs_to_cp():
-    for gi in GovernmentIntervention:
+    for gi in GovernmentIntervention.objects.all():
         try:
             gi.country_programme = CountryProgramme.encapsulates(gi.result_structure.from_date, gi.result_structure.to_date)
             gi.save()
