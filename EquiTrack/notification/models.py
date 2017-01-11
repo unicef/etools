@@ -40,7 +40,7 @@ class Notification(models.Model):
 
     @classmethod
     def create_email_template(cls, template_name, subject, content, html_content):
-        EmailTemplate.object.create(
+        EmailTemplate.objects.create(
             name=template_name, subject=subject,
             content=content, html_content=html_content,
         )

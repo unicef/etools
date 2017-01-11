@@ -1,10 +1,13 @@
 """
 Model factories used for generating models dynamically for tests
 """
+import json
+
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
 
@@ -393,9 +396,25 @@ class GrantFactory(factory.DjangoModelFactory):
 #     wbs = models.CharField(max_length=50)
 #     fc_type = models.CharField(max_length=50)
 
+# Credit goes to http://stackoverflow.com/a/41154232/2363915
+class JSONFieldFactory(factory.DictFactory):
+
+    @classmethod
+    def _build(cls, model_class, *args, **kwargs):
+        if args:
+            raise ValueError(
+                "DictFactory %r does not support Meta.inline_args.", cls)
+        return json.dumps(model_class(**kwargs))
+
 
 class NotificationFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = notification_models.Notification
 
+    type = "Email"
+    content_type = factory.Iterator(ContentType.objects.all())
+    object_id = fuzzy.FuzzyInteger(low=1)
+    template_name = fuzzy.FuzzyText(length=12)
+    sender = factory.SubFactory(UserFactory)
     recipients = factory.SubFactory(UserFactory)
+    template_data = factory.Dict({'greeting': 'Hello!!!'}, dict_factory=JSONFieldFactory)
