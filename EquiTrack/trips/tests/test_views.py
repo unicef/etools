@@ -8,7 +8,6 @@ from trips.models import Trip
 class TestTripViews(APITenantTestCase):
 
     def setUp(self):
-
         self.supervisor = UserFactory()
         self.trip = TripFactory(
             owner__first_name='Fred',
@@ -54,7 +53,7 @@ class TestTripViews(APITenantTestCase):
         self.assertEquals(response.status_code, 200)
 
     def test_view_trips_dashboard(self):
-        response = self.forced_auth_req('get', '/trips/')
+        response = self.client.get('/trips/')
 
         self.assertEquals(response.status_code, 200)
 

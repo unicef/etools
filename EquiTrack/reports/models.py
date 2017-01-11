@@ -16,6 +16,7 @@ from model_utils.models import (
 
 
 
+
 class Quarter(models.Model):
 
     Q1 = 'Q1'
@@ -61,18 +62,6 @@ class CountryProgramme(models.Model):
         today = datetime.now()
         cps = cls.objects.filter(wbs__contains='/A0/', from_date__lt=today, to_date__gt=today).order_by('-to_date')
         return cps.first()
-
-    @classmethod
-    def encapsulates(cls, date_from, date_to):
-        '''
-        :param date_from:
-        :param date_to:
-        :return: CountryProgramme instance - Country programme that contains the dates specified
-        raises cls.DoesNotExist if the dates span outside existing country programmes
-        raises cls.MultipleObjectsReturned if the dates span multiple country programmes
-        '''
-
-        return cls.objects.get(wbs__contains='/A0/', from_date__lte=date_from, to_date__gte=date_to)
 
 
 class ResultStructure(models.Model):
@@ -156,7 +145,6 @@ class Sector(models.Model):
             self.name
         )
 
-
 class ResultManager(models.Manager):
     def get_queryset(self):
         return super(ResultManager, self).get_queryset().select_related('country_programme', 'result_structure', 'result_type')
@@ -239,10 +227,11 @@ class Result(MPTTModel):
 
 class LowerResult(MPTTModel):
 
+    intervention = models.ForeignKey(to="partners.PCA")
     result_type = models.ForeignKey(ResultType)
 
-    # link to intermediary model to intervention and cp ouptut
-    result_link = models.ForeignKey('partners.InterventionResultLink', related_name='ll_results', null=True)
+    # link to Higher level result only valid to have at the output level
+    cp_result = models.ForeignKey(Result, related_name='lower_results')
 
     name = models.CharField(max_length=500)
 
@@ -269,7 +258,9 @@ class LowerResult(MPTTModel):
         )
 
     class Meta:
-        unique_together = (('result_link', 'code'),)
+        unique_together = (('intervention', 'cp_result', 'code'),)
+
+
 
 
 class Goal(models.Model):

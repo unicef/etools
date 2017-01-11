@@ -1,9 +1,7 @@
-
 __author__ = 'jcranwellward'
 
 from rest_framework import serializers
 
-from t2f.serializers.user_data import T2FUserDataSerializer
 from .models import User, UserProfile, Group, Office, Section
 
 
@@ -20,21 +18,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'user',
         )
 
-class SimpleUserSerializer(serializers.ModelSerializer):
-    user_id = serializers.CharField(source="id")
-    full_name = serializers.SerializerMethodField()
 
-    def get_full_name(self, obj):
-        return obj.get_full_name()
-
-    class Meta:
-        model = UserProfile
-        fields = (
-            'user_id',
-            'full_name',
-            'username',
-            'email'
-        )
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
     user_id = serializers.CharField(source="user.id")
@@ -55,13 +39,22 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    profile = UserProfileSerializer(read_only=True)
-    full_name = serializers.CharField(source='get_full_name')
-    t2f = T2FUserDataSerializer(source='*')
+
+    # profile = serializers.SerializerMethodField('get_profile')
+    # It is redundant to specify `get_profile` on SerializerMethodField
+    # because it is the same as the default method name.
+    profile = serializers.SerializerMethodField()
+
+    def get_profile(self, user):
+        return UserProfileSerializer(user.profile).data
 
     class Meta:
         model = User
-        exclude = ('password', 'groups', 'user_permissions')
+        exclude = (
+            'password',
+            'groups',
+            'user_permissions'
+        )
 
 
 class SectionSerializer(serializers.ModelSerializer):
@@ -98,10 +91,6 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
             'user',
         )
 
-class OfficeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Office
-        fields = "__all__"
 
 class GroupSerializer(serializers.ModelSerializer):
 

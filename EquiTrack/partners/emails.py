@@ -6,13 +6,13 @@ from EquiTrack.utils import BaseEmail
 class PartnershipCreatedEmail(BaseEmail):
 
     template_name = 'partners/partnership/created/updated'
-    description = ('The email that is sent when a PD/SSFA'
+    description = ('The email that is sent when a partnership'
                    ' is added or is updated')
-    subject = 'PD/SSFA {{number}} has been {{state}}'
+    subject = 'Partnership {{number}} has been {{state}}'
     content = """
     Dear Colleague,
 
-    PD/SSFA {{number}} has been {{state}} here:
+    Partnership {{number}} has been {{state}} here:
 
     {{url}}
 

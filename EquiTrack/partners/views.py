@@ -5,7 +5,9 @@ from partners.filters import PartnerOrganizationExportFilter, AgreementExportFil
     GovernmentInterventionExportFilter, PartnerScopeFilter
 from partners.models import GovernmentIntervention
 
-from rest_framework.decorators import detail_route
+__author__ = 'jcranwellward'
+
+import datetime
 
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
@@ -16,17 +18,17 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
-from rest_framework.permissions import IsAdminUser
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from easy_pdf.views import PDFTemplateView
 
 from locations.models import Location
-from partners.serializers.v1 import (
+from .serializers import (
     FileTypeSerializer,
     LocationSerializer,
     PartnerStaffMemberPropertiesSerializer,
     InterventionSerializer,
+    ResultChainDetailsSerializer,
     IndicatorReportSerializer,
     PCASectorSerializer,
     PCAGrantSerializer,
@@ -39,13 +41,14 @@ from partners.serializers.v1 import (
     PCAFileSerializer,
     GovernmentInterventionSerializer,
 )
-from partners.permissions import PartnerPermission
-from partners.filters import PartnerScopeFilter
+from .permissions import PartnerPermission, ResultChainPermission
+from .filters import PartnerScopeFilter
 
-from partners.models import (
+from .models import (
     FileType,
     PartnershipBudget,
     PCAFile,
+    AuthorizedOfficer,
     PCA,
     PartnerOrganization,
     Agreement,
@@ -54,11 +57,10 @@ from partners.models import (
     PCASector,
     GwPCALocation,
     PartnerStaffMember,
+    ResultChain,
     IndicatorReport
 )
 from reports.models import CountryProgramme
-from rest_framework import status
-from rest_framework.response import Response
 
 
 class PcaPDFView(PDFTemplateView):
@@ -408,6 +410,38 @@ class InterventionsViewSet(
         return response
 
 
+class ResultChainViewSet(
+    mixins.RetrieveModelMixin,
+    mixins.ListModelMixin,
+    viewsets.GenericViewSet):
+    """
+    Returns a list of all Result Chain for an Intervention
+    """
+    model = ResultChain
+    queryset = ResultChain.objects.all()
+    serializer_class = ResultChainDetailsSerializer
+    permission_classes = (ResultChainPermission,)
+
+    def get_queryset(self):
+        queryset = super(ResultChainViewSet, self).get_queryset()
+        intervention_id = self.kwargs.get('intervention_pk')
+        return queryset.filter(partnership_id=intervention_id)
+
+    def retrieve(self, request, partner_pk=None, intervention_pk=None, pk=None):
+        """
+        Returns an Intervention object for this Intervention PK and partner
+        """
+        try:
+            queryset = self.queryset.get(partnership_id=intervention_pk, id=pk)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except ResultChain.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
 class IndicatorReportViewSet(
     mixins.RetrieveModelMixin,
     mixins.CreateModelMixin,
@@ -467,7 +501,7 @@ class PCASectorViewSet(
     model = PCASector
     queryset = PCASector.objects.all()
     serializer_class = PCASectorSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -520,7 +554,7 @@ class PartnershipBudgetViewSet(
     model = PartnershipBudget
     queryset = PartnershipBudget.objects.all()
     serializer_class = PartnershipBudgetSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -637,7 +671,7 @@ class PCAGrantViewSet(
     model = PCAGrant
     queryset = PCAGrant.objects.all()
     serializer_class = PCAGrantSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -693,7 +727,7 @@ class GwPCALocationViewSet(
     model = GwPCALocation
     queryset = GwPCALocation.objects.all()
     serializer_class = GWLocationSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -746,7 +780,7 @@ class AmendmentLogViewSet(
     model = AmendmentLog
     queryset = AmendmentLog.objects.all()
     serializer_class = AmendmentLogSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (ResultChainPermission,)
 
     def create(self, request, *args, **kwargs):
         """

@@ -91,9 +91,6 @@ class EToolsTenantMiddleware(TenantMiddleware):
         # the tenant metadata is stored.
         connection.set_schema_to_public()
 
-        if not request.user:
-            return
-
         if request.user.is_anonymous():
             # check if user is trying to reach an authentication endpoint
             if any(x in request.path for x in [
@@ -133,11 +130,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
 class EtoolsTokenAuthentication(TokenAuthentication):
 
     def authenticate(self, request):
-        super_return = super(EtoolsTokenAuthentication, self).authenticate(request)
-        if not super_return:
-            return None
-
-        user, token = super_return
+        user, token = super(EtoolsTokenAuthentication, self).authenticate(request)
         set_country(user, request)
         return user, token
 
@@ -207,10 +200,3 @@ class CustomAccountAdapter(DefaultAccountAdapter):
         return super(CustomAccountAdapter, self).login(request, user)
 
 
-class CSRFExemptMiddleware(object):
-    def process_request(self, request):
-        """
-        Rest framework session based authentication cannot handle csrf_exempt decorator.
-        This will prevent csrf related issues with post requests
-        """
-        request.csrf_processing_done = True

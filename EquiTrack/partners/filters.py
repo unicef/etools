@@ -20,7 +20,7 @@ from partners.models import (
     GwPCALocation,
     #IndicatorProgress,
 )
-from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
+from partners.serializers import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
     InterventionExportFilterSerializer, GovernmentInterventionExportFilterSerializer
 from reports.admin import SectorListFilter
 from reports.models import Sector, Indicator
@@ -199,7 +199,7 @@ class PCAOutputFilter(admin.SimpleListFilter):
 
 class PartnerScopeFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        if request.parser_context['kwargs'] and 'partner_pk' in request.parser_context['kwargs']:
+        if request.parser_context['kwargs']:
             return queryset.filter(partner__pk=request.parser_context['kwargs']['partner_pk'])
         return queryset
 

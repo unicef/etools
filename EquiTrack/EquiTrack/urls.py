@@ -5,6 +5,10 @@ from django.conf.urls import patterns, include, url
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import REDIRECT_FIELD_NAME
 
+from autocomplete_light import shortcuts as autocomplete_light
+# import every app/autocomplete_light_registry.py
+autocomplete_light.autodiscover()
+
 from rest_framework_swagger.views import get_swagger_view
 
 from rest_framework_nested import routers
@@ -26,12 +30,10 @@ from .views import (
 )
 from locations.views import (
     LocationTypesViewSet,
-    LocationsViewSet,
-    LocationsLightViewSet,
+    LocationsViewSet
 )
 from trips.views import TripsViewSet, TripFileViewSet, TripActionPointViewSet
-
-from partners.views.v1 import (
+from partners.views import (
     PartnerOrganizationsViewSet,
     AgreementViewSet,
     PartnerStaffMembersViewSet,
@@ -78,8 +80,6 @@ from workplan.views import (
     MilestoneViewSet
 )
 
-from t2f.urls import urlpatterns as et2f_patterns
-
 schema_view = get_swagger_view(title='eTools API')
 
 api = routers.SimpleRouter()
@@ -111,7 +111,6 @@ api.register(r'reports/results', ResultViewSet, base_name='results')
 api.register(r'reports/units', UnitViewSet, base_name='units')
 
 api.register(r'locations', LocationsViewSet, base_name='locations')
-api.register(r'locations-light', LocationsLightViewSet, base_name='locations-light')
 api.register(r'locations-types', LocationTypesViewSet, base_name='locationtypes')
 
 api.register(r'comments', CommentViewSet, base_name='comments')
@@ -161,8 +160,6 @@ urlpatterns = patterns(
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
-    url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
-    url(r'^api/t2f/', include(et2f_patterns, namespace='t2f')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
     url(r'^api/docs/', schema_view),
@@ -176,6 +173,7 @@ urlpatterns = patterns(
     url(r'^accounts/', include('allauth.urls')),
     url(r'^saml2/', include('djangosaml2.urls')),
     url(r'^chaining/', include('smart_selects.urls')),
+    url(r'^autocomplete/', include('autocomplete_light.urls')),
     url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
     url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),  # TODO: remove this when eTrips is deployed needed
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser')

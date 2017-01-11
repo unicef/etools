@@ -63,7 +63,6 @@ class TestAgreementForm(TenantTestCase):
         agr_dict['agreement_type'] = Agreement.PCA
         agr_dict['signed_by_unicef_date'] = self.date - timedelta(days=1)
         agr_dict['signed_by_partner_date'] = self.date
-        agr_dict['status'] = "active"
         # agr_dict['end'] = self.date + timedelta(days=50)
         form = self.create_form(data=agr_dict)
         self.assertTrue(form.is_valid())
@@ -80,7 +79,6 @@ class TestAgreementForm(TenantTestCase):
         agr_dict['agreement_type'] = Agreement.PCA
         agr_dict['signed_by_unicef_date'] = self.date
         agr_dict['signed_by_partner_date'] = self.date - timedelta(days=1)
-        agr_dict['status'] = "active"
         form = self.create_form(data=agr_dict)
         self.assertTrue(form.is_valid())
         agr = form.save()
@@ -113,11 +111,9 @@ class TestAgreementForm(TenantTestCase):
         agr_dict['signed_by_partner_date'] = self.date + timedelta(days=1)
         form = self.create_form(data=agr_dict)
         self.assertFalse(form.is_valid())
-        # skip until next year
-        # TODO: in january 2017 add the test back
-        # self.assertEqual(
-        #     form.errors['start'][0],
-        #     AgreementForm.ERROR_MESSAGES['start_date_val']
-        # )
+        self.assertEqual(
+            form.errors['start'][0],
+            AgreementForm.ERROR_MESSAGES['start_date_val']
+        )
 
 

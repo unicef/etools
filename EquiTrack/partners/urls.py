@@ -4,7 +4,7 @@ from django.conf.urls import patterns, url, include
 
 from rest_framework_nested import routers
 
-from .views.v1 import (
+from .views import (
     InterventionLocationView,
     PortalDashView,
     PortalLoginFailedView,
@@ -17,7 +17,7 @@ from .views.v1 import (
     PCAGrantViewSet,
     AmendmentLogViewSet,
     GwPCALocationViewSet,
-    # ResultChainViewSet,
+    ResultChainViewSet,
     IndicatorReportViewSet,
     PcaPDFView,
     PartnerOrganizationsViewSet,

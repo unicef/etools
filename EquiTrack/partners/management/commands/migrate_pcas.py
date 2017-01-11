@@ -14,6 +14,7 @@ from partners.models import (
     PCA,
     PartnershipBudget,
     PartnerStaffMember,
+    AuthorizedOfficer,
     Agreement,
     AmendmentLog
 )
@@ -70,8 +71,14 @@ class Command(BaseCommand):
                     partnership.end_date,
                     datetime.time(00, 00)
                 )
-            pca.authorized_officers.add(partner_staff)
             pca.save()
+
+            officer, created = AuthorizedOfficer.objects.get_or_create(
+                agreement=pca,
+                officer=partner_staff
+            )
+            if created:
+                print(u'4. Created authorized officer {} for {}'.format(officer, pca))
 
             PartnershipBudget.objects.create(
                 partnership=partnership,
@@ -160,3 +167,5 @@ class Command(BaseCommand):
                 reversion.set_comment("Merged amendments for partnership: {}".format(
                     partnership.number)
                 )
+
+

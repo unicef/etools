@@ -9,8 +9,7 @@ from django.forms.models import BaseInlineFormSet
 from suit.widgets import AutosizedTextarea
 from suit_ckeditor.widgets import CKEditorWidget
 from datetimewidget.widgets import DateTimeWidget, DateWidget
-
-from dal import autocomplete
+from autocomplete_light import forms as auto_forms
 
 from partners.models import PCA
 from .models import Trip, TravelRoutes, TripLocation
@@ -52,23 +51,13 @@ class TravelRoutesForm(ModelForm):
         return cleaned_data
 
 
-class TripLocationForm(ModelForm):
+class TripLocationForm(auto_forms.ModelForm):
 
     class Meta:
         model = TripLocation
         fields = ('location',)
-        widgets = {
-            'location': autocomplete.ModelSelect2(
-                url='locations-autocomplete-light',
-                attrs={
-                    # Set some placeholder
-                    'data-placeholder': 'Enter Location Name ...',
-                    # Only trigger autocompletion after 3 characters have been typed
-                    'data-minimum-input-length': 3,
+        autocomplete_fields = ('location',)
 
-                },
-            )
-        }
 
 class TripForm(ModelForm):
 
