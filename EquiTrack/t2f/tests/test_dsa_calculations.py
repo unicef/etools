@@ -58,7 +58,7 @@ class TestDSACalculations(APITenantTestCase):
 
         cost_summary = calculator.get_cost_summary()
         self.assertEqual(cost_summary,
-                         {'deductions_total': Decimal('55.0000'),
+                         {'deductions_total': Decimal('0.0000'),
                           'dsa': [{'amount_usd': Decimal('8850.0000'),  # 150 * 60 == 9000
                                    'daily_rate_usd': Decimal('150.0000'),
                                    'dsa_region': self.united_states_region.id,
@@ -73,14 +73,14 @@ class TestDSACalculations(APITenantTestCase):
                                    'end_date': date(2017, 3, 10),
                                    'night_count': 9,
                                    'start_date': date(2017, 3, 2)},
-                                  {'amount_usd': Decimal('185.0000'),  # 100 * (1 + 0.45 + 0.4)
+                                  {'amount_usd': Decimal('40.0000'),  # 100 * 0.4
                                    'daily_rate_usd': Decimal('100.0000'),
                                    'dsa_region': self.hungary_region.id,
                                    'dsa_region_name': 'Hungary - Budapest',
-                                   'end_date': date(2017, 3, 13),
-                                   'night_count': 3,
+                                   'end_date': date(2017, 3, 11),
+                                   'night_count': 1,
                                    'start_date': date(2017, 3, 11)}],
-                          'dsa_total': Decimal('10260.0000'),
+                          'dsa_total': Decimal('10060.0000'),
                           'expenses_delta': Decimal('0'),
                           'expenses_total': Decimal('0.0000'),
                           'preserved_expenses': None})
@@ -152,12 +152,10 @@ class TestDSACalculations(APITenantTestCase):
                           date(2017, 1, 8): self.united_states_region,
                           date(2017, 1, 9): self.united_states_region,
                           date(2017, 1, 10): self.united_states_region,
-                          date(2017, 1, 11): self.hungary_region,
-                          date(2017, 1, 12): self.hungary_region,
-                          date(2017, 1, 13): self.hungary_region})
+                          date(2017, 1, 11): self.hungary_region})
 
         collection = calculator.get_dsa_region_collection(itinerary)
         collection = [(dto.region, dto.date_range) for dto in collection]
         self.assertEqual(collection,
                          [(self.united_states_region, [date(2017, 1, 1), date(2017, 1, 10)]),
-                          (self.hungary_region, [date(2017, 1, 11), date(2017, 1, 13)])])
+                          (self.hungary_region, [date(2017, 1, 11), date(2017, 1, 11)])])

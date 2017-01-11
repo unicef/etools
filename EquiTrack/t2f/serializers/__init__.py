@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from decimal import Decimal
 from itertools import chain
+from datetime import datetime
 
 from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
@@ -10,8 +11,10 @@ from rest_framework import serializers, ISO_8601
 from rest_framework.exceptions import ValidationError
 
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelPermission, TravelAttachment, AirlineCompany, ModeOfTravel, ActionPoint, Invoice, InvoiceItem
+    TravelAttachment, AirlineCompany, ModeOfTravel, ActionPoint, Invoice, InvoiceItem, TravelPermission
 from locations.models import Location
+
+User = get_user_model()
 
 
 class PermissionBasedModelSerializer(serializers.ModelSerializer):
@@ -47,11 +50,23 @@ class ActionPointSerializer(serializers.ModelSerializer):
     action_point_number = serializers.CharField(read_only=True)
     trip_id = serializers.IntegerField(source='travel.id')
 
+    description = serializers.CharField(required=True)
+    due_date = serializers.DateTimeField(required=True)
+    person_responsible = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    status = serializers.CharField(required=True)
+
     class Meta:
         model = ActionPoint
         fields = ('id', 'action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
                   'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at', 'assigned_by',
                   'trip_id')
+        read_only_fields = ('action_point_number', 'trip_reference_number', 'assigned_by')
+
+    def validate_due_date(self, value):
+        if value.date() > datetime.now().date():
+            raise ValidationError('Due date cannot be later than today.')
+        return value
+
 
 
 class IteneraryItemSerializer(PermissionBasedModelSerializer):
@@ -342,7 +357,7 @@ class CloneOutputSerializer(TravelDetailsSerializer):
 
 
 class CloneParameterSerializer(serializers.Serializer):
-    traveler = serializers.PrimaryKeyRelatedField(queryset=get_user_model().objects.all())
+    traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         fields = ('traveler',)

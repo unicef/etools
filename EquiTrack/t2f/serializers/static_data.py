@@ -97,10 +97,12 @@ class FundSerializer(serializers.ModelSerializer):
 
 class ExpenseTypeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title')
+    vendor_number = serializers.CharField()
+    unique = serializers.BooleanField()
 
     class Meta:
         model = ExpenseType
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'vendor_number', 'unique')
 
 
 class ModeOfTravelSerializer(serializers.ModelSerializer):

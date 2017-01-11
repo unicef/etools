@@ -10,6 +10,7 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
+from django.db.utils import ProgrammingError
 from django.template.context import Context
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
@@ -61,6 +62,14 @@ class Fund(models.Model):
 class ExpenseType(models.Model):
     title = models.CharField(max_length=32)
     code = models.CharField(max_length=16)
+
+    @property
+    def vendor_number(self):
+        return ''
+
+    @property
+    def unique(self):
+        return False
 
 
 class TravelType(models.Model):
@@ -456,27 +465,6 @@ class TravelAttachment(models.Model):
 
 
 class TravelPermission(models.Model):
-    # TODO: handle this without a model
-    GOD = 'God'
-    ANYONE = 'Anyone'
-    TRAVELER = 'Traveler'
-    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
-    SUPERVISOR = 'Supervisor'
-    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
-    FINANCE_FOCAL_POINT = 'Finance Focal Point'
-    REPRESENTATIVE = 'Representative'
-
-    USER_TYPE_CHOICES = (
-        (GOD, 'God'),
-        (ANYONE, _('Anyone')),
-        (TRAVELER, _('Traveler')),
-        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
-        (SUPERVISOR, _('Supervisor')),
-        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
-        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
-        (REPRESENTATIVE, _('Representative')),
-    )
-
     EDIT = 'edit'
     VIEW = 'view'
     PERMISSION_TYPE_CHOICES = (
@@ -484,10 +472,18 @@ class TravelPermission(models.Model):
         (VIEW, 'View'),
     )
 
+    TRAVEL = 'travel'
+    ACTION_POINT = 'action_point'
+    USAGE_PLACE_CHOICES = (
+        (TRAVEL, 'Travel'),
+        (ACTION_POINT, 'Action point'),
+    )
+
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=128)
-    status = models.CharField(max_length=50, choices=Travel.CHOICES)
-    user_type = models.CharField(max_length=25, choices=USER_TYPE_CHOICES)
+    status = models.CharField(max_length=50)
+    usage_place = models.CharField(max_length=12, choices=USAGE_PLACE_CHOICES)
+    user_type = models.CharField(max_length=25)
     model = models.CharField(max_length=128)
     field = models.CharField(max_length=64)
     permission_type = models.CharField(max_length=5, choices=PERMISSION_TYPE_CHOICES)
@@ -495,6 +491,7 @@ class TravelPermission(models.Model):
 
 
 def make_action_point_number():
+    return ''
     year = datetime.now().year
     last_action_point = ActionPoint.objects.filter(created_at__year=year).order_by('action_point_number').last()
     if last_action_point:
