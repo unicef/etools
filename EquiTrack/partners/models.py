@@ -1632,27 +1632,28 @@ class GovernmentInterventionResult(models.Model):
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
-        for activity in self.activities.items():
-            try:
-                referenced_activity = self.activities_list.get(code=activity[0])
-                if referenced_activity.name != activity[1]:
-                    referenced_activity.name = activity[1]
-                    referenced_activity.save()
+        if self.activities:
+            for activity in self.activities.items():
+                try:
+                    referenced_activity = self.activities_list.get(code=activity[0])
+                    if referenced_activity.name != activity[1]:
+                        referenced_activity.name = activity[1]
+                        referenced_activity.save()
 
-            except Result.DoesNotExist:
-                referenced_activity = Result.objects.create(
-                    result_structure=self.intervention.result_structure,
-                    result_type=ResultType.objects.get(name='Activity'),
-                    parent=self.result,
-                    code=activity[0],
-                    name=activity[1],
-                    hidden=True
+                except Result.DoesNotExist:
+                    referenced_activity = Result.objects.create(
+                        result_structure=self.intervention.result_structure,
+                        result_type=ResultType.objects.get(name='Activity'),
+                        parent=self.result,
+                        code=activity[0],
+                        name=activity[1],
+                        hidden=True
 
-                )
-                self.activities_list.add(referenced_activity)
+                    )
+                    self.activities_list.add(referenced_activity)
 
         for ref_activity in self.activities_list.all():
-            if ref_activity.code not in self.activities:
+            if self.activities and ref_activity.code not in self.activities:
                 ref_activity.delete()
 
 
@@ -1665,7 +1666,6 @@ class GovernmentInterventionResult(models.Model):
     def __unicode__(self):
         return u'{}, {}'.format(self.intervention.number,
                                 self.result)
-
 
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
