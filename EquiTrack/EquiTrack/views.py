@@ -12,7 +12,7 @@ from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType, Governorate, Region
 from funds.models import Donor
 from trips.models import Trip, ActionPoint
-from partners.serializers.v1 import InterventionSerializer
+from partners.serializers.interventions_v2 import InterventionListSerializer
 
 
 class MainView(TemplateView):
@@ -240,12 +240,12 @@ class MyInterventionsListAPIView(ListAPIView):
         """
         Return All Interventions for Partner
         """
-        interventions = Intervention.objects.filter(Q(unicef_signatory=self.request.user) &
+        interventions = Intervention.objects.filter(unicef_signatory=self.request.user).filter(
                 Q(status=Intervention.ACTIVE) | Q(status=Intervention.DRAFT)
-            ).order_by("number", "-created")[:10],
-        # serializer = InterventionSerializer(interventions, many=True)
+            ).order_by("number", "-created")
+        serializer = InterventionListSerializer(interventions, many=True)
 
         return Response(
-            interventions,
+            serializer.data,
             status=status.HTTP_200_OK
         )
