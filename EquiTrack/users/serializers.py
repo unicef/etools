@@ -4,14 +4,19 @@ __author__ = 'jcranwellward'
 from rest_framework import serializers
 
 from t2f.serializers.user_data import T2FUserDataSerializer
-from .models import User, UserProfile, Group, Office, Section
+from .models import User, UserProfile, Group, Office, Section, Country
 
+class SimpleCountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
+        fields = ('id', 'name', 'business_area_code')
 
 class UserProfileSerializer(serializers.ModelSerializer):
 
     office = serializers.CharField(source='office.name')
     section = serializers.CharField(source='section.name')
     country_name = serializers.CharField(source='country.name')
+    countries_available = SimpleCountrySerializer(many=True, read_only=True)
 
     class Meta:
         model = UserProfile
@@ -58,7 +63,6 @@ class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     full_name = serializers.CharField(source='get_full_name')
     t2f = T2FUserDataSerializer(source='*')
-
     class Meta:
         model = User
         exclude = ('password', 'groups', 'user_permissions')
