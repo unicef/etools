@@ -62,7 +62,7 @@ class Country(TenantMixin):
 
 class CountryOfficeManager(models.Manager):
     def get_queryset(self):
-        if hasattr(connection.tenant, 'id'):
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
             return super(CountryOfficeManager, self).get_queryset().filter(offices=connection.tenant)
         else:
             #this only gets called on initialization because FakeTenant does not have the model attrs
@@ -93,7 +93,7 @@ class Office(models.Model):
 
 class CountrySectionManager(models.Manager):
     def get_queryset(self):
-        if hasattr(connection.tenant, 'id'):
+        if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
             return super(CountrySectionManager, self).get_queryset().filter(sections=connection.tenant)
         else:
             #this only gets called on initialization because FakeTenant does not have the model attrs
@@ -130,6 +130,9 @@ class UserProfile(models.Model):
     """
 
     user = models.OneToOneField(User, related_name='profile')
+    # TODO: after migration remove the ability to add blank=True
+    guid = models.CharField(max_length=40, unique=True, null=True)
+
     partner_staff_member = models.IntegerField(
         null=True,
         blank=True
