@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField
 from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
@@ -1591,7 +1591,7 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = JSONField(
+    activities = hstore.DictionaryField(
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
@@ -1614,6 +1614,8 @@ class GovernmentInterventionResult(models.Model):
         blank=True
     )
     planned_visits = models.IntegerField(default=0)
+
+    objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
@@ -2338,6 +2340,8 @@ class GovernmentInterventionResult(models.Model):
         blank=True
     )
     planned_visits = models.IntegerField(default=0)
+
+    objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
