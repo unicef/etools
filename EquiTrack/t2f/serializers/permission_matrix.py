@@ -27,8 +27,63 @@ class PermissionMatrixSerializer(serializers.Serializer):
 
         for permission in permissions_qs:
             if permission.model == 'travel':
-                matrix[permission.user_type][permission.status][permission.field][permission.permission_type] = permission.value
+                matrix[permission.user_type][permission.status][permission.field][
+                    permission.permission_type] = permission.value
             else:
                 model_dict = matrix[permission.user_type][permission.status][permission.model]
                 model_dict.setdefault(permission.field, {})[permission.permission_type] = permission.value
+
+        travel_matrix = matrix
+
+        action_point_matrix = {'PersonResponsible': {'status': {'edit': True, 'view': True},
+                                                     'due_date': {'edit': False, 'view': True},
+                                                     'description': {'edit': False, 'view': True},
+                                                     'follow_up': {'edit': False, 'view': True},
+                                                     'trip_reference_number': {'edit': False, 'view': True},
+                                                     'person_responsible': {'edit': False, 'view': True},
+                                                     'created_at': {'edit': False, 'view': True},
+                                                     'comments': {'edit': False, 'view': True},
+                                                     'action_point_number': {'edit': False, 'view': True},
+                                                     'completed_at': {'edit': True, 'view': True},
+                                                     'actions_taken': {'edit': True, 'view': True},
+                                                     'id': {'edit': False, 'view': True}},
+                               'PME': {'status': {'edit': True, 'view': True},
+                                       'due_date': {'edit': True, 'view': True},
+                                       'description': {'edit': False, 'view': True},
+                                       'follow_up': {'edit': True, 'view': True},
+                                       'trip_reference_number': {'edit': False, 'view': True},
+                                       'person_responsible': {'edit': True, 'view': True},
+                                       'created_at': {'edit': False, 'view': True},
+                                       'comments': {'edit': False, 'view': True},
+                                       'action_point_number': {'edit': False, 'view': True},
+                                       'completed_at': {'edit': True, 'view': True},
+                                       'actions_taken': {'edit': False, 'view': True},
+                                       'id': {'edit': False, 'view': True}},
+                               'Assigner': {'status': {'edit': True, 'view': True},
+                                            'due_date': {'edit': True, 'view': True},
+                                            'description': {'edit': True, 'view': True},
+                                            'follow_up': {'edit': True, 'view': True},
+                                            'trip_reference_number': {'edit': False, 'view': True},
+                                            'person_responsible': {'edit': True, 'view': True},
+                                            'created_at': {'edit': False, 'view': True},
+                                            'comments': {'edit': False, 'view': True},
+                                            'action_point_number': {'edit': False, 'view': True},
+                                            'completed_at': {'edit': False, 'view': True},
+                                            'actions_taken': {'edit': False, 'view': True},
+                                            'id': {'edit': False, 'view': True}},
+                               'Others': {'status': {'edit': False, 'view': True},
+                                          'due_date': {'edit': False, 'view': True},
+                                          'description': {'edit': False, 'view': True},
+                                          'follow_up': {'edit': False, 'view': True},
+                                          'trip_reference_number': {'edit': False, 'view': True},
+                                          'person_responsible': {'edit': False, 'view': True},
+                                          'created_at': {'edit': False, 'view': True},
+                                          'comments': {'edit': False, 'view': True},
+                                          'action_point_number': {'edit': False, 'view': True},
+                                          'completed_at': {'edit': False, 'view': True},
+                                          'actions_taken': {'edit': False, 'view': True},
+                                          'id': {'edit': False, 'view': True}}}
+
+        matrix = {'travel': travel_matrix,
+                  'action_point': action_point_matrix}
         return matrix
