@@ -526,7 +526,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         self.assertEqual(self.partner_organization.hact_values['planned_visits'], 5)
 
-    @skip("Fix this")
+    @skip("Fix when HACT available")
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = "UN Agency"
         self.partner_organization.status = PCA.ACTIVE
@@ -565,10 +565,9 @@ class TestAgreementModel(TenantTestCase):
             partner=self.partner_organization,
         )
 
-    @skip("Fix this")
     def test_reference_number(self):
         year = datetime.datetime.today().year
-        self.assertEqual(self.agreement.reference_number, "/PCA{}01".format(year))
+        self.assertIn("TempRef", self.agreement.reference_number)
 
 class TestInterventionModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
@@ -629,11 +628,10 @@ class TestInterventionModel(TenantTestCase):
         )
         self.assertEqual(int(self.intervention.total_budget), 100200)
 
-    @skip("Fix this")
     def test_reference_number(self):
-        self.assertContains("TempRef:", self.intervention.reference_number)
+        self.assertIn("TempRef:", self.intervention.reference_number)
 
-    @skip("Fix this")
+    @skip("Fix when HACT available")
     def test_planned_cash_transfers(self):
         InterventionBudget.objects.create(
             intervention=self.intervention,

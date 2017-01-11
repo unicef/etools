@@ -111,7 +111,7 @@ class TestModelExport(APITenantTestCase):
                           '',
                           self.agreement.signed_by_unicef_date.strftime('%Y-%m-%d'),
                           ''))
-    @skip("Fix this")
+    @skip("Fix export")
     def test_intervention_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/interventions/export/'.format(self.partner.id),
