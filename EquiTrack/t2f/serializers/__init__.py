@@ -48,7 +48,8 @@ class PermissionBasedModelSerializer(serializers.ModelSerializer):
 class ActionPointSerializer(serializers.ModelSerializer):
     trip_reference_number = serializers.CharField(source='travel.reference_number', read_only=True)
     action_point_number = serializers.CharField(read_only=True)
-    trip_id = serializers.IntegerField(source='travel.id')
+    trip_id = serializers.IntegerField(source='travel.id', read_only=True)
+    assigned_by = serializers.IntegerField(source='assigned_by.id', read_only=True)
 
     description = serializers.CharField(required=True)
     due_date = serializers.DateTimeField(required=True)
@@ -60,7 +61,6 @@ class ActionPointSerializer(serializers.ModelSerializer):
         fields = ('id', 'action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
                   'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at', 'assigned_by',
                   'trip_id')
-        read_only_fields = ('action_point_number', 'trip_reference_number', 'assigned_by')
 
     def validate_due_date(self, value):
         if value.date() > datetime.now().date():
