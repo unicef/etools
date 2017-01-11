@@ -16,6 +16,7 @@ from partners.models import (
     InterventionPlannedVisits,
     Intervention,
     InterventionAmendment,
+    InterventionAttachment,
     PartnerOrganization,
     PartnerType,
     Agreement,
@@ -201,7 +202,7 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
 
 class InterventionAttachmentSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Intervention
+        model = InterventionAttachment
         fields = (
             'id', 'intervention', 'type', 'attachment'
         )
@@ -494,7 +495,6 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
-
     supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentNestedSerializer(many=True, read_only=True, required=False)
