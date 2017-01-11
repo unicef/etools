@@ -198,7 +198,7 @@ class CostSummaryCalculator(object):
             current_itinerary_item = itinerary_item
             current_region = itinerary_item.dsa_region
 
-        end_date = current_itinerary_item.arrival_date.date()
+        end_date = current_itinerary_item.departure_date.date()
         while current_date <= end_date:
             mapping[current_date] = DateRegionMapDTO(current_itinerary_item, current_region, current_date)
             current_date += timedelta(days=1)
