@@ -11,7 +11,6 @@ class TestRunner(DiscoverRunner):
         :return:
         """
         cursor = connection.cursor()
-        cursor.execute("CREATE EXTENSION IF NOT EXISTS hstore;")
 
         return super(TestRunner, self).setup_databases(**kwargs)
 

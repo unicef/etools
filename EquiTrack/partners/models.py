@@ -15,7 +15,6 @@ from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django.contrib.postgres.fields import JSONField, ArrayField
-from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
 from model_utils.models import (
     TimeFramedModel,
@@ -1595,7 +1594,7 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = hstore.DictionaryField(
+    activities = JSONField(
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
@@ -1618,8 +1617,6 @@ class GovernmentInterventionResult(models.Model):
         blank=True
     )
     planned_visits = models.IntegerField(default=0)
-
-    objects = hstore.HStoreManager()
 
     @transaction.atomic
     def save(self, **kwargs):
