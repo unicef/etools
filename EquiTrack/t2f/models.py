@@ -62,14 +62,8 @@ class Fund(models.Model):
 class ExpenseType(models.Model):
     title = models.CharField(max_length=32)
     code = models.CharField(max_length=16)
-
-    @property
-    def vendor_number(self):
-        return ''
-
-    @property
-    def unique(self):
-        return False
+    vendor_number = models.CharField(max_length=32)
+    unique = models.BooleanField(default=False)
 
 
 class TravelType(models.Model):
