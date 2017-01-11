@@ -6,6 +6,7 @@ from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 from django.contrib.gis.geos import GEOSGeometry
+from django.contrib.auth.models import Group
 
 import factory
 from factory import fuzzy
@@ -16,7 +17,9 @@ from funds import models as fund_models
 from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
+from funds.models import Grant, Donor
 from workplan import models as workplan_models
+from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
 
 class GovernorateFactory(factory.django.DjangoModelFactory):
@@ -56,6 +59,13 @@ class CountryFactory(factory.django.DjangoModelFactory):
     name = "Test Country"
     schema_name = 'test'
     domain_url = 'tenant.test.com'
+
+
+class GroupFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Group
+
+    name = "Partnership Manager"
 
 
 class ProfileFactory(factory.django.DjangoModelFactory):
@@ -119,6 +129,7 @@ class LocationFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Location {}'.format(n))
     gateway = factory.SubFactory(GatewayTypeFactory)
     point = GEOSGeometry("POINT(20 20)")
+    p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
 
 
 class LinkedLocationFactory(factory.django.DjangoModelFactory):
@@ -154,6 +165,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
+    status = 'active'
 
 
 
@@ -166,6 +178,15 @@ class PartnershipFactory(factory.django.DjangoModelFactory):
     partnership_type = u'PD'
     title = u'To save the galaxy from the Empire'
     initiation_date = datetime.today()
+
+
+class InterventionFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.Intervention
+
+    agreement = factory.SubFactory(AgreementFactory)
+    title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
+    submission_date = datetime.today()
 
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
@@ -342,6 +363,21 @@ class WorkplanProjectFactory(factory.DjangoModelFactory):
 
     workplan = factory.SubFactory(WorkplanFactory)
     cover_page = factory.RelatedFactory(CoverPageFactory, 'workplan_project')
+
+
+class DonorFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=45)
+
+    class Meta:
+        model = Donor
+
+
+class GrantFactory(factory.DjangoModelFactory):
+    donor = factory.SubFactory(DonorFactory)
+    name = fuzzy.FuzzyText(length=32)
+
+    class Meta:
+        model = Grant
 
 
 # class FundingCommitmentFactory(factory.django.DjangoModelFactory):

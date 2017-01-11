@@ -49,8 +49,12 @@ from .models import (
     PartnershipBudget,
     GovernmentIntervention,
     Intervention,
+<<<<<<< HEAD
     InterventionSectorLocationLink,
     InterventionResultLink,
+=======
+    InterventionSectorLocationLink
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
 )
 
 logger = logging.getLogger('partners.forms')

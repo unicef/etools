@@ -5,7 +5,10 @@ from __future__ import unicode_literals
 from django.conf import settings
 import django.contrib.postgres.fields
 from django.db import migrations, models
+<<<<<<< HEAD
 from django.db.models import Count
+=======
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
 import django.db.models.deletion
 import django.db.models.manager
 import django.utils.timezone
@@ -14,6 +17,7 @@ import model_utils.fields
 import partners.models
 import smart_selects.db_fields
 
+<<<<<<< HEAD
 def reverse(apps, schema_editor):
     pass
 
@@ -52,6 +56,8 @@ def pca_unique_reference_number(apps, schema_editor):
             cdup.number = '{}|{}'.format(cdup.number, cdup.id)
             print(cdup)
             cdup.save()
+=======
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
 
 class Migration(migrations.Migration):
 
@@ -64,12 +70,15 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+<<<<<<< HEAD
         migrations.RunPython(
             agreement_unique_reference_number, reverse_code=reverse
         ),
         migrations.RunPython(
             pca_unique_reference_number, reverse_code=reverse
         ),
+=======
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
         migrations.CreateModel(
             name='AgreementAmendment',
             fields=[

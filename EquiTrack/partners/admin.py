@@ -9,6 +9,10 @@ from django.core.urlresolvers import reverse
 from django.forms import SelectMultiple, TextInput, Select
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
@@ -54,9 +58,13 @@ from .models import (
     AgreementAmendment,
     InterventionAmendment,
     InterventionSectorLocationLink,
+<<<<<<< HEAD
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
+=======
+    InterventionResultLink
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
 
 )
 from .filters import (
@@ -246,6 +254,7 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         )
 
 
+<<<<<<< HEAD
 class BudgetInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
     model = InterventionBudget
@@ -262,6 +271,8 @@ class BudgetInlineAdmin(admin.TabularInline):
     readonly_fields = ('total', )
     extra = 0
 
+=======
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
 
 class PlannedVisitsInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
@@ -272,6 +283,7 @@ class PlannedVisitsInline(admin.TabularInline):
         'spot_checks',
         'audit'
     )
+<<<<<<< HEAD
     extra = 0
 
 
@@ -294,12 +306,20 @@ class LowerResultsInline(admin.TabularInline):
 class ResultsLinkInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
     # form = ResultLinkForm
+=======
+
+    extra = 0
+
+class ResultsLinkInline(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-results'
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
     model = InterventionResultLink
     fields = (
         'cp_output',
         'ram_indicators'
     )
     extra = 0
+<<<<<<< HEAD
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'5', 'style': 'width:100%'})},
     }
@@ -308,11 +328,14 @@ class ResultsLinkInline(admin.TabularInline):
 
 
 
+=======
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
 
 class SectorLocationInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-locations'
     form = SectorLocationForm
     model = InterventionSectorLocationLink
+<<<<<<< HEAD
     # fields = (
     #     'sector',
     #     'locations'
@@ -321,6 +344,9 @@ class SectorLocationInline(admin.TabularInline):
     formfield_overrides = {
         models.ManyToManyField: {'widget': Select(attrs={'style': 'width:100%'})},
     }
+=======
+    extra = 1
+>>>>>>> parent of 5a241cc... Revert "Merge branches 'develop' and 'feature_migrate_hstore_jsonfield' of https://github.com/unicef/etools into feature_migrate_hstore_jsonfield"
     # fields = (
     #     'sector',
     #     'locations'
