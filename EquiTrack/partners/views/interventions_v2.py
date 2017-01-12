@@ -105,7 +105,7 @@ class InterventionListAPIView(ListCreateAPIView):
             if "document_type" in query_params.keys():
                 queries.append(Q(partnership_type=query_params.get("document_type")))
             if "country_programme" in query_params.keys():
-                queries.append(Q(hrp__country_programme=query_params.get("country_programme")))
+                queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
                 queries.append(Q(intervention_locations=query_params.get("sector")))
             if "status" in query_params.keys():
@@ -123,7 +123,8 @@ class InterventionListAPIView(ListCreateAPIView):
             if "search" in query_params.keys():
                 queries.append(
                     Q(title__icontains=query_params.get("search")) |
-                    Q(agreement__partner__name__icontains=query_params.get("search"))
+                    Q(agreement__partner__name__icontains=query_params.get("search")) |
+                    Q(number__icontains=query_params.get("number"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
