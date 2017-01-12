@@ -6,10 +6,8 @@ from rest_framework import serializers
 from reports.serializers import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
-
 from reports.models import LowerResult
-
-from .models import (
+from partners.models import (
     FileType,
     GwPCALocation,
     PCA,
@@ -22,7 +20,6 @@ from .models import (
     PartnerStaffMember,
     PartnerOrganization,
     Agreement,
-    ResultChain,
     IndicatorReport,
     DistributionPlan,
     RISK_RATINGS,
@@ -30,6 +27,7 @@ from .models import (
     PartnerType,
     GovernmentIntervention,
 )
+
 
 class PCASectorGoalSerializer(serializers.ModelSerializer):
 
@@ -117,17 +115,6 @@ class AmendmentLogSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ResultChainSerializer(serializers.ModelSerializer):
-    indicator = IndicatorSerializer()
-    disaggregation = serializers.JSONField()
-    result = OutputSerializer()
-
-    def create(self, validated_data):
-        return validated_data
-
-    class Meta:
-        model = ResultChain
-        fields = '__all__'
 
 
 class LocationSerializer(serializers.Serializer):
@@ -152,15 +139,7 @@ class LocationSerializer(serializers.Serializer):
         fields = '__all__'
 
 
-class ResultChainDetailsSerializer(serializers.ModelSerializer):
-    indicator = IndicatorSerializer()
-    disaggregation = serializers.JSONField()
-    result = OutputSerializer()
-    #indicator_reports = IndicatorReportSerializer(many=True)
 
-    class Meta:
-        model = ResultChain
-        fields = ('indicator', 'disaggregation', 'result')
 
 
 class DistributionPlanSerializer(serializers.ModelSerializer):
@@ -233,30 +212,31 @@ class IndicatorReportSerializer(serializers.ModelSerializer):
         if not (user or rc) or \
                 (user.profile.partner_staff_member not in
                     rc.partnership.partner.staff_members.values_list('id', flat=True)):
-            raise Exception('hell')
+            raise Exception('no result chain ... deprecated')
 
         return data
 
     def create(self, validated_data):
-        result_chain = validated_data.get('result_chain')
+        # result_chain = validated_data.get('result_chain')
         # for multi report this needs to be
         # refreshed from the db in order to reflect the latest value
-        result_chain.refresh_from_db()
-        validated_data['indicator'] = result_chain.indicator
-
-        try:
-            with transaction.atomic():
-                indicator_report = IndicatorReport.objects.create(**validated_data)
-                result_chain.current_progress += validated_data.get('total')
-                result_chain.save()
-        except:
-            raise serializers.ValidationError({'result_chain': "Creation halted for now"})
-
-        return indicator_report
+        # result_chain.refresh_from_db()
+        # validated_data['indicator'] = result_chain.indicator
+        #
+        # try:
+        #     with transaction.atomic():
+        #         indicator_report = IndicatorReport.objects.create(**validated_data)
+        #         result_chain.current_progress += validated_data.get('total')
+        #         result_chain.save()
+        # except:
+        #     raise serializers.ValidationError({'result_chain': "Creation halted for now"})
+        #
+        # return indicator_report
+        serializers.ValidationError({'result_chain': "Deprecated"})
 
     def update(self, instance, validated_data):
         # TODO: update value on resultchain (atomic)
-        raise serializers.ValidationError({'result_chain': "Creation halted for now"})
+        serializers.ValidationError({'result_chain': "Deprecated"})
 
 
 class GovernmentInterventionSerializer(serializers.ModelSerializer):
@@ -285,9 +265,17 @@ class GWLocationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PartnerStaffMemberEmbedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = ("id", "first_name", "last_name",)
+
+
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
     pca_set = InterventionSerializer(many=True, read_only=True)
+    staff_members = PartnerStaffMemberEmbedSerializer(many=True, read_only=True)
 
     class Meta:
         model = PartnerOrganization

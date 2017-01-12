@@ -1,9 +1,7 @@
 
 from django.contrib import admin
 
-from . import models
-
-
+from t2f import models
 
 
 admin.site.register(models.Grant)
