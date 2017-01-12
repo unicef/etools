@@ -23,7 +23,7 @@ from model_utils.models import (
     TimeStampedModel,
 )
 from model_utils import Choices, FieldTracker
-
+from actstream import action
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
