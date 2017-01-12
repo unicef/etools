@@ -15,6 +15,7 @@ from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
 from django.contrib.postgres.fields import JSONField, ArrayField
+from django_hstore import hstore
 from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
 from model_utils.models import (
     TimeFramedModel,
@@ -1594,7 +1595,7 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = JSONField(
+    activities = hstore.DictionaryField(
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
@@ -1618,6 +1619,8 @@ class GovernmentInterventionResult(models.Model):
     )
     planned_visits = models.IntegerField(default=0)
 
+    objects = hstore.HStoreManager()
+
     @transaction.atomic
     def save(self, **kwargs):
         if self.pk:
@@ -1632,28 +1635,27 @@ class GovernmentInterventionResult(models.Model):
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
-        if self.activities:
-            for activity in self.activities.items():
-                try:
-                    referenced_activity = self.activities_list.get(code=activity[0])
-                    if referenced_activity.name != activity[1]:
-                        referenced_activity.name = activity[1]
-                        referenced_activity.save()
+        for activity in self.activities.items():
+            try:
+                referenced_activity = self.activities_list.get(code=activity[0])
+                if referenced_activity.name != activity[1]:
+                    referenced_activity.name = activity[1]
+                    referenced_activity.save()
 
-                except Result.DoesNotExist:
-                    referenced_activity = Result.objects.create(
-                        result_structure=self.intervention.result_structure,
-                        result_type=ResultType.objects.get(name='Activity'),
-                        parent=self.result,
-                        code=activity[0],
-                        name=activity[1],
-                        hidden=True
+            except Result.DoesNotExist:
+                referenced_activity = Result.objects.create(
+                    result_structure=self.intervention.result_structure,
+                    result_type=ResultType.objects.get(name='Activity'),
+                    parent=self.result,
+                    code=activity[0],
+                    name=activity[1],
+                    hidden=True
 
-                    )
-                    self.activities_list.add(referenced_activity)
+                )
+                self.activities_list.add(referenced_activity)
 
         for ref_activity in self.activities_list.all():
-            if self.activities and ref_activity.code not in self.activities:
+            if ref_activity.code not in self.activities:
                 ref_activity.delete()
 
 
@@ -1666,6 +1668,7 @@ class GovernmentInterventionResult(models.Model):
     def __unicode__(self):
         return u'{}, {}'.format(self.intervention.number,
                                 self.result)
+
 
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
