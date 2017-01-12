@@ -485,7 +485,6 @@ class TravelPermission(models.Model):
 
 
 def make_action_point_number():
-    return ''
     year = datetime.now().year
     last_action_point = ActionPoint.objects.filter(created_at__year=year).order_by('action_point_number').last()
     if last_action_point:
@@ -505,11 +504,16 @@ class ActionPoint(models.Model):
     Relates to :model:`auth.User`
     """
 
+    OPEN = 'open'
+    ONGOING = 'ongoing'
+    CANCELLED = 'cancelled'
+    COMPLETED = 'completed'
+
     STATUS = (
-        ('closed', 'Closed'),
-        ('ongoing', 'On-going'),
-        ('open', 'Open'),
-        ('cancelled', 'Cancelled')
+        (OPEN, 'Open'),
+        (ONGOING, 'Ongoing'),
+        (COMPLETED, 'Completed'),
+        (CANCELLED, 'Cancelled'),
     )
 
     travel = models.ForeignKey('Travel', related_name='action_points')
@@ -524,6 +528,11 @@ class ActionPoint(models.Model):
     comments = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
+
+    def save(self, *args, **kwargs):
+        if self.status == ActionPoint.OPEN and self.actions_taken:
+            self.status = ActionPoint.ONGOING
+        super(ActionPoint, self).save(*args, **kwargs)
 
 
 class Invoice(models.Model):
