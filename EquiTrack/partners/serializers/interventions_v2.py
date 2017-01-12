@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from rest_framework import serializers
 
-from reports.serializers import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
+from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
 from locations.models import Location
 
 from partners.models import (
@@ -575,4 +575,3 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_fr_numbers_list(self, obj):
         return ', '.join([f for f in obj.fr_numbers])
-

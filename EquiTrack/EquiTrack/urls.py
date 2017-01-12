@@ -39,7 +39,7 @@ from partners.views.v1 import (
 )
 from users.views import UserViewSet, GroupViewSet, OfficeViewSet, SectionViewSet
 from funds.views import DonorViewSet, GrantViewSet
-from reports.views import (
+from reports.views.v1 import (
     ResultStructureViewSet,
     ResultTypeViewSet,
     SectorViewSet,
