@@ -6,7 +6,7 @@ from django.db import connection, models
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
-from django.forms import SelectMultiple, TextInput, Select
+from django.forms import SelectMultiple
 
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
@@ -14,17 +14,12 @@ from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from EquiTrack.utils import get_changeform_link, get_staticfile_link
+from EquiTrack.utils import get_staticfile_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
-from funds.models import Grant
-from reports.models import Result, Indicator, LowerResult
+from reports.models import Result
 from users.models import Section
-from .exports import (
-    # DonorsFormat,
-    PCAResource,
-    PartnerResource,
-)
+
 from .models import (
     PCA,
     PCAFile,
@@ -64,7 +59,7 @@ from .filters import (
     PCAGrantFilter,
     PCAGatewayTypeFilter,
 )
-from .mixins import ReadOnlyMixin, SectorMixin, HiddenPartnerMixin
+from .mixins import ReadOnlyMixin, HiddenPartnerMixin
 from .forms import (
     PartnershipForm,
     PartnersAdminForm,
@@ -284,12 +279,6 @@ class InterventionAttachmentsInline(admin.TabularInline):
     extra = 0
 
 
-class LowerResultsInline(admin.TabularInline):
-    suit_classes = u'suit-tab suit-tab-results'
-    model = LowerResult
-    fields = ('result_type', 'name')
-
-
 class ResultsLinkInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
     # form = ResultLinkForm
@@ -302,8 +291,6 @@ class ResultsLinkInline(admin.TabularInline):
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'5', 'style': 'width:100%'})},
     }
-    inLines = [LowerResultsInline]
-    show_change_link = True
 
 
 
@@ -312,19 +299,8 @@ class SectorLocationInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-locations'
     form = SectorLocationForm
     model = InterventionSectorLocationLink
-    # fields = (
-    #     'sector',
-    #     'locations'
-    # )
     extra = 1
-    formfield_overrides = {
-        models.ManyToManyField: {'widget': Select(attrs={'style': 'width:100%'})},
-    }
-    # fields = (
-    #     'sector',
-    #     'locations'
-    # )
-    # filter_vertical = ('locations',)
+
 
 
 class SupplyPlanInlineAdmin(admin.TabularInline):
@@ -595,6 +571,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     )
     filter_horizontal = (
         'unicef_focal_points',
+        'partner_focal_points'
     )
     fieldsets = (
         (_('Intervention Details'), {
@@ -825,8 +802,6 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
 
 class BankDetailsInlineAdmin(admin.StackedInline):
     model = BankDetails
-    # form = AgreementAmendmentForm
-    # formset = ParentInlineAdminFormSet
     verbose_name_plural = "Bank Details"
     extra = 1
 

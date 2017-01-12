@@ -18,6 +18,12 @@ def printtf(*args):
     print([arg for arg in args], file=f)
     f.close()
 
+def log_to_file(file_name='fail_logs.txt', *args):
+    print([arg for arg in args])
+    f = open(file_name, 'a')
+    print([arg for arg in args], file=f)
+    f.close()
+
 def set_country(name):
     connection.set_tenant(Country.objects.get(name=name))
 
@@ -593,6 +599,7 @@ def clean_interventions():
 
 
 def copy_pca_amendments_to_intervention():
+
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
         print(cntry)
@@ -691,7 +698,7 @@ def copy_pca_results_to_intervention():
                 try:
                     intervention = Intervention.objects.get(number=pca.number)
                 except Intervention.DoesNotExist:
-                    print(pca.number)
+                    log_to_file('copy_pca_results_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
                     continue
                 irl, created = InterventionResultLink.objects.get_or_create(intervention=intervention, cp_output=result)
                 irl.ram_indicators.add(*indicators)
@@ -708,7 +715,7 @@ def copy_pca_budgets_to_intervention():
             try:
                 intervention = Intervention.objects.get(number=pca.number)
             except Intervention.DoesNotExist:
-                print(pca.number)
+                log_to_file('copy_pca_budgets_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
                 continue
             print(pb_years)
             for pb_year in pb_years:
@@ -744,15 +751,15 @@ def copy_pca_sector_locations_to_intervention():
                 if not sector_id:
                     continue
                 sector = Sector.objects.get(id=sector_id)
-                gwpc_locations = pca.locations.filter(sector=sector)
+                gwpc_locations = pca.locations.filter(sector=sector).all()
                 locations = []
-                for location in gwpc_locations:
-                    if location.location:
-                        locations.append(location.location)
+                for gwpc_loc in gwpc_locations:
+                    if gwpc_loc.location:
+                        locations.append(gwpc_loc.location)
                 try:
                     intervention = Intervention.objects.get(number=pca.number)
                 except Intervention.DoesNotExist:
-                    print(pca.number)
+                    log_to_file('copy_pca_sector_locations_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
                     continue
                 isl, created = InterventionSectorLocationLink.objects.get_or_create(intervention=intervention,
                                                                                     sector=sector)
@@ -766,7 +773,7 @@ def copy_pca_supply_plan_to_intervention():
             try:
                 intervention = Intervention.objects.get(number=sp.partnership.number)
             except Intervention.DoesNotExist:
-                print(sp.partnership.number)
+                log_to_file('copy_pca_supply_plan_to_intervention: Indervention.DoesNotExist', sp.partnership.id, sp.partnership.number)
                 continue
             sp.intervention = intervention
             sp.save()
@@ -780,7 +787,9 @@ def copy_pca_distribution_plan_to_intervention():
                 try:
                     intervention = Intervention.objects.get(number=dp.partnership.number)
                 except Intervention.DoesNotExist:
-                    print(dp.partnership.number)
+                    log_to_file('copy_pca_distribution_plan_to_intervention: Indervention.DoesNotExist', dp.partnership.id,
+                                dp.partnership.number)
+
                     continue
                 dp.intervention = intervention
                 dp.save()
@@ -808,4 +817,12 @@ def after_partner_migration():
     copy_pca_results_to_intervention()
     copy_pca_attachments_to_intervention()
 
+    # copy_pca_amendments_to_intervention() # this needs to be manual since we can't map type of amendment
+    copy_pca_budgets_to_intervention()
+    copy_pca_sector_locations_to_intervention()
+    copy_pca_supply_plan_to_intervention()
+    copy_pca_distribution_plan_to_intervention()
+    # TODO:
+    # all_countries_do(pca_intervention_fr_numbers)
+    # planned_visits
 
