@@ -3,12 +3,16 @@ import datetime
 from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
+from rest_framework.generics import ListAPIView
+from rest_framework import status
+from rest_framework.response import Response
 
-from partners.models import PCA, PartnerOrganization, GwPCALocation
+from partners.models import PCA, PartnerOrganization, Intervention
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType
 from funds.models import Donor
 from trips.models import Trip, ActionPoint
+from partners.serializers.interventions_v2 import InterventionListSerializer
 
 
 class MainView(TemplateView):
@@ -217,3 +221,21 @@ class HACTDashboardView(TemplateView):
 
 class OutdatedBrowserView(TemplateView):
     template_name = 'outdated_browser.html'
+
+
+class MyInterventionsListAPIView(ListAPIView):
+    # serializer_class = InterventionSerializer
+
+    def list(self, request):
+        """
+        Return All Interventions for Partner
+        """
+        interventions = Intervention.objects.filter(unicef_signatory=self.request.user).filter(
+                Q(status=Intervention.ACTIVE) | Q(status=Intervention.DRAFT)
+            ).order_by("number", "-created")
+        serializer = InterventionListSerializer(interventions, many=True)
+
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
