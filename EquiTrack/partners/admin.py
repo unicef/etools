@@ -302,8 +302,11 @@ class ResultsLinkInline(admin.TabularInline):
     formfield_overrides = {
         models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'5', 'style': 'width:100%'})},
     }
-    inLines = [LowerResultsInline]
-    show_change_link = True
+    # filter_vertical = (
+    #     'ram_indicators',
+    # )
+    # inLines = [LowerResultsInline]
+    # show_change_link = True
 
 
 
@@ -317,9 +320,9 @@ class SectorLocationInline(admin.TabularInline):
     #     'locations'
     # )
     extra = 1
-    formfield_overrides = {
-        models.ManyToManyField: {'widget': Select(attrs={'style': 'width:100%'})},
-    }
+    # formfield_overrides = {
+    #     models.ManyToManyField: {'widget': Select(attrs={'style': 'width:100%'})},
+    # }
     # fields = (
     #     'sector',
     #     'locations'
@@ -595,6 +598,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     )
     filter_horizontal = (
         'unicef_focal_points',
+        'partner_focal_points'
     )
     fieldsets = (
         (_('Intervention Details'), {
