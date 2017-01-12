@@ -1603,20 +1603,9 @@ class GovernmentInterventionResult(models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
-    # TODO remove field after adding sectors field
-    sector = models.ForeignKey(
-        Sector,
-        blank=True, null=True,
-        verbose_name='Programme/Sector'
-    )
     sectors = models.ManyToManyField(
         Sector, blank=True,
         verbose_name='Programme/Sector', related_name='+')
-
-    # TODO remove field after adding sections field
-    section = models.ForeignKey(
-        Section, null=True, blank=True
-    )
     sections = models.ManyToManyField(
         Section, blank=True, related_name='+')
     activities_list = models.ManyToManyField(

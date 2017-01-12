@@ -40,5 +40,13 @@ class Migration(migrations.Migration):
         ),
         migrations.RunPython(
             gov_int_copy_section_sectors, reverse_code=reverse
-        )
+        ),
+        migrations.RemoveField(
+            model_name='governmentinterventionresult',
+            name='section',
+        ),
+        migrations.RemoveField(
+            model_name='governmentinterventionresult',
+            name='sector',
+        ),
     ]
