@@ -7,6 +7,7 @@ from datetime import date
 
 from rest_framework import status
 
+from actrsream import action
 from actstream.models import model_stream
 
 from EquiTrack.factories import (
