@@ -39,12 +39,7 @@ from reports.models import (
     LowerResult,
     AppliedIndicator
 )
-from locations.models import (
-    Governorate,
-    Locality,
-    Location,
-    Region,
-)
+from locations.models import Location
 from supplies.models import SupplyItem
 from supplies.tasks import (
     set_unisupply_distribution,
@@ -2219,8 +2214,6 @@ class PCA(AdminURLMixin, models.Model):
 
         super(PCA, self).save(**kwargs)
 
-
-
     @classmethod
     def get_active_partnerships(cls):
         return cls.objects.filter(current=True, status=cls.ACTIVE)
@@ -2399,29 +2392,11 @@ class GwPCALocation(models.Model):
 
     Relates to :model:`partners.PCA`
     Relates to :model:`users.Sector`
-    Relates to :model:`locations.Governorate`
-    Relates to :model:`locations.Region`
-    Relates to :model:`locations.Locality`
     Relates to :model:`locations.Location`
     """
 
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
-    governorate = models.ForeignKey(
-        Governorate,
-        null=True,
-        blank=True
-    )
-    region = models.ForeignKey(
-        Region,
-        null=True,
-        blank=True
-    )
-    locality = models.ForeignKey(
-        Locality,
-        null=True,
-        blank=True
-    )
     location = models.ForeignKey(
         Location,
         null=True,
@@ -2433,12 +2408,7 @@ class GwPCALocation(models.Model):
         verbose_name = 'Partnership Location'
 
     def __unicode__(self):
-        return u'{} -> {}{}{}'.format(
-            self.governorate.name if self.governorate else u'',
-            self.region.name if self.region else u'',
-            u'-> {}'.format(self.locality.name) if self.locality else u'',
-            self.location.__unicode__() if self.location else u'',
-        )
+        return self.location.__unicode__() if self.location else u''
 
     def view_location(self):
         return get_changeform_link(self)
