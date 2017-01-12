@@ -18,7 +18,7 @@ from EquiTrack.mixins import AdminURLMixin
 from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
-from locations.models import Governorate, Locality, Location, Region
+from locations.models import Location
 from partners.models import (
     PartnerOrganization,
     PCA,
@@ -562,18 +562,6 @@ class TripLocation(models.Model):
     """
 
     trip = models.ForeignKey(Trip)
-    governorate = models.ForeignKey(
-        Governorate,
-        null=True, blank=True
-    )
-    region = models.ForeignKey(
-        Region,
-        null=True, blank=True
-    )
-    locality = models.ForeignKey(
-        Locality,
-        null=True, blank=True
-    )
     location = models.ForeignKey(
         Location,
         null=True, blank=True
