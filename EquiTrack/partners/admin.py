@@ -2,11 +2,11 @@ from __future__ import absolute_import
 
 from partners.exports import PartnerExport, GovernmentExport, InterventionExport, AgreementExport
 
-from django.db import connection
+from django.db import connection, models
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
-
+from django.forms import SelectMultiple
 
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
@@ -14,17 +14,12 @@ from generic_links.admin import GenericLinkStackedInline
 
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
-from EquiTrack.utils import get_changeform_link, get_staticfile_link
+from EquiTrack.utils import get_staticfile_link
 from supplies.models import SupplyItem
 from tpm.models import TPMVisit
-from funds.models import Grant
-from reports.models import Result, Indicator
+from reports.models import Result
 from users.models import Section
-from .exports import (
-    # DonorsFormat,
-    PCAResource,
-    PartnerResource,
-)
+
 from .models import (
     PCA,
     PCAFile,
@@ -53,7 +48,9 @@ from .models import (
     AgreementAmendment,
     InterventionAmendment,
     InterventionSectorLocationLink,
-    InterventionResultLink
+    InterventionResultLink,
+    InterventionBudget,
+    InterventionAttachment,
 
 )
 from .filters import (
@@ -62,7 +59,7 @@ from .filters import (
     PCAGrantFilter,
     PCAGatewayTypeFilter,
 )
-from .mixins import ReadOnlyMixin, SectorMixin, HiddenPartnerMixin
+from .mixins import ReadOnlyMixin, HiddenPartnerMixin
 from .forms import (
     PartnershipForm,
     PartnersAdminForm,
@@ -182,8 +179,6 @@ class AmendmentLogInlineAdmin(admin.TabularInline):
             return self.max_num
 
         return 0
-
-
 class PartnershipBudgetInlineAdmin(admin.TabularInline):
     model = PartnershipBudget
     form = PartnershipBudgetAdminForm
@@ -203,8 +198,6 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
     readonly_fields = (
         'total',
     )
-
-
 class PcaGrantInlineAdmin(admin.TabularInline):
 
     model = PCAGrant
@@ -218,8 +211,6 @@ class PcaGrantInlineAdmin(admin.TabularInline):
         'amendment',
     )
     ordering = ['amendment']
-
-
 class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
@@ -243,6 +234,22 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
         )
 
 
+class BudgetInlineAdmin(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-info'
+    model = InterventionBudget
+    fields = (
+        'year',
+        'partner_contribution',
+        'unicef_cash',
+        'in_kind_amount',
+        'partner_contribution_local',
+        'unicef_cash_local',
+        'in_kind_amount_local',
+        'total',
+    )
+    readonly_fields = ('total', )
+    extra = 0
+
 
 class PlannedVisitsInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
@@ -253,28 +260,41 @@ class PlannedVisitsInline(admin.TabularInline):
         'spot_checks',
         'audit'
     )
-
     extra = 0
+
+
+class InterventionAttachmentsInline(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-attachments'
+    model = InterventionAttachment
+    fields = (
+        'type',
+        'attachment',
+    )
+    extra = 0
+
 
 class ResultsLinkInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
+    # form = ResultLinkForm
     model = InterventionResultLink
     fields = (
         'cp_output',
         'ram_indicators'
     )
     extra = 0
+    formfield_overrides = {
+        models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'5', 'style': 'width:100%'})},
+    }
+
+
+
 
 class SectorLocationInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-locations'
     form = SectorLocationForm
     model = InterventionSectorLocationLink
     extra = 1
-    # fields = (
-    #     'sector',
-    #     'locations'
-    # )
-    # filter_vertical = ('locations',)
+
 
 
 class SupplyPlanInlineAdmin(admin.TabularInline):
@@ -504,7 +524,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
 
 
-class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
+class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
 
     date_hierarchy = 'start'
     list_display = (
@@ -545,6 +565,7 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
     )
     filter_horizontal = (
         'unicef_focal_points',
+        'partner_focal_points'
     )
     fieldsets = (
         (_('Intervention Details'), {
@@ -564,12 +585,14 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
             'fields':
                 (('submission_date_prc',),
                  'review_date_prc',
+                 'prc_review_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
                  #('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
+                 'population_focus',
                  'fr_numbers',),
         }),
         # (_('Add sites by P Code'), {
@@ -581,6 +604,7 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
     inlines = (
         #AmendmentLogInlineAdmin,
         InterventionAmendmentsInlineAdmin,
+        BudgetInlineAdmin,
         #PcaSectorInlineAdmin,
         #PartnershipBudgetInlineAdmin,
         #PcaGrantInlineAdmin,
@@ -594,6 +618,7 @@ class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin,
         PlannedVisitsInline,
         ResultsLinkInline,
         SectorLocationInline,
+        InterventionAttachmentsInline,
     )
 
     suit_form_tabs = (
@@ -662,13 +687,15 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
         'result',
         ('year', 'planned_amount',),
         'planned_visits',
-        'activities',
         'unicef_managers',
-        'sector',
-        'section',
+        'sectors',
+        'sections',
+        'activities',
     )
     filter_horizontal = (
         'unicef_managers',
+        'sectors',
+        'sections',
     )
 
     def get_extra(self, request, obj=None, **kwargs):
@@ -690,6 +717,7 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
             'fields':
                 ('partner',
                  'result_structure',
+                 'country_programme',
                  'number'),
         }),
     )
@@ -697,6 +725,7 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         u'number',
         u'partner',
         u'result_structure',
+        u'country_programme'
     )
     inlines = [GovernmentInterventionResultAdminInline]
 
@@ -771,8 +800,6 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
 
 class BankDetailsInlineAdmin(admin.StackedInline):
     model = BankDetails
-    # form = AgreementAmendmentForm
-    # formset = ParentInlineAdminFormSet
     verbose_name_plural = "Bank Details"
     extra = 1
 
@@ -813,8 +840,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 ((u'name', u'vision_synced',),
                  u'short_name',
                  (u'partner_type', u'cso_type',),
-                 # TODO remove field
-                 u'shared_partner',
                  u'shared_with',
                  u'vendor_number',
                  u'rating',
@@ -1023,6 +1048,7 @@ admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(IndicatorReport)
+admin.site.register(BankDetails)
 admin.site.register(InterventionPlannedVisits)
 #admin.site.register(Intervention)
 admin.site.register(InterventionAmendment)
