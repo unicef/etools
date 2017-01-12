@@ -1603,15 +1603,11 @@ class GovernmentInterventionResult(models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
-    sector = models.ForeignKey(
-        Sector,
-        blank=True, null=True,
-        verbose_name='Programme/Sector'
-    )
-    section = models.ForeignKey(
-        Section,
-        null=True, blank=True
-    )
+    sectors = models.ManyToManyField(
+        Sector, blank=True,
+        verbose_name='Programme/Sector', related_name='+')
+    sections = models.ManyToManyField(
+        Section, blank=True, related_name='+')
     activities_list = models.ManyToManyField(
         Result,
         related_name='activities_list',

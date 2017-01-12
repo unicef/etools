@@ -179,8 +179,6 @@ class AmendmentLogInlineAdmin(admin.TabularInline):
             return self.max_num
 
         return 0
-
-
 class PartnershipBudgetInlineAdmin(admin.TabularInline):
     model = PartnershipBudget
     form = PartnershipBudgetAdminForm
@@ -200,8 +198,6 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
     readonly_fields = (
         'total',
     )
-
-
 class PcaGrantInlineAdmin(admin.TabularInline):
 
     model = PCAGrant
@@ -215,8 +211,6 @@ class PcaGrantInlineAdmin(admin.TabularInline):
         'amendment',
     )
     ordering = ['amendment']
-
-
 class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
@@ -591,12 +585,14 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
             'fields':
                 (('submission_date_prc',),
                  'review_date_prc',
+                 'prc_review_document',
                  ('partner_authorized_officer_signatory', 'signed_by_partner_date',),
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
                  #('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
+                 'population_focus',
                  'fr_numbers',),
         }),
         # (_('Add sites by P Code'), {
@@ -691,13 +687,15 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
         'result',
         ('year', 'planned_amount',),
         'planned_visits',
-        'activities',
         'unicef_managers',
-        'sector',
-        'section',
+        'sectors',
+        'sections',
+        'activities',
     )
     filter_horizontal = (
         'unicef_managers',
+        'sectors',
+        'sections',
     )
 
     def get_extra(self, request, obj=None, **kwargs):
@@ -842,8 +840,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                 ((u'name', u'vision_synced',),
                  u'short_name',
                  (u'partner_type', u'cso_type',),
-                 # TODO remove field
-                 u'shared_partner',
                  u'shared_with',
                  u'vendor_number',
                  u'rating',
@@ -1052,6 +1048,7 @@ admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(IndicatorReport)
+admin.site.register(BankDetails)
 admin.site.register(InterventionPlannedVisits)
 #admin.site.register(Intervention)
 admin.site.register(InterventionAmendment)

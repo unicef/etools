@@ -483,20 +483,20 @@ def bank_details_to_partner():
                     bd.save()
 
         # agreement model bank details
-        agreements = Agreement.objects.filter(bank_name__isnull=False).exclude(bank_name='')
-        if agreements.count() > 0:
-            print("================ AGREEMENTS MODEL ================================")
-            for agr in agreements:
-                bd, created = BankDetails.objects.get_or_create(agreement=agr,
-                                                                partner_organization=agr.partner,
-                                                                bank_name=agr.bank_name,
-                                                                bank_address= agr.bank_address,
-                                                                account_title=agr.account_title,
-                                                                account_number=agr.account_number,
-                                                                routing_details=agr.routing_details,
-                                                                bank_contact_person=agr.bank_contact_person)
-                if created:
-                    print(bd.partner_organization)
+        # agreements = Agreement.objects.filter(bank_name__isnull=False).exclude(bank_name='')
+        # if agreements.count() > 0:
+        #     print("================ AGREEMENTS MODEL ================================")
+        #     for agr in agreements:
+        #         bd, created = BankDetails.objects.get_or_create(agreement=agr,
+        #                                                         partner_organization=agr.partner,
+        #                                                         bank_name=agr.bank_name,
+        #                                                         bank_address= agr.bank_address,
+        #                                                         account_title=agr.account_title,
+        #                                                         account_number=agr.account_number,
+        #                                                         routing_details=agr.routing_details,
+        #                                                         bank_contact_person=agr.bank_contact_person)
+        #         if created:
+        #             print(bd.partner_organization)
 
 #run this after migration partners_0007
 def agreement_amendments_copy():
@@ -625,8 +625,6 @@ def copy_pca_amendments_to_intervention():
                                                                         amendment_number=amendment.amendment_number)
             if created:
                 print('{}-{}'.format(intr_amd.amendment_number, intr_amd.intervention))
-
-
 
 
 def export_old_pca_fields():
