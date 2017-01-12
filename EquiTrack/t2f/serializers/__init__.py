@@ -67,6 +67,22 @@ class ActionPointSerializer(serializers.ModelSerializer):
             raise ValidationError('Due date cannot be later than today.')
         return value
 
+    def validate(self, attrs):
+        error_dict = {}
+        status = attrs.get('status')
+        if status is None and self.instance:
+            status = self.instance.status
+
+        if status == ActionPoint.COMPLETED and not attrs.get('completed_at'):
+            error_dict['completed_at'] = 'This field is required'
+
+        if (status == ActionPoint.COMPLETED or attrs.get('completed_at')) and not attrs.get('actions_taken'):
+            error_dict['actions_taken'] = 'This field is required'
+
+        if error_dict:
+            raise ValidationError(error_dict)
+
+        return attrs
 
 
 class IteneraryItemSerializer(PermissionBasedModelSerializer):
@@ -263,6 +279,11 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             m2m_fields = {k: data.pop(k, []) for k in data.keys()
                           if isinstance(model._meta.get_field_by_name(k)[0], ManyToManyField)}
             data.update(kwargs)
+
+            # TODO: remove this ugly stuff from here
+            if issubclass(model, ActionPoint):
+                data['assigned_by'] = self.context['request'].user
+
             related_instance = model.objects.create(**data)
             for field_name, value in m2m_fields.items():
                 related_manager = getattr(related_instance, field_name)

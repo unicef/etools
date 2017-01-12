@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
 
 import json
-from unittest import skip
+from datetime import datetime, timedelta
 
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from t2f.models import ActionPoint
 from t2f.tests.factories import TravelFactory, ActionPointFactory
 
 
@@ -26,7 +27,7 @@ class ActionPoints(APITenantTestCase):
         self.assertEqual(details_url, '/api/t2f/action_points/1/')
 
     def test_list_view(self):
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.forced_auth_req('get', reverse('t2f:action_points:list'), user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -75,7 +76,6 @@ class ActionPoints(APITenantTestCase):
                           'id',
                           'trip_id'})
 
-    @skip('Skipped till migrations fixed')
     def test_searching(self):
         ActionPointFactory(travel=self.travel, description='search_in_desc')
         ap_2 = ActionPointFactory(travel=self.travel)
@@ -95,3 +95,101 @@ class ActionPoints(APITenantTestCase):
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['data']), 1)
+
+    def test_saving(self):
+        due_date = (datetime.now() - timedelta(days=1)).isoformat()
+
+        data = {'action_points': [{'description': 'Something',
+                                   'due_date': due_date,
+                                   'person_responsible': self.unicef_staff.id,
+                                   'status': 'open',
+                                   'completed_at': None,
+                                   'actions_taken': '',
+                                   'follow_up': True,
+                                   'comments': '',
+                                   'trip_id': self.travel.id}]}
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': self.travel.id}),
+                                        data=data,
+                                        user=self.unicef_staff)
+
+        action_points = json.loads(response.rendered_content)['action_points']
+        self.assertEqual(len(action_points), 1)
+
+    def test_conditionally_required_fields(self):
+        due_date = (datetime.now() - timedelta(days=1)).isoformat()
+
+        data = {'action_points': [{'description': 'Something',
+                                   'due_date': due_date,
+                                   'person_responsible': self.unicef_staff.id,
+                                   'status': 'open',
+                                   'completed_at': None,
+                                   'actions_taken': None,
+                                   'follow_up': True,
+                                   'comments': '',
+                                   'trip_id': self.travel.id}]}
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': self.travel.id}),
+                                        data=data,
+                                        user=self.unicef_staff)
+
+        action_points = json.loads(response.rendered_content)['action_points']
+        self.assertEqual(len(action_points), 1)
+
+        data = {'action_points': [{'description': 'Something',
+                                   'due_date': due_date,
+                                   'person_responsible': self.unicef_staff.id,
+                                   'status': 'completed',
+                                   'completed_at': None,
+                                   'actions_taken': None,
+                                   'follow_up': True,
+                                   'comments': '',
+                                   'trip_id': self.travel.id}]}
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': self.travel.id}),
+                                        data=data,
+                                        user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)['action_points']
+        self.assertEqual(response_json,
+                         [{'completed_at': ['This field is required'],
+                           'actions_taken': ['This field is required']}])
+
+        # Check when the completed at is populated but not completed
+        data = {'action_points': [{'description': 'Something',
+                                   'due_date': due_date,
+                                   'person_responsible': self.unicef_staff.id,
+                                   'status': 'ongoing',
+                                   'completed_at': datetime.now().isoformat(),
+                                   'actions_taken': None,
+                                   'follow_up': True,
+                                   'comments': '',
+                                   'trip_id': self.travel.id}]}
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': self.travel.id}),
+                                        data=data,
+                                        user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)['action_points']
+        self.assertEqual(response_json,
+                         [{'actions_taken': ['This field is required']}])
+
+    def test_automatic_state_change(self):
+        due_date = (datetime.now() - timedelta(days=1)).isoformat()
+
+        data = {'action_points': [{'description': 'Something',
+                                   'due_date': due_date,
+                                   'person_responsible': self.unicef_staff.id,
+                                   'status': 'open',
+                                   'completed_at': datetime.now().isoformat(),
+                                   'actions_taken': 'some actions were done',
+                                   'follow_up': True,
+                                   'comments': '',
+                                   'trip_id': self.travel.id}]}
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': self.travel.id}),
+                                        data=data,
+                                        user=self.unicef_staff)
+
+        action_point_json = json.loads(response.rendered_content)['action_points']
+        self.assertEqual(action_point_json[0]['status'], ActionPoint.ONGOING)
