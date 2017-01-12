@@ -526,7 +526,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         self.assertEqual(self.partner_organization.hact_values['planned_visits'], 5)
 
-    @skip("Fix this")
+    @skip("Fix when HACT available")
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = "UN Agency"
         self.partner_organization.status = PCA.ACTIVE
@@ -565,10 +565,9 @@ class TestAgreementModel(TenantTestCase):
             partner=self.partner_organization,
         )
 
-    @skip("Fix this")
     def test_reference_number(self):
         year = datetime.datetime.today().year
-        self.assertEqual(self.agreement.reference_number, "/PCA{}01".format(year))
+        self.assertIn("TempRef", self.agreement.reference_number)
 
 class TestInterventionModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
@@ -607,7 +606,6 @@ class TestInterventionModel(TenantTestCase):
         self.intervention.end_date = datetime.date(datetime.date.today().year+1, 1, 1)
         # self.assertEqual(self.intervention.duration, 24)
 
-    @skip("Fix this")
     def test_total_unicef_cash(self):
         InterventionBudget.objects.create(
             intervention=self.intervention,
@@ -617,27 +615,30 @@ class TestInterventionModel(TenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.total_unicef_cash, 15000)
+        self.assertEqual(int(self.intervention.total_unicef_cash), 100000)
 
-    @skip("Fix this")
     def test_total_budget(self):
-        PartnershipBudget.objects.create(
-            partnership=self.intervention,
-            unicef_cash=15000,
-            in_kind_amount=10000,
-            partner_contribution=8000,
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.total_budget, 33000)
+        self.assertEqual(int(self.intervention.total_budget), 100200)
 
-    @skip("Fix this")
     def test_reference_number(self):
-        self.assertContains("TempRef:", self.intervention.reference_number)
+        self.assertIn("TempRef:", self.intervention.reference_number)
 
-    @skip("Fix this")
+    @skip("Fix when HACT available")
     def test_planned_cash_transfers(self):
-        PartnershipBudget.objects.create(
-            partnership=self.intervention,
-            unicef_cash=15000,
-            year=datetime.date.today().year,
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.planned_cash_transfers, 15000)
+        self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)

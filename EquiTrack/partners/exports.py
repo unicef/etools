@@ -240,14 +240,14 @@ class PartnerExport(resources.ModelResource):
         return partner_organization.rating
 
     def dehydrate_agreement_count(self, partner_organization):
-        return partner_organization.agreement_set.count()
+        return partner_organization.agreements.count()
 
     def dehydrate_intervention_count(self, partner_organization):
         if partner_organization.partner_type == PartnerType.GOVERNMENT:
             return partner_organization.work_plans.count()
         intervention_count = 0
         # TODO: Nik revisit this... move this into a single query
-        for agr in partner_organization.agreement_set.all():
+        for agr in partner_organization.agreements.all():
             intervention_count += agr.interventions.count()
         return intervention_count
 
