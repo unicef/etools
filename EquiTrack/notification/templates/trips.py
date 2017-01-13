@@ -1,4 +1,3 @@
-__author__ = 'jcranwellward'
 import datetime
 
 from django.db.models import Q

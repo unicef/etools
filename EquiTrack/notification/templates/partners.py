@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from notification.email import BaseEmail
 
 

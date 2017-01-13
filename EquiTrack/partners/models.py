@@ -47,7 +47,7 @@ from supplies.tasks import (
     set_unisupply_user
 )
 from users.models import Section, Office
-from . import emails
+from notification.templates import partners as emails
 
 
 # TODO: streamline this ...
