@@ -88,4 +88,9 @@ class Migration(migrations.Migration):
             name='airlines',
             field=models.ManyToManyField(related_name='_iteneraryitem_airlines_+', to='publics.AirlineCompany'),
         ),
+        migrations.RenameField(
+            model_name='travelactivity',
+            old_name='new_travel_type',
+            new_name='travel_type',
+        ),
     ]

@@ -72,4 +72,8 @@ class Migration(migrations.Migration):
             model_name='travel',
             name='mode_of_travel',
         ),
+        migrations.RemoveField(
+            model_name='travelactivity',
+            name='travel_type',
+        ),
     ]

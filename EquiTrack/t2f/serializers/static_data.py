@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from t2f.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant, TravelType, ModeOfTravel
+from publics.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant
+from t2f.models import TravelType, ModeOfTravel
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result
@@ -121,8 +122,6 @@ class StaticDataSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     currencies = CurrencySerializer(many=True)
     airlines = AirlineSerializer(many=True)
-    offices = OfficeSerializer(many=True)
-    sections = SectionSerializer(many=True)
     partners = PartnerOrganizationSerializer(many=True)
     partnerships = PartnershipSerializer(many=True)
     results = ResultSerializer(many=True)

@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 
 from django.views.generic.base import TemplateView
 
-from t2f.helpers import InvoiceMaker
-from t2f.models import Travel, WBS, Expense, ExpenseType, Currency
+from publics.models import WBS, ExpenseType, Currency
+from t2f.models import Travel
 
 
 class TravelEditView(TemplateView):

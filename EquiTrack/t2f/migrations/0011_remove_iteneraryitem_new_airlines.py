@@ -16,4 +16,19 @@ class Migration(migrations.Migration):
             model_name='iteneraryitem',
             name='new_airlines',
         ),
+        migrations.DeleteModel(
+            name='AirlineCompany',
+        ),
+        migrations.DeleteModel(
+            name='Currency',
+        ),
+        migrations.DeleteModel(
+            name='DSARegion',
+        ),
+        migrations.DeleteModel(
+            name='ModeOfTravel',
+        ),
+        migrations.DeleteModel(
+            name='TravelType',
+        ),
     ]

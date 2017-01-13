@@ -67,7 +67,7 @@ class ExpenseType(models.Model):
     unique = models.BooleanField(default=False)
 
 
-class TravelType(models.Model):
+class TravelType(object):
     PROGRAMME_MONITORING = 'Programmatic Visit'
     SPOT_CHECK = 'Spot Check'
     ADVOCACY = 'Advocacy'
@@ -85,12 +85,10 @@ class TravelType(models.Model):
         (STAFF_ENTITLEMENT, 'Staff Entitlement'),
     )
 
-    name = models.CharField(max_length=32, choices=CHOICES)
-
 
 # TODO: all of these models that only have 1 field should be a choice field on the models that are using it
 # for many-to-many arrayfields are recommended
-class ModeOfTravel(models.Model):
+class ModeOfTravel(object):
     PLANE = 'Plane'
     BUS = 'Bus'
     CAR = 'Car'
@@ -103,43 +101,6 @@ class ModeOfTravel(models.Model):
         (BOAT, 'Boat'),
         (RAIL, 'Rail')
     )
-    name = models.CharField(max_length=8, choices=CHOICES)
-
-
-class Currency(models.Model):
-    # This will be populated from vision
-    name = models.CharField(max_length=128)
-    iso_4217 = models.CharField(max_length=3)
-
-    @property
-    def decimal_places(self):
-        return 4
-
-
-class AirlineCompany(models.Model):
-    # This will be populated from vision
-    name = models.CharField(max_length=255)
-    code = models.IntegerField()
-    iata = models.CharField(max_length=3)
-    icao = models.CharField(max_length=3)
-    country = models.CharField(max_length=255)
-
-
-class DSARegion(models.Model):
-    country = models.CharField(max_length=255)
-    region = models.CharField(max_length=255)
-    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
-    room_rate = models.DecimalField(max_digits=20, decimal_places=4)
-    finalization_date = models.DateField()
-    eff_date = models.DateField()
-    business_area_code = models.CharField(max_length=10, null=True)
-
-    @property
-    def name(self):
-        return '{} - {}'.format(self.country, self.region)
 
 
 def make_travel_reference_number():
@@ -355,7 +316,7 @@ class Travel(models.Model):
 
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities')
-    travel_type = models.ForeignKey('TravelType', null=True, related_name='+')
+    travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, null=True)
     partner = models.ForeignKey('partners.PartnerOrganization', null=True, related_name='+')
     partnership = models.ForeignKey('partners.PCA', null=True, related_name='+')
     result = models.ForeignKey('reports.Result', null=True, related_name='+')

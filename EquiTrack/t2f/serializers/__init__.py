@@ -10,8 +10,9 @@ from django.utils.functional import cached_property
 from rest_framework import serializers, ISO_8601
 from rest_framework.exceptions import ValidationError
 
+from publics.models import AirlineCompany
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelAttachment, AirlineCompany, ModeOfTravel, ActionPoint, Invoice, InvoiceItem, TravelPermission
+    TravelAttachment, ModeOfTravel, ActionPoint, Invoice, InvoiceItem, TravelPermission
 from locations.models import Location
 
 User = get_user_model()
@@ -188,7 +189,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     attachments = TravelAttachmentSerializer(many=True, read_only=True)
     cost_summary = CostSummarySerializer(read_only=True)
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
-    mode_of_travel = serializers.PrimaryKeyRelatedField(queryset=ModeOfTravel.objects.all(), required=False, many=True)
+    mode_of_travel = serializers.CharField(required=False)
     action_points = ActionPointSerializer(many=True, required=False)
 
     # Fix because of a frontend validation failure (fix it on the frontend first)

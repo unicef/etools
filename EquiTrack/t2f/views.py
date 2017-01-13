@@ -24,8 +24,8 @@ from reports.models import Result
 from t2f.serializers.export import TravelListExportSerializer
 from users.models import Office, Section
 
-from t2f.models import Travel, Currency, AirlineCompany, DSARegion, TravelPermission, Fund, ExpenseType, WBS, Grant, \
-    TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice
+from publics.models import Currency, AirlineCompany, DSARegion, Fund, ExpenseType, WBS, Grant
+from t2f.models import Travel, TravelPermission, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer
 from t2f.serializers.static_data import StaticDataSerializer

@@ -57,6 +57,11 @@ class Migration(migrations.Migration):
             preserve_default=False,
         ),
         migrations.AddField(
+            model_name='travelactivity',
+            name='new_travel_type',
+            field=models.CharField(choices=[('Programmatic Visit', 'Programmatic Visit'), ('Spot Check', 'Spot Check'), ('Advocacy', 'Advocacy'), ('Technical Support', 'Technical Support'), ('Meeting', 'Meeting'), ('Staff Development', 'Staff Development'), ('Staff Entitlement', 'Staff Entitlement')], max_length=64, null=True),
+        ),
+        migrations.AddField(
             model_name='costassignment',
             name='new_fund',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+',
