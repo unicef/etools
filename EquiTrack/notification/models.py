@@ -13,7 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from model_utils import Choices
 from post_office.models import EmailTemplate
 
-from EquiTrack.utils import send_mail
+from notification.email import send_mail
 
 
 class Notification(models.Model):
@@ -38,22 +38,15 @@ class Notification(models.Model):
     def __unicode__(self):
         return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
 
-    @classmethod
-    def create_email_template(cls, template_name, subject, content, html_content):
-        EmailTemplate.objects.create(
-            name=template_name, subject=subject,
-            content=content, html_content=html_content,
-        )
-
     def send_notification(self):
+        recipients = list(
+            self.recipients.filter(email__isnull=False).value_list('email', flat=True))
+
         if self.type == 'Email':
             if isinstance(self.sender, User):
                 sender = self.sender
             else:
                 sender = settings.DEFAULT_FROM_EMAIL
-
-            recipients = list(
-                self.recipients.filter(email__isnull=False).value_list('email', flat=True))
 
             send_mail(sender, recipients, self.template_name, self.template_data)
 
