@@ -4,6 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 import logging
 
+from django.contrib.postgres.fields.array import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
@@ -207,9 +208,9 @@ class Travel(models.Model):
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_travel_reference_number)
     hidden = models.BooleanField(default=False)
-    mode_of_travel = models.ManyToManyField('ModeOfTravel', related_name='+')
+    mode_of_travel = ArrayField(models.CharField(max_length=5, choices=ModeOfTravel.CHOICES))
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
-    currency = models.ForeignKey('Currency', null=True, blank=True, related_name='+')
+    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     is_driver = models.BooleanField(default=False)
 
     # When the travel is sent for payment, the expenses should be saved for later use
@@ -369,17 +370,17 @@ class IteneraryItem(models.Model):
     destination = models.CharField(max_length=255)
     departure_date = models.DateTimeField()
     arrival_date = models.DateTimeField()
-    dsa_region = models.ForeignKey('DSARegion', related_name='+')
+    dsa_region = models.ForeignKey('publics.DSARegion', related_name='+', null=True)
     overnight_travel = models.BooleanField(default=False)
-    mode_of_travel = models.ForeignKey('ModeOfTravel', related_name='+')
-    airlines = models.ManyToManyField('AirlineCompany', related_name='+')
+    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, null=True)
+    airlines = models.ManyToManyField('publics.AirlineCompany', related_name='+')
 
 
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')
-    type = models.ForeignKey('ExpenseType', related_name='+')
-    document_currency = models.ForeignKey('Currency', related_name='+')
-    account_currency = models.ForeignKey('Currency', related_name='+')
+    type = models.ForeignKey('publics.ExpenseType', related_name='+', null=True)
+    document_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    account_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=4)
 
 
@@ -418,9 +419,9 @@ class Deduction(models.Model):
 class CostAssignment(models.Model):
     travel = models.ForeignKey('Travel', related_name='cost_assignments')
     share = models.PositiveIntegerField()
-    wbs = models.ForeignKey('WBS', related_name='+')
-    grant = models.ForeignKey('Grant', related_name='+')
-    fund = models.ForeignKey('Fund', related_name='+')
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
 
 
 class Clearances(models.Model):
@@ -547,7 +548,7 @@ class Invoice(models.Model):
     reference_number = models.CharField(max_length=32)
     business_area = models.CharField(max_length=32)
     vendor_number = models.CharField(max_length=32)
-    currency = models.ForeignKey('Currency', related_name='+')
+    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
     vision_fi_id = models.CharField(max_length=16)
@@ -571,9 +572,9 @@ class Invoice(models.Model):
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey('Invoice', related_name='items')
-    wbs = models.ForeignKey('WBS', related_name='+')
-    grant = models.ForeignKey('Grant', related_name='+')
-    fund = models.ForeignKey('Fund', related_name='+')
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
     amount = models.DecimalField(max_digits=20, decimal_places=10)
 
     @property

@@ -145,6 +145,7 @@ class UserProfile(models.Model):
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
     installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
+    vendor_number = models.CharField(max_length=32, null=True)
 
     def username(self):
         return self.user.username
@@ -157,10 +158,6 @@ class UserProfile(models.Model):
 
     def last_name(self):
         return self.user.last_name
-
-    @property
-    def vendor_number(self):
-        return 'user'
 
     def __unicode__(self):
         return u'User profile for {}'.format(
