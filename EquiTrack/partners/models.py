@@ -8,6 +8,7 @@ from django_fsm import FSMField, transition
 from django.db.models import Q, Sum
 from django.conf import settings
 from django.db import models, connection, transaction
+from django.forms.models import model_to_dict
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
@@ -21,8 +22,8 @@ from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
-from model_utils import Choices
-
+from model_utils import Choices, FieldTracker
+from actstream import action
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
@@ -39,12 +40,7 @@ from reports.models import (
     LowerResult,
     AppliedIndicator
 )
-from locations.models import (
-    Governorate,
-    Locality,
-    Location,
-    Region,
-)
+from locations.models import Location
 from supplies.models import SupplyItem
 from supplies.tasks import (
     set_unisupply_distribution,
@@ -928,7 +924,7 @@ class Agreement(TimeStampedModel):
         default=DRAFT
     )
 
-
+    tracker = FieldTracker()
     view_objects = AgreementManager()
     objects = models.Manager()
 
@@ -1064,6 +1060,33 @@ class Agreement(TimeStampedModel):
         self.update_related_interventions(oldself)
 
         return super(Agreement, self).save()
+
+    @classmethod
+    def create_snapshot_activity_stream(cls, actor, target):
+        """
+        Create activity stream for Agreement in order to keep track of field changes
+        actor: An activity trigger - Any Python object
+        target: An action target for the activity - Django ORM with FieldTracker before calling save() method
+        """
+
+        if hasattr(target, 'tracker'):
+            with transaction.atomic():
+                # Get the previous values for changed fields and merge it with
+                # target as dictionary
+                changes = target.tracker.changed()
+                snapshot = dict(model_to_dict(target).items() + changes.items())
+
+                # Stringify any non-JSON Serializeable data types
+                for key, value in snapshot.items():
+                    if type(value) not in [int, float, bool, str]:
+                        snapshot[key] = str(snapshot[key])
+
+                # TODO: Use a different action verb for each status choice in Agreement
+                # Draft, Active, Expired, Suspended, Terminated
+                action.send(actor, verb="changed",
+                            target=target, snapshot=snapshot)
+
+
 class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
@@ -1527,7 +1550,11 @@ class GovernmentIntervention(models.Model):
         related_name='work_plans',
     )
     result_structure = models.ForeignKey(
-        ResultStructure, on_delete=models.DO_NOTHING
+        ResultStructure, on_delete=models.DO_NOTHING, null=True, blank=True
+    )
+    country_programme = models.ForeignKey(
+        CountryProgramme, on_delete=models.DO_NOTHING, null=True, blank=True,
+        related_query_name='government_interventions'
     )
     number = models.CharField(
         max_length=45L,
@@ -1549,13 +1576,12 @@ class GovernmentIntervention(models.Model):
         else:
             objects = list(GovernmentIntervention.objects.filter(
                 partner=self.partner,
-                result_structure=self.result_structure,
+                country_programme=self.country_programme,
             ).order_by('created_at').values_list('id', flat=True))
             sequence = '{0:02d}'.format(objects.index(self.id) + 1 if self.id in objects else len(objects) + 1)
-            number = u'{code}/{partner}/{year}{seq}'.format(
+            number = u'{code}/{partner}/{seq}'.format(
                 code=connection.tenant.country_short_code or '',
                 partner=self.partner.short_name,
-                year=self.result_structure.to_date.year,
                 seq=sequence
             )
         return number
@@ -1600,15 +1626,11 @@ class GovernmentInterventionResult(models.Model):
         verbose_name='Unicef focal points',
         blank=True
     )
-    sector = models.ForeignKey(
-        Sector,
-        blank=True, null=True,
-        verbose_name='Programme/Sector'
-    )
-    section = models.ForeignKey(
-        Section,
-        null=True, blank=True
-    )
+    sectors = models.ManyToManyField(
+        Sector, blank=True,
+        verbose_name='Programme/Sector', related_name='+')
+    sections = models.ManyToManyField(
+        Section, blank=True, related_name='+')
     activities_list = models.ManyToManyField(
         Result,
         related_name='activities_list',
@@ -2220,8 +2242,6 @@ class PCA(AdminURLMixin, models.Model):
 
         super(PCA, self).save(**kwargs)
 
-
-
     @classmethod
     def get_active_partnerships(cls):
         return cls.objects.filter(current=True, status=cls.ACTIVE)
@@ -2400,29 +2420,11 @@ class GwPCALocation(models.Model):
 
     Relates to :model:`partners.PCA`
     Relates to :model:`users.Sector`
-    Relates to :model:`locations.Governorate`
-    Relates to :model:`locations.Region`
-    Relates to :model:`locations.Locality`
     Relates to :model:`locations.Location`
     """
 
     pca = models.ForeignKey(PCA, related_name='locations')
     sector = models.ForeignKey(Sector, null=True, blank=True)
-    governorate = models.ForeignKey(
-        Governorate,
-        null=True,
-        blank=True
-    )
-    region = models.ForeignKey(
-        Region,
-        null=True,
-        blank=True
-    )
-    locality = models.ForeignKey(
-        Locality,
-        null=True,
-        blank=True
-    )
     location = models.ForeignKey(
         Location,
         null=True,
@@ -2434,12 +2436,7 @@ class GwPCALocation(models.Model):
         verbose_name = 'Partnership Location'
 
     def __unicode__(self):
-        return u'{} -> {}{}{}'.format(
-            self.governorate.name if self.governorate else u'',
-            self.region.name if self.region else u'',
-            u'-> {}'.format(self.locality.name) if self.locality else u'',
-            self.location.__unicode__() if self.location else u'',
-        )
+        return self.location.__unicode__() if self.location else u''
 
     def view_location(self):
         return get_changeform_link(self)
