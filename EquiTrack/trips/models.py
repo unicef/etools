@@ -471,7 +471,7 @@ class LinkedPartner(models.Model):
     Relates to :model:`trips.Trip`
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`partners.PCA`
-    Relates to :model:`reports.ResultChain`
+    # Relates to :model:`reports.ResultChain`
     """
 
     trip = models.ForeignKey(Trip)

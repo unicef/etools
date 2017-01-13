@@ -8,6 +8,7 @@ from django_fsm import FSMField, transition
 from django.db.models import Q, Sum
 from django.conf import settings
 from django.db import models, connection, transaction
+from django.forms.models import model_to_dict
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
@@ -21,8 +22,8 @@ from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
 )
-from model_utils import Choices
-
+from model_utils import Choices, FieldTracker
+from actstream import action
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
@@ -923,7 +924,7 @@ class Agreement(TimeStampedModel):
         default=DRAFT
     )
 
-
+    tracker = FieldTracker()
     view_objects = AgreementManager()
     objects = models.Manager()
 
@@ -1059,6 +1060,33 @@ class Agreement(TimeStampedModel):
         self.update_related_interventions(oldself)
 
         return super(Agreement, self).save()
+
+    @classmethod
+    def create_snapshot_activity_stream(cls, actor, target):
+        """
+        Create activity stream for Agreement in order to keep track of field changes
+        actor: An activity trigger - Any Python object
+        target: An action target for the activity - Django ORM with FieldTracker before calling save() method
+        """
+
+        if hasattr(target, 'tracker'):
+            with transaction.atomic():
+                # Get the previous values for changed fields and merge it with
+                # target as dictionary
+                changes = target.tracker.changed()
+                snapshot = dict(model_to_dict(target).items() + changes.items())
+
+                # Stringify any non-JSON Serializeable data types
+                for key, value in snapshot.items():
+                    if type(value) not in [int, float, bool, str]:
+                        snapshot[key] = str(snapshot[key])
+
+                # TODO: Use a different action verb for each status choice in Agreement
+                # Draft, Active, Expired, Suspended, Terminated
+                action.send(actor, verb="changed",
+                            target=target, snapshot=snapshot)
+
+
 class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement

@@ -125,6 +125,7 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
             return AgreementCreateUpdateSerializer
         return super(AgreementDetailAPIView, self).get_serializer_class()
 
+    @transaction.atomic
     def update(self, request, *args, **kwargs):
 
         partial = kwargs.pop('partial', False)
@@ -133,6 +134,8 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         agreement_serializer = self.get_serializer(instance, data=request.data, partial=partial)
         agreement_serializer.is_valid(raise_exception=True)
+
+        Agreement.create_snapshot_activity_stream(request.user, agreement_serializer.instance)
         agreement = agreement_serializer.save()
 
         if amendments:
@@ -155,7 +158,7 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
                 except ValidationError as e:
                     e.detail = {'amendments': e.detail}
                     raise e
-
+                Agreement.create_snapshot_activity_stream(request.user, amd_serializer.instance.agreement)
                 amd_serializer.save()
 
         if getattr(instance, '_prefetched_objects_cache', None):

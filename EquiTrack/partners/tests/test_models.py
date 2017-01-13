@@ -1,8 +1,12 @@
 import datetime
 from unittest import skip
+from actstream import action
+from actstream.models import model_stream
+
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
 from funds.models import Donor, Grant
+
 from reports.models import (
     ResultStructure,
     CountryProgramme,
@@ -564,10 +568,33 @@ class TestAgreementModel(TenantTestCase):
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
         )
+        # Trigger created event activity stream
+        action.send(self.partner_organization, verb = "created", target = self.agreement)
+
 
     def test_reference_number(self):
         year = datetime.datetime.today().year
         self.assertIn("TempRef", self.agreement.reference_number)
+
+    def test_snapshot_activity_stream(self):
+        self.agreement.start = datetime.date.today()
+        self.agreement.signed_by_unicef_date = datetime.date.today()
+
+        Agreement.create_snapshot_activity_stream(
+            self.partner_organization, self.agreement)
+        self.agreement.save()
+
+         # Check if new activity action has been created
+        self.assertEquals(model_stream(Agreement).count(), 2)
+
+         # Check the snapshot content
+        snapshot = model_stream(Agreement).first().data['snapshot']
+        self.assertNotEquals(snapshot, {})
+
+  # Check if the snapshot had the empty entries for bank information when
+  # initially created
+        self.assertEquals(snapshot['start'], 'None')
+        self.assertEquals(snapshot['signed_by_unicef_date'], 'None')
 
 class TestInterventionModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
