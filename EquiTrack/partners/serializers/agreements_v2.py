@@ -1,5 +1,6 @@
 import json
 from operator import xor
+
 from django.db import transaction
 from django.db.models import Q
 from django.core.exceptions import ValidationError
@@ -7,8 +8,9 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import serializers
+from actstream import action
 
-from reports.serializers import IndicatorSerializer, OutputSerializer
+from reports.serializers.v1 import IndicatorSerializer, OutputSerializer
 from partners.serializers.v1 import (
     PartnerOrganizationSerializer,
     PartnerStaffMemberEmbedSerializer,
@@ -16,7 +18,7 @@ from partners.serializers.v1 import (
 )
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
 from locations.models import Location
-
+from reports.models import CountryProgramme
 from users.serializers import SimpleUserSerializer
 
 from .v1 import PartnerStaffMemberSerializer
@@ -132,6 +134,11 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
             start_errors.append("Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).")
         if start_errors:
             errors.update(start=start_errors)
+
+        if data.get("agreement_type", None) == Agreement.PCA or self.instance.agreement_type == Agreement.PCA:
+            cp = CountryProgramme.current()
+            if cp:
+                data.update(end=cp.to_date)
 
         if xor(bool(data.get("signed_by_partner_date", None)), bool(data.get("partner_manager", None))):
             errors.update(partner_manager=["partner_manager and signed_by_partner_date must be provided."])

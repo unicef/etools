@@ -1,1 +1,1 @@
-__author__ = 'jcranwellward'
+default_app_config = 'users.apps.UsersAppConfig'

@@ -1,8 +1,12 @@
 import datetime
 from unittest import skip
+from actstream import action
+from actstream.models import model_stream
+
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
 from funds.models import Donor, Grant
+
 from reports.models import (
     ResultStructure,
     CountryProgramme,
@@ -526,7 +530,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         )
         self.assertEqual(self.partner_organization.hact_values['planned_visits'], 5)
 
-    @skip("Fix this")
+    @skip("Fix when HACT available")
     def test_planned_visits_non_gov(self):
         self.partner_organization.partner_type = "UN Agency"
         self.partner_organization.status = PCA.ACTIVE
@@ -564,11 +568,33 @@ class TestAgreementModel(TenantTestCase):
             agreement_type=Agreement.PCA,
             partner=self.partner_organization,
         )
+        # Trigger created event activity stream
+        action.send(self.partner_organization, verb = "created", target = self.agreement)
 
-    @skip("Fix this")
+
     def test_reference_number(self):
         year = datetime.datetime.today().year
-        self.assertEqual(self.agreement.reference_number, "/PCA{}01".format(year))
+        self.assertIn("TempRef", self.agreement.reference_number)
+
+    def test_snapshot_activity_stream(self):
+        self.agreement.start = datetime.date.today()
+        self.agreement.signed_by_unicef_date = datetime.date.today()
+
+        Agreement.create_snapshot_activity_stream(
+            self.partner_organization, self.agreement)
+        self.agreement.save()
+
+         # Check if new activity action has been created
+        self.assertEquals(model_stream(Agreement).count(), 2)
+
+         # Check the snapshot content
+        snapshot = model_stream(Agreement).first().data['snapshot']
+        self.assertNotEquals(snapshot, {})
+
+  # Check if the snapshot had the empty entries for bank information when
+  # initially created
+        self.assertEquals(snapshot['start'], 'None')
+        self.assertEquals(snapshot['signed_by_unicef_date'], 'None')
 
 class TestInterventionModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
@@ -607,7 +633,6 @@ class TestInterventionModel(TenantTestCase):
         self.intervention.end_date = datetime.date(datetime.date.today().year+1, 1, 1)
         # self.assertEqual(self.intervention.duration, 24)
 
-    @skip("Fix this")
     def test_total_unicef_cash(self):
         InterventionBudget.objects.create(
             intervention=self.intervention,
@@ -617,27 +642,30 @@ class TestInterventionModel(TenantTestCase):
             partner_contribution_local=20,
             in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.total_unicef_cash, 15000)
+        self.assertEqual(int(self.intervention.total_unicef_cash), 100000)
 
-    @skip("Fix this")
     def test_total_budget(self):
-        PartnershipBudget.objects.create(
-            partnership=self.intervention,
-            unicef_cash=15000,
-            in_kind_amount=10000,
-            partner_contribution=8000,
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.total_budget, 33000)
+        self.assertEqual(int(self.intervention.total_budget), 100200)
 
-    @skip("Fix this")
     def test_reference_number(self):
-        self.assertContains("TempRef:", self.intervention.reference_number)
+        self.assertIn("TempRef:", self.intervention.reference_number)
 
-    @skip("Fix this")
+    @skip("Fix when HACT available")
     def test_planned_cash_transfers(self):
-        PartnershipBudget.objects.create(
-            partnership=self.intervention,
-            unicef_cash=15000,
-            year=datetime.date.today().year,
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100000,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
         )
-        self.assertEqual(self.intervention.planned_cash_transfers, 15000)
+        self.assertEqual(int(self.intervention.planned_cash_transfers), 15000)
