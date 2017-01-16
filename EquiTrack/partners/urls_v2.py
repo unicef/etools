@@ -3,7 +3,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from .views.v1 import InterventionsView
 from .views.partner_organization_v2 import (
-    PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView
+    PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView,
 )
 from .views.agreements_v2 import (
     AgreementListAPIView,
@@ -13,6 +13,7 @@ from views.interventions_v2 import (
     InterventionListAPIView,
     InterventionDetailAPIView
 )
+from views.v2 import PmpStaticDropdownsListApiView
 
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
@@ -42,6 +43,6 @@ urlpatterns = (
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
-
+    url(r'^dropdowns/$', view=PmpStaticDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-list'),
 )
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'csv'])

@@ -13,12 +13,18 @@ from rest_framework.generics import (
     RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
+from rest_framework.views import APIView
 
 from partners.models import (
     PartnerOrganization,
     PCA,
     Agreement,
     PartnerStaffMember,
+    PartnerType,
+    Assessment,
+    InterventionAmendment,
+    AgreementAmendment
+
 )
 from partners.serializers.v1 import InterventionSerializer
 from partners.serializers.agreements_v2 import (
@@ -173,3 +179,43 @@ class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
         obj = get_object_or_404(queryset, **filter)
         self.check_object_permissions(self.request, obj)
         return obj
+
+
+class PmpStaticDropdownsListApiView(APIView):
+    # serializer_class = InterventionSerializer
+    # filter_backends = (PartnerScopeFilter,)
+    permission_classes = (PartneshipManagerPermission,)
+
+    def get(self, request):
+        """
+        Return All Static values used for dropdowns in the frontend
+        """
+        cso_types = PartnerOrganization.objects.values_list('cso_type', flat=True).order_by('cso_type').distinct('cso_type')
+        partner_types = PartnerType.CHOICES
+        agency_choices = PartnerOrganization.AGENCY_CHOICES
+        assessment_types = Assessment.objects.values_list('type', flat=True).order_by('type').distinct()
+        agreement_types = Agreement.AGREEMENT_TYPES
+        agreement_status = Agreement.STATUS_CHOICES
+        agreement_amendment_types = AgreementAmendment.AMENDMENT_TYPES
+        intervention_doc_type = Intervention.INTERVENTION_TYPES
+        intervention_status = Intervention.INTERVENTION_STATUS
+        intervention_amendment_types = InterventionAmendment.AMENDMENT_TYPES
+
+
+        return Response(
+            {
+                'cso_types': cso_types,
+                'partner_types': partner_types,
+                'agency_choices': agency_choices,
+                'assessment_types': assessment_types,
+                'agreement_types': agreement_types,
+                'agreement_status': agreement_status,
+                'agreement_amendment_types': agreement_amendment_types,
+                'intervention_doc_type': intervention_doc_type,
+                'intervention_status': intervention_status,
+                'intervention_amendment_types': intervention_amendment_types,
+
+
+             },
+            status=status.HTTP_200_OK
+        )
