@@ -49,39 +49,6 @@ class LocationAdmin(LeafletGeoAdmin, MPTTModelAdmin):
     #     return fields
 
 
-
-class GovernorateAdmin(LeafletGeoAdmin):
-    list_display = (
-        'name',
-        'p_code',
-        'color',
-    )
-    list_editable = ['color']
-
-
-class RegionAdmin(LeafletGeoAdmin):
-    list_display = (
-        'name',
-        'p_code',
-        'governorate',
-        'color',
-    )
-    list_editable = ['color']
-    list_filter = ['governorate']
-
-
-class LocalityAdmin(LeafletGeoAdmin):
-    list_display = (
-        'name',
-        'p_code',
-        'region',
-        'color',
-    )
-    list_editable = ['color']
-    search_fields = ('name', 'cas_code')
-    list_filter = ('region', 'cas_code')
-
-
 class CartoDBTableAdmin(admin.ModelAdmin):
     form = CartoDBTableForm
     save_as = True

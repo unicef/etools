@@ -3,13 +3,11 @@ import json
 from django.db import transaction
 from rest_framework import serializers
 
-from reports.serializers import IndicatorSerializer, OutputSerializer
+from reports.serializers.v1 import IndicatorSerializer, OutputSerializer
 from locations.models import Location
 
-
 from reports.models import LowerResult
-
-from .models import (
+from partners.models import (
     FileType,
     GwPCALocation,
     PCA,
@@ -29,6 +27,7 @@ from .models import (
     PartnerType,
     GovernmentIntervention,
 )
+
 
 class PCASectorGoalSerializer(serializers.ModelSerializer):
 
@@ -266,9 +265,17 @@ class GWLocationSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class PartnerStaffMemberEmbedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PartnerStaffMember
+        fields = ("id", "first_name", "last_name",)
+
+
 class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
     pca_set = InterventionSerializer(many=True, read_only=True)
+    staff_members = PartnerStaffMemberEmbedSerializer(many=True, read_only=True)
 
     class Meta:
         model = PartnerOrganization

@@ -49,9 +49,6 @@ class TripLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = TripLocation
         fields = (
-            'governorate',
-            'region',
-            'locality',
             'location'
         )
 
@@ -301,8 +298,3 @@ class TripSerializer(serializers.ModelSerializer):
             'pending_ta_amendment',
             'files'
         )
-
-
-
-
-

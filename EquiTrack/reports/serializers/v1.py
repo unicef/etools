@@ -5,7 +5,7 @@ from rest_framework import serializers
 from users.serializers import UserProfileSerializer
 from workplan.serializers import ResultWorkplanPropertySerializer
 from workplan.models import ResultWorkplanProperty
-from .models import (
+from reports.models import (
     ResultStructure,
     ResultType,
     Unit,
@@ -37,6 +37,12 @@ class SectorSerializer(serializers.ModelSerializer):
         model = Sector
         fields = ('sector_id', 'name', 'description', 'goals')
 
+class SectorLightSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Sector
+        fields = ('id', 'name')
+
 
 class IndicatorSerializer(serializers.ModelSerializer):
 
@@ -63,6 +69,12 @@ class SectorCreateSerializer(serializers.ModelSerializer):
 
 
 
+class RAMIndicatorLightSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Indicator
+        fields = '__all__'
+
 
 class IndicatorCreateSerializer(serializers.ModelSerializer):
 
@@ -70,7 +82,7 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indicator
-        fields = '__all__'
+        fields = ('id', 'name', 'code')
 
 
 class ResultSerializer(serializers.ModelSerializer):
@@ -89,6 +101,11 @@ class ResultSerializer(serializers.ModelSerializer):
             ResultWorkplanProperty.objects.create(result=result, **workplan_property)
         return result
 
+class ResultLightSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Result
+        fields = ('id', 'result_name')
 
 class ResultStructureSerializer(serializers.ModelSerializer):
 
