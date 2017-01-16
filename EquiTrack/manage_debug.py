@@ -5,8 +5,12 @@ if __name__ == "__main__":
 
 
     import sys
-
-    sys.path.append("/code/pycharm-debug.egg")
+    try:
+        sys.path.append("/code/pycharm-debug.egg")
+    except:
+        sys.stderr.write("Error: " +
+                         "You must add pycharm-debug.egg to your main EquiTrack folder ")
+        sys.exit(1)
     from django.core.management import execute_from_command_line
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "EquiTrack.settings.local")
     DEBUG_IP = os.environ.get("DEBUG_IP", "10.0.2.2")
@@ -21,7 +25,7 @@ if __name__ == "__main__":
            import pydevd
         except ImportError:
            sys.stderr.write("Error: " +
-               "You must add org.python.pydev.debug.pysrc to your PYTHONPATH.")
+               "Could not import pydevd. make sure your pycharm-debug.egg is in the main EquiTrack folder")
            sys.exit(1)
 
         from django.utils import autoreload
