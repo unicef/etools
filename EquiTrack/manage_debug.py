@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+import os
+
+if __name__ == "__main__":
+
+
+    import sys
+
+    sys.path.append("/code/pycharm-debug.egg")
+    from django.core.management import execute_from_command_line
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "EquiTrack.settings.local")
+    DEBUG_IP = os.environ.get("DEBUG_IP", "10.0.2.2")
+    DEBUG_PORT = int(os.environ.get("DEBUG_PORT", 51312))
+    if len(sys.argv) > 1:
+        command = sys.argv[1]
+
+    if (command == "runserver" or command == "testserver"):
+
+        # Make pydev debugger works for auto reload.
+        try:
+           import pydevd
+        except ImportError:
+           sys.stderr.write("Error: " +
+               "You must add org.python.pydev.debug.pysrc to your PYTHONPATH.")
+           sys.exit(1)
+
+        from django.utils import autoreload
+        m = autoreload.main
+        def main(main_func, args=None, kwargs=None):
+           import os
+           if os.environ.get("RUN_MAIN") == "true":
+               def pydevdDecorator(func):
+                   def wrap(*args, **kws):
+                       pydevd.settrace(DEBUG_IP, port=DEBUG_PORT, suspend=False, stdoutToServer=True,
+                                       stderrToServer=True)
+                       return func(*args, **kws)
+                   return wrap
+               main_func = pydevdDecorator(main_func)
+
+           return m(main_func, args, kwargs)
+
+        autoreload.main = main
+
+    execute_from_command_line(sys.argv)
