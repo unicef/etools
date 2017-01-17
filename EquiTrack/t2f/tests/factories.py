@@ -6,9 +6,9 @@ from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
     PartnershipFactory, ResultFactory, LocationFactory
-from publics.models import DSARegion, Currency, AirlineCompany
+from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    ExpenseType, Fund, Grant, WBS, ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
+    ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
     TravelType
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)

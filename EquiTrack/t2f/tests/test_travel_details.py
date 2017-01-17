@@ -7,9 +7,9 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import TravelAttachment, DSARegion, Travel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
-    ModeOfTravelFactory
+from publics.models import DSARegion
+from t2f.models import TravelAttachment, Travel, ModeOfTravel
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory
 
 from .factories import TravelFactory
 
@@ -178,7 +178,6 @@ class TravelDetails(APITenantTestCase):
     def test_itinerary_dates(self):
         dsaregion = DSARegion.objects.first()
         airlines = AirlineCompanyFactory()
-        mode_of_travel = ModeOfTravelFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],
@@ -189,7 +188,7 @@ class TravelDetails(APITenantTestCase):
                                'arrival_date': '2016-11-17T12:06:55.821490',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': mode_of_travel.id,
+                               'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]},
                               {'origin': 'Berlin',
                                'destination': 'Budapest',
@@ -197,7 +196,7 @@ class TravelDetails(APITenantTestCase):
                                'arrival_date': '2016-11-16T12:06:55.821490',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': mode_of_travel.id,
+                               'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': []}
         response = self.forced_auth_req('post',  reverse('t2f:travels:list:index'), data=data,
@@ -214,7 +213,7 @@ class TravelDetails(APITenantTestCase):
                                'arrival_date': '2016-11-15T12:06:55.821490',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': mode_of_travel.id,
+                               'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': []}
         response = self.forced_auth_req('post',  reverse('t2f:travels:list:index'), data=data,
@@ -242,7 +241,6 @@ class TravelDetails(APITenantTestCase):
     def test_itinerary_origin_destination(self):
         dsaregion = DSARegion.objects.first()
         airlines = AirlineCompanyFactory()
-        mode_of_travel = ModeOfTravelFactory()
 
         data = {'cost_assignments': [],
                 'deductions': [],
@@ -253,7 +251,7 @@ class TravelDetails(APITenantTestCase):
                                'arrival_date': '2016-11-16T12:06:55.821490',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': mode_of_travel.id,
+                               'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]},
                               {'origin': 'Something else',
                                'destination': 'Berlin',
@@ -261,7 +259,7 @@ class TravelDetails(APITenantTestCase):
                                'arrival_date': '2016-11-17T12:06:55.821490',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': mode_of_travel.id,
+                               'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': []}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,

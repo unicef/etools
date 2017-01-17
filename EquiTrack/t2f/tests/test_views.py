@@ -4,7 +4,8 @@ from unittest.case import skip
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import TravelPermission, DSARegion
+from publics.models import DSARegion
+from t2f.models import TravelPermission
 from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory
 
 from .factories import TravelFactory

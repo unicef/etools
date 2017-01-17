@@ -11,7 +11,6 @@ from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
-from django.db.utils import ProgrammingError
 from django.template.context import Context
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
@@ -44,27 +43,6 @@ class UserTypes(object):
         (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
         (REPRESENTATIVE, _('Representative')),
     )
-
-
-class WBS(models.Model):
-    name = models.CharField(max_length=25)
-
-
-class Grant(models.Model):
-    wbs = models.ForeignKey('WBS', related_name='grants')
-    name = models.CharField(max_length=25)
-
-
-class Fund(models.Model):
-    grant = models.ForeignKey('Grant', related_name='funds')
-    name = models.CharField(max_length=25)
-
-
-class ExpenseType(models.Model):
-    title = models.CharField(max_length=32)
-    code = models.CharField(max_length=16)
-    vendor_number = models.CharField(max_length=32)
-    unique = models.BooleanField(default=False)
 
 
 class TravelType(object):

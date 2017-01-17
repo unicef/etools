@@ -13,7 +13,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from t2f.helpers import CostSummaryCalculator
 from t2f.models import Expense
 from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory, \
-    ExpenseTypeFactory, CurrencyFactory, ModeOfTravelFactory
+    ExpenseTypeFactory, CurrencyFactory
 
 
 class TestDSACalculations(APITenantTestCase):

@@ -153,7 +153,6 @@ class TravelList(APITenantTestCase):
         dsaregion = DSARegion.objects.first()
         airlines = AirlineCompanyFactory()
         airlines2 = AirlineCompanyFactory()
-        mode_of_travel = ModeOfTravel.objects.first()
 
         data = {'cost_assignments': [],
                 'deductions': [{'date': '2016-11-03',
@@ -168,7 +167,7 @@ class TravelList(APITenantTestCase):
                                'arrival_date': '2016-11-16T12:06:55.821490',
                                'dsa_region': dsaregion.id,
                                'overnight_travel': False,
-                               'mode_of_travel': mode_of_travel.id,
+                               'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id, airlines2.id]}],
                 'activities': []}
 

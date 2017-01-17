@@ -10,6 +10,8 @@ from django.utils.functional import cached_property
 
 from django.core.exceptions import ObjectDoesNotExist
 
+from publics.models import WBS, Grant, Fund
+
 
 class PermissionMatrix(object):
     def __init__(self, travel, user):
@@ -459,7 +461,7 @@ class InvoiceMaker(object):
         return vendor_grouping
 
     def make_invoices(self, vendor_grouping):
-        from t2f.models import Invoice, InvoiceItem, WBS, Grant, Fund
+        from t2f.models import Invoice, InvoiceItem
 
         for vendor_number in vendor_grouping:
             if vendor_number == self.USER_VENDOR_NUMBER:
