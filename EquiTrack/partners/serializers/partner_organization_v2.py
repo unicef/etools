@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.db import transaction
 from rest_framework import serializers
 
-from reports.serializers import IndicatorSerializer, OutputSerializer
+from reports.serializers.v1 import IndicatorSerializer, OutputSerializer
 from partners.serializers.v1 import (
     PartnerOrganizationSerializer,
     PartnerStaffMemberEmbedSerializer,

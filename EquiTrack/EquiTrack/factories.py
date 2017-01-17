@@ -22,21 +22,6 @@ from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
 
-class GovernorateFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.Governorate
-
-    name = factory.Sequence(lambda n: 'Gov {}'.format(n))
-
-
-class RegionFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.Region
-
-    name = factory.Sequence(lambda n: 'District {}'.format(n))
-    governorate = factory.SubFactory(GovernorateFactory)
-
-
 class OfficeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = user_models.Office
@@ -130,15 +115,6 @@ class LocationFactory(factory.django.DjangoModelFactory):
     gateway = factory.SubFactory(GatewayTypeFactory)
     point = GEOSGeometry("POINT(20 20)")
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
-
-
-class LinkedLocationFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.LinkedLocation
-
-    content_object = factory.SubFactory(TripFactory)
-    governorate = factory.SubFactory(GovernorateFactory)
-    region = factory.SubFactory(RegionFactory)
 
 
 class PartnerStaffFactory(factory.django.DjangoModelFactory):
