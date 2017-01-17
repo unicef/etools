@@ -963,6 +963,15 @@ class TestInterventionViews(APITenantTestCase):
         )
         self.intervention = response.data
 
+        self.sector = Sector.objects.create(name="Sector 1")
+        self.location = LocationFactory()
+        self.isll = InterventionSectorLocationLink.objects.create(
+            intervention=Intervention.objects.get(id=self.intervention["id"]),
+            sector=self.sector,
+        )
+        self.isll.locations.add(LocationFactory())
+        self.isll.save()
+
     def test_intervention_list(self):
         response = self.forced_auth_req(
             'get',
@@ -1070,6 +1079,9 @@ class TestInterventionViews(APITenantTestCase):
             "status": Intervention.DRAFT,
             "start": "2016-10-28",
             "end": "2016-10-28",
+            "location": "Location",
+            "sector": self.sector.id,
+            "search": "2009",
         }
         response = self.forced_auth_req(
             'get',

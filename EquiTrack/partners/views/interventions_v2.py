@@ -107,7 +107,7 @@ class InterventionListAPIView(ListCreateAPIView):
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
-                queries.append(Q(intervention_locations=query_params.get("sector")))
+                queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
             if "unicef_focal_points" in query_params.keys():
@@ -119,12 +119,12 @@ class InterventionListAPIView(ListCreateAPIView):
             if "office" in query_params.keys():
                 queries.append(Q(offices__in=[query_params.get("office")]))
             if "location" in query_params.keys():
-                queries.append(Q(intervention_sector_locations__in=[query_params.get("location")]))
+                queries.append(Q(sector_locations__locations__name__icontains=query_params.get("location")))
             if "search" in query_params.keys():
                 queries.append(
                     Q(title__icontains=query_params.get("search")) |
                     Q(agreement__partner__name__icontains=query_params.get("search")) |
-                    Q(number__icontains=query_params.get("number"))
+                    Q(number__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
