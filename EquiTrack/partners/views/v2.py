@@ -29,6 +29,7 @@ from reports.models import (
     Result,
     ResultType,
 )
+from supplies.models import SupplyItem
 
 from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
@@ -195,12 +196,15 @@ class PMPDropdownsListApiView(APIView):
                                 .values('id', 'first_name', 'last_name', 'email'))
         hrps = list(ResultStructure.objects.values())
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT).values('id', 'name', 'wbs'))
+        supply_items = list(SupplyItem.objects.all().values())
 
         return Response(
             {
                 'signed_by_unicef_users': signed_by_unicef,
                 'hrps': hrps,
-                'cp_outputs': cp_outputs
+                'cp_outputs': cp_outputs,
+                'supply_items': supply_items,
+
              },
-            status=status.HTTP_200_OK
+            status=status.HTTP_200_OKItem
         )
