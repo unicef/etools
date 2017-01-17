@@ -29,6 +29,7 @@ class BaseEmail(object):
     that can be overridden in the django admin
     """
     template_name = None
+    description = None
     subject = None
     content = None
 
