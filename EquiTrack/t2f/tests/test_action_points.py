@@ -96,6 +96,26 @@ class ActionPoints(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['data']), 1)
 
+    def test_filtering(self):
+        ActionPointFactory(travel=self.travel, person_responsible=self.traveler, assigned_by=self.traveler)
+        ActionPointFactory(travel=self.travel, person_responsible=self.unicef_staff, assigned_by=self.unicef_staff)
+
+        response = self.forced_auth_req('get', reverse('t2f:action_points:list'), user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 3)
+
+        response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
+                                        data={'f_assigned_by': self.unicef_staff.id},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 1)
+
+        response = self.forced_auth_req('get', reverse('t2f:action_points:list'),
+                                        data={'f_person_responsible': self.traveler.id},
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['data']), 1)
+
     def test_saving(self):
         due_date = (datetime.now() - timedelta(days=1)).isoformat()
 
@@ -194,7 +214,7 @@ class ActionPoints(APITenantTestCase):
         action_point_json = json.loads(response.rendered_content)['action_points']
         self.assertEqual(action_point_json[0]['status'], ActionPoint.ONGOING)
 
-    def invalid_status(self):
+    def test_invalid_status(self):
         due_date = (datetime.now() - timedelta(days=1)).isoformat()
 
         data = {'action_points': [{'description': 'Something',
