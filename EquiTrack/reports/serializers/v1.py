@@ -48,7 +48,7 @@ class IndicatorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indicator
-        fields = ('id', 'name', 'unit', 'total', 'current', 'sector_total', 'sector_current')
+        fields = ('id', 'name', 'unit', 'total', 'current', 'sector_total', 'sector_current', 'result_id')
 
 
 class OutputSerializer(serializers.ModelSerializer):
@@ -82,7 +82,7 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indicator
-        fields = ('id', 'name', 'code')
+        fields = ('id', 'name', 'code', 'result')
 
 
 class ResultSerializer(serializers.ModelSerializer):

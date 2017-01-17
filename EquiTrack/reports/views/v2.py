@@ -4,9 +4,12 @@ import functools
 from django.db.models import Q
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
+from rest_framework.response import Response
+from rest_framework import status
 
-from reports.models import Result, CountryProgramme
+from reports.models import Result, CountryProgramme, Indicator
 from reports.serializers.v2 import ResultListSerializer
+from reports.serializers.v1 import IndicatorCreateSerializer
 
 
 class ResultListAPIView(ListAPIView):
@@ -39,3 +42,19 @@ class ResultDetailAPIView(RetrieveAPIView):
     queryset = Result.objects.all()
     serializer_class = ResultListSerializer
     permission_classes = (IsAdminUser,)
+
+
+class ResultIndicatorListAPIView(ListAPIView):
+    serializer_class = IndicatorCreateSerializer
+    permission_classes = (IsAdminUser,)
+
+    def list(self, request, pk=None, format=None):
+        """
+        Return All Indicators for Result
+        """
+        indicators = Indicator.objects.filter(result_id=pk)
+        serializer = IndicatorCreateSerializer(indicators, many=True)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
