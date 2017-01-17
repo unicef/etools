@@ -10,9 +10,9 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.models import DSARegion, ModeOfTravel, make_travel_reference_number, Travel
-from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, FundFactory, TravelTypeFactory, \
-    ModeOfTravelFactory
+from publics.models import DSARegion
+from t2f.models import ModeOfTravel, make_travel_reference_number, Travel
+from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, FundFactory
 
 from .factories import TravelFactory
 
@@ -92,15 +92,11 @@ class TravelList(APITenantTestCase):
         self.assertEqual(reference_numbers, ['2016/000003', '2016/000002', '2016/000001'])
 
     def test_filtering(self):
-        mode_of_travel_plane = ModeOfTravelFactory(name='plane')
-        mode_of_travel_rail = ModeOfTravelFactory(name='rail')
-        t1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-        t1.mode_of_travel.add(mode_of_travel_plane)
-        t2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
-        t2.mode_of_travel.add(mode_of_travel_rail)
+        t1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.PLANE])
+        t2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.RAIL])
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
-                                        data={'f_travel_type': mode_of_travel_plane.id},
+                                        data={'f_travel_type': ModeOfTravel.PLANE},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('data', response_json)

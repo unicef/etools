@@ -169,7 +169,7 @@ class Travel(models.Model):
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
     reference_number = models.CharField(max_length=12, default=make_travel_reference_number)
     hidden = models.BooleanField(default=False)
-    mode_of_travel = ArrayField(models.CharField(max_length=5, choices=ModeOfTravel.CHOICES))
+    mode_of_travel = ArrayField(models.CharField(max_length=5, choices=ModeOfTravel.CHOICES), null=True)
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
     currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     is_driver = models.BooleanField(default=False)

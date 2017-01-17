@@ -106,18 +106,6 @@ class ExpenseTypeSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'vendor_number', 'unique')
 
 
-class ModeOfTravelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ModeOfTravel
-        fields = ('id', 'name')
-
-
-class TravelTypeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TravelType
-        fields = ('id', 'name')
-
-
 class StaticDataSerializer(serializers.Serializer):
     users = UserSerializer(many=True)
     currencies = CurrencySerializer(many=True)
@@ -131,5 +119,5 @@ class StaticDataSerializer(serializers.Serializer):
     grants = GrantSerializer(many=True)
     funds = FundSerializer(many=True)
     expense_types = ExpenseTypeSerializer(many=True)
-    travel_types = TravelTypeSerializer(many=True)
-    travel_modes = ModeOfTravelSerializer(many=True)
+    travel_types = serializers.ListField(child=serializers.CharField())
+    travel_modes = serializers.ListField(child=serializers.CharField())

@@ -16,6 +16,5 @@ class StaticDataEndpointTest(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/t2f/static_data/', user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         expected_keys = ['dsa_regions', 'currencies', 'users', 'travel_types', 'partners', 'funds', 'results',
-                         'airlines', 'locations', 'travel_modes', 'grants', 'offices', 'expense_types', 'sections',
-                         'wbs', 'partnerships']
+                         'airlines', 'locations', 'travel_modes', 'grants', 'expense_types', 'wbs', 'partnerships']
         self.assertKeysIn(expected_keys, response_json)

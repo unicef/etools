@@ -6,26 +6,13 @@ from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
     PartnershipFactory, ResultFactory, LocationFactory
-from t2f.models import DSARegion, Currency, AirlineCompany, Travel, TravelActivity, IteneraryItem, Expense, Deduction,\
-    CostAssignment, Clearances, ExpenseType, Fund, Grant, WBS, TravelType, ModeOfTravel, make_travel_reference_number, \
-    ActionPoint, make_action_point_number
+from publics.models import DSARegion, Currency, AirlineCompany
+from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
+    ExpenseType, Fund, Grant, WBS, ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
+    TravelType
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
-
-
-class TravelTypeFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=8)
-
-    class Meta:
-        model = TravelType
-
-
-class ModeOfTravelFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=8)
-
-    class Meta:
-        model = ModeOfTravel
 
 
 class ExpenseTypeFactory(factory.DjangoModelFactory):
@@ -91,7 +78,7 @@ class DSARegionFactory(factory.DjangoModelFactory):
 
 
 class TravelActivityFactory(factory.DjangoModelFactory):
-    travel_type = factory.SubFactory(TravelTypeFactory)
+    travel_type = TravelType.ADVOCACY
     partner = factory.SubFactory(PartnerFactory)
     partnership = factory.SubFactory(PartnershipFactory)
     result = factory.SubFactory(ResultFactory)
@@ -113,7 +100,7 @@ class IteneraryItemFactory(factory.DjangoModelFactory):
     arrival_date = fuzzy.FuzzyNaiveDateTime(start_dt=datetime.now(), end_dt=_FUZZY_END_DATE)
     dsa_region = factory.SubFactory(DSARegionFactory)
     overnight_travel = False
-    mode_of_travel = factory.SubFactory(ModeOfTravelFactory)
+    mode_of_travel = ModeOfTravel.BOAT
 
     @factory.post_generation
     def populate_airlines(self, create, extracted, **kwargs):
@@ -191,6 +178,7 @@ class TravelFactory(factory.DjangoModelFactory):
     ta_required = True
     reference_number = factory.Sequence(lambda n: make_travel_reference_number())
     currency = factory.SubFactory(CurrencyFactory)
+    mode_of_travel = []
 
     itinerary = factory.RelatedFactory(IteneraryItemFactory, 'travel')
     expenses = factory.RelatedFactory(ExpenseFactory, 'travel')
