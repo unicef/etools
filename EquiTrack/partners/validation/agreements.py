@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from django_fsm import can_proceed, has_transition_perm
+from django_fsm import can_proceed, has_transition_perm, get_available_FIELD_transitions
 
 from django.utils.functional import cached_property
 
@@ -48,8 +48,8 @@ class AgreementValid(object):
     # TODO: Django fsm gives us some sort of mapping like this
     transitions = [
         {
-            'from':['active'],
-            'to':['suspended'],
+            'from': ['active'],
+            'to': ['suspended'],
             'transition_function': 'transition_to_suspended'
         }
     ]
@@ -67,6 +67,11 @@ class AgreementValid(object):
         return can_proceed(transition)
 
     def get_transition(self):
+        #print [i for i in get_available_FIELD_transitions(self.old, self.old.__class__._meta.get_field('status'))]
+        transitions = list(self.old.__class__._meta.get_field('status').get_all_transitions(self.old.__class__))
+        transitions = self.old.__class__._meta.get_field('status').transitions
+
+        print transitions.get('active', None)
         for obj in self.transitions:
             print obj
             print self.old.status
