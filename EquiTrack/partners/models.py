@@ -28,6 +28,7 @@ from actstream import action
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
 
+from partners.validation.agreements import illegal_transition as agreements_illegal_transition
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -1029,11 +1030,26 @@ class Agreement(TimeStampedModel):
         # mess up the reference numbers.
         pass
 
+    @transition(field=status,
+                source=[ACTIVE, ENDED, SUSPENDED, TERMINATED],
+                target=[DRAFT, CANCELLED],
+                conditions=[agreements_illegal_transition])
+    def transition_to_draft(self):
+        pass
+
+    @transition(field=status,
+                source=[ACTIVE],
+                target=[SUSPENDED],
+                conditions=[agreements_illegal_transition])
+    def transition_to_suspended(self):
+        pass
+
     def check_auto_updates(self):
         self.check_status_auto_updates()
 
         #auto-update country programme:
-        if self.start and self.end:
+
+        if not self.country_programme and self.start and self.end:
             try:
                 self.country_programme = CountryProgramme.encapsulates(self.start, self.end)
             except (CountryProgramme.MultipleObjectsReturned, CountryProgramme.DoesNotExist):

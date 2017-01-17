@@ -28,7 +28,7 @@ from partners.serializers.agreements_v2 import (
 )
 
 from partners.filters import PartnerScopeFilter
-
+from partners.validation.agreements import AgreementValid
 
 
 class AgreementListAPIView(ListCreateAPIView):
@@ -131,12 +131,17 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
         partial = kwargs.pop('partial', False)
         amendments = request.data.pop('amendments', None)
 
+        old_instance = self.get_object()
         instance = self.get_object()
         agreement_serializer = self.get_serializer(instance, data=request.data, partial=partial)
         agreement_serializer.is_valid(raise_exception=True)
 
         Agreement.create_snapshot_activity_stream(request.user, agreement_serializer.instance)
+
         agreement = agreement_serializer.save()
+
+        # before updateing amendments... make sure to keep a version of the old amendments for potential validation
+        setattr(instance, 'amendments_old', list(old_instance.amendments.all()))
 
         if amendments:
             for item in amendments:
@@ -160,6 +165,14 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
                     raise e
                 Agreement.create_snapshot_activity_stream(request.user, amd_serializer.instance.agreement)
                 amd_serializer.save()
+
+
+        validator = AgreementValid(instance, old_instance, request.user)
+
+
+        if not validator.is_valid:
+            print validator.errors
+            raise Exception(validator.errors)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
