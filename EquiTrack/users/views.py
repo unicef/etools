@@ -87,6 +87,29 @@ class UsersView(ListAPIView):
         ).order_by('user__first_name')
 
 
+class UsersDetailAPIView(RetrieveAPIView):
+    """
+    Retrieve a User in the current country
+    """
+    queryset = UserProfile.objects.all()
+    serializer_class = SimpleProfileSerializer
+
+    def retrieve(self, request, pk=None):
+        """
+        Returns an Intervention object for this PK
+        """
+        try:
+            queryset = self.queryset.get(id=pk, country=request.user.profile.country, user__is_staff=True)
+            serializer = self.serializer_class(queryset)
+            data = serializer.data
+        except UserProfile.DoesNotExist:
+            data = {}
+        return Response(
+            data,
+            status=status.HTTP_200_OK
+        )
+
+
 class ProfileEdit(FormView):
 
     template_name = 'users/profile.html'
