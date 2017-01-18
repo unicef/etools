@@ -2,6 +2,7 @@ import operator
 import functools
 
 from django.shortcuts import get_object_or_404
+from django.contrib.auth import models
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import (
@@ -9,6 +10,7 @@ from rest_framework.generics import (
     RetrieveAPIView,
     RetrieveUpdateDestroyAPIView,
 )
+from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
 from partners.models import (
@@ -144,7 +146,7 @@ def normalize_choices(choices):
 
 
 class PmpStaticDropdownsListApiView(APIView):
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (IsAdminUser,)
 
     def get(self, request):
         """
@@ -176,8 +178,6 @@ class PmpStaticDropdownsListApiView(APIView):
                 'intervention_doc_type': intervention_doc_type,
                 'intervention_status': intervention_status,
                 'intervention_amendment_types': intervention_amendment_types,
-
-
              },
             status=status.HTTP_200_OK
         )
@@ -185,13 +185,12 @@ class PmpStaticDropdownsListApiView(APIView):
 class PMPDropdownsListApiView(APIView):
     # serializer_class = InterventionSerializer
     # filter_backends = (PartnerScopeFilter,)
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (IsAdminUser)
 
     def get(self, request):
         """
         Return All dropdown values used for Agreements form
         """
-        from django.contrib.auth import models
         signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team'])
                                 .values('id', 'first_name', 'last_name', 'email'))
         hrps = list(ResultStructure.objects.values())

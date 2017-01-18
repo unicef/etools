@@ -143,7 +143,7 @@ urlpatterns = patterns(
     url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(government_interventions_api.urls)),
     url(r'^api/', include(simple_government_interventions_api.urls)),
-    url(r'^api/', include(bulk_reports_api.urls)),
+
     url(r'^trips/', include('trips.urls')),
 
     # ***************  API version 1 - not used ****************
@@ -163,6 +163,7 @@ urlpatterns = patterns(
     # url(r'^api/', include(tripsfiles_api.urls)),
     # url(r'^api/', include(actionpoint_api.urls)),
     # url(r'^api/', include(simple_interventions_api.urls)),
+    # url(r'^api/', include(bulk_reports_api.urls)),
     # url(r'^management/', include('management.urls')),
     # url(r'^partners/', include('partners.urls')),
     # url(r'^api/', include(partners_api.urls)),

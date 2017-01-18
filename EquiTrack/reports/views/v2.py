@@ -9,7 +9,7 @@ from rest_framework import status
 
 from reports.models import Result, CountryProgramme, Indicator
 from reports.serializers.v2 import ResultListSerializer
-from reports.serializers.v1 import IndicatorCreateSerializer
+from reports.serializers.v1 import IndicatorSerializer
 
 
 class ResultListAPIView(ListAPIView):
@@ -45,7 +45,7 @@ class ResultDetailAPIView(RetrieveAPIView):
 
 
 class ResultIndicatorListAPIView(ListAPIView):
-    serializer_class = IndicatorCreateSerializer
+    serializer_class = IndicatorSerializer
     permission_classes = (IsAdminUser,)
 
     def list(self, request, pk=None, format=None):

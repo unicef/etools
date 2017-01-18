@@ -998,8 +998,8 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     def download_url(self, obj):
         if obj and obj.agreement_type == Agreement.PCA:
             return u'<a class="btn btn-primary default" ' \
-                   u'href="{}" target="_blank" >Download</a>'.format(
-                    reverse('pca_pdf', args=(obj.id,))
+                   u'href="{}" target="_blank" >Download</a>'.format('test'
+                    # reverse('pca_pdf', args=(obj.id,))
                     )
         return u''
     download_url.allow_tags = True
