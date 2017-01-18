@@ -22,7 +22,8 @@ from partners.models import (
     Assessment,
     InterventionAmendment,
     AgreementAmendment,
-    Intervention
+    Intervention,
+    FileType,
 )
 
 from reports.models import (
@@ -185,7 +186,7 @@ class PmpStaticDropdownsListApiView(APIView):
 class PMPDropdownsListApiView(APIView):
     # serializer_class = InterventionSerializer
     # filter_backends = (PartnerScopeFilter,)
-    permission_classes = (IsAdminUser)
+    permission_classes = (IsAdminUser,)
 
     def get(self, request):
         """
@@ -196,6 +197,7 @@ class PMPDropdownsListApiView(APIView):
         hrps = list(ResultStructure.objects.values())
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
+        file_types = list(FileType.objects.all().values())
 
         return Response(
             {
@@ -203,7 +205,8 @@ class PMPDropdownsListApiView(APIView):
                 'hrps': hrps,
                 'cp_outputs': cp_outputs,
                 'supply_items': supply_items,
+                'file_types': file_types
 
              },
-            status=status.HTTP_200_OKItem
+            status=status.HTTP_200_OK
         )

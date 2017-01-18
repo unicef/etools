@@ -43,7 +43,7 @@ urlpatterns = (
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
-    url(r'^dropdowns/static$', view=PmpStaticDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-list'),
-    url(r'^dropdowns/pmp$', view=PMPDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-agreements-list'),
+    url(r'^dropdowns/static/$', view=PmpStaticDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-static-list'),
+    url(r'^dropdowns/pmp/$', view=PMPDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-pmp-list'),
 )
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'csv'])
