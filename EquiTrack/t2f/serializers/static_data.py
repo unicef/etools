@@ -4,7 +4,6 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from publics.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant
-from t2f.models import TravelType, ModeOfTravel
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
 from reports.models import Result

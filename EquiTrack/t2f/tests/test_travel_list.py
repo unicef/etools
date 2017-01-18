@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
-from t2f.models import ModeOfTravel, make_travel_reference_number, Travel
+from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, TravelType
 from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, FundFactory
 
 from .factories import TravelFactory
@@ -178,7 +178,6 @@ class TravelList(APITenantTestCase):
         fund = FundFactory()
         grant = fund.grant
         wbs = grant.wbs
-        travel_type = TravelTypeFactory()
         location = LocationFactory()
 
         data = {'0': {},
@@ -207,10 +206,10 @@ class TravelList(APITenantTestCase):
                                'dsa_region': dsaregion.id,
                                'departure_date': '2016-12-15T15:02:13+01:00',
                                'arrival_date': '2016-12-16T15:02:13+01:00',
-                               'mode_of_travel': mode_of_travel.id}],
+                               'mode_of_travel': ModeOfTravel.BOAT}],
                 'activities': [{'primary_traveler': True,
                                 'locations': [location.id],
-                                'travel_type': travel_type.id,
+                                'travel_type': TravelType.ADVOCACY,
                                 'date': '2016-12-15T15:02:13+01:00'}],
                 'cost_assignments': [{'wbs': wbs.id,
                                       'grant': grant.id,
@@ -221,7 +220,7 @@ class TravelList(APITenantTestCase):
                                'security_course': 'requested'},
                 'ta_required': True,
                 'international_travel': False,
-                'mode_of_travel': [mode_of_travel.id],
+                'mode_of_travel': [ModeOfTravel.BOAT],
                 'traveler': self.traveler.id,
                 'supervisor': self.unicef_staff.id,
                 'start_date': '2016-12-15T15:02:13+01:00',

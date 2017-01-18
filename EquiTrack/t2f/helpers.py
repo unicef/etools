@@ -152,7 +152,7 @@ class CostSummaryCalculator(object):
         dsa = {'start_date': start_date,
                'end_date': end_date,
                'dsa_region': region.id,
-               'dsa_region_name': region.name,
+               'dsa_region_name': region.label,
                'night_count': night_count,
                'daily_rate_usd': daily_rate,
                'amount_usd': amount}

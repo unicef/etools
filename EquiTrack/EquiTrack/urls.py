@@ -11,6 +11,9 @@ from rest_framework_nested import routers
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+
+from publics.views import StaticDataView
+
 admin.autodiscover()
 
 from .utils import staff_required
@@ -131,6 +134,8 @@ urlpatterns = patterns(
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
     url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
+
+    url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
 
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),

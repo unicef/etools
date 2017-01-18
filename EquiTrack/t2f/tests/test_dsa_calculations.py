@@ -1,11 +1,8 @@
 from __future__ import unicode_literals
 
-from unittest import skip
-import json
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from decimal import Decimal
 
-from django.core.urlresolvers import reverse
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
@@ -13,19 +10,23 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from t2f.helpers import CostSummaryCalculator
 from t2f.models import Expense
 from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory, \
-    ExpenseTypeFactory, CurrencyFactory
+    ExpenseTypeFactory, CurrencyFactory, CountryFactory
 
 
 class TestDSACalculations(APITenantTestCase):
     def setUp(self):
         super(TestDSACalculations, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.hungary_region = DSARegionFactory(country='Hungary',
-                                               region='Budapest',
+        hungary = CountryFactory(name='Hungary', long_name='Hungary')
+        usa = CountryFactory(name='United States of America', long_name='United States of America')
+        self.hungary_region = DSARegionFactory(country=hungary,
+                                               area_name='Budapest',
+                                               area_code='123',
                                                dsa_amount_usd=100,
                                                dsa_amount_60plus_usd=80)
-        self.united_states_region = DSARegionFactory(country='United States',
-                                                     region='New York',
+        self.united_states_region = DSARegionFactory(country=usa,
+                                                     area_name='New York',
+                                                     area_code='567',
                                                      dsa_amount_usd=150,
                                                      dsa_amount_60plus_usd=130)
 
@@ -62,14 +63,14 @@ class TestDSACalculations(APITenantTestCase):
                           'dsa': [{'amount_usd': Decimal('8850.0000'),  # 150 * 60 == 9000
                                    'daily_rate_usd': Decimal('150.0000'),
                                    'dsa_region': self.united_states_region.id,
-                                   'dsa_region_name': 'United States - New York',
+                                   'dsa_region_name': 'United States of America - New York',
                                    'end_date': date(2017, 3, 1),
                                    'night_count': 60,
                                    'start_date': date(2017, 1, 1)},
                                   {'amount_usd': Decimal('1170.0000'),  # 130 * 9 = 1170
                                    'daily_rate_usd': Decimal('130.0000'),
                                    'dsa_region': self.united_states_region.id,
-                                   'dsa_region_name': 'United States - New York',
+                                   'dsa_region_name': 'United States of America - New York',
                                    'end_date': date(2017, 3, 10),
                                    'night_count': 9,
                                    'start_date': date(2017, 3, 2)},

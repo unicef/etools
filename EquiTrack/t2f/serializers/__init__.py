@@ -189,7 +189,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     attachments = TravelAttachmentSerializer(many=True, read_only=True)
     cost_summary = CostSummarySerializer(read_only=True)
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
-    mode_of_travel = serializers.ListField(child=serializers.CharField(), required=False)
+    mode_of_travel = serializers.ListField(child=serializers.CharField(), allow_null=True, required=False)
     action_points = ActionPointSerializer(many=True, required=False)
 
     # Fix because of a frontend validation failure (fix it on the frontend first)

@@ -222,7 +222,7 @@ class StaticDataView(generics.GenericAPIView):
         # users, partners, partnerships, results, locations, wbs, grants, funds
 
         country = request.user.profile.country
-        dsa_regions = DSARegion.objects.filter(business_area_code=country.business_area_code)
+        dsa_regions = DSARegion.objects.filter(area_code=country.business_area_code)
 
         data = {'users': get_filtered_users(request),
                 'currencies': Currency.objects.all(),

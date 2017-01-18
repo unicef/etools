@@ -6,7 +6,7 @@ from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
     PartnershipFactory, ResultFactory, LocationFactory
-from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType
+from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType, Country
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
     TravelType
@@ -62,9 +62,22 @@ class AirlineCompanyFactory(factory.DjangoModelFactory):
         model = AirlineCompany
 
 
+class CountryFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=32)
+    long_name = fuzzy.FuzzyText(length=32)
+    iso_2 = fuzzy.FuzzyText(length=2)
+    iso_3 = fuzzy.FuzzyText(length=3)
+    valid_from = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
+    valid_to = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
+
+    class Meta:
+        model = Country
+
+
 class DSARegionFactory(factory.DjangoModelFactory):
-    country = fuzzy.FuzzyText(length=32)
-    region = fuzzy.FuzzyText(length=32)
+    country = factory.SubFactory(CountryFactory)
+    area_name = fuzzy.FuzzyText(length=32)
+    area_code = fuzzy.FuzzyText(length=3)
     dsa_amount_usd = 100
     dsa_amount_60plus_usd = 80
     dsa_amount_local = 200
