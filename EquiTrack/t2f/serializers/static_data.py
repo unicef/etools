@@ -6,6 +6,8 @@ from rest_framework import serializers
 from publics.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
+from publics.serialziers import CurrencySerializer, DSARegionSerializer, WBSSerializer, GrantSerializer, FundSerializer, \
+    ExpenseTypeSerializer, AirlineSerializer
 from reports.models import Result
 from users.models import Office, Section
 
@@ -16,18 +18,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ('id', 'full_name')
-
-
-class CurrencySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Currency
-        fields = ('id', 'name', 'iso_4217')
-
-
-class AirlineSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = AirlineCompany
-        fields = ('id', 'name', 'code')
 
 
 class OfficeSerializer(serializers.ModelSerializer):
@@ -66,43 +56,6 @@ class LocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Location
         fields = ('id', 'name')
-
-
-class DSARegionSerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
-
-    class Meta:
-        model = DSARegion
-        fields = ('id', 'name', 'country', 'region', 'dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local',
-                  'dsa_amount_60plus_local', 'room_rate')
-
-
-class WBSSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = WBS
-        fields = ('id', 'name')
-
-
-class GrantSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Grant
-        fields = ('id', 'name', 'wbs')
-
-
-class FundSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Fund
-        fields = ('id', 'name', 'grant')
-
-
-class ExpenseTypeSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='title')
-    vendor_number = serializers.CharField()
-    unique = serializers.BooleanField()
-
-    class Meta:
-        model = ExpenseType
-        fields = ('id', 'name', 'vendor_number', 'unique')
 
 
 class StaticDataSerializer(serializers.Serializer):
