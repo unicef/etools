@@ -1,15 +1,15 @@
-from django.core.management.base import NoneCommand
+from django.core.management.base import BaseCommand
 
 from post_office.models import EmailTemplate
 
 
-class Command(NoneCommand):
+class Command(BaseCommand):
     help = "Create post_office EmailTemplate objects."
 
     def handle(self, *args, **options):
         # TripCreatedEmail/TripUpdatedEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/created/updated',
+            name = 'trips/trip/created/updated',
             defaults={
                 'description': 'The email that is sent to the supervisor, budget owner, traveller for any update',
                 'subject': 'eTools {{environment}} - Trip {{number}} has been {{state}} for {{owner_name}}',
@@ -38,7 +38,7 @@ class Command(NoneCommand):
 
         # TripApprovedEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/approved',
+            name = 'trips/trip/approved',
             defaults={
                 'description': 'The email that is sent to the traveller if a trip has been approved',
                 'subject': 'eTools {{environment}} - Trip Approved: {{trip_reference}}',
@@ -61,7 +61,7 @@ class Command(NoneCommand):
 
         # TripApprovedEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/approved',
+            name = 'trips/trip/approved',
             defaults={
                 'description': 'The email that is sent to the traveller if a trip has been approved',
                 'subject': 'eTools {{environment}} - Trip Approved: {{trip_reference}}',
@@ -84,7 +84,7 @@ class Command(NoneCommand):
 
         # TripCancelledEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/cancelled',
+            name = 'trips/trip/cancelled',
             defaults={
                 'description': 'The email that is sent to everyone if a trip has been cancelled',
                 'subject': 'eTools {{environment}} - Trip Cancelled: {{trip_reference}}',
@@ -107,7 +107,7 @@ class Command(NoneCommand):
 
         # TripCompletedEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/completed',
+            name = 'trips/trip/completed',
             defaults={
                 'description': 'The email that is sent to travelller and supervisor  when a trip has been completed',
                 'subject': 'eTools {{environment}} - Trip Completed: {{trip_reference}}',
@@ -138,7 +138,7 @@ class Command(NoneCommand):
 
         # TripRepresentativeEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/representative',
+            name = 'trips/trip/representative',
             defaults={
                 'description': 'The email that is sent to the rep  to approve a trip',
                 'subject': 'eTools {{environment}} - Trip Approval Needed: {{trip_reference}}',
@@ -161,7 +161,7 @@ class Command(NoneCommand):
 
         # TripTravelAssistantEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'travel/trip/travel_or_admin_assistant',
+            name = 'travel/trip/travel_or_admin_assistant',
             defaults={
                 'description': 'This e-mail will be sent when the trip is approved by the supervisor. It will go to the travel assistant to prompt them to organise the travel (vehicles, flights etc.) and request security clearance.',
                 'subject': 'eTools {{environment}} - Travel for {{owner_name}}',
@@ -191,7 +191,7 @@ class Command(NoneCommand):
 
         # TripTAEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/TA_request',
+            name = 'trips/trip/TA_request',
             defaults={
                 'description': 'This email is sent to the relevant programme assistant to create the TA for the staff in concern after the approval of the supervisor.',
                 'subject': 'eTools {{environment}} - Travel Authorization request for {{owner_name}}',
@@ -221,7 +221,7 @@ class Command(NoneCommand):
 
         # TripTADraftedEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/TA_drafted',
+            name = 'trips/trip/TA_drafted',
             defaults={
                 'description': 'This email is sent to the relevant colleague to approve the TA for the staff in concern after the TA has been drafted in VISION.',
                 'subject': 'eTools {{environment}} - Travel Authorization drafted for {{owner_name}}',
@@ -251,7 +251,7 @@ class Command(NoneCommand):
 
         # TripActionPointCreated/TripActionPointUpdated/TTripActionPointClosed
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/action/created/updated/closed',
+            name = 'trips/action/created/updated/closed',
             defaults={
                 'description': 'Sent when trip action points are created, updated, or closed',
                 'subject': 'eTools {{environment}} - Trip action point {{state}} for trip: {{trip_reference}}',
@@ -274,7 +274,7 @@ class Command(NoneCommand):
 
         # TripSummaryEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'trips/trip/summary',
+            name = 'trips/trip/summary',
             defaults={
                 'description': 'A summary of trips sent to the owner',
                 'subject': 'eTools {{environment}} - Trip Summary',
@@ -304,7 +304,7 @@ class Command(NoneCommand):
 
         # PartnershipCreatedEmail
         template, created = EmailTemplate.objects.update_or_create(
-            template_name = 'partners/partnership/created/updated',
+            name = 'partners/partnership/created/updated',
             defaults={
                 'description': 'The email that is sent when a PD/SSFA is added or is updated',
                 'subject': 'PD/SSFA {{number}} has been {{state}}',
