@@ -62,8 +62,8 @@ class Country(models.Model):
     iso_2 = models.CharField(max_length=2)
     iso_3 = models.CharField(max_length=3)
     currency = models.ForeignKey('Currency', null=True)
-    valid_from = models.DateField()
-    valid_to = models.DateField()
+    valid_from = models.DateField(null=True)
+    valid_to = models.DateField(null=True)
 
 
 class DSARegion(models.Model):
