@@ -69,8 +69,12 @@ def move_models(apps, schema_editor):
     for travel in Travel.objects.all():
         travel.new_mode_of_travel = [mot.name for mot in travel.mode_of_travel.all()]
         travel.new_currency = get_from_mapping(currency_mapping, travel.currency)
-        travel.new_travel_type = getattr(travel.travel_type, 'name', None)
         travel.save()
+
+    TravelActivity = apps.get_model('t2f', 'TravelActivity')
+    for travel_activity in TravelActivity.objects.all():
+        travel_activity.new_travel_type = getattr(travel_activity.travel_type, 'name', None)
+        travel_activity.save()
 
     IteneraryItem = apps.get_model('t2f', 'IteneraryItem')
     for itinerary_item in IteneraryItem.objects.all():
