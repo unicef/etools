@@ -1,10 +1,11 @@
 from django.conf import settings
+from django.db import transaction
 
 from post_office import mail
 from post_office.models import EmailTemplate
 
 
-def send_mail(sender, recipients, template, variables, attachments=None, cc_list=None, bcc_list=None):
+def send_mail(sender, recipients, template, variables, attachments=None, cc_list=None, bcc_list=None, notification_obj=None):
     """
     Single mail send hook that is reused across the project
     """
@@ -21,6 +22,11 @@ def send_mail(sender, recipients, template, variables, attachments=None, cc_list
     except Exception as exp:
         print exp.message
         print traceback.format_exc()
+    else:
+        with transaction.atomic():
+            if notification_obj:
+                notification_obj.sent_recipients = recipients
+                notification_obj.save()
 
 
 class BaseEmail(object):

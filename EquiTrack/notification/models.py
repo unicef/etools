@@ -31,7 +31,12 @@ class Notification(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     sender = GenericForeignKey('content_type', 'object_id')
-    recipients = models.ManyToManyField(User, related_name="notifications")
+    recipients = ArrayField(
+        models.CharField(max_length=255),
+    )
+    sent_recipients = ArrayField(
+        models.CharField(max_length=255),
+    )
     template_name = models.CharField(max_length=255)
     template_data = JSONField()
 
@@ -39,9 +44,6 @@ class Notification(models.Model):
         return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
 
     def send_notification(self):
-        recipients = list(
-            self.recipients.filter(email__isnull=False).value_list('email', flat=True))
-
         if self.type == 'Email':
             if isinstance(self.sender, User):
                 sender = self.sender
