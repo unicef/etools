@@ -7,9 +7,14 @@ from django.utils.functional import cached_property
 valid_errors = {
     'signed_date_valid': 'Signed date cannot be greater than today',
     'transitional_one': 'Cannot Transition to draft',
-    'transitional_two': 'Cannot Transition to blah blah'
-
+    'transitional_two': 'Cannot Transition to blah blah',
+    'generic_transition_fail': 'GENERIC TRANSITION FAIL'
 }
+
+class TransitionError(Exception):
+    def __init__(self, message=''):
+        super(TransitionError, self).__init__(message)
+
 
 def error_string(function):
     def wrapper(*args, **kwargs):
@@ -20,48 +25,42 @@ def error_string(function):
             return (False, [valid_errors[function.__name__]])
     return wrapper
 
+
 def transition_error_string(function):
     def wrapper(*args, **kwargs):
-        valid = function(*args, **kwargs)
+        try:
+            valid = function(*args, **kwargs)
+        except TransitionError as e:
+            return (False, [valid_errors.get(e.message, e.message)])
+
         if valid and type(valid) is bool:
             return (True, [])
         else:
-            return (False, [valid_errors['transitional_two']])
+            return (False, [valid_errors['generic_transition_fail']])
     return wrapper
 
+
 def illegal_transition(agreement, *args, **kwargs):
-    print 'new agreement {}, old agreement {}'.format(agreement.signed_by_unicef_date, agreement.old_instance.signed_by_unicef_date)
+    if True:
+        raise TransitionError('transitional_twos')
+
     return False
 
 def illegal_transition_permissions(agreement, user):
-    print 'new agreement {}, old agreement {}'.format(agreement.signed_by_unicef_date,
-                                                      agreement.old_instance.signed_by_unicef_date)
-    print user
+
     return False
 
 
-@error_string
+
 def signed_date_valid(agreement):
     now = date.today()
     if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
         return False
     return True
 
-@error_string
-def transition_to_draft(agreement):
-    return True if can_proceed(agreement.transition_to_draft) else False
 
-class AgreementValid(object):
 
-    # TODO: Django fsm gives us some sort of mapping like this
-    transitions = [
-        {
-            'from': ['active'],
-            'to': ['suspended'],
-            'transition_function': 'transition_to_suspended'
-        }
-    ]
-
+class CompleteValidation(object):
     def __init__(self, new, old, user):
         self.new = new
         self.new_status = self.new.status
@@ -71,24 +70,18 @@ class AgreementValid(object):
 
     def check_transition_conditions(self, transition):
         if not transition:
-            print 'no Transition'
             return True
-        b = can_proceed(transition)
-        print b
-        return b
+        return can_proceed(transition)
 
     def check_transition_permission(self, transition):
         if not transition:
-            print 'no Transition'
             return True
-        a = has_transition_perm(transition, self.user)
-        print a
-        return a
+        return has_transition_perm(transition, self.user)
 
     @cached_property
     def transition(self):
         # TODO: try to get the transitions in a better way
-        #print [i for i in get_available_FIELD_transitions(self.old, self.old.__class__._meta.get_field('status'))]
+        # print [i for i in get_available_FIELD_transitions(self.old, self.old.__class__._meta.get_field('status'))]
         # transitions = list(self.old.__class__._meta.get_field('status').get_all_transitions(self.old.__class__))
         # transitions = self.old.__class__._meta.get_field('status').transitions
         # print 'transitions:', transitions.get('active', None)
@@ -99,8 +92,6 @@ class AgreementValid(object):
                     return getattr(self.new, obj['transition_function'])
         return None
 
-
-
     @transition_error_string
     def transitional_validation(self):
         # set old status to get proper transitions
@@ -110,15 +101,15 @@ class AgreementValid(object):
         setattr(self.new, 'old_instance', self.old)
 
         # check conditions and permissions
+
         conditions_check = self.check_transition_conditions(self.transition)
+
         permissions_check = self.check_transition_permission(self.transition)
 
         # cleanup
         delattr(self.new, 'old_instance')
         self.new.status = self.new_status
-        print 'fixed:', self.new.status
         return conditions_check and permissions_check
-
 
     @cached_property
     def basic_validation(self):
@@ -126,8 +117,11 @@ class AgreementValid(object):
         basic set of validations to make sure new state is correct
         :return: True or False
         '''
-        return signed_date_valid(self.new)
-
+        errors = []
+        for function in self.BASIC_VALIDATIONS:
+            a = error_string(function)(self.new)
+            errors = a[1]
+        return not len(errors), errors
 
     @cached_property
     def total_validation(self):
@@ -142,4 +136,23 @@ class AgreementValid(object):
     @property
     def errors(self):
         return self.total_validation[1]
+
+
+class AgreementValid(CompleteValidation):
+
+    # TODO: Django fsm gives us some sort of mapping like this
+    transitions = [
+        {
+            'from': ['active'],
+            'to': ['suspended'],
+            'transition_function': 'transition_to_suspended'
+        }
+    ]
+    # validations that will be checked on every object... these functions only take the new instance
+    BASIC_VALIDATIONS = [signed_date_valid]
+
+
+
+
+
 
