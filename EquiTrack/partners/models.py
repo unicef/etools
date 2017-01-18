@@ -833,12 +833,22 @@ class BankDetails(models.Model):
 class AgreementManager(models.Manager):
     def get_queryset(self):
         return super(AgreementManager, self).get_queryset().select_related('partner')
+
+def draft_to_active_auto_changes(obj):
+    obj.activated_on = datetime.date.today()
+
 class Agreement(TimeStampedModel):
     """
     Represents an agreement with the partner organization.
 
     Relates to :model:`partners.PartnerOrganization`
     """
+    POTENTIAL_AUTO_TRANSITIONS = {
+        'draft': [
+            {'active': [draft_to_active_auto_changes]},
+            {'cancelled': []}
+        ],
+    }
 
     PCA = u'PCA'
     MOU = u'MOU'

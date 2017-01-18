@@ -167,7 +167,7 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
                 amd_serializer.save()
 
 
-        validator = AgreementValid(instance, old_instance, request.user)
+        validator = AgreementValid(instance, old=old_instance, user=request.user)
 
 
         if not validator.is_valid:

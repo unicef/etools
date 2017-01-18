@@ -1,4 +1,4 @@
-from django_fsm import can_proceed, has_transition_perm
+from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitions
 
 from django.utils.functional import cached_property
 
@@ -35,9 +35,11 @@ def transition_error_string(function):
     return wrapper
 
 class CompleteValidation(object):
-    def __init__(self, new, old, user):
+    def __init__(self, new, user=None, old=None):
         self.new = new
         self.new_status = self.new.status
+        self.skip_transition = not old
+        self.skip_permissions = not user
         self.old = old
         self.old_status = self.old.status
         self.user = user
@@ -54,17 +56,7 @@ class CompleteValidation(object):
 
     @cached_property
     def transition(self):
-        # TODO: try to get the transitions in a better way
-        # print [i for i in get_available_FIELD_transitions(self.old, self.old.__class__._meta.get_field('status'))]
-        # transitions = list(self.old.__class__._meta.get_field('status').get_all_transitions(self.old.__class__))
-        # transitions = self.old.__class__._meta.get_field('status').transitions
-        # print 'transitions:', transitions.get('active', None)
-
-        for obj in self.transitions:
-            if self.old_status in obj['from']:
-                if self.new_status in obj['to']:
-                    return getattr(self.new, obj['transition_function'])
-        return None
+        return self._get_fsm_defined_transitions(self.old_status, self.new_status)
 
     @transition_error_string
     def transitional_validation(self):
@@ -78,12 +70,70 @@ class CompleteValidation(object):
 
         conditions_check = self.check_transition_conditions(self.transition)
 
-        permissions_check = self.check_transition_permission(self.transition)
+        if self.skip_permissions:
+            permissions_check = True
+        else:
+            permissions_check = self.check_transition_permission(self.transition)
 
         # cleanup
         delattr(self.new, 'old_instance')
         self.new.status = self.new_status
         return conditions_check and permissions_check
+
+    @cached_property
+    def state_valid(self):
+        if not self.basic_validation[0]:
+            return self.basic_validation
+
+        funct_name = "state_{}_valid".format(self.new_status)
+        function = getattr(self, funct_name, None)
+        if function:
+            return function(self.new)
+        return True, []
+
+    def _get_fsm_defined_transitions(self, source, target):
+        all_transitions = get_all_FIELD_transitions(self.new, self.new.__class__._meta.get_field('status'))
+        for transition in all_transitions:
+            if transition.source == source and target in transition.target:
+                return getattr(self.new, transition.method.__name__)
+
+    @transition_error_string
+    def auto_transition_validation(self, potential_transition):
+        return self.check_transition_conditions(potential_transition)
+
+
+    def _first_available_auto_transition(self):
+        potential = getattr(self.new.__class__, 'POTENTIAL_AUTO_TRANSITIONS', {})
+
+        #Transition list: list of objects [{'transition_to_status': [auto_changes_function1, auto_changes_function2]}]
+        tl = potential.get(self.new.status, None)
+        if not tl:
+            return None
+
+        # ptt: Potential Transition To List
+        pttl = [p.iterkeys().next() for p in tl]
+
+        for potential_transition_to in pttl:
+            # test to see if it's a viable transition:
+            if self.auto_transition_validation(self._get_fsm_defined_transitions(self.new.status,
+                                                                              potential_transition_to))[0]:
+                return True, potential_transition_to, tl[potential_transition_to]
+        return None, None, None
+
+    def _make_auto_transition(self):
+        valid_available_transition, new_status, auto_update_functions = self._first_available_auto_transition()
+        if not valid_available_transition:
+            return False
+        else:
+            self.new.status = new_status
+            for function in auto_update_functions:
+                function(self.new)
+            return True
+
+    def make_auto_transitions(self):
+        while self._make_auto_transition():
+            pass
+        return
 
     @cached_property
     def basic_validation(self):
@@ -104,6 +154,9 @@ class CompleteValidation(object):
     def total_validation(self):
         if not self.basic_validation[0]:
             return False, self.map_errors(self.basic_validation[1])
+
+        if self.skip_transition:
+            return True, []
 
         transitional = self.transitional_validation()
         return transitional[0], self.map_errors(transitional[1])
