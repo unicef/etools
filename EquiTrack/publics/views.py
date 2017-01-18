@@ -43,8 +43,8 @@ class StaticDataView(generics.GenericAPIView):
                 'grants': Grant.objects.all(),
                 'funds': Fund.objects.all(),
                 'expense_types': ExpenseType.objects.all(),
-                'travel_types': [c[0] for c in TravelType.CHOICES],
-                'travel_modes': [c[0] for c in ModeOfTravel.CHOICES]}
+                'travel_types': [c[0].lower() for c in TravelType.CHOICES],
+                'travel_modes': [c[0].lower() for c in ModeOfTravel.CHOICES]}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)

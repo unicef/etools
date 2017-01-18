@@ -12,10 +12,19 @@ from rest_framework.exceptions import ValidationError
 
 from publics.models import AirlineCompany
 from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
-    TravelAttachment, ModeOfTravel, ActionPoint, Invoice, InvoiceItem, TravelPermission
+    TravelAttachment, ActionPoint, Invoice, InvoiceItem, TravelPermission
 from locations.models import Location
 
 User = get_user_model()
+
+
+class LowerTitleField(serializers.CharField):
+    def to_representation(self, value):
+        return value.lower()
+
+    def to_internal_value(self, data):
+        value = super(LowerTitleField, self).to_internal_value(data)
+        return value.title()
 
 
 class PermissionBasedModelSerializer(serializers.ModelSerializer):
@@ -95,6 +104,7 @@ class IteneraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.objects.all(), required=False,
                                                   allow_null=True)
+    mode_of_travel = LowerTitleField(required=False)
 
     class Meta:
         model = IteneraryItem
@@ -142,6 +152,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     locations = serializers.PrimaryKeyRelatedField(many=True, queryset=Location.objects.all(), required=False,
                                                    allow_null=True)
+    travel_type = LowerTitleField(required=False)
 
     class Meta:
         model = TravelActivity
@@ -189,7 +200,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     attachments = TravelAttachmentSerializer(many=True, read_only=True)
     cost_summary = CostSummarySerializer(read_only=True)
     report = serializers.CharField(source='report_note', required=False, default='', allow_blank=True)
-    mode_of_travel = serializers.ListField(child=serializers.CharField(), allow_null=True, required=False)
+    mode_of_travel = serializers.ListField(child=LowerTitleField(), allow_null=True, required=False)
     action_points = ActionPointSerializer(many=True, required=False)
 
     # Fix because of a frontend validation failure (fix it on the frontend first)
