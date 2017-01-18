@@ -1040,7 +1040,8 @@ class Agreement(TimeStampedModel):
     @transition(field=status,
                 source=[ACTIVE],
                 target=[SUSPENDED],
-                conditions=[agreements_illegal_transition])
+                conditions=[agreements_illegal_transition],
+                permission=agreements_illegal_transition)
     def transition_to_suspended(self):
         pass
 
