@@ -694,6 +694,7 @@ class PartnerStaffMember(models.Model):
                 self.reactivate_signal()
 
         return super(PartnerStaffMember, self).save(**kwargs)
+
 class Assessment(models.Model):
     """
     Represents an assessment for a partner organization.
