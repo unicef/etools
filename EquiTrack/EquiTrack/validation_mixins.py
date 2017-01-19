@@ -2,6 +2,60 @@ from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitio
 
 from django.utils.functional import cached_property
 
+
+class ValidatorViewMixin(object):
+    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name,
+                         partial=False):
+        if not field:
+            return
+        for item in field:
+            item.update({reverse_name: mother_obj.pk})
+            if item.get('id', None):
+                try:
+                    instance = fieldClass.objects.get(id=item['id'])
+                except fieldClass.DoesNotExist:
+                    instance = None
+
+                instance_serializer = fieldSerializer(instance=instance,
+                                                      data=item,
+                                                      partial=partial)
+            else:
+                instance_serializer = fieldSerializer(data=item)
+
+            try:
+                instance_serializer.is_valid(raise_exception=True)
+            except ValidationError as e:
+                e.detail = {rel_prop_name: e.detail}
+                raise e
+            instance_serializer.save()
+
+    def my_update(self, request, related_f, snapshot=None, snapshot_class=None, **kwargs):
+        partial = kwargs.pop('partial', False)
+        my_relations = {}
+        for f in related_f:
+            my_relations[f] = request.data.pop(f, [])
+
+        old_instance = self.get_object()
+        instance = self.get_object()
+        main_serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        main_serializer.is_valid(raise_exception=True)
+
+        if snapshot:
+            snapshot_class.create_snapshot_activity_stream(request.user, main_serializer.instance)
+
+        main_object = main_serializer.save()
+        for k in my_relations.iterkeys():
+            prop = '{}_old'.format(k)
+            val = list(getattr(old_instance, k).all())
+            setattr(old_instance, prop, val)
+
+        for k, v in my_relations.iteritems():
+            self.up_related_field(main_object, v, self.MODEL_MAP[k], self.SERIALIZER_MAP[k],
+                                  k, self.REVERSE_MAP[k], partial)
+
+        return instance, old_instance, main_serializer
+
+
 class TransitionError(Exception):
     def __init__(self, message=[]):
         if not isinstance(message, list):
@@ -141,10 +195,12 @@ class CompleteValidation(object):
         basic set of validations to make sure new state is correct
         :return: True or False
         '''
+        setattr(self.new, 'old_instance', self.old)
         errors = []
         for function in self.BASIC_VALIDATIONS:
             a = error_string(function)(self.new)
             errors += a[1]
+        delattr(self.new, 'old_instance')
         return not len(errors), errors
 
     def map_errors(self, errors):

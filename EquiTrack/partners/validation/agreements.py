@@ -21,6 +21,15 @@ def illegal_transition_permissions(agreement, user):
 
 
 def signed_date_valid(agreement):
+    '''
+    :param agreement:
+        agreement - > new agreement
+        agreement.old_instance -> old agreement
+        agreement.old_instance.amendments_old - > old amendments before the update in list format
+
+    :return:
+        True or False / conditions are met
+    '''
     now = date.today()
     if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
         return False
