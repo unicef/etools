@@ -31,7 +31,7 @@ from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, Trave
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.serializers.permission_matrix import PermissionMatrixSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix, InvoiceMaker
-from t2f.permission_matrix import TRAVEL_PERMISSION_MATRIX, ACTION_POINT_MATRIX
+from t2f.permission_matrix import PERMISSION_MATRIX, ACTION_POINT_MATRIX
 
 
 class T2FPagePagination(PageNumberPagination):
@@ -268,6 +268,6 @@ class PermissionMatrixView(generics.GenericAPIView):
         #     # permission_matrix_data = serializer.data
         #     cache.set('travel_matrix', TRAVEL_PERMISSION_MATRIX, self.cache_timeout)
         #
-        matrix = {'travel': TRAVEL_PERMISSION_MATRIX,
-                  'action_point': ACTION_POINT_MATRIX}
-        return Response(matrix, status.HTTP_200_OK)
+        # matrix = {'travel': TRAVEL_PERMISSION_MATRIX,
+        #           'action_point': ACTION_POINT_MATRIX}
+        return Response(PERMISSION_MATRIX, status.HTTP_200_OK)
