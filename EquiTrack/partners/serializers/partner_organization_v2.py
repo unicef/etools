@@ -141,6 +141,7 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
     active_staff_members = serializers.SerializerMethodField()
+    assessments = serializers.SerializerMethodField()
 
     class Meta:
 
@@ -150,10 +151,13 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         fields = ('vendor_number', 'vision_synced', 'deleted_flag', 'blocked', 'name', 'short_name', 'alternate_id',
                   'alternate_name', 'partner_type', 'cso_type', 'shared_partner', 'address', 'email', 'phone_number',
                   'rating', 'type_of_assessment', 'last_assessment_date', 'total_ct_cp', 'total_ct_cy',
-                  'active_staff_members')
+                  'active_staff_members', 'core_values_assessment_date', 'assessments')
 
     def get_active_staff_members(self, obj):
         return ', '.join([sm.get_full_name() for sm in obj.staff_members.filter(active=True).all()])
+
+    def get_assessments(self, obj):
+        return ', '.join(["{} {}".format(a.type, a.completed_date) for a in obj.assessments.all()])
 
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
