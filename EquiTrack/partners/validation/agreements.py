@@ -1,6 +1,6 @@
 from datetime import date, datetime
 
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields
 
 
 
@@ -31,8 +31,8 @@ def signed_date_valid(agreement):
         True or False / conditions are met
     '''
     now = date.today()
-    # if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
-    #     return False
+    if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
+        return False
     return True
 
 def signed_boo_valid(agreement):
@@ -45,6 +45,7 @@ def signed_by_everyone_valid(agreement):
     if not agreement.signed_by_partner_date and agreement.signed_by_unicef_date:
         return False
     return True
+
 
 class AgreementValid(CompleteValidation):
 
@@ -65,7 +66,9 @@ class AgreementValid(CompleteValidation):
             return False, ['suspended_invalid']
 
     def state_active_valid(self, agreement):
-        pass
+        rigid_fields = ['signed_by_unicef_date']
+        valid, changed_field = check_rigid_fields(agreement, rigid_fields)
+        return valid, ['rigid_field_changed: %s' % changed_field] if not valid else None
 
 
 

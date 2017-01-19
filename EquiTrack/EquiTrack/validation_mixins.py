@@ -4,6 +4,13 @@ from rest_framework.exceptions import ValidationError
 from django.apps import apps
 from django.utils.functional import cached_property
 
+def check_rigid_fields(obj, fields):
+    if not obj.old_instance:
+        return False, None
+    for field in fields:
+        if getattr(obj, field) != getattr(obj.old_instance, field):
+            return False, field
+    return True, None
 
 class ValidatorViewMixin(object):
     def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name,
@@ -172,11 +179,18 @@ class CompleteValidation(object):
         if not self.basic_validation[0]:
             return self.basic_validation
 
+        result = (True, [])
+        # set old instance on instance to make it available to the validation functions
+        setattr(self.new, 'old_instance', self.old)
+
         funct_name = "state_{}_valid".format(self.new_status)
         function = getattr(self, funct_name, None)
         if function:
-            return function(self.new)
-        return True, []
+            result = function(self.new)
+
+        # cleanup
+        delattr(self.new, 'old_instance')
+        return result
 
     def _get_fsm_defined_transitions(self, source, target):
         all_transitions = get_all_FIELD_transitions(self.new, self.new.__class__._meta.get_field('status'))
@@ -243,6 +257,9 @@ class CompleteValidation(object):
     def total_validation(self):
         if not self.basic_validation[0]:
             return False, self.map_errors(self.basic_validation[1])
+
+        if not self.state_valid[0]:
+            return False, self.map_errors(self.state_valid[1])
 
         if self.skip_transition:
             return True, []
