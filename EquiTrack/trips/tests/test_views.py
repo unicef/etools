@@ -27,7 +27,6 @@ class TestTripViews(APITenantTestCase):
             password='test'
         )
 
-    @skip("moved to t2f")
     def test_view_trips_list(self):
 
         response = self.forced_auth_req('get', '/api/trips/')
@@ -36,7 +35,6 @@ class TestTripViews(APITenantTestCase):
         # the length of this list should be 1
         self.assertEquals(len(response.data), 1)
 
-    @skip("moved to t2f")
     def test_view_trips_api_action(self):
         # the trip should be in status planned
         self.assertEquals(self.trip.status, Trip.PLANNED)

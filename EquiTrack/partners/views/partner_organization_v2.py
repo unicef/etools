@@ -24,7 +24,6 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
-    PartnerStaffMemberExportSerializer,
 )
 
 
@@ -191,28 +190,7 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     """
     queryset = PartnerStaffMember.objects.all()
     serializer_class = PartnerStaffMemberDetailSerializer
-    permission_classes = (PartneshipManagerPermission,)
+    permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
 
-    def get_serializer_class(self, format=None):
-        if self.request.method == "GET":
-            query_params = self.request.query_params
-            if "format" in query_params.keys():
-                if query_params.get("format") == 'csv':
-                    return PartnerStaffMemberExportSerializer
-        if self.request.method == "POST":
-            return PartnerStaffMemberCreateUpdateSerializer
-        return super(PartnerStaffMemberListAPIVIew, self).get_serializer_class()
-
-    def list(self, request, partner_pk=None, format=None):
-        """
-            Checks for format query parameter
-            :returns: JSON or CSV file
-        """
-        query_params = self.request.query_params
-        response = super(PartnerStaffMemberListAPIVIew, self).list(request)
-        if "format" in query_params.keys():
-            if query_params.get("format") == 'csv':
-                response['Content-Disposition'] = "attachment;filename=staff-members.csv"
-        return response
 

@@ -127,7 +127,7 @@ class PartnerStaffMemberPropertiesAPIView(RetrieveAPIView):
         return obj
 
 
-def normalize_choices(choices):
+def choices_to_json_ready(choices):
 
     if isinstance(choices, dict):
         choice_list = [[k, v] for k, v in choices]
@@ -153,18 +153,18 @@ class PmpStaticDropdownsListApiView(APIView):
         """
         Return All Static values used for dropdowns in the frontend
         """
-        cso_types = normalize_choices(list(PartnerOrganization.objects.values_list('cso_type', flat=True).
+        cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).
                                       order_by('cso_type').distinct('cso_type')))
-        partner_types = normalize_choices(tuple(PartnerType.CHOICES))
-        agency_choices = normalize_choices(tuple(PartnerOrganization.AGENCY_CHOICES))
-        assessment_types = normalize_choices(list(Assessment.objects.values_list('type', flat=True).
+        partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
+        agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
+        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).
                                                   order_by('type').distinct()))
-        agreement_types = normalize_choices(Agreement.AGREEMENT_TYPES)
-        agreement_status = normalize_choices(Agreement.STATUS_CHOICES)
-        agreement_amendment_types = normalize_choices(tuple(AgreementAmendment.AMENDMENT_TYPES))
-        intervention_doc_type = normalize_choices(Intervention.INTERVENTION_TYPES)
-        intervention_status = normalize_choices(Intervention.INTERVENTION_STATUS)
-        intervention_amendment_types = normalize_choices(InterventionAmendment.AMENDMENT_TYPES)
+        agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
+        agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
+        agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendment.AMENDMENT_TYPES))
+        intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
+        intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
+        intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
 
 
         return Response(

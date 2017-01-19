@@ -88,12 +88,12 @@ api = routers.SimpleRouter()
 
 # api.register(r'funds/donors', DonorViewSet, base_name='donors')
 # api.register(r'funds/grants', GrantViewSet, base_name='grants')
-# trips_api = routers.SimpleRouter()
-# trips_api.register(r'trips', TripsViewSet, base_name='trips')
-# tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
-# tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
-# actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
-# actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
+trips_api = routers.SimpleRouter()
+trips_api.register(r'trips', TripsViewSet, base_name='trips')
+tripsfiles_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
+tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
+actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
+actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
 # api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
 
 
@@ -145,6 +145,9 @@ urlpatterns = patterns(
     url(r'^api/', include(simple_government_interventions_api.urls)),
 
     url(r'^trips/', include('trips.urls')),
+    url(r'^api/', include(trips_api.urls)),
+    url(r'^api/', include(tripsfiles_api.urls)),
+    url(r'^api/', include(actionpoint_api.urls)),
 
     # ***************  API version 1 - not used ****************
     # url(r'^api/', include(agreement_api.urls)),
@@ -159,11 +162,8 @@ urlpatterns = patterns(
     # url(r'^api/', include(pcaamendments_api.urls)),
     # url(r'^api/', include(pcalocations_api.urls)),
     # url(r'^api/', include(intervention_reports_api.urls)),
-    # url(r'^api/', include(trips_api.urls)),
-    # url(r'^api/', include(tripsfiles_api.urls)),
-    # url(r'^api/', include(actionpoint_api.urls)),
     # url(r'^api/', include(simple_interventions_api.urls)),
-    url(r'^api/', include(bulk_reports_api.urls)),
+    # url(r'^api/', include(bulk_reports_api.urls)),
     # url(r'^management/', include('management.urls')),
     # url(r'^partners/', include('partners.urls')),
     # url(r'^api/', include(partners_api.urls)),

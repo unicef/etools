@@ -53,7 +53,7 @@ class ResultIndicatorListAPIView(ListAPIView):
         Return All Indicators for Result
         """
         indicators = Indicator.objects.filter(result_id=pk)
-        serializer = IndicatorCreateSerializer(indicators, many=True)
+        serializer = self.get_serializer(indicators, many=True)
         return Response(
             serializer.data,
             status=status.HTTP_200_OK
