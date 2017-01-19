@@ -1,3 +1,4 @@
+import copy
 from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitions
 
 from django.utils.functional import cached_property
@@ -88,14 +89,34 @@ def transition_error_string(function):
             return (False, ['generic_transition_fail'])
     return wrapper
 
+def update_object(obj, kwdict):
+    for k, v in kwdict.iteritems():
+        setattr(obj, k, v)
+
 class CompleteValidation(object):
-    def __init__(self, new, user=None, old=None):
+    def __init__(self, new, user=None, old=None, instance_class=None):
+        if isinstance(new, dict):
+            if not instance_class:
+                raise TypeError('Object Transimitted for validation cannot be dict if instance_class is not defined')
+            new_id = new.get('id', None) or new.get('pk', None)
+            if new_id:
+                # let it raise the error if it does not exist
+                old_instance = old if old and old.id == new_id else instance_class.objects.get(id=new_id)
+                new_instance = instance_class.objects.get(id=new_id)
+                update_object(new_instance, new)
+
+            else:
+                old_instance = old
+                new_instance = update_object(copy.deepcopy(old), new) if old else instance_class(**new)
+            new = new_instance
+            old = old_instance
+
         self.new = new
         self.new_status = self.new.status
         self.skip_transition = not old
         self.skip_permissions = not user
         self.old = old
-        self.old_status = self.old.status
+        self.old_status = self.old.status if self.old else None
         self.user = user
 
     def check_transition_conditions(self, transition):
