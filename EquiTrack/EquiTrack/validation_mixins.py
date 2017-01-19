@@ -95,6 +95,8 @@ def update_object(obj, kwdict):
 
 class CompleteValidation(object):
     def __init__(self, new, user=None, old=None, instance_class=None):
+        if old and isinstance(old, dict):
+            raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
         if isinstance(new, dict):
             if not instance_class:
                 raise TypeError('Object Transimitted for validation cannot be dict if instance_class is not defined')
