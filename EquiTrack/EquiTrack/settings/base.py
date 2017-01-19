@@ -408,6 +408,7 @@ SHARED_APPS = (
     'management',
     # you must list the app where your tenant model resides in
     'users',
+    'rest_framework_raml',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20

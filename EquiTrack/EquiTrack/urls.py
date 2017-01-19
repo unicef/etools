@@ -1,5 +1,14 @@
 from __future__ import absolute_import
 
+from rest_framework.schemas import get_schema_view
+from rest_framework_raml.renderers import RAMLRenderer, RAMLDocsRenderer
+
+schema_view = get_schema_view(
+    title='Example API',
+    renderer_classes=[RAMLRenderer, RAMLDocsRenderer]
+)
+
+
 from django.conf import settings
 from django.conf.urls import patterns, include, url
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -80,7 +89,7 @@ from workplan.views import (
 
 from t2f.urls import urlpatterns as et2f_patterns
 
-schema_view = get_swagger_view(title='eTools API')
+#schema_view = get_swagger_view(title='eTools API')
 
 api = routers.SimpleRouter()
 
@@ -124,6 +133,7 @@ api.register(r'labels', LabelViewSet, base_name='labels')
 urlpatterns = patterns(
     '',
     # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
+    url(r'^raml/$', schema_view),
     url(r'^$', staff_required(UserDashboardView.as_view()), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
