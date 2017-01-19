@@ -22,7 +22,8 @@ from reports.models import CountryProgramme
 from users.serializers import SimpleUserSerializer
 
 from .v1 import PartnerStaffMemberSerializer
-
+#from EquiTrack.validation_mixins import CompleteValidation
+from partners.validation.agreements import AgreementValid
 from partners.models import (
     PCA,
     InterventionBudget,
@@ -125,7 +126,11 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data = super(AgreementCreateUpdateSerializer, self).validate(data)
-        errors = {}
+
+        # When running validations in the serializer.. keep in mind that the
+        # related fields have not been updated and therefore not accessible on old_instance.relatedfield_old.
+        # If you want to run validation only after related fields have been updated. please run it in the view
+        validator = AgreementValid(data, old=self.instance)
 
         start_errors = []
         # if data.get("end", None) and not data.get("start", None):
@@ -153,6 +158,6 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
         #     if not partner.partner_type == "Civil Society Organization":
         #         errors.update(partner=["Partner type must be CSO for PCA or SSFA agreement types."])
 
-        if errors:
-            raise serializers.ValidationError(errors)
+        if not validator.is_valid:
+            raise serializers.ValidationError({'errors':validator.errors})
         return data

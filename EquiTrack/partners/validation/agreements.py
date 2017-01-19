@@ -31,14 +31,14 @@ def signed_date_valid(agreement):
         True or False / conditions are met
     '''
     now = date.today()
-    if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
-        return False
+    # if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
+    #     return False
     return True
 
 def signed_boo_valid(agreement):
     now = date.today()
-    if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
-        return False
+    # if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
+    #     return False
     return True
 
 def signed_by_everyone_valid(agreement):
@@ -48,7 +48,7 @@ def signed_by_everyone_valid(agreement):
 
 class AgreementValid(CompleteValidation):
 
-
+    VALIDATION_CLASS = 'partners.Agreement'
     # validations that will be checked on every object... these functions only take the new instance
     BASIC_VALIDATIONS = [signed_date_valid, signed_boo_valid]
     VALID_ERRORS = {

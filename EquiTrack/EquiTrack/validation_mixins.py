@@ -1,6 +1,7 @@
 import copy
 from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitions
-
+from rest_framework.exceptions import ValidationError
+from django.apps import apps
 from django.utils.functional import cached_property
 
 
@@ -97,19 +98,28 @@ class CompleteValidation(object):
     def __init__(self, new, user=None, old=None, instance_class=None):
         if old and isinstance(old, dict):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
+
         if isinstance(new, dict):
-            if not instance_class:
-                raise TypeError('Object Transimitted for validation cannot be dict if instance_class is not defined')
+            print 'instance is dict'
+            print old
+            if not old and not instance_class:
+                try:
+                    instance_class = apps.get_model(getattr(self, 'VALIDATION_CLASS'))
+                except LookupError:
+                    raise TypeError('Object Transimitted for validation cannot be dict if instance_class is not defined')
             new_id = new.get('id', None) or new.get('pk', None)
             if new_id:
+                print 'newid'
                 # let it raise the error if it does not exist
                 old_instance = old if old and old.id == new_id else instance_class.objects.get(id=new_id)
                 new_instance = instance_class.objects.get(id=new_id)
                 update_object(new_instance, new)
 
             else:
+                print 'no id'
                 old_instance = old
-                new_instance = update_object(copy.deepcopy(old), new) if old else instance_class(**new)
+                new_instance = copy.deepcopy(old) if old else instance_class(**new)
+                update_object(new_instance, new)
             new = new_instance
             old = old_instance
 
