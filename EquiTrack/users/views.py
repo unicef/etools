@@ -99,13 +99,12 @@ class UsersDetailAPIView(RetrieveAPIView):
         Returns an Intervention object for this PK
         """
         try:
-            queryset = self.queryset.get(id=pk, country=request.user.profile.country, user__is_staff=True)
+            queryset = self.queryset.get(user__id=pk)
             serializer = self.serializer_class(queryset)
-            data = serializer.data
         except UserProfile.DoesNotExist:
             data = {}
         return Response(
-            data,
+            serializer.data,
             status=status.HTTP_200_OK
         )
 
