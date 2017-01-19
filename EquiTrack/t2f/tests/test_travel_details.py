@@ -9,7 +9,8 @@ from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
+    DSARegionFactory
 
 from .factories import TravelFactory
 
@@ -199,7 +200,7 @@ class TravelDetails(APITenantTestCase):
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': []}
-        response = self.forced_auth_req('post',  reverse('t2f:travels:list:index'), data=data,
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
@@ -216,7 +217,7 @@ class TravelDetails(APITenantTestCase):
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
                 'activities': []}
-        response = self.forced_auth_req('post',  reverse('t2f:travels:list:index'), data=data,
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
@@ -303,3 +304,97 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         self.assertEqual(len(response_json['action_points']), 2)
+
+    def test_reversed_itinerary_order(self):
+        dsa_1 = DSARegion.objects.first()
+        dsa_2 = DSARegionFactory()
+
+        data = {"deductions": [{"date": "2017-01-19",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-20",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-21",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-22",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-23",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-24",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-25",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-26",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-27",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False},
+                               {"date": "2017-01-28",
+                                "breakfast": False,
+                                "lunch": False,
+                                "dinner": False,
+                                "accomodation": False,
+                                "no_dsa": False}],
+                "itinerary": [{"airlines": [],
+                               "origin": "a",
+                               "destination": "b",
+                               "dsa_region": dsa_1.id,
+                               "departure_date": "2017-01-18T23:00:01.224Z",
+                               "arrival_date": "2017-01-19T23:00:01.237Z",
+                               "mode_of_travel": "car"},
+                              {"origin": "b",
+                               "destination": "c",
+                               "dsa_region": dsa_2.id,
+                               "departure_date": "2017-01-20T23:00:01.892Z",
+                               "arrival_date": "2017-01-27T23:00:01.905Z",
+                               "mode_of_travel": "car"}],
+                "activities": [{"primary_traveler": False,
+                                "locations": []}],
+                "cost_assignments": [],
+                "expenses": [],
+                "action_points": [],
+                "ta_required": True,
+                "international_travel": False,
+                "traveler": self.traveler.id,
+                "mode_of_travel": []}
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        itinerary_origin_destination_expectation = [('a', 'b'), ('b', 'c')]
+        extracted_origin_destination = [(i['origin'], i['destination']) for i in response_json['itinerary']]
+        self.assertEqual(extracted_origin_destination, itinerary_origin_destination_expectation)

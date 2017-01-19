@@ -314,6 +314,9 @@ class IteneraryItem(models.Model):
     mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, null=True)
     airlines = models.ManyToManyField('publics.AirlineCompany', related_name='+')
 
+    class Meta:
+        ordering = ('id',)
+
 
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')
