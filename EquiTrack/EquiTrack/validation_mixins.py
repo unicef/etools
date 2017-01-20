@@ -1,8 +1,10 @@
 import copy
+import logging
 from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitions
 from rest_framework.exceptions import ValidationError
 from django.apps import apps
 from django.utils.functional import cached_property
+
 
 def check_rigid_fields(obj, fields):
     if not obj.old_instance:
@@ -133,8 +135,8 @@ class CompleteValidation(object):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
 
         if isinstance(new, dict):
-            print 'instance is dict'
-            print old
+            logging.debug('instance is dict')
+            logging.debug(old)
             if not old and not instance_class:
                 try:
                     instance_class = apps.get_model(getattr(self, 'VALIDATION_CLASS'))
@@ -142,14 +144,14 @@ class CompleteValidation(object):
                     raise TypeError('Object Transimitted for validation cannot be dict if instance_class is not defined')
             new_id = new.get('id', None) or new.get('pk', None)
             if new_id:
-                print 'newid'
+                logging.debug('newid')
                 # let it raise the error if it does not exist
                 old_instance = old if old and old.id == new_id else instance_class.objects.get(id=new_id)
                 new_instance = instance_class.objects.get(id=new_id)
                 update_object(new_instance, new)
 
             else:
-                print 'no id'
+                logging.debug('no id')
                 old_instance = old
                 new_instance = copy.deepcopy(old) if old else instance_class(**new)
                 update_object(new_instance, new)
@@ -210,14 +212,14 @@ class CompleteValidation(object):
         setattr(self.new, 'old_instance', self.old)
 
         funct_name = "state_{}_valid".format(self.new_status)
-        print 'in state_valid finding function: {}'.format(funct_name)
+        logging.debug('in state_valid finding function: {}'.format(funct_name))
         function = getattr(self, funct_name, None)
         if function:
             result = function(self.new)
 
         # cleanup
         delattr(self.new, 'old_instance')
-        print 'result is: {}'.format(result)
+        logging.debug('result is: {}'.format(result))
         return result
 
     def _get_fsm_defined_transitions(self, source, target):
@@ -228,10 +230,10 @@ class CompleteValidation(object):
 
     @transition_error_string
     def auto_transition_validation(self, potential_transition):
-        print 'in auto transition validation %s' % potential_transition
+        logging.debug('in auto transition validation %s' % potential_transition)
 
         result = self.check_transition_conditions(potential_transition)
-        print "check_transition_conditions returned: {}".format(result)
+        logging.debug("check_transition_conditions returned: {}".format(result))
         return result
 
     def _first_available_auto_transition(self):
@@ -253,30 +255,30 @@ class CompleteValidation(object):
         tl = filter_tl(potential.get(self.new.status, None),
                        [s[0] for s in self.new.__class__._meta.get_field('status').choices])
 
-        print "Potential transition from the current status: {} -> {}".format(self.new.status, tl)
+        logging.debug("Potential transition from the current status: {} -> {}".format(self.new.status, tl))
         if not tl:
             return None, None, None
 
         # ptt: Potential Transition To List
         pttl = [p.iterkeys().next() for p in tl]
-        print pttl
+        logging.debug(pttl)
 
         for potential_transition_to in pttl:
             # test to see if it's a viable transition:
-            print "test to see if transition is possible : {} -> {}".format(self.new.status, potential_transition_to)
+            logging.debug("test to see if transition is possible : {} -> {}".format(self.new.status, potential_transition_to))
             # try to find a possible transition... if no possible transition (transition was not defined on the model
             # it will always validate
             possible_fsm_transition = self._get_fsm_defined_transitions(self.new.status, potential_transition_to)
             if not possible_fsm_transition:
-                print "transition: {} -> {} is possible since there was no transition defined on the model".format(
+                logging.debug("transition: {} -> {} is possible since there was no transition defined on the model".format(
                     self.new.status, potential_transition_to
-                )
+                ))
             if self.auto_transition_validation(possible_fsm_transition)[0]:
                 # auto_update_functions:
                 auf = next(obj[potential_transition_to] for obj in tl if potential_transition_to in obj)
-                print "transition is possible  {} -> {}".format(self.new.status, potential_transition_to)
+                logging.debug("transition is possible  {} -> {}".format(self.new.status, potential_transition_to))
                 return True, potential_transition_to, auf
-            print "transition is not possible : {} -> {}".format(self.new.status, potential_transition_to)
+            logging.debug("transition is not possible : {} -> {}".format(self.new.status, potential_transition_to))
         return None, None, None
 
     def _make_auto_transition(self):
@@ -284,14 +286,14 @@ class CompleteValidation(object):
         if not valid_available_transition:
             return False
         else:
-            print "valid potential transition happening {}->{}".format(self.new.status, new_status)
+            logging.debug("valid potential transition happening {}->{}".format(self.new.status, new_status))
             originals = self.new.status, self.new_status
             self.new.status = new_status
             self.new_status = new_status
 
-            print "making sure new state is valid: {}".format(self.new.status)
+            logging.debug("making sure new state is valid: {}".format(self.new.status))
             state_valid = self.state_valid()
-            print "new state  {} is valid: {}".format(self.new.status, state_valid[0])
+            logging.debug("new state  {} is valid: {}".format(self.new.status, state_valid[0]))
             if not state_valid[0]:
                 # set stuff back
                 self.new.status, self.new_status = originals
@@ -299,17 +301,17 @@ class CompleteValidation(object):
 
             # if all good run all the autoupdates on that status
             for function in auto_update_functions:
-                print "auto updating functions for transition"
+                logging.debug("auto updating functions for transition")
                 function(self.new)
             return True
 
     def make_auto_transitions(self):
-        print "*************** STARTING AUTO TRANSITIONS *****************"
+        logging.debug("*************** STARTING AUTO TRANSITIONS *****************")
         any_transition_made = False
         while self._make_auto_transition():
             any_transition_made = True
 
-        print "*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(any_transition_made)
+        logging.debug("*************** ENDING AUTO TRANSITIONS ***************** auto_transitioned: {}".format(any_transition_made))
         return any_transition_made
 
     @cached_property

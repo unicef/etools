@@ -1,5 +1,6 @@
 import operator
 import functools
+import logging
 
 from rest_framework import status
 
@@ -144,7 +145,7 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
 
         if not validator.is_valid:
-            print validator.errors
+            logging.debug(validator.errors)
             raise ValidationError(validator.errors)
             #raise Exception(validator.errors)
 

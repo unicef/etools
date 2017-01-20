@@ -1026,10 +1026,6 @@ class Agreement(TimeStampedModel):
                     item.status = self.status
                     item.save()
 
-    def illegal_transitions(self):
-        return False
-
-
 
     @transition(field=status,
                 source=[DRAFT],
@@ -1078,6 +1074,7 @@ class Agreement(TimeStampedModel):
             self.update_reference_number(oldself, amendment_number)
         else:
             self.update_reference_number(oldself)
+
         self.update_related_interventions(oldself)
 
         return super(Agreement, self).save()
