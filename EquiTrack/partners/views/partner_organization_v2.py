@@ -28,9 +28,8 @@ from partners.serializers.partner_organization_v2 import (
 
 from partners.models import PartnerOrganization
 from partners.permissions import PartnerPermission
-
-
 from partners.filters import PartnerScopeFilter
+from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
@@ -42,7 +41,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     serializer_class = PartnerOrganizationListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationCsvRenderer)
 
     def get_serializer_class(self, format=None):
         """
@@ -94,6 +93,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         """
         query_params = self.request.query_params
         response = super(PartnerOrganizationListAPIView, self).list(request)
+
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
