@@ -1,15 +1,15 @@
 from datetime import date, datetime
 
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
 
 
 
 def illegal_transition(agreement):
-    print agreement.old_instance
-    if True:
-        raise TransitionError(['transitional_two'])
+    # print agreement.old_instance
+    # if True:
+    #     raise TransitionError(['transitional_two'])
 
-    return False
+    return True
 
 def continion_one_for_transition_X(agreement):
     pass
@@ -17,7 +17,9 @@ def continion_one_for_transition_X(agreement):
 def illegal_transition_permissions(agreement, user):
     print agreement.old_instance
     print user
-    return False
+    if user.first_name != 'Jim':
+        raise TransitionError(['user is not Rob'])
+    return True
 
 
 def signed_date_valid(agreement):
@@ -31,7 +33,8 @@ def signed_date_valid(agreement):
         True or False / conditions are met
     '''
     now = date.today()
-    if agreement.signed_by_unicef_date > now or agreement.signed_by_partner_date > now:
+    if (agreement.signed_by_unicef_date and agreement.signed_by_unicef_date > now) or \
+            (agreement.signed_by_partner_date and agreement.signed_by_partner_date > now):
         return False
     return True
 
@@ -58,17 +61,28 @@ class AgreementValid(CompleteValidation):
         'transitional_one': 'Cannot Transition to draft',
         'transitional_two': 'Cannot Transition to blah blah',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
-        'suspended_invalid': 'hey can;t suspend an agreement that was supposed to be ended'
+        'suspended_invalid': 'hey can;t suspend an agreement that was supposed to be ended',
+        'state_active_not_signed': 'Hey this is agreement needs to be signed in order to be active, no signed dates'
     }
 
     def state_suspended_valid(self, agreement):
-        if agreement.to_date > date.today:
-            return False, ['suspended_invalid']
+        if agreement.end > date.today():
+            raise StateValidError('suspended_invalid')
+        return True
 
     def state_active_valid(self, agreement):
-        rigid_fields = ['signed_by_unicef_date']
-        valid, changed_field = check_rigid_fields(agreement, rigid_fields)
-        return valid, ['rigid_field_changed: %s' % changed_field] if not valid else None
+        if not agreement.old_instance:
+            raise StateValidError(['no direct active state'])
+        if agreement.old_instance and agreement.status == agreement.old_instance.status:
+            rigid_fields = ['signed_by_unicef_date']
+            valid, changed_field = check_rigid_fields(agreement, rigid_fields)
+            if not valid:
+                raise StateValidError('rigid_field_changed: %s' % changed_field)
+
+        if not agreement.signed_by_partner_date or not agreement.signed_by_unicef_date:
+            raise StateValidError(['state_active_not_signed'])
+
+        return True
 
 
 

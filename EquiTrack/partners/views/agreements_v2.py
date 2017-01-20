@@ -136,8 +136,6 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
         return super(AgreementDetailAPIView, self).get_serializer_class()
 
 
-
-
     @transaction.atomic
     def update(self, request, *args, **kwargs):
 
@@ -157,8 +155,6 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
             instance = self.get_object()
-            # amd_serializer = self.get_serializer(instance)
 
-        #return Response(agreement_serializer.data)
         return Response(serializer.data)
 

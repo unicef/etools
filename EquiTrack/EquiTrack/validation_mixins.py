@@ -39,6 +39,7 @@ class ValidatorViewMixin(object):
             instance_serializer.save()
 
     def my_update(self, request, related_f, snapshot=None, snapshot_class=None, **kwargs):
+
         partial = kwargs.pop('partial', False)
         my_relations = {}
         for f in related_f:
@@ -72,6 +73,11 @@ class TransitionError(Exception):
         super(TransitionError, self).__init__(message)
 
 
+class StateValidError(Exception):
+    def __init__(self, message=[]):
+        if not isinstance(message, list):
+            raise TypeError('Transition exception takes a list of errors not %s' % type(message))
+        super(StateValidError, self).__init__(message)
 
 
 def error_string(function):
@@ -95,6 +101,19 @@ def transition_error_string(function):
             return (True, [])
         else:
             return (False, ['generic_transition_fail'])
+    return wrapper
+
+def state_error_string(function):
+    def wrapper(*args, **kwargs):
+        try:
+            valid = function(*args, **kwargs)
+        except StateValidError as e:
+            return (False, e.message)
+
+        if valid and type(valid) is bool:
+            return (True, [])
+        else:
+            return (False, ['generic_state_validation_fail'])
     return wrapper
 
 def update_object(obj, kwdict):
@@ -174,7 +193,7 @@ class CompleteValidation(object):
         self.new.status = self.new_status
         return conditions_check and permissions_check
 
-    @cached_property
+    @state_error_string
     def state_valid(self):
         if not self.basic_validation[0]:
             return self.basic_validation
@@ -258,14 +277,16 @@ class CompleteValidation(object):
         if not self.basic_validation[0]:
             return False, self.map_errors(self.basic_validation[1])
 
-        if not self.state_valid[0]:
-            return False, self.map_errors(self.state_valid[1])
+        if not self.skip_transition:
+            transitional = self.transitional_validation()
+            if not transitional[0]:
+                return False, self.map_errors(transitional[1])
 
-        if self.skip_transition:
-            return True, []
+        state_valid = self.state_valid()
+        if not state_valid[0]:
+            return False, self.map_errors(state_valid[1])
 
-        transitional = self.transitional_validation()
-        return transitional[0], self.map_errors(transitional[1])
+        return True, []
 
     @property
     def is_valid(self):

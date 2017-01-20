@@ -130,7 +130,7 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
         # When running validations in the serializer.. keep in mind that the
         # related fields have not been updated and therefore not accessible on old_instance.relatedfield_old.
         # If you want to run validation only after related fields have been updated. please run it in the view
-        validator = AgreementValid(data, old=self.instance)
+        validator = AgreementValid(data, old=self.instance, user=self.context['request'].user)
 
         start_errors = []
         # if data.get("end", None) and not data.get("start", None):

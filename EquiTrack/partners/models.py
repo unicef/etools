@@ -29,6 +29,8 @@ from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
 
 from partners.validation.agreements import illegal_transition as agreements_illegal_transition
+from partners.validation.agreements import illegal_transition_permissions as agreements_illegal_transition_permissions
+
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -1031,14 +1033,7 @@ class Agreement(TimeStampedModel):
     def illegal_transitions(self):
         return False
 
-    @transition(field=status,
-                source=[ACTIVE, ENDED, SUSPENDED, TERMINATED],
-                target=[DRAFT, CANCELLED],
-                conditions=[illegal_transitions])
-    def basic_transition(self):
-        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
-        # mess up the reference numbers.
-        pass
+
 
     @transition(field=status,
                 source=[ACTIVE, ENDED, SUSPENDED, TERMINATED],
@@ -1051,7 +1046,7 @@ class Agreement(TimeStampedModel):
                 source=[ACTIVE],
                 target=[SUSPENDED],
                 conditions=[agreements_illegal_transition],
-                permission=agreements_illegal_transition)
+                permission=agreements_illegal_transition_permissions)
     def transition_to_suspended(self):
         pass
 
