@@ -2,9 +2,24 @@ from datetime import date, datetime
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
 
+def agreement_transition_to_active_valid(agreement):
+    print 'I GOT CALLED to active'
+    print agreement.status, agreement.start, agreement.end, agreement.signed_by_partner_date, agreement.signed_by_unicef_date, agreement.signed_by, agreement.partner_manager
+    if agreement.status == agreement.DRAFT and agreement.start and agreement.end and \
+            agreement.signed_by_unicef_date and agreement.signed_by_partner_date and \
+            agreement.signed_by and agreement.partner_manager:
+        print "moving to active ok"
+        return True
+    return False
 
+def agreement_transition_to_ended_valid(agreement):
+    today = datetime.date.today()
+    print 'I GOT CALLED to ended'
+    if agreement.status == agreement.ACTIVE and agreement.end and agreement.end < today:
+        return False
+    return False
 
-def illegal_transition(agreement):
+def agreements_illegal_transition(agreement):
     # print agreement.old_instance
     # if True:
     #     raise TransitionError(['transitional_two'])
@@ -14,7 +29,7 @@ def illegal_transition(agreement):
 def continion_one_for_transition_X(agreement):
     pass
 
-def illegal_transition_permissions(agreement, user):
+def agreements_illegal_transition_permissions(agreement, user):
     print agreement.old_instance
     print user
     if user.first_name != 'Jim':
@@ -71,6 +86,7 @@ class AgreementValid(CompleteValidation):
         return True
 
     def state_active_valid(self, agreement):
+        print 'STATE ACTIVE VALID CALLED'
         if not agreement.old_instance:
             raise StateValidError(['no direct active state'])
         if agreement.old_instance and agreement.status == agreement.old_instance.status:
@@ -83,6 +99,10 @@ class AgreementValid(CompleteValidation):
             raise StateValidError(['state_active_not_signed'])
 
         return True
+
+    def state_cancelled_valid(self, agreement):
+        print 'STATE CANCELLED VALID CALLED'
+        return False
 
 
 
