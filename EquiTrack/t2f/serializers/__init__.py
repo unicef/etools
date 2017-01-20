@@ -221,6 +221,16 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         self.transition_name = data.get('transition_name', None)
         super(TravelDetailsSerializer, self).__init__(*args, **kwargs)
 
+        ta_required = data.get('ta_required', False)
+        if self.instance:
+            ta_required |= self.instance.ta_required
+
+        if not ta_required:
+            data.pop('itinerary', None)
+            data.pop('deductions', None)
+            data.pop('expenses', None)
+            data.pop('cost_assignments', None)
+
     # -------- Validation method --------
     def validate_cost_assignments(self, value):
         # If transition is None, it's a normal save (not an action) and we don't have to validate this
