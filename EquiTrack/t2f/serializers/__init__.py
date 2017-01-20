@@ -74,8 +74,8 @@ class ActionPointSerializer(serializers.ModelSerializer):
                   'trip_id')
 
     def validate_due_date(self, value):
-        if value.date() > datetime.now().date():
-            raise ValidationError('Due date cannot be later than today.')
+        if value.date() < datetime.now().date():
+            raise ValidationError('Due date cannot be earlier than today.')
         return value
 
     def validate(self, attrs):
