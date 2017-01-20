@@ -7,6 +7,7 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
+from django.utils.itercompat import is_iterable
 from rest_framework import serializers, ISO_8601
 from rest_framework.exceptions import ValidationError
 
@@ -222,7 +223,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         super(TravelDetailsSerializer, self).__init__(*args, **kwargs)
 
         ta_required = data.get('ta_required', False)
-        if self.instance:
+        if self.instance and not is_iterable(self.instance):
             ta_required |= self.instance.ta_required
 
         if not ta_required:
