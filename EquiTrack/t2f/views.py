@@ -31,7 +31,7 @@ from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, Trave
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.serializers.permission_matrix import PermissionMatrixSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix, InvoiceMaker
-from t2f.permission_matrix import PERMISSION_MATRIX, ACTION_POINT_MATRIX
+from t2f.permission_matrix import PERMISSION_MATRIX
 
 
 class T2FPagePagination(PageNumberPagination):
