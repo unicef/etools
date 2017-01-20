@@ -59,17 +59,10 @@ class LocationSerializer(serializers.ModelSerializer):
 
 
 class StaticDataSerializer(serializers.Serializer):
-    users = UserSerializer(many=True)
-    currencies = CurrencySerializer(many=True)
-    airlines = AirlineSerializer(many=True)
     partners = PartnerOrganizationSerializer(many=True)
     partnerships = PartnershipSerializer(many=True)
     results = ResultSerializer(many=True)
     locations = LocationSerializer(many=True)
-    dsa_regions = DSARegionSerializer(many=True)
-    wbs = WBSSerializer(many=True)
-    grants = GrantSerializer(many=True)
-    funds = FundSerializer(many=True)
-    expense_types = ExpenseTypeSerializer(many=True)
     travel_types = serializers.ListField(child=serializers.CharField())
     travel_modes = serializers.ListField(child=serializers.CharField())
+    action_point_statuses = serializers.ListField(child=serializers.CharField())

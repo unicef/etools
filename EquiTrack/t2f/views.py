@@ -225,22 +225,13 @@ class StaticDataView(generics.GenericAPIView):
         country = request.user.profile.country
         dsa_regions = DSARegion.objects.filter(area_code=country.business_area_code)
 
-        data = {'users': get_filtered_users(request),
-                'currencies': Currency.objects.all(),
-                'airlines': AirlineCompany.objects.all(),
-                'offices': Office.objects.all(),
-                'sections': Section.objects.all(),
-                'partners': PartnerOrganization.objects.all(),
+        data = {'partners': PartnerOrganization.objects.all(),
                 'partnerships': PCA.objects.all(),
                 'results': Result.objects.all(),
                 'locations': Location.objects.all(),
-                'dsa_regions': dsa_regions,
-                'wbs': WBS.objects.all(),
-                'grants': Grant.objects.all(),
-                'funds': Fund.objects.all(),
-                'expense_types': ExpenseType.objects.all(),
                 'travel_types': [c[0] for c in TravelType.CHOICES],
-                'travel_modes': [c[0] for c in ModeOfTravel.CHOICES]}
+                'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],
+                'action_point_statuses': [c[0] for c in ActionPoint.STATUS]}
 
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)
