@@ -28,9 +28,12 @@ from actstream import action
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
 
-from partners.validation.agreements import illegal_transition as agreements_illegal_transition
-from partners.validation.agreements import illegal_transition_permissions as agreements_illegal_transition_permissions
-
+from partners.validation.agreements import (
+    agreement_transition_to_active_valid,
+    agreement_transition_to_ended_valid,
+    agreements_illegal_transition_permissions,
+    agreements_illegal_transition
+)
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -837,7 +840,9 @@ class AgreementManager(models.Manager):
         return super(AgreementManager, self).get_queryset().select_related('partner')
 
 def draft_to_active_auto_changes(obj):
-    obj.activated_on = datetime.date.today()
+    # here we can make any updates to the object as we need as part of the auto transition change
+    # obj.end = datetime.date.today()
+    pass
 
 class Agreement(TimeStampedModel):
     """
@@ -845,10 +850,13 @@ class Agreement(TimeStampedModel):
 
     Relates to :model:`partners.PartnerOrganization`
     """
+    # POTENTIAL_AUTO_TRANSITIONS.. these are all transitions that we want to make automatically if possible
     POTENTIAL_AUTO_TRANSITIONS = {
         'draft': [
             {'active': [draft_to_active_auto_changes]},
-            {'cancelled': []}
+        ],
+        'active': [
+            {'ended': []},
         ],
     }
 
@@ -984,18 +992,6 @@ class Agreement(TimeStampedModel):
     def base_number(self):
         return self.agreement_number.split('-')[0]
 
-    def check_status_auto_updates(self):
-        # TODO: make sure that all related models are valid the moment status changes
-        # commit the reference number to the database once the agreement is signed
-        if self.status == Agreement.DRAFT and self.start and self.end and \
-                self.signed_by_unicef_date and self.signed_by_partner_date and \
-                self.signed_by and self.partner_manager:
-            self.status = Agreement.ACTIVE
-            return
-        today = datetime.date.today()
-        if self.end and self.end < today:
-            self.status = Agreement.ENDED
-            return
 
     def update_reference_number(self, oldself=None, amendment_number=None, **kwargs):
 
@@ -1036,11 +1032,19 @@ class Agreement(TimeStampedModel):
 
 
     @transition(field=status,
-                source=[ACTIVE, ENDED, SUSPENDED, TERMINATED],
-                target=[DRAFT, CANCELLED],
-                conditions=[agreements_illegal_transition])
-    def transition_to_draft(self):
+                source=[DRAFT],
+                target=[ACTIVE],
+                conditions=[agreement_transition_to_active_valid])
+    def transition_to_active(self):
         pass
+
+    @transition(field=status,
+                source=[ACTIVE],
+                target=[ENDED],
+                conditions=[agreement_transition_to_ended_valid])
+    def transition_to_ended(self):
+        pass
+
 
     @transition(field=status,
                 source=[ACTIVE],
@@ -1051,10 +1055,7 @@ class Agreement(TimeStampedModel):
         pass
 
     def check_auto_updates(self):
-        self.check_status_auto_updates()
-
         #auto-update country programme:
-
         if not self.country_programme and self.start and self.end:
             try:
                 self.country_programme = CountryProgramme.encapsulates(self.start, self.end)
@@ -1064,8 +1065,6 @@ class Agreement(TimeStampedModel):
 
     @transaction.atomic
     def save(self, **kwargs):
-        # check status auto updates
-        # TODO: move this outside of save in the future to properly check transitions
         self.check_auto_updates()
 
         oldself = None

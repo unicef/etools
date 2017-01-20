@@ -10,21 +10,20 @@ def agreement_transition_to_active_valid(agreement):
             agreement.signed_by and agreement.partner_manager:
         print "moving to active ok"
         return True
-    return False
+    raise TransitionError(['agreement_transition_to_active_invalid'])
 
 def agreement_transition_to_ended_valid(agreement):
     today = datetime.date.today()
     print 'I GOT CALLED to ended'
     if agreement.status == agreement.ACTIVE and agreement.end and agreement.end < today:
-        return False
-    return False
+        return True
+    raise TransitionError(['agreement_transition_to_ended_invalid'])
 
 def agreements_illegal_transition(agreement):
     # print agreement.old_instance
     # if True:
     #     raise TransitionError(['transitional_two'])
-
-    return True
+    return False
 
 def continion_one_for_transition_X(agreement):
     pass
@@ -77,7 +76,8 @@ class AgreementValid(CompleteValidation):
         'transitional_two': 'Cannot Transition to blah blah',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
         'suspended_invalid': 'hey can;t suspend an agreement that was supposed to be ended',
-        'state_active_not_signed': 'Hey this is agreement needs to be signed in order to be active, no signed dates'
+        'state_active_not_signed': 'Hey this is agreement needs to be signed in order to be active, no signed dates',
+        'agreement_transition_to_active_invalid': "Dude you can't transition to active without having the proper sinatures"
     }
 
     def state_suspended_valid(self, agreement):

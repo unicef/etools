@@ -6,7 +6,7 @@ from rest_framework import status
 from django.db import transaction
 from django.db.models import Q
 from rest_framework.response import Response
-
+from rest_framework.serializers import ValidationError
 
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
@@ -108,6 +108,7 @@ class AgreementListAPIView(ListCreateAPIView):
         headers = self.get_success_headers(serialier.data)
         return Response(serialier.data, status=status.HTTP_201_CREATED, headers=headers)
 
+
 class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
@@ -115,14 +116,9 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     queryset = Agreement.objects.all()
     serializer_class = AgreementRetrieveSerializer
     permission_classes = (IsAdminUser,)
-    MODEL_MAP = {
-        'amendments': AgreementAmendment
-    }
+
     SERIALIZER_MAP = {
         'amendments': AgreementAmendmentCreateUpdateSerializer
-    }
-    REVERSE_MAP = {
-        'amendments': 'agreement'
     }
 
     def get_serializer_class(self, format=None):
@@ -149,7 +145,8 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
         if not validator.is_valid:
             print validator.errors
-            raise Exception(validator.errors)
+            raise ValidationError(validator.errors)
+            #raise Exception(validator.errors)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
