@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
+    RetrieveUpdateAPIView,
 )
 
 from partners.models import (
@@ -35,8 +35,13 @@ from partners.filters import PartnerScopeFilter
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
     """
-    Create new Partners.
-    Returns a list of Partners.
+    List and Create PartnerOrganizations.
+
+    post:
+        Create new Partner.
+
+    get:
+        Returns a list of Partners.
     """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationListSerializer
@@ -127,16 +132,23 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
+class PartnerOrganizationDetailAPIView(RetrieveUpdateAPIView):
     """
-    Retrieve and Update PartnerOrganization.
+    Retrieve, Update PartnerOrganization.
+
+    get:
+        Retrieve PartnerOrganization.
+
+    patch:
+        Update PartnerOrganization.
     """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
+    http_method_names = ["GET", "PATCH"]
 
     def get_serializer_class(self, format=None):
-        if self.request.method in ["PUT", "PATCH"]:
+        if self.request.method == "PATCH":
             return PartnerOrganizationCreateUpdateSerializer
         else:
             return super(PartnerOrganizationDetailAPIView, self).get_serializer_class()
@@ -181,5 +193,3 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             po_serializer = self.get_serializer(instance)
 
         return Response(po_serializer.data)
-
-

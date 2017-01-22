@@ -12,7 +12,7 @@ from rest_framework_csv import renderers as r
 
 from rest_framework.generics import (
     ListCreateAPIView,
-    RetrieveUpdateDestroyAPIView,
+    RetrieveUpdateAPIView,
 )
 
 from partners.models import (
@@ -42,8 +42,14 @@ from partners.filters import PartnerScopeFilter
 
 class InterventionListAPIView(ListCreateAPIView):
     """
-    Create new Interventions.
-    Returns a list of Interventions.
+    List and Create Interventions.
+
+    post:
+        Create new Intervention.
+
+    get:
+        Returns a list of Intervention.
+
     """
     serializer_class = InterventionListSerializer
     permission_classes = (IsAdminUser,)
@@ -145,13 +151,20 @@ class InterventionListAPIView(ListCreateAPIView):
         return response
 
 
-class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
+class InterventionDetailAPIView(RetrieveUpdateAPIView):
     """
-    Retrieve and Update Agreement.
+    Retrieve, Update Intervention.
+
+    get:
+        Retrieve Intervention.
+
+    patch:
+        Update Intervention.
     """
     queryset = Intervention.objects.all()
     serializer_class = InterventionDetailSerializer
     permission_classes = (IsAdminUser,)
+    http_method_names = ["GET", "PATCH"]
 
     def get_serializer_class(self):
         """

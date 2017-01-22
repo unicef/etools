@@ -33,8 +33,13 @@ from partners.filters import PartnerScopeFilter
 
 class AgreementListAPIView(ListCreateAPIView):
     """
-    Create new Agreements.
-    Returns a list of Agreements.
+    List and Create Agreements.
+
+    post:
+        Create new Agreement.
+
+    get:
+        Returns a list of Agreement.
     """
     serializer_class = AgreementListSerializer
     filter_backends = (PartnerScopeFilter,)
@@ -109,7 +114,19 @@ class AgreementListAPIView(ListCreateAPIView):
 
 class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
-    Retrieve and Update Agreement.
+    Retrieve, Update and Destroy Agreement.
+
+    get:
+        Retrieve Agreement.
+
+    patch:
+        Update Agreement.
+
+    put:
+        Update Agreement.
+
+    delete:
+        Destroy Agreement.
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementRetrieveSerializer
@@ -168,4 +185,3 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
             amd_serializer = self.get_serializer(instance)
 
         return Response(agreement_serializer.data)
-

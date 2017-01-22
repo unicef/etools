@@ -1,0 +1,52 @@
+{
+    "agreement": <<AGREEMENT_ID>>,
+    "partner_id": <<PARTNER_ID>>,
+    "document_type": "SHPD",
+    "hrp": <<RESULT_STRUCTURE_ID>>,
+    "title": "2009 EFY AWP",
+    "status": "draft",
+    "start": "2016-10-28",
+    "end": "2016-10-28",
+    "submission_date_prc": "2016-10-31",
+    "review_date_prc": "2016-10-28",
+    "submission_date": "2016-10-28",
+    "prc_review_document": None,
+    "signed_by_unicef_date": "2016-10-28",
+    "signed_by_partner_date": "2016-10-20",
+    "unicef_signatory": <<USER_ID>>,
+    "unicef_focal_points": [],
+    "partner_focal_points": [],
+    "partner_authorized_officer_signatory": <<PARTNER_STAFF_MEMBER_ID>>,
+    "offices": [],
+    "fr_numbers": None,
+    "population_focus": None,
+    "planned_budget": [
+        {
+            "partner_contribution": "2.00",
+            "unicef_cash": "3.00",
+            "in_kind_amount": "1.00",
+            "partner_contribution_local": "3.00",
+            "unicef_cash_local": "3.00",
+            "in_kind_amount_local": "0.00",
+            "year": "2017",
+            "total": "6.00"
+        },
+        {
+            "partner_contribution": "2.00",
+            "unicef_cash": "3.00",
+            "in_kind_amount": "1.00",
+            "partner_contribution_local": "3.00",
+            "unicef_cash_local": "3.00",
+            "in_kind_amount_local": "0.00",
+            "year": "2016",
+            "total": "6.00"
+        }
+    ],
+    "amendments": [],
+    "result_links": [
+        {
+            "cp_output": <<RESULT_ID>>,
+            "ram_indicators":[]
+        }
+    ]
+}

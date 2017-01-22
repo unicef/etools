@@ -1,0 +1,12 @@
+{
+    "partner": <<PARTNER_ID>>,
+    "agreement_number": "PCA/AAA/2015/25",
+    "agreement_type": "PCA",
+    "end": "2016-05-30",
+    "start": "2014-04-29",
+    "signed_by_unicef_date": "2014-04-29",
+    "signed_by_partner_date": "2014-04-29",
+    "status": "draft",
+    "signed_by": <<USER_ID>>,
+    "partner_manager": <<PARTNER_STAFF_MEMBER_ID>>
+}
