@@ -161,5 +161,5 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
         #         errors.update(partner=["Partner type must be CSO for PCA or SSFA agreement types."])
 
         if not validator.is_valid:
-            raise serializers.ValidationError({'errors':validator.errors})
+            raise serializers.ValidationError({'errors': validator.errors})
         return data

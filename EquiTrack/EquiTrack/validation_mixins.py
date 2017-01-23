@@ -56,7 +56,7 @@ class ValidatorViewMixin(object):
         if snapshot:
             snapshot_class.create_snapshot_activity_stream(request.user, main_serializer.instance)
 
-        main_object = main_serializer.save(skip_auto_updates=True)
+        main_object = main_serializer.save()
         for k in my_relations.iterkeys():
             prop = '{}_old'.format(k)
             val = list(getattr(old_instance, k).all())
@@ -154,7 +154,8 @@ class CompleteValidation(object):
                 logging.debug('no id')
                 old_instance = old
                 new_instance = copy.deepcopy(old) if old else instance_class(**new)
-                update_object(new_instance, new)
+                if old:
+                    update_object(new_instance, new)
             new = new_instance
             old = old_instance
 
@@ -215,7 +216,7 @@ class CompleteValidation(object):
         logging.debug('in state_valid finding function: {}'.format(funct_name))
         function = getattr(self, funct_name, None)
         if function:
-            result = function(self.new)
+            result = function(self.new, user=self.user)
 
         # cleanup
         delattr(self.new, 'old_instance')

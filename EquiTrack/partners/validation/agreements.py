@@ -50,6 +50,7 @@ def amendments_ok(agreement):
 def start_end_dates_valid(agreement):
     if agreement.start and agreement.end and agreement.start < agreement.end:
         return False
+    return True
 
 def signed_date_valid(agreement):
     '''
@@ -61,6 +62,7 @@ def signed_date_valid(agreement):
     :return:
         True or False / conditions are met
     '''
+
     now = date.today()
     if (agreement.signed_by_unicef_date and agreement.signed_by_unicef_date > now) or \
             (agreement.signed_by_partner_date and agreement.signed_by_partner_date > now):
@@ -81,9 +83,12 @@ def signed_agreement_present(agreement):
 
 class AgreementValid(CompleteValidation):
 
+    # TODO: add user on basic and state
+
     VALIDATION_CLASS = 'partners.Agreement'
     # validations that will be checked on every object... these functions only take the new instance
     BASIC_VALIDATIONS = [start_end_dates_valid, signed_date_valid]
+
     VALID_ERRORS = {
         'signed_agreement_present': 'Signed agreement must be included in order to activate',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
@@ -95,15 +100,16 @@ class AgreementValid(CompleteValidation):
         'suspended_invalid': 'hey can;t suspend an agreement that was supposed to be ended',
         'state_active_not_signed': 'Hey this is agreement needs to be signed in order to be active, no signed dates',
         'agreement_transition_to_active_invalid': "Dude you can't transition to active without having the proper sinatures",
-        'cant_create_in_active_state': 'When adding a new object the state needs to be "Draft"'
+        'cant_create_in_active_state': 'When adding a new object the state needs to be "Draft"',
+        'custom_error': 'blah blah'
     }
 
-    def state_suspended_valid(self, agreement):
+    def state_suspended_valid(self, agreement, user=None):
         if agreement.end > date.today():
-            raise StateValidError('suspended_invalid')
+            raise StateValidError('custom_error')
         return True
 
-    def state_active_valid(self, agreement):
+    def state_active_valid(self, agreement, user=None):
         logging.debug('STATE ACTIVE VALID CALLED')
         if not agreement.old_instance:
             raise StateValidError(['cant_create_in_active_state'])
@@ -125,7 +131,7 @@ class AgreementValid(CompleteValidation):
 
         return True
 
-    def state_cancelled_valid(self, agreement):
+    def state_cancelled_valid(self, agreement, user=None):
         logging.debug('STATE CANCELLED VALID CALLED')
         return False
 
