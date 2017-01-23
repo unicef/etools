@@ -2260,13 +2260,13 @@ class PCA(AdminURLMixin, models.Model):
         if created:  # new partnership
             emails.PartnershipCreatedEmail(instance).send(
                 settings.DEFAULT_FROM_EMAIL,
-                *recipients
+                recipients,
             )
 
         else:  # change to existing
             emails.PartnershipUpdatedEmail(instance).send(
                 settings.DEFAULT_FROM_EMAIL,
-                *recipients
+                recipients,
             )
 
         # attach any FCs immediately

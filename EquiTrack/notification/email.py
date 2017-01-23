@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import transaction
+from django.contrib.sites.models import Site
 
 from post_office import mail
 from post_office.models import EmailTemplate

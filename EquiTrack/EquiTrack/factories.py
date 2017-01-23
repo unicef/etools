@@ -391,6 +391,5 @@ class NotificationFactory(factory.django.DjangoModelFactory):
     content_type = factory.Iterator(ContentType.objects.all())
     object_id = fuzzy.FuzzyInteger(low=1)
     template_name = fuzzy.FuzzyText(length=12)
-    sender = factory.SubFactory(UserFactory)
-    recipients = factory.SubFactory(UserFactory)
+    recipients = factory.SubFactory('EquiTrack.factories.UserFactory', profile=None)
     template_data = factory.Dict({'greeting': 'Hello!!!'}, dict_factory=JSONFieldFactory)

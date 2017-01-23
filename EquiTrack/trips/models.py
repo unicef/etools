@@ -401,7 +401,7 @@ class Trip(AdminURLMixin, models.Model):
             if instance.submitted_email_sent is False:
                 emails.TripCreatedEmail(instance).send(
                     instance.owner.email,
-                    *recipients
+                    recipients
                 )
                 instance.submitted_email_sent = True
                 instance.save()
@@ -410,7 +410,7 @@ class Trip(AdminURLMixin, models.Model):
                 recipients.append(instance.representative.email)
                 emails.TripRepresentativeEmail(instance).send(
                     instance.owner.email,
-                    *recipients
+                    recipients
                 )
 
         elif instance.status == Trip.CANCELLED:
@@ -421,7 +421,7 @@ class Trip(AdminURLMixin, models.Model):
             #recipients.extend(zonal_chiefs)
             emails.TripCancelledEmail(instance).send(
                 instance.owner.email,
-                *recipients
+                recipients
             )
 
         elif instance.status == Trip.APPROVED:
@@ -450,7 +450,7 @@ class Trip(AdminURLMixin, models.Model):
                 #recipients.extend(zonal_chiefs)
                 emails.TripApprovedEmail(instance).send(
                     instance.owner.email,
-                    *recipients
+                    recipients
                 )
                 instance.approved_email_sent = True
                 instance.save()
@@ -458,7 +458,7 @@ class Trip(AdminURLMixin, models.Model):
         elif instance.status == Trip.COMPLETED:
             emails.TripCompletedEmail(instance).send(
                 instance.owner.email,
-                *recipients
+                recipients
             )
 
 post_save.connect(Trip.send_trip_request, sender=Trip)
@@ -658,17 +658,17 @@ class ActionPoint(models.Model):
         if created:
             emails.TripActionPointCreated(instance).send(
                 instance.trip.owner.email,
-                *recipients
+                recipients
             )
         elif instance.status == 'closed':
             emails.TripActionPointClosed(instance).send(
                 instance.trip.owner.email,
-                *recipients
+                recipients
             )
         else:
             emails.TripActionPointUpdated(instance).send(
                 instance.trip.owner.email,
-                *recipients
+                recipients
             )
 
     @transaction.atomic
