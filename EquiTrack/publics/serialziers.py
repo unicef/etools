@@ -50,7 +50,7 @@ class AirlineSerializer(serializers.ModelSerializer):
 class WBSSerializer(serializers.ModelSerializer):
     class Meta:
         model = WBS
-        fields = ('id', 'name')
+        fields = ('id', 'name', 'business_area')
 
 
 class GrantSerializer(serializers.ModelSerializer):

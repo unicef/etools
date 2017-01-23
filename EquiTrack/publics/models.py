@@ -3,20 +3,6 @@ from __future__ import unicode_literals
 from django.db import models
 
 
-class WBS(models.Model):
-    name = models.CharField(max_length=25)
-
-
-class Grant(models.Model):
-    wbs = models.ForeignKey('WBS', related_name='grants')
-    name = models.CharField(max_length=25)
-
-
-class Fund(models.Model):
-    grant = models.ForeignKey('Grant', related_name='funds')
-    name = models.CharField(max_length=25)
-
-
 class ExpenseType(models.Model):
     title = models.CharField(max_length=32)
     code = models.CharField(max_length=16)
@@ -52,6 +38,21 @@ class BusinessArea(models.Model):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=32)
     region = models.ForeignKey('BusinessRegion', related_name='business_areas')
+
+
+class WBS(models.Model):
+    business_area = models.ForeignKey('BusinessArea', null=True)
+    name = models.CharField(max_length=25)
+
+
+class Grant(models.Model):
+    wbs = models.ForeignKey('WBS', related_name='grants')
+    name = models.CharField(max_length=25)
+
+
+class Fund(models.Model):
+    grant = models.ForeignKey('Grant', related_name='funds')
+    name = models.CharField(max_length=25)
 
 
 class Country(models.Model):
