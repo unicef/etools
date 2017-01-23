@@ -1050,6 +1050,21 @@ class Agreement(TimeStampedModel):
     def transition_to_suspended(self):
         pass
 
+    @transition(field=status,
+                source=[SUSPENDED, TERMINATED, ACTIVE],
+                target=[CANCELLED],
+                conditions=[agreements_illegal_transition])
+    def transition_to_cancelled(self):
+        pass
+
+    @transition(field=status,
+                source=[DRAFT],
+                target=[TERMINATED, SUSPENDED],
+                conditions=[agreements_illegal_transition])
+    def transition_to_cancelled(self):
+        pass
+
+
     def check_auto_updates(self):
         #auto-update country programme:
         if not self.country_programme and self.start and self.end:
