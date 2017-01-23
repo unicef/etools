@@ -28,18 +28,18 @@ class Notification(models.Model):
     )
 
     TEMPLATE_NAME_CHOICES = Choices(
-        ('trips/trip/created/updated', 'trips/trip/created/updated')
-        ('trips/trip/approved', 'trips/trip/approved')
-        ('trips/trip/approved', 'trips/trip/approved')
-        ('trips/trip/cancelled', 'trips/trip/cancelled')
-        ('trips/trip/completed', 'trips/trip/completed')
-        ('trips/trip/representative', 'trips/trip/representative')
-        ('travel/trip/travel_or_admin_assistant', 'travel/trip/travel_or_admin_assistant')
-        ('trips/trip/TA_request', 'trips/trip/TA_request')
-        ('trips/trip/TA_drafted', 'trips/trip/TA_drafted')
-        ('trips/action/created/updated/closed', 'trips/action/created/updated/closed')
-        ('trips/trip/summary', 'trips/trip/summary')
-        ('partners/partnership/created/updated', 'partners/partnership/created/updated')
+        ('trips/trip/created/updated', 'trips/trip/created/updated'),
+        ('trips/trip/approved', 'trips/trip/approved'),
+        ('trips/trip/approved', 'trips/trip/approved'),
+        ('trips/trip/cancelled', 'trips/trip/cancelled'),
+        ('trips/trip/completed', 'trips/trip/completed'),
+        ('trips/trip/representative', 'trips/trip/representative'),
+        ('travel/trip/travel_or_admin_assistant', 'travel/trip/travel_or_admin_assistant'),
+        ('trips/trip/TA_request', 'trips/trip/TA_request'),
+        ('trips/trip/TA_drafted', 'trips/trip/TA_drafted'),
+        ('trips/action/created/updated/closed', 'trips/action/created/updated/closed'),
+        ('trips/trip/summary', 'trips/trip/summary'),
+        ('partners/partnership/created/updated', 'partners/partnership/created/updated'),
     )
 
     type = models.CharField(max_length=255, choices=TYPE_CHOICES)
