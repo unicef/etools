@@ -9,6 +9,7 @@ from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.template.base import Template, VariableNode
 
 from model_utils import Choices
 from post_office.models import EmailTemplate
@@ -69,3 +70,23 @@ class Notification(models.Model):
 
         else:
             pass
+
+    @classmethod
+    def get_template_html_content(cls, template_name):
+        try:
+            email_template = EmailTemplate.objects.get(name=template_name)
+
+            return email_template.html_content
+        except EmailTemplate.DoesNotExist as e:
+            return ''
+
+    @classmethod
+    def get_template_context_entries(cls, template_name):
+        try:
+            email_template = EmailTemplate.objects.get(name=template_name)
+
+            template_obj = Template(email_template.html_content)
+
+            return map(lambda node: str(node).split(': ')[1][:-1], template_obj.nodelist.get_nodes_by_type(VariableNode))
+        except EmailTemplate.DoesNotExist as e:
+            return []
