@@ -136,7 +136,7 @@ class CostAssignmentSerializer(PermissionBasedModelSerializer):
 
     class Meta:
         model = CostAssignment
-        fields = ('id', 'wbs', 'share', 'grant', 'fund')
+        fields = ('id', 'wbs', 'share', 'grant', 'fund', 'business_area', 'delegate')
 
 
 class ClearancesSerializer(PermissionBasedModelSerializer):
@@ -153,7 +153,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     locations = serializers.PrimaryKeyRelatedField(many=True, queryset=Location.objects.all(), required=False,
                                                    allow_null=True)
-    travel_type = LowerTitleField(required=False)
+    travel_type = LowerTitleField(required=False, allow_null=True)
 
     class Meta:
         model = TravelActivity

@@ -10,7 +10,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
-    DSARegionFactory
+    DSARegionFactory, BusinessAreaFactory
 
 from .factories import TravelFactory
 
@@ -144,16 +144,31 @@ class TravelDetails(APITenantTestCase):
         fund = FundFactory()
         grant = fund.grant
         wbs = grant.wbs
+        business_area = BusinessAreaFactory()
 
         data = {'cost_assignments': [{'wbs': wbs.id,
                                       'fund': fund.id,
                                       'grant': grant.id,
-                                      'share': 55}]}
+                                      'share': 55}],
+                'ta_required': True}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'save_and_submit'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'cost_assignments': ['Shares should add up to 100%']})
+
+        data = {'cost_assignments': [{'wbs': wbs.id,
+                                      'fund': fund.id,
+                                      'grant': grant.id,
+                                      'share': 100,
+                                      'business_area': business_area.id,
+                                      'delegate': False}],
+                'ta_required': True}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
+                                                        kwargs={'transition_name': 'save_and_submit'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {})
 
     def test_activity_location(self):
         location = LocationFactory()
@@ -199,24 +214,8 @@ class TravelDetails(APITenantTestCase):
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
-                'activities': []}
-        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
-                                        user=self.unicef_staff)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
-
-        data = {'cost_assignments': [],
-                'deductions': [],
-                'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
-                               'destination': 'Berlin',
-                               'departure_date': '2016-11-16T12:06:55.821490',
-                               'arrival_date': '2016-11-15T12:06:55.821490',
-                               'dsa_region': dsaregion.id,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': [airlines.id]}],
-                'activities': []}
+                'activities': [],
+                'ta_required': True}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -262,7 +261,8 @@ class TravelDetails(APITenantTestCase):
                                'overnight_travel': False,
                                'mode_of_travel': ModeOfTravel.RAIL,
                                'airlines': [airlines.id]}],
-                'activities': []}
+                'activities': [],
+                'ta_required': True}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)

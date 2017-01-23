@@ -18,6 +18,7 @@ class ActionPoints(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
+        self.due_date = (datetime.now() + timedelta(days=1)).isoformat()
 
     def test_urls(self):
         list_url = reverse('t2f:action_points:list')
@@ -117,10 +118,8 @@ class ActionPoints(APITenantTestCase):
         self.assertEqual(len(response_json['data']), 1)
 
     def test_saving(self):
-        due_date = (datetime.now() - timedelta(days=1)).isoformat()
-
         data = {'action_points': [{'description': 'Something',
-                                   'due_date': due_date,
+                                   'due_date': self.due_date,
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'open',
                                    'completed_at': None,
@@ -137,10 +136,8 @@ class ActionPoints(APITenantTestCase):
         self.assertEqual(len(action_points), 1)
 
     def test_conditionally_required_fields(self):
-        due_date = (datetime.now() - timedelta(days=1)).isoformat()
-
         data = {'action_points': [{'description': 'Something',
-                                   'due_date': due_date,
+                                   'due_date': self.due_date,
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'open',
                                    'completed_at': None,
@@ -157,7 +154,7 @@ class ActionPoints(APITenantTestCase):
         self.assertEqual(len(action_points), 1)
 
         data = {'action_points': [{'description': 'Something',
-                                   'due_date': due_date,
+                                   'due_date': self.due_date,
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'completed',
                                    'completed_at': None,
@@ -177,7 +174,7 @@ class ActionPoints(APITenantTestCase):
 
         # Check when the completed at is populated but not completed
         data = {'action_points': [{'description': 'Something',
-                                   'due_date': due_date,
+                                   'due_date': self.due_date,
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'ongoing',
                                    'completed_at': datetime.now().isoformat(),
@@ -195,17 +192,16 @@ class ActionPoints(APITenantTestCase):
                          [{'actions_taken': ['This field is required']}])
 
     def test_automatic_state_change(self):
-        due_date = (datetime.now() - timedelta(days=1)).isoformat()
-
         data = {'action_points': [{'description': 'Something',
-                                   'due_date': due_date,
+                                   'due_date': self.due_date,
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'open',
                                    'completed_at': datetime.now().isoformat(),
                                    'actions_taken': 'some actions were done',
                                    'follow_up': True,
                                    'comments': '',
-                                   'trip_id': self.travel.id}]}
+                                   'trip_id': self.travel.id}],
+                'ta_required': True}
         response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
                                                        kwargs={'travel_pk': self.travel.id}),
                                         data=data,
@@ -215,10 +211,8 @@ class ActionPoints(APITenantTestCase):
         self.assertEqual(action_point_json[0]['status'], ActionPoint.ONGOING)
 
     def test_invalid_status(self):
-        due_date = (datetime.now() - timedelta(days=1)).isoformat()
-
         data = {'action_points': [{'description': 'Something',
-                                   'due_date': due_date,
+                                   'due_date': self.due_date,
                                    'person_responsible': self.unicef_staff.id,
                                    'status': 'invalid',
                                    'completed_at': None,

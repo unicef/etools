@@ -6,13 +6,31 @@ from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
     PartnershipFactory, ResultFactory, LocationFactory
-from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType, Country
+from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType, Country, BusinessArea, \
+    BusinessRegion
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
     TravelType
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
+
+
+class BusinessRegionFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=8)
+    code = fuzzy.FuzzyText(length=2)
+
+    class Meta:
+        model = BusinessRegion
+
+
+class BusinessAreaFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=8)
+    code = fuzzy.FuzzyText(length=8)
+    region = factory.SubFactory(BusinessRegionFactory)
+
+    class Meta:
+        model = BusinessArea
 
 
 class ExpenseTypeFactory(factory.DjangoModelFactory):
@@ -25,6 +43,7 @@ class ExpenseTypeFactory(factory.DjangoModelFactory):
 
 class WBSFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=12)
+    # business_area = factory.SubFactory(BusinessAreaFactory)
 
     class Meta:
         model = WBS

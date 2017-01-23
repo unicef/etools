@@ -173,6 +173,9 @@ class Travel(models.Model):
 
     @transition(status, source=[PLANNED, REJECTED], target=SUBMITTED)
     def submit_for_approval(self):
+        # TODO validate this!!!
+        if not self.supervisor:
+            return
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.id),
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
@@ -361,6 +364,8 @@ class Deduction(models.Model):
 class CostAssignment(models.Model):
     travel = models.ForeignKey('Travel', related_name='cost_assignments')
     share = models.PositiveIntegerField()
+    delegate = models.BooleanField(default=False)
+    business_area = models.ForeignKey('publics.BusinessArea', related_name='+', null=True)
     wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
     grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
     fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
