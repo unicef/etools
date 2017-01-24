@@ -29,8 +29,18 @@ class TravelList(APITenantTestCase):
     def test_urls(self):
         list_url = reverse('t2f:travels:list:index')
         self.assertEqual(list_url, '/api/t2f/travels/')
+
         list_export_url = reverse('t2f:travels:list:export')
         self.assertEqual(list_export_url, '/api/t2f/travels/export/')
+
+        export_url = reverse('t2f:travels:list:finance_export')
+        self.assertEqual(export_url, '/api/t2f/travels/finance-export/')
+
+        export_url = reverse('t2f:travels:list:travel_admin_export')
+        self.assertEqual(export_url, '/api/t2f/travels/travel-admin-export/')
+
+        export_url = reverse('t2f:travels:list:invoice_export')
+        self.assertEqual(export_url, '/api/t2f/travels/invoice-export/')
 
     def test_list_view(self):
         with self.assertNumQueries(4):
@@ -148,6 +158,72 @@ class TravelList(APITenantTestCase):
                           'approval_date',
                           'is_driver',
                           'attachment_count'])
+
+    @skip('How can I make a non-json request?')
+    def test_finance_export(self):
+        response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
+                                        content_type='text/csv', user=self.unicef_staff)
+        export_csv = csv.reader(StringIO(response.content))
+
+        # check header
+        self.assertEqual(export_csv.next(),
+                         ['reference_number',
+                          'traveller',
+                          'office',
+                          'section',
+                          'status',
+                          'supervisor',
+                          'start_date',
+                          'end_date',
+                          'purpose_of_travel',
+                          'mode_of_travel',
+                          'international_travel',
+                          'require_ta',
+                          'dsa_total',
+                          'expense_total',
+                          'deductions_total'])
+
+    @skip('How can I make a non-json request?')
+    def test_travel_admin_export(self):
+        response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
+                                        content_type='text/csv', user=self.unicef_staff)
+        export_csv = csv.reader(StringIO(response.content))
+
+        # check header
+        self.assertEqual(export_csv.next(),
+                         ['reference_number',
+                          'traveller',
+                          'office',
+                          'section',
+                          'status',
+                          'origin',
+                          'destination',
+                          'departure_time',
+                          'arrival_time',
+                          'dsa_area',
+                          'overnight_travel',
+                          'mode_of_travel',
+                          'airline'])
+
+    @skip('How can I make a non-json request?')
+    def test_invoice_export(self):
+        response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
+                                        content_type='text/csv', user=self.unicef_staff)
+        export_csv = csv.reader(StringIO(response.content))
+
+        # check header
+        self.assertEqual(export_csv.next(),
+                         ['reference_number',
+                          'ta_number',
+                          'vendor_number',
+                          'currency',
+                          'amount',
+                          'status',
+                          'message',
+                          'vision_fi_doc',
+                          'wbs',
+                          'grant',
+                          'fund'])
 
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()

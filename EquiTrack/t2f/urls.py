@@ -6,7 +6,6 @@ from t2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, P
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
-travel_list_export = TravelListViewSet.as_view({'get': 'export'})
 travel_list_state_change = TravelListViewSet.as_view({'post': 'create'})
 
 travel_details = TravelDetailsViewSet.as_view({'get': 'retrieve',
@@ -51,8 +50,12 @@ travel_details_patterns = patterns(
 travel_list_patterns = patterns(
     '',
     url(r'^$', travel_list, name='index'),
-    url(r'^export/$', travel_list_export, name='export'),
     url(r'^(?P<transition_name>save_and_submit)/$', travel_list_state_change, name='state_change'),
+    url(r'^export/$', TravelListViewSet.as_view({'get': 'export'}), name='export'),
+    url(r'^finance-export/$', TravelListViewSet.as_view({'get': 'export_finances'}), name='finance_export'),
+    url(r'^travel-admin-export/$', TravelListViewSet.as_view({'get': 'export_travel_admins'}),
+        name='travel_admin_export'),
+    url(r'^invoice-export/$', TravelListViewSet.as_view({'get': 'export_invoices'}), name='invoice_export'),
 )
 
 

@@ -168,7 +168,8 @@ class TravelDetails(APITenantTestCase):
                                                         kwargs={'transition_name': 'save_and_submit'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {})
+        self.assertKeysIn(['wbs', 'fund', 'grant', 'share', 'business_area', 'delegate'],
+                          response_json['cost_assignments'][0])
 
     def test_activity_location(self):
         location = LocationFactory()
