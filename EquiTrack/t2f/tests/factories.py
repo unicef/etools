@@ -5,7 +5,7 @@ from factory import fuzzy
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
-    PartnershipFactory, ResultFactory, LocationFactory
+    InterventionFactory, ResultFactory, LocationFactory
 from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType, Country, BusinessArea, \
     BusinessRegion
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
@@ -112,7 +112,8 @@ class DSARegionFactory(factory.DjangoModelFactory):
 class TravelActivityFactory(factory.DjangoModelFactory):
     travel_type = TravelType.ADVOCACY
     partner = factory.SubFactory(PartnerFactory)
-    partnership = factory.SubFactory(PartnershipFactory)
+    # TODO: refactor code to use Intervention instead of PCA model
+    partnership = factory.SubFactory(InterventionFactory)
     result = factory.SubFactory(ResultFactory)
     date = factory.LazyAttribute(lambda o: datetime.now())
 
