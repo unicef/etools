@@ -164,6 +164,27 @@ def create_or_update_user(ad_user):
         print 'saving profile for: {} {}'.format(user, user.profile)
         profile.save()
 
+section_users = {
+
+},
+def _set_supervisor(profile, manager_id):
+    if profile.supervisor and profile.supervisor.staff_id == manager_id:
+        return False
+
+    try:
+        supervisor = section_users.get(manager_id, User.objects.get(profile__staff_id=manager_id))
+        section_users[manager_id] = supervisor
+    except User.DoesNotExist:
+        print "this user does not exist in the db to set as supervisor: {}".format(manager_id)
+        return False
+
+    profile.supervisor = supervisor
+    return True
+
+
+
+
+
 def map_users():
     # get the users from IM (bania's file)
         # map sections and staff_ids and all other relevant fields
@@ -174,18 +195,25 @@ def map_users():
             .distinct()
 
     for code in section_codes:
+        section_users = {}
         synchronizer = UserSynchronizer('GetOrgChartUnitsInfo_JSON', code)
         print "Mapping for section {}".format(code)
         for in_user in synchronizer.response:
+            if not in_user.get('STAFF_ID'):
+                continue
             # get user:
             try:
-                user = User.objects.get(profile__staff_id=in_user['STAFF_ID'])
+                user = section_users.get(in_user['STAFF_ID'], User.objects.get(profile__staff_id=in_user['STAFF_ID']))
+                section_users[in_user['STAFF_ID']] = user
             except User.DoesNotExist:
                 print "this user does not exist in the db: {}".format(in_user['STAFF_EMAIL'])
                 continue
 
             profile_updated = _set_attribute(user.profile, "post_number", in_user["STAFF_POST_NO"])
-            if profile_updated:
+
+            supervisor_updated = _set_supervisor(user.profile, in_user["MANAGER_ID"])
+
+            if profile_updated or supervisor_updated:
                 print "saving profile for {}".format(user)
                 user.profile.save()
     # for each section call the "GetOrgChartUnitsInfo" to get all section org units

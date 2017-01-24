@@ -163,7 +163,7 @@ class UserProfile(models.Model):
     section_code = models.CharField(max_length=32, null=True, blank=True)
 
 
-    # TODO: add this when we need to autmatically map to groups
+    # TODO: figure this out when we need to autmatically map to groups
     #vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES), blank=True, null=True)
 
     def username(self):
