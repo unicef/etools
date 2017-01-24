@@ -23,11 +23,12 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
+    PartnerStaffMemberDetailSerializer,
 )
 
 
 from partners.models import PartnerOrganization
-from partners.permissions import PartnerPermission
+from partners.permissions import PartnerPermission, PartneshipManagerPermission
 
 
 from partners.filters import PartnerScopeFilter
@@ -181,5 +182,15 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             po_serializer = self.get_serializer(instance)
 
         return Response(po_serializer.data)
+
+
+class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
+    """
+    Returns a list of all Partner staff members
+    """
+    queryset = PartnerStaffMember.objects.all()
+    serializer_class = PartnerStaffMemberDetailSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
 
 
