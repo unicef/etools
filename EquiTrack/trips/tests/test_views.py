@@ -1,4 +1,5 @@
 from rest_framework import status
+from unittest import skip
 
 from EquiTrack.factories import TripFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
