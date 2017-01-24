@@ -408,6 +408,7 @@ SHARED_APPS = (
     'management',
     # you must list the app where your tenant model resides in
     'users',
+    'notification',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -428,7 +429,6 @@ TENANT_APPS = (
     't2f',
     'workplan',
     'actstream',
-    'notification',
 )
 
 

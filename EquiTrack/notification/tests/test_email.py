@@ -16,6 +16,14 @@ class TestEmailNotification(TenantTestCase):
         self.tenant.country_short_code = 'LEBA'
         self.tenant.save()
 
-    def test_email_template_generation(self):
+    def test_email_template_html_content_lookup(self):
+        if EmailTemplate.objects.count() == 0:
+            self.fail("No EmailTemplate instances found. Is the migration run?")
 
-        notification = NotificationFactory()
+        non_existing_template_content = Notification.get_template_html_content('random/template/name')
+
+        self.assertEqual(non_existing_template_content, '')
+
+        valid_template_content = Notification.get_template_html_content('trips/trip/created/updated')
+
+        self.assertNotEqual(valid_template_content, '')
