@@ -42,7 +42,7 @@ class Notification(models.Model):
         ('partners/partnership/created/updated', 'partners/partnership/created/updated'),
     )
 
-    type = models.CharField(max_length=255, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=255, choices=TYPE_CHOICES, default='Email')
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     sender = GenericForeignKey('content_type', 'object_id')
@@ -51,6 +51,7 @@ class Notification(models.Model):
     )
     sent_recipients = ArrayField(
         models.CharField(max_length=255),
+        default=list
     )
     template_name = models.CharField(max_length=255, choices=TEMPLATE_NAME_CHOICES)
     template_data = JSONField()
@@ -65,7 +66,7 @@ class Notification(models.Model):
             else:
                 sender = settings.DEFAULT_FROM_EMAIL
 
-            send_mail(sender, recipients, self.template_name, self.template_data)
+            send_mail(sender, self.recipients, self.template_name, self.template_data)
 
         else:
             pass
