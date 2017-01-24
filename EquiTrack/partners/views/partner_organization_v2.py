@@ -23,11 +23,14 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
+    PartnerStaffMemberDetailSerializer,
 )
 
 
 from partners.models import PartnerOrganization
-from partners.permissions import PartnerPermission
+from partners.permissions import PartnerPermission, PartneshipManagerPermission
+
+
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
@@ -93,7 +96,6 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         """
         query_params = self.request.query_params
         response = super(PartnerOrganizationListAPIView, self).list(request)
-
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
@@ -181,5 +183,15 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             po_serializer = self.get_serializer(instance)
 
         return Response(po_serializer.data)
+
+
+class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
+    """
+    Returns a list of all Partner staff members
+    """
+    queryset = PartnerStaffMember.objects.all()
+    serializer_class = PartnerStaffMemberDetailSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
 
 

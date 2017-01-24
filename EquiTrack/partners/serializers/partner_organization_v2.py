@@ -227,10 +227,3 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
-
-
-class PartnerStaffMemberExportSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = PartnerStaffMember
-        fields = "__all__"
