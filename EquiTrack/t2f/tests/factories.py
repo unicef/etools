@@ -5,7 +5,8 @@ from factory import fuzzy
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
-    PartnershipFactory, ResultFactory, LocationFactory
+    PartnershipFactory, ResultFactory, LocationFactory, InterventionFactory
+from partners.models import Agreement
 from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType, Country, BusinessArea, \
     BusinessRegion
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
@@ -111,8 +112,8 @@ class DSARegionFactory(factory.DjangoModelFactory):
 
 class TravelActivityFactory(factory.DjangoModelFactory):
     travel_type = TravelType.ADVOCACY
-    partner = factory.SubFactory(PartnerFactory)
-    partnership = factory.SubFactory(PartnershipFactory)
+    partner = factory.SelfAttribute('partnership.agreement.partner')
+    partnership = factory.SubFactory(InterventionFactory)
     result = factory.SubFactory(ResultFactory)
     date = factory.LazyAttribute(lambda o: datetime.now())
 
@@ -221,7 +222,7 @@ class TravelFactory(factory.DjangoModelFactory):
 
     @factory.post_generation
     def populate_activities(self, create, extracted, **kwargs):
-        ta = TravelActivityFactory()
+        ta = TravelActivityFactory(primary_traveler=self.traveler)
         ta.travels.add(self)
 
     class Meta:

@@ -87,4 +87,5 @@ class FilterBoxFilter(BaseFilterBackend):
         # TODO simon: figure out what to do with this
         data.pop('cp_output', None)
 
+        # To have proper keys in data dict, the serializer renames the incoming values according to the needs
         return queryset.filter(**data)

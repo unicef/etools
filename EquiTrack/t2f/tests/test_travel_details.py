@@ -177,7 +177,9 @@ class TravelDetails(APITenantTestCase):
         location_3 = LocationFactory()
 
         data = {'cost_assignments': [],
-                'activities': [{'locations': [location.id, location_2.id]}]}
+                'activities': [{'primary_traveler': True,
+                                'locations': [location.id, location_2.id]}],
+                'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
@@ -274,7 +276,8 @@ class TravelDetails(APITenantTestCase):
                 'deductions': [],
                 'expenses': [],
                 'itinerary': [],
-                'activities': [{}]}
+                'activities': [{}],
+                'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
@@ -323,7 +326,7 @@ class TravelDetails(APITenantTestCase):
                                "departure_date": "2017-01-20T23:00:01.892Z",
                                "arrival_date": "2017-01-27T23:00:01.905Z",
                                "mode_of_travel": "car"}],
-                "activities": [{"primary_traveler": False,
+                "activities": [{"primary_traveler": True,
                                 "locations": []}],
                 "cost_assignments": [],
                 "expenses": [],
@@ -342,7 +345,7 @@ class TravelDetails(APITenantTestCase):
 
     def test_ta_not_required(self):
         data = {"itinerary": [{}],
-                "activities": [{"primary_traveler": False,
+                "activities": [{"primary_traveler": True,
                                 "locations": []}],
                 "cost_assignments": [],
                 "expenses": [{}],

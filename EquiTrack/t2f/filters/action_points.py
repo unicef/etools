@@ -49,4 +49,5 @@ class FilterBoxFilter(BaseFilterBackend):
             return queryset
         data = serializer.validated_data
 
+        # To have proper keys in data dict, the serializer renames the incoming values according to the needs
         return queryset.filter(**data)

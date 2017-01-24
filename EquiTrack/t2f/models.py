@@ -83,7 +83,12 @@ class ModeOfTravel(object):
 
 def make_travel_reference_number():
     year = datetime.now().year
-    last_travel = Travel.objects.filter(created__year=year).order_by('reference_number').last()
+    travels_qs = Travel.objects.select_for_update().filter(created__year=year)
+
+    # This will lock the matching rows and prevent concurency issue
+    travels_qs.values_list('id')
+
+    last_travel = travels_qs.order_by('reference_number').last()
     if last_travel:
         reference_number = last_travel.reference_number
         reference_number = int(reference_number.split('/')[1])
@@ -145,7 +150,7 @@ class Travel(models.Model):
     additional_note = models.TextField(null=True, blank=True)
     international_travel = models.NullBooleanField(default=False, null=True, blank=True)
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
-    reference_number = models.CharField(max_length=12, default=make_travel_reference_number)
+    reference_number = models.CharField(max_length=12, default=make_travel_reference_number, unique=True)
     hidden = models.BooleanField(default=False)
     mode_of_travel = ArrayField(models.CharField(max_length=5, choices=ModeOfTravel.CHOICES), null=True)
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
@@ -252,6 +257,9 @@ class Travel(models.Model):
                                      self.supervisor.email,
                                      'emails/trip_completed.html')
 
+        # TODO nic: :)
+        # jsonfield += self.activites.filter(primary_traveler=self.traveler, partner=<partner>, travel_type='Prog visit').count()
+
     @transition(status, target=PLANNED)
     def reset_status(self):
         pass
@@ -299,10 +307,12 @@ class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities')
     travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, null=True)
     partner = models.ForeignKey('partners.PartnerOrganization', null=True, related_name='+')
-    partnership = models.ForeignKey('partners.PCA', null=True, related_name='+')
+    # Partnership has to be filtered based on partner
+    # TODO: assert self.partnership.agreement.partner == self.partner
+    partnership = models.ForeignKey('partners.Intervention', null=True, related_name='+')
     result = models.ForeignKey('reports.Result', null=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
-    primary_traveler = models.BooleanField(default=True)
+    primary_traveler = models.ForeignKey(User)
     date = models.DateTimeField(null=True)
 
 
@@ -434,7 +444,12 @@ class TravelPermission(models.Model):
 
 def make_action_point_number():
     year = datetime.now().year
-    last_action_point = ActionPoint.objects.filter(created_at__year=year).order_by('action_point_number').last()
+    action_points_qs = ActionPoint.objects.select_for_update().filter(created_at__year=year)
+
+    # This will lock the matching rows and prevent concurency issue
+    action_points_qs.values_list('id')
+
+    last_action_point = action_points_qs.order_by('action_point_number').last()
     if last_action_point:
         action_point_number = last_action_point.action_point_number
         action_point_number = int(action_point_number.split('/')[1])
@@ -465,7 +480,7 @@ class ActionPoint(models.Model):
     )
 
     travel = models.ForeignKey('Travel', related_name='action_points')
-    action_point_number = models.CharField(max_length=11, default=make_action_point_number)
+    action_point_number = models.CharField(max_length=11, default=make_action_point_number, unique=True)
     description = models.CharField(max_length=254)
     due_date = models.DateTimeField()
     person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
@@ -492,7 +507,7 @@ class Invoice(models.Model):
     )
 
     travel = models.ForeignKey('Travel', related_name='invoices')
-    reference_number = models.CharField(max_length=32)
+    reference_number = models.CharField(max_length=32, unique=True)
     business_area = models.CharField(max_length=32)
     vendor_number = models.CharField(max_length=32)
     currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
@@ -502,7 +517,9 @@ class Invoice(models.Model):
 
     def save(self, **kwargs):
         if self.pk is None:
-            invoice_counter = self.travel.invoices.all().count() + 1
+            # This will lock the travel row and prevent concurency issues
+            travel = Travel.objects.select_for_update().get(id=self.travel_id)
+            invoice_counter = travel.invoices.all().count() + 1
             self.reference_number = '{}/{}/{:02d}'.format(self.business_area,
                                                           self.travel.reference_number,
                                                           invoice_counter)

@@ -230,25 +230,25 @@ class TravelList(APITenantTestCase):
         airlines = AirlineCompanyFactory()
         airlines2 = AirlineCompanyFactory()
 
-        data = {'cost_assignments': [],
-                'deductions': [{'date': '2016-11-03',
-                                'breakfast': True,
-                                'lunch': True,
-                                'dinner': False,
-                                'accomodation': True}],
-                'expenses': [],
-                'itinerary': [{'origin': 'Budapest',
-                               'destination': 'Berlin',
-                               'departure_date': '2016-11-16T12:06:55.821490',
-                               'arrival_date': '2016-11-16T12:06:55.821490',
-                               'dsa_region': dsaregion.id,
-                               'overnight_travel': False,
-                               'mode_of_travel': ModeOfTravel.RAIL,
-                               'airlines': [airlines.id, airlines2.id]}],
-                'activities': []}
-
-        self.forced_auth_req('post', reverse('t2f:travels:list:index'),
-                             data=data, user=self.unicef_staff)
+        # data = {'cost_assignments': [],
+        #         'deductions': [{'date': '2016-11-03',
+        #                         'breakfast': True,
+        #                         'lunch': True,
+        #                         'dinner': False,
+        #                         'accomodation': True}],
+        #         'expenses': [],
+        #         'itinerary': [{'origin': 'Budapest',
+        #                        'destination': 'Berlin',
+        #                        'departure_date': '2016-11-16T12:06:55.821490',
+        #                        'arrival_date': '2016-11-16T12:06:55.821490',
+        #                        'dsa_region': dsaregion.id,
+        #                        'overnight_travel': False,
+        #                        'mode_of_travel': ModeOfTravel.RAIL,
+        #                        'airlines': [airlines.id, airlines2.id]}],
+        #         'activities': []}
+        #
+        # self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+        #                      data=data, user=self.unicef_staff)
 
         currency = CurrencyFactory()
         fund = FundFactory()

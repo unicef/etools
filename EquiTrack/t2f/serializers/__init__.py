@@ -154,10 +154,21 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
     locations = serializers.PrimaryKeyRelatedField(many=True, queryset=Location.objects.all(), required=False,
                                                    allow_null=True)
     travel_type = LowerTitleField(required=False, allow_null=True)
+    primary_traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
 
     class Meta:
         model = TravelActivity
         fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date')
+
+    def validate(self, attrs):
+        if 'id' not in attrs:
+            if 'primary_traveler' in attrs:
+                if not attrs['primary_traveler']:
+                    raise ValidationError({'primary_traveler': 'This field have to be true upon creation'})
+            else:
+                raise ValidationError({'primary_traveler': 'This field is required'})
+
+        return attrs
 
 
 class TravelAttachmentSerializer(serializers.ModelSerializer):
@@ -277,6 +288,32 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             attrs['mode_of_travel'] = []
         return super(TravelDetailsSerializer, self).validate(attrs)
 
+    def to_internal_value(self, data):
+        if self.instance:
+            traveler_id = getattr(self.instance.traveler, 'id', None)
+        else:
+            traveler_id = None
+
+        traveler_id = data.get('traveler', traveler_id)
+
+        for travel_activity_data in data.get('activities', []):
+            if travel_activity_data.get('primary_traveler') is False:
+                travel_activity_data['primary_traveler'] = None
+            else:
+                travel_activity_data['primary_traveler'] = traveler_id
+
+        return super(TravelDetailsSerializer, self).to_internal_value(data)
+
+    def to_representation(self, instance):
+        data = super(TravelDetailsSerializer, self).to_representation(instance)
+
+        for travel_activity_data in data.get('activities', []):
+            if travel_activity_data['primary_traveler'] == data.get('traveler', None):
+                travel_activity_data['primary_traveler'] = True
+            else:
+                travel_activity_data['primary_traveler'] = False
+
+        return data
 
     # -------- Create and update methods --------
     def create(self, validated_data):

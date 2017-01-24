@@ -12,7 +12,7 @@ from rest_framework_nested import routers
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 
-from publics.views import StaticDataView
+from publics.views import StaticDataView, WBSGrantFundView
 
 admin.autodiscover()
 
@@ -136,6 +136,7 @@ urlpatterns = patterns(
     url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
     url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
+    url(r'^api/wbs_grants_funds/$', WBSGrantFundView.as_view(), name='wbs_grants_funds'),
 
     url(r'^locations/', include('locations.urls')),
     url(r'^management/', include('management.urls')),

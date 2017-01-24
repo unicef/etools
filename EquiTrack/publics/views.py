@@ -5,7 +5,8 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
 from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Grant, Fund, ExpenseType, BusinessArea
-from publics.serialziers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer
+from publics.serialziers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
+    WBSGrantFundSerializer, WBSGrantFundParameterSerializer
 from t2f.models import TravelType, ModeOfTravel
 
 
@@ -27,12 +28,8 @@ class StaticDataView(generics.GenericAPIView):
     serializer_class = PublicStaticDataSerializer
 
     def get(self, request):
-        # TODO: this is not only static data some of the data changes,
-        # there should be calls to individual endpoints for:
-        # users, partners, partnerships, results, locations, wbs, grants, funds
-
         country = request.user.profile.country
-        dsa_regions = DSARegion.objects.filter(area_code=country.business_area_code)
+        dsa_regions = DSARegion.objects.filter(country__business_area__code=country.business_area_code)
 
         data = {'currencies': Currency.objects.all(),
                 'airlines': AirlineCompany.objects.all(),
@@ -46,5 +43,24 @@ class StaticDataView(generics.GenericAPIView):
                 'travel_types': [c[0].lower() for c in TravelType.CHOICES],
                 'travel_modes': [c[0].lower() for c in ModeOfTravel.CHOICES]}
 
+        serializer = self.get_serializer(data)
+        return Response(serializer.data, status.HTTP_200_OK)
+
+
+class WBSGrantFundView(generics.GenericAPIView):
+    serializer_class = WBSGrantFundSerializer
+
+    def get(self, request):
+        parameter_serialzier = WBSGrantFundParameterSerializer(data=request.GET, context=self.get_serializer_context())
+        parameter_serialzier.is_valid(raise_exception=True)
+
+        business_area = parameter_serialzier.validated_data['business_area']
+
+        wbs_qs = WBS.objects.filter(business_area=business_area)
+        grant_qs = Grant.objects.filter(wbs__in=wbs_qs)
+        funds_qs = Fund.objects.filter(grant__in=grant_qs)
+        data = {'wbs': wbs_qs,
+                'funds': funds_qs,
+                'grants': grant_qs}
         serializer = self.get_serializer(data)
         return Response(serializer.data, status.HTTP_200_OK)

@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.views.generic.base import TemplateView
 
-from publics.models import WBS, ExpenseType, Currency
+from django.http import HttpResponseForbidden
 from t2f.models import Travel
 
 
@@ -21,3 +21,8 @@ class TravelEditView(TemplateView):
         kwargs['error_count'] = travel.invoices.filter(status='error').count()
 
         return kwargs
+
+    def get(self, request, *args, **kwargs):
+        if not self.request.user or not self.request.user.is_staff:
+            return HttpResponseForbidden()
+        return super(TravelEditView, self).get(request, *args, **kwargs)

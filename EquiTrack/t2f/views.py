@@ -18,17 +18,15 @@ from rest_framework_csv import renderers
 from t2f.filters import TravelRelatedModelFilter
 from t2f.filters import travel_list, action_points, invoices
 from locations.models import Location
-from partners.models import PartnerOrganization, PCA
+from partners.models import PartnerOrganization, Intervention
 from reports.models import Result
 from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
     InvoiceExportSerializer
 
-from publics.models import DSARegion
 from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice, IteneraryItem
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer
 from t2f.serializers.static_data import StaticDataSerializer
-from t2f.serializers.permission_matrix import PermissionMatrixSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix, InvoiceMaker
 from t2f.permission_matrix import PERMISSION_MATRIX
 
@@ -243,15 +241,8 @@ class StaticDataView(generics.GenericAPIView):
     serializer_class = StaticDataSerializer
 
     def get(self, request):
-        # TODO: this is not only static data some of the data changes,
-        # there should be calls to individual endpoints for:
-        # users, partners, partnerships, results, locations, wbs, grants, funds
-
-        country = request.user.profile.country
-        dsa_regions = DSARegion.objects.filter(area_code=country.business_area_code)
-
         data = {'partners': PartnerOrganization.objects.all(),
-                'partnerships': PCA.objects.all(),
+                'partnerships': Intervention.objects.all(),
                 'results': Result.objects.all(),
                 'locations': Location.objects.all(),
                 'travel_types': [c[0] for c in TravelType.CHOICES],
@@ -273,17 +264,5 @@ class VendorNumberListView(generics.GenericAPIView):
 
 
 class PermissionMatrixView(generics.GenericAPIView):
-    serializer_class = PermissionMatrixSerializer
-    cache_timeout = None
-
     def get(self, request):
-        # travel_matrix = cache.get('travel_matrix')
-        # if not travel_matrix:
-        #     # permissions = TravelPermission.objects.all()
-        #     # serializer = self.get_serializer(permissions)
-        #     # permission_matrix_data = serializer.data
-        #     cache.set('travel_matrix', TRAVEL_PERMISSION_MATRIX, self.cache_timeout)
-        #
-        # matrix = {'travel': TRAVEL_PERMISSION_MATRIX,
-        #           'action_point': ACTION_POINT_MATRIX}
         return Response(PERMISSION_MATRIX, status.HTTP_200_OK)
