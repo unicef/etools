@@ -19,7 +19,3 @@ class TestEmailNotification(TenantTestCase):
     def test_email_template_generation(self):
 
         notification = NotificationFactory()
-
-        Notification.create_email_template(notification.template_name, "Test template", "Announcement from UNICEF. {{ greeting }}", "<h1>Announcement from UNICEF. {{ greeting }}</h1>")
-
-        self.assertNotEqual(EmailTemplate.objects.count(), 0)

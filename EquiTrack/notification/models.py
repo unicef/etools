@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import datetime
-from dateutil.relativedelta import relativedelta
 
 from django.conf import settings
 from django.contrib.auth.models import User
