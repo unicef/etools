@@ -62,3 +62,51 @@ class AgreementCvsRenderer(r.CSVRenderer):
         "staff_members": 'Partner Authorized Officer',
         "amendments": 'Amendments'
     }
+
+class InterventionCvsRenderer(r.CSVRenderer):
+    header = [
+            "status", "partner_name", "agreement_name", "document_type", "number", "title",
+            "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+            "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers",
+            "planned_budget_local", "cso_contribution",
+            "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
+            "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
+            "unicef_signatory", "signed_by_unicef_date", "supply_plans", "distribution_plans",
+    ]
+
+    labels = {
+        "status": "Status",
+        "partner_name": "Partner",
+        "agreement_name": "Agreement",
+        "document_type": "Document Type",
+        "number": "Reference Number",
+        "title": "Document Title",
+        "start": "Start Date",
+        "end": "End Date",
+        "offices": "UNICEF Office",
+        "sectors": "Sectors",
+        "locations": "Locations",
+        "unicef_focal_points": "UNICEF Focal Points",
+        "partner_focal_points": "CSO Authorized Officials",
+        "population_focus": "Population Focus",
+        "hrp_name": "Humanitarian Response Plan",
+        "cp_outputs": "CP Outputs",
+        "ram_indicators": "RAM Indicators",
+        "fr_numbers": "FR Number(s)",
+        "planned_budget_local": "Total UNICEF Budget (Local)",
+        "unicef_budget": "Total UNICEF Budget (USD)",
+        "cso_contribution": "Total CSO Budget (USD)",
+        "partner_contribution_local": "Total CSO Budget (Local)",
+        "planned_visits": "Planned Programmatic Visits",
+        "spot_checks": "Planned Spot Checks",
+        "audit": "Planned Audits",
+        "submission_date": "Document Submission Date by CSO",
+        "submission_date_prc": "Submission Date to PRC",
+        "review_date_prc": "Review Date by PRC",
+        "partner_authorized_officer_signatory": "Signed by Partner",
+        "signed_by_partner_date": "Signed by Partner Date",
+        "unicef_signatory": "Signed by UNICEF",
+        "signed_by_unicef_date": "Signed by UNICEF Date",
+        "supply_plans": "Supply Plan",
+        "distribution_plans": "Distribution Plan",
+    }

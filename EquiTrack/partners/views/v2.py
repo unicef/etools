@@ -57,9 +57,6 @@ from partners.serializers.v1 import PartnerOrganizationSerializer, InterventionS
 from partners.filters import PartnerScopeFilter
 
 
-
-
-
 class PartnerInterventionListAPIView(ListAPIView):
     queryset = Intervention.objects.all()
     serializer_class = InterventionSerializer
@@ -95,8 +92,6 @@ class AgreementInterventionsListAPIView(ListAPIView):
             serializer.data,
             status=status.HTTP_200_OK
         )
-
-
 
 
 class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
