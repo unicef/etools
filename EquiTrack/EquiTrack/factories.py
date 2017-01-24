@@ -388,10 +388,7 @@ class NotificationFactory(factory.django.DjangoModelFactory):
         model = notification_models.Notification
 
     type = "Email"
-    content_type = factory.Iterator(ContentType.objects.all())
-    object_id = fuzzy.FuzzyInteger(low=1)
-    sender = factory.SubFactory(DonorFactory)
-    template_name = fuzzy.FuzzyText(length=12)
+    sender = factory.SubFactory(AgreementFactory)
+    template_name = 'trips/trip/TA_request'
     recipients = ['test@test.com', 'test1@test.com', 'test2@test.com']
-    sent_recipients = ['test@test.com', 'test1@test.com', 'test2@test.com']
-    template_data = factory.Dict({'greeting': 'Hello!!!'}, dict_factory=JSONFieldFactory)
+    template_data = factory.Dict({'url': 'www.unicef.org', 'pa_assistant': 'Test revised', 'owner_name': 'Tester revised'}, dict_factory=JSONFieldFactory)

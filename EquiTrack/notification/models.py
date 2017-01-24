@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import json
 import datetime
 
 from django.conf import settings
@@ -59,12 +60,6 @@ class Notification(models.Model):
     def __unicode__(self):
         return "{} Notification from {}: {}".format(self.type, self.sender, self.template_data)
 
-    def save(self, *args, **kwargs):
-        if isinstance(str, self.template_data):
-            raise Exception("Saving string as template data is not allowed. Pass dictionary object instead.")
-        else:
-            super(Notification, self).save(*args, **kwargs)
-
     def send_notification(self):
         if self.type == 'Email':
             if isinstance(self.sender, User):
@@ -72,7 +67,9 @@ class Notification(models.Model):
             else:
                 sender = settings.DEFAULT_FROM_EMAIL
 
-            send_mail(sender, self.recipients, self.template_name, self.template_data, notification_obj=self)
+            template_data = json.loads(self.template_data) if isinstance(self.template_data, str) else self.template_data
+
+            send_mail(sender, self.recipients, self.template_name, template_data, notification_obj=self)
 
         else:
             pass
