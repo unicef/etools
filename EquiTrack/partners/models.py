@@ -138,6 +138,7 @@ def get_agreement_amd_file_path(instance, filename):
          filename]
     )
 
+
 # TODO: move this to a workspace app for common configuration options
 class WorkspaceFileType(models.Model):
     """
@@ -347,7 +348,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     #     "planned_cash_transfer": 0,
     #     "micro_assessment_needed": "Missing",
     #     "audits_mr": 0}
-    hact_values = JSONField(blank=True, null=True, default={})
+    hact_values = JSONField(blank=True, null=True)
     # hact_calculations = JSONField(blank=True, null=True, default={})
 
     class Meta:
@@ -383,6 +384,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         :return:
         """
         micro_assessment = partner.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
+        hact = json.loads(partner.hact_values) if partner.hact_values else {}
+
         if assessment:
             if micro_assessment:
                 if assessment.completed_date and micro_assessment.completed_date and \
@@ -391,18 +394,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             else:
                 micro_assessment = assessment
         if partner.type_of_assessment == 'High Risk Assumed':
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
-        elif partner.hact_values['planned_cash_transfer'] > 100000.00 \
+            hact['micro_assessment_needed'] = 'Yes'
+        elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
             and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
+            hact['micro_assessment_needed'] = 'Yes'
         elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
             and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
             and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
+            hact['micro_assessment_needed'] = 'Yes'
         elif micro_assessment is None:
-            partner.hact_values['micro_assessment_needed'] = 'Missing'
+            hact['micro_assessment_needed'] = 'Missing'
         else:
-            partner.hact_values['micro_assessment_needed'] = 'No'
+            hact['micro_assessment_needed'] = 'No'
+        partner.hact_values = hact
         partner.save()
 
 
@@ -507,8 +511,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 q = q.order_by("intervention__id", "-created").\
                     distinct('intervention__id').values_list('unicef_cash', flat=True)
                 total = sum(q)
-        hact = json.load(partner.hact_values)
-        hact["planned_cash_transfer"] = total
+
+        hact = json.loads(partner.hact_values) if partner.hact_values else {}
+        hact["planned_cash_transfer"] = float(total)
         partner.hact_values = hact
         partner.save()
 
