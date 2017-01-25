@@ -652,6 +652,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(len(response.data), 1)
         self.assertEquals(response.data[0]["agreement_number"], self.agreement.agreement_number)
 
+    @skip("Test transitions - checked when going active")
     def test_agreements_create_validation_signed_by(self):
         data = {
             "agreement_type":"PCA",

@@ -106,7 +106,6 @@ class AgreementValid(CompleteValidation):
     BASIC_VALIDATIONS = [
         start_end_dates_valid,
         signed_date_valid,
-        signed_by_valid,
         start_date_equals_max_signoff,
         partner_type_valid_cso,
     ]
@@ -141,6 +140,9 @@ class AgreementValid(CompleteValidation):
 
         if not signed_by_everyone_valid(agreement):
             raise StateValidError(['signed_by_everyone_valid'])
+
+        if not signed_by_valid(agreement):
+            raise StateValidError(['signed_by_valid'])
 
         if not signed_agreement_present(agreement):
             raise StateValidError(['signed_agreement_present'])
