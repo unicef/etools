@@ -3,8 +3,15 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
-from django.db import migrations, models
-import django.db.models.deletion
+from django.db import migrations
+
+
+def clear_everything(apps, schema_editor):
+    Travel = apps.get_model('t2f', 'Travel')
+    Travel.objects.all().delete()
+
+    TravelActivity = apps.get_model('t2f', 'TravelActivity')
+    TravelActivity.objects.all().delete()
 
 
 class Migration(migrations.Migration):
@@ -15,19 +22,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='travelactivity',
-            name='primary_traveler',
-        ),
-        migrations.AlterField(
-            model_name='travelactivity',
-            name='partnership',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='partners.Intervention'),
-        ),
-
-        migrations.AddField(
-            model_name='travelactivity',
-            name='primary_traveler',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
-        ),
+        migrations.RunPython(clear_everything),
     ]
