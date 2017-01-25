@@ -127,8 +127,9 @@ class AgreementValid(CompleteValidation):
     }
 
     def state_suspended_valid(self, agreement, user=None):
-        if agreement.end > date.today():
-            raise StateValidError('suspended_invalid')
+        # TODO: figure out when suspended is invalid
+        # if agreement.end > date.today():
+        #     raise StateValidError('suspended_invalid')
         return True
 
     def state_active_valid(self, agreement, user=None):
