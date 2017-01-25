@@ -43,7 +43,7 @@ class Notification(models.Model):
         ('partners/partnership/created/updated', 'partners/partnership/created/updated'),
     )
 
-    type = models.CharField(max_length=255, choices=TYPE_CHOICES, default='Email')
+    type = models.CharField(max_length=255, default='Email')
     content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField(null=True)
     sender = GenericForeignKey('content_type', 'object_id')
@@ -54,7 +54,7 @@ class Notification(models.Model):
         models.CharField(max_length=255),
         default=list
     )
-    template_name = models.CharField(max_length=255, choices=TEMPLATE_NAME_CHOICES)
+    template_name = models.CharField(max_length=255)
     template_data = JSONField()
 
     def __unicode__(self):
