@@ -44,8 +44,8 @@ class Notification(models.Model):
     )
 
     type = models.CharField(max_length=255, choices=TYPE_CHOICES, default='Email')
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
+    content_type = models.ForeignKey(ContentType, null=True, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField(null=True)
     sender = GenericForeignKey('content_type', 'object_id')
     recipients = ArrayField(
         models.CharField(max_length=255),

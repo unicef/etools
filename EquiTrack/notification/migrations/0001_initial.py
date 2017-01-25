@@ -22,12 +22,12 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('type', models.CharField(choices=[(b'Email', b'Email')], default=b'Email', max_length=255)),
-                ('object_id', models.PositiveIntegerField()),
+                ('object_id', models.PositiveIntegerField(null=True)),
                 ('recipients', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=255), size=None)),
                 ('sent_recipients', django.contrib.postgres.fields.ArrayField(base_field=models.CharField(max_length=255), default=list, size=None)),
                 ('template_name', models.CharField(choices=[(b'trips/trip/created/updated', b'trips/trip/created/updated'), (b'trips/trip/approved', b'trips/trip/approved'), (b'trips/trip/approved', b'trips/trip/approved'), (b'trips/trip/cancelled', b'trips/trip/cancelled'), (b'trips/trip/completed', b'trips/trip/completed'), (b'trips/trip/representative', b'trips/trip/representative'), (b'travel/trip/travel_or_admin_assistant', b'travel/trip/travel_or_admin_assistant'), (b'trips/trip/TA_request', b'trips/trip/TA_request'), (b'trips/trip/TA_drafted', b'trips/trip/TA_drafted'), (b'trips/action/created/updated/closed', b'trips/action/created/updated/closed'), (b'trips/trip/summary', b'trips/trip/summary'), (b'partners/partnership/created/updated', b'partners/partnership/created/updated')], max_length=255)),
                 ('template_data', django.contrib.postgres.fields.jsonb.JSONField()),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
+                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType', null=True)),
             ],
         ),
     ]
