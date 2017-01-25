@@ -37,7 +37,7 @@ from partners.serializers.interventions_v2 import (
     InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer
 )
-
+from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.interventions import InterventionValid
@@ -50,7 +50,7 @@ class InterventionListAPIView(ListCreateAPIView):
     serializer_class = InterventionListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
 
     def get_serializer_class(self):
         """

@@ -29,9 +29,10 @@ from partners.serializers.agreements_v2 import (
 )
 
 from partners.filters import PartnerScopeFilter
+
+from partners.exports_v2 import AgreementCvsRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.agreements import AgreementValid
-
 
 class AgreementListAPIView(ListCreateAPIView):
     """
@@ -41,7 +42,7 @@ class AgreementListAPIView(ListCreateAPIView):
     serializer_class = AgreementListSerializer
     filter_backends = (PartnerScopeFilter,)
     permission_classes = (IsAdminUser,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, AgreementCvsRenderer)
 
     def get_serializer_class(self, format=None):
         """
