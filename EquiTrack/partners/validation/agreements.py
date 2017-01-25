@@ -3,6 +3,7 @@ from datetime import date, datetime
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
 
+
 def agreement_transition_to_active_valid(agreement):
     logging.debug(agreement.status, agreement.start, agreement.end, agreement.signed_by_partner_date, agreement.signed_by_unicef_date, agreement.signed_by, agreement.partner_manager)
     if agreement.status == agreement.DRAFT and agreement.start and agreement.end and \
@@ -52,6 +53,11 @@ def start_end_dates_valid(agreement):
         return False
     return True
 
+def start_date_equals_max_signoff(agreement):
+    if agreement.start != max(agreement.signed_by_unicef_date, agreement.signed_by_partner_date):
+        return False
+    return True
+
 def signed_date_valid(agreement):
     '''
     :param agreement:
@@ -69,6 +75,10 @@ def signed_date_valid(agreement):
         return False
     return True
 
+def signed_by_valid(agreement):
+    if not agreement.signed_by or not agreement.partner_manager:
+        return False
+    return True
 
 def signed_by_everyone_valid(agreement):
     if not agreement.signed_by_partner_date and agreement.signed_by_unicef_date:
@@ -81,13 +91,25 @@ def signed_agreement_present(agreement):
         return False
     return True
 
+def partner_type_valid_cso(agreement):
+    if agreement.agreement_type in ["PCA", "SSFA"] and agreement.partner \
+        and not agreement.partner.partner_type == "Civil Society Organization":
+            return False
+    return True
+
 class AgreementValid(CompleteValidation):
 
     # TODO: add user on basic and state
 
     VALIDATION_CLASS = 'partners.Agreement'
     # validations that will be checked on every object... these functions only take the new instance
-    BASIC_VALIDATIONS = [start_end_dates_valid, signed_date_valid]
+    BASIC_VALIDATIONS = [
+        start_end_dates_valid,
+        signed_date_valid,
+        signed_by_valid,
+        start_date_equals_max_signoff,
+        partner_type_valid_cso,
+    ]
 
     VALID_ERRORS = {
         'signed_agreement_present': 'Signed agreement must be included in order to activate',
@@ -101,7 +123,10 @@ class AgreementValid(CompleteValidation):
         'state_active_not_signed': 'Hey this is agreement needs to be signed in order to be active, no signed dates',
         'agreement_transition_to_active_invalid': "Dude you can't transition to active without having the proper sinatures",
         'cant_create_in_active_state': 'When adding a new object the state needs to be "Draft"',
-        'custom_error': 'blah blah'
+        'custom_error': 'blah blah',
+        'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
+        'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
+        'signed_by_valid': 'Partner manager and signed by must be provided.',
     }
 
     def state_suspended_valid(self, agreement, user=None):
@@ -134,12 +159,3 @@ class AgreementValid(CompleteValidation):
     def state_cancelled_valid(self, agreement, user=None):
         logging.debug('STATE CANCELLED VALID CALLED')
         return False
-
-
-
-
-
-
-
-
-
