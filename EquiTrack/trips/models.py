@@ -418,6 +418,8 @@ class Trip(AdminURLMixin, models.Model):
                     }
                 )
 
+                notification.send_notification()
+
                 instance.submitted_email_sent = True
                 instance.save()
 
