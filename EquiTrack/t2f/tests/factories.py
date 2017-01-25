@@ -4,9 +4,8 @@ import factory
 from factory import fuzzy
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
-    PartnershipFactory, ResultFactory, LocationFactory, InterventionFactory
-from partners.models import Agreement
+from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory, ResultFactory,\
+    LocationFactory, InterventionFactory
 from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType, Country, BusinessArea, \
     BusinessRegion
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
@@ -145,7 +144,6 @@ class IteneraryItemFactory(factory.DjangoModelFactory):
 
 
 class ExpenseFactory(factory.DjangoModelFactory):
-    type = fuzzy.FuzzyText(length=32)
     document_currency = factory.SubFactory(CurrencyFactory)
     account_currency = factory.SubFactory(CurrencyFactory)
     amount = fuzzy.FuzzyDecimal(1, 10000)
