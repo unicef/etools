@@ -28,6 +28,13 @@ from actstream import action
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.mixins import AdminURLMixin
 
+from partners.validation.agreements import (
+    agreement_transition_to_active_valid,
+    agreement_transition_to_ended_valid,
+    agreements_illegal_transition_permissions,
+    agreements_illegal_transition
+)
+from partners.validation import interventions as intervention_validation
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -833,12 +840,27 @@ class BankDetails(models.Model):
 class AgreementManager(models.Manager):
     def get_queryset(self):
         return super(AgreementManager, self).get_queryset().select_related('partner')
+
+def draft_to_active_auto_changes(obj):
+    # here we can make any updates to the object as we need as part of the auto transition change
+    # obj.end = datetime.date.today()
+    pass
+
 class Agreement(TimeStampedModel):
     """
     Represents an agreement with the partner organization.
 
     Relates to :model:`partners.PartnerOrganization`
     """
+    # POTENTIAL_AUTO_TRANSITIONS.. these are all transitions that we want to make automatically if possible
+    POTENTIAL_AUTO_TRANSITIONS = {
+        'draft': [
+            {'active': [draft_to_active_auto_changes]},
+        ],
+        'active': [
+            {'ended': []},
+        ],
+    }
 
     PCA = u'PCA'
     MOU = u'MOU'
@@ -972,18 +994,6 @@ class Agreement(TimeStampedModel):
     def base_number(self):
         return self.agreement_number.split('-')[0]
 
-    def check_status_auto_updates(self):
-        # TODO: make sure that all related models are valid the moment status changes
-        # commit the reference number to the database once the agreement is signed
-        if self.status == Agreement.DRAFT and self.start and self.end and \
-                self.signed_by_unicef_date and self.signed_by_partner_date and \
-                self.signed_by and self.partner_manager:
-            self.status = Agreement.ACTIVE
-            return
-        today = datetime.date.today()
-        if self.end and self.end < today:
-            self.status = Agreement.ENDED
-            return
 
     def update_reference_number(self, oldself=None, amendment_number=None, **kwargs):
 
@@ -1018,23 +1028,48 @@ class Agreement(TimeStampedModel):
                     item.status = self.status
                     item.save()
 
-    def illegal_transitions(self):
-        return False
 
     @transition(field=status,
-                source=[ACTIVE, ENDED, SUSPENDED, TERMINATED],
-                target=[DRAFT, CANCELLED],
-                conditions=[illegal_transitions])
-    def basic_transition(self):
-        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
-        # mess up the reference numbers.
+                source=[DRAFT],
+                target=[ACTIVE],
+                conditions=[agreement_transition_to_active_valid])
+    def transition_to_active(self):
         pass
 
-    def check_auto_updates(self):
-        self.check_status_auto_updates()
+    @transition(field=status,
+                source=[ACTIVE],
+                target=[ENDED],
+                conditions=[agreement_transition_to_ended_valid])
+    def transition_to_ended(self):
+        pass
 
+
+    @transition(field=status,
+                source=[ACTIVE],
+                target=[SUSPENDED],
+                conditions=[agreements_illegal_transition],
+                permission=agreements_illegal_transition_permissions)
+    def transition_to_suspended(self):
+        pass
+
+    @transition(field=status,
+                source=[SUSPENDED, TERMINATED, ACTIVE],
+                target=[CANCELLED],
+                conditions=[agreements_illegal_transition])
+    def transition_to_cancelled(self):
+        pass
+
+    @transition(field=status,
+                source=[DRAFT],
+                target=[TERMINATED, SUSPENDED],
+                conditions=[agreements_illegal_transition])
+    def transition_to_cancelled(self):
+        pass
+
+
+    def check_auto_updates(self):
         #auto-update country programme:
-        if self.start and self.end:
+        if not self.country_programme and self.start and self.end:
             try:
                 self.country_programme = CountryProgramme.encapsulates(self.start, self.end)
             except (CountryProgramme.MultipleObjectsReturned, CountryProgramme.DoesNotExist):
@@ -1043,8 +1078,6 @@ class Agreement(TimeStampedModel):
 
     @transaction.atomic
     def save(self, **kwargs):
-        # check status auto updates
-        # TODO: move this outside of save in the future to properly check transitions
         self.check_auto_updates()
 
         oldself = None
@@ -1058,6 +1091,7 @@ class Agreement(TimeStampedModel):
             self.update_reference_number(oldself, amendment_number)
         else:
             self.update_reference_number(oldself)
+
         self.update_related_interventions(oldself)
 
         return super(Agreement, self).save()
@@ -1152,6 +1186,15 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.PartnerStaffMember`
     """
 
+    POTENTIAL_AUTO_TRANSITIONS = {
+        'draft': [
+            {'active': []},
+        ],
+        'active': [
+            {'implemented': []},
+        ],
+    }
+
     DRAFT = u'draft'
     ACTIVE = u'active'
     IMPLEMENTED = u'implemented'
@@ -1198,11 +1241,11 @@ class Intervention(TimeStampedModel):
         unique=True,
     )
     title = models.CharField(max_length=256)
-    status = models.CharField(
+    status = FSMField(
         max_length=32,
         blank=True,
         choices=INTERVENTION_STATUS,
-        default=u'in_process',
+        default=u'draft',
         help_text=u'Draft = In discussion with partner, '
                   u'Active = Currently ongoing, '
                   u'Implemented = completed, '
@@ -1348,6 +1391,24 @@ class Intervention(TimeStampedModel):
         # mess up the reference numbers.
         pass
 
+    @transition(field=status,
+               source=[DRAFT, SUSPENDED],
+               target=[ACTIVE],
+               conditions=[intervention_validation.transition_to_active])
+    def transition_to_active(self):
+        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
+        # mess up the reference numbers.
+        pass
+
+    @transition(field=status,
+                source=[ACTIVE],
+                target=[IMPLEMENTED],
+                conditions=[intervention_validation.transition_to_implemented])
+    def transition_to_ended(self):
+        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
+        # mess up the reference numbers.
+        pass
+
     @property
     def reference_number(self):
         if self.status in [self.DRAFT, self.CANCELLED]:
@@ -1401,7 +1462,7 @@ class Intervention(TimeStampedModel):
     def save(self, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
-        self.check_status_auto_updates()
+        # self.check_status_auto_updates()
 
         oldself = None
         if self.pk:

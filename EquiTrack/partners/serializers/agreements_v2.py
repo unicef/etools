@@ -22,7 +22,8 @@ from reports.models import CountryProgramme
 from users.serializers import SimpleUserSerializer
 
 from .v1 import PartnerStaffMemberSerializer
-
+#from EquiTrack.validation_mixins import CompleteValidation
+from partners.validation.agreements import AgreementValid
 from partners.models import (
     PCA,
     InterventionBudget,
@@ -130,34 +131,40 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         data = super(AgreementCreateUpdateSerializer, self).validate(data)
-        errors = {}
+
+        # When running validations in the serializer.. keep in mind that the
+        # related fields have not been updated and therefore not accessible on old_instance.relatedfield_old.
+        # If you want to run validation only after related fields have been updated. please run it in the view
+        if self.context.get('skip_global_validator', None):
+            return data
+        validator = AgreementValid(data, old=self.instance, user=self.context['request'].user)
 
         start_errors = []
-        if data.get("end", None) and not data.get("start", None):
-            start_errors.append("Start date must be provided along with end date.")
-        if data.get("start", None) != max(data.get("signed_by_unicef_date", None), data.get("signed_by_partner_date", None)):
-            start_errors.append("Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).")
-        if start_errors:
-            errors.update(start=start_errors)
+        # if data.get("end", None) and not data.get("start", None):
+        #     start_errors.append("Start date must be provided along with end date.")
+        # if data.get("start", None) != max(data.get("signed_by_unicef_date", None), data.get("signed_by_partner_date", None)):
+        #     start_errors.append("Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).")
+        # if start_errors:
+        #     errors.update(start=start_errors)
+        #
+        # if data.get("agreement_type", None) == Agreement.PCA or self.instance.agreement_type == Agreement.PCA:
+        #     cp = CountryProgramme.current()
+        #     if cp:
+        #         data.update(end=cp.to_date)
+        #
+        # if xor(bool(data.get("signed_by_partner_date", None)), bool(data.get("partner_manager", None))):
+        #     errors.update(partner_manager=["partner_manager and signed_by_partner_date must be provided."])
+        #     errors.update(signed_by_partner_date=["signed_by_partner_date and partner_manager must be provided."])
+        #
+        # if xor(bool(data.get("signed_by_unicef_date", None)), bool(data.get("signed_by", None))):
+        #     errors.update(signed_by=["signed_by and signed_by_unicef_date must be provided."])
+        #     errors.update(signed_by_unicef_date=["signed_by_unicef_date and signed_by must be provided."])
+        #
+        # if data.get("agreement_type", None) in [Agreement.PCA, Agreement.SSFA] and data.get("partner", None):
+        #     partner = data.get("partner", None)
+        #     if not partner.partner_type == "Civil Society Organization":
+        #         errors.update(partner=["Partner type must be CSO for PCA or SSFA agreement types."])
 
-        if data.get("agreement_type", None) == Agreement.PCA or self.instance.agreement_type == Agreement.PCA:
-            cp = CountryProgramme.current()
-            if cp:
-                data.update(end=cp.to_date)
-
-        if xor(bool(data.get("signed_by_partner_date", None)), bool(data.get("partner_manager", None))):
-            errors.update(partner_manager=["partner_manager and signed_by_partner_date must be provided."])
-            errors.update(signed_by_partner_date=["signed_by_partner_date and partner_manager must be provided."])
-
-        if xor(bool(data.get("signed_by_unicef_date", None)), bool(data.get("signed_by", None))):
-            errors.update(signed_by=["signed_by and signed_by_unicef_date must be provided."])
-            errors.update(signed_by_unicef_date=["signed_by_unicef_date and signed_by must be provided."])
-
-        if data.get("agreement_type", None) in [Agreement.PCA, Agreement.SSFA] and data.get("partner", None):
-            partner = data.get("partner", None)
-            if not partner.partner_type == "Civil Society Organization":
-                errors.update(partner=["Partner type must be CSO for PCA or SSFA agreement types."])
-
-        if errors:
-            raise serializers.ValidationError(errors)
+        if not validator.is_valid:
+            raise serializers.ValidationError({'errors': validator.errors})
         return data
