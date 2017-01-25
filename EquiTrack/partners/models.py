@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import logging
 import datetime
+import json
 from dateutil.relativedelta import relativedelta
 
 from django_fsm import FSMField, transition
@@ -347,7 +348,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     #     "micro_assessment_needed": "Missing",
     #     "audits_mr": 0}
     hact_values = JSONField(blank=True, null=True, default={})
-
+    # hact_calculations = JSONField(blank=True, null=True, default={})
 
     class Meta:
         ordering = ['name']
@@ -490,24 +491,25 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 )['planned_amount__sum'] or 0
         else:
             if budget_record:
-                q = PartnershipBudget.objects.filter(partnership__partner=partner,
-                                                     partnership__status__in=[PCA.ACTIVE,
-                                                                              PCA.IMPLEMENTED],
-                                                     year=year).exclude(partnership__id=budget_record.partnership.id)
-                q = q.order_by("partnership__id", "-created").\
-                    distinct('partnership__id').values_list('unicef_cash', flat=True)
+                q = InterventionBudget.objects.filter(intervention__agreement__partner=partner,
+                                                      intervention__status__in=[Intervention.ACTIVE,
+                                                                              Intervention.IMPLEMENTED],
+                                                     year=year).exclude(id=budget_record.id)
+                q = q.order_by("intervention__id", "-created").\
+                    distinct('intervention__id').values_list('unicef_cash', flat=True)
                 total = sum(q)
-                total += budget_record.unicef_cash
+                total += budget_record.unicef_cash if budget_record.year == str(year) else 0
             else:
-                q = PartnershipBudget.objects.filter(partnership__partner=partner,
-                                                     partnership__status__in=[PCA.ACTIVE,
-                                                                              PCA.IMPLEMENTED],
-                                                     year=year)
-                q = q.order_by("partnership__id", "-created").\
-                    distinct('partnership__id').values_list('unicef_cash', flat=True)
+                q = InterventionBudget.objects.filter(intervention__agreement__partner=partner,
+                                                      intervention__status__in=[
+                                                          Intervention.ACTIVE, Intervention.IMPLEMENTED],
+                                                      year=year)
+                q = q.order_by("intervention__id", "-created").\
+                    distinct('intervention__id').values_list('unicef_cash', flat=True)
                 total = sum(q)
-
-        partner.hact_values['planned_cash_transfer'] = total
+        hact = json.load(partner.hact_values)
+        hact["planned_cash_transfer"] = total
+        partner.hact_values = hact
         partner.save()
 
     @cached_property
@@ -1494,6 +1496,8 @@ class InterventionBudget(TimeStampedModel):
         self.total = \
             self.total_unicef_contribution() \
             + self.partner_contribution
+
+        PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner, self)
 
         super(InterventionBudget, self).save(**kwargs)
 
