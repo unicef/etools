@@ -13,7 +13,7 @@ def agreement_transition_to_active_valid(agreement):
     raise TransitionError(['agreement_transition_to_active_invalid'])
 
 def agreement_transition_to_ended_valid(agreement):
-    today = datetime.date.today()
+    today = date.today()
     logging.debug('I GOT CALLED to ended')
     if agreement.status == agreement.ACTIVE and agreement.end and agreement.end < today:
         return True
@@ -48,7 +48,7 @@ def amendments_ok(agreement):
     return True
 
 def start_end_dates_valid(agreement):
-    if agreement.start and agreement.end and agreement.start < agreement.end:
+    if agreement.start and agreement.end and agreement.start > agreement.end:
         return False
     return True
 
