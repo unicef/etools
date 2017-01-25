@@ -63,7 +63,7 @@ class Notification(models.Model):
     def send_notification(self):
         if self.type == 'Email':
             if isinstance(self.sender, User):
-                sender = self.sender
+                sender = self.sender.email
             else:
                 sender = settings.DEFAULT_FROM_EMAIL
 

@@ -25,7 +25,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from actstream import action
 
-from EquiTrack.utils import get_changeform_link
+from EquiTrack.utils import get_changeform_link, get_current_site
 from EquiTrack.mixins import AdminURLMixin
 
 from funds.models import Grant
@@ -47,7 +47,7 @@ from supplies.tasks import (
     set_unisupply_user
 )
 from users.models import Section, Office
-from notification.templates import partners as emails
+from notification.models import Notification
 
 
 # TODO: streamline this ...
@@ -2258,16 +2258,28 @@ class PCA(AdminURLMixin, models.Model):
         recipients = [user.email for user in managers]
 
         if created:  # new partnership
-            emails.PartnershipCreatedEmail(instance).send(
-                settings.DEFAULT_FROM_EMAIL,
-                recipients,
+            notification = Notification.objects.create(
+                sender=self,
+                recipients=recipients, template_name="partners/partnership/created/updated",
+                template_data={
+                    'number': self.__unicode__(),
+                    'state': 'Created',
+                    'url': 'https://{}{}'.format(get_current_site().domain, self.get_admin_url())
+                }
             )
 
         else:  # change to existing
-            emails.PartnershipUpdatedEmail(instance).send(
-                settings.DEFAULT_FROM_EMAIL,
-                recipients,
+            notification = Notification.objects.create(
+                sender=self,
+                recipients=recipients, template_name="partners/partnership/created/updated",
+                template_data={
+                    'number': self.__unicode__(),
+                    'state': 'Updated',
+                    'url': 'https://{}{}'.format(get_current_site().domain, self.get_admin_url())
+                }
             )
+
+        notification.send_notification()
 
         # attach any FCs immediately
         # if instance:

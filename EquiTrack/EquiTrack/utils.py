@@ -1,18 +1,26 @@
 """
 Project wide base classes and utility functions for apps
 """
-__author__ = 'jcranwellward'
+from collections import OrderedDict as SortedDict
+
+from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.sites.models import Site
+from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.db import connection
 
 import tablib
 import traceback
 
-from django.db import connection
-from django.core.urlresolvers import reverse
-from collections import OrderedDict as SortedDict
-from django.contrib.auth.decorators import user_passes_test
-from django.contrib.staticfiles.templatetags.staticfiles import static
-
 from import_export.resources import ModelResource
+
+
+def get_environment():
+    return settings.ENVIRONMENT
+
+def get_current_site():
+    return Site.objects.get_current()
 
 
 def get_changeform_link(model, link_name='View', action='change'):

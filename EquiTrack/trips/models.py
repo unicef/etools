@@ -15,6 +15,7 @@ from reversion.revisions import get_for_object
 from smart_selects.db_fields import ChainedForeignKey
 
 from EquiTrack.mixins import AdminURLMixin
+from EquiTrack.utils import get_current_site, get_environment
 from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
@@ -399,10 +400,23 @@ class Trip(AdminURLMixin, models.Model):
 
         if instance.status == Trip.SUBMITTED:
             if instance.submitted_email_sent is False:
-                emails.TripCreatedEmail(instance).send(
-                    instance.owner.email,
-                    recipients
+                notification = Notification.objects.create(
+                    sender=instance.budget_owner,
+                    recipients=recipients, template_name='trips/trip/created/updated',
+                    template_data={
+                        'trip_reference': self.reference(),
+                        'owner_name': self.owner.get_full_name(),
+                        'number': self.reference(),
+                        'state': 'Submitted',
+                        'url': 'https://{}{}'.format(
+                            get_current_site().domain,
+                            self.get_admin_url()),
+                        'purpose_of_travel': self.purpose_of_travel,
+                        'environment': get_environment(),
+                        'action_points': ('\n'.join([action.__unicode__() for action in self.actionpoint_set.all()]))
+                    }
                 )
+
                 instance.submitted_email_sent = True
                 instance.save()
 
