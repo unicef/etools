@@ -116,13 +116,11 @@ class AgreementValid(CompleteValidation):
         'signed_by_everyone_valid': 'Agreement needs to be signed by UNICEF and Partner',
         'signed_date_valid': 'Signed dates cannot be greater than today, only magical creatures can sign in the future',
         'transitional_one': 'Cannot Transition to draft',
-        'transitional_two': 'Cannot Transition to blah blah',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
-        'suspended_invalid': 'hey can;t suspend an agreement that was supposed to be ended',
-        'state_active_not_signed': 'Hey this is agreement needs to be signed in order to be active, no signed dates',
-        'agreement_transition_to_active_invalid': "Dude you can't transition to active without having the proper sinatures",
+        'suspended_invalid': 'Cant suspend an agreement that was supposed to be ended',
+        'state_active_not_signed': 'This agreement needs to be signed in order to be active, no signed dates',
+        'agreement_transition_to_active_invalid': "You can't transition to active without having the proper signatures",
         'cant_create_in_active_state': 'When adding a new object the state needs to be "Draft"',
-        'custom_error': 'blah blah',
         'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
         'signed_by_valid': 'Partner manager and signed by must be provided.',
@@ -130,7 +128,7 @@ class AgreementValid(CompleteValidation):
 
     def state_suspended_valid(self, agreement, user=None):
         if agreement.end > date.today():
-            raise StateValidError('custom_error')
+            raise StateValidError('suspended_invalid')
         return True
 
     def state_active_valid(self, agreement, user=None):
