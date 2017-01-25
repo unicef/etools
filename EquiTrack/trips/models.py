@@ -404,16 +404,16 @@ class Trip(AdminURLMixin, models.Model):
                     sender=instance.budget_owner,
                     recipients=recipients, template_name='trips/trip/created/updated',
                     template_data={
-                        'trip_reference': self.reference(),
-                        'owner_name': self.owner.get_full_name(),
-                        'number': self.reference(),
+                        'trip_reference': instance.reference(),
+                        'owner_name': instance.owner.get_full_name(),
+                        'number': instance.reference(),
                         'state': 'Submitted',
                         'url': 'https://{}{}'.format(
                             get_current_site().domain,
-                            self.get_admin_url()),
-                        'purpose_of_travel': self.purpose_of_travel,
+                            instance.get_admin_url()),
+                        'purpose_of_travel': instance.purpose_of_travel,
                         'environment': get_environment(),
-                        'action_points': ('\n'.join([action.__unicode__() for action in self.actionpoint_set.all()]))
+                        'action_points': ('\n'.join([action.__unicode__() for action in instance.actionpoint_set.all()]))
                     }
                 )
 

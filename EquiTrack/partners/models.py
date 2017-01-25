@@ -2259,23 +2259,23 @@ class PCA(AdminURLMixin, models.Model):
 
         if created:  # new partnership
             notification = Notification.objects.create(
-                sender=self,
+                sender=instance,
                 recipients=recipients, template_name="partners/partnership/created/updated",
                 template_data={
-                    'number': self.__unicode__(),
+                    'number': instance.__unicode__(),
                     'state': 'Created',
-                    'url': 'https://{}{}'.format(get_current_site().domain, self.get_admin_url())
+                    'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
                 }
             )
 
         else:  # change to existing
             notification = Notification.objects.create(
-                sender=self,
+                sender=instance,
                 recipients=recipients, template_name="partners/partnership/created/updated",
                 template_data={
-                    'number': self.__unicode__(),
+                    'number': instance.__unicode__(),
                     'state': 'Updated',
-                    'url': 'https://{}{}'.format(get_current_site().domain, self.get_admin_url())
+                    'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
                 }
             )
 
