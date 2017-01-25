@@ -34,6 +34,7 @@ from partners.validation.agreements import (
     agreements_illegal_transition_permissions,
     agreements_illegal_transition
 )
+from partners.validation import interventions as intervention_validation
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -1185,6 +1186,15 @@ class Intervention(TimeStampedModel):
     Relates to :model:`partners.PartnerStaffMember`
     """
 
+    POTENTIAL_AUTO_TRANSITIONS = {
+        'draft': [
+            {'active': []},
+        ],
+        'active': [
+            {'implemented': []},
+        ],
+    }
+
     DRAFT = u'draft'
     ACTIVE = u'active'
     IMPLEMENTED = u'implemented'
@@ -1231,11 +1241,11 @@ class Intervention(TimeStampedModel):
         unique=True,
     )
     title = models.CharField(max_length=256)
-    status = models.CharField(
+    status = FSMField(
         max_length=32,
         blank=True,
         choices=INTERVENTION_STATUS,
-        default=u'in_process',
+        default=u'draft',
         help_text=u'Draft = In discussion with partner, '
                   u'Active = Currently ongoing, '
                   u'Implemented = completed, '
@@ -1359,6 +1369,24 @@ class Intervention(TimeStampedModel):
         # mess up the reference numbers.
         pass
 
+    @transition(field=status,
+               source=[DRAFT, SUSPENDED],
+               target=[ACTIVE],
+               conditions=[intervention_validation.transition_to_active])
+    def transition_to_active(self):
+        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
+        # mess up the reference numbers.
+        pass
+
+    @transition(field=status,
+                source=[ACTIVE],
+                target=[IMPLEMENTED],
+                conditions=[intervention_validation.transition_to_implemented])
+    def transition_to_ended(self):
+        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
+        # mess up the reference numbers.
+        pass
+
     @property
     def reference_number(self):
         if self.status in [self.DRAFT, self.CANCELLED]:
@@ -1412,7 +1440,7 @@ class Intervention(TimeStampedModel):
     def save(self, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
-        self.check_status_auto_updates()
+        # self.check_status_auto_updates()
 
         oldself = None
         if self.pk:
