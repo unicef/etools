@@ -415,7 +415,7 @@ class Trip(AdminURLMixin, models.Model):
         if instance.status == Trip.SUBMITTED:
             if instance.submitted_email_sent is False:
                 notification = Notification.objects.create(
-                    sender=instance.budget_owner,
+                    sender=instance.owner,
                     recipients=recipients, template_name='trips/trip/created/updated',
                     template_data=email_context
                 )

@@ -2257,26 +2257,26 @@ class PCA(AdminURLMixin, models.Model):
                        instance.unicef_managers.all())
         recipients = [user.email for user in managers]
 
+        email_context = {
+            'number': instance.__unicode__(),
+            'state': 'Created',
+            'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
+        }
+
         if created:  # new partnership
             notification = Notification.objects.create(
                 sender=instance,
                 recipients=recipients, template_name="partners/partnership/created/updated",
-                template_data={
-                    'number': instance.__unicode__(),
-                    'state': 'Created',
-                    'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
-                }
+                template_data=email_context
             )
 
         else:  # change to existing
+            email_context['state'] = 'Updated'
+
             notification = Notification.objects.create(
                 sender=instance,
                 recipients=recipients, template_name="partners/partnership/created/updated",
-                template_data={
-                    'number': instance.__unicode__(),
-                    'state': 'Updated',
-                    'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
-                }
+                template_data=email_context
             )
 
         notification.send_notification()
