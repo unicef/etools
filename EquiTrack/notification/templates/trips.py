@@ -2,7 +2,6 @@ import datetime
 
 from django.db.models import Q
 
-from notification.models import Notification
 from notification.email import BaseEmail
 
 
