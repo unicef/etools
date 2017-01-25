@@ -13,6 +13,10 @@ from views.interventions_v2 import (
     InterventionListAPIView,
     InterventionDetailAPIView
 )
+from views.government import (
+    GovernmentInterventionListAPIView,
+    GovernmentDetailAPIView
+)
 from views.v2 import PmpStaticDropdownsListApiView, PMPDropdownsListApiView
 
 
@@ -41,6 +45,11 @@ urlpatterns = (
     url(r'^interventions/$', view=InterventionListAPIView.as_view(http_method_names=['get', 'post']), name='intervention-list'),
     url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(http_method_names=['get', 'patch']), name='intervention-detail'),
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
+
+    #GOVERNMENT
+    url(r'^government_interventions/$', view=GovernmentInterventionListAPIView.as_view(http_method_names=['get', 'post']), name='government-intervention-list'),
+    url(r'^government_interventions/(?P<pk>\d+)/$', view=GovernmentDetailAPIView.as_view(http_method_names=['get', 'patch']), name='government-intervention-detail'),
+
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),
     url(r'^dropdowns/static/$', view=PmpStaticDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-static-list'),
