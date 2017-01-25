@@ -705,21 +705,48 @@ class ActionPoint(models.Model):
             instance.trip.supervisor.email
         ]
 
+        email_context = {
+            'trip_reference': instance.trip.reference(),
+            'url': 'https://{}{}#reporting'.format(
+                get_current_site().domain,
+                instance.trip.get_admin_url()
+            ),
+            'owner_name': instance.trip.owner.get_full_name(),
+            'responsible': instance.person_responsible.get_full_name(),
+            'state': 'Created',
+            'environment': get_environment()
+        }
+
         if created:
-            emails.TripActionPointCreated(instance).send(
-                instance.trip.owner.email,
-                recipients
+            notification = Notification.objects.create(
+                sender=instance.trip.owner,
+                recipients=recipients, template_name='trips/action/created',
+                template_data=email_context
             )
+
+            notification.send_notification()
+
         elif instance.status == 'closed':
-            emails.TripActionPointClosed(instance).send(
-                instance.trip.owner.email,
-                recipients
+            email_context['state'] = 'Closed'
+
+            notification = Notification.objects.create(
+                sender=instance.trip.owner,
+                recipients=recipients, template_name='trips/action/created',
+                template_data=email_context
             )
+
+            notification.send_notification()
+
         else:
-            emails.TripActionPointUpdated(instance).send(
-                instance.trip.owner.email,
-                recipients
+            email_context['state'] = 'Updated'
+
+            notification = Notification.objects.create(
+                sender=instance.trip.owner,
+                recipients=recipients, template_name='trips/action/created',
+                template_data=email_context
             )
+
+            notification.send_notification()
 
     @transaction.atomic
     def save(self, **kwargs):
