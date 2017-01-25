@@ -20,8 +20,6 @@ from notification.email import send_mail
 class Notification(models.Model):
     """
     Represents a notification instance from sender to recipients
-
-    Relates to :model:`django.contrib.auth.models.User`
     """
 
     TYPE_CHOICES = Choices(
