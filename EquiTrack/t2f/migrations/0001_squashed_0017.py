@@ -21,10 +21,8 @@ class Migration(migrations.Migration):
                 (b't2f', '0014_auto_20170124_2357'), (b't2f', '0015_travelactivity_primary_traveler'),
                 (b't2f', '0016_auto_20170124_2358'), (b't2f', '0017_auto_20170125_1305')]
 
-    initial = True
-
     dependencies = [
-        ('publics', '0001_initial'),
+        ('publics', '0001_squashed_0007'),
         ('locations', '0004_auto_20170112_2051'),
         ('users', '0003_userprofile_vendor_number'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

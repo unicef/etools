@@ -12,8 +12,6 @@ class Migration(migrations.Migration):
                 (b'publics', '0005_auto_20170118_1024'), (b'publics', '0006_auto_20170118_1213'),
                 (b'publics', '0007_wbs_business_area')]
 
-    initial = True
-
     dependencies = [
     ]
 
