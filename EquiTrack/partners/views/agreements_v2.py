@@ -113,7 +113,7 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
         if not validator.is_valid:
             logging.debug(validator.errors)
-            raise ValidationError(validator.errors)
+            raise ValidationError({'errors': validator.errors})
 
         # serialier = self.get_serializer(data=request.data)
         # serialier.is_valid(raise_exception=True)
