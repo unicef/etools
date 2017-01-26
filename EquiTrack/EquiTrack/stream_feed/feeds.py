@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 from django.utils.feedgenerator import rfc3339_date
 from django.utils.six import text_type
 
@@ -12,8 +13,6 @@ class JSONActivityFeedWithCustomData(CustomStreamMixin, JSONActivityFeed):
         Returns a formatted dictionary for the given action.
         """
         item = {
-            'id': self.get_uri(action),
-            'url': self.get_url(action),
             'verb': action.verb,
             'published': rfc3339_date(action.timestamp),
             'actor': self.format_actor(action),
@@ -29,3 +28,14 @@ class JSONActivityFeedWithCustomData(CustomStreamMixin, JSONActivityFeed):
             item['data'] = action.data
 
         return item
+
+    def format_item(self, action, item_type='actor'):
+        """
+        Returns a formatted dictionary for an individual item based on the action and item_type.
+        """
+        obj = getattr(action, item_type)
+        return {
+            'id': obj.pk,
+            'objectType': ContentType.objects.get_for_model(obj).name,
+            'displayName': text_type(obj)
+        }
