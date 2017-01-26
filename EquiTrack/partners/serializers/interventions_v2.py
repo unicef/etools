@@ -523,49 +523,50 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     offices = serializers.SerializerMethodField()
     sectors = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
-    partner_auth_officials = serializers.SerializerMethodField()
     planned_budget_local = serializers.IntegerField(source='total_budget_local')
     unicef_budget = serializers.IntegerField(source='total_unicef_cash')
     cso_contribution = serializers.IntegerField(source='total_partner_contribution')
     partner_contribution_local = serializers.IntegerField(source='total_partner_contribution_local')
-    unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
+    # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     unicef_signatory = serializers.SerializerMethodField()
     hrp_name = serializers.CharField(source='hrp.name')
     partner_focal_points = serializers.SerializerMethodField()
-    visits = PlannedVisitsNestedSerializer(many=True, required=False)
-    supply_plans = SupplyPlanNestedSerializer(many=True, required=False)
-    distribution_plans = DistributionPlanNestedSerializer(many=True, required=False)
+    supply_plans = serializers.SerializerMethodField()
+    distribution_plans = serializers.SerializerMethodField()
     unicef_focal_points = serializers.SerializerMethodField()
-    fr_numbers_list = serializers.SerializerMethodField()
+    cp_outputs = serializers.SerializerMethodField()
+    ram_indicators = serializers.SerializerMethodField()
+    planned_visits = serializers.SerializerMethodField()
+    spot_checks = serializers.SerializerMethodField()
+    audit = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
         fields = (
-            "id", "status", "partner_name", "agreement_name", "document_type", "number", "title",
-            "start", "end", "offices", "unicef_focals",
-            "partner_auth_officials", "unicef_focals", "intervention_programme_focals", "population_focus",
-            "hrp_name", "fr_numbers_list", "planned_budget_local", "unicef_budget", "unicef_cash_local", "cso_contribution",
-            "partner_contribution_local", "visits", "submission_date", "submission_date_prc", "review_date_prc",
-            "unicef_signatory", "signed_by_unicef_date", "signed_by_partner_date", "supply_plans", "distribution_plans",
+            "status", "partner_name", "agreement_name", "document_type", "number", "title",
+            "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+            "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers",
+            "planned_budget_local", "unicef_budget", "cso_contribution",
+            "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
+            "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
+            "signed_by_partner_date", "supply_plans", "distribution_plans",
         )
 
     def get_unicef_signatory(self, obj):
-        return obj.unicef_signatory.get_full_name()
+        return obj.unicef_signatory.get_full_name() if obj.unicef_signatory else ''
 
     def get_offices(self, obj):
-        return ', '.join([o.name for o in obj.office.all()])
+        return ', '.join([o.name for o in obj.offices.all()])
 
     def get_sectors(self, obj):
         return ', '.join([l.sector.name for l in obj.sector_locations.all()])
 
     def get_locations(self, obj):
-        ll = Location.objects.\
-            filter(intervention_sector_locations__intervention=obj.id).order_by('name').\
-            value_list('name', flat=True).distinct()
-        return ', '.join(ll)
+        ll = Location.objects.filter(intervention_sector_locations__intervention=obj.id).order_by('name')
+        return ', '.join([l.name for l in ll.all()])
 
     def get_partner_authorized_officer_signatory(self, obj):
-        return obj.partner_authorized_officer_signatory.get_full_name()
+        return obj.partner_authorized_officer_signatory.get_full_name() if obj.partner_authorized_officer_signatory else ''
 
     def get_partner_focal_points(self, obj):
         return ', '.join([pf.get_full_name() for pf in obj.partner_focal_points.all()])
@@ -573,5 +574,27 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_unicef_focal_points(self, obj):
         return ', '.join([pf.get_full_name() for pf in obj.unicef_focal_points.all()])
 
-    def get_fr_numbers_list(self, obj):
-        return ', '.join([f for f in obj.fr_numbers])
+    def get_cp_outputs(self, obj):
+        return ', '.join([rs.cp_output.name for rs in obj.result_links.all()])
+
+    def get_ram_indicators(self, obj):
+        ram_indicators = []
+        for rs in obj.result_links.all():
+            if rs.ram_indicators:
+                for ram in rs.ram_indicators.all():
+                    ram_indicators.append("{}, ".format(ram.name))
+
+    def get_planned_visits(self, obj):
+        return ', '.join(['{} ({})'.format(pv.programmatic, pv.year) for pv in obj.planned_visits.all()])
+
+    def get_spot_checks(self, obj):
+        return ', '.join(['{} ({})'.format(pv.spot_checks, pv.year) for pv in obj.planned_visits.all()])
+
+    def get_audit(self, obj):
+        return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
+
+    def get_supply_plans(self, obj):
+        return ', '.join(['"{}" ({})'.format(s.item.name, s.quantity) for s in obj.supplies.all()])
+
+    def get_distribution_plans(self, obj):
+        return ', '.join(['"{}"/{} ({})'.format(d.item.name, d.quantity, d.site) for d in obj.distributions.all()])
