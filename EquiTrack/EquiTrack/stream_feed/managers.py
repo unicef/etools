@@ -1,5 +1,6 @@
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.http.response import Http404
 from django.shortcuts import get_object_or_404
 
 from actstream.managers import ActionManager, stream
@@ -21,6 +22,10 @@ class CustomDataActionManager(ActionManager):
     @stream
     def custom_data_model_detail_stream(self, model_name, obj_id, **kwargs):
         obj_content = get_object_or_404(ContentType, model=model_name)
-        obj = obj_content.get_object_for_this_type(pk=obj_id)
+
+        try:
+            obj = obj_content.get_object_for_this_type(pk=obj_id)
+        except Exception as e:
+            raise Http404
 
         return obj.target_actions.public(**kwargs)
