@@ -13,7 +13,7 @@ from rest_framework_nested import routers
 from django.contrib import admin
 admin.autodiscover()
 
-from .stream import JSONActivityFeedWithCustomData
+from .stream_feed.feeds import JSONActivityFeedWithCustomData
 from .utils import staff_required
 from .views import (
     MainView,
@@ -192,7 +192,7 @@ urlpatterns = patterns(
 
     # Activity stream
     url(r'^activity/(?P<content_type_id>\d+)/json/$',
-        JSONActivityFeedWithCustomData.as_view(name='custom_data_stream')),
+        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_stream')),
     url('^activity/', include('actstream.urls')),
 )
 

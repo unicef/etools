@@ -1,18 +1,11 @@
-import json
-
-from django.http import HttpResponse
-from django.views.generic import View
 from django.utils.feedgenerator import rfc3339_date
 from django.utils.six import text_type
-from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import get_object_or_404
 
-from actstream.managers import ActionManager, stream
-from actstream.registry import check
 from actstream.feeds import JSONActivityFeed, CustomStreamMixin
 
 
 class JSONActivityFeedWithCustomData(CustomStreamMixin, JSONActivityFeed):
+
     def format(self, action):
         """
         Overriden to add a custom data per each item to render.
@@ -36,16 +29,3 @@ class JSONActivityFeedWithCustomData(CustomStreamMixin, JSONActivityFeed):
             item['data'] = action.data
 
         return item
-
-
-class CustomDataActionManager(ActionManager):
-
-    @stream
-    def custom_data_model_stream(self, content_type_id, **kwargs):
-        obj_content = get_object_or_404(ContentType, pk=content_type_id)
-        return self.public(
-            (Q(target_content_type=obj_content) |
-             Q(action_object_content_type=obj_content) |
-             Q(actor_content_type=obj_content)),
-            **kwargs
-        )
