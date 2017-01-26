@@ -163,6 +163,7 @@ class AssessmentDetailSerializer(serializers.ModelSerializer):
 
 
 class PartnerOrganizationListSerializer(serializers.ModelSerializer):
+    hact_values = serializers.SerializerMethodField()
 
     class Meta:
         model = PartnerOrganization
@@ -182,7 +183,11 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "phone_number",
             "total_ct_cp",
             "total_ct_cy",
+            "hact_values",
         )
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values) if obj.hact_values else {}
 
 
 class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
