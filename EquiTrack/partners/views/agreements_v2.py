@@ -34,7 +34,8 @@ from partners.exports_v2 import AgreementCvsRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.agreements import AgreementValid
 
-class AgreementListAPIView(ListCreateAPIView):
+
+class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Agreements.
     Returns a list of Agreements.
@@ -43,6 +44,10 @@ class AgreementListAPIView(ListCreateAPIView):
     filter_backends = (PartnerScopeFilter,)
     permission_classes = (IsAdminUser,)
     renderer_classes = (r.JSONRenderer, AgreementCvsRenderer)
+
+    SERIALIZER_MAP = {
+        'amendments': AgreementAmendmentCreateUpdateSerializer
+    }
 
     def get_serializer_class(self, format=None):
         """
@@ -103,12 +108,21 @@ class AgreementListAPIView(ListCreateAPIView):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-        serialier = self.get_serializer(data=request.data)
-        serialier.is_valid(raise_exception=True)
-        agreement = serialier.save()
+        related_fields = ['amendments']
+        serializer = self.my_create(request, related_fields, snapshot=True, snapshot_class=Agreement, **kwargs)
 
-        headers = self.get_success_headers(serialier.data)
-        return Response(serialier.data, status=status.HTTP_201_CREATED, headers=headers)
+        validator = AgreementValid(serializer.instance, user=request.user)
+
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError({'errors': validator.errors})
+
+        # serialier = self.get_serializer(data=request.data)
+        # serialier.is_valid(raise_exception=True)
+        # agreement = serialier.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
