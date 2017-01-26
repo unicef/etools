@@ -245,9 +245,7 @@ class BudgetInlineAdmin(admin.TabularInline):
         'partner_contribution_local',
         'unicef_cash_local',
         'in_kind_amount_local',
-        'total',
     )
-    readonly_fields = ('total', )
     extra = 0
 
 

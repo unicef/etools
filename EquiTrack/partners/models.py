@@ -1564,7 +1564,6 @@ class InterventionBudget(TimeStampedModel):
         blank=True, null=True
     )
     # TODO add Currency field
-    total = models.DecimalField(max_digits=20, decimal_places=2)
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
@@ -2648,8 +2647,6 @@ class AgreementAmendmentLog(TimeStampedModel):
             'Additional Clauses',
         ))
     amended_at = models.DateField(null=True, verbose_name='Signed At')
-
-    amendment_number = models.IntegerField(default=0)
 
     signed_document = models.FileField(
         max_length=255,
