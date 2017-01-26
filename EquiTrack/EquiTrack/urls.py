@@ -13,6 +13,7 @@ from rest_framework_nested import routers
 from django.contrib import admin
 admin.autodiscover()
 
+from .stream import JSONActivityFeedWithCustomData
 from .utils import staff_required
 from .views import (
     MainView,
@@ -188,6 +189,10 @@ urlpatterns = patterns(
     url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
     url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),  # TODO: remove this when eTrips is deployed needed
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
+
+    # Activity stream
+    url(r'^activity/(?P<content_type_id>\d+)/json/$',
+        JSONActivityFeedWithCustomData.as_view(name='custom_data_stream')),
     url('^activity/', include('actstream.urls')),
 )
 

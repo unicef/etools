@@ -441,7 +441,8 @@ LEAFLET_CONFIG = {
 ACTSTREAM_SETTINGS = {
     'FETCH_RELATIONS': True,
     'GFK_FETCH_DEPTH': 1,
-    'USE_JSONFIELD': True
+    'USE_JSONFIELD': True,
+    'MANAGER': 'EquiTrack.stream.CustomDataActionManager',
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
