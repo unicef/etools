@@ -179,6 +179,8 @@ class CompleteValidation(object):
             else:
                 logging.debug('no id')
                 old_instance = old
+                # TODO: instance_class(**new) can't be called like that if models have m2m fields
+                # Workaround for now is not to call the validator from the serializer on new instances
                 new_instance = copy.deepcopy(old) if old else instance_class(**new)
                 if old:
                     update_object(new_instance, new)
