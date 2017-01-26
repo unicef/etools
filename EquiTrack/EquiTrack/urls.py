@@ -191,8 +191,10 @@ urlpatterns = patterns(
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
 
     # Activity stream
-    url(r'^activity/(?P<content_type_id>\d+)/json/$',
+    url(r'^activity/(?P<model_name>\w+)/json/$',
         JSONActivityFeedWithCustomData.as_view(name='custom_data_model_stream')),
+    url(r'^activity/(?P<model_name>\w+)/(?P<obj_id>\d+)/json/$',
+        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream')),
     url('^activity/', include('actstream.urls')),
 )
 
