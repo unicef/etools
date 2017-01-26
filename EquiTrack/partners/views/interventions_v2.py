@@ -238,9 +238,9 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
         self.up_related_field(intervention, sector_locations,
                               InterventionSectorLocationLink, InterventionSectorLocationCUSerializer,
                               'sector_locations', 'intervention', partial)
-        self.up_related_field(intervention, result_links,
-                              InterventionResultLink, InterventionResultCUSerializer,
-                              'sector_locations', 'intervention', partial)
+        # self.up_related_field(intervention, result_links,
+        #                       InterventionResultLink, InterventionResultCUSerializer,
+        #                       'sector_locations', 'intervention', partial)
 
 
         if getattr(instance, '_prefetched_objects_cache', None):

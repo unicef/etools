@@ -1,13 +1,14 @@
 import operator
 import functools
+import logging
 
 from rest_framework import status
 
 from django.db import transaction
 from django.db.models import Q
 from rest_framework.response import Response
+from rest_framework.serializers import ValidationError
 
-from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
 from rest_framework.generics import (
@@ -28,7 +29,8 @@ from partners.serializers.agreements_v2 import (
 )
 
 from partners.filters import PartnerScopeFilter
-
+from EquiTrack.validation_mixins import ValidatorViewMixin
+from partners.validation.agreements import AgreementValid
 
 
 class AgreementListAPIView(ListCreateAPIView):
@@ -107,13 +109,18 @@ class AgreementListAPIView(ListCreateAPIView):
         headers = self.get_success_headers(serialier.data)
         return Response(serialier.data, status=status.HTTP_201_CREATED, headers=headers)
 
-class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
+
+class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementRetrieveSerializer
     permission_classes = (IsAdminUser,)
+
+    SERIALIZER_MAP = {
+        'amendments': AgreementAmendmentCreateUpdateSerializer
+    }
 
     def get_serializer_class(self, format=None):
         """
@@ -125,47 +132,27 @@ class AgreementDetailAPIView(RetrieveUpdateDestroyAPIView):
             return AgreementCreateUpdateSerializer
         return super(AgreementDetailAPIView, self).get_serializer_class()
 
+
     @transaction.atomic
     def update(self, request, *args, **kwargs):
 
-        partial = kwargs.pop('partial', False)
-        amendments = request.data.pop('amendments', None)
+        related_fields = ['amendments']
+        instance, old_instance, serializer = self.my_update(request, related_fields,
+                                                            snapshot=True, snapshot_class=Agreement, **kwargs)
 
-        instance = self.get_object()
-        agreement_serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        agreement_serializer.is_valid(raise_exception=True)
 
-        Agreement.create_snapshot_activity_stream(request.user, agreement_serializer.instance)
-        agreement = agreement_serializer.save()
+        validator = AgreementValid(instance, old=old_instance, user=request.user)
 
-        if amendments:
-            for item in amendments:
-                item.update({u"agreement": agreement.pk})
-                if item.get('id', None):
-                    try:
-                        amd_instance = AgreementAmendment.objects.get(id=item['id'])
-                    except AgreementAmendment.DoesNotExist:
-                        amd_instance = None
 
-                    amd_serializer = AgreementAmendmentCreateUpdateSerializer(instance=amd_instance,
-                                                                                       data=item,
-                                                                                       partial=partial)
-                else:
-                    amd_serializer = AgreementAmendmentCreateUpdateSerializer(data=item)
-
-                try:
-                    amd_serializer.is_valid(raise_exception=True)
-                except ValidationError as e:
-                    e.detail = {'amendments': e.detail}
-                    raise e
-                Agreement.create_snapshot_activity_stream(request.user, amd_serializer.instance.agreement)
-                amd_serializer.save()
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+            #raise Exception(validator.errors)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
             instance = self.get_object()
-            amd_serializer = self.get_serializer(instance)
 
-        return Response(agreement_serializer.data)
+        return Response(serializer.data)
 
