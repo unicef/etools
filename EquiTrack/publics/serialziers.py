@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from rest_framework import serializers
 
 from publics.models import Country, DSARegion, BusinessArea, BusinessRegion, Currency, AirlineCompany, WBS, Grant,\
-    Fund, ExpenseType
+    Fund, TravelExpenseType
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -68,11 +68,14 @@ class FundSerializer(serializers.ModelSerializer):
 class ExpenseTypeSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title')
     vendor_number = serializers.CharField()
-    unique = serializers.BooleanField()
+    unique = serializers.SerializerMethodField()
 
     class Meta:
-        model = ExpenseType
+        model = TravelExpenseType
         fields = ('id', 'name', 'vendor_number', 'unique')
+
+    def get_unique(self, obj):
+        return obj.is_travel_agent
 
 
 class PublicStaticDataSerializer(serializers.Serializer):

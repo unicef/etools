@@ -4,7 +4,8 @@ from rest_framework import viewsets, mixins, generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Grant, Fund, ExpenseType, BusinessArea
+from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Grant, Fund, TravelExpenseType, \
+    BusinessArea
 from publics.serialziers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
     WBSGrantFundSerializer, WBSGrantFundParameterSerializer
 from t2f.models import TravelType, ModeOfTravel
@@ -39,7 +40,7 @@ class StaticDataView(generics.GenericAPIView):
                 'wbs': WBS.objects.all(),
                 'grants': Grant.objects.all(),
                 'funds': Fund.objects.all(),
-                'expense_types': ExpenseType.objects.all(),
+                'expense_types': TravelExpenseType.objects.all(),
                 'travel_types': [c[0].lower() for c in TravelType.CHOICES],
                 'travel_modes': [c[0].lower() for c in ModeOfTravel.CHOICES]}
 

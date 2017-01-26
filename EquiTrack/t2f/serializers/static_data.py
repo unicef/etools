@@ -3,11 +3,8 @@ from __future__ import unicode_literals
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from publics.models import AirlineCompany, DSARegion, Currency, Fund, ExpenseType, WBS, Grant
 from locations.models import Location
 from partners.models import PartnerOrganization, PCA
-from publics.serialziers import CurrencySerializer, DSARegionSerializer, WBSSerializer, GrantSerializer, FundSerializer, \
-    ExpenseTypeSerializer, AirlineSerializer
 from reports.models import Result
 from users.models import Office, Section
 

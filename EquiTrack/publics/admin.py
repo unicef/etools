@@ -7,7 +7,7 @@ from publics import models
 admin.site.register(models.Grant)
 admin.site.register(models.Fund)
 admin.site.register(models.WBS)
-admin.site.register(models.ExpenseType)
+admin.site.register(models.TravelExpenseType)
 admin.site.register(models.Currency)
 admin.site.register(models.DSARegion)
 admin.site.register(models.AirlineCompany)

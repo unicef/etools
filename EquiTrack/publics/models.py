@@ -3,11 +3,10 @@ from __future__ import unicode_literals
 from django.db import models
 
 
-class ExpenseType(models.Model):
+class TravelExpenseType(models.Model):
     title = models.CharField(max_length=32)
-    code = models.CharField(max_length=16)
     vendor_number = models.CharField(max_length=32)
-    unique = models.BooleanField(default=False)
+    is_travel_agent = models.BooleanField(default=False)
 
 
 class Currency(models.Model):
