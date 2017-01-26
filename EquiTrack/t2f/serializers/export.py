@@ -65,18 +65,18 @@ class TravelAdminExportSerializer(serializers.Serializer):
 
 
 class InvoiceExportSerializer(serializers.Serializer):
-    reference_number = serializers.CharField()
-    ta_number = serializers.CharField()
-    vendor_number = serializers.CharField()
-    currency = serializers.CharField()
-    amount = serializers.CharField()
-    status = serializers.CharField()
-    message = serializers.CharField()
-    vision_fi_doc = serializers.CharField()
-    wbs = serializers.CharField()
-    grant = serializers.CharField()
-    fund = serializers.CharField()
+    reference_number = serializers.CharField(source='invoice.reference_number')
+    ta_number = serializers.CharField(source='invoice.travel.reference_number')
+    vendor_number = serializers.CharField(source='invoice.vendor_number')
+    currency = serializers.CharField(source='invoice.currency.name')
+    amount = serializers.DecimalField(max_digits=20, decimal_places=10)
+    status = serializers.CharField(source='invoice.status')
+    message = serializers.CharField(source='invoice.message')
+    vision_fi_id = serializers.CharField(source='invoice.vision_fi_id')
+    wbs = serializers.CharField(source='wbs.name')
+    grant = serializers.CharField(source='grant.name')
+    fund = serializers.CharField(source='fund.name')
 
     class Meta:
         fields = ('reference_number', 'ta_number', 'vendor_number', 'currency', 'amount', 'status', 'message',
-                  'vision_fi_doc', 'wbs', 'grant', 'fund')
+                  'vision_fi_id', 'wbs', 'grant', 'fund')

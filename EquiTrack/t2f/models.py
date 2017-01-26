@@ -533,6 +533,10 @@ class Invoice(models.Model):
     def normalized_amount(self):
         return abs(self.amount.normalize())
 
+    @property
+    def message(self):
+        return ''
+
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey('Invoice', related_name='items')

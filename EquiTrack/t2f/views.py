@@ -23,7 +23,8 @@ from reports.models import Result
 from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
     InvoiceExportSerializer
 
-from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice, IteneraryItem
+from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice, IteneraryItem, \
+    InvoiceItem
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer
 from t2f.serializers.static_data import StaticDataSerializer
@@ -123,8 +124,8 @@ class TravelListViewSet(mixins.ListModelMixin,
         return response
 
     def export_invoices(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_501_NOT_IMPLEMENTED)
-        queryset = self.filter_queryset(self.get_queryset())
+        travel_queryset = self.filter_queryset(self.get_queryset())
+        queryset = InvoiceItem.objects.filter(invoice__travel__in=travel_queryset).order_by('invoice__travel__reference_number')
         serialzier = InvoiceExportSerializer(queryset, many=True, context=self.get_serializer_context())
 
         response = Response(data=serialzier.data, status=status.HTTP_200_OK)
