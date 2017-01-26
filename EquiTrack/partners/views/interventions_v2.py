@@ -102,29 +102,29 @@ class InterventionListAPIView(ListCreateAPIView):
         if query_params:
             queries = []
 
-            # TODO: update these filters
-            if "partnership_type" in query_params.keys():
-                queries.append(Q(partnership_type=query_params.get("partnership_type")))
+            if "document_type" in query_params.keys():
+                queries.append(Q(partnership_type=query_params.get("document_type")))
             if "country_programme" in query_params.keys():
-                queries.append(Q(country_programme=query_params.get("country_programme")))
+                queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
-                queries.append(Q(pcasectors__sector=query_params.get("sector")))
+                queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
-            if "unicef_managers" in query_params.keys():
-                queries.append(Q(unicef_managers__in=[query_params.get("unicef_managers")]))
-            if "start_date" in query_params.keys():
-                queries.append(Q(start_date__gte=query_params.get("start_date")))
-            if "end_date" in query_params.keys():
-                queries.append(Q(end_date__lte=query_params.get("end_date")))
+            if "unicef_focal_points" in query_params.keys():
+                queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
+            if "start" in query_params.keys():
+                queries.append(Q(start__gte=query_params.get("start")))
+            if "end" in query_params.keys():
+                queries.append(Q(end__lte=query_params.get("end")))
             if "office" in query_params.keys():
-                queries.append(Q(office__in=[query_params.get("office")]))
+                queries.append(Q(offices__in=[query_params.get("office")]))
             if "location" in query_params.keys():
-                queries.append(Q(locations__location=query_params.get("location")))
+                queries.append(Q(sector_locations__locations__name__icontains=query_params.get("location")))
             if "search" in query_params.keys():
                 queries.append(
                     Q(title__icontains=query_params.get("search")) |
-                    Q(partner__name__icontains=query_params.get("search"))
+                    Q(agreement__partner__name__icontains=query_params.get("search")) |
+                    Q(number__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
