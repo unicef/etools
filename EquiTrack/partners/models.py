@@ -1199,6 +1199,9 @@ class AgreementAmendment(TimeStampedModel):
             self.agreement.save(amendment_number=self.number)
         return super(AgreementAmendment, self).save(**kwargs)
 
+class InterventionManager(models.Manager):
+    def get_queryset(self):
+        return super(InterventionManager, self).get_queryset().prefetch_related('result_links', 'sector_locations')
 
 
 class Intervention(TimeStampedModel):
@@ -1244,6 +1247,9 @@ class Intervention(TimeStampedModel):
         (SHPD, u'Simplified Humanitarian Programme Document'),
         (SSFA, u'SSFA TOR'),
     )
+
+    objects = InterventionManager()
+
     document_type = models.CharField(
         choices=INTERVENTION_TYPES,
         max_length=255,

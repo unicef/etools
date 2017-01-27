@@ -184,8 +184,9 @@ class InterventionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
-            'unicef_budget', 'cso_contribution', 'sectors', 'cp_outputs'
+            'id', 'number', 'hrp', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
+            'unicef_budget', 'cso_contribution', 'sectors', 'cp_outputs', 'unicef_focal_points',
+            'offices'
         )
 
 class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
