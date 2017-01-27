@@ -173,6 +173,10 @@ class InterventionListSerializer(serializers.ModelSerializer):
     unicef_budget = serializers.IntegerField(source='total_unicef_cash')
     cso_contribution = serializers.IntegerField(source='total_partner_contribution')
     sectors = serializers.SerializerMethodField()
+    cp_outputs = serializers.SerializerMethodField()
+
+    def get_cp_outputs(self, obj):
+        return [rl.cp_output.id for rl in obj.result_links.all()]
 
     def get_sectors(self, obj):
         return [l.sector.name for l in obj.sector_locations.all()]
@@ -180,8 +184,9 @@ class InterventionListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            'id', 'reference_number', 'number', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
-            'unicef_budget', 'cso_contribution', 'sectors'
+            'id', 'number', 'hrp', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
+            'unicef_budget', 'cso_contribution', 'sectors', 'cp_outputs', 'unicef_focal_points',
+            'offices'
         )
 
 class InterventionLocationSectorNestedSerializer(serializers.ModelSerializer):
