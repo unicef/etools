@@ -415,7 +415,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         :return:
         """
         micro_assessment = partner.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
-        hact = json.loads(partner.hact_values) if partner.hact_values else {}
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
 
         if assessment:
             if micro_assessment:
@@ -444,7 +444,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @classmethod
     def audit_needed(cls, partner, assesment=None):
         audits = 0
-        hact = json.loads(partner.hact_values) if partner.hact_values else {}
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
             current_cycle = CountryProgramme.current()
@@ -466,7 +466,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @classmethod
     def audit_done(cls, partner, assesment=None):
         audits = 0
-        hact = json.loads(partner.hact_values) if partner.hact_values else {}
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         audits = partner.assessments.filter(type=u'Scheduled Audit report').count()
         if assesment:
             audits += 1
@@ -547,7 +547,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                     distinct('intervention__id').values_list('unicef_cash', flat=True)
                 total = sum(q)
 
-        hact = json.loads(partner.hact_values) if partner.hact_values else {}
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_cash_transfer"] = float(total)
         partner.hact_values = hact
         partner.save()
@@ -612,7 +612,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                     intervention__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]).aggregate(
                     models.Sum('programmatic'))['programmatic__sum'] or 0
 
-        hact = json.loads(partner.hact_values) if partner.hact_values else {}
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         hact["planned_visits"] = pv
         partner.hact_values = hact
         partner.save()

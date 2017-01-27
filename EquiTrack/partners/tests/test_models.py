@@ -1,10 +1,11 @@
 import datetime
+import json
 from unittest import skip
 from actstream import action
 from actstream.models import model_stream
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory
+from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory, InterventionFactory
 from funds.models import Donor, Grant
 
 from reports.models import (
@@ -122,7 +123,7 @@ class TestHACTCalculations(TenantTestCase):
     fixtures = ['initial_data.json']
     def setUp(self):
         year = datetime.date.today().year
-        self.intervention = PartnershipFactory(
+        self.intervention = InterventionFactory(
             status=u'active'
         )
         current_cp = ResultStructure.objects.create(
@@ -134,15 +135,15 @@ class TestHACTCalculations(TenantTestCase):
             donor=Donor.objects.create(name='Test Donor'),
             name='SM12345678'
         )
-        PartnershipBudget.objects.create(
-            partnership=self.intervention,
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
             partner_contribution=10000,
             unicef_cash=60000,
             in_kind_amount=5000,
             year=str(year)
         )
-        PartnershipBudget.objects.create(
-            partnership=self.intervention,
+        InterventionBudget.objects.create(
+            intervention=self.intervention,
             partner_contribution=10000,
             unicef_cash=40000,
             in_kind_amount=5000,
@@ -169,8 +170,11 @@ class TestHACTCalculations(TenantTestCase):
 
     def test_planned_cash_transfers(self):
 
-        PartnerOrganization.planned_cash_transfers(self.intervention.partner)
-        self.assertEqual(self.intervention.partner.hact_values['planned_cash_transfer'], 60000)
+        PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner)
+        hact = json.loads(self.intervention.agreement.partner.hact_values) \
+            if isinstance(self.intervention.agreement.partner.hact_values, str) \
+            else self.intervention.agreement.partner.hact_values
+        self.assertEqual(hact['planned_cash_transfer'], 60000)
 
 
 class TestPartnerOrganizationModel(TenantTestCase):

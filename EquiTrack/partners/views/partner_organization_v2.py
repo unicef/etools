@@ -16,6 +16,7 @@ from rest_framework.generics import (
 
 from partners.models import (
     PartnerStaffMember,
+    Intervention,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -24,6 +25,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
+    PartnerOrganizationHactSerializer,
 )
 
 
@@ -183,6 +185,18 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             po_serializer = self.get_serializer(instance)
 
         return Response(po_serializer.data)
+
+
+class PartnerOrganizationHactAPIView(ListCreateAPIView):
+    """
+    Create new Partners.
+    Returns a list of Partners.
+    """
+    queryset = PartnerOrganization.objects.filter(
+            Q(documents__status__in=[Intervention.ACTIVE,Intervention.IMPLEMENTED]) |
+            (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
+        ).distinct()
+    serializer_class = PartnerOrganizationHactSerializer
 
 
 class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
