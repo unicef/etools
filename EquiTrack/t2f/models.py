@@ -16,7 +16,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
-from t2f.helpers import CostSummaryCalculator
+from t2f.helpers import CostSummaryCalculator, InvoiceMaker
 
 log = logging.getLogger(__name__)
 
@@ -218,6 +218,7 @@ class Travel(models.Model):
     @transition(status, source=[APPROVED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
+        self.generate_invoices()
         self.send_notification_email('Travel #{} sent for payment.'.format(self.id),
                                      self.traveler.email,
                                      'emails/sent_for_payment.html')
@@ -265,6 +266,8 @@ class Travel(models.Model):
         pass
 
     def send_notification_email(self, subject, recipient, template_name):
+        # TODO this could be async to avoid too long api calls in case of mail server issue
+        # TODO move this out from here
         from t2f.serializers.mailing import TravelMailSerializer
         serializer = TravelMailSerializer(self, context={})
 
@@ -301,6 +304,10 @@ class Travel(models.Model):
             msg.send(fail_silently=False)
         except ValidationError as exc:
             log.error('Was not able to send the email. Exception: %s', exc.message)
+
+    def generate_invoices(self):
+        maker = InvoiceMaker(self)
+        maker.do_invoicing()
 
 
 class TravelActivity(models.Model):

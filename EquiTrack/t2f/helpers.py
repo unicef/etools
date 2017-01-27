@@ -433,7 +433,7 @@ class InvoiceMaker(object):
         cost_assignment_list = self.travel.cost_assignments.all()
 
         for expense in self.travel.expenses.all():
-            vendor_number = expense.type.code
+            vendor_number = expense.type.vendor_number
 
             # Parking expense
             if not vendor_number:
@@ -467,7 +467,7 @@ class InvoiceMaker(object):
             if vendor_number == self.USER_VENDOR_NUMBER:
                 currency = self.travel.currency
             else:
-                expense = self.travel.expenses.get(type__code=vendor_number)
+                expense = self.travel.expenses.get(type__vendor_number=vendor_number)
                 currency = expense.account_currency
 
             invoice_kwargs = {'travel': self.travel,

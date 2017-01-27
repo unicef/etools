@@ -62,11 +62,6 @@ def run_transition(serializer):
         instance.save()
 
 
-def make_invoices(travel):
-    maker = InvoiceMaker(travel)
-    maker.do_invoicing()
-
-
 class TravelListViewSet(mixins.ListModelMixin,
                         mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
@@ -96,7 +91,6 @@ class TravelListViewSet(mixins.ListModelMixin,
     def perform_create(self, serializer):
         super(TravelListViewSet, self).perform_create(serializer)
         run_transition(serializer)
-        make_invoices(serializer.instance)
 
     def export(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
@@ -164,7 +158,6 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
         run_transition(serializer)
-        make_invoices(serializer.instance)
 
     def clone_for_secondary_traveler(self, request, *args, **kwargs):
         traveler = self._get_traveler_for_cloning()

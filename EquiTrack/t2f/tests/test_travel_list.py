@@ -102,8 +102,8 @@ class TravelList(APITenantTestCase):
         self.assertEqual(reference_numbers, ['2016/000003', '2016/000002', '2016/000001'])
 
     def test_filtering(self):
-        t1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.PLANE])
-        t2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.RAIL])
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.PLANE])
+        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.RAIL])
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
                                         data={'f_travel_type': ModeOfTravel.PLANE},

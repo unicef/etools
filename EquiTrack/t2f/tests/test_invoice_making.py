@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 
-from t2f.helpers import InvoiceMaker
 from t2f.models import Travel, Expense, CostAssignment, InvoiceItem
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory
 from t2f.views import make_invoices
@@ -39,13 +38,13 @@ class TravelDetails(APITenantTestCase):
         fund_4 = FundFactory(name='Fund #4', grant=grant_3)
 
         # Expense types
-        et_t_food = ExpenseTypeFactory(title='Food', code='t_food')
-        et_t_travel = ExpenseTypeFactory(title='Travel', code='t_travel')
-        et_t_other = ExpenseTypeFactory(title='Other', code='t_other')
+        et_t_food = ExpenseTypeFactory(title='Food', vendor_number='t_food')
+        et_t_travel = ExpenseTypeFactory(title='Travel', vendor_number='t_travel')
+        et_t_other = ExpenseTypeFactory(title='Other', vendor_number='t_other')
 
-        et_a_andras = ExpenseTypeFactory(title='Andras Travel', code='a_andras')
-        et_a_nico = ExpenseTypeFactory(title='Nico Travel', code='a_nico')
-        et_a_torben = ExpenseTypeFactory(title='Torben Travel', code='a_torben')
+        et_a_andras = ExpenseTypeFactory(title='Andras Travel', vendor_number='a_andras')
+        et_a_nico = ExpenseTypeFactory(title='Nico Travel', vendor_number='a_nico')
+        et_a_torben = ExpenseTypeFactory(title='Torben Travel', vendor_number='a_torben')
 
         # Make a travel
         travel = Travel.objects.create(traveler=self.traveler,

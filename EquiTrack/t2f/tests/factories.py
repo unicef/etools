@@ -4,10 +4,10 @@ import factory
 from factory import fuzzy
 from pytz import UTC
 
-from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory, ResultFactory,\
-    LocationFactory, InterventionFactory
-from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, ExpenseType, Country, BusinessArea, \
-    BusinessRegion
+from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, LocationFactory,\
+    InterventionFactory
+from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, TravelExpenseType, Country,\
+    BusinessArea, BusinessRegion
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
     TravelType
@@ -35,10 +35,10 @@ class BusinessAreaFactory(factory.DjangoModelFactory):
 
 class ExpenseTypeFactory(factory.DjangoModelFactory):
     title = fuzzy.FuzzyText(length=12)
-    code = fuzzy.FuzzyText(length=12)
+    vendor_number = fuzzy.FuzzyText(length=12)
 
     class Meta:
-        model = ExpenseType
+        model = TravelExpenseType
 
 
 class WBSFactory(factory.DjangoModelFactory):
