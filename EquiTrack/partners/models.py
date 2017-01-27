@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import json
 import logging
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -183,7 +184,17 @@ class PartnerType(object):
                       GOVERNMENT,
                       UN_AGENCY)
 
-
+def hact_default():
+    return {
+        "audits_mr": 0,
+        "audits_done": 0,
+        "spot_checks": 0,
+        "planned_visits": 0,
+        "follow_up_flags": 0,
+        "programmatic_visits": 0,
+        "planned_cash_transfer": 0,
+        "micro_assessment_needed": "Missing"
+    }
 class PartnerOrganization(AdminURLMixin, models.Model):
     """
     Represents a partner organization
@@ -353,7 +364,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     #     "planned_cash_transfer": 0,
     #     "micro_assessment_needed": "Missing",
     #     "audits_mr": 0}
-    hact_values = JSONField(blank=True, null=True, default={})
+    hact_values = JSONField(blank=True, null=True, default=hact_default)
+
 
 
     class Meta:
@@ -365,6 +377,20 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
+
+    def save(self, *args, **kwargs):
+        # JSONFIELD has an issue where it keeps escaping characters
+        hact_is_string = isinstance(self.hact_values, str)
+        try:
+
+            self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
+        except ValueError as e:
+            e.message = 'hact_values needs to be a valid format (dict)'
+            raise e
+
+        super(PartnerOrganization, self).save(*args, **kwargs)
+        if hact_is_string:
+            self.hact_values = json.dumps(self.hact_values)
 
     @cached_property
     def get_last_pca(self):
@@ -1172,6 +1198,9 @@ class AgreementAmendment(TimeStampedModel):
             self.agreement.save(amendment_number=self.number)
         return super(AgreementAmendment, self).save(**kwargs)
 
+class InterventionManager(models.Manager):
+    def get_queryset(self):
+        return super(InterventionManager, self).get_queryset().prefetch_related('result_links', 'sector_locations')
 
 
 class Intervention(TimeStampedModel):
@@ -1217,6 +1246,9 @@ class Intervention(TimeStampedModel):
         (SHPD, u'Simplified Humanitarian Programme Document'),
         (SSFA, u'SSFA TOR'),
     )
+
+    objects = InterventionManager()
+
     document_type = models.CharField(
         choices=INTERVENTION_TYPES,
         max_length=255,
