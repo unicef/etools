@@ -1,7 +1,7 @@
 from __future__ import absolute_import
-import json
 import logging
 import datetime
+import json
 from dateutil.relativedelta import relativedelta
 
 from django_fsm import FSMField, transition
@@ -415,6 +415,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         :return:
         """
         micro_assessment = partner.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+
         if assessment:
             if micro_assessment:
                 if assessment.completed_date and micro_assessment.completed_date and \
@@ -423,24 +425,26 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             else:
                 micro_assessment = assessment
         if partner.type_of_assessment == 'High Risk Assumed':
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
-        elif partner.hact_values['planned_cash_transfer'] > 100000.00 \
+            hact['micro_assessment_needed'] = 'Yes'
+        elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
             and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
+            hact['micro_assessment_needed'] = 'Yes'
         elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
             and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
             and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
+            hact['micro_assessment_needed'] = 'Yes'
         elif micro_assessment is None:
-            partner.hact_values['micro_assessment_needed'] = 'Missing'
+            hact['micro_assessment_needed'] = 'Missing'
         else:
-            partner.hact_values['micro_assessment_needed'] = 'No'
+            hact['micro_assessment_needed'] = 'No'
+        partner.hact_values = hact
         partner.save()
 
 
     @classmethod
     def audit_needed(cls, partner, assesment=None):
         audits = 0
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
             current_cycle = CountryProgramme.current()
@@ -454,17 +458,20 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
             if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
                 audits = 0
-        partner.hact_values['audits_mr'] = audits
+        hact['audits_mr'] = audits
+        partner.hact_values = hact
         partner.save()
 
 
     @classmethod
     def audit_done(cls, partner, assesment=None):
         audits = 0
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         audits = partner.assessments.filter(type=u'Scheduled Audit report').count()
         if assesment:
             audits += 1
-        partner.hact_values['audits_done'] = audits
+        hact['audits_done'] = audits
+        partner.hact_values = hact
         partner.save()
 
 
@@ -523,24 +530,26 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 )['planned_amount__sum'] or 0
         else:
             if budget_record:
-                q = PartnershipBudget.objects.filter(partnership__partner=partner,
-                                                     partnership__status__in=[PCA.ACTIVE,
-                                                                              PCA.IMPLEMENTED],
-                                                     year=year).exclude(partnership__id=budget_record.partnership.id)
-                q = q.order_by("partnership__id", "-created").\
-                    distinct('partnership__id').values_list('unicef_cash', flat=True)
+                q = InterventionBudget.objects.filter(intervention__agreement__partner=partner,
+                                                      intervention__status__in=[Intervention.ACTIVE,
+                                                                              Intervention.IMPLEMENTED],
+                                                     year=year).exclude(id=budget_record.id)
+                q = q.order_by("intervention__id", "-created").\
+                    distinct('intervention__id').values_list('unicef_cash', flat=True)
                 total = sum(q)
-                total += budget_record.unicef_cash
+                total += budget_record.unicef_cash if budget_record.year == str(year) else 0
             else:
-                q = PartnershipBudget.objects.filter(partnership__partner=partner,
-                                                     partnership__status__in=[PCA.ACTIVE,
-                                                                              PCA.IMPLEMENTED],
-                                                     year=year)
-                q = q.order_by("partnership__id", "-created").\
-                    distinct('partnership__id').values_list('unicef_cash', flat=True)
+                q = InterventionBudget.objects.filter(intervention__agreement__partner=partner,
+                                                      intervention__status__in=[
+                                                          Intervention.ACTIVE, Intervention.IMPLEMENTED],
+                                                      year=year)
+                q = q.order_by("intervention__id", "-created").\
+                    distinct('intervention__id').values_list('unicef_cash', flat=True)
                 total = sum(q)
 
-        partner.hact_values['planned_cash_transfer'] = total
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact["planned_cash_transfer"] = float(total)
+        partner.hact_values = hact
         partner.save()
 
     @cached_property
@@ -571,20 +580,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         )
 
     @classmethod
-    def planned_visits(cls, partner, intervention=None):
+    def planned_visits(cls, partner, pv_intervention=None):
         year = datetime.date.today().year
-        from trips.models import Trip
         # planned visits
         pv = 0
         if partner.partner_type == u'Government':
 
-            if intervention:
+            if pv_intervention:
                 pv = GovernmentInterventionResult.objects.filter(
                     intervention__partner=partner,
-                    year=year).exclude(id=intervention.id).aggregate(
+                    year=year).exclude(id=pv_intervention.id).aggregate(
                     models.Sum('planned_visits')
                 )['planned_visits__sum'] or 0
-                pv += intervention.planned_visits
+                pv += pv_intervention.planned_visits
             else:
                pv = GovernmentInterventionResult.objects.filter(
                     intervention__partner=partner,
@@ -592,23 +600,21 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                     models.Sum('planned_visits')
                 )['planned_visits__sum'] or 0
         else:
-            qs = PCA.objects.filter(
-                partner=partner,
-                end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED])
-            pv = 0
-            if intervention:
-                pv += intervention.planned_visits
-                if intervention.id:
-                    qs = qs.exclude(id=intervention.id)
-
-                pv += qs.aggregate(models.Sum('planned_visits'))['planned_visits__sum'] or 0
+            if pv_intervention:
+                pv = InterventionPlannedVisits.objects.filter(
+                    intervention__agreement__partner=partner, year=year,
+                    intervention__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]).exclude(
+                    id=pv_intervention.id).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
+                pv += pv_intervention.programmatic
             else:
-                pv = PCA.objects.filter(
-                     partner=partner,
-                     end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
-                     models.Sum('planned_visits'))['planned_visits__sum'] or 0
+                pv = InterventionPlannedVisits.objects.filter(
+                    intervention__agreement__partner=partner, year=year,
+                    intervention__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]).aggregate(
+                    models.Sum('programmatic'))['programmatic__sum'] or 0
 
-        partner.hact_values['planned_visits'] = pv
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact["planned_visits"] = pv
+        partner.hact_values = hact
         partner.save()
 
     @classmethod
@@ -1574,6 +1580,11 @@ class InterventionPlannedVisits(models.Model):
     spot_checks = models.IntegerField(default=0)
     audit = models.IntegerField(default=0)
 
+    @transaction.atomic
+    def save(self, **kwargs):
+        PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
+        super(InterventionPlannedVisits, self).save(**kwargs)
+
     class Meta:
         unique_together = ('intervention', 'year')
 class InterventionResultLink(models.Model):
@@ -1613,7 +1624,7 @@ class InterventionBudget(TimeStampedModel):
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
 
-
+    @transaction.atomic
     def save(self, **kwargs):
         """
         Calculate total budget on save
@@ -1621,6 +1632,9 @@ class InterventionBudget(TimeStampedModel):
         self.total = \
             self.total_unicef_contribution() \
             + self.partner_contribution
+
+        if self.intervention.status in [Intervention.ACTIVE, Intervention.IMPLEMENTED]:
+            PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner, self)
 
         super(InterventionBudget, self).save(**kwargs)
 
