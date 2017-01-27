@@ -4,7 +4,7 @@ Model factories used for generating models dynamically for tests
 import json
 
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
-
+import decimal
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
 from django.contrib.contenttypes.models import ContentType
@@ -168,6 +168,19 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.today()
 
+
+class InterventionBudgetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionBudget
+
+    intervention = factory.SubFactory(InterventionFactory)
+    unicef_cash = 100001.00
+    unicef_cash_local = 10.00
+    partner_contribution = 200.00
+    partner_contribution_local = 20.00
+    in_kind_amount = 10.00
+    in_kind_amount_local = 10.00
+    year = '2017'
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:

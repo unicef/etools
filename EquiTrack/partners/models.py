@@ -1621,7 +1621,8 @@ class InterventionBudget(TimeStampedModel):
             self.total_unicef_contribution() \
             + self.partner_contribution
 
-        PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner, self)
+        if self.intervention.status in [Intervention.ACTIVE, Intervention.IMPLEMENTED]:
+            PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner, self)
 
         super(InterventionBudget, self).save(**kwargs)
 
