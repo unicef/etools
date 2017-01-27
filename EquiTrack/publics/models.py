@@ -4,6 +4,8 @@ from django.db import models
 
 
 class TravelExpenseType(models.Model):
+    USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
+
     title = models.CharField(max_length=32)
     vendor_number = models.CharField(max_length=32)
     is_travel_agent = models.BooleanField(default=False)
