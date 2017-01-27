@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from locations.models import Location
-from partners.models import PartnerOrganization, PCA
+from partners.models import PartnerOrganization, Intervention
 from reports.models import Result
 from users.models import Office, Section
 
@@ -37,9 +37,10 @@ class PartnerOrganizationSerializer(serializers.ModelSerializer):
 
 class PartnershipSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='title')
+    partner = serializers.PrimaryKeyRelatedField(source='agreement.partner', read_only=True)
 
     class Meta:
-        model = PCA
+        model = Intervention
         fields = ('id', 'name', 'partner')
 
 
