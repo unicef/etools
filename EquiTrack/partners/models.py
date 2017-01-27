@@ -26,7 +26,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from actstream import action
 
-from EquiTrack.utils import get_changeform_link
+from EquiTrack.utils import get_changeform_link, get_current_site
 from EquiTrack.mixins import AdminURLMixin
 
 from partners.validation.agreements import (
@@ -55,7 +55,7 @@ from supplies.tasks import (
     set_unisupply_user
 )
 from users.models import Section, Office
-from . import emails
+from notification.models import Notification
 
 
 # TODO: streamline this ...
@@ -1168,7 +1168,7 @@ class AgreementAmendment(TimeStampedModel):
     )
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
-    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
+    type = ArrayField(models.CharField(max_length=64, choices=AMENDMENT_TYPES))
     signed_amendment = models.FileField(
         max_length=255,
         null=True, blank=True,
@@ -2385,17 +2385,29 @@ class PCA(AdminURLMixin, models.Model):
                        instance.unicef_managers.all())
         recipients = [user.email for user in managers]
 
+        email_context = {
+            'number': instance.__unicode__(),
+            'state': 'Created',
+            'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
+        }
+
         if created:  # new partnership
-            emails.PartnershipCreatedEmail(instance).send(
-                settings.DEFAULT_FROM_EMAIL,
-                *recipients
+            notification = Notification.objects.create(
+                sender=instance,
+                recipients=recipients, template_name="partners/partnership/created/updated",
+                template_data=email_context
             )
 
         else:  # change to existing
-            emails.PartnershipUpdatedEmail(instance).send(
-                settings.DEFAULT_FROM_EMAIL,
-                *recipients
+            email_context['state'] = 'Updated'
+
+            notification = Notification.objects.create(
+                sender=instance,
+                recipients=recipients, template_name="partners/partnership/created/updated",
+                template_data=email_context
             )
+
+        notification.send_notification()
 
         # attach any FCs immediately
         # if instance:
@@ -2693,8 +2705,6 @@ class AgreementAmendmentLog(TimeStampedModel):
             'Additional Clauses',
         ))
     amended_at = models.DateField(null=True, verbose_name='Signed At')
-
-    amendment_number = models.IntegerField(default=0)
 
     signed_document = models.FileField(
         max_length=255,
