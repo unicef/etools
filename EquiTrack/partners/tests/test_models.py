@@ -589,13 +589,19 @@ class TestAgreementModel(TenantTestCase):
         self.assertEquals(model_stream(Agreement).count(), 2)
 
          # Check the snapshot content
-        snapshot = model_stream(Agreement).first().data['snapshot']
-        self.assertNotEquals(snapshot, {})
+        previous = model_stream(Agreement).first().data['previous']
+        self.assertNotEquals(previous, {})
 
-  # Check if the snapshot had the empty entries for bank information when
-  # initially created
-        self.assertEquals(snapshot['start'], 'None')
-        self.assertEquals(snapshot['signed_by_unicef_date'], 'None')
+        changes = model_stream(Agreement).first().data['changes']
+        self.assertNotEquals(changes, {})
+
+        # Check if the previous had the empty entries for bank information when
+        # initially created
+        self.assertEquals(previous['start'], 'None')
+        self.assertEquals(previous['signed_by_unicef_date'], 'None')
+
+        self.assertEquals(changes['start'], str(self.agreement.start))
+        self.assertEquals(changes['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
 
 class TestInterventionModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
