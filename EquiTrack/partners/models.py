@@ -380,7 +380,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     def save(self, *args, **kwargs):
         # JSONFIELD has an issue where it keeps escaping characters
-        print 'HACRT: {}'.format(self.hact_values)
         hact_is_string = isinstance(self.hact_values, str)
         try:
 
