@@ -1045,6 +1045,53 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(response.data, {"document_type":["This field is required."],"agreement":["This field is required."],"title":["This field is required."]})
 
+    def test_intervention_validation_doctype_pca(self):
+        data={
+            "document_type": Intervention.SSFA,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Document type must be PD or SHPD in case of agreement is PCA."])
+
+    def test_intervention_validation_doctype_ssfa(self):
+        self.agreement.agreement_type = Agreement.SSFA
+        self.agreement.save()
+        data={
+            "document_type": Intervention.PD,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Document type must be SSFA in case of agreement is SSFA."])
+
+    def test_intervention_validation_dates(self):
+        today = datetime.date.today()
+        data={
+            "start": datetime.date(today.year+1, 1, 1),
+            "end": today,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ['Start date must precede end date'])
+
+
     def test_intervention_filter(self):
         # Test filter
         params = {

@@ -71,7 +71,6 @@ class InterventionListAPIView(ListCreateAPIView):
         Add a new Intervention
         :return: JSON
         """
-
         planned_budget = request.data.pop("planned_budget", [])
         attachements = request.data.pop("attachments", [])
         planned_visits = request.data.pop("planned_visits", [])
@@ -81,14 +80,11 @@ class InterventionListAPIView(ListCreateAPIView):
         supplies = request.data.pop("supplies", [])
         distributions = request.data.pop("distributions", [])
 
-
         intervention_serializer = self.get_serializer(data=request.data)
         intervention_serializer.is_valid(raise_exception=True)
         intervention = intervention_serializer.save()
 
         # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
-
-
 
         headers = self.get_success_headers(intervention_serializer.data)
         return Response(
