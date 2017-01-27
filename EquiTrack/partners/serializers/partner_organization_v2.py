@@ -208,7 +208,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     hact_values = serializers.SerializerMethodField(read_only=True)
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values)
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
@@ -221,7 +221,7 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
     hact_values = serializers.SerializerMethodField(read_only=True)
 
     def get_hact_values(self, obj):
-        return json.loads(obj.hact_values)
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
