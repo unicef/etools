@@ -1162,7 +1162,7 @@ class AgreementAmendment(TimeStampedModel):
     )
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
-    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
+    type = ArrayField(models.CharField(max_length=64, choices=AMENDMENT_TYPES))
     signed_amendment = models.FileField(
         max_length=255,
         null=True, blank=True,
@@ -2680,8 +2680,6 @@ class AgreementAmendmentLog(TimeStampedModel):
             'Additional Clauses',
         ))
     amended_at = models.DateField(null=True, verbose_name='Signed At')
-
-    amendment_number = models.IntegerField(default=0)
 
     signed_document = models.FileField(
         max_length=255,
