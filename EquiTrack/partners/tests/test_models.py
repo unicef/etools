@@ -585,17 +585,24 @@ class TestAgreementModel(TenantTestCase):
             self.partner_organization, self.agreement)
         self.agreement.save()
 
-         # Check if new activity action has been created
+        # Check if new activity action has been created
         self.assertEquals(model_stream(Agreement).count(), 2)
 
-         # Check the snapshot content
-        snapshot = model_stream(Agreement).first().data['snapshot']
-        self.assertNotEquals(snapshot, {})
+        # Check the previous content
+        previous = model_stream(Agreement).first().data['previous']
+        self.assertNotEquals(previous, {})
 
-  # Check if the snapshot had the empty entries for bank information when
-  # initially created
-        self.assertEquals(snapshot['start'], 'None')
-        self.assertEquals(snapshot['signed_by_unicef_date'], 'None')
+        # Check the changes content
+        changes = model_stream(Agreement).first().data['changes']
+        self.assertNotEquals(changes, {})
+
+        # Check if the previous had the empty date fields
+        self.assertEquals(previous['start'], 'None')
+        self.assertEquals(previous['signed_by_unicef_date'], 'None')
+
+        # Check if the changes had the updated date fields
+        self.assertEquals(changes['start'], str(self.agreement.start))
+        self.assertEquals(changes['signed_by_unicef_date'], str(self.agreement.signed_by_unicef_date))
 
 class TestInterventionModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']

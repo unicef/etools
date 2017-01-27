@@ -1132,20 +1132,32 @@ class Agreement(TimeStampedModel):
 
         if hasattr(target, 'tracker'):
             with transaction.atomic():
-                # Get the previous values for changed fields and merge it with
-                # target as dictionary
-                changes = target.tracker.changed()
-                snapshot = dict(model_to_dict(target).items() + changes.items())
+                # Get current mutated state of object as dictionary
+                current_obj_dict = model_to_dict(target)
+
+                # Get all previous values of mutated fields for current object
+                changed_prev_values = target.tracker.changed()
+
+                # Restore the previous state of current object by merging above
+                previous = dict(current_obj_dict.items() + changed_prev_values.items())
+
+                # Extract current field changes from key lookups with current object
+                changes = {k:v for k,v in current_obj_dict.items() if k in changed_prev_values}
 
                 # Stringify any non-JSON Serializeable data types
-                for key, value in snapshot.items():
+                for key, value in previous.items():
                     if type(value) not in [int, float, bool, str]:
-                        snapshot[key] = str(snapshot[key])
+                        previous[key] = str(previous[key])
+
+                # Stringify any non-JSON Serializeable data types
+                for key, value in changes.items():
+                    if type(value) not in [int, float, bool, str]:
+                        changes[key] = str(changes[key])
 
                 # TODO: Use a different action verb for each status choice in Agreement
                 # Draft, Active, Expired, Suspended, Terminated
                 action.send(actor, verb="changed",
-                            target=target, snapshot=snapshot)
+                            target=target, previous=previous, changes=changes)
 
 
 class AgreementAmendment(TimeStampedModel):
