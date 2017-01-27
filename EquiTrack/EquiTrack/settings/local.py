@@ -21,3 +21,11 @@ DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TEMPLATE_CONTEXT': True,
 }
 ########## END TOOLBAR CONFIGURATION
+
+POST_OFFICE = {
+    'DEFAULT_PRIORITY': 'now',
+    'BACKENDS': {
+        # Will ensure email is sent async
+        'default': 'django.core.mail.backends.console.EmailBackend'
+    }
+}
