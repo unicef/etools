@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 (b't2f', '0016_auto_20170124_2358'), (b't2f', '0017_auto_20170125_1305')]
 
     dependencies = [
-        ('publics', '0001_squashed_0007'),
+        ('publics', '0003_auto_20170126_1615'),
         ('locations', '0004_auto_20170112_2051'),
         ('users', '0003_userprofile_vendor_number'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -222,7 +222,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='expense',
             name='type',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='publics.ExpenseType'),
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='+', to='publics.TravelExpenseType'),
         ),
         migrations.AddField(
             model_name='deduction',
