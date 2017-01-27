@@ -1,5 +1,6 @@
 import operator
 import functools
+import logging
 
 from django.db import transaction
 from django.db.models import Q
@@ -36,9 +37,10 @@ from partners.serializers.interventions_v2 import (
     InterventionSectorLocationCUSerializer,
     InterventionResultCUSerializer
 )
-
+from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
-
+from EquiTrack.validation_mixins import ValidatorViewMixin
+from partners.validation.interventions import InterventionValid
 
 class InterventionListAPIView(ListCreateAPIView):
     """
@@ -48,7 +50,7 @@ class InterventionListAPIView(ListCreateAPIView):
     serializer_class = InterventionListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
 
     def get_serializer_class(self):
         """
@@ -102,29 +104,29 @@ class InterventionListAPIView(ListCreateAPIView):
         if query_params:
             queries = []
 
-            # TODO: update these filters
-            if "partnership_type" in query_params.keys():
-                queries.append(Q(partnership_type=query_params.get("partnership_type")))
+            if "document_type" in query_params.keys():
+                queries.append(Q(partnership_type=query_params.get("document_type")))
             if "country_programme" in query_params.keys():
-                queries.append(Q(country_programme=query_params.get("country_programme")))
+                queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
-                queries.append(Q(pcasectors__sector=query_params.get("sector")))
+                queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
             if "status" in query_params.keys():
                 queries.append(Q(status=query_params.get("status")))
-            if "unicef_managers" in query_params.keys():
-                queries.append(Q(unicef_managers__in=[query_params.get("unicef_managers")]))
-            if "start_date" in query_params.keys():
-                queries.append(Q(start_date__gte=query_params.get("start_date")))
-            if "end_date" in query_params.keys():
-                queries.append(Q(end_date__lte=query_params.get("end_date")))
+            if "unicef_focal_points" in query_params.keys():
+                queries.append(Q(unicef_focal_points__in=[query_params.get("unicef_focal_points")]))
+            if "start" in query_params.keys():
+                queries.append(Q(start__gte=query_params.get("start")))
+            if "end" in query_params.keys():
+                queries.append(Q(end__lte=query_params.get("end")))
             if "office" in query_params.keys():
-                queries.append(Q(office__in=[query_params.get("office")]))
+                queries.append(Q(offices__in=[query_params.get("office")]))
             if "location" in query_params.keys():
-                queries.append(Q(locations__location=query_params.get("location")))
+                queries.append(Q(sector_locations__locations__name__icontains=query_params.get("location")))
             if "search" in query_params.keys():
                 queries.append(
                     Q(title__icontains=query_params.get("search")) |
-                    Q(partner__name__icontains=query_params.get("search"))
+                    Q(agreement__partner__name__icontains=query_params.get("search")) |
+                    Q(number__icontains=query_params.get("search"))
                 )
             if queries:
                 expression = functools.reduce(operator.and_, queries)
@@ -145,13 +147,21 @@ class InterventionListAPIView(ListCreateAPIView):
         return response
 
 
-class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
+class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
     queryset = Intervention.objects.all()
     serializer_class = InterventionDetailSerializer
     permission_classes = (IsAdminUser,)
+
+    SERIALIZER_MAP = {
+        'planned_budget' : InterventionBudgetCUSerializer,
+        'planned_visits': PlannedVisitsCUSerializer,
+        'attachments': InterventionAttachmentSerializer,
+        'amendments': InterventionAmendmentCUSerializer,
+        'sector_locations': InterventionSectorLocationCUSerializer
+    }
 
     def get_serializer_class(self):
         """
@@ -176,77 +186,22 @@ class InterventionDetailAPIView(RetrieveUpdateDestroyAPIView):
             status=status.HTTP_200_OK
         )
 
-    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name, partial=False):
-        if not field:
-            return
-        for item in field:
-            item.update({reverse_name: mother_obj.pk})
-            if item.get('id', None):
-                try:
-                    instance = fieldClass.objects.get(id=item['id'])
-                except fieldClass.DoesNotExist:
-                    instance = None
-
-                instance_serializer = fieldSerializer(instance=instance,
-                                                      data=item,
-                                                      partial=partial)
-            else:
-                instance_serializer = fieldSerializer(data=item)
-
-            try:
-                instance_serializer.is_valid(raise_exception=True)
-            except ValidationError as e:
-                e.detail = {rel_prop_name: e.detail}
-                raise e
-            instance_serializer.save()
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
+        related_fields = ['planned_budget', 'planned_visits', 'attachments', 'amendments', 'sector_locations']
 
-        partial = kwargs.pop('partial', False)
-        planned_budget = request.data.pop("planned_budget", [])
-        attachements = request.data.pop("attachments", [])
-        planned_visits = request.data.pop("planned_visits", [])
-        amendments = request.data.pop("amendments", [])
-        sector_locations = request.data.pop("sector_locations", [])
-        instance = self.get_object()
+        instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
 
-        # TODO: rename these
-        supplies = request.data.pop("supplies", [])
-        distributions = request.data.pop("distributions", [])
-
-
-        result_links = request.data.pop("result_links", [])
-
-        intervention_serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        intervention_serializer.is_valid(raise_exception=True)
-        intervention = intervention_serializer.save()
-
-        # TODO: test attachements, amendments, supplies, distributions
-        self.up_related_field(intervention, planned_budget,
-                              InterventionBudget, InterventionBudgetCUSerializer,
-                              'planned_budget', 'intervention', partial)
-        self.up_related_field(intervention, planned_visits,
-                              InterventionPlannedVisits, PlannedVisitsCUSerializer,
-                              'planned_visits', 'intervention', partial)
-        self.up_related_field(intervention, attachements,
-                              InterventionAttachment, InterventionAttachmentSerializer,
-                              'attachments', 'intervention', partial)
-        self.up_related_field(intervention, amendments,
-                              InterventionAmendment, InterventionAmendmentCUSerializer,
-                              'amendments', 'intervention', partial)
-        self.up_related_field(intervention, sector_locations,
-                              InterventionSectorLocationLink, InterventionSectorLocationCUSerializer,
-                              'sector_locations', 'intervention', partial)
-        self.up_related_field(intervention, result_links,
-                              InterventionResultLink, InterventionResultCUSerializer,
-                              'sector_locations', 'intervention', partial)
-
+        validator = InterventionValid(instance, old=old_instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
             instance = self.get_object()
-            intervention_serializer = self.get_serializer(instance)
+            serializer = self.get_serializer(instance)
 
-        return Response(intervention_serializer.data)
+        return Response(serializer.data)

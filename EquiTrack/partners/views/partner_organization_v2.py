@@ -32,6 +32,7 @@ from partners.permissions import PartnerPermission, PartneshipManagerPermission
 
 
 from partners.filters import PartnerScopeFilter
+from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
@@ -43,7 +44,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     serializer_class = PartnerOrganizationListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationCsvRenderer)
 
     def get_serializer_class(self, format=None):
         """
