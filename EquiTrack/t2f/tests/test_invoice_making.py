@@ -30,9 +30,9 @@ class TravelDetails(APITenantTestCase):
 
         # Currencies
         usd = CurrencyFactory(name='USD',
-                              iso_4217='usd')
+                              code='usd')
         huf = CurrencyFactory(name='HUF',
-                              iso_4217='huf')
+                              code='huf')
 
         # Add wbs/grant/fund
         wbs_1 = WBSFactory(name='WBS #1')

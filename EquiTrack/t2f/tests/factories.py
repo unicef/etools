@@ -67,7 +67,7 @@ class FundFactory(factory.DjangoModelFactory):
 
 class CurrencyFactory(factory.DjangoModelFactory):
     name = 'United States Dollar'
-    iso_4217 = 'USD'
+    code = 'USD'
 
     class Meta:
         model = Currency

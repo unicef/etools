@@ -3,22 +3,36 @@ from __future__ import unicode_literals
 from django.db import models
 
 
+class TravelAgent(models.Model):
+    name = models.CharField(max_length=128)
+    code = models.CharField(max_length=12)
+    city = models.CharField(max_length=128)
+    country = models.ForeignKey('publics.Country')
+
+
 class TravelExpenseType(models.Model):
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
     title = models.CharField(max_length=32)
     vendor_number = models.CharField(max_length=32)
     is_travel_agent = models.BooleanField(default=False)
+    rank = models.PositiveIntegerField(default=100)
+
+    class Meta:
+        ordering = ('rank', 'title')
 
 
 class Currency(models.Model):
-    # This will be populated from vision
     name = models.CharField(max_length=128)
-    iso_4217 = models.CharField(max_length=3)
+    code = models.CharField(max_length=3)
+    decimal_places = models.PositiveIntegerField(default=0)
 
-    @property
-    def decimal_places(self):
-        return 4
+
+class ExchangeRate(models.Model):
+    currency = models.ForeignKey('publics.Currency')
+    valid_from = models.DateField()
+    valid_to = models.DateField()
+    x_rate = models.DecimalField(max_digits=10, decimal_places=5)
 
 
 class AirlineCompany(models.Model):
@@ -66,6 +80,8 @@ class Country(models.Model):
     currency = models.ForeignKey('Currency', null=True)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
+    threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4)
+    threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4)
 
 
 class DSARegion(models.Model):

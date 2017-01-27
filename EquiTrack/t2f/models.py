@@ -159,10 +159,8 @@ class Travel(models.Model):
 
     # When the travel is sent for payment, the expenses should be saved for later use
     preserved_expenses = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
-
-    @property
-    def approval_date(self):
-        return self.approved_at
+    approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+    approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
 
     @property
     def cost_summary(self):
