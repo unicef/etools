@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from publics.models import TravelExpenseType
 from t2f.helpers import InvoiceMaker
 
 from t2f.models import Travel, Expense, CostAssignment, InvoiceItem
@@ -11,11 +12,16 @@ from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory,
 class TravelDetails(APITenantTestCase):
     def setUp(self):
         super(TravelDetails, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
         self.traveler = UserFactory()
-        country = self.traveler.profile.country
+
+        profile = self.traveler.profile
+        profile.vendor_number = 'user0001'
+        profile.save()
+
+        country = profile.country
         country.business_area_code = '0060'
         country.save()
-        self.unicef_staff = UserFactory(is_staff=True)
 
     def test_invoice_making(self):
         def make_invoices(travel):
@@ -42,9 +48,9 @@ class TravelDetails(APITenantTestCase):
         fund_4 = FundFactory(name='Fund #4', grant=grant_3)
 
         # Expense types
-        et_t_food = ExpenseTypeFactory(title='Food', vendor_number='t_food')
-        et_t_travel = ExpenseTypeFactory(title='Travel', vendor_number='t_travel')
-        et_t_other = ExpenseTypeFactory(title='Other', vendor_number='t_other')
+        et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+        et_t_travel = ExpenseTypeFactory(title='Travel', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
+        et_t_other = ExpenseTypeFactory(title='Other', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
 
         et_a_andras = ExpenseTypeFactory(title='Andras Travel', vendor_number='a_andras')
         et_a_nico = ExpenseTypeFactory(title='Nico Travel', vendor_number='a_nico')

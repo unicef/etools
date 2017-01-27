@@ -312,6 +312,7 @@ class CloneTravelHelper(object):
 class InvoiceMaker(object):
     def __init__(self, travel):
         self.travel = travel
+        self.user_vendor_number = self.travel.traveler.profile.vendor_number
 
     def do_invoicing(self):
         """Main entry point of the class"""
@@ -360,7 +361,7 @@ class InvoiceMaker(object):
                 continue
 
             if vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
-                vendor_number = self.travel.traveler.profile.vendor_number
+                vendor_number = self.user_vendor_number
 
             amount = expense.amount
 
@@ -404,7 +405,7 @@ class InvoiceMaker(object):
         from t2f.models import Invoice, InvoiceItem
 
         for vendor_number in vendor_grouping:
-            if vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
+            if vendor_number == self.user_vendor_number:
                 currency = self.travel.currency
             else:
                 expense = self.travel.expenses.get(type__vendor_number=vendor_number)
