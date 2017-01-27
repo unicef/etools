@@ -2,10 +2,10 @@ from __future__ import unicode_literals
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from t2f.helpers import InvoiceMaker
 
 from t2f.models import Travel, Expense, CostAssignment, InvoiceItem
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory
-from t2f.views import make_invoices
 
 
 class TravelDetails(APITenantTestCase):
@@ -18,6 +18,10 @@ class TravelDetails(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_invoice_making(self):
+        def make_invoices(travel):
+            maker = InvoiceMaker(travel)
+            maker.do_invoicing()
+
         # Currencies
         usd = CurrencyFactory(name='USD',
                               iso_4217='usd')
