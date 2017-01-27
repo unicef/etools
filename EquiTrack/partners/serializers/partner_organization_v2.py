@@ -205,6 +205,10 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
+    hact_values = serializers.SerializerMethodField(read_only=True)
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values)
 
     class Meta:
         model = PartnerOrganization
@@ -214,6 +218,10 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    hact_values = serializers.SerializerMethodField(read_only=True)
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values)
 
     class Meta:
         model = PartnerOrganization
