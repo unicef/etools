@@ -1455,6 +1455,7 @@ class InterventionPlannedVisits(models.Model):
     spot_checks = models.IntegerField(default=0)
     audit = models.IntegerField(default=0)
 
+    @transaction.atomic
     def save(self, **kwargs):
         PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
         super(InterventionPlannedVisits, self).save(**kwargs)
@@ -1498,7 +1499,7 @@ class InterventionBudget(TimeStampedModel):
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
 
-
+    @transaction.atomic
     def save(self, **kwargs):
         """
         Calculate total budget on save
