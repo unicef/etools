@@ -236,10 +236,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='interventionbudget',
-            name='total',
-        ),
         migrations.RunPython(
             after_partner_migrations, reverse_code=reverse
         ),

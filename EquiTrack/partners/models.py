@@ -1564,6 +1564,7 @@ class InterventionBudget(TimeStampedModel):
         blank=True, null=True
     )
     # TODO add Currency field
+    total = models.DecimalField(max_digits=20, decimal_places=2)
 
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
