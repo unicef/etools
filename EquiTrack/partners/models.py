@@ -1135,7 +1135,7 @@ class Agreement(TimeStampedModel):
                 # Get current mutated state of object as dictionary
                 current_obj_dict = model_to_dict(target)
 
-                # Get all mutated fields for current object
+                # Get all previous values of mutated fields for current object
                 changed_prev_values = target.tracker.changed()
 
                 # Restore the previous state of current object by merging above
