@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 
 from django.contrib.auth import get_user_model
+from django.db.transaction import atomic
 from django_fsm import TransitionNotAllowed
 
 from rest_framework import generics, viewsets, mixins, status
@@ -77,6 +78,7 @@ class TravelListViewSet(mixins.ListModelMixin,
 
     _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
 
+    @atomic
     def create(self, request, *args, **kwargs):
         if 'transition_name' in kwargs:
             transition_name = kwargs['transition_name']
@@ -150,15 +152,18 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
 
         return context
 
+    @atomic
     def partial_update(self, request, *args, **kwargs):
         if 'transition_name' in kwargs:
             request.data['transition_name'] = kwargs['transition_name']
         return super(TravelDetailsViewSet, self).partial_update(request, *args, **kwargs)
 
+    @atomic
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
         run_transition(serializer)
 
+    @atomic
     def clone_for_secondary_traveler(self, request, *args, **kwargs):
         traveler = self._get_traveler_for_cloning()
         helper = CloneTravelHelper(self.get_object())
@@ -166,6 +171,7 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
         serializer = CloneOutputSerializer(clone, context=self.get_serializer_context())
         return Response(serializer.data, status.HTTP_201_CREATED)
 
+    @atomic
     def clone_for_driver(self, request, *args, **kwargs):
         traveler = self._get_traveler_for_cloning()
         helper = CloneTravelHelper(self.get_object())
