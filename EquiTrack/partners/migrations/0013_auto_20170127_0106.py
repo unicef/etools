@@ -6,25 +6,239 @@ import django.contrib.postgres.fields
 from django.db import migrations, models
 
 
+def reverse(apps, schema_editor):
+    pass
+
+def log_to_file(file_name='fail_logs.txt', *args):
+    print([arg for arg in args])
+    f = open(file_name, 'a')
+    f.close()
+
+def helper_amendment_number(obj, AgreementAmendmentLog):
+    """
+    Increment amendment number automatically
+    """
+    objects = list(AgreementAmendmentLog.objects.filter(
+        agreement=obj.agreement
+    ).order_by('created').values_list('id', flat=True))
+
+    return objects.index(obj.id) + 1 if obj.id in objects else len(objects) + 1
+
+def after_partner_migrations(apps, schema_editor):
+    AgreementAmendment = apps.get_model('partners', 'AgreementAmendment')
+    AgreementAmendmentLog = apps.get_model('partners', 'AgreementAmendmentLog')
+    PCA = apps.get_model('partners', 'PCA')
+    Intervention = apps.get_model('partners', 'Intervention')
+    Result = apps.get_model('reports', 'Result')
+    InterventionResultLink = apps.get_model('partners', 'InterventionResultLink')
+    PCAFile = apps.get_model('partners', 'PCAFile')
+    InterventionAttachment = apps.get_model('partners', 'InterventionAttachment')
+    InterventionBudget = apps.get_model('partners', 'InterventionBudget')
+    Sector = apps.get_model('reports', 'Sector')
+    InterventionSectorLocationLink = apps.get_model('partners', 'InterventionSectorLocationLink')
+    SupplyPlan = apps.get_model('partners', 'SupplyPlan')
+    DistributionPlan = apps.get_model('partners', 'DistributionPlan')
+
+    def copy_pca_fields_to_intervention():
+        MAPPING = {
+            'created_at': 'created',
+            'updated_at': 'modified',
+            'partnership_type': 'document_type',
+            'number': 'number',
+            'title': 'title',
+            'status': 'status',
+            'start_date': 'start',
+            'end_date': 'end',
+            'initiation_date': 'submission_date',
+            'submission_date': 'submission_date_prc',
+            'review_date': 'review_date_prc',
+            'signed_by_unicef_date': 'signed_by_unicef_date',
+            'signed_by_partner_date': 'signed_by_partner_date',
+            'agreement': 'agreement',
+            'result_structure': 'hrp',
+            'partner_manager': 'partner_authorized_officer_signatory',
+            'unicef_manager': 'unicef_signatory',
+        }
+        status_map = {
+            'in_proccess': 'Draft'
+        }
+        pca_attrs = ['created_at', 'updated_at', 'partnership_type', 'number', 'title', 'status', 'start_date',
+                     'end_date',
+                     'initiation_date', 'submission_date', 'review_date', 'signed_by_unicef_date',
+                     'signed_by_partner_date',
+                     'agreement', 'result_structure', 'partner_manager', 'unicef_manager']
+        pcas = PCA.objects.all()
+        interventions_to_save = []
+        for pca in pcas:
+            if pca.number == '-':
+                print('-')
+            if pca.partnership_type in ['AWP', 'IC']:
+                continue
+            intervention = Intervention()
+            for attr in pca_attrs:
+                if attr == 'status' and pca.status == u'in_process':
+                    setattr(intervention, 'status', u'draft')
+                elif attr == 'agreement' and not getattr(pca, attr):
+                    break
+                else:
+                    setattr(intervention, MAPPING[attr], getattr(pca, attr))
+            if not intervention.document_type:
+                continue
+            try:
+                if intervention.status in \
+                        ['active', 'suspended', 'terminated', 'implemented'] and \
+                        not intervention.signed_by_unicef_date:
+                    if intervention.start:
+                        intervention.signed_by_unicef_date = intervention.start
+                    elif intervention.signed_by_partner_date:
+                        intervention.signed_by_unicef_date = intervention.signed_by_partner_date
+                    else:
+                        intervention.signed_by_unicef_date = intervention.created
+                print('before', intervention, intervention.status, intervention.document_type)
+                if not intervention.agreement:
+                    continue
+                interventions_to_save.append(intervention)
+            except Exception as e:
+                print(pca.number)
+                print(intervention.number)
+                raise e
+            print('after', intervention, intervention.status, intervention.document_type)
+        Intervention.objects.bulk_create(interventions_to_save)
+
+    def agreement_amd_copy():
+        agr_amds = AgreementAmendmentLog.objects.all()
+        amd_type = ''
+        for amd in agr_amds:
+            if amd.type == 'Authorised Officers':
+                amd_type = 'Change authorized officer'
+            elif amd.type == 'Banking Info':
+                amd_type = 'Change banking info'
+            elif amd.type == 'Agreement Changes':
+                amd_type = 'Amend existing clause'
+            elif amd.type == 'Additional Clauses':
+                amd_type = 'Additional clause'
+
+            amendment_number = helper_amendment_number(amd, AgreementAmendmentLog)
+            agr_amd, created = AgreementAmendment.objects.get_or_create(number=amendment_number,
+                                                                        agreement=amd.agreement,
+                                                                        type=amd_type,
+                                                                        signed_amendment=amd.signed_document,
+                                                                        signed_date=amd.amended_at)
+            if created:
+                print('{}-{}'.format(agr_amd.number, agr_amd.agreement))
+
+    def copy_pca_results_to_intervention():
+        for pca in PCA.objects.all():
+            result_ids = pca.indicators.order_by().values_list('result__id', flat=True).distinct()
+            for result_id in result_ids:
+                result = Result.objects.get(id=result_id)
+                ram_inds = pca.indicators.filter(result=result)
+                indicators = []
+                for ram_ind in ram_inds:
+                    if ram_ind.indicator:
+                        indicators.append(ram_ind.indicator)
+                try:
+                    intervention = Intervention.objects.get(number=pca.number)
+                except Intervention.DoesNotExist:
+                    log_to_file('copy_pca_results_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
+                    continue
+                irl, created = InterventionResultLink.objects.get_or_create(intervention=intervention, cp_output=result)
+                irl.ram_indicators.add(*indicators)
+
+    def copy_pca_attachments_to_intervention():
+        for pca_file in PCAFile.objects.all():
+            try:
+                intervention = Intervention.objects.get(number=pca_file.pca.number)
+            except Intervention.DoesNotExist:
+                print(pca_file.pca.number)
+                continue
+            InterventionAttachment.objects.get_or_create(intervention=intervention,
+                                                         type=pca_file.type,
+                                                         attachment=pca_file.attachment)
+
+    def copy_pca_budgets_to_intervention():
+        for pca in PCA.objects.all():
+            pb_years = pca.budget_log.values_list('year', flat=True).distinct()
+            if not pb_years:
+                continue
+            try:
+                intervention = Intervention.objects.get(number=pca.number)
+            except Intervention.DoesNotExist:
+                log_to_file('copy_pca_budgets_to_intervention: Intervention.DoesNotExist', pca.id, pca.number)
+                continue
+            print(pb_years)
+            for pb_year in pb_years:
+                if pb_year:
+                    pb = pca.budget_log.filter(year=pb_year).order_by('-created').first()
+                    InterventionBudget.objects.get_or_create(intervention=intervention,
+                                                            partner_contribution=pb.partner_contribution,
+                                                            unicef_cash=pb.unicef_cash,
+                                                            in_kind_amount=pb.in_kind_amount,
+                                                            year=pb.year)
+
+    def copy_pca_sector_locations_to_intervention():
+        for pca in PCA.objects.all():
+            sector_ids = pca.locations.order_by().values_list('sector__id', flat=True).distinct()
+            for sector_id in sector_ids:
+                if not sector_id:
+                    continue
+                sector = Sector.objects.get(id=sector_id)
+                gwpc_locations = pca.locations.filter(sector=sector).all()
+                locations = []
+                for gwpc_loc in gwpc_locations:
+                    if gwpc_loc.location:
+                        locations.append(gwpc_loc.location)
+                try:
+                    intervention = Intervention.objects.get(number=pca.number)
+                except Intervention.DoesNotExist:
+                    log_to_file('copy_pca_sector_locations_to_intervention: Intervention.DoesNotExist', pca.id, pca.number)
+                    continue
+                isl, created = InterventionSectorLocationLink.objects.get_or_create(intervention=intervention,
+                                                                                    sector=sector)
+                isl.locations.add(*locations)
+
+    def copy_pca_supply_plan_to_intervention():
+        for sp in SupplyPlan.objects.all():
+            try:
+                intervention = Intervention.objects.get(number=sp.partnership.number)
+            except Intervention.DoesNotExist:
+                log_to_file('copy_pca_supply_plan_to_intervention: Intervention.DoesNotExist', sp.partnership.id, sp.partnership.number)
+                continue
+            sp.intervention = intervention
+            sp.save()
+
+    def copy_pca_distribution_plan_to_intervention():
+        for dp in DistributionPlan.objects.all():
+            if SupplyPlan.objects.filter(intervention=dp.intervention, item=dp.item).count():
+                try:
+                    intervention = Intervention.objects.get(number=dp.partnership.number)
+                except Intervention.DoesNotExist:
+                    log_to_file('copy_pca_distribution_plan_to_intervention: Indervention.DoesNotExist', dp.partnership.id,
+                                dp.partnership.number)
+
+                    continue
+                dp.intervention = intervention
+                dp.save()
+
+    copy_pca_fields_to_intervention()
+    agreement_amd_copy()
+    copy_pca_results_to_intervention()
+    copy_pca_attachments_to_intervention()
+    copy_pca_budgets_to_intervention()
+    copy_pca_sector_locations_to_intervention()
+    copy_pca_supply_plan_to_intervention()
+    copy_pca_distribution_plan_to_intervention()
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('partners', '0012_auto_20170126_2237'),
+        ('partners', '0012_partnerorganization_hact_values'),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='agreementamendment',
-            name='tmp_type',
+        migrations.RunPython(
+            after_partner_migrations, reverse_code=reverse
         ),
-        migrations.AlterField(
-            model_name='agreementamendment',
-            name='type',
-            field=django.contrib.postgres.fields.ArrayField(base_field=models.CharField(
-                choices=[(b'Change IP name', b'Change in Legal Name of Implementing Partner'),
-                         (b'CP extension', b'Extension of Country Programme Cycle'),
-                         (b'Change authorized officer', b'Change Authorized Officer'),
-                         (b'Change banking info', b'Banking Information'), (b'Additional clause', b'Additional Clause'),
-                         (b'Amend existing clause', b'Amend Existing Clause')], max_length=64), size=None),
-        ),
+
     ]
