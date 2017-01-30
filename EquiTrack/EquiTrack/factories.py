@@ -1,10 +1,13 @@
 """
 Model factories used for generating models dynamically for tests
 """
-from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
+import json
 
+from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
+import decimal
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
 
@@ -18,6 +21,7 @@ from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
 from funds.models import Grant, Donor
+from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
 
@@ -165,6 +169,19 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     title = factory.Sequence(lambda n: 'Intervention Title {}'.format(n))
     submission_date = datetime.today()
 
+
+class InterventionBudgetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionBudget
+
+    intervention = factory.SubFactory(InterventionFactory)
+    unicef_cash = 100001.00
+    unicef_cash_local = 10.00
+    partner_contribution = 200.00
+    partner_contribution_local = 20.00
+    in_kind_amount = 10.00
+    in_kind_amount_local = 10.00
+    year = '2017'
 
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -368,3 +385,24 @@ class GrantFactory(factory.DjangoModelFactory):
 #     fr_number = models.CharField(max_length=50)
 #     wbs = models.CharField(max_length=50)
 #     fc_type = models.CharField(max_length=50)
+
+# Credit goes to http://stackoverflow.com/a/41154232/2363915
+class JSONFieldFactory(factory.DictFactory):
+
+    @classmethod
+    def _build(cls, model_class, *args, **kwargs):
+        if args:
+            raise ValueError(
+                "DictFactory %r does not support Meta.inline_args.", cls)
+        return json.dumps(model_class(**kwargs))
+
+
+class NotificationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = notification_models.Notification
+
+    type = "Email"
+    sender = factory.SubFactory(AgreementFactory)
+    template_name = 'trips/trip/TA_request'
+    recipients = ['test@test.com', 'test1@test.com', 'test2@test.com']
+    template_data = factory.Dict({'url': 'www.unicef.org', 'pa_assistant': 'Test revised', 'owner_name': 'Tester revised'}, dict_factory=JSONFieldFactory)

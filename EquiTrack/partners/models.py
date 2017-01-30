@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import logging
 import datetime
+import json
 from dateutil.relativedelta import relativedelta
 
 from django_fsm import FSMField, transition
@@ -25,7 +26,7 @@ from model_utils.models import (
 from model_utils import Choices, FieldTracker
 from actstream import action
 
-from EquiTrack.utils import get_changeform_link
+from EquiTrack.utils import get_changeform_link, get_current_site
 from EquiTrack.mixins import AdminURLMixin
 
 from partners.validation.agreements import (
@@ -34,6 +35,7 @@ from partners.validation.agreements import (
     agreements_illegal_transition_permissions,
     agreements_illegal_transition
 )
+from partners.validation import interventions as intervention_validation
 from funds.models import Grant
 from reports.models import (
     ResultStructure,
@@ -53,7 +55,7 @@ from supplies.tasks import (
     set_unisupply_user
 )
 from users.models import Section, Office
-from . import emails
+from notification.models import Notification
 
 
 # TODO: streamline this ...
@@ -182,7 +184,17 @@ class PartnerType(object):
                       GOVERNMENT,
                       UN_AGENCY)
 
-
+def hact_default():
+    return {
+        "audits_mr": 0,
+        "audits_done": 0,
+        "spot_checks": 0,
+        "planned_visits": 0,
+        "follow_up_flags": 0,
+        "programmatic_visits": 0,
+        "planned_cash_transfer": 0,
+        "micro_assessment_needed": "Missing"
+    }
 class PartnerOrganization(AdminURLMixin, models.Model):
     """
     Represents a partner organization
@@ -352,7 +364,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     #     "planned_cash_transfer": 0,
     #     "micro_assessment_needed": "Missing",
     #     "audits_mr": 0}
-    hact_values = JSONField(blank=True, null=True, default={})
+    hact_values = JSONField(blank=True, null=True, default=hact_default)
+
 
 
     class Meta:
@@ -364,6 +377,20 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     def latest_assessment(self, type):
         return self.assessments.filter(type=type).order_by('completed_date').last()
+
+    def save(self, *args, **kwargs):
+        # JSONFIELD has an issue where it keeps escaping characters
+        hact_is_string = isinstance(self.hact_values, str)
+        try:
+
+            self.hact_values = json.loads(self.hact_values) if hact_is_string else self.hact_values
+        except ValueError as e:
+            e.message = 'hact_values needs to be a valid format (dict)'
+            raise e
+
+        super(PartnerOrganization, self).save(*args, **kwargs)
+        if hact_is_string:
+            self.hact_values = json.dumps(self.hact_values)
 
     @cached_property
     def get_last_pca(self):
@@ -388,6 +415,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         :return:
         """
         micro_assessment = partner.assessments.filter(type=u'Micro Assessment').order_by('completed_date').last()
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+
         if assessment:
             if micro_assessment:
                 if assessment.completed_date and micro_assessment.completed_date and \
@@ -396,24 +425,26 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             else:
                 micro_assessment = assessment
         if partner.type_of_assessment == 'High Risk Assumed':
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
-        elif partner.hact_values['planned_cash_transfer'] > 100000.00 \
+            hact['micro_assessment_needed'] = 'Yes'
+        elif 'planned_cash_transfer' in hact and hact['planned_cash_transfer'] > 100000.00 \
             and partner.type_of_assessment == 'Simplified Checklist' or partner.rating == 'Not Required':
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
+            hact['micro_assessment_needed'] = 'Yes'
         elif partner.rating in [LOW, MEDIUM, SIGNIFICANT, HIGH] \
             and partner.type_of_assessment in ['Micro Assessment', 'Negative Audit Results'] \
             and micro_assessment.completed_date < datetime.date.today() - datetime.timedelta(days=1642):
-            partner.hact_values['micro_assessment_needed'] = 'Yes'
+            hact['micro_assessment_needed'] = 'Yes'
         elif micro_assessment is None:
-            partner.hact_values['micro_assessment_needed'] = 'Missing'
+            hact['micro_assessment_needed'] = 'Missing'
         else:
-            partner.hact_values['micro_assessment_needed'] = 'No'
+            hact['micro_assessment_needed'] = 'No'
+        partner.hact_values = hact
         partner.save()
 
 
     @classmethod
     def audit_needed(cls, partner, assesment=None):
         audits = 0
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         if partner.total_ct_cp > 500000.00:
             audits = 1
             current_cycle = CountryProgramme.current()
@@ -427,17 +458,20 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
             if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
                 audits = 0
-        partner.hact_values['audits_mr'] = audits
+        hact['audits_mr'] = audits
+        partner.hact_values = hact
         partner.save()
 
 
     @classmethod
     def audit_done(cls, partner, assesment=None):
         audits = 0
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
         audits = partner.assessments.filter(type=u'Scheduled Audit report').count()
         if assesment:
             audits += 1
-        partner.hact_values['audits_done'] = audits
+        hact['audits_done'] = audits
+        partner.hact_values = hact
         partner.save()
 
 
@@ -496,24 +530,26 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                 )['planned_amount__sum'] or 0
         else:
             if budget_record:
-                q = PartnershipBudget.objects.filter(partnership__partner=partner,
-                                                     partnership__status__in=[PCA.ACTIVE,
-                                                                              PCA.IMPLEMENTED],
-                                                     year=year).exclude(partnership__id=budget_record.partnership.id)
-                q = q.order_by("partnership__id", "-created").\
-                    distinct('partnership__id').values_list('unicef_cash', flat=True)
+                q = InterventionBudget.objects.filter(intervention__agreement__partner=partner,
+                                                      intervention__status__in=[Intervention.ACTIVE,
+                                                                              Intervention.IMPLEMENTED],
+                                                     year=year).exclude(id=budget_record.id)
+                q = q.order_by("intervention__id", "-created").\
+                    distinct('intervention__id').values_list('unicef_cash', flat=True)
                 total = sum(q)
-                total += budget_record.unicef_cash
+                total += budget_record.unicef_cash if budget_record.year == str(year) else 0
             else:
-                q = PartnershipBudget.objects.filter(partnership__partner=partner,
-                                                     partnership__status__in=[PCA.ACTIVE,
-                                                                              PCA.IMPLEMENTED],
-                                                     year=year)
-                q = q.order_by("partnership__id", "-created").\
-                    distinct('partnership__id').values_list('unicef_cash', flat=True)
+                q = InterventionBudget.objects.filter(intervention__agreement__partner=partner,
+                                                      intervention__status__in=[
+                                                          Intervention.ACTIVE, Intervention.IMPLEMENTED],
+                                                      year=year)
+                q = q.order_by("intervention__id", "-created").\
+                    distinct('intervention__id').values_list('unicef_cash', flat=True)
                 total = sum(q)
 
-        partner.hact_values['planned_cash_transfer'] = total
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact["planned_cash_transfer"] = float(total)
+        partner.hact_values = hact
         partner.save()
 
     @cached_property
@@ -544,20 +580,19 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         )
 
     @classmethod
-    def planned_visits(cls, partner, intervention=None):
+    def planned_visits(cls, partner, pv_intervention=None):
         year = datetime.date.today().year
-        from trips.models import Trip
         # planned visits
         pv = 0
         if partner.partner_type == u'Government':
 
-            if intervention:
+            if pv_intervention:
                 pv = GovernmentInterventionResult.objects.filter(
                     intervention__partner=partner,
-                    year=year).exclude(id=intervention.id).aggregate(
+                    year=year).exclude(id=pv_intervention.id).aggregate(
                     models.Sum('planned_visits')
                 )['planned_visits__sum'] or 0
-                pv += intervention.planned_visits
+                pv += pv_intervention.planned_visits
             else:
                pv = GovernmentInterventionResult.objects.filter(
                     intervention__partner=partner,
@@ -565,23 +600,21 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                     models.Sum('planned_visits')
                 )['planned_visits__sum'] or 0
         else:
-            qs = PCA.objects.filter(
-                partner=partner,
-                end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED])
-            pv = 0
-            if intervention:
-                pv += intervention.planned_visits
-                if intervention.id:
-                    qs = qs.exclude(id=intervention.id)
-
-                pv += qs.aggregate(models.Sum('planned_visits'))['planned_visits__sum'] or 0
+            if pv_intervention:
+                pv = InterventionPlannedVisits.objects.filter(
+                    intervention__agreement__partner=partner, year=year,
+                    intervention__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]).exclude(
+                    id=pv_intervention.id).aggregate(models.Sum('programmatic'))['programmatic__sum'] or 0
+                pv += pv_intervention.programmatic
             else:
-                pv = PCA.objects.filter(
-                     partner=partner,
-                     end_date__gte=datetime.date(year, 1, 1), status__in=[PCA.ACTIVE, PCA.IMPLEMENTED]).aggregate(
-                     models.Sum('planned_visits'))['planned_visits__sum'] or 0
+                pv = InterventionPlannedVisits.objects.filter(
+                    intervention__agreement__partner=partner, year=year,
+                    intervention__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]).aggregate(
+                    models.Sum('programmatic'))['programmatic__sum'] or 0
 
-        partner.hact_values['planned_visits'] = pv
+        hact = json.loads(partner.hact_values) if isinstance(partner.hact_values, str) else partner.hact_values
+        hact["planned_visits"] = pv
+        partner.hact_values = hact
         partner.save()
 
     @classmethod
@@ -1105,20 +1138,32 @@ class Agreement(TimeStampedModel):
 
         if hasattr(target, 'tracker'):
             with transaction.atomic():
-                # Get the previous values for changed fields and merge it with
-                # target as dictionary
-                changes = target.tracker.changed()
-                snapshot = dict(model_to_dict(target).items() + changes.items())
+                # Get current mutated state of object as dictionary
+                current_obj_dict = model_to_dict(target)
+
+                # Get all previous values of mutated fields for current object
+                changed_prev_values = target.tracker.changed()
+
+                # Restore the previous state of current object by merging above
+                previous = dict(current_obj_dict.items() + changed_prev_values.items())
+
+                # Extract current field changes from key lookups with current object
+                changes = {k:v for k,v in current_obj_dict.items() if k in changed_prev_values}
 
                 # Stringify any non-JSON Serializeable data types
-                for key, value in snapshot.items():
+                for key, value in previous.items():
                     if type(value) not in [int, float, bool, str]:
-                        snapshot[key] = str(snapshot[key])
+                        previous[key] = str(previous[key])
+
+                # Stringify any non-JSON Serializeable data types
+                for key, value in changes.items():
+                    if type(value) not in [int, float, bool, str]:
+                        changes[key] = str(changes[key])
 
                 # TODO: Use a different action verb for each status choice in Agreement
                 # Draft, Active, Expired, Suspended, Terminated
                 action.send(actor, verb="changed",
-                            target=target, snapshot=snapshot)
+                            target=target, previous=previous, changes=changes)
 
 
 class AgreementAmendment(TimeStampedModel):
@@ -1135,7 +1180,7 @@ class AgreementAmendment(TimeStampedModel):
     )
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
-    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
+    type = ArrayField(models.CharField(max_length=64, choices=AMENDMENT_TYPES))
     signed_amendment = models.FileField(
         max_length=255,
         null=True, blank=True,
@@ -1171,6 +1216,9 @@ class AgreementAmendment(TimeStampedModel):
             self.agreement.save(amendment_number=self.number)
         return super(AgreementAmendment, self).save(**kwargs)
 
+class InterventionManager(models.Manager):
+    def get_queryset(self):
+        return super(InterventionManager, self).get_queryset().prefetch_related('result_links', 'sector_locations')
 
 
 class Intervention(TimeStampedModel):
@@ -1184,6 +1232,15 @@ class Intervention(TimeStampedModel):
     Relates to :model:`auth.User`
     Relates to :model:`partners.PartnerStaffMember`
     """
+
+    POTENTIAL_AUTO_TRANSITIONS = {
+        'draft': [
+            {'active': []},
+        ],
+        'active': [
+            {'implemented': []},
+        ],
+    }
 
     DRAFT = u'draft'
     ACTIVE = u'active'
@@ -1207,6 +1264,9 @@ class Intervention(TimeStampedModel):
         (SHPD, u'Simplified Humanitarian Programme Document'),
         (SSFA, u'SSFA TOR'),
     )
+
+    objects = InterventionManager()
+
     document_type = models.CharField(
         choices=INTERVENTION_TYPES,
         max_length=255,
@@ -1231,11 +1291,11 @@ class Intervention(TimeStampedModel):
         unique=True,
     )
     title = models.CharField(max_length=256)
-    status = models.CharField(
+    status = FSMField(
         max_length=32,
         blank=True,
         choices=INTERVENTION_STATUS,
-        default=u'in_process',
+        default=u'draft',
         help_text=u'Draft = In discussion with partner, '
                   u'Active = Currently ongoing, '
                   u'Implemented = completed, '
@@ -1337,6 +1397,28 @@ class Intervention(TimeStampedModel):
                    self.total_unicef_cash + self.total_partner_contribution
         return 0
 
+
+    @cached_property
+    def total_partner_contribution_local(self):
+        if self.planned_budget.exists():
+            return self.planned_budget.aggregate(mysum=Sum('partner_contribution_local'))['mysum']
+        return 0
+
+    @cached_property
+    def total_unicef_cash_local(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            return self.planned_budget.aggregate(mysum=Sum('unicef_cash_local'))['mysum']
+        return 0
+
+    @cached_property
+    def total_budget_local(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            return self.planned_budget.aggregate(mysum=Sum('in_kind_amount_local'))['mysum'] + \
+                   self.total_unicef_cash_local + self.total_partner_contribution_local
+        return 0
+
     @property
     def year(self):
         if self.id:
@@ -1355,6 +1437,24 @@ class Intervention(TimeStampedModel):
                 target=[DRAFT, CANCELLED],
                 conditions=[illegal_transitions])
     def basic_transition(self):
+        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
+        # mess up the reference numbers.
+        pass
+
+    @transition(field=status,
+               source=[DRAFT, SUSPENDED],
+               target=[ACTIVE],
+               conditions=[intervention_validation.transition_to_active])
+    def transition_to_active(self):
+        # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
+        # mess up the reference numbers.
+        pass
+
+    @transition(field=status,
+                source=[ACTIVE],
+                target=[IMPLEMENTED],
+                conditions=[intervention_validation.transition_to_implemented])
+    def transition_to_ended(self):
         # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
         # mess up the reference numbers.
         pass
@@ -1412,7 +1512,7 @@ class Intervention(TimeStampedModel):
     def save(self, **kwargs):
         # check status auto updates
         # TODO: move this outside of save in the future to properly check transitions
-        self.check_status_auto_updates()
+        # self.check_status_auto_updates()
 
         oldself = None
         if self.pk:
@@ -1480,6 +1580,11 @@ class InterventionPlannedVisits(models.Model):
     spot_checks = models.IntegerField(default=0)
     audit = models.IntegerField(default=0)
 
+    @transaction.atomic
+    def save(self, **kwargs):
+        PartnerOrganization.planned_visits(self.intervention.agreement.partner, self)
+        super(InterventionPlannedVisits, self).save(**kwargs)
+
     class Meta:
         unique_together = ('intervention', 'year')
 class InterventionResultLink(models.Model):
@@ -1519,7 +1624,7 @@ class InterventionBudget(TimeStampedModel):
     def total_unicef_contribution(self):
         return self.unicef_cash + self.in_kind_amount
 
-
+    @transaction.atomic
     def save(self, **kwargs):
         """
         Calculate total budget on save
@@ -1527,6 +1632,9 @@ class InterventionBudget(TimeStampedModel):
         self.total = \
             self.total_unicef_contribution() \
             + self.partner_contribution
+
+        if self.intervention.status in [Intervention.ACTIVE, Intervention.IMPLEMENTED]:
+            PartnerOrganization.planned_cash_transfers(self.intervention.agreement.partner, self)
 
         super(InterventionBudget, self).save(**kwargs)
 
@@ -2290,17 +2398,29 @@ class PCA(AdminURLMixin, models.Model):
                        instance.unicef_managers.all())
         recipients = [user.email for user in managers]
 
+        email_context = {
+            'number': instance.__unicode__(),
+            'state': 'Created',
+            'url': 'https://{}{}'.format(get_current_site().domain, instance.get_admin_url())
+        }
+
         if created:  # new partnership
-            emails.PartnershipCreatedEmail(instance).send(
-                settings.DEFAULT_FROM_EMAIL,
-                *recipients
+            notification = Notification.objects.create(
+                sender=instance,
+                recipients=recipients, template_name="partners/partnership/created/updated",
+                template_data=email_context
             )
 
         else:  # change to existing
-            emails.PartnershipUpdatedEmail(instance).send(
-                settings.DEFAULT_FROM_EMAIL,
-                *recipients
+            email_context['state'] = 'Updated'
+
+            notification = Notification.objects.create(
+                sender=instance,
+                recipients=recipients, template_name="partners/partnership/created/updated",
+                template_data=email_context
             )
+
+        notification.send_notification()
 
         # attach any FCs immediately
         # if instance:
@@ -2598,8 +2718,6 @@ class AgreementAmendmentLog(TimeStampedModel):
             'Additional Clauses',
         ))
     amended_at = models.DateField(null=True, verbose_name='Signed At')
-
-    amendment_number = models.IntegerField(default=0)
 
     signed_document = models.FileField(
         max_length=255,

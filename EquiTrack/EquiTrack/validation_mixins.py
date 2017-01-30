@@ -40,6 +40,32 @@ class ValidatorViewMixin(object):
                 raise e
             instance_serializer.save()
 
+    def my_create(self, request, related_f, snapshot=None, snapshot_class=None, **kwargs):
+        my_relations = {}
+        for f in related_f:
+            my_relations[f] = request.data.pop(f, [])
+
+        main_serializer = self.get_serializer(data=request.data)
+        main_serializer.context['skip_global_validator'] = True
+        main_serializer.is_valid(raise_exception=True)
+
+        if snapshot:
+            snapshot_class.create_snapshot_activity_stream(request.user, main_serializer.instance)
+
+        main_object = main_serializer.save()
+
+        def _get_model_for_field(field):
+            return main_object.__class__._meta.get_field(field).related_model
+
+        def _get_reverse_for_field(field):
+            return main_object.__class__._meta.get_field(field).remote_field.name
+
+        for k, v in my_relations.iteritems():
+            self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
+                                  k, _get_reverse_for_field(k))
+
+        return main_serializer
+
     def my_update(self, request, related_f, snapshot=None, snapshot_class=None, **kwargs):
 
         partial = kwargs.pop('partial', False)
@@ -153,6 +179,8 @@ class CompleteValidation(object):
             else:
                 logging.debug('no id')
                 old_instance = old
+                # TODO: instance_class(**new) can't be called like that if models have m2m fields
+                # Workaround for now is not to call the validator from the serializer on new instances
                 new_instance = copy.deepcopy(old) if old else instance_class(**new)
                 if old:
                     update_object(new_instance, new)
