@@ -1,9 +1,14 @@
 import copy
 import logging
-from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitions
-from rest_framework.exceptions import ValidationError
+
 from django.apps import apps
 from django.utils.functional import cached_property
+
+from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitions
+
+from rest_framework.exceptions import ValidationError
+
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 
 def check_rigid_fields(obj, fields):
@@ -50,7 +55,7 @@ class ValidatorViewMixin(object):
         main_serializer.is_valid(raise_exception=True)
 
         if snapshot:
-            snapshot_class.create_snapshot_activity_stream(request.user, main_serializer.instance)
+            create_snapshot_activity_stream(request.user, main_serializer.instance, created=True)
 
         main_object = main_serializer.save()
 
@@ -80,7 +85,7 @@ class ValidatorViewMixin(object):
         main_serializer.is_valid(raise_exception=True)
 
         if snapshot:
-            snapshot_class.create_snapshot_activity_stream(request.user, main_serializer.instance)
+            create_snapshot_activity_stream(request.user, main_serializer.instance)
 
         main_object = main_serializer.save()
         for k in my_relations.iterkeys():

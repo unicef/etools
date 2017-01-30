@@ -4,8 +4,10 @@ from unittest import skip
 from actstream import action
 from actstream.models import model_stream
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import PartnershipFactory, TripFactory, AgreementFactory, InterventionFactory, InterventionBudgetFactory
+
 from funds.models import Donor, Grant
 
 from reports.models import (
@@ -559,6 +561,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
 
 class TestAgreementModel(TenantTestCase):
     fixtures = ['reports.initial_data.json']
+
     def setUp(self):
         self.partner_organization = PartnerOrganization.objects.create(
             name="Partner Org 1",
@@ -568,8 +571,8 @@ class TestAgreementModel(TenantTestCase):
             partner=self.partner_organization,
         )
         # Trigger created event activity stream
-        action.send(self.partner_organization, verb = "created", target = self.agreement)
-
+        create_snapshot_activity_stream(
+            self.partner_organization, self.agreement, created=True)
 
     def test_reference_number(self):
         year = datetime.datetime.today().year
@@ -579,7 +582,7 @@ class TestAgreementModel(TenantTestCase):
         self.agreement.start = datetime.date.today()
         self.agreement.signed_by_unicef_date = datetime.date.today()
 
-        Agreement.create_snapshot_activity_stream(
+        create_snapshot_activity_stream(
             self.partner_organization, self.agreement)
         self.agreement.save()
 

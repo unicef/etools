@@ -9,7 +9,6 @@ from django_fsm import FSMField, transition
 from django.db.models import Q, Sum
 from django.conf import settings
 from django.db import models, connection, transaction
-from django.forms.models import model_to_dict
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.contrib.auth.models import User
@@ -24,7 +23,6 @@ from model_utils.models import (
     TimeStampedModel,
 )
 from model_utils import Choices, FieldTracker
-from actstream import action
 
 from EquiTrack.utils import get_changeform_link, get_current_site
 from EquiTrack.mixins import AdminURLMixin
@@ -1127,43 +1125,6 @@ class Agreement(TimeStampedModel):
         self.update_related_interventions(oldself)
 
         return super(Agreement, self).save()
-
-    @classmethod
-    def create_snapshot_activity_stream(cls, actor, target):
-        """
-        Create activity stream for Agreement in order to keep track of field changes
-        actor: An activity trigger - Any Python object
-        target: An action target for the activity - Django ORM with FieldTracker before calling save() method
-        """
-
-        if hasattr(target, 'tracker'):
-            with transaction.atomic():
-                # Get current mutated state of object as dictionary
-                current_obj_dict = model_to_dict(target)
-
-                # Get all previous values of mutated fields for current object
-                changed_prev_values = target.tracker.changed()
-
-                # Restore the previous state of current object by merging above
-                previous = dict(current_obj_dict.items() + changed_prev_values.items())
-
-                # Extract current field changes from key lookups with current object
-                changes = {k:v for k,v in current_obj_dict.items() if k in changed_prev_values}
-
-                # Stringify any non-JSON Serializeable data types
-                for key, value in previous.items():
-                    if type(value) not in [int, float, bool, str]:
-                        previous[key] = str(previous[key])
-
-                # Stringify any non-JSON Serializeable data types
-                for key, value in changes.items():
-                    if type(value) not in [int, float, bool, str]:
-                        changes[key] = str(changes[key])
-
-                # TODO: Use a different action verb for each status choice in Agreement
-                # Draft, Active, Expired, Suspended, Terminated
-                action.send(actor, verb="changed",
-                            target=target, previous=previous, changes=changes)
 
 
 class AgreementAmendment(TimeStampedModel):

@@ -17,6 +17,8 @@ from rest_framework.response import Response
 from actstream import action
 from easy_pdf.views import PDFTemplateView
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+
 from locations.models import Location
 from reports.models import CountryProgramme
 
@@ -268,7 +270,7 @@ class AgreementViewSet(
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
-        Agreement.create_snapshot_activity_stream(request.user, serializer.instance)
+        create_snapshot_activity_stream(request.user, serializer.instance)
 
         serializer.instance = serializer.save()
 
