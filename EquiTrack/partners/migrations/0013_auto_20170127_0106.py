@@ -174,7 +174,8 @@ def after_partner_migrations(apps, schema_editor):
                                                             partner_contribution=pb.partner_contribution,
                                                             unicef_cash=pb.unicef_cash,
                                                             in_kind_amount=pb.in_kind_amount,
-                                                            year=pb.year)
+                                                            year=pb.year,
+                                                            total=pb.total)
 
     def copy_pca_sector_locations_to_intervention():
         for pca in PCA.objects.all():
