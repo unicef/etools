@@ -8,9 +8,13 @@ from django.conf import settings
 from django.db.models import Q
 
 from EquiTrack.celery import app
-from trips.models import Trip
-from trips.emails import TripSummaryEmail
+from EquiTrack.utils import get_current_site, get_environment
+
 from users.models import User
+
+from notification.models import Notification
+
+from trips.models import Trip
 
 
 @app.task
@@ -35,7 +39,29 @@ def process_trips():
             print settings.CELERY_EMAIL_BACKEND
             print settings.MANDRILL_API_KEY
             try:
-                TripSummaryEmail(user).send('equitrack@unicef.org', user.email)
+                for trip in trips_overdue:
+                    trips_overdue_text[trip.purpose_of_travel] = ['https://{}{}'.format(
+                        get_current_site().domain,
+                        trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
+
+                for trip in trips_coming:
+                    trips_coming_text[trip.purpose_of_travel] = ['https://{}{}'.format(
+                        get_current_site().domain,
+                        trip.get_admin_url()), trip.from_date.strftime("%d-%b-%y")]
+
+                notification = Notification.objects.create(
+                    sender='equitrack@unicef.org',
+                    recipients=[user.email, ], template_name='trips/trip/summary',
+                    template_data={
+                        'trips_coming_text': trips_coming_text,
+                        'trips_overdue_text': trips_overdue_text,
+                        'owner_name': user.get_full_name(),
+                        'environment': get_environment()
+                    }
+                )
+
+                notification.send_notification()
+
             except Exception as exp:
                 print exp.message
                 print traceback.format_exc()

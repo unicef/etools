@@ -7,7 +7,7 @@ from django.contrib.gis.utils import LayerMapping
 from django.contrib.gis.geos import GEOSGeometry
 from django.core.management.base import BaseCommand, CommandError
 
-from locations.models import Location, GatewayType, Locality
+from locations.models import Location, GatewayType
 
 location_mapping = {
 
@@ -60,17 +60,10 @@ class Command(BaseCommand):
 
                 cad_code = feat.get('CAD_CODE_1').encode('utf-8').split('.')[0]
 
-                try:
-                    locality = Locality.objects.get(cad_code=cad_code)
-                except Locality.DoesNotExist:
-                    print "Locality does not exist with Cad Code: {}".format(cad_code)
-                    continue
-
                 location, created = Location.objects.get_or_create(
                     #p_code=field_values['p_code'],
                     name=field_values['name'].encode('utf-8'),
                     gateway=gateway_type,
-                    locality=locality
                 )
                 location.name = field_values['name'].encode('utf-8')
                 location.p_code = str(field_values['p_code'])

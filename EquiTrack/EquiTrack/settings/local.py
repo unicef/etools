@@ -4,6 +4,7 @@ from local_base import *
 # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
 INSTALLED_APPS += (
     'debug_toolbar',
+    'django_extensions',
 )
 
 # See: https://github.com/django-debug-toolbar/django-debug-toolbar#installation
@@ -20,3 +21,11 @@ DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TEMPLATE_CONTEXT': True,
 }
 ########## END TOOLBAR CONFIGURATION
+
+POST_OFFICE = {
+    'DEFAULT_PRIORITY': 'now',
+    'BACKENDS': {
+        # Will ensure email is sent async
+        'default': 'django.core.mail.backends.console.EmailBackend'
+    }
+}

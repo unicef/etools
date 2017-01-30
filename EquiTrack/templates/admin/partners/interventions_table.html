@@ -1,0 +1,29 @@
+{% for i in interventions %}
+<tr>
+    <td colspan="2">
+        <a href="{% url 'admin:partners_intervention_change' i.id %}">{{ i.number }}</a>
+    </td>
+    <td>
+        {{ i.status }}
+    </td>
+    <td>
+        {{ i.start }}
+    </td>
+    <td>
+        {{ i.end }}
+    </td>
+    <td>
+        {% for s in i.sector_locations.all %}
+            {{ s.sector.name }},
+        {% endfor %}
+    </td>
+    <td>
+        {{ i.title }}
+    </td>
+    <td>
+        {{ i.total_unicef_cash }}
+    </td>
+
+
+</tr>
+{% endfor %}
