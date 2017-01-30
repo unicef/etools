@@ -29,8 +29,8 @@ class Migration(migrations.Migration):
         migrations.RunPython(
             bank_details_to_partner, reverse_code=reverse
         ),
-        # migrations.RemoveField(
-        #     model_name='bankdetails',
-        #     name='agreement',
-        # ),
+        migrations.RemoveField(
+            model_name='bankdetails',
+            name='agreement',
+        ),
     ]

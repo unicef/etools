@@ -848,9 +848,6 @@ class BankDetails(models.Model):
     Relates to :model:`partners.AgreementAmendmentLog`
     """
 
-    #TODO: remove agreement field after running util_scripts.bank_details_to_partner()
-    # agreement = models.ForeignKey('partners.Agreement', related_name='bank_details')
-
     # TODO: remove the ability to add blank for the partner_organization field
     partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details', null=True, blank=True)
     bank_name = models.CharField(max_length=255, null=True, blank=True)
