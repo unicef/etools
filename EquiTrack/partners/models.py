@@ -4,21 +4,22 @@ import datetime
 import json
 from dateutil.relativedelta import relativedelta
 
-from django_fsm import FSMField, transition
-
-from django.db.models import Q, Sum
 from django.conf import settings
+from django.contrib.auth.models import User, Group
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
-from django.forms.models import model_to_dict
-from django.contrib.auth.models import Group
+from django.db.models import Q, Sum
 from django.db.models.signals import post_save, pre_delete
-from django.contrib.auth.models import User
+from django.forms.models import model_to_dict
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django_fsm import FSMField, transition
+
 from django_hstore import hstore
+
 from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
+
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -1760,7 +1761,7 @@ class GovernmentInterventionResult(models.Model):
         default=0,
         verbose_name='Planned Cash Transfers'
     )
-    activities = hstore.DictionaryField(
+    activities = JSONField(
         blank=True, null=True
     )
     unicef_managers = models.ManyToManyField(
@@ -1780,8 +1781,6 @@ class GovernmentInterventionResult(models.Model):
     )
     planned_visits = models.IntegerField(default=0)
 
-    objects = hstore.HStoreManager()
-
     @transaction.atomic
     def save(self, **kwargs):
         if self.pk:
@@ -1796,27 +1795,28 @@ class GovernmentInterventionResult(models.Model):
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
-        for activity in self.activities.items():
-            try:
-                referenced_activity = self.activities_list.get(code=activity[0])
-                if referenced_activity.name != activity[1]:
-                    referenced_activity.name = activity[1]
-                    referenced_activity.save()
+        if self.activities:
+            for activity in self.activities.items():
+                try:
+                    referenced_activity = self.activities_list.get(code=activity[0])
+                    if referenced_activity.name != activity[1]:
+                        referenced_activity.name = activity[1]
+                        referenced_activity.save()
 
-            except Result.DoesNotExist:
-                referenced_activity = Result.objects.create(
-                    result_structure=self.intervention.result_structure,
-                    result_type=ResultType.objects.get(name='Activity'),
-                    parent=self.result,
-                    code=activity[0],
-                    name=activity[1],
-                    hidden=True
+                except Result.DoesNotExist:
+                    referenced_activity = Result.objects.create(
+                        result_structure=self.intervention.result_structure,
+                        result_type=ResultType.objects.get(name='Activity'),
+                        parent=self.result,
+                        code=activity[0],
+                        name=activity[1],
+                        hidden=True
 
-                )
-                self.activities_list.add(referenced_activity)
+                    )
+                    self.activities_list.add(referenced_activity)
 
         for ref_activity in self.activities_list.all():
-            if ref_activity.code not in self.activities:
+            if self.activities and ref_activity.code not in self.activities:
                 ref_activity.delete()
 
 
