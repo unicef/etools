@@ -24,7 +24,7 @@ class TestModelExport(APITenantTestCase):
         self.intervention = InterventionFactory(agreement=self.agreement)
         self.government_intervention = GovernmentInterventionFactory(partner=self.partner)
 
-    @skip("Fix this")
+    @skip("wrong endpoint")
     def test_partner_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/export/',
@@ -79,6 +79,7 @@ class TestModelExport(APITenantTestCase):
                           '1',
                           'Mace Windu'))
 
+    @skip("wrong api endpoint")
     def test_agreement_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/agreements/export/'.format(self.partner.id),
@@ -112,7 +113,8 @@ class TestModelExport(APITenantTestCase):
                           '',
                           self.agreement.signed_by_unicef_date.strftime('%Y-%m-%d'),
                           ''))
-    @skip("Fix this")
+
+    @skip("Fix export")
     def test_intervention_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/interventions/export/'.format(self.partner.id),

@@ -89,7 +89,20 @@ def generate_all_permissions(command):
                                           'result': None,
                                           'locations': None,
                                           'primary_traveler': None,
-                                          'date': None}}
+                                          'date': None},
+                           'action_points': {'status': None,
+                                             'trip_reference_number': None,
+                                             'action_point_number': None,
+                                             'description': None,
+                                             'due_date': None,
+                                             'actions_taken': None,
+                                             'created_at': None,
+                                             'comments': None,
+                                             'completed_at': None,
+                                             'follow_up': None,
+                                             'person_responsible': None,
+                                             'id': None},
+                            'report':None}
 
     command.stdout.write('Regenerating permission matrix')
     new_permissions = []
@@ -169,7 +182,7 @@ class PermissionMatrixSetter(object):
 
         q = Q(status__in=status_where_hide) & self.get_related_q(['deductions', 'expenses'])
         sub_qs = qs.filter(q)
-        self.revoke_edit(sub_qs)
+        # self.revoke_edit(sub_qs)
 
         sub_qs = qs.filter(status__in=[Travel.CERTIFICATION_SUBMITTED,
                                        Travel.CERTIFICATION_REJECTED,
@@ -183,6 +196,8 @@ class PermissionMatrixSetter(object):
                                                                            Travel.APPROVED,
                                                                            Travel.SUBMITTED])
         self.grant_edit(sub_qs)
+
+        self.grant_edit(qs.filter(self.get_related_q(['action_points', 'report'])))
 
     def set_up_travel_administrator(self):
         self.log('Set up permissions for travel administrator')
@@ -198,11 +213,13 @@ class PermissionMatrixSetter(object):
 
         sub_qs = qs.filter(status__in=[Travel.COMPLETED, Travel.CERTIFICATION_APPROVED])
         self.revoke_edit(sub_qs)
+        self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
     def set_up_supervisor(self):
         self.log('Set up permissions for supervisor')
         qs = TravelPermission.objects.filter(user_type=UserTypes.SUPERVISOR)
         self.revoke_edit(qs)
+        self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
     def set_up_travel_focal_point(self):
         self.log('Set up permissions for travel focal point')
@@ -225,6 +242,7 @@ class PermissionMatrixSetter(object):
                                             Travel.CERTIFICATION_APPROVED,
                                             Travel.CERTIFICATION_REJECTED])
         self.grant_edit(sub_qs)
+        self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
     def set_up_finance_focal_point(self):
         self.log('Set up permissions for finance focal point')
@@ -254,6 +272,7 @@ class PermissionMatrixSetter(object):
                         Travel.REJECTED,
                         Travel.SENT_FOR_PAYMENT])
         self.grant_edit(sub_qs)
+        self.grant_edit(qs.filter(self.get_related_q(['action_points'])))
 
     def set_up_representative(self):
         qs = TravelPermission.objects.filter(user_type=UserTypes.REPRESENTATIVE)

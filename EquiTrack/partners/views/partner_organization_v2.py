@@ -16,6 +16,7 @@ from rest_framework.generics import (
 
 from partners.models import (
     PartnerStaffMember,
+    Intervention,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -23,14 +24,17 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationDetailSerializer,
     PartnerOrganizationCreateUpdateSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
+    PartnerStaffMemberDetailSerializer,
+    PartnerOrganizationHactSerializer,
 )
 
 
 from partners.models import PartnerOrganization
-from partners.permissions import PartnerPermission
+from partners.permissions import PartnerPermission, PartneshipManagerPermission
 
 
 from partners.filters import PartnerScopeFilter
+from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
@@ -42,7 +46,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
     serializer_class = PartnerOrganizationListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, PartnerOrganizationCsvRenderer)
 
     def get_serializer_class(self, format=None):
         """
@@ -181,5 +185,27 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             po_serializer = self.get_serializer(instance)
 
         return Response(po_serializer.data)
+
+
+class PartnerOrganizationHactAPIView(ListCreateAPIView):
+    """
+    Create new Partners.
+    Returns a list of Partners.
+    """
+    queryset = PartnerOrganization.objects.filter(
+            Q(documents__status__in=[Intervention.ACTIVE,Intervention.IMPLEMENTED]) |
+            (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
+        ).distinct()
+    serializer_class = PartnerOrganizationHactSerializer
+
+
+class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
+    """
+    Returns a list of all Partner staff members
+    """
+    queryset = PartnerStaffMember.objects.all()
+    serializer_class = PartnerStaffMemberDetailSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
 
 

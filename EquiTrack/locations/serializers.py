@@ -1,7 +1,7 @@
 
 from rest_framework import serializers
 
-from .models import CartoDBTable, GatewayType, Location, Governorate, Region, Locality
+from .models import CartoDBTable, GatewayType, Location
 
 
 class CartoDBTableSerializer(serializers.ModelSerializer):
@@ -40,7 +40,6 @@ class LocationSerializer(serializers.ModelSerializer):
             'name',
             'p_code',
             'gateway',
-            'locality',
             'point',
             'latitude',
             'longitude',

@@ -18,6 +18,12 @@ def printtf(*args):
     print([arg for arg in args], file=f)
     f.close()
 
+def log_to_file(file_name='fail_logs.txt', *args):
+    print([arg for arg in args])
+    f = open(file_name, 'a')
+    print([arg for arg in args], file=f)
+    f.close()
+
 def set_country(name):
     connection.set_tenant(Country.objects.get(name=name))
 
@@ -477,20 +483,20 @@ def bank_details_to_partner():
                     bd.save()
 
         # agreement model bank details
-        agreements = Agreement.objects.filter(bank_name__isnull=False).exclude(bank_name='')
-        if agreements.count() > 0:
-            print("================ AGREEMENTS MODEL ================================")
-            for agr in agreements:
-                bd, created = BankDetails.objects.get_or_create(agreement=agr,
-                                                                partner_organization=agr.partner,
-                                                                bank_name=agr.bank_name,
-                                                                bank_address= agr.bank_address,
-                                                                account_title=agr.account_title,
-                                                                account_number=agr.account_number,
-                                                                routing_details=agr.routing_details,
-                                                                bank_contact_person=agr.bank_contact_person)
-                if created:
-                    print(bd.partner_organization)
+        # agreements = Agreement.objects.filter(bank_name__isnull=False).exclude(bank_name='')
+        # if agreements.count() > 0:
+        #     print("================ AGREEMENTS MODEL ================================")
+        #     for agr in agreements:
+        #         bd, created = BankDetails.objects.get_or_create(agreement=agr,
+        #                                                         partner_organization=agr.partner,
+        #                                                         bank_name=agr.bank_name,
+        #                                                         bank_address= agr.bank_address,
+        #                                                         account_title=agr.account_title,
+        #                                                         account_number=agr.account_number,
+        #                                                         routing_details=agr.routing_details,
+        #                                                         bank_contact_person=agr.bank_contact_person)
+        #         if created:
+        #             print(bd.partner_organization)
 
 #run this after migration partners_0007
 def agreement_amendments_copy():
@@ -593,6 +599,7 @@ def clean_interventions():
 
 
 def copy_pca_amendments_to_intervention():
+
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
         print(cntry)
@@ -618,8 +625,6 @@ def copy_pca_amendments_to_intervention():
                                                                         amendment_number=amendment.amendment_number)
             if created:
                 print('{}-{}'.format(intr_amd.amendment_number, intr_amd.intervention))
-
-
 
 
 def export_old_pca_fields():
@@ -691,7 +696,7 @@ def copy_pca_results_to_intervention():
                 try:
                     intervention = Intervention.objects.get(number=pca.number)
                 except Intervention.DoesNotExist:
-                    print(pca.number)
+                    log_to_file('copy_pca_results_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
                     continue
                 irl, created = InterventionResultLink.objects.get_or_create(intervention=intervention, cp_output=result)
                 irl.ram_indicators.add(*indicators)
@@ -708,7 +713,7 @@ def copy_pca_budgets_to_intervention():
             try:
                 intervention = Intervention.objects.get(number=pca.number)
             except Intervention.DoesNotExist:
-                print(pca.number)
+                log_to_file('copy_pca_budgets_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
                 continue
             print(pb_years)
             for pb_year in pb_years:
@@ -744,15 +749,15 @@ def copy_pca_sector_locations_to_intervention():
                 if not sector_id:
                     continue
                 sector = Sector.objects.get(id=sector_id)
-                gwpc_locations = pca.locations.filter(sector=sector)
+                gwpc_locations = pca.locations.filter(sector=sector).all()
                 locations = []
-                for location in gwpc_locations:
-                    if location.location:
-                        locations.append(location.location)
+                for gwpc_loc in gwpc_locations:
+                    if gwpc_loc.location:
+                        locations.append(gwpc_loc.location)
                 try:
                     intervention = Intervention.objects.get(number=pca.number)
                 except Intervention.DoesNotExist:
-                    print(pca.number)
+                    log_to_file('copy_pca_sector_locations_to_intervention: Indervention.DoesNotExist', pca.id, pca.number)
                     continue
                 isl, created = InterventionSectorLocationLink.objects.get_or_create(intervention=intervention,
                                                                                     sector=sector)
@@ -766,7 +771,7 @@ def copy_pca_supply_plan_to_intervention():
             try:
                 intervention = Intervention.objects.get(number=sp.partnership.number)
             except Intervention.DoesNotExist:
-                print(sp.partnership.number)
+                log_to_file('copy_pca_supply_plan_to_intervention: Indervention.DoesNotExist', sp.partnership.id, sp.partnership.number)
                 continue
             sp.intervention = intervention
             sp.save()
@@ -779,16 +784,35 @@ def copy_pca_distribution_plan_to_intervention():
             print('Debug')
 
         for dp in DistributionPlan.objects.all():
-            try:
-                intervention = Intervention.objects.get(number=dp.partnership.number)
-            except Intervention.DoesNotExist:
-                print(dp.partnership.number)
-                continue
-            dp.intervention = intervention
-            dp.save()
+            if SupplyPlan.objects.filter(intervention=dp.intervention, item=dp.item).count():
+                try:
+                    intervention = Intervention.objects.get(number=dp.partnership.number)
+                except Intervention.DoesNotExist:
+                    log_to_file('copy_pca_distribution_plan_to_intervention: Indervention.DoesNotExist', dp.partnership.id,
+                                dp.partnership.number)
+
+                    continue
+                dp.intervention = intervention
+                dp.save()
 
 
 def local_country_keep():
     set_country('Global')
     keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border']
     Country.objects.exclude(name__in=keeping).all().delete()
+
+
+def after_partner_migration():
+    copy_pca_fields_to_intervention()
+    agreement_amendments_copy()
+    copy_pca_results_to_intervention()
+    copy_pca_attachments_to_intervention()
+
+    # copy_pca_amendments_to_intervention() # this needs to be manual since we can't map type of amendment
+    copy_pca_budgets_to_intervention()
+    copy_pca_sector_locations_to_intervention()
+    copy_pca_supply_plan_to_intervention()
+    copy_pca_distribution_plan_to_intervention()
+    # TODO:
+    # all_countries_do(pca_intervention_fr_numbers)
+    # planned_visits

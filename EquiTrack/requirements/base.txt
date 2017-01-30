@@ -28,6 +28,10 @@ django-suit-ckeditor==0.0.2
 django-import-export==0.5.1
 django-reversion==1.10.1
 django-generic-links==0.4.0
+django-activity-stream==0.6.3
+
+# Needed for django-activity-stream package to store custom activity data
+django-jsonfield==1.0.1
 
 # Django REST Framework packages
 djangorestframework==3.5.3

@@ -405,8 +405,10 @@ SHARED_APPS = (
 
     'vision',
     'management',
+    'publics',
     # you must list the app where your tenant model resides in
     'users',
+    'notification',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -426,6 +428,7 @@ TENANT_APPS = (
     'supplies',
     't2f',
     'workplan',
+    'actstream',
 )
 
 
@@ -434,6 +437,13 @@ LEAFLET_CONFIG = {
     'ATTRIBUTION_PREFIX': 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
+}
+
+ACTSTREAM_SETTINGS = {
+    'FETCH_RELATIONS': True,
+    'GFK_FETCH_DEPTH': 1,
+    'USE_JSONFIELD': True,
+    'MANAGER': 'EquiTrack.stream_feed.managers.CustomDataActionManager',
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
