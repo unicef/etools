@@ -1,11 +1,18 @@
 from __future__ import unicode_literals
 
+import logging
+
+from django.core.exceptions import ObjectDoesNotExist
+
 from t2f.models import Invoice
 
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
     import xml.etree.ElementTree as ET
+
+
+log = logging.getLogger(__name__)
 
 
 class InvoiceExport(object):
@@ -64,19 +71,32 @@ class InvoiceExport(object):
         return 'debit' if amount >= 0 else 'credit'
 
 
-class XMLUpdater(object):
+class InvoiceUpdater(object):
     def __init__(self, xml_data):
         self.root = ET.fromstring(xml_data)
 
     def update_invoices(self):
+        possible_statuses = {s[0] for s in Invoice.STATUS}
+
         for invoice_ack in self.root.iter('ta_invoice_ack'):
             invoice_number = invoice_ack.find('invoice_reference').text
             status = invoice_ack.find('status').text
             message = invoice_ack.find('message').text
             vision_fi_id = invoice_ack.find('vision_fi_doc').text
 
-            invoice = Invoice.objects.get(reference_number=invoice_number)
+            try:
+                invoice = Invoice.objects.get(reference_number=invoice_number)
+            except ObjectDoesNotExist:
+                log.error('Cannot find invoice with reference number %s', invoice_number)
+                continue
+
             status = status.lower()
+
+            if status not in possible_statuses:
+                log.error('Invalid invoice (%s) status: %s', invoice_number, status)
+                continue
+
             invoice.status = status
+            invoice.message = message
             invoice.vision_fi_id = vision_fi_id
             invoice.save()

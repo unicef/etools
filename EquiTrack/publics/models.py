@@ -6,11 +6,12 @@ from django.db import models
 class TravelAgent(models.Model):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=12)
-    city = models.CharField(max_length=128)
+    city = models.CharField(max_length=128, null=True)
     country = models.ForeignKey('publics.Country')
 
 
 class TravelExpenseType(models.Model):
+    # TODO simon: explain what's this line here
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
     title = models.CharField(max_length=32)

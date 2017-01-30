@@ -31,7 +31,7 @@ from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, Trave
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 from t2f.permission_matrix import PERMISSION_MATRIX
-from t2f.vision import InvoiceExport, XMLUpdater
+from t2f.vision import InvoiceExport, InvoiceUpdater
 
 
 class T2FPagePagination(PageNumberPagination):
@@ -273,11 +273,11 @@ class PermissionMatrixView(generics.GenericAPIView):
 
 class VisionInvoiceExport(generics.GenericAPIView):
     def get(self, request):
-        invoice_qs = Invoice.objects.filter(status=Invoice.PENDING)
+        invoice_qs = Invoice.objects.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING])
         exporter = InvoiceExport(invoice_qs)
         xml_structure = exporter.generate_xml()
 
-        # This line has to be the last otherwise can create some problems because of lazy loading
+        # This line has to be the last otherwise can create problems because of lazy loading
         invoice_qs.update(status=Invoice.PROCESSING)
         return Response(xml_structure, status.HTTP_200_OK, content_type='application/xml')
 
@@ -285,6 +285,6 @@ class VisionInvoiceExport(generics.GenericAPIView):
 class VisionInvoiceUpdate(generics.GenericAPIView):
     def post(self, request):
         xml_payload = request.data['xml'][0]
-        updater = XMLUpdater(xml_payload)
+        updater = InvoiceUpdater(xml_payload)
         updater.update_invoices()
         return Response(status=status.HTTP_200_OK)
