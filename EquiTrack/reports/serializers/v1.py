@@ -5,7 +5,7 @@ from rest_framework import serializers
 from users.serializers import UserProfileSerializer
 from workplan.serializers import ResultWorkplanPropertySerializer
 from workplan.models import ResultWorkplanProperty
-from .models import (
+from reports.models import (
     ResultStructure,
     ResultType,
     Unit,
@@ -48,7 +48,7 @@ class IndicatorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indicator
-        fields = ('id', 'name', 'unit', 'total', 'current', 'sector_total', 'sector_current')
+        fields = ('id', 'name', 'unit', 'total', 'current', 'sector_total', 'sector_current', 'result')
 
 
 class OutputSerializer(serializers.ModelSerializer):
@@ -82,7 +82,7 @@ class IndicatorCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Indicator
-        fields = ('id', 'name', 'code')
+        fields = ('id', 'name', 'code', 'result')
 
 
 class ResultSerializer(serializers.ModelSerializer):

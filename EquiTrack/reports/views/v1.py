@@ -2,7 +2,7 @@
 from rest_framework import viewsets, mixins
 from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework.permissions import IsAdminUser
-from .models import (
+from reports.models import (
     ResultStructure,
     ResultType,
     Result,
@@ -11,7 +11,7 @@ from .models import (
     Unit,
     CountryProgramme
 )
-from .serializers import (
+from reports.serializers.v1 import (
     ResultStructureSerializer,
     ResultTypeSerializer,
     ResultSerializer,

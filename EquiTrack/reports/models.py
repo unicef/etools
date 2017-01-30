@@ -46,12 +46,10 @@ class CountryProgramme(models.Model):
     """
     Represents a country programme cycle
     """
-
     name = models.CharField(max_length=150)
     wbs = models.CharField(max_length=30, unique=True)
     from_date = models.DateField()
     to_date = models.DateField()
-
 
     def __unicode__(self):
         return ' '.join([self.name, self.wbs])

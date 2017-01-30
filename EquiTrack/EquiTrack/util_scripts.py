@@ -780,6 +780,9 @@ def copy_pca_distribution_plan_to_intervention():
     for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
         set_country(cntry)
         print(cntry)
+        if cntry == 'Nigeria':
+            print('Debug')
+
         for dp in DistributionPlan.objects.all():
             if SupplyPlan.objects.filter(intervention=dp.intervention, item=dp.item).count():
                 try:
@@ -799,8 +802,6 @@ def local_country_keep():
     Country.objects.exclude(name__in=keeping).all().delete()
 
 
-
-
 def after_partner_migration():
     copy_pca_fields_to_intervention()
     agreement_amendments_copy()
@@ -815,4 +816,3 @@ def after_partner_migration():
     # TODO:
     # all_countries_do(pca_intervention_fr_numbers)
     # planned_visits
-

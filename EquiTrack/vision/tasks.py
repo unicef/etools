@@ -121,11 +121,12 @@ def update_all_partners(country_name=None):
                 PartnerOrganization.planned_cash_transfers(partner)
                 PartnerOrganization.micro_assessment_needed(partner)
                 PartnerOrganization.audit_needed(partner)
+                PartnerOrganization.audit_done(partner)
                 PartnerOrganization.planned_visits(partner)
                 PartnerOrganization.programmatic_visits(partner)
                 PartnerOrganization.spot_checks(partner)
                 PartnerOrganization.follow_up_flags(partner)
-                PartnerOrganization.audit_done(partner)
+
             except Exception as e:
                 print partner.name
                 print partner.hact_values

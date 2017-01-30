@@ -8,7 +8,6 @@ import django.contrib.postgres.fields.jsonb
 from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
-import django_hstore.fields
 import model_utils.fields
 import partners.models
 import smart_selects.db_fields
@@ -187,7 +186,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('year', models.CharField(max_length=4)),
                 ('planned_amount', models.IntegerField(default=0, verbose_name=b'Planned Cash Transfers')),
-                ('activities', django_hstore.fields.DictionaryField(blank=True, null=True)),
+                ('activities', django.contrib.postgres.fields.jsonb.JSONField(blank=True, null=True)),
                 ('planned_visits', models.IntegerField(default=0)),
                 ('activities_list', models.ManyToManyField(blank=True, related_name='activities_list', to='reports.Result')),
                 ('intervention', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='results', to='partners.GovernmentIntervention')),
