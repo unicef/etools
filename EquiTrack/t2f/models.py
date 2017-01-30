@@ -174,7 +174,7 @@ class Travel(models.Model):
             return False
         return True
 
-    @transition(status, source=[PLANNED, REJECTED], target=SUBMITTED)
+    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED)
     def submit_for_approval(self):
         # TODO validate this!!!
         if not self.supervisor:
@@ -504,11 +504,16 @@ class ActionPoint(models.Model):
 
 
 class Invoice(models.Model):
+    PENDING = 'pending'
+    PROCESSING = 'processing'
+    SUCCESS = 'success'
+    ERROR = 'error'
+
     STATUS = (
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('success', 'Success'),
-        ('error', 'Error'),
+        (PENDING, 'Pending'),
+        (PROCESSING, 'Processing'),
+        (SUCCESS, 'Success'),
+        (ERROR, 'Error'),
     )
 
     travel = models.ForeignKey('Travel', related_name='invoices')

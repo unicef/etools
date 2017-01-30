@@ -1,11 +1,20 @@
 from __future__ import unicode_literals
 
+from time import time
+
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
+
+from django.core.urlresolvers import reverse
+
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from t2f.helpers import InvoiceMaker
 
-from t2f.models import Travel, Expense, CostAssignment, InvoiceItem
+from t2f.models import Travel, Expense, CostAssignment, InvoiceItem, Invoice
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory
 
 
@@ -22,6 +31,18 @@ class TravelDetails(APITenantTestCase):
         country = profile.country
         country.business_area_code = '0060'
         country.save()
+
+    def make_invoice_updater(self):
+        root = ET.Element('ta_invoice_acks')
+        for invoice in Invoice.objects.filter(status=Invoice.PROCESSING):
+            main = ET.SubElement(root, 'ta_invoice_ack')
+            ET.SubElement(main, 'invoice_reference').text = invoice.reference_number
+            ET.SubElement(main, 'status').text = 'Success'
+            ET.SubElement(main, 'message').text = 'explanation'
+            ET.SubElement(main, 'vision_fi_doc').text = 'vision_fi'
+
+        with open('/tmp/invoices/updater.xml', 'w') as output:
+            output.write(ET.tostring(root))
 
     def test_invoice_making(self):
         def make_invoices(travel):
@@ -102,6 +123,30 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(travel.invoices.all().count(), 1)
         self.assertEqual(InvoiceItem.objects.all().count(), 2)
 
+        response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
+        with open('/tmp/invoices/inv_{}.xml'.format(time()), 'w') as output:
+            output.write(response.data)
+
+        self.assertEqual(Invoice.objects.filter(status=Invoice.PENDING).count(), 0)
+        self.assertEqual(Invoice.objects.filter(status=Invoice.PROCESSING).count(), 1)
+        self.assertEqual(Invoice.objects.filter(status=Invoice.SUCCESS).count(), 0)
+        self.assertEqual(Invoice.objects.filter(status=Invoice.ERROR).count(), 0)
+
+        self.make_invoice_updater()
+
+        # Update invoices like vision would do it
+        with open('/tmp/invoices/updater.xml', 'r') as fp:
+            self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
+                                 data={'xml': fp},
+                                 user=self.unicef_staff)
+
+        debug_line = 1
+
+        self.assertEqual(Invoice.objects.filter(status=Invoice.PENDING).count(), 0)
+        self.assertEqual(Invoice.objects.filter(status=Invoice.PROCESSING).count(), 0)
+        self.assertEqual(Invoice.objects.filter(status=Invoice.SUCCESS).count(), 1)
+        self.assertEqual(Invoice.objects.filter(status=Invoice.ERROR).count(), 0)
+
         # Add more stuff
         expense_other.amount = 45
         expense_other.save()
@@ -130,3 +175,17 @@ class TravelDetails(APITenantTestCase):
 
         # Generate invoice
         make_invoices(travel)
+
+        response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
+        with open('/tmp/invoices/inv_{}.xml'.format(time()), 'w') as output:
+            output.write(response.data)
+
+        self.make_invoice_updater()
+
+        # Update invoices like vision would do it
+        with open('/tmp/invoices/updater.xml', 'r') as fp:
+            self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
+                                 data={'xml': fp},
+                                 user=self.unicef_staff)
+
+
