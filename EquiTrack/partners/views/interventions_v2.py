@@ -16,6 +16,8 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+
 from partners.models import (
     InterventionBudget,
     Intervention,
@@ -84,6 +86,8 @@ class InterventionListAPIView(ListCreateAPIView):
 
         intervention_serializer = self.get_serializer(data=request.data)
         intervention_serializer.is_valid(raise_exception=True)
+
+        create_snapshot_activity_stream(request.user, intervention_serializer.instance, created=True)
         intervention = intervention_serializer.save()
 
         # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
@@ -191,7 +195,7 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget', 'planned_visits', 'attachments', 'amendments', 'sector_locations']
 
-        instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
+        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
 
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:

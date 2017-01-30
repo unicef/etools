@@ -109,7 +109,7 @@ class AgreementListAPIView(ValidatorViewMixin, ListCreateAPIView):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         related_fields = ['amendments']
-        serializer = self.my_create(request, related_fields, snapshot=True, snapshot_class=Agreement, **kwargs)
+        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
 
         validator = AgreementValid(serializer.instance, user=request.user)
 
@@ -152,9 +152,7 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
 
         related_fields = ['amendments']
-        instance, old_instance, serializer = self.my_update(request, related_fields,
-                                                            snapshot=True, snapshot_class=Agreement, **kwargs)
-
+        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
 
         validator = AgreementValid(instance, old=old_instance, user=request.user)
 
@@ -170,4 +168,3 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             instance = self.get_object()
 
         return Response(serializer.data)
-

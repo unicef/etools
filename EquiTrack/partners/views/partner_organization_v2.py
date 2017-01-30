@@ -14,6 +14,8 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+
 from partners.models import (
     PartnerStaffMember,
     Intervention,
@@ -113,6 +115,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         # validate and save partner org
         po_serializer = self.get_serializer(data=request.data)
         po_serializer.is_valid(raise_exception=True)
+
+        create_snapshot_activity_stream(request.user, po_serializer.instance, created=True)
         partner = po_serializer.save()
 
         if staff_members:
@@ -124,6 +128,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             except ValidationError as e:
                 e.detail = {'staff_members': e.detail}
                 raise e
+
+            create_snapshot_activity_stream(request.user, staff_members_serializer.instance, created=True)
             staff_members_serializer.save()
 
 
@@ -153,6 +159,8 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         po_serializer = self.get_serializer(instance, data=request.data, partial=partial)
         po_serializer.is_valid(raise_exception=True)
+
+        create_snapshot_activity_stream(request.user, po_serializer.instance)
         partner = po_serializer.save()
 
         if staff_members:
@@ -164,9 +172,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
                     except PartnerStaffMember.DoesNotExist:
                         sm_instance = None
 
-                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance,
-                                                                                       data=item,
-                                                                                       partial=partial)
+                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance, data=item, partial=partial)
                 else:
                     staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(data=item)
 
@@ -176,6 +182,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
                     e.detail = {'staff_members': e.detail}
                     raise e
 
+                create_snapshot_activity_stream(request.user, staff_member_serializer.instance)
                 staff_member_serializer.save()
 
         if getattr(instance, '_prefetched_objects_cache', None):
@@ -207,5 +214,3 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-
-
