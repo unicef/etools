@@ -149,7 +149,6 @@ class UserProfile(models.Model):
 
     # TODO: remove this
     installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
-    vendor_number = models.CharField(max_length=32, null=True)
 
     staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
     org_unit_code = models.CharField(max_length=32, null=True, blank=True)
