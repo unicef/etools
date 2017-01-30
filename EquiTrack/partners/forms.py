@@ -51,6 +51,7 @@ from .models import (
     Intervention,
     InterventionSectorLocationLink,
     InterventionResultLink,
+    InterventionSectorLocationLink
 )
 
 logger = logging.getLogger('partners.forms')
