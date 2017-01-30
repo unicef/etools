@@ -140,20 +140,36 @@ class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
 
 class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
-    active_staff_members = serializers.SerializerMethodField()
+    staff_members = serializers.SerializerMethodField()
+    assessments = serializers.SerializerMethodField()
+    staff_members = serializers.SerializerMethodField()
+    organization_full_name = serializers.CharField(source='name')
+    email_address = serializers.CharField(source='email')
+    risk_rating = serializers.CharField(source='rating')
+    date_last_assessment_against_core_values = serializers.CharField(source='core_values_assessment_date')
+    actual_cash_transfer_for_cp = serializers.CharField(source='total_ct_cp')
+    actual_cash_transfer_for_current_year = serializers.CharField(source='total_ct_cy')
+    marked_for_deletion = serializers.CharField(source='deleted_flag')
+    date_assessed = serializers.CharField(source='last_assessment_date')
+
 
     class Meta:
 
         model = PartnerOrganization
         # TODO add missing fields:
         #   Bank Info (just the number of accounts synced from VISION)
-        fields = ('vendor_number', 'vision_synced', 'deleted_flag', 'blocked', 'name', 'short_name', 'alternate_id',
-                  'alternate_name', 'partner_type', 'cso_type', 'shared_partner', 'address', 'email', 'phone_number',
-                  'rating', 'type_of_assessment', 'last_assessment_date', 'total_ct_cp', 'total_ct_cy',
-                  'active_staff_members')
+        fields = ('vendor_number', 'marked_for_deletion', 'blocked', 'organization_full_name',
+                  'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
+                  'email_address', 'phone_number', 'risk_rating', 'type_of_assessment', 'date_assessed',
+                  'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'staff_members',
+                  'date_last_assessment_against_core_values', 'assessments', )
 
-    def get_active_staff_members(self, obj):
+    def get_staff_members(self, obj):
         return ', '.join([sm.get_full_name() for sm in obj.staff_members.filter(active=True).all()])
+
+    def get_assessments(self, obj):
+        return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])
+
 
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
@@ -189,6 +205,10 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
+    hact_values = serializers.SerializerMethodField(read_only=True)
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
@@ -198,10 +218,39 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    hact_values = serializers.SerializerMethodField(read_only=True)
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+
+class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
+
+    hact_values = serializers.SerializerMethodField(read_only=True)
+    hact_min_requirements = serializers.JSONField()
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "name",
+            "short_name",
+            "partner_type",
+            "cso_type",
+            "rating",
+            "shared_partner",
+            "shared_with",
+            "total_ct_cp",
+            "total_ct_cy",
+            "hact_min_requirements",
+            "hact_values",
+        )
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
