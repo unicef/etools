@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block body %}
+    <div class="container">
+        <h2>Invoices for Travel #{{ travel.id }}</h2>
+
+        <div class="row">
+            <div class="col-md-2"><strong>Traveler</strong></div>
+            <div class="col-md-2">{{ travel.traveler.get_full_name }}</div>
+            <div class="col-md-2"><strong>Local currency</strong></div>
+            <div class="col-md-2">{{ travel.currency.name }}</div>
+        </div>
+        <div class="row">
+            <div class="col-md-2"><strong>Processing</strong></div>
+            <div class="col-md-2">{{ processing_count }}</div>
+            <div class="col-md-2"><strong>Success</strong></div>
+            <div class="col-md-2">{{ success_count }}</div>
+            <div class="col-md-2"><strong>Error</strong></div>
+            <div class="col-md-2">{{ error_count }}</div>
+        </div>
+
+        {% for invoice in travel.invoices.all %}
+            <hr>
+
+            <h3>Invoice #{{ invoice.reference_number }}</h3>
+
+            <div class="row">
+                <div class="col-md-2"><strong>Reference Number</strong></div>
+                <div class="col-md-4">{{ invoice.reference_number }}</div>
+                <div class="col-md-2"><strong>TA Number</strong></div>
+                <div class="col-md-4">{{ invoice.travel.reference_number }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-2"><strong>DB id</strong></div>
+                <div class="col-md-4">{{ invoice.id }}</div>
+                <div class="col-md-2"><strong>Vendor number</strong></div>
+                <div class="col-md-4">{{ invoice.vendor_number }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-2"><strong>Status</strong></div>
+                <div class="col-md-4">{{ invoice.status }}</div>
+                <div class="col-md-2"><strong>Posting key</strong></div>
+                <div class="col-md-4">{{ invoice.posting_key }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-2"><strong>Amount</strong></div>
+                <div class="col-md-4">{{ invoice.normalized_amount }}</div>
+                <div class="col-md-2"><strong>Currency</strong></div>
+                <div class="col-md-4">{{ invoice.currency.name }}</div>
+            </div>
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>WBS</th>
+                        <th>Grant</th>
+                        <th>Fund</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.items.all %}
+                    <tr>
+                        <td>{{ item.wbs.name }}</td>
+                        <td>{{ item.grant.name }}</td>
+                        <td>{{ item.fund.name }}</td>
+                        <td>{{ item.posting_key }}</td>
+                        <td>{{ item.normalized_amount }} {{ invoice.currency.name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
+    </div>
+{% endblock %}

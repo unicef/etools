@@ -39,99 +39,10 @@ class GatewayType(models.Model):
         return self.name
 
 
-class Governorate(models.Model):
-    """
-    Represents Admin level as a geospatial boundary
-
-    Relates to :model:`locations.GatewayType`
-    """
-
-    name = models.CharField(max_length=45L)
-    p_code = models.CharField(max_length=32L, blank=True, null=True)
-    gateway = models.ForeignKey(
-        GatewayType,
-        blank=True, null=True,
-        verbose_name='Admin type'
-    )
-    color = ColorPickerField(null=True, blank=True, default=get_random_color)
-
-    geom = models.MultiPolygonField(null=True, blank=True)
-    objects = models.GeoManager()
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        ordering = ['name']
-
-
-class Region(models.Model):
-    """
-    Represents a district, a part of Admin area as a geospatial boundary
-
-    Relates to :model:`locations.GatewayType`
-    Relates to :model:`locations.Governorate`
-    """
-
-    governorate = models.ForeignKey(Governorate)
-    name = models.CharField(max_length=45L)
-    p_code = models.CharField(max_length=32L, blank=True, null=True)
-    gateway = models.ForeignKey(
-        GatewayType,
-        blank=True, null=True,
-        verbose_name='Admin type'
-    )
-    color = ColorPickerField(null=True, blank=True, default=get_random_color)
-
-    geom = models.MultiPolygonField(null=True, blank=True)
-    objects = models.GeoManager()
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = 'District'
-        ordering = ['name']
-
-
-class Locality(models.Model):
-    """
-    Represents Locality, a part of District area as a geospatial boundary
-
-    Relates to :model:`locations.GatewayType`
-    Relates to :model:`locations.Region`
-    """
-
-    region = models.ForeignKey(Region)
-    cad_code = models.CharField(max_length=11L)
-    cas_code = models.CharField(max_length=11L)
-    cas_code_un = models.CharField(max_length=11L)
-    name = models.CharField(max_length=128L)
-    cas_village_name = models.CharField(max_length=128L)
-    p_code = models.CharField(max_length=32L, blank=True, null=True)
-    gateway = models.ForeignKey(
-        GatewayType,
-        blank=True, null=True,
-        verbose_name='Admin type'
-    )
-    color = ColorPickerField(null=True, blank=True, default=get_random_color)
-
-
-    geom = models.MultiPolygonField(null=True, blank=True)
-    objects = models.GeoManager()
-
-    def __unicode__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = 'Sub-district'
-        ordering = ['name']
-
-
 class LocationManager(models.Manager):
 
     def get_queryset(self):
-        return super(LocationManager, self).get_queryset().select_related('gateway', 'locality')
+        return super(LocationManager, self).get_queryset().select_related('gateway')
 
 
 class Location(MPTTModel):
@@ -140,11 +51,9 @@ class Location(MPTTModel):
     pcode should be unique
 
     Relates to :model:`locations.GatewayType`
-    Relates to :model:`locations.Locality`
     """
 
     name = models.CharField(max_length=254L)
-    locality = models.ForeignKey(Locality, null=True, blank=True)
     gateway = models.ForeignKey(GatewayType, verbose_name='Location Type')
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
@@ -193,63 +102,6 @@ def invalidate_locations_etag(sender, instance, **kwargs):
     """
     schema_name = connection.schema_name
     cache.delete("{}-locations-etag".format(schema_name))
-
-
-class LinkedLocation(models.Model):
-    """
-    Represents Generic model for linking locations to anything
-
-    Relates to :model:`locations.Governorate`
-    Relates to :model:`locations.Region`
-    Relates to :model:`locations.Locality`
-    Relates to :model:`locations.Location`
-    """
-    governorate = models.ForeignKey(Governorate)
-    region = ChainedForeignKey(
-        Region,
-        chained_field="governorate",
-        chained_model_field="governorate",
-        show_all=False,
-        auto_choose=True,
-    )
-    locality = ChainedForeignKey(
-        Locality,
-        chained_field="region",
-        chained_model_field="region",
-        show_all=False,
-        auto_choose=True,
-        null=True, blank=True
-    )
-    location = ChainedForeignKey(
-        Location,
-        chained_field="locality",
-        chained_model_field="locality",
-        show_all=False,
-        auto_choose=False,
-        null=True, blank=True
-    )
-
-    content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-
-    def __unicode__(self):
-        desc = u'{} -> {}'.format(
-            self.governorate.name,
-            self.region.name,
-        )
-        if self.locality:
-            desc = u'{} -> {}'.format(
-                desc,
-                self.locality.name
-            )
-        if self.location:
-            desc = u'{} -> {} ({})'.format(
-                desc,
-                self.location.name,
-                self.location.gateway.name
-            )
-
-        return desc
 
 
 class CartoDBTable(MPTTModel):
