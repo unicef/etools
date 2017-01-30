@@ -1,6 +1,4 @@
-__author__ = 'jcranwellward'
-
-from EquiTrack.utils import BaseEmail
+from notification.email import BaseEmail
 
 
 class PartnershipCreatedEmail(BaseEmail):

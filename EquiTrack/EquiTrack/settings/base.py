@@ -406,8 +406,10 @@ SHARED_APPS = (
 
     'vision',
     'management',
+    'publics',
     # you must list the app where your tenant model resides in
     'users',
+    'notification',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -441,7 +443,8 @@ LEAFLET_CONFIG = {
 ACTSTREAM_SETTINGS = {
     'FETCH_RELATIONS': True,
     'GFK_FETCH_DEPTH': 1,
-    'USE_JSONFIELD': True
+    'USE_JSONFIELD': True,
+    'MANAGER': 'EquiTrack.stream_feed.managers.CustomDataActionManager',
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

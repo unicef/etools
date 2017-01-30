@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.core import mail
+from post_office.models import Email
 
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 
@@ -33,7 +33,7 @@ class TestTripModels(TenantTestCase):
         self.assertIsNotNone(self.trip.from_date)
         self.assertIsNotNone(self.trip.to_date)
         self.assertFalse(self.trip.ta_required)
-        self.assertEqual(len(mail.outbox), 0)  # no emails should be sent
+        self.assertEqual(Email.objects.count(), 0)  # no emails should be sent
 
     def test_submit_trip(self):
         """
@@ -42,14 +42,14 @@ class TestTripModels(TenantTestCase):
         self.trip.status = Trip.SUBMITTED
         self.trip.save()
         self.assertEqual(Trip.SUBMITTED, self.trip.status)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(Email.objects.count(), 1)
 
         # Now test the email is correct for this action
-        self.assertTrue(self.trip.owner.first_name in mail.outbox[0].subject)
-        self.assertTrue('Submitted' in mail.outbox[0].subject)
-        self.assertTrue('Submitted' in mail.outbox[0].body)
-        self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
-        self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+        self.assertTrue(self.trip.owner.first_name in Email.objects.first().subject)
+        self.assertTrue('Submitted' in Email.objects.first().subject)
+        self.assertTrue('Submitted' in Email.objects.first().message)
+        self.assertTrue(self.trip.supervisor.email in Email.objects.first().to)
+        self.assertTrue(self.trip.owner.email in Email.objects.first().to)
 
     def test_submit_trip_international(self):
         """
@@ -62,13 +62,13 @@ class TestTripModels(TenantTestCase):
         self.trip.representative = UserFactory()
         self.trip.save()
         self.assertEqual(Trip.SUBMITTED, self.trip.status)
-        self.assertEqual(len(mail.outbox), 3)
+        self.assertEqual(Email.objects.count(), 3)
 
         # Now test the email is correct for this action
-        self.assertTrue('Approval' in mail.outbox[1].subject)
-        self.assertTrue('representative approval' in mail.outbox[1].body)
-        self.assertTrue(self.trip.representative.email in mail.outbox[1].to)
-        self.assertTrue(self.trip.owner.email in mail.outbox[1].to)
+        self.assertTrue('Approval' in Email.objects.last().subject)
+        self.assertTrue('representative approval' in Email.objects.last().message)
+        self.assertTrue(self.trip.representative.email in Email.objects.last().to)
+        self.assertTrue(self.trip.owner.email in Email.objects.last().to)
 
     def test_approve_trip(self):
         """
@@ -83,12 +83,12 @@ class TestTripModels(TenantTestCase):
         self.assertIsNotNone(self.trip.approved_date)
 
         # Now test the email is correct for this action
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(Email.objects.count(), 1)
         self.assertTrue(self.trip.approved_email_sent)
-        self.assertTrue('Approved' in mail.outbox[0].subject)
-        self.assertTrue('approved' in mail.outbox[0].body)
-        self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
-        self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+        self.assertTrue('Approved' in Email.objects.first().subject)
+        self.assertTrue('approved' in Email.objects.first().message)
+        self.assertTrue(self.trip.supervisor.email in Email.objects.first().to)
+        self.assertTrue(self.trip.owner.email in Email.objects.first().to)
 
     def test_approve_trip_with_TA(self):
         """
@@ -104,9 +104,9 @@ class TestTripModels(TenantTestCase):
         self.trip.approved_email_sent = True
         self.trip.save()
         self.assertEqual(Trip.APPROVED, self.trip.status)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(Email.objects.count(), 1)
         # Now test the email is correct for this action
-        self.assertTrue(self.trip.programme_assistant.first_name in mail.outbox[0].subject)
+        self.assertTrue(self.trip.programme_assistant.first_name in Email.objects.first().subject)
 
     def test_approve_trip_with_Vision_Approver(self):
         """
@@ -122,12 +122,12 @@ class TestTripModels(TenantTestCase):
         self.trip.approved_email_sent = True
         self.trip.save()
         self.assertEqual(Trip.APPROVED, self.trip.status)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(Email.objects.count(), 1)
         # Now test the email is correct for this action
-        self.assertTrue('Travel Authorization' in mail.outbox[0].subject)
-        self.assertTrue('VISION' in mail.outbox[0].body)
-        self.assertTrue(self.trip.vision_approver.email in mail.outbox[0].to)
-        self.assertTrue(self.trip.vision_approver.first_name in mail.outbox[0].body)
+        self.assertTrue('Travel Authorization' in Email.objects.first().subject)
+        self.assertTrue('VISION' in Email.objects.first().message)
+        self.assertTrue(self.trip.vision_approver.email in Email.objects.first().to)
+        self.assertTrue(self.trip.vision_approver.first_name in Email.objects.first().message)
 
     def test_approve_trip_with_Travel_Assistant(self):
         """
@@ -141,12 +141,12 @@ class TestTripModels(TenantTestCase):
         self.trip.approved_email_sent = True
         self.trip.save()
         self.assertEqual(Trip.APPROVED, self.trip.status)
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(Email.objects.count(), 1)
 
         # Now test the email is correct for this action
-        self.assertTrue('travel' in mail.outbox[0].body)
-        self.assertTrue(self.trip.travel_assistant.email in mail.outbox[0].to)
-        self.assertTrue(self.trip.travel_assistant.first_name in mail.outbox[0].body)
+        self.assertTrue('travel' in Email.objects.first().message)
+        self.assertTrue(self.trip.travel_assistant.email in Email.objects.first().to)
+        self.assertTrue(self.trip.travel_assistant.first_name in Email.objects.first().message)
 
     def test_complete_trip(self):
         self.trip.status = Trip.COMPLETED
@@ -154,11 +154,11 @@ class TestTripModels(TenantTestCase):
         self.assertEqual(Trip.COMPLETED, self.trip.status)
 
         # Now test the email is correct for this action
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue('Completed' in mail.outbox[0].subject)
-        self.assertTrue('completed' in mail.outbox[0].body)
-        self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
-        self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+        self.assertEqual(Email.objects.count(), 1)
+        self.assertTrue('Completed' in Email.objects.first().subject)
+        self.assertTrue('completed' in Email.objects.first().message)
+        self.assertTrue(self.trip.supervisor.email in Email.objects.first().to)
+        self.assertTrue(self.trip.owner.email in Email.objects.first().to)
 
     def test_cancel_trip(self):
         self.trip.status = Trip.CANCELLED
@@ -166,11 +166,11 @@ class TestTripModels(TenantTestCase):
         self.assertEqual(Trip.CANCELLED, self.trip.status)
 
         # Now test the email is correct for this action
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue('Cancelled' in mail.outbox[0].subject)
-        self.assertTrue('cancelled' in mail.outbox[0].body)
-        self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
-        self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+        self.assertEqual(Email.objects.count(), 1)
+        self.assertTrue('Cancelled' in Email.objects.first().subject)
+        self.assertTrue('cancelled' in Email.objects.first().message)
+        self.assertTrue(self.trip.supervisor.email in Email.objects.first().to)
+        self.assertTrue(self.trip.owner.email in Email.objects.first().to)
 
     def test_cancel_trip_reason(self):
         self.trip.cancelled_reason = 'This trip is no longer valid'
@@ -178,8 +178,8 @@ class TestTripModels(TenantTestCase):
         self.assertEqual(Trip.CANCELLED, self.trip.status)
 
         # Now test the email is correct for this action
-        self.assertEqual(len(mail.outbox), 1)
-        self.assertTrue('Cancelled' in mail.outbox[0].subject)
-        self.assertTrue('cancelled' in mail.outbox[0].body)
-        self.assertTrue(self.trip.supervisor.email in mail.outbox[0].to)
-        self.assertTrue(self.trip.owner.email in mail.outbox[0].to)
+        self.assertEqual(Email.objects.count(), 1)
+        self.assertTrue('Cancelled' in Email.objects.first().subject)
+        self.assertTrue('cancelled' in Email.objects.first().message)
+        self.assertTrue(self.trip.supervisor.email in Email.objects.first().to)
+        self.assertTrue(self.trip.owner.email in Email.objects.first().to)
