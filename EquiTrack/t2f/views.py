@@ -29,7 +29,7 @@ from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, Actio
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer
 from t2f.serializers.static_data import StaticDataSerializer
-from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix, InvoiceMaker
+from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 from t2f.permission_matrix import PERMISSION_MATRIX
 
 
@@ -70,10 +70,10 @@ class TravelListViewSet(mixins.ListModelMixin,
     serializer_class = TravelListSerializer
     pagination_class = T2FPagePagination
     permission_classes = (IsAdminUser,)
-    filter_backends = (travel_list.SearchFilter,
+    filter_backends = (travel_list.TravelSearchFilter,
                        travel_list.ShowHiddenFilter,
-                       travel_list.SortFilter,
-                       travel_list.FilterBoxFilter)
+                       travel_list.TravelSortFilter,
+                       travel_list.TravelFilterBoxFilter)
     renderer_classes = (renderers.JSONRenderer, renderers.CSVRenderer)
 
     _transition_name_mapping = {'save_and_submit': 'submit_for_approval'}
@@ -218,9 +218,9 @@ class ActionPointViewSet(mixins.ListModelMixin,
     serializer_class = ActionPointSerializer
     pagination_class = T2FPagePagination
     permission_classes = (IsAdminUser,)
-    filter_backends = (action_points.SearchFilter,
-                       action_points.SortFilter,
-                       action_points.FilterBoxFilter)
+    filter_backends = (action_points.ActionPointSearchFilter,
+                       action_points.ActionPointSortFilter,
+                       action_points.ActionPointFilterBoxFilter)
     lookup_url_kwarg = 'action_point_pk'
 
 
@@ -231,9 +231,9 @@ class InvoiceViewSet(mixins.ListModelMixin,
     serializer_class = InvoiceSerializer
     pagination_class = T2FPagePagination
     permission_classes = (IsAdminUser,)
-    filter_backends = (invoices.SearchFilter,
-                       invoices.SortFilter,
-                       invoices.FilterBoxFilter)
+    filter_backends = (invoices.InvoiceSearchFilter,
+                       invoices.InvoiceSortFilter,
+                       invoices.InvoiceFilterBoxFilter)
     lookup_url_kwarg = 'invoice_pk'
 
 

@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Grant, Fund, TravelExpenseType, \
     BusinessArea
-from publics.serialziers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
+from publics.serializers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
     WBSGrantFundSerializer, WBSGrantFundParameterSerializer
 from t2f.models import TravelType, ModeOfTravel
 
@@ -52,10 +52,10 @@ class WBSGrantFundView(generics.GenericAPIView):
     serializer_class = WBSGrantFundSerializer
 
     def get(self, request):
-        parameter_serialzier = WBSGrantFundParameterSerializer(data=request.GET, context=self.get_serializer_context())
-        parameter_serialzier.is_valid(raise_exception=True)
+        parameter_serializer = WBSGrantFundParameterSerializer(data=request.GET, context=self.get_serializer_context())
+        parameter_serializer.is_valid(raise_exception=True)
 
-        business_area = parameter_serialzier.validated_data['business_area']
+        business_area = parameter_serializer.validated_data['business_area']
 
         wbs_qs = WBS.objects.filter(business_area=business_area)
         grant_qs = Grant.objects.filter(wbs__in=wbs_qs)

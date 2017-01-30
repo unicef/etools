@@ -1,32 +1,20 @@
 from __future__ import unicode_literals
 
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
 
 from t2f.serializers import TravelListSerializer
-
-
-class SearchFilterSerializer(serializers.Serializer):
-    search = serializers.CharField(default='', required=False)
+from t2f.serializers.filters import SortFilterSerializer
 
 
 class ShowHiddenFilterSerializer(serializers.Serializer):
     show_hidden = serializers.BooleanField(default=False, required=False)
 
 
-class SortFilterSerializer(serializers.Serializer):
+class TravelSortFilterSerializer(SortFilterSerializer):
     _SORTABLE_FIELDS = tuple(TravelListSerializer.Meta.fields)
-    reverse = serializers.BooleanField(default=False, required=False)
-    sort_by = serializers.CharField(default=_SORTABLE_FIELDS[0], required=False)
-
-    def validate_sort_by(self, value):
-        if value not in self._SORTABLE_FIELDS:
-            valid_values = ', '.join(self._SORTABLE_FIELDS)
-            raise ValidationError('Invalid sorting option. Valid values are {}'.format(valid_values))
-        return value
 
 
-class FilterBoxFilterSerializer(serializers.Serializer):
+class TravelFilterBoxSerializer(serializers.Serializer):
     f_traveler = serializers.IntegerField(source='traveler__pk', required=False)
     f_supervisor = serializers.IntegerField(source='supervisor__pk', required=False)
     f_year = serializers.IntegerField(source='year', required=False)
@@ -41,7 +29,7 @@ class FilterBoxFilterSerializer(serializers.Serializer):
     # TODO simon: figure out how to handle when year is not in the payload but month is
 
     def to_internal_value(self, data):
-        data = super(FilterBoxFilterSerializer, self).to_internal_value(data)
+        data = super(TravelFilterBoxSerializer, self).to_internal_value(data)
 
         # Adjust month because frontend sends 0-11
         if 'month' in data:

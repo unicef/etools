@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('publics', '0003_auto_20170126_1615'),
         ('locations', '0004_auto_20170112_2051'),
-        ('users', '0003_userprofile_vendor_number'),
+        ('users', '0003_auto_20170123_2009'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('reports', '0003_auto_20161227_1953'),
         ('partners', '0009_auto_20170112_2051'),
