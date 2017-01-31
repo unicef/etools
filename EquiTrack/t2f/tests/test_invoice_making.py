@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from time import time
+from StringIO import StringIO
 
 try:
     import xml.etree.cElementTree as ET
@@ -41,8 +42,7 @@ class TravelDetails(APITenantTestCase):
             ET.SubElement(main, 'message').text = 'explanation'
             ET.SubElement(main, 'vision_fi_doc').text = 'vision_fi'
 
-        with open('/tmp/invoices/updater.xml', 'w') as output:
-            output.write(ET.tostring(root))
+        return ET.tostring(root)
 
     def test_invoice_making(self):
         def make_invoices(travel):
@@ -123,24 +123,19 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(travel.invoices.all().count(), 1)
         self.assertEqual(InvoiceItem.objects.all().count(), 2)
 
-        response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
-        with open('/tmp/invoices/inv_{}.xml'.format(time()), 'w') as output:
-            output.write(response.data)
+        self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
 
         self.assertEqual(Invoice.objects.filter(status=Invoice.PENDING).count(), 0)
         self.assertEqual(Invoice.objects.filter(status=Invoice.PROCESSING).count(), 1)
         self.assertEqual(Invoice.objects.filter(status=Invoice.SUCCESS).count(), 0)
         self.assertEqual(Invoice.objects.filter(status=Invoice.ERROR).count(), 0)
 
-        self.make_invoice_updater()
+        updater_file_like = StringIO(self.make_invoice_updater())
 
         # Update invoices like vision would do it
-        with open('/tmp/invoices/updater.xml', 'r') as fp:
-            self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
-                                 data={'xml': fp},
-                                 user=self.unicef_staff)
-
-        debug_line = 1
+        self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
+                             data={'xml': updater_file_like},
+                             user=self.unicef_staff)
 
         self.assertEqual(Invoice.objects.filter(status=Invoice.PENDING).count(), 0)
         self.assertEqual(Invoice.objects.filter(status=Invoice.PROCESSING).count(), 0)
@@ -175,17 +170,3 @@ class TravelDetails(APITenantTestCase):
 
         # Generate invoice
         make_invoices(travel)
-
-        response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
-        with open('/tmp/invoices/inv_{}.xml'.format(time()), 'w') as output:
-            output.write(response.data)
-
-        self.make_invoice_updater()
-
-        # Update invoices like vision would do it
-        with open('/tmp/invoices/updater.xml', 'r') as fp:
-            self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
-                                 data={'xml': fp},
-                                 user=self.unicef_staff)
-
-
