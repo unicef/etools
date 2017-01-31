@@ -21,12 +21,12 @@ log = logging.getLogger(__name__)
 
 def run_on_tenants(func):
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(self, *args, **kwargs):
         original_tenant = connection.tenant
         try:
             for workspace in Workspace.objects.all():
                 connection.set_tenant(workspace)
-                func(workspace, *args, **kwargs)
+                func(self, workspace, *args, **kwargs)
         finally:
             connection.set_tenant(original_tenant)
     return wrapper

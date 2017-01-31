@@ -6,7 +6,7 @@ import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from publics.models import TravelAgent, Country, Currency, ExchangeRate, WBS, Grant, Fund
+from publics.models import TravelAgent, Country, Currency, ExchangeRate, WBS, Grant, Fund, TravelExpenseType
 
 # try:
 #     import xml.etree.cElementTree as ET
@@ -17,10 +17,6 @@ import xml.etree.ElementTree as ET
 from EquiTrack.celery import app
 
 log = logging.getLogger(__name__)
-
-
-def convert_date(date_str):
-    return datetime()
 
 
 @app.task
@@ -70,6 +66,8 @@ def import_travel_agents(xml_path):
         travel_agent.save()
         log.info('Travel agent %s saved.', travel_agent.name)
 
+        TravelExpenseType.objects.get_or_create(vendor_number=vendor_code, is_travel_agent=True,
+                                                defaults={'title': name})
 
 @app.task
 def import_exchange_rates(xml_path):
