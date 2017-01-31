@@ -150,7 +150,6 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-
         related_fields = ['amendments']
         instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
 

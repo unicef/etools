@@ -54,10 +54,10 @@ class ValidatorViewMixin(object):
         main_serializer.context['skip_global_validator'] = True
         main_serializer.is_valid(raise_exception=True)
 
-        if snapshot:
-            create_snapshot_activity_stream(request.user, main_serializer.instance, created=True)
-
         main_object = main_serializer.save()
+
+        if snapshot:
+            create_snapshot_activity_stream(request.user, main_object, created=True)
 
         def _get_model_for_field(field):
             return main_object.__class__._meta.get_field(field).related_model
