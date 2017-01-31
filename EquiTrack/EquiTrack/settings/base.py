@@ -62,8 +62,6 @@ SUIT_CONFIG = {
             {'model': 'reports.goal'},
         ]},
 
-        #{'app': 'activityinfo', 'label': 'ActivityInfo'},
-
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
         {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
@@ -402,7 +400,6 @@ SHARED_APPS = (
     'analytical',
     'mptt',
     'easy_pdf',
-    'django_hstore',
 
     'vision',
     'management',
@@ -421,7 +418,6 @@ TENANT_APPS = (
     'reversion',
     'funds',
     'locations',
-    'activityinfo',
     'reports',
     'partners',
     'trips',
