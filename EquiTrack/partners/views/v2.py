@@ -26,6 +26,8 @@ from partners.models import (
     FileType,
 )
 
+from publics.models import Currency
+
 from reports.models import (
     ResultStructure,
     CountryProgramme,
@@ -165,6 +167,8 @@ class PmpStaticDropdownsListApiView(APIView):
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
+        currencies = choices_to_json_ready(list(Currency.objects.values_list('name', flat=True).
+                                                  order_by('name').distinct()))
 
 
         return Response(
@@ -179,6 +183,7 @@ class PmpStaticDropdownsListApiView(APIView):
                 'intervention_doc_type': intervention_doc_type,
                 'intervention_status': intervention_status,
                 'intervention_amendment_types': intervention_amendment_types,
+                'currencies': currencies,
              },
             status=status.HTTP_200_OK
         )
