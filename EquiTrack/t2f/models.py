@@ -174,7 +174,13 @@ class Travel(models.Model):
             return False
         return True
 
-    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED)
+    def check_pending_invoices(self):
+        if self.invoices.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]).exists():
+            return False
+        return True
+
+    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED,
+                conditions=[check_pending_invoices])
     def submit_for_approval(self):
         # TODO validate this!!!
         if not self.supervisor:
@@ -222,7 +228,8 @@ class Travel(models.Model):
                                      'emails/sent_for_payment.html')
 
     @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED],
-                target=CERTIFICATION_SUBMITTED)
+                target=CERTIFICATION_SUBMITTED,
+                conditions=[check_pending_invoices])
     def submit_certificate(self):
         self.send_notification_email('Travel #{} certification was submitted.'.format(self.id),
                                      self.supervisor.email,
@@ -242,7 +249,8 @@ class Travel(models.Model):
                                      'emails/certificate_rejected.html')
 
     @transition(status, source=[CERTIFICATION_APPROVED, SENT_FOR_PAYMENT],
-                target=CERTIFIED)
+                target=CERTIFIED,
+                conditions=[check_pending_invoices])
     def mark_as_certified(self):
         self.send_notification_email('Travel #{} certification was certified.'.format(self.id),
                                      self.traveler.email,
