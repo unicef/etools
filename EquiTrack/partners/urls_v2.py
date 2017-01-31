@@ -27,8 +27,9 @@ urlpatterns = (
     # url(r'^agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='agreement-interventions-list'),
 
     url(r'^partners/$', view=PartnerOrganizationListAPIView.as_view(http_method_names=['get', 'post']), name='partner-list'),
+    url(r'^partners/hact/$', view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]), name='partner-hact'),
     url(r'^partners/(?P<pk>\d+)/$', view=PartnerOrganizationDetailAPIView.as_view(http_method_names=['get', 'patch']), name='partner-detail'),
-    url(r'^partners/hact$', view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]), name='partner-hact'),
+
     # url(r'^partners/(?P<pk>\d+)/interventions/$', view=PartnerInterventionListAPIView.as_view(), name='partner-interventions-list'),
     # url(r'^partners/(?P<partner_pk>\d+)/agreements/$', view=AgreementListAPIView.as_view(), name='parter-agreement-list'),
     # url(r'^partners/(?P<partner_pk>\d+)/agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='partner-agreement-interventions-list'),
