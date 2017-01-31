@@ -1,10 +1,12 @@
 
-from partners.models import GovernmentIntervention
+from partners.models import GovernmentIntervention, GovernmentInterventionResult
 
 from rest_framework import serializers
 
 
-
+class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
+    model = GovernmentInterventionResult
+    fields = '__all__'
 
 
 class GovernmentInterventionListSerializer(serializers.ModelSerializer):
@@ -15,6 +17,7 @@ class GovernmentInterventionListSerializer(serializers.ModelSerializer):
 
 
 class GovernmentInterventionDetailSerializer(serializers.ModelSerializer):
+    results = GovernmentInterventionResultNestedSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = GovernmentIntervention
