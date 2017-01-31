@@ -19,7 +19,7 @@ class TravelListExportSerializer(TravelListSerializer):
 
 class FinanceExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField()
-    traveller = serializers.CharField(source='traveller.get_full_name')
+    traveller = serializers.CharField(source='traveler.get_full_name')
     office = serializers.CharField(source='office.name')
     section = serializers.CharField(source='section.name')
     status = serializers.CharField()
@@ -56,7 +56,7 @@ class TravelAdminExportSerializer(serializers.Serializer):
     dsa_area = serializers.CharField(source='dsa_region.area_code')
     overnight_travel = serializers.BooleanField()
     mode_of_travel = serializers.CharField()
-    airline = serializers.CharField(source='airlines.0.name')
+    airline = serializers.CharField(source='airlines.all.0.name')
 
     class Meta:
         fields = ('reference_number', 'traveller', 'office', 'section', 'status', 'origin', 'destination',
