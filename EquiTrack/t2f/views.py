@@ -284,7 +284,6 @@ class VisionInvoiceExport(generics.GenericAPIView):
 
 class VisionInvoiceUpdate(generics.GenericAPIView):
     def post(self, request):
-        xml_payload = request.data['xml'][0]
-        updater = InvoiceUpdater(xml_payload)
+        updater = InvoiceUpdater(request.data)
         updater.update_invoices()
         return Response(status=status.HTTP_200_OK)
