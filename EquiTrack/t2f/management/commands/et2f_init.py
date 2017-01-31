@@ -11,7 +11,7 @@ from django.db import connection
 from django.db.transaction import atomic
 from tenant_schemas.postgresql_backend.base import FakeTenant
 
-from publics.models import Currency, AirlineCompany, DSARegion, ExpenseType, WBS, Grant, Fund, BusinessRegion, \
+from publics.models import Currency, AirlineCompany, DSARegion, TravelExpenseType, WBS, Grant, Fund, BusinessRegion, \
     BusinessArea, Country
 from t2f.models import TravelType, ModeOfTravel
 from partners.models import PartnerOrganization
@@ -898,7 +898,7 @@ class Command(BaseCommand):
 
         for data in expense_type_data:
             title = data.pop('title')
-            e, created = ExpenseType.objects.get_or_create(title=title, defaults=data)
+            e, created = TravelExpenseType.objects.get_or_create(title=title, defaults=data)
             if created:
                 self.stdout.write('Expense type created: {}'.format(title))
             else:
