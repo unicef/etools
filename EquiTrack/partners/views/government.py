@@ -1,5 +1,6 @@
 import operator
 import functools
+import logging
 from django.db import transaction
 from django.db.models import Q
 
@@ -10,6 +11,7 @@ from rest_framework.generics import (
 )
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
 from rest_framework_csv import renderers as r
 
@@ -19,10 +21,13 @@ from partners.serializers.government import (
     GovernmentInterventionListSerializer,
     GovernmentInterventionCreateUpdateSerializer,
     GovernmentInterventionExportSerializer,
-    GovernmentInterventionDetailSerializer
+    GovernmentInterventionDetailSerializer,
+    GovernmentInterventionResultNestedSerializer
 )
 
 from partners.filters import PartnerScopeFilter
+from partners.validation.governments import GovernmentInterventionValid
+from EquiTrack.validation_mixins import ValidatorViewMixin
 
 
 class GovernmentInterventionListAPIView(ListCreateAPIView):
@@ -103,13 +108,17 @@ class GovernmentInterventionListAPIView(ListCreateAPIView):
         return response
 
 
-class GovernmentDetailAPIView(RetrieveUpdateDestroyAPIView):
+class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update Agreement.
     """
     queryset = GovernmentIntervention.objects.all()
     serializer_class = GovernmentInterventionDetailSerializer
     permission_classes = (IsAdminUser,)
+
+    SERIALIZER_MAP = {
+        'results': GovernmentInterventionResultNestedSerializer
+    }
 
     def get_serializer_class(self):
         """
@@ -134,4 +143,21 @@ class GovernmentDetailAPIView(RetrieveUpdateDestroyAPIView):
             status=status.HTTP_200_OK
         )
 
-    #TODO add update method
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        related_fields = ['results']
+
+        instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
+
+        validator = GovernmentInterventionValid(instance, old=old_instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # refresh the instance from the database.
+            instance = self.get_object()
+            serializer = self.get_serializer(instance)
+
+        return Response(serializer.data)

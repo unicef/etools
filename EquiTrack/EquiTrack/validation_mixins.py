@@ -2,6 +2,7 @@ import copy
 import logging
 from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitions
 from rest_framework.exceptions import ValidationError
+from django.core.exceptions import FieldDoesNotExist
 from django.apps import apps
 from django.utils.functional import cached_property
 
@@ -188,11 +189,17 @@ class CompleteValidation(object):
             old = old_instance
 
         self.new = new
-        self.new_status = self.new.status
+        try:
+            self.new_status = self.new.status
+        except AttributeError:
+            self.new_status = None
         self.skip_transition = not old
         self.skip_permissions = not user
         self.old = old
-        self.old_status = self.old.status if self.old else None
+        try:
+            self.old_status = self.old.status
+        except AttributeError:
+            self.old_status = None
         self.user = user
 
     def check_transition_conditions(self, transition):
@@ -212,7 +219,10 @@ class CompleteValidation(object):
     @transition_error_string
     def transitional_validation(self):
         # set old status to get proper transitions
-        self.new.status = self.old.status
+        try:
+            self.new.status = self.old.status
+        except AttributeError:
+            self.new.status = None
 
         # set old instance on instance to make it available to the validation functions
         setattr(self.new, 'old_instance', self.old)
@@ -252,10 +262,14 @@ class CompleteValidation(object):
         return result
 
     def _get_fsm_defined_transitions(self, source, target):
-        all_transitions = get_all_FIELD_transitions(self.new, self.new.__class__._meta.get_field('status'))
-        for transition in all_transitions:
-            if transition.source == source and target in transition.target:
-                return getattr(self.new, transition.method.__name__)
+        try:
+            all_transitions = get_all_FIELD_transitions(self.new, self.new.__class__._meta.get_field('status'))
+        except FieldDoesNotExist:
+            all_transitions = None
+        if all_transitions:
+            for transition in all_transitions:
+                if transition.source == source and target in transition.target:
+                    return getattr(self.new, transition.method.__name__)
 
     @transition_error_string
     def auto_transition_validation(self, potential_transition):
@@ -281,10 +295,12 @@ class CompleteValidation(object):
 
         # Transition list: list of objects [{'transition_to_status': [auto_changes_function1, auto_changes_function2]}]
         # Represents potential transitions from the current status:
-        tl = filter_tl(potential.get(self.new.status, None),
-                       [s[0] for s in self.new.__class__._meta.get_field('status').choices])
-
-        logging.debug("Potential transition from the current status: {} -> {}".format(self.new.status, tl))
+        try:
+            tl = filter_tl(potential.get(self.new.status, None),
+                           [s[0] for s in self.new.__class__._meta.get_field('status').choices])
+            logging.debug("Potential transition from the current status: {} -> {}".format(self.new.status, tl))
+        except FieldDoesNotExist:
+            tl = None
         if not tl:
             return None, None, None
 
