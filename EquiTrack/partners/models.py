@@ -551,8 +551,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                     ],
                     year=year).exclude(id=budget_record.id)
 
-                q = q.order_by("intervention__id", "-created")
-                    .distinct('intervention__id')
+                q = q.order_by("intervention__id", "-created") \
+                    .distinct('intervention__id') \
                     .values_list('unicef_cash', flat=True)
 
                 total = sum(q)

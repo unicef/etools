@@ -84,6 +84,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+        # Check for activity action created
+        self.assertEquals(model_stream(PartnerOrganization).count(), 1)
+
     def test_api_partners_create_with_members(self):
         staff_members = [{
                 "title": "Some title",
@@ -106,6 +109,12 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+        # Check for activity action created
+        self.assertEquals(model_stream(PartnerOrganization).count(), 2)
+
+        # Check for activity action created
+        self.assertEquals(model_stream(PartnerStaffMember).count(), 1)
 
     def test_api_partners_update_with_members(self):
         response = self.forced_auth_req(
@@ -139,6 +148,12 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data["staff_members"]), 2)
+
+        # Check for activity action created
+        self.assertEquals(model_stream(PartnerOrganization).count(), 2)
+
+        # Check for activity action created
+        self.assertEquals(model_stream(PartnerStaffMember).count(), 2)
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
@@ -176,6 +191,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
+
+        # Check for activity action created
+        self.assertEquals(model_stream(PartnerOrganization).count(), 3)
 
     def test_api_partners_filter_partner_type(self):
         # make some other type to filter against
@@ -514,6 +532,9 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+        # Check for activity action created
+        self.assertEquals(model_stream(Agreement).count(), 1)
+
     def test_agreements_list(self):
         response = self.forced_auth_req(
             'get',
@@ -538,6 +559,9 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "active")
+
+        # Check for activity action created
+        self.assertEquals(model_stream(Agreement).count(), 2)
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -575,6 +599,9 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(set(response.data["authorized_officers"]), set([self.partner_staff.id, self.partner_staff2.id]))
+
+        # Check for activity action created
+        self.assertEquals(model_stream(Agreement).count(), 3)
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
@@ -972,6 +999,9 @@ class TestInterventionViews(APITenantTestCase):
         )
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+        # Check for activity action created
+        self.assertEquals(model_stream(Intervention).count(), 1)
+
     def test_intervention_update(self):
         data = {
             "agreement": self.agreement.id,
@@ -1033,6 +1063,9 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        # Check for activity action created
+        self.assertEquals(model_stream(Intervention).count(), 2)
 
     def test_intervention_validation(self):
         response = self.forced_auth_req(
