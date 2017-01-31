@@ -247,6 +247,8 @@ class AgreementViewSet(
 
         # TODO: Use a different action verb for each status choice in Agreement
         # Draft, Active, Expired, Suspended, Terminated
+        create_snapshot_activity_stream(request.user, serializer.instance, created=True)
+
         serializer.instance = serializer.save()
 
         with transaction.atomic():
