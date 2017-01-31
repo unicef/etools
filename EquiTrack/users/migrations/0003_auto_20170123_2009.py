@@ -58,11 +58,11 @@ class Migration(migrations.Migration):
             name='supervisor',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='supervisee', to='users.UserProfile'),
         ),
-        # migrations.AddField(
-        #     model_name='userprofile',
-        #     name='vendor_number',
-        #     field=models.CharField(blank=True, max_length=32, null=True, unique=True),
-        # ),
+        migrations.AddField(
+            model_name='userprofile',
+            name='vendor_number',
+            field=models.CharField(blank=True, max_length=32, null=True, unique=True),
+        ),
         migrations.AlterField(
             model_name='section',
             name='name',
