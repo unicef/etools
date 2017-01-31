@@ -4,10 +4,12 @@ from __future__ import unicode_literals
 from datetime import datetime
 
 from django.contrib.auth.models import Group
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
 
 from publics.models import Currency, AirlineCompany, DSARegion, TravelExpenseType, BusinessRegion, BusinessArea, Country
+from dsa_regions_data import DSA_REGION_DATA
 
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
@@ -17,10 +19,9 @@ class Command(BaseCommand):
 
         self._load_airlines()
         self._load_business_areas()
-        # self._load_currencies()
-        self._load_countries()
-        # self._load_dsa_regions()
-        # self._add_expense_types()
+        dsa_country_mapping = self._load_countries()
+        self._load_dsa_regions(dsa_country_mapping)
+        self._add_expense_types()
         self._add_user_groups()
 
     def _load_business_areas(self):
@@ -200,47 +201,6 @@ class Command(BaseCommand):
                 self.stdout.write('Business area created: {}'.format(ba[1]))
             else:
                 self.stdout.write('Business area found: {}'.format(ba[1]))
-
-    def _load_currencies(self):
-        data = ['DZD', 'NAD', 'GHS', 'BZD', 'EGP', 'BGN', 'PAB', 'YUM', 'BOB', 'DKK', 'BWP', 'LBP', 'TZS', 'VND', 'AOA',
-                'KHR', 'MYR', 'KYD', 'LYD', 'UAH', 'JOD', 'AWG', 'SAR', 'LTL', 'HKD', 'CHF', 'GIP', 'BYR', 'ALL', 'MRO',
-                'HRK', 'DJF', 'THB', 'XAF', 'BND', 'VUV', 'UYU', 'NIO', 'LAK', 'NPR', 'SYP', 'MAD', 'MZM', 'PHP', 'ZAR',
-                'PYG', 'GBP', 'NGN', 'ZWD', 'CRC', 'AED', 'EEK', 'MWK', 'LKR', 'SKK', 'PKR', 'HUF', 'ROL', 'SZL', 'LSL',
-                'MNT', 'AMD', 'UGX', 'JMD', 'GEL', 'SHP', 'AFN', 'MMK', 'KPW', 'CSD', 'TRY', 'BDT', 'CVE', 'HTG', 'SLL',
-                'MGA', 'YER', 'LRD', 'XCD', 'NOK', 'MOP', 'SSP', 'INR', 'MXN', 'CZK', 'TJS', 'BTN', 'COP', 'MUR', 'IDR',
-                'HNL', 'XPF', 'FJD', 'ETB', 'PEN', 'MKD', 'ILS', 'DOP', 'TMM', 'MDL', 'QAR', 'SEK', 'MVR', 'AUD', 'SRD',
-                'CUP', 'BBD', 'KMF', 'KRW', 'GMD', 'VEF', 'GTQ', 'ANG', 'CLP', 'ZMW', 'EUR', 'CDF', 'RWF', 'KZT', 'RUB',
-                'ISK', 'TTD', 'OMR', 'BRL', 'SBD', 'PLN', 'KES', 'SVC', 'USD', 'AZM', 'TOP', 'GNF', 'WST', 'IQD', 'ERN',
-                'BAM', 'SCR', 'CAD', 'GYD', 'KWD', 'BIF', 'PGK', 'SOS', 'SGD', 'UZS', 'STD', 'IRR', 'CNY', 'XOF', 'TND',
-                'NZD', 'LVL', 'BSD', 'KGS', 'ARS', 'BMD', 'RSD', 'BHD', 'JPY', 'SDG']
-        # data = [('United States dollar', 'USD'),
-        #         ('Euro', 'EUR'),
-        #         ('Japanese yen', 'JPY'),
-        #         ('Pound sterling', 'GBP'),
-        #         ('Australian dollar', 'AUD'),
-        #         ('Canadian dollar', 'CAD'),
-        #         ('Swiss franc', 'CHF'),
-        #         ('Chinese yuan', 'CNY'),
-        #         ('Swedish krona', 'SEK'),
-        #         ('Mexican peso', 'MXN'),
-        #         ('New Zealand dollar', 'NZD'),
-        #         ('Singapore dollar', 'SGD'),
-        #         ('Hong Kong dollar', 'HKD'),
-        #         ('Norwegian krone', 'NOK'),
-        #         ('South Korean won', 'KRW'),
-        #         ('Turkish lira', 'TRY'),
-        #         ('Indian rupee', 'INR'),
-        #         ('Russian ruble', 'RUB'),
-        #         ('Brazilian real', 'BRL'),
-        #         ('South African rand', 'ZAR')]
-
-        for code in data:
-            name = code
-            c, created = Currency.objects.get_or_create(code=code, defaults={'name': name})
-            if created:
-                self.stdout.write('Currency created: {} ({})'.format(name, code))
-            else:
-                self.stdout.write('Currency found: {} ({})'.format(name, code))
 
     def _load_countries(self):
         countries = [('Afghanistan', '0060', 'Afghanistan', 'AFG', '006', 'AF', 'AFG', 'AFN', '19.11.1946', '31.12.9999', 'THE ISLAMIC STATE OF AFGHANISTAN'),
@@ -479,7 +439,12 @@ class Command(BaseCommand):
                      ('Wallis & Futuna Islands', '', 'Wallis & Futuna Islands', '', '661', 'WF', 'WLF', 'XPF', '20.09.1993', '31.12.9999', 'WALLIS & FUTUNA ISLANDS'),
                      ('Yugoslavia', '', 'Yugoslavia', '', '495', 'YU', '', 'YUM', '24.10.1945', '31.12.9999', 'THE FEDERAL REPUBLIC OF YUGOSLAVIA')]
 
-        for name, ba_code, _, _, vision_code, iso_2, iso_3, currency_code, valid_from, valid_to, long_name in countries:
+        dsa_country_mapping = {}
+        for name, ba_code, _, dsa_code, vision_code, iso_2, iso_3, currency_code, valid_from, valid_to, long_name in countries:
+            iso_2 = iso_2 or None
+            iso_3 = iso_3 or None
+            vision_code = vision_code or None
+
             if valid_from:
                 valid_from = datetime.strptime(valid_from, '%d.%m.%Y')
             else:
@@ -501,10 +466,15 @@ class Command(BaseCommand):
                                                        valid_to=valid_to,
                                                        threshold_tre_usd=0,
                                                        threshold_tae_usd=0)
+            if dsa_code:
+                dsa_country_mapping[dsa_code] = c
+
             if created:
                 self.stdout.write('Country created: {}'.format(name))
             else:
                 self.stdout.write('Country found: {}'.format(name))
+
+        return dsa_country_mapping
 
     def _load_airlines(self):
         airlines = [('American Airlines', 'AA', 1, 'AAL', 'United States'),
@@ -630,52 +600,53 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('Airline found: {}'.format(airline_name))
 
-    def _load_dsa_regions(self):
-        dsa_region_data = [{'dsa_amount_usd': 300,
-                            'country': Country.objects.get(name='Hungary'),
-                            'room_rate': 120,
-                            'dsa_amount_60plus_usd': 200,
-                            'dsa_amount_60plus_local': 56000,
-                            'dsa_amount_local': 84000,
-                            'finalization_date': datetime.now().date(),
-                            'eff_date': datetime.now().date(),
-                            'area_name': 'Everywhere',
-                            'area_code': country.business_area_code},
-                           {'dsa_amount_usd': 400,
-                            'country': Country.objects.filter(name='Germany').last(),
-                            'room_rate': 150,
-                            'dsa_amount_60plus_usd': 260,
-                            'dsa_amount_60plus_local': 238.68,
-                            'dsa_amount_local': 367.21,
-                            'finalization_date': datetime.now().date(),
-                            'eff_date': datetime.now().date(),
-                            'area_name': 'Everywhere',
-                            'area_code': country.business_area_code}]
-        for data in dsa_region_data:
-            name = data.pop('country')
-            d, created = DSARegion.objects.get_or_create(country=name, defaults=data)
-            if created:
-                self.stdout.write('DSA Region created: {}'.format(name))
-            else:
-                self.stdout.write('DSA Region found: {}'.format(name))
+    def _load_dsa_regions(self, dsa_country_mapping):
 
-    # def _add_expense_types(self):
-    #     expense_type_data = [
-    #         {'title': 'Food',
-    #          'code': 'food'},
-    #         {'title': 'Tickets',
-    #          'code': 'tickets'},
-    #         {'title': 'Fees',
-    #          'code': 'fees'}
-    #     ]
-    #
-    #     for data in expense_type_data:
-    #         title = data.pop('title')
-    #         e, created = ExpenseType.objects.get_or_create(title=title, defaults=data)
-    #         if created:
-    #             self.stdout.write('Expense type created: {}'.format(title))
-    #         else:
-    #             self.stdout.write('Expense type found: {}'.format(title))
+        for data in DSA_REGION_DATA:
+            country_code = data.pop('country_code')
+            area_code = data.pop('area_code')
+
+            country = dsa_country_mapping[country_code]
+
+            data['dsa_amount_usd'] = data['dsa_amount_usd'].replace(',', '')
+            data['dsa_amount_60plus_usd'] = data['dsa_amount_60plus_usd'].replace(',', '')
+            data['dsa_amount_local'] = data['dsa_amount_local'].replace(',', '')
+            data['dsa_amount_60plus_local'] = data['dsa_amount_60plus_local'].replace(',', '')
+
+            def make_datetime(date_str):
+                day, month, year = date_str.split('/')
+                return datetime(int(year), int(month), int(day))
+
+            data['finalization_date'] = make_datetime(data['finalization_date'])
+            data['eff_date'] = make_datetime(data['eff_date'])
+
+            d, created = DSARegion.objects.get_or_create(country=country, area_code=area_code, defaults=data)
+            if created:
+                self.stdout.write('DSA Region created: {}'.format(d.label))
+            else:
+                self.stdout.write('DSA Region found: {}'.format(d.label))
+
+    def _add_expense_types(self):
+        expense_type_data = [
+            {'title': 'Air Ticket Cost',
+             'vendor_number': 'user'},
+            {'title': 'Train Cost',
+             'vendor_number': 'user'},
+            {'title': 'Terminal Cost',
+             'vendor_number': 'user'},
+            {'title': 'Other Traveler Costs',
+             'vendor_number': 'user'},
+            {'title': 'Estimated Travel Agent Cost',
+             'vendor_number': ''}
+        ]
+
+        for data in expense_type_data:
+            title = data.pop('title')
+            e, created = TravelExpenseType.objects.get_or_create(title=title, defaults=data)
+            if created:
+                self.stdout.write('Expense type created: {}'.format(title))
+            else:
+                self.stdout.write('Expense type found: {}'.format(title))
 
     def _add_user_groups(self):
         group_names = ['Representative Office',

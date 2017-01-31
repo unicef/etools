@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
 
+from collections import defaultdict
 from datetime import datetime
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
 
-from publics.models import TravelAgent, Country, Currency, ExchangeRate
+from publics.models import TravelAgent, Country, Currency, ExchangeRate, WBS, Grant, Fund
 
 # try:
 #     import xml.etree.cElementTree as ET
@@ -87,8 +88,8 @@ def import_exchange_rates(xml_path):
         decimal_places = row.find('NO_OF_DECIMAL').text
 
         x_rate = row.find('X_RATE').text
-        valid_from = row.find('VALID_FROM').text
-        valid_to = row.find('VALID_TO').text
+        valid_from = datetime.strptime(row.find('VALID_FROM').text, '%d-%b-%y')
+        valid_to = datetime.strptime(row.find('VALID_TO').text, '%d-%b-%y')
 
         try:
             currency = Currency.objects.get(code=currency_code)
@@ -112,3 +113,40 @@ def import_exchange_rates(xml_path):
         exchange_rate.valid_to = valid_to
         exchange_rate.save()
         log.info('Exchange rate %s was updated.', currency_name)
+
+
+@app.task
+def import_cost_assignments(xml_path):
+    log.info('Try to open %s', xml_path)
+
+    try:
+        with open(xml_path) as xml_file:
+            root = ET.fromstring(xml_file.read())
+    except IOError:
+        log.error('Cannot open file at %s', xml_path)
+        return
+
+    # This will hold the wbs/grant/fund grouping
+    mapping = defaultdict(lambda: defaultdict(list))
+
+    for row in root.iter('ROW'):
+        wbs_code = row.find('WBS_ELEMENT').text
+        grant_code = row.find('GRANT_REF').text
+        fund_code = row.find('FUND_TYPE_CODE').text
+
+        mapping[wbs_code][grant_code].append(fund_code)
+
+    for wbs_code in mapping.keys():
+        wbs, created = WBS.objects.get_or_create(name=wbs_code)
+        if created:
+            log.info('WBS %s was created.', wbs_code)
+
+        for grant_code in mapping[wbs_code].keys():
+            grant, created = Grant.objects.get_or_create(name=grant_code, wbs=wbs)
+            if created:
+                log.info('Grant %s was created.', grant_code)
+
+            for fund_code in mapping[wbs_code][grant_code]:
+                f, created = Fund.objects.get_or_create(name=fund_code, grant=grant)
+                if created:
+                    log.info('Fund %s was created.', fund_code)

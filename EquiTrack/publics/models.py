@@ -25,7 +25,7 @@ class TravelExpenseType(models.Model):
 
 class Currency(models.Model):
     name = models.CharField(max_length=128)
-    code = models.CharField(max_length=3)
+    code = models.CharField(max_length=5)
     decimal_places = models.PositiveIntegerField(default=0)
 
 
@@ -75,9 +75,9 @@ class Country(models.Model):
     name = models.CharField(max_length=64)
     long_name = models.CharField(max_length=128)
     business_area = models.ForeignKey('BusinessArea', related_name='countries', null=True)
-    vision_code = models.CharField(max_length=3, null=True)
-    iso_2 = models.CharField(max_length=2)
-    iso_3 = models.CharField(max_length=3)
+    vision_code = models.CharField(max_length=3, null=True, unique=True)
+    iso_2 = models.CharField(max_length=2, null=True)
+    iso_3 = models.CharField(max_length=3, null=True)
     currency = models.ForeignKey('Currency', null=True)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
@@ -87,7 +87,7 @@ class Country(models.Model):
 
 class DSARegion(models.Model):
     country = models.ForeignKey('Country', related_name='dsa_regions')
-    area_name = models.CharField(max_length=32)
+    area_name = models.CharField(max_length=120)
     area_code = models.CharField(max_length=3)
 
     dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
