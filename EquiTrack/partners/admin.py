@@ -8,6 +8,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.core.urlresolvers import reverse
 from django.forms import SelectMultiple
 
+
 from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
@@ -51,6 +52,7 @@ from .models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
+    InterventionResultLink
 
 )
 from .filters import (
@@ -276,6 +278,11 @@ class InterventionAttachmentsInline(admin.TabularInline):
 class ResultsLinkInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-results'
     # form = ResultLinkForm
+
+    extra = 0
+
+class ResultsLinkInline(admin.TabularInline):
+    suit_classes = u'suit-tab suit-tab-results'
     model = InterventionResultLink
     fields = (
         'cp_output',
@@ -287,14 +294,12 @@ class ResultsLinkInline(admin.TabularInline):
     }
 
 
-
-
 class SectorLocationInline(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-locations'
     form = SectorLocationForm
     model = InterventionSectorLocationLink
-    extra = 1
 
+    extra = 1
 
 
 class SupplyPlanInlineAdmin(admin.TabularInline):
@@ -524,7 +529,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
 
 
-class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
+class InterventionAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
 
     date_hierarchy = 'start'
     list_display = (
@@ -604,7 +609,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     inlines = (
         #AmendmentLogInlineAdmin,
         InterventionAmendmentsInlineAdmin,
-        BudgetInlineAdmin,
         #PcaSectorInlineAdmin,
         #PartnershipBudgetInlineAdmin,
         #PcaGrantInlineAdmin,
@@ -618,7 +622,6 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         PlannedVisitsInline,
         ResultsLinkInline,
         SectorLocationInline,
-        InterventionAttachmentsInline,
     )
 
     suit_form_tabs = (

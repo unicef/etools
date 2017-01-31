@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 import django.contrib.postgres.fields
 from django.db import migrations, models
+
 from django.db.models import Count
 import django.db.models.deletion
 import django.db.models.manager
@@ -13,6 +14,7 @@ import django_fsm
 import model_utils.fields
 import partners.models
 import smart_selects.db_fields
+
 
 def reverse(apps, schema_editor):
     pass
@@ -53,6 +55,7 @@ def pca_unique_reference_number(apps, schema_editor):
             print(cdup)
             cdup.save()
 
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -64,6 +67,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+
         migrations.RunPython(
             agreement_unique_reference_number, reverse_code=reverse
         ),

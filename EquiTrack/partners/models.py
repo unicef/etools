@@ -16,9 +16,8 @@ from django.contrib.auth.models import User
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
 
-from django.contrib.postgres.fields import JSONField, ArrayField
-from django_hstore import hstore
-from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
+from django.contrib.postgres.fields import JSONField
+from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -2455,6 +2454,110 @@ class RAMIndicator(models.Model):
     @property
     def target(self):
         return self.indicator.target
+
+    def save(self, **kwargs):
+
+        # commit the reference number to the database once the agreement is signed
+        if not self.number:
+            self.number = self.reference_number
+
+        super(GovernmentIntervention, self).save(**kwargs)
+
+
+class GovernmentInterventionResult(models.Model):
+    """
+    Represents an result from government intervention.
+
+    Relates to :model:`partners.GovernmentIntervention`
+    Relates to :model:`auth.User`
+    Relates to :model:`reports.Sector`
+    Relates to :model:`users.Section`
+    Relates to :model:`reports.Result`
+    """
+
+    intervention = models.ForeignKey(
+        GovernmentIntervention,
+        related_name='results'
+    )
+    result = models.ForeignKey(
+        Result,
+    )
+    year = models.CharField(
+        max_length=4,
+    )
+    planned_amount = models.IntegerField(
+        default=0,
+        verbose_name='Planned Cash Transfers'
+    )
+    activities = JSONField(
+        blank=True, null=True
+    )
+    unicef_managers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        verbose_name='Unicef focal points',
+        blank=True
+    )
+    sector = models.ForeignKey(
+        Sector,
+        blank=True, null=True,
+        verbose_name='Programme/Sector'
+    )
+    section = models.ForeignKey(
+        Section,
+        null=True, blank=True
+    )
+    activities_list = models.ManyToManyField(
+        Result,
+        related_name='activities_list',
+        blank=True
+    )
+    planned_visits = models.IntegerField(default=0)
+
+    objects = hstore.HStoreManager()
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        if self.pk:
+            prev_result = GovernmentInterventionResult.objects.get(id=self.id)
+            if prev_result.planned_amount != self.planned_amount:
+                PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            if prev_result.planned_visits != self.planned_visits:
+                PartnerOrganization.planned_visits(self.intervention.partner, self)
+        else:
+            PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            PartnerOrganization.planned_visits(self.intervention.partner, self)
+
+        super(GovernmentInterventionResult, self).save(**kwargs)
+
+        for activity in self.activities.items():
+            try:
+                referenced_activity = self.activities_list.get(code=activity[0])
+                if referenced_activity.name != activity[1]:
+                    referenced_activity.name = activity[1]
+                    referenced_activity.save()
+
+            except Result.DoesNotExist:
+                referenced_activity = Result.objects.create(
+                    result_structure=self.intervention.result_structure,
+                    result_type=ResultType.objects.get(name='Activity'),
+                    parent=self.result,
+                    code=activity[0],
+                    name=activity[1],
+                    hidden=True
+
+                )
+                self.activities_list.add(referenced_activity)
+
+        for ref_activity in self.activities_list.all():
+            if ref_activity.code not in self.activities:
+                ref_activity.delete()
+
+
+    @transaction.atomic
+    def delete(self, using=None):
+
+        self.activities_list.all().delete()
+        super(GovernmentInterventionResult, self).delete(using=using)
 
     def __unicode__(self):
         return u'{} -> {}'.format(
