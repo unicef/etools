@@ -30,7 +30,7 @@ class Currency(models.Model):
 
 
 class ExchangeRate(models.Model):
-    currency = models.ForeignKey('publics.Currency')
+    currency = models.ForeignKey('publics.Currency', related_name='exchange_rates')
     valid_from = models.DateField()
     valid_to = models.DateField()
     x_rate = models.DecimalField(max_digits=10, decimal_places=5)
