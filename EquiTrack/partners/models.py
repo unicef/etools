@@ -399,7 +399,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             agreement_type=Agreement.PCA
         ).exclude(
             signed_by_unicef_date__isnull=True,
-            signed_by_partner_date__isnull=True
+            signed_by_partner_date__isnull=True,
+            status__in=[Agreement.DRAFT, Agreement.TERMINATED, Agreement.CANCELLED]
         ).order_by('signed_by_unicef_date').last()
 
     @classmethod
