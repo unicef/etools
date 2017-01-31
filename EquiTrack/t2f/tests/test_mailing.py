@@ -4,6 +4,7 @@ from django.core import mail
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from t2f.models import Invoice
 from t2f.tests.factories import BusinessAreaFactory
 
 from .factories import TravelFactory
@@ -29,6 +30,7 @@ class MailingTest(APITenantTestCase):
         self.travel.submit_for_approval()
         self.travel.approve()
         self.travel.send_for_payment()
+        self.travel.invoices.all().update(status=Invoice.SUCCESS)
         self.travel.submit_certificate()
         self.travel.approve_certificate()
         self.travel.mark_as_certified()

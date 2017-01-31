@@ -42,7 +42,7 @@ class InvoiceExport(object):
         return self.generate_tree(root)
 
     @run_on_tenants
-    def generate_invoices(self, tenant, root):
+    def generate_invoices(self, workspace, root):
         for invoice in self.invoice_list:
             self.generate_invoice_node(root, invoice)
 
@@ -118,11 +118,11 @@ class InvoiceUpdater(object):
 
             invoice_grouping[business_area_code].append(data)
 
-        self._update_invoices_in_tenants()
+        self._update_invoices_in_tenants(invoice_grouping)
 
     @run_on_tenants
-    def _update_invoices_in_tenants(self, tenant, invoice_grouping):
-        for invoice_data in invoice_grouping[tenant.business_area]:
+    def _update_invoices_in_tenants(self, workspace, invoice_grouping):
+        for invoice_data in invoice_grouping[workspace.business_area_code]:
             invoice_number = invoice_data['invoice_number']
             try:
                 invoice = Invoice.objects.get(reference_number=invoice_number)
