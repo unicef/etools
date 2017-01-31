@@ -1,10 +1,14 @@
 from __future__ import unicode_literals
 
+from functools import wraps
 import logging
+from collections import defaultdict
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import connection
 
 from t2f.models import Invoice
+from users.models import Country as Workspace
 
 try:
     import xml.etree.cElementTree as ET
@@ -15,19 +19,34 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
+def run_on_tenants(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        original_tenant = connection.tenant
+        try:
+            for workspace in Workspace.objects.all():
+                connection.set_tenant(workspace)
+                func(workspace, *args, **kwargs)
+        finally:
+            connection.set_tenant(original_tenant)
+    return wrapper
+
+
 class InvoiceExport(object):
     def __init__(self, invoice_list):
         self.invoice_list = invoice_list
 
     def generate_xml(self):
         root = ET.Element('invoices')
-
-        for invoice in self.invoice_list:
-            self.generate_invoice_structure(root, invoice)
-
+        self.generate_invoices(root)
         return self.generate_tree(root)
 
-    def generate_invoice_structure(self, root, invoice):
+    @run_on_tenants
+    def generate_invoices(self, tenant, root):
+        for invoice in self.invoice_list:
+            self.generate_invoice_node(root, invoice)
+
+    def generate_invoice_node(self, root, invoice):
         main = ET.SubElement(root, 'invoice')
         self.generate_header_node(main, invoice)
         self.generate_vendor_node(main, invoice)
@@ -78,25 +97,41 @@ class InvoiceUpdater(object):
     def update_invoices(self):
         possible_statuses = {s[0] for s in Invoice.STATUS}
 
+        invoice_grouping = defaultdict(list)
+
         for invoice_ack in self.root.iter('ta_invoice_ack'):
             invoice_number = invoice_ack.find('invoice_reference').text
             status = invoice_ack.find('status').text
-            message = invoice_ack.find('message').text
-            vision_fi_id = invoice_ack.find('vision_fi_doc').text
-
-            try:
-                invoice = Invoice.objects.get(reference_number=invoice_number)
-            except ObjectDoesNotExist:
-                log.error('Cannot find invoice with reference number %s', invoice_number)
-                continue
-
             status = status.lower()
 
             if status not in possible_statuses:
+                # TODO refine error handling
                 log.error('Invalid invoice (%s) status: %s', invoice_number, status)
                 continue
 
-            invoice.status = status
-            invoice.message = message
-            invoice.vision_fi_id = vision_fi_id
+            data = {'invoice_number': invoice_number,
+                    'status': status,
+                    'message': getattr(invoice_ack.find('message'), 'text'),
+                    'vision_fi_id': getattr(invoice_ack.find('vision_fi_doc'), 'text')}
+
+            business_area_code, _ = invoice_number.split('/', 1)
+
+            invoice_grouping[business_area_code].append(data)
+
+        self._update_invoices_in_tenants()
+
+    @run_on_tenants
+    def _update_invoices_in_tenants(self, tenant, invoice_grouping):
+        for invoice_data in invoice_grouping[tenant.business_area]:
+            invoice_number = invoice_data['invoice_number']
+            try:
+                invoice = Invoice.objects.get(reference_number=invoice_number)
+            except ObjectDoesNotExist:
+                # TODO refine error handling
+                log.error('Cannot find invoice with reference number %s', invoice_number)
+                continue
+
+            invoice.status = invoice_data['status']
+            invoice.message = invoice_data['message']
+            invoice.vision_fi_id = invoice_data['vision_fi_id']
             invoice.save()
