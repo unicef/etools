@@ -162,6 +162,9 @@ class Travel(models.Model):
     approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
     approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
 
+    def __unicode__(self):
+        return self.reference_number
+
     @property
     def cost_summary(self):
         calculator = CostSummaryCalculator(self)
