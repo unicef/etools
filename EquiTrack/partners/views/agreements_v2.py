@@ -155,7 +155,6 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
         validator = AgreementValid(instance, old=old_instance, user=request.user)
 
-
         if not validator.is_valid:
             logging.debug(validator.errors)
             raise ValidationError(validator.errors)

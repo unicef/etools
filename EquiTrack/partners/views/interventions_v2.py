@@ -17,6 +17,7 @@ from rest_framework.generics import (
 )
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
     InterventionBudget,
@@ -41,7 +42,6 @@ from partners.serializers.interventions_v2 import (
 )
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
-from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.interventions import InterventionValid
 
 class InterventionListAPIView(ListCreateAPIView):
@@ -83,7 +83,6 @@ class InterventionListAPIView(ListCreateAPIView):
         supplies = request.data.pop("supplies", [])
         distributions = request.data.pop("distributions", [])
 
-
         intervention_serializer = self.get_serializer(data=request.data)
         intervention_serializer.is_valid(raise_exception=True)
 
@@ -91,8 +90,6 @@ class InterventionListAPIView(ListCreateAPIView):
         intervention = intervention_serializer.save()
 
         # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
-
-
 
         headers = self.get_success_headers(intervention_serializer.data)
         return Response(

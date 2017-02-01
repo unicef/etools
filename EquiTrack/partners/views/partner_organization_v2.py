@@ -19,6 +19,7 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from partners.models import (
     PartnerStaffMember,
     Intervention,
+    PartnerOrganization
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -29,12 +30,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
 )
-
-
-from partners.models import PartnerOrganization
 from partners.permissions import PartnerPermission, PartneshipManagerPermission
-
-
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
@@ -80,7 +76,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                     hidden = True
                 if query_params.get("hidden").lower() == "false":
                     hidden = False
-                if hidden != None:
+                if hidden:
                     queries.append(Q(hidden=hidden))
             if "search" in query_params.keys():
                 queries.append(
@@ -116,8 +112,9 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         po_serializer = self.get_serializer(data=request.data)
         po_serializer.is_valid(raise_exception=True)
 
-        create_snapshot_activity_stream(request.user, po_serializer.instance, created=True)
         partner = po_serializer.save()
+
+        create_snapshot_activity_stream(request.user, partner, created=True)
 
         if staff_members:
             for item in staff_members:
@@ -129,9 +126,10 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                 e.detail = {'staff_members': e.detail}
                 raise e
 
-            create_snapshot_activity_stream(request.user, staff_members_serializer.instance, created=True)
-            staff_members_serializer.save()
+            staff_members = staff_members_serializer.save()
 
+            for staff_member in staff_members:
+                create_snapshot_activity_stream(request.user, staff_member, created=True)
 
         headers = self.get_success_headers(po_serializer.data)
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -160,7 +158,8 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
         po_serializer = self.get_serializer(instance, data=request.data, partial=partial)
         po_serializer.is_valid(raise_exception=True)
 
-        create_snapshot_activity_stream(request.user, po_serializer.instance)
+        create_snapshot_activity_stream(request.user, po_serializer.instance, delta_dict=request.data)
+
         partner = po_serializer.save()
 
         if staff_members:
@@ -173,8 +172,12 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
                         sm_instance = None
 
                     staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance, data=item, partial=partial)
+
+                    create_snapshot_activity_stream(request.user, staff_member_serializer.instance, delta_dict=item)
                 else:
                     staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(data=item)
+
+                    create_snapshot_activity_stream(request.user, staff_member_serializer.instance, created=True)
 
                 try:
                     staff_member_serializer.is_valid(raise_exception=True)
@@ -182,7 +185,6 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
                     e.detail = {'staff_members': e.detail}
                     raise e
 
-                create_snapshot_activity_stream(request.user, staff_member_serializer.instance)
                 staff_member_serializer.save()
 
         if getattr(instance, '_prefetched_objects_cache', None):
@@ -200,7 +202,7 @@ class PartnerOrganizationHactAPIView(ListCreateAPIView):
     Returns a list of Partners.
     """
     queryset = PartnerOrganization.objects.filter(
-            Q(documents__status__in=[Intervention.ACTIVE,Intervention.IMPLEMENTED]) |
+            Q(documents__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
             (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
         ).distinct()
     serializer_class = PartnerOrganizationHactSerializer
@@ -214,3 +216,16 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        # validate and save partner staff member
+        staff_members_serializer = self.get_serializer(data=request.data)
+        staff_members_serializer.is_valid(raise_exception=True)
+
+        staff_member = staff_members_serializer.save()
+
+        create_snapshot_activity_stream(request.user, staff_member, created=True)
+
+        headers = self.get_success_headers(staff_members_serializer.data)
+        return Response(staff_members_serializer.data, status=status.HTTP_201_CREATED, headers=headers)

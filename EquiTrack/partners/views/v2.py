@@ -3,6 +3,7 @@ import functools
 
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import models
+
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.generics import (
@@ -12,6 +13,14 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
+
+from reports.models import (
+    ResultStructure,
+    CountryProgramme,
+    Result,
+    ResultType,
+)
+from supplies.models import SupplyItem
 
 from partners.models import (
     PartnerOrganization,
@@ -25,23 +34,12 @@ from partners.models import (
     Intervention,
     FileType,
 )
-
-from reports.models import (
-    ResultStructure,
-    CountryProgramme,
-    Result,
-    ResultType,
-)
-from supplies.models import SupplyItem
-
 from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerStaffMemberPropertiesSerializer,
     PartnerStaffMemberCreateUpdateSerializer,
 )
-
-from partners.permissions import PartneshipManagerPermission
-from partners.permissions import PartnerPermission
+from partners.permissions import PartneshipManagerPermission, PartnerPermission
 from partners.serializers.v1 import InterventionSerializer
 from partners.filters import PartnerScopeFilter
 
@@ -153,19 +151,16 @@ class PmpStaticDropdownsListApiView(APIView):
         """
         Return All Static values used for dropdowns in the frontend
         """
-        cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).
-                                      order_by('cso_type').distinct('cso_type')))
+        cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
-        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).
-                                                  order_by('type').distinct()))
+        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).order_by('type').distinct()))
         agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendment.AMENDMENT_TYPES))
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
-
 
         return Response(
             {
@@ -192,8 +187,7 @@ class PMPDropdownsListApiView(APIView):
         """
         Return All dropdown values used for Agreements form
         """
-        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team'])
-                                .values('id', 'first_name', 'last_name', 'email'))
+        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team']).values('id', 'first_name', 'last_name', 'email'))
         hrps = list(ResultStructure.objects.values())
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
