@@ -4,7 +4,10 @@ import logging
 from django.apps import apps
 from django.utils.functional import cached_property
 
-from django_fsm import can_proceed, has_transition_perm, get_all_FIELD_transitions
+from django_fsm import (
+    can_proceed, has_transition_perm,
+    get_all_FIELD_transitions
+)
 
 from rest_framework.exceptions import ValidationError
 
@@ -19,9 +22,9 @@ def check_rigid_fields(obj, fields):
             return False, field
     return True, None
 
+
 class ValidatorViewMixin(object):
-    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name,
-                         partial=False):
+    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name, partial=False):
         if not field:
             return
         for item in field:
@@ -72,7 +75,6 @@ class ValidatorViewMixin(object):
         return main_serializer
 
     def my_update(self, request, related_f, snapshot=None, **kwargs):
-
         partial = kwargs.pop('partial', False)
         my_relations = {}
         for f in related_f:
@@ -85,9 +87,10 @@ class ValidatorViewMixin(object):
         main_serializer.is_valid(raise_exception=True)
 
         if snapshot:
-            create_snapshot_activity_stream(request.user, main_serializer.instance)
+            create_snapshot_activity_stream(request.user, main_serializer.instance, delta_dict=request.data)
 
         main_object = main_serializer.save()
+
         for k in my_relations.iterkeys():
             prop = '{}_old'.format(k)
             val = list(getattr(old_instance, k).all())
