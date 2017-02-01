@@ -20,15 +20,8 @@ log = logging.getLogger(__name__)
 
 
 @app.task
-def import_travel_agents(xml_path):
-    log.info('Try to open %s', xml_path)
-
-    try:
-        with open(xml_path) as xml_file:
-            root = ET.fromstring(xml_file.read())
-    except IOError:
-        log.error('Cannot open file at %s', xml_path)
-        return
+def import_travel_agents(xml_structure):
+    root = ET.fromstring(xml_structure)
 
     for row in root.iter('ROW'):
         name = row.find('VENDOR_NAME').text
@@ -70,15 +63,8 @@ def import_travel_agents(xml_path):
                                                 defaults={'title': name})
 
 @app.task
-def import_exchange_rates(xml_path):
-    log.info('Try to open %s', xml_path)
-
-    try:
-        with open(xml_path) as xml_file:
-            root = ET.fromstring(xml_file.read())
-    except IOError:
-        log.error('Cannot open file at %s', xml_path)
-        return
+def import_exchange_rates(xml_structure):
+    root = ET.fromstring(xml_structure)
 
     for row in root.iter('ROW'):
         currency_name = row.find('CURRENCY_NAME').text
@@ -114,15 +100,8 @@ def import_exchange_rates(xml_path):
 
 
 @app.task
-def import_cost_assignments(xml_path):
-    log.info('Try to open %s', xml_path)
-
-    try:
-        with open(xml_path) as xml_file:
-            root = ET.fromstring(xml_file.read())
-    except IOError:
-        log.error('Cannot open file at %s', xml_path)
-        return
+def import_cost_assignments(xml_structure):
+    root = ET.fromstring(xml_structure)
 
     # This will hold the wbs/grant/fund grouping
     mapping = defaultdict(lambda: defaultdict(list))

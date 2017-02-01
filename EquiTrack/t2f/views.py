@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.transaction import atomic
 from django_fsm import TransitionNotAllowed
 
@@ -16,6 +18,7 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
+from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter
 from t2f.filters import travel_list, action_points, invoices
 from locations.models import Location
@@ -162,9 +165,39 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     @atomic
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
-        # if 1 == 2 or 3 == 4:
-        #     serializer.transition_name = 'submit_for_approval'
+        if self.check_treshold(serializer.instance):
+            serializer.transition_name = 'submit_for_approval'
         run_transition(serializer)
+
+    def check_treshold(self, travel):
+        expenses = {'user': Decimal(0),
+                    'travel_agent': Decimal(0)}
+
+        for expense in travel.expenses.all():
+            if expense.type.vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
+                expenses['user'] += expense.amount
+            elif expense.type.vendor_number:
+                expenses['travel_agent'] += expense.amount
+
+        traveler_delta = 0
+        travel_agent_delta = 0
+        if travel.approved_cost_traveler:
+            traveler_delta = expenses['user'] - travel.approved_cost_traveler
+            if travel.currency.iso_3 != 'USD':
+                exchange_rate = travel.currency.exchange_rates.all().last()
+                traveler_delta *= exchange_rate.x_rate
+
+        if travel.approved_cost_travel_agencies:
+            travel_agent_delta = expenses['travel_agent'] - travel.approved_cost_travel_agencies
+
+        workspace = connection.tenant
+        if workspace.threshold_tre_usd and traveler_delta > workspace.threshold_tre_usd:
+            return True
+
+        if workspace.threshold_tae_usd and travel_agent_delta > workspace.threshold_tae_usd:
+            return True
+
+        return False
 
     @atomic
     def clone_for_secondary_traveler(self, request, *args, **kwargs):

@@ -105,8 +105,6 @@ class Country(models.Model):
     currency = models.ForeignKey('Currency', null=True)
     valid_from = models.DateField(null=True)
     valid_to = models.DateField(null=True)
-    threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4)
 
     def __unicode__(self):
         return self.name

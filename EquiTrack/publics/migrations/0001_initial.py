@@ -56,8 +56,6 @@ class Migration(migrations.Migration):
                 ('iso_3', models.CharField(max_length=3, null=True)),
                 ('valid_from', models.DateField(null=True)),
                 ('valid_to', models.DateField(null=True)),
-                ('threshold_tre_usd', models.DecimalField(decimal_places=4, max_digits=20)),
-                ('threshold_tae_usd', models.DecimalField(decimal_places=4, max_digits=20)),
                 ('business_area', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, related_name='countries', to='publics.BusinessArea')),
             ],
         ),

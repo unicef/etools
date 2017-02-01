@@ -88,8 +88,6 @@ class CountryFactory(factory.DjangoModelFactory):
     iso_3 = fuzzy.FuzzyText(length=3)
     valid_from = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
     valid_to = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
-    threshold_tae_usd = 0
-    threshold_tre_usd = 0
 
     class Meta:
         model = Country
