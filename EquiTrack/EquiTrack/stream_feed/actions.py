@@ -4,12 +4,16 @@ from django.forms import model_to_dict
 from actstream import action
 
 
-def create_snapshot_activity_stream(actor, target, created=False):
+def create_snapshot_activity_stream(actor, target, created=False, delta_dict={}):
     """
     Create activity stream for Agreement in order to keep track of field changes
     actor: An activity trigger - Any Python object
     target: An action target for the activity - Mutated but unsaved Django ORM with FieldTracker
     created: A boolean flag that indicates target has been newly created.
+    delta_dict: A Python dictionary that contains a set of delta values as a manual method.
+
+    Instance from Serializer class does not trigger FieldTracker.
+    Therefore, create_snapshot_activity_stream needs to be able to get instance object and changed dictionary as a manual effort.
     """
 
     if created:
@@ -25,18 +29,24 @@ def create_snapshot_activity_stream(actor, target, created=False):
             # Get all previous values of mutated fields for current object
             changed_prev_values = target.tracker.changed()
 
-            # Restore the previous state of current object by merging above
-            previous = dict(current_obj_dict.items() + changed_prev_values.items())
+            # If there is no manual delta data passed in, use FieldTracker
+            if not delta_dict:
+                # Restore the previous state of current object by merging above
+                previous = dict(current_obj_dict.items() + changed_prev_values.items())
 
-            # Extract current field changes from key lookups with current object
-            changes = {k:v for k,v in current_obj_dict.items() if k in changed_prev_values}
+                # Extract current field changes from key lookups with current object
+                changes = {k:v for k,v in current_obj_dict.items() if k in changed_prev_values}
 
-            # Stringify any non-JSON Serializeable data types
+            else:
+                previous = current_obj_dict
+                changes = delta_dict
+
+            # Stringify any non-JSON Serializeable data types for previous
             for key, value in previous.items():
                 if type(value) not in [int, float, bool, str]:
                     previous[key] = str(previous[key])
 
-            # Stringify any non-JSON Serializeable data types
+            # Stringify any non-JSON Serializeable data types for changes
             for key, value in changes.items():
                 if type(value) not in [int, float, bool, str]:
                     changes[key] = str(changes[key])
