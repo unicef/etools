@@ -1216,7 +1216,12 @@ class AgreementAmendment(TimeStampedModel):
 
 class InterventionManager(models.Manager):
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('result_links', 'sector_locations')
+        return super(InterventionManager, self).get_queryset().prefetch_related('result_links',
+                                                                                'sector_locations__sector',
+                                                                                'unicef_focal_points',
+                                                                                'offices',
+                                                                                'agreement__partner',
+                                                                                'planned_budget')
 
 
 class Intervention(TimeStampedModel):
@@ -1372,6 +1377,13 @@ class Intervention(TimeStampedModel):
     @property
     def sector_names(self):
         return u', '.join(Sector.objects.filter(intervention_locations__intervention=self).values_list('name', flat=True))
+
+    @cached_property
+    def total_partner_contribution(self):
+        # TODO: test this
+        if self.planned_budget.exists():
+            return self.planned_budget.aggregate(mysum=Sum('partner_contribution'))['mysum']
+        return 0
 
     @cached_property
     def total_partner_contribution(self):

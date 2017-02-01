@@ -140,7 +140,7 @@ class InterventionAmendmentNestedSerializer(serializers.ModelSerializer):
     class Meta:
         model = InterventionAmendment
         fields = (
-            "amended_at",
+            "signed_date",
             "type",
         )
 
@@ -185,7 +185,8 @@ class InterventionListSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             'id', 'number', 'hrp', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
-            'unicef_budget', 'cso_contribution', 'sectors', 'cp_outputs', 'unicef_focal_points',
+            'unicef_budget', 'cso_contribution',
+            'sectors', 'cp_outputs', 'unicef_focal_points',
             'offices'
         )
 
