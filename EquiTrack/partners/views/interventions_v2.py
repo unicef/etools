@@ -86,8 +86,9 @@ class InterventionListAPIView(ListCreateAPIView):
         intervention_serializer = self.get_serializer(data=request.data)
         intervention_serializer.is_valid(raise_exception=True)
 
-        create_snapshot_activity_stream(request.user, intervention_serializer.instance, created=True)
         intervention = intervention_serializer.save()
+
+        create_snapshot_activity_stream(request.user, intervention, created=True)
 
         # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
 
@@ -186,7 +187,6 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             data,
             status=status.HTTP_200_OK
         )
-
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):

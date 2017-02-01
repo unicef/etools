@@ -76,7 +76,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                     hidden = True
                 if query_params.get("hidden").lower() == "false":
                     hidden = False
-                if hidden:
+                if hidden is not None:
                     queries.append(Q(hidden=hidden))
             if "search" in query_params.keys():
                 queries.append(
@@ -173,11 +173,8 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
 
                     staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance, data=item, partial=partial)
 
-                    create_snapshot_activity_stream(request.user, staff_member_serializer.instance, delta_dict=item)
                 else:
                     staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(data=item)
-
-                    create_snapshot_activity_stream(request.user, staff_member_serializer.instance, created=True)
 
                 try:
                     staff_member_serializer.is_valid(raise_exception=True)
@@ -185,7 +182,15 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
                     e.detail = {'staff_members': e.detail}
                     raise e
 
-                staff_member_serializer.save()
+                if item.get('id', None):
+                    create_snapshot_activity_stream(request.user, staff_member_serializer.instance, delta_dict=item)
+
+                    staff_member_serializer.save()
+
+                else:
+                    staff_member = staff_member_serializer.save()
+
+                    create_snapshot_activity_stream(request.user, staff_member, created=True)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

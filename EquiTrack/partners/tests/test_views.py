@@ -33,6 +33,7 @@ from partners.models import (
     PCA,
     Agreement,
     PartnerOrganization,
+    PartnerStaffMember,
     PartnerType,
     PCASector,
     PartnershipBudget,
@@ -111,7 +112,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
         # Check for activity action created
-        self.assertEquals(model_stream(PartnerOrganization).count(), 2)
+        self.assertEquals(model_stream(PartnerOrganization).count(), 1)
 
         # Check for activity action created
         self.assertEquals(model_stream(PartnerStaffMember).count(), 1)
@@ -150,10 +151,10 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEquals(len(response.data["staff_members"]), 2)
 
         # Check for activity action created
-        self.assertEquals(model_stream(PartnerOrganization).count(), 2)
+        self.assertEquals(model_stream(PartnerOrganization).count(), 1)
 
         # Check for activity action created
-        self.assertEquals(model_stream(PartnerStaffMember).count(), 2)
+        self.assertEquals(model_stream(PartnerStaffMember).count(), 1)
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
@@ -193,7 +194,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertIn("Updated", response.data["name"])
 
         # Check for activity action created
-        self.assertEquals(model_stream(PartnerOrganization).count(), 3)
+        self.assertEquals(model_stream(PartnerOrganization).count(), 1)
 
     def test_api_partners_filter_partner_type(self):
         # make some other type to filter against
@@ -320,7 +321,6 @@ class TestPartnershipViews(APITenantTestCase):
             sector=Sector.objects.create(name="Sector 2")
         )
 
-
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
 
@@ -344,9 +344,6 @@ class TestPartnershipViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-        # Check for activity action created
-        self.assertEquals(model_stream(Agreement).count(), 1)
 
     @skip("different endpoint")
     def test_api_agreements_list(self):
@@ -548,7 +545,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
     def test_agreements_update(self):
         data = {
-            "status":"active",
+            "status": "active",
         }
         response = self.forced_auth_req(
             'patch',
@@ -561,7 +558,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.data["status"], "active")
 
         # Check for activity action created
-        self.assertEquals(model_stream(Agreement).count(), 2)
+        self.assertEquals(model_stream(Agreement).count(), 1)
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -601,7 +598,7 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(set(response.data["authorized_officers"]), set([self.partner_staff.id, self.partner_staff2.id]))
 
         # Check for activity action created
-        self.assertEquals(model_stream(Agreement).count(), 3)
+        self.assertEquals(model_stream(Agreement).count(), 1)
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
@@ -1000,7 +997,7 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
         # Check for activity action created
-        self.assertEquals(model_stream(Intervention).count(), 1)
+        self.assertEquals(model_stream(Intervention).count(), 2)
 
     def test_intervention_update(self):
         data = {
