@@ -6,7 +6,7 @@ from actstream import action
 
 def create_snapshot_activity_stream(actor, target, created=False, delta_dict={}):
     """
-    Create activity stream for Agreement in order to keep track of field changes
+    Create activity stream item for Django model instance in order to keep track of field changes
     actor: An activity trigger - Any Python object
     target: An action target for the activity - Mutated but unsaved Django ORM with FieldTracker
     created: A boolean flag that indicates target has been newly created.
@@ -35,11 +35,11 @@ def create_snapshot_activity_stream(actor, target, created=False, delta_dict={})
                 previous = dict(current_obj_dict.items() + changed_prev_values.items())
 
                 # Extract current field changes from key lookups with current object
-                changes = {k:v for k,v in current_obj_dict.items() if k in changed_prev_values}
+                changes = {k: v for k, v in current_obj_dict.items() if k in changed_prev_values}
 
             else:
                 previous = current_obj_dict
-                changes = delta_dict
+                changes = {k: v for k, v in current_obj_dict.items() if k in delta_dict and delta_dict[k] != current_obj_dict[k]}
 
             # Stringify any non-JSON Serializeable data types for previous
             for key, value in previous.items():
