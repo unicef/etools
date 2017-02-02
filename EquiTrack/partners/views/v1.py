@@ -75,20 +75,19 @@ class PcaPDFView(PDFTemplateView):
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
         agreement = Agreement.objects.get(id=agr_id)
-        officers = agreement.authorized_officers.all()
         officers_list = []
-        for officer in officers:
+        for officer in agreement.authorized_officers.all():
             officers_list.append(
-                {'first_name': officer.officer.first_name,
-                 'last_name': officer.officer.last_name,
-                 'title': officer.officer.title}
+                {'first_name': officer.first_name,
+                 'last_name': officer.last_name,
+                 'title': officer.title}
             )
 
         return super(PcaPDFView, self).get_context_data(
             pagesize="Letter",
             title="Partnership",
             agreement=agreement,
-            bank_details=agreement.bank_details.all(),
+            bank_details=agreement.partner.bank_details.all(),
             cp=CountryProgramme.current(),
             auth_officers=officers_list,
             country=self.request.tenant.name,

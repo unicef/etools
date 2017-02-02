@@ -11,6 +11,9 @@ from rest_framework_nested import routers
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+
+from publics.views import StaticDataView, WBSGrantFundView
+
 admin.autodiscover()
 
 from .stream_feed.feeds import JSONActivityFeedWithCustomData
@@ -135,6 +138,9 @@ urlpatterns = patterns(
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
     url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
+
+    url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
+    url(r'^api/wbs_grants_funds/$', WBSGrantFundView.as_view(), name='wbs_grants_funds'),
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),

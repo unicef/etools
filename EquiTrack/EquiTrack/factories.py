@@ -145,6 +145,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
 
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
+    signed_by_unicef_date = date.today()
     status = 'active'
 
 

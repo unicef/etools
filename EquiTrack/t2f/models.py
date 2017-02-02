@@ -4,18 +4,19 @@ from datetime import datetime
 from decimal import Decimal
 import logging
 
+from django.contrib.postgres.fields.array import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
 from django.core.urlresolvers import reverse
-from django.db import models
 from django.contrib.auth.models import User
-from django.contrib.staticfiles import finders
+from django.conf import settings
+from django.db import models
 from django.template.context import Context
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
-from t2f.helpers import CostSummaryCalculator
+from t2f.helpers import CostSummaryCalculator, InvoiceMaker
 
 log = logging.getLogger(__name__)
 
@@ -44,26 +45,7 @@ class UserTypes(object):
     )
 
 
-class WBS(models.Model):
-    name = models.CharField(max_length=25)
-
-
-class Grant(models.Model):
-    wbs = models.ForeignKey('WBS', related_name='grants')
-    name = models.CharField(max_length=25)
-
-
-class Fund(models.Model):
-    grant = models.ForeignKey('Grant', related_name='funds')
-    name = models.CharField(max_length=25)
-
-
-class ExpenseType(models.Model):
-    title = models.CharField(max_length=32)
-    code = models.CharField(max_length=16)
-
-
-class TravelType(models.Model):
+class TravelType(object):
     PROGRAMME_MONITORING = 'Programmatic Visit'
     SPOT_CHECK = 'Spot Check'
     ADVOCACY = 'Advocacy'
@@ -81,12 +63,10 @@ class TravelType(models.Model):
         (STAFF_ENTITLEMENT, 'Staff Entitlement'),
     )
 
-    name = models.CharField(max_length=32, choices=CHOICES)
-
 
 # TODO: all of these models that only have 1 field should be a choice field on the models that are using it
 # for many-to-many arrayfields are recommended
-class ModeOfTravel(models.Model):
+class ModeOfTravel(object):
     PLANE = 'Plane'
     BUS = 'Bus'
     CAR = 'Car'
@@ -99,44 +79,16 @@ class ModeOfTravel(models.Model):
         (BOAT, 'Boat'),
         (RAIL, 'Rail')
     )
-    name = models.CharField(max_length=8, choices=CHOICES)
 
 
-class Currency(models.Model):
-    # This will be populated from vision
-    name = models.CharField(max_length=128)
-    iso_4217 = models.CharField(max_length=3)
-
-
-class AirlineCompany(models.Model):
-    # This will be populated from vision
-    name = models.CharField(max_length=255)
-    code = models.IntegerField()
-    iata = models.CharField(max_length=3)
-    icao = models.CharField(max_length=3)
-    country = models.CharField(max_length=255)
-
-
-class DSARegion(models.Model):
-    country = models.CharField(max_length=255)
-    region = models.CharField(max_length=255)
-    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
-    room_rate = models.DecimalField(max_digits=20, decimal_places=4)
-    finalization_date = models.DateField()
-    eff_date = models.DateField()
-    business_area_code = models.CharField(max_length=10, null=True)
-
-    @property
-    def name(self):
-        return '{} - {}'.format(self.country, self.region)
-
-
-def make_reference_number():
+def make_travel_reference_number():
     year = datetime.now().year
-    last_travel = Travel.objects.filter(created__year=year).order_by('reference_number').last()
+    travels_qs = Travel.objects.select_for_update().filter(created__year=year)
+
+    # This will lock the matching rows and prevent concurency issue
+    travels_qs.values_list('id')
+
+    last_travel = travels_qs.order_by('reference_number').last()
     if last_travel:
         reference_number = last_travel.reference_number
         reference_number = int(reference_number.split('/')[1])
@@ -198,11 +150,11 @@ class Travel(models.Model):
     additional_note = models.TextField(null=True, blank=True)
     international_travel = models.NullBooleanField(default=False, null=True, blank=True)
     ta_required = models.NullBooleanField(default=True, null=True, blank=True)
-    reference_number = models.CharField(max_length=12, default=make_reference_number)
+    reference_number = models.CharField(max_length=12, default=make_travel_reference_number, unique=True)
     hidden = models.BooleanField(default=False)
-    mode_of_travel = models.ManyToManyField('ModeOfTravel', related_name='+')
+    mode_of_travel = ArrayField(models.CharField(max_length=5, choices=ModeOfTravel.CHOICES), null=True)
     estimated_travel_cost = models.DecimalField(max_digits=20, decimal_places=4, default=0)
-    currency = models.ForeignKey('Currency', null=True, blank=True, related_name='+')
+    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     is_driver = models.BooleanField(default=False)
 
     # When the travel is sent for payment, the expenses should be saved for later use
@@ -226,6 +178,9 @@ class Travel(models.Model):
 
     @transition(status, source=[PLANNED, REJECTED], target=SUBMITTED)
     def submit_for_approval(self):
+        # TODO validate this!!!
+        if not self.supervisor:
+            return
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.id),
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
@@ -263,6 +218,7 @@ class Travel(models.Model):
     @transition(status, source=[APPROVED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
+        self.generate_invoices()
         self.send_notification_email('Travel #{} sent for payment.'.format(self.id),
                                      self.traveler.email,
                                      'emails/sent_for_payment.html')
@@ -302,11 +258,16 @@ class Travel(models.Model):
                                      self.supervisor.email,
                                      'emails/trip_completed.html')
 
+        # TODO nic: :)
+        # jsonfield += self.activites.filter(primary_traveler=self.traveler, partner=<partner>, travel_type='Prog visit').count()
+
     @transition(status, target=PLANNED)
     def reset_status(self):
         pass
 
     def send_notification_email(self, subject, recipient, template_name):
+        # TODO this could be async to avoid too long api calls in case of mail server issue
+        # TODO move this out from here
         from t2f.serializers.mailing import TravelMailSerializer
         serializer = TravelMailSerializer(self, context={})
 
@@ -344,15 +305,21 @@ class Travel(models.Model):
         except ValidationError as exc:
             log.error('Was not able to send the email. Exception: %s', exc.message)
 
+    def generate_invoices(self):
+        maker = InvoiceMaker(self)
+        maker.do_invoicing()
+
 
 class TravelActivity(models.Model):
     travels = models.ManyToManyField('Travel', related_name='activities')
-    travel_type = models.ForeignKey('TravelType', null=True, related_name='+')
+    travel_type = models.CharField(max_length=64, choices=TravelType.CHOICES, null=True)
     partner = models.ForeignKey('partners.PartnerOrganization', null=True, related_name='+')
-    partnership = models.ForeignKey('partners.PCA', null=True, related_name='+')
+    # Partnership has to be filtered based on partner
+    # TODO: assert self.partnership.agreement.partner == self.partner
+    partnership = models.ForeignKey('partners.Intervention', null=True, related_name='+')
     result = models.ForeignKey('reports.Result', null=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
-    primary_traveler = models.BooleanField(default=True)
+    primary_traveler = models.ForeignKey(User)
     date = models.DateTimeField(null=True)
 
 
@@ -362,17 +329,20 @@ class IteneraryItem(models.Model):
     destination = models.CharField(max_length=255)
     departure_date = models.DateTimeField()
     arrival_date = models.DateTimeField()
-    dsa_region = models.ForeignKey('DSARegion', related_name='+')
+    dsa_region = models.ForeignKey('publics.DSARegion', related_name='+', null=True)
     overnight_travel = models.BooleanField(default=False)
-    mode_of_travel = models.ForeignKey('ModeOfTravel', related_name='+')
-    airlines = models.ManyToManyField('AirlineCompany', related_name='+')
+    mode_of_travel = models.CharField(max_length=5, choices=ModeOfTravel.CHOICES, null=True)
+    airlines = models.ManyToManyField('publics.AirlineCompany', related_name='+')
+
+    class Meta:
+        ordering = ('id',)
 
 
 class Expense(models.Model):
     travel = models.ForeignKey('Travel', related_name='expenses')
-    type = models.ForeignKey('ExpenseType', related_name='+')
-    document_currency = models.ForeignKey('Currency', related_name='+')
-    account_currency = models.ForeignKey('Currency', related_name='+')
+    type = models.ForeignKey('publics.TravelExpenseType', related_name='+', null=True)
+    document_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    account_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=10, decimal_places=4)
 
 
@@ -411,9 +381,11 @@ class Deduction(models.Model):
 class CostAssignment(models.Model):
     travel = models.ForeignKey('Travel', related_name='cost_assignments')
     share = models.PositiveIntegerField()
-    wbs = models.ForeignKey('WBS', related_name='+')
-    grant = models.ForeignKey('Grant', related_name='+')
-    fund = models.ForeignKey('Fund', related_name='+')
+    delegate = models.BooleanField(default=False)
+    business_area = models.ForeignKey('publics.BusinessArea', related_name='+', null=True)
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
 
 
 class Clearances(models.Model):
@@ -452,27 +424,6 @@ class TravelAttachment(models.Model):
 
 
 class TravelPermission(models.Model):
-    # TODO: handle this without a model
-    GOD = 'God'
-    ANYONE = 'Anyone'
-    TRAVELER = 'Traveler'
-    TRAVEL_ADMINISTRATOR = 'Travel Administrator'
-    SUPERVISOR = 'Supervisor'
-    TRAVEL_FOCAL_POINT = 'Travel Focal Point'
-    FINANCE_FOCAL_POINT = 'Finance Focal Point'
-    REPRESENTATIVE = 'Representative'
-
-    USER_TYPE_CHOICES = (
-        (GOD, 'God'),
-        (ANYONE, _('Anyone')),
-        (TRAVELER, _('Traveler')),
-        (TRAVEL_ADMINISTRATOR, _('Travel Administrator')),
-        (SUPERVISOR, _('Supervisor')),
-        (TRAVEL_FOCAL_POINT, _('Travel Focal Point')),
-        (FINANCE_FOCAL_POINT, _('Finance Focal Point')),
-        (REPRESENTATIVE, _('Representative')),
-    )
-
     EDIT = 'edit'
     VIEW = 'view'
     PERMISSION_TYPE_CHOICES = (
@@ -480,11 +431,131 @@ class TravelPermission(models.Model):
         (VIEW, 'View'),
     )
 
+    TRAVEL = 'travel'
+    ACTION_POINT = 'action_point'
+    USAGE_PLACE_CHOICES = (
+        (TRAVEL, 'Travel'),
+        (ACTION_POINT, 'Action point'),
+    )
+
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=128)
-    status = models.CharField(max_length=50, choices=Travel.CHOICES)
-    user_type = models.CharField(max_length=25, choices=USER_TYPE_CHOICES)
+    status = models.CharField(max_length=50)
+    usage_place = models.CharField(max_length=12, choices=USAGE_PLACE_CHOICES)
+    user_type = models.CharField(max_length=25)
     model = models.CharField(max_length=128)
     field = models.CharField(max_length=64)
     permission_type = models.CharField(max_length=5, choices=PERMISSION_TYPE_CHOICES)
     value = models.BooleanField(default=False)
+
+
+def make_action_point_number():
+    year = datetime.now().year
+    action_points_qs = ActionPoint.objects.select_for_update().filter(created_at__year=year)
+
+    # This will lock the matching rows and prevent concurency issue
+    action_points_qs.values_list('id')
+
+    last_action_point = action_points_qs.order_by('action_point_number').last()
+    if last_action_point:
+        action_point_number = last_action_point.action_point_number
+        action_point_number = int(action_point_number.split('/')[1])
+        action_point_number += 1
+    else:
+        action_point_number = 1
+    return '{}/{:06d}'.format(year, action_point_number)
+
+
+class ActionPoint(models.Model):
+    """
+    Represents an action point for the trip
+
+    Relates to :model:`trips.Trip`
+    Relates to :model:`auth.User`
+    """
+
+    OPEN = 'open'
+    ONGOING = 'ongoing'
+    CANCELLED = 'cancelled'
+    COMPLETED = 'completed'
+
+    STATUS = (
+        (OPEN, 'Open'),
+        (ONGOING, 'Ongoing'),
+        (COMPLETED, 'Completed'),
+        (CANCELLED, 'Cancelled'),
+    )
+
+    travel = models.ForeignKey('Travel', related_name='action_points')
+    action_point_number = models.CharField(max_length=11, default=make_action_point_number, unique=True)
+    description = models.CharField(max_length=254)
+    due_date = models.DateTimeField()
+    person_responsible = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
+    status = models.CharField(choices=STATUS, max_length=254, null=True, verbose_name='Status')
+    completed_at = models.DateTimeField(blank=True, null=True)
+    actions_taken = models.TextField(blank=True, null=True)
+    follow_up = models.BooleanField(default=False)
+    comments = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    assigned_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='+')
+
+    def save(self, *args, **kwargs):
+        if self.status == ActionPoint.OPEN and self.actions_taken:
+            self.status = ActionPoint.ONGOING
+        super(ActionPoint, self).save(*args, **kwargs)
+
+
+class Invoice(models.Model):
+    STATUS = (
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('success', 'Success'),
+        ('error', 'Error'),
+    )
+
+    travel = models.ForeignKey('Travel', related_name='invoices')
+    reference_number = models.CharField(max_length=32, unique=True)
+    business_area = models.CharField(max_length=32)
+    vendor_number = models.CharField(max_length=32)
+    currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
+    amount = models.DecimalField(max_digits=20, decimal_places=4)
+    status = models.CharField(max_length=16, choices=STATUS)
+    vision_fi_id = models.CharField(max_length=16)
+
+    def save(self, **kwargs):
+        if self.pk is None:
+            # This will lock the travel row and prevent concurency issues
+            travel = Travel.objects.select_for_update().get(id=self.travel_id)
+            invoice_counter = travel.invoices.all().count() + 1
+            self.reference_number = '{}/{}/{:02d}'.format(self.business_area,
+                                                          self.travel.reference_number,
+                                                          invoice_counter)
+        super(Invoice, self).save(**kwargs)
+
+    @property
+    def posting_key(self):
+        return 'credit' if self.amount >= 0 else 'debit'
+
+    @property
+    def normalized_amount(self):
+        return abs(self.amount.normalize())
+
+    @property
+    def message(self):
+        return ''
+
+
+class InvoiceItem(models.Model):
+    invoice = models.ForeignKey('Invoice', related_name='items')
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
+    amount = models.DecimalField(max_digits=20, decimal_places=10)
+
+    @property
+    def posting_key(self):
+        return 'credit' if self.amount >= 0 else 'debit'
+
+    @property
+    def normalized_amount(self):
+        return abs(self.amount.normalize())

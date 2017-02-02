@@ -406,6 +406,7 @@ SHARED_APPS = (
 
     'vision',
     'management',
+    'publics',
     # you must list the app where your tenant model resides in
     'users',
     'notification',

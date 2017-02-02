@@ -415,7 +415,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
             agreement_type=Agreement.PCA
         ).exclude(
             signed_by_unicef_date__isnull=True,
-            signed_by_partner_date__isnull=True
+            signed_by_partner_date__isnull=True,
+            status__in=[Agreement.DRAFT, Agreement.TERMINATED, Agreement.CANCELLED]
         ).order_by('signed_by_unicef_date').last()
 
     @classmethod
@@ -875,10 +876,6 @@ class BankDetails(models.Model):
     Relates to :model:`partners.Agreement`
     Relates to :model:`partners.AgreementAmendmentLog`
     """
-
-    # TODO: remove agreement field after running
-    # util_scripts.bank_details_to_partner()
-    agreement = models.ForeignKey('partners.Agreement', related_name='bank_details')
 
     # TODO: remove the ability to add blank for the partner_organization field
     partner_organization = models.ForeignKey(PartnerOrganization, related_name='bank_details', null=True, blank=True)
