@@ -37,13 +37,14 @@ class BusinessAreaSerializer(serializers.ModelSerializer):
 
 class CurrencySerializer(serializers.ModelSerializer):
     iso_4217 = serializers.CharField(source='code', read_only=True)
-    exchange_to_dollar = serializers.DecimalField(source='exchange_rates.all.last.x_rate', max_digits=20,
-                                                  decimal_places=10)
+    exchange_to_dollar = serializers.SerializerMethodField()
 
     class Meta:
         model = Currency
         fields = ('id', 'name', 'iso_4217')
 
+    def get_exchange_to_dollar(self, obj):
+        return obj.exchange_rates.order_by('id').last().x_rate
 
 class AirlineSerializer(serializers.ModelSerializer):
     class Meta:

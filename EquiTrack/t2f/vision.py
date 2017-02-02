@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
+from django.db.models.query_utils import Q
 
 from t2f.models import Invoice
 from users.models import Country as Workspace
@@ -24,7 +25,7 @@ def run_on_tenants(func):
     def wrapper(self, *args, **kwargs):
         original_tenant = connection.tenant
         try:
-            for workspace in Workspace.objects.exclude(business_area_code=''):
+            for workspace in Workspace.objects.exclude(Q(business_area_code='') | Q(business_area_code__isnull=True)):
                 connection.set_tenant(workspace)
                 func(self, workspace, *args, **kwargs)
         finally:
