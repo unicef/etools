@@ -15,7 +15,7 @@ from django.utils.functional import cached_property
 
 from django_fsm import FSMField, transition
 from django_hstore import hstore
-from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
+from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -1218,7 +1218,12 @@ class AgreementAmendment(TimeStampedModel):
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('result_links', 'sector_locations')
+        return super(InterventionManager, self).get_queryset().prefetch_related('result_links',
+                                                                                'sector_locations__sector',
+                                                                                'unicef_focal_points',
+                                                                                'offices',
+                                                                                'agreement__partner',
+                                                                                'planned_budget')
 
 
 class Intervention(TimeStampedModel):
@@ -1704,6 +1709,11 @@ class InterventionSectorLocationLink(models.Model):
     tracker = FieldTracker()
 
 
+class GovernmentInterventionManager(models.Manager):
+    def get_queryset(self):
+        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors', 'results__unicef_managers')
+
+
 # TODO: check this for sanity
 class GovernmentIntervention(models.Model):
     """
@@ -1712,6 +1722,7 @@ class GovernmentIntervention(models.Model):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`reports.ResultStructure`
     """
+    objects = GovernmentInterventionManager()
 
     partner = models.ForeignKey(
         PartnerOrganization,

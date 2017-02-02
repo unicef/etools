@@ -3,76 +3,24 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.management.base import BaseCommand
-from django.db import connection
 from django.db.transaction import atomic
-from tenant_schemas.postgresql_backend.base import FakeTenant
 
-from publics.models import Currency, AirlineCompany, DSARegion, TravelExpenseType, WBS, Grant, Fund, BusinessRegion, \
-    BusinessArea, Country
-from t2f.models import TravelType, ModeOfTravel
-from partners.models import PartnerOrganization
-from users.models import Country as UserCountry, Office, Section
-
-from _private import populate_permission_matrix
-
+from publics.models import Currency, AirlineCompany, DSARegion, TravelExpenseType, BusinessRegion, BusinessArea, Country
+from dsa_regions_data import DSA_REGION_DATA
 
 # DEVELOPMENT CODE -
 class Command(BaseCommand):
-    """
-    Usage:
-    manage.py et2f_init [--with_users, --with_partners, --assign_sections, --with_offices] <username> <password>
-
-    Username and password required to create a user for testing and look up the proper schema.
-
-    -u | --with_users : Import sample users
-    -o | --with_offices : Import sample offices
-    -p | --with_partners : Import sample partners
-    -s | --assign_sections : Assign all sections to the current schema !Use only on local dev machine!
-    """
-
-    def add_arguments(self, parser):
-        parser.add_argument('username', nargs=1)
-        parser.add_argument('password', nargs=1, default='password')
-        parser.add_argument('-u', '--with_users', action='store_true', default=False)
-        parser.add_argument('-o', '--with_offices', action='store_true', default=False)
-        parser.add_argument('-p', '--with_partners', action='store_true', default=False)
-        parser.add_argument('-s', '--assign_sections', action='store_true', default=False)
 
     @atomic
     def handle(self, *args, **options):
-        username = options['username']
-        password = options['password']
-        user = self._get_or_create_admin_user(username, password)
-        country = user.profile.country
-        connection.set_tenant(country)
-
-        if options.get('with_users'):
-            self._load_users()
 
         self._load_airlines()
-
-        if options.get('with_offices'):
-            self._load_offices()
-
-        if options.get('with_partners'):
-            self._load_partners()
-
-        if options.get('with_partners'):
-            self._assign_sections()
-
         self._load_business_areas()
-        self._load_currencies()
-        self._load_countries()
-
-        self._load_dsa_regions(country)
-        self._load_permission_matrix()
-        self._add_wbs()
-        self._add_grants()
-        self._add_funds()
+        dsa_country_mapping = self._load_countries()
+        self._load_dsa_regions(dsa_country_mapping)
         self._add_expense_types()
         self._add_user_groups()
 
@@ -253,79 +201,6 @@ class Command(BaseCommand):
                 self.stdout.write('Business area created: {}'.format(ba[1]))
             else:
                 self.stdout.write('Business area found: {}'.format(ba[1]))
-
-    def _get_or_create_admin_user(self, username, password):
-        User = get_user_model()
-
-        try:
-            return User.objects.get(username=username)
-        except ObjectDoesNotExist:
-            pass
-
-        uat_country = UserCountry.objects.get(name='UAT')
-
-        user = User(username=username,
-                    first_name='Puli',
-                    last_name='Lab',
-                    is_superuser=True,
-                    is_staff=True)
-        user.set_password(password)
-        user.save()
-
-        profile = user.profile
-        profile.country = profile.country_override = uat_country
-        profile.save()
-
-        self.stdout.write('User was successfully created.')
-        return user
-
-    def _assign_sections(self):
-        tenant = connection.tenant
-        connection.set_tenant(FakeTenant('public'))
-        for s in Section.objects.all():
-            s.sections.add(tenant)
-        connection.set_tenant(tenant)
-
-    def _load_currencies(self):
-        data = ['DZD', 'NAD', 'GHS', 'BZD', 'EGP', 'BGN', 'PAB', 'YUM', 'BOB', 'DKK', 'BWP', 'LBP', 'TZS', 'VND', 'AOA',
-                'KHR', 'MYR', 'KYD', 'LYD', 'UAH', 'JOD', 'AWG', 'SAR', 'LTL', 'HKD', 'CHF', 'GIP', 'BYR', 'ALL', 'MRO',
-                'HRK', 'DJF', 'THB', 'XAF', 'BND', 'VUV', 'UYU', 'NIO', 'LAK', 'NPR', 'SYP', 'MAD', 'MZM', 'PHP', 'ZAR',
-                'PYG', 'GBP', 'NGN', 'ZWD', 'CRC', 'AED', 'EEK', 'MWK', 'LKR', 'SKK', 'PKR', 'HUF', 'ROL', 'SZL', 'LSL',
-                'MNT', 'AMD', 'UGX', 'JMD', 'GEL', 'SHP', 'AFN', 'MMK', 'KPW', 'CSD', 'TRY', 'BDT', 'CVE', 'HTG', 'SLL',
-                'MGA', 'YER', 'LRD', 'XCD', 'NOK', 'MOP', 'SSP', 'INR', 'MXN', 'CZK', 'TJS', 'BTN', 'COP', 'MUR', 'IDR',
-                'HNL', 'XPF', 'FJD', 'ETB', 'PEN', 'MKD', 'ILS', 'DOP', 'TMM', 'MDL', 'QAR', 'SEK', 'MVR', 'AUD', 'SRD',
-                'CUP', 'BBD', 'KMF', 'KRW', 'GMD', 'VEF', 'GTQ', 'ANG', 'CLP', 'ZMW', 'EUR', 'CDF', 'RWF', 'KZT', 'RUB',
-                'ISK', 'TTD', 'OMR', 'BRL', 'SBD', 'PLN', 'KES', 'SVC', 'USD', 'AZM', 'TOP', 'GNF', 'WST', 'IQD', 'ERN',
-                'BAM', 'SCR', 'CAD', 'GYD', 'KWD', 'BIF', 'PGK', 'SOS', 'SGD', 'UZS', 'STD', 'IRR', 'CNY', 'XOF', 'TND',
-                'NZD', 'LVL', 'BSD', 'KGS', 'ARS', 'BMD', 'RSD', 'BHD', 'JPY', 'SDG']
-        # data = [('United States dollar', 'USD'),
-        #         ('Euro', 'EUR'),
-        #         ('Japanese yen', 'JPY'),
-        #         ('Pound sterling', 'GBP'),
-        #         ('Australian dollar', 'AUD'),
-        #         ('Canadian dollar', 'CAD'),
-        #         ('Swiss franc', 'CHF'),
-        #         ('Chinese yuan', 'CNY'),
-        #         ('Swedish krona', 'SEK'),
-        #         ('Mexican peso', 'MXN'),
-        #         ('New Zealand dollar', 'NZD'),
-        #         ('Singapore dollar', 'SGD'),
-        #         ('Hong Kong dollar', 'HKD'),
-        #         ('Norwegian krone', 'NOK'),
-        #         ('South Korean won', 'KRW'),
-        #         ('Turkish lira', 'TRY'),
-        #         ('Indian rupee', 'INR'),
-        #         ('Russian ruble', 'RUB'),
-        #         ('Brazilian real', 'BRL'),
-        #         ('South African rand', 'ZAR')]
-
-        for iso_4217 in data:
-            name = iso_4217
-            c, created = Currency.objects.get_or_create(iso_4217=iso_4217, defaults={'name': name})
-            if created:
-                self.stdout.write('Currency created: {} ({})'.format(name, iso_4217))
-            else:
-                self.stdout.write('Currency found: {} ({})'.format(name, iso_4217))
 
     def _load_countries(self):
         countries = [('Afghanistan', '0060', 'Afghanistan', 'AFG', '006', 'AF', 'AFG', 'AFN', '19.11.1946', '31.12.9999', 'THE ISLAMIC STATE OF AFGHANISTAN'),
@@ -564,7 +439,12 @@ class Command(BaseCommand):
                      ('Wallis & Futuna Islands', '', 'Wallis & Futuna Islands', '', '661', 'WF', 'WLF', 'XPF', '20.09.1993', '31.12.9999', 'WALLIS & FUTUNA ISLANDS'),
                      ('Yugoslavia', '', 'Yugoslavia', '', '495', 'YU', '', 'YUM', '24.10.1945', '31.12.9999', 'THE FEDERAL REPUBLIC OF YUGOSLAVIA')]
 
-        for name, ba_code, _, _, vision_code, iso_2, iso_3, currency_code, valid_from, valid_to, long_name in countries:
+        dsa_country_mapping = {}
+        for name, ba_code, _, dsa_code, vision_code, iso_2, iso_3, currency_code, valid_from, valid_to, long_name in countries:
+            iso_2 = iso_2 or None
+            iso_3 = iso_3 or None
+            vision_code = vision_code or None
+
             if valid_from:
                 valid_from = datetime.strptime(valid_from, '%d.%m.%Y')
             else:
@@ -581,47 +461,18 @@ class Command(BaseCommand):
                                                        business_area=BusinessArea.objects.filter(code=ba_code).first(),
                                                        iso_2=iso_2,
                                                        iso_3=iso_3,
-                                                       currency=Currency.objects.filter(iso_4217=currency_code).first(),
+                                                       currency=Currency.objects.filter(code=currency_code).first(),
                                                        valid_from=valid_from,
                                                        valid_to=valid_to)
+            if dsa_code:
+                dsa_country_mapping[dsa_code] = c
+
             if created:
                 self.stdout.write('Country created: {}'.format(name))
             else:
                 self.stdout.write('Country found: {}'.format(name))
 
-
-    def _load_users(self):
-        User = get_user_model()
-        user_full_names = ['Kathryn Cruz', 'Jonathan Wright', 'Timothy Kelly', 'Brenda Nguyen', 'Matthew Morales',
-                           'Timothy Watson', 'Jacqueline Brooks', 'Steve Olson', 'Lawrence Patterson', 'Lois Jones',
-                           'Margaret White', 'Clarence Stanley', 'Bruce Williamson', 'Susan Carroll', 'Philip Wood',
-                           'Emily Jenkins', 'Christina Robinson', 'Jason Young', 'Joyce Freeman', 'Jack Murphy',
-                           'Katherine Garcia', 'Sean Perkins', 'Howard Peterson', 'Denise Coleman', 'Benjamin Evans',
-                           'Carl Watkins', 'Martin Morris', 'Nicole Stephens', 'Thomas Willis', 'Ann Ferguson',
-                           'Russell Hanson', 'Janet Johnston', 'Adam Bowman', 'Elizabeth Mendoza', 'Helen Robertson',
-                           'Wanda Fowler', 'Roger Richardson', 'Bobby Carroll', 'Donna Sims', 'Shawn Peters',
-                           'Lisa Davis', 'Laura Riley', 'Jason Freeman', 'Ashley Hill', 'Joseph Gonzales',
-                           'Brenda Dixon', 'Paul Wilson', 'Tammy Reyes', 'Beverly Bishop', 'James Weaver',
-                           'Samuel Vasquez', 'Albert Baker', 'Keith Wright', 'Michael Hart', 'Shirley Allen',
-                           'Samuel Gutierrez', 'Cynthia Riley', 'Roy Simpson', 'Raymond Wagner', 'Eric Taylor',
-                           'Steven Bell', 'Jane Powell', 'Paula Morales', 'James Hamilton', 'Shirley Perez',
-                           'Maria Olson', 'Amy Dunn', 'Frances Bowman', 'Billy Lawrence', 'Beverly Howell', 'Amy Sims',
-                           'Carlos Sanchez', 'Nicholas Harvey', 'Walter Wheeler', 'Bruce Morales', 'Kathy Reynolds',
-                           'Lisa Lopez', 'Ann Medina', 'Raymond Washington', 'Jessica Brown', 'Harold Stone',
-                           'Paul Hill', 'Wayne Foster', 'Brian Garza', 'Craig Sims', 'Adam Morales', 'Brandon Miller',
-                           'Dennis Green', 'Linda Banks', 'Sandra Dunn', 'Randy Rogers', 'Jimmy West', 'Julia Grant',
-                           'Judy Ryan', 'William Carroll', 'Mary Rose', 'Ann Nelson', 'Rebecca Hill', 'Robert Rivera',
-                           'Rebecca Weaver']
-
-        for full_name in user_full_names:
-            first_name, last_name = full_name.split()
-            username = full_name.replace(' ', '_').lower()
-            u, created = User.objects.get_or_create(username=username, defaults={'first_name': first_name,
-                                                                                 'last_name': last_name})
-            if created:
-                self.stdout.write('User created: {} ({})'.format(full_name, username))
-            else:
-                self.stdout.write('User found: {} ({})'.format(full_name, username))
+        return dsa_country_mapping
 
     def _load_airlines(self):
         airlines = [('American Airlines', 'AA', 1, 'AAL', 'United States'),
@@ -737,8 +588,6 @@ class Command(BaseCommand):
                     ('WestJet', 'WS', 838, 'WJA', 'Canada'),
                     ('White coloured by you', 'WI', 97, 'WHT', 'Portugal')]
 
-        AirlineCompany.objects.all().delete()
-
         for airline_name, iata, code, icao, country in airlines:
             a, created = AirlineCompany.objects.get_or_create(name=airline_name, defaults={'iata': iata,
                                                                                            'code': code,
@@ -749,151 +598,44 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('Airline found: {}'.format(airline_name))
 
-    def _load_offices(self):
-        offices = ('Pulilab', 'Unicef HQ')
+    def _load_dsa_regions(self, dsa_country_mapping):
 
-        for office_name in offices:
-            o, created = Office.objects.get_or_create(name=office_name)
+        for data in DSA_REGION_DATA:
+            country_code = data.pop('country_code')
+            area_code = data.pop('area_code')
+
+            country = dsa_country_mapping[country_code]
+
+            data['dsa_amount_usd'] = data['dsa_amount_usd'].replace(',', '')
+            data['dsa_amount_60plus_usd'] = data['dsa_amount_60plus_usd'].replace(',', '')
+            data['dsa_amount_local'] = data['dsa_amount_local'].replace(',', '')
+            data['dsa_amount_60plus_local'] = data['dsa_amount_60plus_local'].replace(',', '')
+
+            def make_datetime(date_str):
+                day, month, year = date_str.split('/')
+                return datetime(int(year), int(month), int(day))
+
+            data['finalization_date'] = make_datetime(data['finalization_date'])
+            data['eff_date'] = make_datetime(data['eff_date'])
+
+            d, created = DSARegion.objects.get_or_create(country=country, area_code=area_code, defaults=data)
             if created:
-                o.offices.add(connection.tenant)
-                self.stdout.write('Office created: {}'.format(office_name))
+                self.stdout.write('DSA Region created: {}'.format(d.label))
             else:
-                self.stdout.write('Office found: {}'.format(office_name))
-
-    def _load_partners(self):
-        partners = ['Dynazzy', 'Yodoo', 'Omba', 'Eazzy', 'Avamba', 'Jaxworks', 'Thoughtmix', 'Bubbletube', 'Mydo',
-                    'Photolist', 'Gevee', 'Buzzdog', 'Quinu', 'Edgewire', 'Yambee', 'Ntag', 'Muxo',
-                    'Edgetag', 'Tagfeed', 'BlogXS', 'Feedbug', 'Babblestorm', 'Skimia', 'Linkbridge', 'Fatz', 'Kwimbee',
-                    'Yodo', 'Skibox', 'Zoomzone', 'Meemm', 'Twitterlist', 'Kwilith', 'Skipfire', 'Wikivu', 'Topicblab',
-                    'BlogXS', 'Brightbean', 'Skimia', 'Mycat', 'Tagcat', 'Meedoo', 'Vitz', 'Realblab', 'Babbleopia',
-                    'Pixonyx', 'Dabshots', 'Gabcube', 'Yoveo', 'Realblab', 'Tagcat']
-
-        for partner_name in partners:
-            p, created = PartnerOrganization.objects.get_or_create(name=partner_name)
-            if created:
-                self.stdout.write('Partner created: {}'.format(partner_name))
-            else:
-                self.stdout.write('Partner found: {}'.format(partner_name))
-
-    def _load_dsa_regions(self, country):
-        dsa_region_data = [{'dsa_amount_usd': 300,
-                            'country': Country.objects.filter(name='Hungary').last(),
-                            'room_rate': 120,
-                            'dsa_amount_60plus_usd': 200,
-                            'dsa_amount_60plus_local': 56000,
-                            'dsa_amount_local': 84000,
-                            'finalization_date': datetime.now().date(),
-                            'eff_date': datetime.now().date(),
-                            'area_name': 'Everywhere',
-                            'area_code': country.business_area_code},
-                           {'dsa_amount_usd': 400,
-                            'country': Country.objects.filter(name='Germany').last(),
-                            'room_rate': 150,
-                            'dsa_amount_60plus_usd': 260,
-                            'dsa_amount_60plus_local': 238.68,
-                            'dsa_amount_local': 367.21,
-                            'finalization_date': datetime.now().date(),
-                            'eff_date': datetime.now().date(),
-                            'area_name': 'Everywhere',
-                            'area_code': country.business_area_code}]
-        for data in dsa_region_data:
-            name = data.pop('country')
-            d, created = DSARegion.objects.get_or_create(country=name, defaults=data)
-            if created:
-                self.stdout.write('DSA Region created: {}'.format(name))
-            else:
-                self.stdout.write('DSA Region found: {}'.format(name))
-
-    def _load_permission_matrix(self):
-        populate_permission_matrix(self)
-
-    def _add_wbs(self):
-        wbs_data_list = [
-            {'name': 'WBS #1'},
-            {'name': 'WBS #2'},
-            {'name': 'WBS #3'},
-        ]
-
-        for data in wbs_data_list:
-            name = data.pop('name')
-            r, created = WBS.objects.get_or_create(name=name)
-            if created:
-                self.stdout.write('WBS created: {}'.format(name))
-            else:
-                self.stdout.write('WBS found: {}'.format(name))
-
-    def _add_grants(self):
-        wbs_1 = WBS.objects.get(name='WBS #1')
-        wbs_2 = WBS.objects.get(name='WBS #2')
-        wbs_3 = WBS.objects.get(name='WBS #3')
-
-        grant_data_list = [
-            {'name': 'Grant #1',
-             'wbs': wbs_1},
-            {'name': 'Grant #2',
-             'wbs': wbs_1},
-            {'name': 'Grant #3',
-             'wbs': wbs_2},
-            {'name': 'Grant #4',
-             'wbs': wbs_2},
-            {'name': 'Grant #5',
-             'wbs': wbs_3}
-        ]
-
-        for data in grant_data_list:
-            name = data.pop('name')
-            g, created = Grant.objects.get_or_create(name=name, defaults=data)
-            if created:
-                self.stdout.write('Grant created: {}'.format(name))
-            else:
-                self.stdout.write('Grant found: {}'.format(name))
-
-    def _add_funds(self):
-        grant_1 = Grant.objects.get(name='Grant #1')
-        grant_2 = Grant.objects.get(name='Grant #2')
-        grant_3 = Grant.objects.get(name='Grant #3')
-        grant_4 = Grant.objects.get(name='Grant #4')
-        grant_5 = Grant.objects.get(name='Grant #5')
-
-        fund_data_list = [
-            {'name': 'Fund #1',
-             'grant': grant_1},
-            {'name': 'Fund #2',
-             'grant': grant_1},
-            {'name': 'Fund #3',
-             'grant': grant_2},
-            {'name': 'Fund #4',
-             'grant': grant_3},
-            {'name': 'Fund #5',
-             'grant': grant_3},
-            {'name': 'Fund #6',
-             'grant': grant_4},
-            {'name': 'Fund #7',
-             'grant': grant_4},
-            {'name': 'Fund #8',
-             'grant': grant_5},
-            {'name': 'Fund #4',
-             'grant': grant_5},
-            {'name': 'Fund #4',
-             'grant': grant_5},
-        ]
-
-        for data in fund_data_list:
-            name = data.pop('name')
-            f, created = Fund.objects.get_or_create(name=name, defaults=data)
-            if created:
-                self.stdout.write('Fund created: {}'.format(name))
-            else:
-                self.stdout.write('Fund found: {}'.format(name))
+                self.stdout.write('DSA Region found: {}'.format(d.label))
 
     def _add_expense_types(self):
         expense_type_data = [
-            {'title': 'Food',
-             'code': 'food'},
-            {'title': 'Tickets',
-             'code': 'tickets'},
-            {'title': 'Fees',
-             'code': 'fees'}
+            {'title': 'Air Ticket Cost',
+             'vendor_number': 'user'},
+            {'title': 'Train Cost',
+             'vendor_number': 'user'},
+            {'title': 'Terminal Cost',
+             'vendor_number': 'user'},
+            {'title': 'Other Traveler Costs',
+             'vendor_number': 'user'},
+            {'title': 'Estimated Travel Agent Cost',
+             'vendor_number': ''}
         ]
 
         for data in expense_type_data:

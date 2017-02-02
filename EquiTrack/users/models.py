@@ -57,6 +57,9 @@ class Country(TenantMixin):
     offices = models.ManyToManyField('Office', related_name='offices')
     sections = models.ManyToManyField('Section', related_name='sections')
 
+    threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
+    threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
+
     def __unicode__(self):
         return self.name
 

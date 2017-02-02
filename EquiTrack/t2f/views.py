@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 
 from collections import OrderedDict
+from decimal import Decimal
 
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.db.transaction import atomic
 from django_fsm import TransitionNotAllowed
 
@@ -16,6 +18,7 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
+from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter
 from t2f.filters import travel_list, action_points, invoices
 from locations.models import Location
@@ -31,6 +34,7 @@ from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, Trave
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 from t2f.permission_matrix import PERMISSION_MATRIX
+from t2f.vision import InvoiceExport, InvoiceUpdater
 
 
 class T2FPagePagination(PageNumberPagination):
@@ -113,6 +117,7 @@ class TravelListViewSet(mixins.ListModelMixin,
     def export_travel_admins(self, request, *args, **kwargs):
         travel_queryset = self.filter_queryset(self.get_queryset())
         queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number')
+        queryset = queryset.prefetch_related('airlines')
         serialzier = TravelAdminExportSerializer(queryset, many=True, context=self.get_serializer_context())
 
         response = Response(data=serialzier.data, status=status.HTTP_200_OK)
@@ -161,7 +166,39 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     @atomic
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
+        if self.check_treshold(serializer.instance):
+            serializer.transition_name = 'submit_for_approval'
         run_transition(serializer)
+
+    def check_treshold(self, travel):
+        expenses = {'user': Decimal(0),
+                    'travel_agent': Decimal(0)}
+
+        for expense in travel.expenses.all():
+            if expense.type.vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
+                expenses['user'] += expense.amount
+            elif expense.type.vendor_number:
+                expenses['travel_agent'] += expense.amount
+
+        traveler_delta = 0
+        travel_agent_delta = 0
+        if travel.approved_cost_traveler:
+            traveler_delta = expenses['user'] - travel.approved_cost_traveler
+            if travel.currency.iso_3 != 'USD':
+                exchange_rate = travel.currency.exchange_rates.all().last()
+                traveler_delta *= exchange_rate.x_rate
+
+        if travel.approved_cost_travel_agencies:
+            travel_agent_delta = expenses['travel_agent'] - travel.approved_cost_travel_agencies
+
+        workspace = connection.tenant
+        if workspace.threshold_tre_usd and traveler_delta > workspace.threshold_tre_usd:
+            return True
+
+        if workspace.threshold_tae_usd and travel_agent_delta > workspace.threshold_tae_usd:
+            return True
+
+        return False
 
     @atomic
     def clone_for_secondary_traveler(self, request, *args, **kwargs):
@@ -266,3 +303,17 @@ class VendorNumberListView(generics.GenericAPIView):
 class PermissionMatrixView(generics.GenericAPIView):
     def get(self, request):
         return Response(PERMISSION_MATRIX, status.HTTP_200_OK)
+
+
+class VisionInvoiceExport(generics.GenericAPIView):
+    def get(self, request):
+        exporter = InvoiceExport()
+        xml_structure = exporter.generate_xml()
+        return Response(xml_structure, status.HTTP_200_OK, content_type='application/xml')
+
+
+class VisionInvoiceUpdate(generics.GenericAPIView):
+    def post(self, request):
+        updater = InvoiceUpdater(request.data)
+        updater.update_invoices()
+        return Response(status=status.HTTP_200_OK)

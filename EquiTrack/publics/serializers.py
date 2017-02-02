@@ -18,7 +18,7 @@ class DSARegionSerializer(serializers.ModelSerializer):
         model = DSARegion
         fields = ('id', 'country', 'area_name', 'area_code', 'dsa_amount_usd', 'dsa_amount_60plus_usd',
                   'dsa_amount_local', 'dsa_amount_60plus_local', 'room_rate', 'finalization_date', 'eff_date',
-                  'unique_id', 'unique_name')
+                  'unique_id', 'unique_name', 'label')
 
 
 class BusinessRegionSerializer(serializers.ModelSerializer):
@@ -36,10 +36,15 @@ class BusinessAreaSerializer(serializers.ModelSerializer):
 
 
 class CurrencySerializer(serializers.ModelSerializer):
+    iso_4217 = serializers.CharField(source='code', read_only=True)
+    exchange_to_dollar = serializers.SerializerMethodField()
+
     class Meta:
         model = Currency
         fields = ('id', 'name', 'iso_4217')
 
+    def get_exchange_to_dollar(self, obj):
+        return obj.exchange_rates.order_by('valid_from').last().x_rate
 
 class AirlineSerializer(serializers.ModelSerializer):
     class Meta:

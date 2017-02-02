@@ -31,8 +31,10 @@ class StaticDataView(generics.GenericAPIView):
     def get(self, request):
         country = request.user.profile.country
         dsa_regions = DSARegion.objects.filter(country__business_area__code=country.business_area_code)
+        currencies = Currency.objects.all()
+        currencies = currencies.prefetch_related('exchange_rates')
 
-        data = {'currencies': Currency.objects.all(),
+        data = {'currencies': currencies,
                 'airlines': AirlineCompany.objects.all(),
                 'dsa_regions': dsa_regions,
                 'countries': Country.objects.all(),
