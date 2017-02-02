@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 (b't2f', '0016_auto_20170124_2358'), (b't2f', '0017_auto_20170125_1305')]
 
     dependencies = [
-        ('publics', '0003_auto_20170126_1615'),
+        ('publics', '0001_initial'),
         ('locations', '0004_auto_20170112_2051'),
         ('users', '0003_auto_20170123_2009'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

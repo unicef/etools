@@ -333,9 +333,11 @@ class InvoiceMaker(object):
         :return: Aggregated values
         :rtype: dict
         """
+        from t2f.models import Invoice
+
         vendor_grouping = defaultdict(lambda: defaultdict(Decimal))
 
-        for invoice in self.travel.invoices.filter(status='success'):
+        for invoice in self.travel.invoices.filter(status=Invoice.SUCCESS):
             for item in invoice.items.all():
                 key = (item.wbs.id, item.grant.id, item.fund.id)
                 vendor_grouping[invoice.vendor_number][key] += item.amount
@@ -416,7 +418,7 @@ class InvoiceMaker(object):
                               'vendor_number': vendor_number,
                               'currency': currency,
                               'amount': Decimal(0),
-                              'status': 'success'}
+                              'status': Invoice.PENDING}
 
             items_list = []
             for key, amount in vendor_grouping[vendor_number].items():

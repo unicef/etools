@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
+from publics.models import TravelExpenseType
 from t2f.helpers import CostSummaryCalculator, InvoiceMaker
 
 log = logging.getLogger(__name__)
@@ -159,10 +160,11 @@ class Travel(models.Model):
 
     # When the travel is sent for payment, the expenses should be saved for later use
     preserved_expenses = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+    approved_cost_traveler = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
+    approved_cost_travel_agencies = models.DecimalField(max_digits=20, decimal_places=4, null=True, default=None)
 
-    @property
-    def approval_date(self):
-        return self.approved_at
+    def __unicode__(self):
+        return self.reference_number
 
     @property
     def cost_summary(self):
@@ -176,7 +178,13 @@ class Travel(models.Model):
             return False
         return True
 
-    @transition(status, source=[PLANNED, REJECTED], target=SUBMITTED)
+    def check_pending_invoices(self):
+        if self.invoices.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]).exists():
+            return False
+        return True
+
+    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED,
+                conditions=[check_pending_invoices])
     def submit_for_approval(self):
         # TODO validate this!!!
         if not self.supervisor:
@@ -187,6 +195,18 @@ class Travel(models.Model):
 
     @transition(status, source=[SUBMITTED], target=APPROVED)
     def approve(self):
+        expenses = {'user': Decimal(0),
+                    'travel_agent': Decimal(0)}
+
+        for expense in self.expenses.all():
+            if expense.type.vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
+                expenses['user'] += expense.amount
+            elif expense.type.vendor_number:
+                expenses['travel_agent'] += expense.amount
+
+        self.approved_cost_traveler = expenses['user']
+        self.approved_cost_travel_agencies = expenses['travel_agent']
+
         self.approved_at = datetime.now()
         self.send_notification_email('Travel #{} was approved.'.format(self.id),
                                      self.traveler.email,
@@ -224,7 +244,8 @@ class Travel(models.Model):
                                      'emails/sent_for_payment.html')
 
     @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED],
-                target=CERTIFICATION_SUBMITTED)
+                target=CERTIFICATION_SUBMITTED,
+                conditions=[check_pending_invoices])
     def submit_certificate(self):
         self.send_notification_email('Travel #{} certification was submitted.'.format(self.id),
                                      self.supervisor.email,
@@ -244,7 +265,8 @@ class Travel(models.Model):
                                      'emails/certificate_rejected.html')
 
     @transition(status, source=[CERTIFICATION_APPROVED, SENT_FOR_PAYMENT],
-                target=CERTIFIED)
+                target=CERTIFIED,
+                conditions=[check_pending_invoices])
     def mark_as_certified(self):
         self.send_notification_email('Travel #{} certification was certified.'.format(self.id),
                                      self.traveler.email,
@@ -506,11 +528,16 @@ class ActionPoint(models.Model):
 
 
 class Invoice(models.Model):
+    PENDING = 'pending'
+    PROCESSING = 'processing'
+    SUCCESS = 'success'
+    ERROR = 'error'
+
     STATUS = (
-        ('pending', 'Pending'),
-        ('processing', 'Processing'),
-        ('success', 'Success'),
-        ('error', 'Error'),
+        (PENDING, 'Pending'),
+        (PROCESSING, 'Processing'),
+        (SUCCESS, 'Success'),
+        (ERROR, 'Error'),
     )
 
     travel = models.ForeignKey('Travel', related_name='invoices')
@@ -520,7 +547,8 @@ class Invoice(models.Model):
     currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
-    vision_fi_id = models.CharField(max_length=16)
+    message = models.TextField(null=True, blank=True)
+    vision_fi_id = models.CharField(max_length=16, null=True, blank=True)
 
     def save(self, **kwargs):
         if self.pk is None:
@@ -539,10 +567,6 @@ class Invoice(models.Model):
     @property
     def normalized_amount(self):
         return abs(self.amount.normalize())
-
-    @property
-    def message(self):
-        return ''
 
 
 class InvoiceItem(models.Model):
