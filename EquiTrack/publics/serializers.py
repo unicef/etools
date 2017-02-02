@@ -37,7 +37,7 @@ class BusinessAreaSerializer(serializers.ModelSerializer):
 
 class CurrencySerializer(serializers.ModelSerializer):
     iso_4217 = serializers.CharField(source='code', read_only=True)
-    exchange_to_dollar = serializers.DecimalField(source='exchange_rates.all.0.x_rate', max_digits=20,
+    exchange_to_dollar = serializers.DecimalField(source='exchange_rates.all.last.x_rate', max_digits=20,
                                                   decimal_places=10)
 
     class Meta:

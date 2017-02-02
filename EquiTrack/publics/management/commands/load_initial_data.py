@@ -463,9 +463,7 @@ class Command(BaseCommand):
                                                        iso_3=iso_3,
                                                        currency=Currency.objects.filter(code=currency_code).first(),
                                                        valid_from=valid_from,
-                                                       valid_to=valid_to,
-                                                       threshold_tre_usd=0,
-                                                       threshold_tae_usd=0)
+                                                       valid_to=valid_to)
             if dsa_code:
                 dsa_country_mapping[dsa_code] = c
 

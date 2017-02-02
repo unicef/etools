@@ -56,7 +56,7 @@ class TravelAdminExportSerializer(serializers.Serializer):
     dsa_area = serializers.CharField(source='dsa_region.area_code')
     overnight_travel = serializers.BooleanField()
     mode_of_travel = serializers.CharField()
-    airline = serializers.CharField(source='airlines.all.0.name')
+    airline = serializers.CharField(source='airlines.all.last.name')
 
     class Meta:
         fields = ('reference_number', 'traveller', 'office', 'section', 'status', 'origin', 'destination',

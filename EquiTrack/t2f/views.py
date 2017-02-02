@@ -117,6 +117,7 @@ class TravelListViewSet(mixins.ListModelMixin,
     def export_travel_admins(self, request, *args, **kwargs):
         travel_queryset = self.filter_queryset(self.get_queryset())
         queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number')
+        queryset = queryset.prefetch_related('airlines')
         serialzier = TravelAdminExportSerializer(queryset, many=True, context=self.get_serializer_context())
 
         response = Response(data=serialzier.data, status=status.HTTP_200_OK)
@@ -306,12 +307,8 @@ class PermissionMatrixView(generics.GenericAPIView):
 
 class VisionInvoiceExport(generics.GenericAPIView):
     def get(self, request):
-        invoice_qs = Invoice.objects.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING])
-        exporter = InvoiceExport(invoice_qs)
+        exporter = InvoiceExport()
         xml_structure = exporter.generate_xml()
-
-        # This line has to be the last otherwise can create problems because of lazy loading
-        invoice_qs.update(status=Invoice.PROCESSING)
         return Response(xml_structure, status.HTTP_200_OK, content_type='application/xml')
 
 

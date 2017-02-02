@@ -24,7 +24,7 @@ def run_on_tenants(func):
     def wrapper(self, *args, **kwargs):
         original_tenant = connection.tenant
         try:
-            for workspace in Workspace.objects.all():
+            for workspace in Workspace.objects.exclude(business_area_code=''):
                 connection.set_tenant(workspace)
                 func(self, workspace, *args, **kwargs)
         finally:
@@ -33,9 +33,6 @@ def run_on_tenants(func):
 
 
 class InvoiceExport(object):
-    def __init__(self, invoice_list):
-        self.invoice_list = invoice_list
-
     def generate_xml(self):
         root = ET.Element('invoices')
         self.generate_invoices(root)
@@ -43,8 +40,10 @@ class InvoiceExport(object):
 
     @run_on_tenants
     def generate_invoices(self, workspace, root):
-        for invoice in self.invoice_list:
+        invoices_qs = Invoice.objects.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING])
+        for invoice in invoices_qs:
             self.generate_invoice_node(root, invoice)
+        invoices_qs.update(status=Invoice.PROCESSING)
 
     def generate_invoice_node(self, root, invoice):
         main = ET.SubElement(root, 'invoice')

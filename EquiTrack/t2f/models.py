@@ -16,6 +16,7 @@ from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
+from publics.models import TravelExpenseType
 from t2f.helpers import CostSummaryCalculator, InvoiceMaker
 
 log = logging.getLogger(__name__)
@@ -194,6 +195,18 @@ class Travel(models.Model):
 
     @transition(status, source=[SUBMITTED], target=APPROVED)
     def approve(self):
+        expenses = {'user': Decimal(0),
+                    'travel_agent': Decimal(0)}
+
+        for expense in self.expenses.all():
+            if expense.type.vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
+                expenses['user'] += expense.amount
+            elif expense.type.vendor_number:
+                expenses['travel_agent'] += expense.amount
+
+        self.approved_cost_traveler = expenses['user']
+        self.approved_cost_travel_agencies = expenses['travel_agent']
+
         self.approved_at = datetime.now()
         self.send_notification_email('Travel #{} was approved.'.format(self.id),
                                      self.traveler.email,
