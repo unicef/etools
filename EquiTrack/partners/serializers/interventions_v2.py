@@ -135,17 +135,6 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class InterventionAmendmentNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = InterventionAmendment
-        fields = (
-            "amended_at",
-            "type",
-        )
-
-
-
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -185,7 +174,8 @@ class InterventionListSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             'id', 'number', 'hrp', 'document_type', 'partner_name', 'status', 'title', 'start', 'end',
-            'unicef_budget', 'cso_contribution', 'sectors', 'cp_outputs', 'unicef_focal_points',
+            'unicef_budget', 'cso_contribution',
+            'sectors', 'cp_outputs', 'unicef_focal_points',
             'offices'
         )
 
@@ -492,7 +482,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     #     #     errors.update(locations="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
     #
     #     if errors:
-    #         raise serializers.ValidationError(errors)
+    #         raise serializers.ValidationError(errors
     #
     #     return data
 
@@ -502,7 +492,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     partner = serializers.CharField(source='agreement.partner.name')
     supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
-    amendments = InterventionAmendmentNestedSerializer(many=True, read_only=True, required=False)
+    amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)

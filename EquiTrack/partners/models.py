@@ -18,7 +18,7 @@ from django.utils.functional import cached_property
 
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django_hstore import hstore
-from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
+from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -1216,7 +1216,12 @@ class AgreementAmendment(TimeStampedModel):
 
 class InterventionManager(models.Manager):
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('result_links', 'sector_locations')
+        return super(InterventionManager, self).get_queryset().prefetch_related('result_links',
+                                                                                'sector_locations__sector',
+                                                                                'unicef_focal_points',
+                                                                                'offices',
+                                                                                'agreement__partner',
+                                                                                'planned_budget')
 
 
 class Intervention(TimeStampedModel):
@@ -1676,7 +1681,14 @@ class InterventionSectorLocationLink(models.Model):
     sector = models.ForeignKey(Sector, related_name='intervention_locations')
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
 
-# TODO: check this for sanity
+
+class GovernmentInterventionManager(models.Manager):
+    def get_queryset(self):
+        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results',
+                                                                                'results__sectors',
+                                                                                'results__unicef_managers')
+
+
 class GovernmentIntervention(models.Model):
     """
     Represents a government intervention.
@@ -1684,6 +1696,7 @@ class GovernmentIntervention(models.Model):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`reports.ResultStructure`
     """
+    objects = GovernmentInterventionManager()
 
     partner = models.ForeignKey(
         PartnerOrganization,
