@@ -2,40 +2,48 @@
 from datetime import datetime, timedelta
 import factory
 from factory import fuzzy
+from pytz import UTC
 
-from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, PartnerFactory,\
-    PartnershipFactory, ResultFactory, LocationFactory
-from t2f.models import DSARegion, Currency, AirlineCompany, Travel, TravelActivity, IteneraryItem, Expense, Deduction,\
-    CostAssignment, Clearances, ExpenseType, Fund, Grant, WBS, TravelType, ModeOfTravel, make_reference_number
+from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, LocationFactory,\
+    InterventionFactory
+from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, TravelExpenseType, Country,\
+    BusinessArea, BusinessRegion
+from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
+    ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
+    TravelType
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
 
 
-class TravelTypeFactory(factory.DjangoModelFactory):
+class BusinessRegionFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=8)
+    code = fuzzy.FuzzyText(length=2)
 
     class Meta:
-        model = TravelType
+        model = BusinessRegion
 
 
-class ModeOfTravelFactory(factory.DjangoModelFactory):
+class BusinessAreaFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=8)
+    code = fuzzy.FuzzyText(length=8)
+    region = factory.SubFactory(BusinessRegionFactory)
 
     class Meta:
-        model = ModeOfTravel
+        model = BusinessArea
 
 
 class ExpenseTypeFactory(factory.DjangoModelFactory):
     title = fuzzy.FuzzyText(length=12)
-    code = fuzzy.FuzzyText(length=12)
+    vendor_number = fuzzy.FuzzyText(length=12)
 
     class Meta:
-        model = ExpenseType
+        model = TravelExpenseType
 
 
 class WBSFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=12)
+    # business_area = factory.SubFactory(BusinessAreaFactory)
 
     class Meta:
         model = WBS
@@ -59,7 +67,7 @@ class FundFactory(factory.DjangoModelFactory):
 
 class CurrencyFactory(factory.DjangoModelFactory):
     name = 'United States Dollar'
-    iso_4217 = 'USD'
+    code = 'USD'
 
     class Meta:
         model = Currency
@@ -73,9 +81,22 @@ class AirlineCompanyFactory(factory.DjangoModelFactory):
         model = AirlineCompany
 
 
+class CountryFactory(factory.DjangoModelFactory):
+    name = fuzzy.FuzzyText(length=32)
+    long_name = fuzzy.FuzzyText(length=32)
+    iso_2 = fuzzy.FuzzyText(length=2)
+    iso_3 = fuzzy.FuzzyText(length=3)
+    valid_from = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
+    valid_to = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
+
+    class Meta:
+        model = Country
+
+
 class DSARegionFactory(factory.DjangoModelFactory):
-    country = fuzzy.FuzzyText(length=32)
-    region = fuzzy.FuzzyText(length=32)
+    country = factory.SubFactory(CountryFactory)
+    area_name = fuzzy.FuzzyText(length=32)
+    area_code = fuzzy.FuzzyText(length=3)
     dsa_amount_usd = 100
     dsa_amount_60plus_usd = 80
     dsa_amount_local = 200
@@ -89,9 +110,9 @@ class DSARegionFactory(factory.DjangoModelFactory):
 
 
 class TravelActivityFactory(factory.DjangoModelFactory):
-    travel_type = factory.SubFactory(TravelTypeFactory)
-    partner = factory.SubFactory(PartnerFactory)
-    partnership = factory.SubFactory(PartnershipFactory)
+    travel_type = TravelType.ADVOCACY
+    partner = factory.SelfAttribute('partnership.agreement.partner')
+    partnership = factory.SubFactory(InterventionFactory)
     result = factory.SubFactory(ResultFactory)
     date = factory.LazyAttribute(lambda o: datetime.now())
 
@@ -111,7 +132,7 @@ class IteneraryItemFactory(factory.DjangoModelFactory):
     arrival_date = fuzzy.FuzzyNaiveDateTime(start_dt=datetime.now(), end_dt=_FUZZY_END_DATE)
     dsa_region = factory.SubFactory(DSARegionFactory)
     overnight_travel = False
-    mode_of_travel = factory.SubFactory(ModeOfTravelFactory)
+    mode_of_travel = ModeOfTravel.BOAT
 
     @factory.post_generation
     def populate_airlines(self, create, extracted, **kwargs):
@@ -123,7 +144,6 @@ class IteneraryItemFactory(factory.DjangoModelFactory):
 
 
 class ExpenseFactory(factory.DjangoModelFactory):
-    type = fuzzy.FuzzyText(length=32)
     document_currency = factory.SubFactory(CurrencyFactory)
     account_currency = factory.SubFactory(CurrencyFactory)
     amount = fuzzy.FuzzyDecimal(1, 10000)
@@ -164,6 +184,19 @@ class ClearanceFactory(factory.DjangoModelFactory):
         model = Clearances
 
 
+class ActionPointFactory(factory.DjangoModelFactory):
+    action_point_number = factory.Sequence(lambda n: make_action_point_number())
+    description = fuzzy.FuzzyText(length=128)
+    due_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
+    person_responsible = factory.SubFactory(UserFactory)
+    assigned_by = factory.SubFactory(UserFactory)
+    status = 'open'
+    created_at = datetime.now(tz=UTC)
+
+    class Meta:
+        model = ActionPoint
+
+
 class TravelFactory(factory.DjangoModelFactory):
     traveler = factory.SubFactory(UserFactory)
     supervisor = factory.SubFactory(UserFactory)
@@ -174,18 +207,20 @@ class TravelFactory(factory.DjangoModelFactory):
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True
-    reference_number = factory.Sequence(lambda n: make_reference_number())
+    reference_number = factory.Sequence(lambda n: make_travel_reference_number())
     currency = factory.SubFactory(CurrencyFactory)
+    mode_of_travel = []
 
     itinerary = factory.RelatedFactory(IteneraryItemFactory, 'travel')
     expenses = factory.RelatedFactory(ExpenseFactory, 'travel')
     deductions = factory.RelatedFactory(DeductionFactory, 'travel')
     cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')
     clearances = factory.RelatedFactory(ClearanceFactory, 'travel')
+    action_points = factory.RelatedFactory(ActionPointFactory, 'travel')
 
     @factory.post_generation
     def populate_activities(self, create, extracted, **kwargs):
-        ta = TravelActivityFactory()
+        ta = TravelActivityFactory(primary_traveler=self.traveler)
         ta.travels.add(self)
 
     class Meta:

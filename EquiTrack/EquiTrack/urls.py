@@ -11,8 +11,12 @@ from rest_framework_nested import routers
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+
+from publics.views import StaticDataView, WBSGrantFundView
+
 admin.autodiscover()
 
+from .stream_feed.feeds import JSONActivityFeedWithCustomData
 from .utils import staff_required
 from .views import (
     MainView,
@@ -135,6 +139,9 @@ urlpatterns = patterns(
     url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
     url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
+    url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
+    url(r'^api/wbs_grants_funds/$', WBSGrantFundView.as_view(), name='wbs_grants_funds'),
+
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
     url(r'^users/', include('users.urls')),
@@ -188,6 +195,12 @@ urlpatterns = patterns(
     url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
     url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),  # TODO: remove this when eTrips is deployed needed
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
+
+    # Activity stream
+    url(r'^activity/(?P<model_name>\w+)/json/$',
+        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_stream'), name='custom_data_model_stream'),
+    url(r'^activity/(?P<model_name>\w+)/(?P<obj_id>\d+)/json/$',
+        JSONActivityFeedWithCustomData.as_view(name='custom_data_model_detail_stream'), name='custom_data_model_detail_stream'),
     url('^activity/', include('actstream.urls')),
 )
 

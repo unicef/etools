@@ -8,7 +8,7 @@ django-easy-pdf==0.1.0
 django-logentry-admin==1.0.2
 djrill==2.1.0
 django-autocomplete-light==3.2.1
-django-smart-selects==1.2.6
+django-smart-selects==1.3.1
 django-hstore==1.4.2
 django-redis-cache==1.7.1
 django-smtp-ssl==1.0
@@ -31,8 +31,10 @@ django-reversion==1.10.1
 django-generic-links==0.4.0
 django-activity-stream==0.6.3
 
-# Needed for django-activity-stream package to store custom activity data
-django-jsonfield==1.0.1
+# Needed for django-activity-stream
+#package to store custom activity data
+git+https://github.com/bradjasper/django-jsonfield.git
+#django-jsonfield==1.0.3
 
 # Django REST Framework packages
 djangorestframework==3.5.3

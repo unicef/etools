@@ -1,9 +1,8 @@
-__author__ = 'jcranwellward'
 import datetime
 
 from django.db.models import Q
 
-from EquiTrack.utils import BaseEmail
+from notification.email import BaseEmail
 
 
 class TripCreatedEmail(BaseEmail):
@@ -280,5 +279,3 @@ class TripSummaryEmail(BaseEmail):
             'owner_name': self.object.get_full_name(),
             'environment': self.get_environment()
         }
-
-

@@ -23,7 +23,7 @@ class TravelMailSerializer(serializers.ModelSerializer):
     traveler = serializers.CharField(source='traveler.get_full_name')
     start_date = serializers.DateTimeField(format='%m/%d/%Y %H:%M')
     end_date = serializers.DateTimeField(format='%m/%d/%Y %H:%M')
-    currency = serializers.CharField(source='currency.iso_4217')
+    currency = serializers.CharField(source='currency.code')
     cost_summary = CostSummarySerializer(read_only=True)
     location = serializers.CharField(source='itinerary.first.destination')
     cost_assignments = CostAssignmentNameSerializer(many=True)

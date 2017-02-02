@@ -205,6 +205,10 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberDetailSerializer(many=True, read_only=True)
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
+    hact_values = serializers.SerializerMethodField(read_only=True)
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
@@ -214,10 +218,39 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
 
     staff_members = PartnerStaffMemberNestedSerializer(many=True, read_only=True)
+    hact_values = serializers.SerializerMethodField(read_only=True)
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+
+class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
+
+    hact_values = serializers.SerializerMethodField(read_only=True)
+    hact_min_requirements = serializers.JSONField()
+
+    def get_hact_values(self, obj):
+        return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+
+    class Meta:
+        model = PartnerOrganization
+        fields = (
+            "id",
+            "name",
+            "short_name",
+            "partner_type",
+            "cso_type",
+            "rating",
+            "shared_partner",
+            "shared_with",
+            "total_ct_cp",
+            "total_ct_cy",
+            "hact_min_requirements",
+            "hact_values",
+        )
 
 
 class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
