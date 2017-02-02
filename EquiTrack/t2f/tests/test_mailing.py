@@ -4,6 +4,8 @@ from django.core import mail
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from t2f.models import Invoice
+from t2f.tests.factories import BusinessAreaFactory
 
 from .factories import TravelFactory
 
@@ -20,9 +22,15 @@ class MailingTest(APITenantTestCase):
                                     supervisor=self.unicef_staff)
 
     def test_mailing(self):
+        tenant_country = self.travel.traveler.profile.country
+        tenant_country.business_area_code = '0'
+        tenant_country.save()
+        BusinessAreaFactory(code=self.travel.traveler.profile.country.business_area_code)
+
         self.travel.submit_for_approval()
         self.travel.approve()
         self.travel.send_for_payment()
+        self.travel.invoices.all().update(status=Invoice.SUCCESS)
         self.travel.submit_certificate()
         self.travel.approve_certificate()
         self.travel.mark_as_certified()

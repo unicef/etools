@@ -3,6 +3,7 @@ __author__ = 'unicef-leb-inn'
 import tablib
 
 from django import template
+from django.template.loader import render_to_string
 from django.utils.datastructures import OrderedDict as SortedDict
 
 from partners.models import (
@@ -11,11 +12,21 @@ from partners.models import (
     FundingCommitment,
     DirectCashTransfer,
     GovernmentIntervention,
+    Intervention,
 )
 from trips.models import Trip
 
+from django.shortcuts import render
 
 register = template.Library()
+
+@register.simple_tag
+def get_interventions(partner_id):
+    interventions = Intervention.objects.filter(agreement__partner__pk=partner_id)
+
+    return render_to_string('admin/partners/interventions_table.html', {'interventions':interventions} )
+
+
 
 
 @register.simple_tag
@@ -107,8 +118,10 @@ def show_fr_fc(value):
     if not value:
         return ''
 
-    intervention = PCA.objects.get(id=int(value))
-    commitments = FundingCommitment.objects.filter(fr_number=intervention.fr_number)
+    intervention = Intervention.objects.get(id=int(value))
+    if not intervention.fr_numbers:
+        return ''
+    commitments = FundingCommitment.objects.filter(fr_number__in=intervention.fr_numbers)
     data = tablib.Dataset()
     fr_fc_summary = []
 
@@ -183,7 +196,7 @@ def show_dct(value):
     if not value:
         return ''
 
-    intervention = PCA.objects.get(id=int(value))
+    intervention = Intervention.objects.get(id=int(value))
     # fr_number = intervention.fr_number
     data = tablib.Dataset()
     dct_summary = []

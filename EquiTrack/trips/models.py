@@ -15,10 +15,11 @@ from reversion.revisions import get_for_object
 from smart_selects.db_fields import ChainedForeignKey
 
 from EquiTrack.mixins import AdminURLMixin
+from EquiTrack.utils import get_current_site, get_environment
 from reports.models import Result, Sector
 from funds.models import Grant
 from users.models import Office, Section
-from locations.models import Governorate, Locality, Location, Region
+from locations.models import Location
 from partners.models import (
     PartnerOrganization,
     PCA,
@@ -27,7 +28,8 @@ from partners.models import (
     GovernmentIntervention,
     GovernmentInterventionResult
 )
-from . import emails
+from notification.templates import trips as emails
+from notification.models import Notification
 
 User = settings.AUTH_USER_MODEL
 
@@ -397,21 +399,42 @@ class Trip(AdminURLMixin, models.Model):
             if instance.budget_owner.email not in recipients:
                 recipients.append(instance.budget_owner.email)
 
+        email_context = {
+            'trip_reference': instance.reference(),
+            'owner_name': instance.owner.get_full_name(),
+            'number': instance.reference(),
+            'state': 'Submitted',
+            'url': 'https://{}{}'.format(
+                get_current_site().domain,
+                instance.get_admin_url()),
+            'purpose_of_travel': instance.purpose_of_travel,
+            'environment': get_environment(),
+            'action_points': ('\n'.join([action.__unicode__() for action in instance.actionpoint_set.all()]))
+        }
+
         if instance.status == Trip.SUBMITTED:
             if instance.submitted_email_sent is False:
-                emails.TripCreatedEmail(instance).send(
-                    instance.owner.email,
-                    *recipients
+                notification = Notification.objects.create(
+                    sender=instance.owner,
+                    recipients=recipients, template_name='trips/trip/created/updated',
+                    template_data=email_context
                 )
+
+                notification.send_notification()
+
                 instance.submitted_email_sent = True
                 instance.save()
 
             if instance.international_travel and instance.approved_by_supervisor:
                 recipients.append(instance.representative.email)
-                emails.TripRepresentativeEmail(instance).send(
-                    instance.owner.email,
-                    *recipients
+
+                notification = Notification.objects.create(
+                    sender=instance.owner,
+                    recipients=recipients, template_name='trips/trip/representative',
+                    template_data=email_context
                 )
+
+                notification.send_notification()
 
         elif instance.status == Trip.CANCELLED:
             # send an email to everyone if the trip is cancelled
@@ -419,47 +442,74 @@ class Trip(AdminURLMixin, models.Model):
                 recipients.append(instance.travel_assistant.email)
 
             #recipients.extend(zonal_chiefs)
-            emails.TripCancelledEmail(instance).send(
-                instance.owner.email,
-                *recipients
+
+            notification = Notification.objects.create(
+                sender=instance.owner,
+                recipients=recipients, template_name='trips/trip/cancelled',
+                template_data=email_context
             )
+
+            notification.send_notification()
 
         elif instance.status == Trip.APPROVED:
             if instance.travel_assistant and not instance.transport_booked:
-                emails.TripTravelAssistantEmail(instance).send(
-                    instance.owner.email,
-                    instance.travel_assistant.email
+                email_context['travel_assistant'] = instance.travel_assistant.first_name
+
+                notification = Notification.objects.create(
+                    sender=instance.owner,
+                    recipients=[instance.travel_assistant.email, ], template_name='travel/trip/travel_or_admin_assistant',
+                    template_data=email_context
                 )
+
+                notification.send_notification()
 
             if instance.ta_required and instance.programme_assistant and not instance.ta_drafted:
-                emails.TripTAEmail(instance).send(
-                    instance.owner.email,
-                    instance.programme_assistant.email
+                email_context['pa_assistant'] = instance.programme_assistant.first_name
+
+                notification = Notification.objects.create(
+                    sender=instance.owner,
+                    recipients=[instance.programme_assistant.email, ], template_name='trips/trip/TA_request',
+                    template_data=email_context
                 )
 
+                notification.send_notification()
+
             if instance.ta_drafted and instance.vision_approver:
-                emails.TripTADraftedEmail(instance).send(
-                    instance.programme_assistant.email,
-                    instance.vision_approver.email
+                email_context['vision_approver'] = instance.vision_approver.first_name
+                email_context['ta_ref'] = instance.ta_reference
+
+                notification = Notification.objects.create(
+                    sender=instance.programme_assistant,
+                    recipients=[instance.vision_approver.email, ], template_name='trips/trip/TA_drafted',
+                    template_data=email_context
                 )
+
+                notification.send_notification()
 
             if not instance.approved_email_sent:
                 if instance.international_travel:
                     recipients.append(instance.representative.email)
 
                 #recipients.extend(zonal_chiefs)
-                emails.TripApprovedEmail(instance).send(
-                    instance.owner.email,
-                    *recipients
+                notification = Notification.objects.create(
+                    sender=instance.owner,
+                    recipients=recipients, template_name='trips/trip/approved',
+                    template_data=email_context
                 )
+
+                notification.send_notification()
+
                 instance.approved_email_sent = True
                 instance.save()
 
         elif instance.status == Trip.COMPLETED:
-            emails.TripCompletedEmail(instance).send(
-                instance.owner.email,
-                *recipients
+            notification = Notification.objects.create(
+                sender=instance.owner,
+                recipients=recipients, template_name='trips/trip/completed',
+                template_data=email_context
             )
+
+            notification.send_notification()
 
 post_save.connect(Trip.send_trip_request, sender=Trip)
 
@@ -471,7 +521,7 @@ class LinkedPartner(models.Model):
     Relates to :model:`trips.Trip`
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`partners.PCA`
-    Relates to :model:`reports.ResultChain`
+    # Relates to :model:`reports.ResultChain`
     """
 
     trip = models.ForeignKey(Trip)
@@ -562,18 +612,6 @@ class TripLocation(models.Model):
     """
 
     trip = models.ForeignKey(Trip)
-    governorate = models.ForeignKey(
-        Governorate,
-        null=True, blank=True
-    )
-    region = models.ForeignKey(
-        Region,
-        null=True, blank=True
-    )
-    locality = models.ForeignKey(
-        Locality,
-        null=True, blank=True
-    )
     location = models.ForeignKey(
         Location,
         null=True, blank=True
@@ -667,21 +705,48 @@ class ActionPoint(models.Model):
             instance.trip.supervisor.email
         ]
 
+        email_context = {
+            'trip_reference': instance.trip.reference(),
+            'url': 'https://{}{}#reporting'.format(
+                get_current_site().domain,
+                instance.trip.get_admin_url()
+            ),
+            'owner_name': instance.trip.owner.get_full_name(),
+            'responsible': instance.person_responsible.get_full_name(),
+            'state': 'Created',
+            'environment': get_environment()
+        }
+
         if created:
-            emails.TripActionPointCreated(instance).send(
-                instance.trip.owner.email,
-                *recipients
+            notification = Notification.objects.create(
+                sender=instance.trip.owner,
+                recipients=recipients, template_name='trips/action/created',
+                template_data=email_context
             )
+
+            notification.send_notification()
+
         elif instance.status == 'closed':
-            emails.TripActionPointClosed(instance).send(
-                instance.trip.owner.email,
-                *recipients
+            email_context['state'] = 'Closed'
+
+            notification = Notification.objects.create(
+                sender=instance.trip.owner,
+                recipients=recipients, template_name='trips/action/created',
+                template_data=email_context
             )
+
+            notification.send_notification()
+
         else:
-            emails.TripActionPointUpdated(instance).send(
-                instance.trip.owner.email,
-                *recipients
+            email_context['state'] = 'Updated'
+
+            notification = Notification.objects.create(
+                sender=instance.trip.owner,
+                recipients=recipients, template_name='trips/action/created',
+                template_data=email_context
             )
+
+            notification.send_notification()
 
     @transaction.atomic
     def save(self, **kwargs):

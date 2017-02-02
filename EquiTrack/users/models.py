@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.postgres.fields import ArrayField
 
 from djangosaml2.signals import pre_user_save
 
@@ -55,6 +56,9 @@ class Country(TenantMixin):
     # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
     offices = models.ManyToManyField('Office', related_name='offices')
     sections = models.ManyToManyField('Section', related_name='sections')
+
+    threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
+    threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
 
     def __unicode__(self):
         return self.name
@@ -106,7 +110,8 @@ class Section(models.Model):
     Represents a section for the country
     """
 
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=64, unique=True)
+    code = models.CharField(max_length=32, null=True, unique=True, blank=True)
 
     objects = CountrySectionManager()
 
@@ -144,7 +149,25 @@ class UserProfile(models.Model):
     office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
+
+    # TODO: remove this
     installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
+
+    staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
+    org_unit_code = models.CharField(max_length=32, null=True, blank=True)
+    org_unit_name = models.CharField(max_length=64, null=True, blank=True)
+    post_number = models.CharField(max_length=32, null=True, blank=True)
+    post_title = models.CharField(max_length=64, null=True, blank=True)
+    vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True)
+    supervisor = models.ForeignKey('self', related_name='supervisee', blank=True, null=True)
+    oic = models.ForeignKey('self', blank=True, null=True)  # related oic_set
+
+    # TODO: refactor when sections are properly set
+    section_code = models.CharField(max_length=32, null=True, blank=True)
+
+
+    # TODO: figure this out when we need to autmatically map to groups
+    #vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES), blank=True, null=True)
 
     def username(self):
         return self.user.username

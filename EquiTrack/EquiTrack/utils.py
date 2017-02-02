@@ -1,93 +1,26 @@
 """
 Project wide base classes and utility functions for apps
 """
-__author__ = 'jcranwellward'
+from collections import OrderedDict as SortedDict
+
+from django.conf import settings
+from django.core.urlresolvers import reverse
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.sites.models import Site
+from django.contrib.staticfiles.templatetags.staticfiles import static
+from django.db import connection
 
 import tablib
 import traceback
 
-from django.db import connection
-from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.contrib.sites.models import Site
-from collections import OrderedDict as SortedDict
-from django.contrib.auth.decorators import user_passes_test
-from django.contrib.staticfiles.templatetags.staticfiles import static
-
 from import_export.resources import ModelResource
-from post_office.models import EmailTemplate
-from post_office import mail
 
 
-def send_mail(sender, template, variables, *recipients):
-    """
-    Single mail send hook that is reused across the project
-    """
-    try:
-        mail.send(
-            [recp for recp in recipients],
-            sender,
-            template=template,
-            context=variables,
-        )
-    except Exception as exp:
-        print exp.message
-        print traceback.format_exc()
+def get_environment():
+    return settings.ENVIRONMENT
 
-
-class BaseEmail(object):
-    """
-    Base class for providing email templates in code
-    that can be overridden in the django admin
-    """
-    template_name = None
-    description = None
-    subject = None
-    content = None
-
-    def __init__(self, object):
-        self.object = object
-
-    @classmethod
-    def get_environment(cls):
-        return settings.ENVIRONMENT
-
-    @classmethod
-    def get_current_site(cls):
-        return Site.objects.get_current()
-
-    @classmethod
-    def get_email_template(cls):
-        if cls.template_name is None:
-            raise NotImplemented()
-        try:
-            template = EmailTemplate.objects.get(
-                name=cls.template_name
-            )
-        except EmailTemplate.DoesNotExist:
-            template = EmailTemplate.objects.create(
-                name=cls.template_name,
-                description=cls.description,
-                subject=cls.subject,
-                content=cls.content
-            )
-        return template
-
-    def get_context(self):
-        """
-        Provides context variables for the email template.
-        Must be implemented in inheriting class
-        """
-        raise NotImplemented()
-
-    def send(self, sender, *recipients):
-
-        send_mail(
-            sender,
-            self.get_email_template(),
-            self.get_context(),
-            *recipients
-        )
+def get_current_site():
+    return Site.objects.get_current()
 
 
 def get_changeform_link(model, link_name='View', action='change'):
@@ -212,6 +145,3 @@ def set_country(user, request):
 
     request.tenant = user.profile.country or user.profile.country_override
     connection.set_tenant(request.tenant)
-
-
-

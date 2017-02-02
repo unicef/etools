@@ -1,0 +1,32 @@
+{% load i18n admin_static admin_modify %}
+{% load intervention_tags %}
+
+    <h3>Interventions Inline</h3>
+    <div id="assurance_table">
+        <table class="table">
+            <thead>
+            <tr>
+                <th colspan="2">Reference Number</th>
+                <th>Status</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Sectors</th>
+                <th>Title</th>
+                <th>Total Budget</th>
+            </tr>
+            </thead>
+
+
+
+            {% autoescape off %} {% get_interventions object_id %} {% endautoescape %}
+
+        </table>
+
+
+    </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#assurance_table table').addClass("table table-striped table-hover");
+    });
+</script>
