@@ -18,7 +18,7 @@ from django.utils.functional import cached_property
 
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django_hstore import hstore
-from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
+from smart_selects.db_fields import ChainedForeignKey
 from model_utils.models import (
     TimeFramedModel,
     TimeStampedModel,
@@ -1675,6 +1675,9 @@ class InterventionSectorLocationLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='sector_locations')
     sector = models.ForeignKey(Sector, related_name='intervention_locations')
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
+
+
+
 
 # TODO: check this for sanity
 class GovernmentIntervention(models.Model):
