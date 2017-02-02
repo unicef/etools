@@ -58,15 +58,15 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         model = GovernmentIntervention
         fields = ("id", "number", "created_at", "partner", "result_structure", "country_programme", "results")
 
-        def validate(self, data):
-            """
-            Check that the start is before the stop.
-            """
-            if not data['partner']:
-                raise serializers.ValidationError("There is no partner selected")
-            if not data['country_programme']:
-                raise serializers.ValidationError("There is no country programme selected")
-            return data
+    def validate(self, data):
+        """
+        Check that the start is before the stop.
+        """
+        if not 'partner' in data:
+            raise serializers.ValidationError("There is no partner selected")
+        if not 'country_programme' in data:
+            raise serializers.ValidationError("There is no country programme selected")
+        return data
 
 
 class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
