@@ -1216,7 +1216,12 @@ class AgreementAmendment(TimeStampedModel):
 
 class InterventionManager(models.Manager):
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('result_links', 'sector_locations')
+        return super(InterventionManager, self).get_queryset().prefetch_related('result_links',
+                                                                                'sector_locations__sector',
+                                                                                'unicef_focal_points',
+                                                                                'offices',
+                                                                                'agreement__partner',
+                                                                                'planned_budget')
 
 
 class Intervention(TimeStampedModel):
