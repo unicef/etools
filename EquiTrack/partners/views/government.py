@@ -21,7 +21,6 @@ from partners.serializers.government import (
     GovernmentInterventionListSerializer,
     GovernmentInterventionCreateUpdateSerializer,
     GovernmentInterventionExportSerializer,
-    GovernmentInterventionDetailSerializer,
     GovernmentInterventionResultNestedSerializer
 )
 
@@ -108,20 +107,12 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     Retrieve and Update Agreement.
     """
     queryset = GovernmentIntervention.objects.all()
-    serializer_class = GovernmentInterventionDetailSerializer
+    serializer_class = GovernmentInterventionCreateUpdateSerializer
     permission_classes = (IsAdminUser,)
 
     SERIALIZER_MAP = {
         'results': GovernmentInterventionResultNestedSerializer
     }
-
-    def get_serializer_class(self):
-        """
-        Use different serilizers for methods
-        """
-        if self.request.method == "PATCH":
-            return GovernmentInterventionCreateUpdateSerializer
-        return super(GovernmentDetailAPIView, self).get_serializer_class()
 
     def retrieve(self, request, pk=None, format=None):
         """

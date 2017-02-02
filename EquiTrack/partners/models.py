@@ -1677,9 +1677,13 @@ class InterventionSectorLocationLink(models.Model):
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
 
 
+class GovernmentInterventionManager(models.Manager):
+    def get_queryset(self):
+        return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results',
+                                                                                'results__sectors',
+                                                                                'results__unicef_managers')
 
 
-# TODO: check this for sanity
 class GovernmentIntervention(models.Model):
     """
     Represents a government intervention.
@@ -1687,6 +1691,7 @@ class GovernmentIntervention(models.Model):
     Relates to :model:`partners.PartnerOrganization`
     Relates to :model:`reports.ResultStructure`
     """
+    objects = GovernmentInterventionManager()
 
     partner = models.ForeignKey(
         PartnerOrganization,
