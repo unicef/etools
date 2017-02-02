@@ -39,7 +39,7 @@ def create_snapshot_activity_stream(actor, target, created=False, delta_dict={})
 
             else:
                 previous = current_obj_dict
-                changes = {k: v for k, v in current_obj_dict.items() if k in delta_dict and delta_dict[k] != current_obj_dict[k]}
+                changes = {k: v for k, v in delta_dict.items() if k in current_obj_dict and delta_dict[k] != current_obj_dict[k]}
 
             # Stringify any non-JSON Serializeable data types for previous
             for key, value in previous.items():
@@ -51,7 +51,9 @@ def create_snapshot_activity_stream(actor, target, created=False, delta_dict={})
                 if type(value) not in [int, float, bool, str]:
                     changes[key] = str(changes[key])
 
-            # TODO: Use a different action verb for each status choice in Agreement
-            # Draft, Active, Expired, Suspended, Terminated
-            action.send(actor, verb="changed",
-                        target=target, previous=previous, changes=changes)
+            # We only want to generate a new activity stream item if there is field changes
+            if changes:
+                # TODO: Use a different action verb for each status choice in Agreement
+                # Draft, Active, Expired, Suspended, Terminated
+                action.send(actor, verb="changed",
+                            target=target, previous=previous, changes=changes)

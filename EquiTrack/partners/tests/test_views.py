@@ -141,7 +141,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
                 "active": True,
             }]
         data = {
-            "name": self.partner.name,
+            "name": self.partner.name + ' Updated',
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "staff_members": staff_members,
@@ -159,7 +159,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         # Check for activity action created
         self.assertEquals(model_stream(PartnerOrganization).count(), 1)
         self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'changed')
-        self.assertEquals(model_stream(PartnerOrganization)[0].data['changes']['name'], self.partner.name)
+        self.assertEquals(model_stream(PartnerOrganization)[0].data['changes']['name'], self.partner.name + ' Updated')
 
         # Check for activity action created
         self.assertEquals(model_stream(PartnerStaffMember).count(), 1)
@@ -190,7 +190,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
     def test_api_partners_update(self):
         data = {
-            "name": "Updated name",
+            "name": "Updated name again",
         }
         response = self.forced_auth_req(
             'patch',
@@ -205,7 +205,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         # Check for activity action created
         self.assertEquals(model_stream(PartnerOrganization).count(), 1)
         self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'changed')
-        self.assertIn('Updated', model_stream(PartnerOrganization)[0].data['changes']['name'])
+        self.assertIn('again', model_stream(PartnerOrganization)[0].data['changes']['name'])
 
     def test_api_partners_filter_partner_type(self):
         # make some other type to filter against
@@ -570,10 +570,8 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "active")
 
-        # Check for activity action created
-        self.assertEquals(model_stream(Agreement).count(), 1)
-        self.assertEquals(model_stream(Agreement)[0].verb, 'changed')
-        self.assertEquals(model_stream(Agreement)[0].data['changes']['status'], 'active')
+        # There should not be any activity stream item created as there is no delta data
+        self.assertEquals(model_stream(Agreement).count(), 0)
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -1023,7 +1021,7 @@ class TestInterventionViews(APITenantTestCase):
             "partner_id": self.agreement.partner.id,
             "document_type": Intervention.SHPD,
             "hrp": ResultStructureFactory().id,
-            "title": "2009 EFY AWP",
+            "title": "2009 EFY AWP Updated",
             "status": "draft",
             "start": "2016-10-28",
             "end": "2016-10-28",
@@ -1082,7 +1080,7 @@ class TestInterventionViews(APITenantTestCase):
         # Check for activity action created
         self.assertEquals(model_stream(Intervention).count(), 2)
         self.assertEquals(model_stream(Intervention)[0].verb, 'changed')
-        self.assertEquals(model_stream(Intervention)[0].data['changes']['title'], '2009 EFY AWP')
+        self.assertEquals(model_stream(Intervention)[0].data['changes']['title'], '2009 EFY AWP Updated')
 
     def test_intervention_validation(self):
         response = self.forced_auth_req(
