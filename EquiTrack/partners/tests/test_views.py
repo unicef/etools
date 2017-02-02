@@ -85,11 +85,6 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
-        # Check for activity action created
-        self.assertEquals(model_stream(PartnerOrganization).count(), 1)
-        self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'created')
-        self.assertEquals(model_stream(PartnerOrganization)[0].target.name, 'PO 1')
-
     def test_api_partners_create_with_members(self):
         staff_members = [{
                 "title": "Some title",
@@ -112,16 +107,6 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-        # Check for activity action created
-        self.assertEquals(model_stream(PartnerOrganization).count(), 1)
-        self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'created')
-        self.assertEquals(model_stream(PartnerOrganization)[0].target.name, 'PO 1')
-
-        # Check for activity action created
-        self.assertEquals(model_stream(PartnerStaffMember).count(), 1)
-        self.assertEquals(model_stream(PartnerStaffMember)[0].verb, 'created')
-        self.assertEquals(model_stream(PartnerStaffMember)[0].target.title, 'Some title')
 
     def test_api_partners_update_with_members(self):
         response = self.forced_auth_req(
@@ -155,15 +140,6 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data["staff_members"]), 2)
-
-        # Check for activity action created
-        self.assertEquals(model_stream(PartnerOrganization).count(), 1)
-        self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'changed')
-        self.assertEquals(model_stream(PartnerOrganization)[0].data['changes']['name'], self.partner.name + ' Updated')
-
-        # Check for activity action created
-        self.assertEquals(model_stream(PartnerStaffMember).count(), 1)
-        self.assertEquals(model_stream(PartnerStaffMember)[0].verb, 'created')
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
@@ -201,11 +177,6 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertIn("Updated", response.data["name"])
-
-        # Check for activity action created
-        self.assertEquals(model_stream(PartnerOrganization).count(), 1)
-        self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'changed')
-        self.assertIn('again', model_stream(PartnerOrganization)[0].data['changes']['name'])
 
     def test_api_partners_filter_partner_type(self):
         # make some other type to filter against

@@ -934,12 +934,6 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
             partners += 1
         self.message_user(request, '{} partners were shown'.format(partners))
 
-    def save_model(self, request, obj, form, change):
-        created = False if changed else True
-        create_snapshot_activity_stream(request.user, obj, created=created)
-
-        super(PartnerAdmin, self).save_model(request, obj, form, change)
-
 
 class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
     verbose_name = u'Revision'
