@@ -44,7 +44,7 @@ class CurrencySerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'iso_4217')
 
     def get_exchange_to_dollar(self, obj):
-        return obj.exchange_rates.order_by('id').last().x_rate
+        return obj.exchange_rates.order_by('valid_from').last().x_rate
 
 class AirlineSerializer(serializers.ModelSerializer):
     class Meta:
