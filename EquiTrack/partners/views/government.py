@@ -26,11 +26,10 @@ from partners.serializers.government import (
 )
 
 from partners.filters import PartnerScopeFilter
-from partners.validation.governments import GovernmentInterventionValid
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
 
-class GovernmentInterventionListAPIView(ListCreateAPIView):
+class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -39,6 +38,10 @@ class GovernmentInterventionListAPIView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+
+    SERIALIZER_MAP = {
+        'results': GovernmentInterventionResultNestedSerializer
+    }
 
     def get_serializer_class(self):
         """
@@ -56,22 +59,14 @@ class GovernmentInterventionListAPIView(ListCreateAPIView):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
 
+        related_fields = ['results']
 
-
-        gov_intervention_serializer = self.get_serializer(data=request.data)
-        gov_intervention_serializer.is_valid(raise_exception=True)
-        gov_intervention = gov_intervention_serializer.save()
+        serializer = self.my_create(request, related_fields, **kwargs)
 
         #TOOD: split out related fields and get them validated through the proper serializers
         #(use the validator)
 
-
-        headers = self.get_success_headers(gov_intervention_serializer.data)
-        return Response(
-            gov_intervention_serializer.data,
-            status=status.HTTP_201_CREATED,
-            headers=headers
-        )
+        return Response(serializer.data)
 
     def get_queryset(self, format=None):
         q = GovernmentIntervention.objects.all()
@@ -148,11 +143,6 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
         related_fields = ['results']
 
         instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
-
-        validator = GovernmentInterventionValid(instance, old=old_instance, user=request.user)
-        if not validator.is_valid:
-            logging.debug(validator.errors)
-            raise ValidationError(validator.errors)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
