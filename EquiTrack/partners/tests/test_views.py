@@ -87,6 +87,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(PartnerOrganization).count(), 1)
+        self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'created')
+        self.assertEquals(model_stream(PartnerOrganization)[0].target.name, 'PO 1')
 
     def test_api_partners_create_with_members(self):
         staff_members = [{
@@ -113,9 +115,13 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(PartnerOrganization).count(), 1)
+        self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'created')
+        self.assertEquals(model_stream(PartnerOrganization)[0].target.name, 'PO 1')
 
         # Check for activity action created
         self.assertEquals(model_stream(PartnerStaffMember).count(), 1)
+        self.assertEquals(model_stream(PartnerStaffMember)[0].verb, 'created')
+        self.assertEquals(model_stream(PartnerStaffMember)[0].target.title, 'Some title')
 
     def test_api_partners_update_with_members(self):
         response = self.forced_auth_req(
@@ -152,9 +158,12 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(PartnerOrganization).count(), 1)
+        self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'changed')
+        self.assertEquals(model_stream(PartnerOrganization)[0].data['changes']['name'], self.partner.name)
 
         # Check for activity action created
         self.assertEquals(model_stream(PartnerStaffMember).count(), 1)
+        self.assertEquals(model_stream(PartnerStaffMember)[0].verb, 'created')
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
@@ -195,6 +204,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(PartnerOrganization).count(), 1)
+        self.assertEquals(model_stream(PartnerOrganization)[0].verb, 'changed')
+        self.assertIn('Updated', model_stream(PartnerOrganization)[0].data['changes']['name'])
 
     def test_api_partners_filter_partner_type(self):
         # make some other type to filter against
@@ -531,6 +542,8 @@ class TestAgreementAPIView(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(Agreement).count(), 1)
+        self.assertEquals(model_stream(Agreement)[0].verb, 'created')
+        self.assertEquals(model_stream(Agreement)[0].target.start, date(today.year-1, 1, 1))
 
     def test_agreements_list(self):
         response = self.forced_auth_req(
@@ -559,6 +572,8 @@ class TestAgreementAPIView(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(Agreement).count(), 1)
+        self.assertEquals(model_stream(Agreement)[0].verb, 'changed')
+        self.assertEquals(model_stream(Agreement)[0].data['changes']['status'], 'active')
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -599,6 +614,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(Agreement).count(), 1)
+        self.assertEquals(model_stream(Agreement)[0].verb, 'changed')
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
@@ -998,6 +1014,8 @@ class TestInterventionViews(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(Intervention).count(), 2)
+        self.assertEquals(model_stream(Intervention)[0].verb, 'created')
+        self.assertEquals(model_stream(Intervention)[0].target.title, '2009 EFY AWP')
 
     def test_intervention_update(self):
         data = {
@@ -1063,6 +1081,8 @@ class TestInterventionViews(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(Intervention).count(), 2)
+        self.assertEquals(model_stream(Intervention)[0].verb, 'changed')
+        self.assertEquals(model_stream(Intervention)[0].data['changes']['title'], '2009 EFY AWP')
 
     def test_intervention_validation(self):
         response = self.forced_auth_req(
