@@ -262,7 +262,7 @@ class Command(BaseCommand):
         except ObjectDoesNotExist:
             pass
 
-        uat_country = Country.objects.get(name='UAT')
+        uat_country = UserCountry.objects.get(name='UAT')
 
         user = User(username=username,
                     first_name='Puli',
