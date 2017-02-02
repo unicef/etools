@@ -135,17 +135,6 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class InterventionAmendmentNestedSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = InterventionAmendment
-        fields = (
-            "signed_date",
-            "type",
-        )
-
-
-
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -503,7 +492,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     partner = serializers.CharField(source='agreement.partner.name')
     supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
-    amendments = InterventionAmendmentNestedSerializer(many=True, read_only=True, required=False)
+    amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
     planned_visits = PlannedVisitsNestedSerializer(many=True, read_only=True, required=False)
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
