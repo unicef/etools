@@ -482,7 +482,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
     #     #     errors.update(locations="This field is required if PCA status is ACTIVE or IMPLEMENTED.")
     #
     #     if errors:
-    #         raise serializers.ValidationError(errors)
+    #         raise serializers.ValidationError(errors
     #
     #     return data
 
