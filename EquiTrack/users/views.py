@@ -23,6 +23,7 @@ from .serializers import (
     SectionSerializer,
     UserCreationSerializer,
     SimpleProfileSerializer,
+    SimpleUserSerializer
 )
 
 
@@ -192,9 +193,26 @@ class UserViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Users
     """
-    queryset = User.objects.all()
+    #queryset = User.objects.all()
     serializer_class = UserCreationSerializer
     permission_classes = (IsSuperUser,)
+
+    def get_queryset(self):
+        # we should only return workspace users.
+        qs = User.objects.prefetch_related('profile', 'groups', 'user_permissions')
+        return qs.all()
+
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = SimpleUserSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = SimpleUserSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
 
