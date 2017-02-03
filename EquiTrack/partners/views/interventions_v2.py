@@ -44,7 +44,7 @@ from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
 
-class InterventionListAPIView(ListCreateAPIView):
+class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -53,6 +53,14 @@ class InterventionListAPIView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
+
+    SERIALIZER_MAP = {
+        'planned_budget' : InterventionBudgetCUSerializer,
+        'planned_visits': PlannedVisitsCUSerializer,
+        'attachments': InterventionAttachmentSerializer,
+        'amendments': InterventionAmendmentCUSerializer,
+        'sector_locations': InterventionSectorLocationCUSerializer
+    }
 
     def get_serializer_class(self):
         """
@@ -73,28 +81,29 @@ class InterventionListAPIView(ListCreateAPIView):
         Add a new Intervention
         :return: JSON
         """
-
-        planned_budget = request.data.pop("planned_budget", [])
-        attachements = request.data.pop("attachments", [])
-        planned_visits = request.data.pop("planned_visits", [])
-        amendments = request.data.pop("amendments", [])
-
         # TODO: rename these
-        supplies = request.data.pop("supplies", [])
-        distributions = request.data.pop("distributions", [])
+        # supplies = request.data.pop("supplies", [])
+        # distributions = request.data.pop("distributions", [])
 
-        intervention_serializer = self.get_serializer(data=request.data)
-        intervention_serializer.is_valid(raise_exception=True)
+        # TODO: add supplies, distributions
+        related_fields = [
+            'planned_budget',
+            'planned_visits',
+            'attachments',
+            'amendments',
+            'sector_locations'
+        ]
 
-        intervention = intervention_serializer.save()
+        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
 
-        create_snapshot_activity_stream(request.user, intervention, created=True)
+        validator = InterventionValid(serializer.instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
 
-        # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
-
-        headers = self.get_success_headers(intervention_serializer.data)
+        headers = self.get_success_headers(serializer.data)
         return Response(
-            intervention_serializer.data,
+            serializer.data,
             status=status.HTTP_201_CREATED,
             headers=headers
         )

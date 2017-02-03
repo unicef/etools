@@ -1383,24 +1383,32 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_partner_contribution(self):
         # TODO: test this
-        if self.planned_budget.exists():
-            return self.planned_budget.aggregate(mysum=Sum('partner_contribution'))['mysum']
-        return 0
+        return sum([i.partner_contribution for i in self.planned_budget.all()])
+        # return self.planned_budget.aggregate(mysum=Sum('partner_contribution'))['mysum'] or 0
 
     @cached_property
     def total_unicef_cash(self):
         # TODO: test this
-        if self.planned_budget.exists():
-            return self.planned_budget.aggregate(mysum=Sum('unicef_cash'))['mysum']
-        return 0
+        return sum([i.unicef_cash for i in self.planned_budget.all()])
+        # return self.planned_budget.aggregate(mysum=Sum('unicef_cash'))['mysum'] or 0
 
     @cached_property
-    def total_budget(self):
+    def total_in_kind_amount(self):
         # TODO: test this
+<<<<<<< HEAD
         if self.planned_budget.exists():
             return self.planned_budget.aggregate(mysum=Sum('in_kind_amount'))['mysum'] + self.total_unicef_cash + self.total_partner_contribution
         return 0
 
+=======
+        return sum([i.in_kind_amount for i in self.planned_budget.all()])
+
+    @cached_property
+    def total_budget(self):
+        # TODO: test this
+        return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
+
+>>>>>>> develop
     @cached_property
     def total_partner_contribution_local(self):
         if self.planned_budget.exists():
@@ -1411,6 +1419,7 @@ class Intervention(TimeStampedModel):
     def total_unicef_cash_local(self):
         # TODO: test this
         if self.planned_budget.exists():
+            # return sum([i.unicef_cash_local for i in self.planned_budget.all()])
             return self.planned_budget.aggregate(mysum=Sum('unicef_cash_local'))['mysum']
         return 0
 
@@ -1776,6 +1785,13 @@ class GovernmentIntervention(models.Model):
 
         super(GovernmentIntervention, self).save(**kwargs)
 
+<<<<<<< HEAD
+=======
+def activity_default():
+    return {
+        "0": "",
+    }
+>>>>>>> develop
 
 class GovernmentInterventionResult(models.Model):
     """
@@ -1805,6 +1821,7 @@ class GovernmentInterventionResult(models.Model):
     activities = hstore.DictionaryField(
         blank=True, null=True
     )
+    activity = JSONField(blank=True, null=True, default=activity_default)
     unicef_managers = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         verbose_name='Unicef focal points',
@@ -1815,11 +1832,6 @@ class GovernmentInterventionResult(models.Model):
         verbose_name='Programme/Sector', related_name='+')
     sections = models.ManyToManyField(
         Section, blank=True, related_name='+')
-    activities_list = models.ManyToManyField(
-        Result,
-        related_name='activities_list',
-        blank=True
-    )
     planned_visits = models.IntegerField(default=0)
 
     tracker = FieldTracker()
@@ -1837,31 +1849,20 @@ class GovernmentInterventionResult(models.Model):
             PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
             PartnerOrganization.planned_visits(self.intervention.partner, self)
 
+        # JSONFIELD has an issue where it keeps escaping characters
+        activity_is_string = isinstance(self.activity, str)
+        try:
+
+            self.activity = json.loads(self.activity) if activity_is_string else self.activity
+        except ValueError as e:
+            e.message = 'Activities needs to be a valid format (dict)'
+            raise e
+
+<<<<<<< HEAD
+=======
         super(GovernmentInterventionResult, self).save(**kwargs)
 
-        for activity in self.activities.items():
-            try:
-                referenced_activity = self.activities_list.get(code=activity[0])
-                if referenced_activity.name != activity[1]:
-                    referenced_activity.name = activity[1]
-                    referenced_activity.save()
-
-            except Result.DoesNotExist:
-                referenced_activity = Result.objects.create(
-                    result_structure=self.intervention.result_structure,
-                    result_type=ResultType.objects.get(name='Activity'),
-                    parent=self.result,
-                    code=activity[0],
-                    name=activity[1],
-                    hidden=True
-
-                )
-                self.activities_list.add(referenced_activity)
-
-        for ref_activity in self.activities_list.all():
-            if ref_activity.code not in self.activities:
-                ref_activity.delete()
-
+>>>>>>> develop
     @transaction.atomic
     def delete(self, using=None):
 
