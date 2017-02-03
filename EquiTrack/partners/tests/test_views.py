@@ -918,6 +918,7 @@ class TestInterventionViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.agreement = AgreementFactory()
+        self.agreement2 = AgreementFactory(status="draft")
         self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
         data = {
             "document_type": Intervention.SHPD,
@@ -945,37 +946,10 @@ class TestInterventionViews(APITenantTestCase):
         self.isll.locations.add(LocationFactory())
         self.isll.save()
 
-    def test_intervention_list(self):
-        response = self.forced_auth_req(
-            'get',
-            '/api/v2/interventions/',
-            user=self.unicef_staff,
-        )
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
-
-    def test_intervention_create(self):
-        data = {
-            "document_type": Intervention.SHPD,
-            "status": Intervention.DRAFT,
-            "title": "2009 EFY AWP",
-            "start": "2016-10-28",
-            "end": "2016-10-28",
-            "unicef_budget": 0,
-            "agreement": self.agreement.id,
-        }
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/interventions/',
-            user=self.unicef_staff,
-            data=data
-        )
-        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-    def test_intervention_update(self):
-        data = {
-            "agreement": self.agreement.id,
-            "partner_id": self.agreement.partner.id,
+        # Basic data to adjust in tests
+        self.intervention_data = {
+            "agreement": self.agreement2.id,
+            "partner_id": self.agreement2.partner.id,
             "document_type": Intervention.SHPD,
             "hrp": ResultStructureFactory().id,
             "title": "2009 EFY AWP",
@@ -994,7 +968,7 @@ class TestInterventionViews(APITenantTestCase):
             "partner_authorized_officer_signatory": self.partnerstaff.id,
             "offices": [],
             "fr_numbers": None,
-            "population_focus": None,
+            "population_focus": "Some focus",
             "planned_budget": [
                 {
                     "partner_contribution": "2.00",
@@ -1017,22 +991,96 @@ class TestInterventionViews(APITenantTestCase):
                     "total": "6.00"
                 }
             ],
-            "amendments": [],
+            "sector_locations": [
+                {
+                    "sector": self.sector.id,
+                    "locations": [self.location.id],
+                }
+            ],
             "result_links": [
                 {
                     "cp_output": ResultFactory().id,
                     "ram_indicators":[]
                 }
-            ]
+            ],
+            "amendments": [],
+            "attachments": [],
         }
         response = self.forced_auth_req(
-            'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention.get("id")),
+            'post',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
+        self.intervention_data = response.data
+
+    def test_intervention_list(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+
+    def test_intervention_create(self):
+        data = {
+            "document_type": Intervention.SHPD,
+            "status": Intervention.DRAFT,
+            "title": "2009 EFY AWP",
+            "start": "2016-10-28",
+            "end": "2016-10-28",
+            "unicef_budget": 0,
+            "agreement": self.agreement.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/interventions/',
             user=self.unicef_staff,
             data=data
         )
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+    def test_intervention_active_update_population_focus(self):
+        self.intervention_data.update(population_focus=None)
+        self.intervention_data.update(status="active")
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Population focus is required if Intervention status is ACTIVE or IMPLEMENTED."])
+
+    def test_intervention_active_update_planned_budget(self):
+        InterventionBudget.objects.filter(intervention=self.intervention_data.get("id")).delete()
+        self.intervention_data.update(planned_budget=[])
+        self.intervention_data.update(status="active")
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."])
+
+    def test_intervention_active_update_sector_locations(self):
+        InterventionSectorLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
+        self.intervention_data.update(sector_locations=[])
+        self.intervention_data.update(status="active")
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
 
     def test_intervention_validation(self):
         response = self.forced_auth_req(
@@ -1044,6 +1092,53 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(response.data, {"document_type":["This field is required."],"agreement":["This field is required."],"title":["This field is required."]})
+
+    def test_intervention_validation_doctype_pca(self):
+        data={
+            "document_type": Intervention.SSFA,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Document type must be PD or SHPD in case of agreement is PCA."])
+
+    def test_intervention_validation_doctype_ssfa(self):
+        self.agreement.agreement_type = Agreement.SSFA
+        self.agreement.save()
+        data={
+            "document_type": Intervention.PD,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Document type must be SSFA in case of agreement is SSFA."])
+
+    def test_intervention_validation_dates(self):
+        today = datetime.date.today()
+        data={
+            "start": datetime.date(today.year+1, 1, 1),
+            "end": today,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ['Start date must precede end date'])
+
 
     def test_intervention_filter(self):
         # Test filter
