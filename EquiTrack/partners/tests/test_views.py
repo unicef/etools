@@ -1051,7 +1051,7 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
         # Check for activity action created
-        self.assertEquals(model_stream(Intervention).count(), 2)
+        self.assertEquals(model_stream(Intervention).count(), 3)
         self.assertEquals(model_stream(Intervention)[0].verb, 'changed')
         self.assertEquals(model_stream(Intervention)[0].data['changes']['title'], '2009 EFY AWP Updated')
 
