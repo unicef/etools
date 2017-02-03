@@ -1052,8 +1052,7 @@ class TestInterventionViews(APITenantTestCase):
 
         # Check for activity action created
         self.assertEquals(model_stream(Intervention).count(), 3)
-        self.assertEquals(model_stream(Intervention)[0].verb, 'changed')
-        self.assertEquals(model_stream(Intervention)[0].data['changes']['title'], '2009 EFY AWP Updated')
+        self.assertEquals(model_stream(Intervention)[0].verb, 'created')
 
     def test_intervention_active_update_population_focus(self):
         self.intervention_data.update(population_focus=None)
