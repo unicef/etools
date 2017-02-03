@@ -215,3 +215,14 @@ class PMPDropdownsListApiView(APIView):
              },
             status=status.HTTP_200_OK
         )
+
+
+class PartnershipDashboardAPIView(APIView):
+    permission_classes = (IsAdminUser,)
+
+    def get(self, request):
+        """
+        Return the aggregation data for Intervention and GovernmentIntervention.
+        """
+
+        return Response({}, status=status.HTTP_200_OK)
