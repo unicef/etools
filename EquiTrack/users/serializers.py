@@ -131,7 +131,27 @@ class GroupSerializer(serializers.ModelSerializer):
             'name',
             'permissions'
         )
-
+class SimpleNestedProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = (
+            'country',
+        )
+class SimpleUserSerializer(serializers.ModelSerializer):
+    profile = SimpleNestedProfileSerializer()
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'is_superuser',
+            'first_name',
+            'last_name',
+            'is_staff',
+            'is_active',
+            'profile'
+        )
 
 class UserCreationSerializer(serializers.ModelSerializer):
 
