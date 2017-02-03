@@ -1395,12 +1395,6 @@ class Intervention(TimeStampedModel):
     @cached_property
     def total_in_kind_amount(self):
         # TODO: test this
-<<<<<<< HEAD
-        if self.planned_budget.exists():
-            return self.planned_budget.aggregate(mysum=Sum('in_kind_amount'))['mysum'] + self.total_unicef_cash + self.total_partner_contribution
-        return 0
-
-=======
         return sum([i.in_kind_amount for i in self.planned_budget.all()])
 
     @cached_property
@@ -1408,7 +1402,6 @@ class Intervention(TimeStampedModel):
         # TODO: test this
         return self.total_unicef_cash + self.total_partner_contribution + self.total_in_kind_amount
 
->>>>>>> develop
     @cached_property
     def total_partner_contribution_local(self):
         if self.planned_budget.exists():
@@ -1785,13 +1778,10 @@ class GovernmentIntervention(models.Model):
 
         super(GovernmentIntervention, self).save(**kwargs)
 
-<<<<<<< HEAD
-=======
 def activity_default():
     return {
         "0": "",
     }
->>>>>>> develop
 
 class GovernmentInterventionResult(models.Model):
     """
@@ -1858,11 +1848,8 @@ class GovernmentInterventionResult(models.Model):
             e.message = 'Activities needs to be a valid format (dict)'
             raise e
 
-<<<<<<< HEAD
-=======
         super(GovernmentInterventionResult, self).save(**kwargs)
 
->>>>>>> develop
     @transaction.atomic
     def delete(self, using=None):
 
