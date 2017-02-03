@@ -690,7 +690,6 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
         'unicef_managers',
         'sectors',
         'sections',
-        'activities',
     )
     filter_horizontal = (
         'unicef_managers',
