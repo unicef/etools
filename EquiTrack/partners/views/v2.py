@@ -242,21 +242,30 @@ class PartnershipDashboardAPIView(APIView):
 
         gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
 
+        def count_by_partnership_type(partnership_type=None, partnerships):
+            return len(filter(lambda item: item.agreement.partner.partner_type == partnership_type, partnerships))
+
+        def sum_up_total_value_for_parternships(partnerships):
+            return reduce(lambda prevVal, nextVal: prevVal + nextVal, map(lambda item: item.total_budget, partnerships))
+
         result = {
             'partnership_type_counts': {
-                'bilateral/multilateral': filter(lambda item: item.agreement.partner.partner_type == PartnerType.BILATERAL_MULTILATERAL, interventions),
-                'cso': filter(lambda item: item.agreement.partner.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION, interventions),
-                'un_agency': filter(lambda item: item.agreement.partner.partner_type == PartnerType.UN_AGENCY, interventions),
+                'bilateral/multilateral': count_by_partnership_type(PartnerType.BILATERAL_MULTILATERAL, interventions),
+                'cso': count_by_partnership_type(PartnerType.CIVIL_SOCIETY_ORGANIZATION, interventions),
+                'un_agency': count_by_partnership_type(PartnerType.UN_AGENCY, interventions),
                 'government': len(gov_interventions),
             },
             'active_partnership': {
                 'count': len(active_partnerships),
+                'total_value': sum_up_total_value_for_parternships(active_partnerships)
             },
             'active_approved_previous_years_partnership': {
                 'count': len(active_approved_previous_years_partnerships),
+                'total_value': sum_up_total_value_for_parternships(active_approved_previous_years_partnerships),
             },
             'expiring_in_2_months_partnership': {
                 'count': len(expiring_in_2_months_partnerships),
+                'total_value': sum_up_total_value_for_parternships(expiring_in_2_months_partnerships),
             }
         }
 
