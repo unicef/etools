@@ -243,8 +243,11 @@ class PartnershipDashboardAPIView(APIView):
         gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
 
         result = {
-            'gov_partnership': {
-                'count': len(gov_interventions),
+            'partnership_type_counts': {
+                'bilateral/multilateral': filter(lambda item: item.agreement.partner.partner_type == PartnerType.BILATERAL_MULTILATERAL, interventions),
+                'cso': filter(lambda item: item.agreement.partner.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION, interventions),
+                'un_agency': filter(lambda item: item.agreement.partner.partner_type == PartnerType.UN_AGENCY, interventions),
+                'government': len(gov_interventions),
             },
             'active_partnership': {
                 'count': len(active_partnerships),
