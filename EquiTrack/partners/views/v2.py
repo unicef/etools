@@ -246,7 +246,7 @@ class PartnershipDashboardAPIView(APIView):
             return len(filter(lambda item: item.agreement.partner.partner_type == partnership_type, partnerships))
 
         def sum_up_total_value_for_parternships(partnerships):
-            return reduce(lambda prevVal, nextVal: prevVal + nextVal, map(lambda item: item.total_budget, partnerships))
+            return sum(map(lambda item: item.total_budget, partnerships))
 
         result = {
             'partnership_type_counts': {
