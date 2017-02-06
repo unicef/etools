@@ -6,10 +6,12 @@ from rest_framework import serializers
 from t2f.serializers.user_data import T2FUserDataSerializer
 from .models import User, UserProfile, Group, Office, Section, Country
 
+
 class SimpleCountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = ('id', 'name', 'business_area_code')
+
 
 class UserProfileSerializer(serializers.ModelSerializer):
 
@@ -25,21 +27,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'user',
         )
 
-class SimpleUserSerializer(serializers.ModelSerializer):
-    user_id = serializers.CharField(source="id")
-    full_name = serializers.SerializerMethodField()
 
-    def get_full_name(self, obj):
-        return obj.get_full_name()
-
-    class Meta:
-        model = UserProfile
-        fields = (
-            'user_id',
-            'full_name',
-            'username',
-            'email'
-        )
 class SimpleProfileSerializer(serializers.ModelSerializer):
 
     user_id = serializers.CharField(source="user.id")
@@ -63,6 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     full_name = serializers.CharField(source='get_full_name')
     t2f = T2FUserDataSerializer(source='*')
+
     class Meta:
         model = User
         exclude = ('password', 'groups', 'user_permissions')
@@ -80,19 +69,6 @@ class SectionSerializer(serializers.ModelSerializer):
         )
 
 
-class OfficeSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Office
-        fields = (
-            'id',
-            'name',
-            # 'zonal_chief'
-        )
-
-
 class UserProfileCreationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -102,10 +78,12 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
             'user',
         )
 
+
 class OfficeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Office
         fields = "__all__"
+
 
 class GroupSerializer(serializers.ModelSerializer):
 
@@ -131,12 +109,16 @@ class GroupSerializer(serializers.ModelSerializer):
             'name',
             'permissions'
         )
+
+
 class SimpleNestedProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = (
             'country',
         )
+
+
 class SimpleUserSerializer(serializers.ModelSerializer):
     profile = SimpleNestedProfileSerializer()
     class Meta:
@@ -152,6 +134,15 @@ class SimpleUserSerializer(serializers.ModelSerializer):
             'is_active',
             'profile'
         )
+
+
+class MinimalUserSerializer(SimpleUserSerializer):
+    name = serializers.CharField(source='get_full_name', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'name', 'first_name', 'last_name')
+
 
 class UserCreationSerializer(serializers.ModelSerializer):
 
