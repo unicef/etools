@@ -7,7 +7,7 @@ from t2f.serializers.filters import SortFilterSerializer
 
 
 class ActionPointSortFilterSerializer(SortFilterSerializer):
-    _SORTABLE_FIELDS = tuple(ActionPointSerializer.Meta.fields)
+    SORT_BY_SERIALIZER = ActionPointSerializer
 
 
 class ActionPointFilterBoxSerializer(serializers.Serializer):
