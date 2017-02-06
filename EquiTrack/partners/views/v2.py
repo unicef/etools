@@ -224,18 +224,21 @@ class PartnershipDashboardAPIView(APIView):
         Return the aggregation data for Intervention and GovernmentIntervention.
         """
 
-        this_year = datetime.date.today().year
+        current = datetime.date.today()
 
         interventions = Intervention.objects.filter(hrp__country_programme=ct_pk)
 
         if office_pk:
             interventions = interventions.objects.filter(offices=office_pk)
 
-        active_partnerships = filter(lambda item: item.status == Intervention.ACTIVE and item.year == this_year, interventions)
+        # Filter out partnerships which are active this year
+        active_partnerships = filter(lambda item: item.status == Intervention.ACTIVE and item.year == current.year, interventions)
 
-        active_approved_previous_years_partnerships = filter(lambda item: item.status == Intervention.ACTIVE and item.year < this_year, interventions)
+        # Filter out partnerships which are active in the previous years
+        active_approved_previous_years_partnerships = filter(lambda item: item.status == Intervention.ACTIVE and item.year < current.year, interventions)
 
-        expiring_in_2_months_partnerships = filter(lambda item: (datetime.date.today() + relativedelta(months=2)) == item.end, active_partnerships)
+        # Filter out active partnerships which are going to be ended in 2 months from now on
+        expiring_in_2_months_partnerships = filter(lambda item: (current + relativedelta(months=2)) == item.end, active_partnerships)
 
         gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
 
