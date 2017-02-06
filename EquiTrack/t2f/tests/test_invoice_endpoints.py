@@ -71,3 +71,9 @@ class InvoiceEndpoints(APITenantTestCase):
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['data']), 0)
+
+    def test_sorting(self):
+        # Check for 500
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        data={'sort_by': 'trip_reference_number'},
+                                        user=self.unicef_staff)

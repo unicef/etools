@@ -9,9 +9,6 @@ from .xml.cost_assignments import COST_ASSIGNMENTS_XML
 
 class Command(BaseCommand):
 
-    def add_arguments(self, parser):
-        parser.add_argument('xml_path', nargs=1)
-
     @atomic
     def handle(self, *args, **options):
         import_cost_assignments(COST_ASSIGNMENTS_XML)
