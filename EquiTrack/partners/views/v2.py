@@ -1,3 +1,5 @@
+import datetime
+import dateutil import relativedelta
 import operator
 import functools
 
@@ -222,14 +224,18 @@ class PartnershipDashboardAPIView(APIView):
         Return the aggregation data for Intervention and GovernmentIntervention.
         """
 
+        this_year = datetime.date.today().year
+
         interventions = Intervention.objects.filter(hrp__country_programme=ct_pk)
 
         if office_pk:
             interventions = interventions.objects.filter(offices=office_pk)
 
-        active_partnerships = filter(lambda item: item.status == Intervention.ACTIVE, interventions)
+        active_partnerships = filter(lambda item: item.status == Intervention.ACTIVE and item.year == this_year, interventions)
 
-        approved_partnerships = filter(lambda item: item.status == Intervention.IMPLEMENTED, interventions)
+        active_approved_previous_years_partnerships = filter(lambda item: item.status == Intervention.ACTIVE and item.year < this_year, interventions)
+
+        expiring_in_2_months_partnerships = filter(lambda item: (datetime.date.today() + relativedelta(months=2)) == item.end, active_partnerships)
 
         gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
 
@@ -240,15 +246,12 @@ class PartnershipDashboardAPIView(APIView):
             'active_partnership': {
                 'count': len(active_partnerships),
             },
-            'approved_partnership': {
-                'count': len(approved_partnerships),
+            'active_approved_previous_years_partnership': {
+                'count': len(active_approved_previous_years_partnerships),
             },
-            # 'active_approved_previous_years_partnership': {
-            #     'count': len(active_approved_previous_years_partnerships),
-            # },
-            # 'expiring_in_2_months_partnership': {
-            #     'count': len(expiring_in_2_months_partnerships),
-            # }
+            'expiring_in_2_months_partnership': {
+                'count': len(expiring_in_2_months_partnerships),
+            }
         }
 
         return Response(result, status=status.HTTP_200_OK)
