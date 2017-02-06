@@ -49,10 +49,16 @@ class FastTenantTestCase(TenantTestCase):
     def tearDownClass(cls):
         connection.set_schema_to_public()
 
-    def assertKeysIn(self, keys, container, msg=None):
+    def assertKeysIn(self, keys, container, msg=None, exact=False):
         """Small helper to check all keys in the response payload"""
-        for key in keys:
-            self.assertIn(key, container, msg)
+        key_set = set(keys)
+        container_set = set(container)
+        missing_keys = key_set - container_set
+        if missing_keys:
+            self.fail('Missing keys: {}'.format(', '.join(missing_keys)))
+
+        if exact and len(key_set) != len(container_set):
+            self.fail('{} != {}'.format(', '.join(key_set), ', '.join(container_set)))
 
 
 class APITenantClient(TenantClient, APIClient):
