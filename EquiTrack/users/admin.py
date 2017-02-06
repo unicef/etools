@@ -62,6 +62,16 @@ class ProfileAdmin(admin.ModelAdmin):
         'section',
         'job_title',
         'phone_number',
+        'staff_id',
+        'org_unit_code',
+        'org_unit_name',
+        'post_number',
+        'post_title',
+        'vendor_number',
+        # 'supervisor',
+        # 'oic',
+        'section_code'
+
     ]
     list_display = (
         'username',
