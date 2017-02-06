@@ -155,20 +155,17 @@ class PmpStaticDropdownsListApiView(APIView):
         """
         Return All Static values used for dropdowns in the frontend
         """
-        cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).
-                                      order_by('cso_type').distinct('cso_type')))
+        cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
-        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).
-                                                  order_by('type').distinct()))
+        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).order_by('type').distinct()))
         agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendment.AMENDMENT_TYPES))
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
-        currencies = choices_to_json_ready(list(Currency.objects.values_list('name', flat=True).
-                                                  order_by('name').distinct()))
+        currencies = choices_to_json_ready(list(Currency.objects.values_list('name', flat=True).order_by('name').distinct()))
 
 
         return Response(
@@ -188,6 +185,7 @@ class PmpStaticDropdownsListApiView(APIView):
             status=status.HTTP_200_OK
         )
 
+
 class PMPDropdownsListApiView(APIView):
     # serializer_class = InterventionSerializer
     # filter_backends = (PartnerScopeFilter,)
@@ -197,8 +195,7 @@ class PMPDropdownsListApiView(APIView):
         """
         Return All dropdown values used for Agreements form
         """
-        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team'])
-                                .values('id', 'first_name', 'last_name', 'email'))
+        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team']).values('id', 'first_name', 'last_name', 'email'))
         hrps = list(ResultStructure.objects.values())
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
@@ -220,9 +217,38 @@ class PMPDropdownsListApiView(APIView):
 class PartnershipDashboardAPIView(APIView):
     permission_classes = (IsAdminUser,)
 
-    def get(self, request):
+    def get(self, request, ct_pk=None, office_pk=None):
         """
         Return the aggregation data for Intervention and GovernmentIntervention.
         """
 
-        return Response({}, status=status.HTTP_200_OK)
+        interventions = Intervention.objects.filter(hrp__country_programme=ct_pk)
+
+        if office_pk:
+            interventions = interventions.objects.filter(offices=office_pk)
+
+        active_partnerships = filter(lambda item: item.status == Intervention.ACTIVE, interventions)
+
+        approved_partnerships = filter(lambda item: item.status == Intervention.IMPLEMENTED, interventions)
+
+        gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
+
+        result = {
+            'gov_partnership': {
+                'count': len(gov_interventions),
+            },
+            'active_partnership': {
+                'count': len(active_partnerships),
+            },
+            'approved_partnership': {
+                'count': len(approved_partnerships),
+            },
+            # 'active_approved_previous_years_partnership': {
+            #     'count': len(active_approved_previous_years_partnerships),
+            # },
+            # 'expiring_in_2_months_partnership': {
+            #     'count': len(expiring_in_2_months_partnerships),
+            # }
+        }
+
+        return Response(result, status=status.HTTP_200_OK)
