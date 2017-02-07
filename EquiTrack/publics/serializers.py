@@ -34,7 +34,7 @@ class BusinessAreaSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BusinessArea
-        fields = ('id', 'name', 'code', 'region')
+        fields = ('id', 'name', 'code', 'region', 'default_currency')
 
 
 class CurrencySerializer(serializers.ModelSerializer):
