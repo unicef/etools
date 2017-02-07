@@ -3,7 +3,6 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-from mptt.admin import MPTTModelAdmin
 from .models import UserProfile, Country, Office, Section
 
 
@@ -53,27 +52,7 @@ class ProfileInline(admin.StackedInline):
         )
 
 
-class SupervisorInlineAdmin(admin.StackedInline):
-    model = UserProfile
-    verbose_name_plural = 'supervisors'
-    fk_name = 'supervisor'
-    fields = ['user']
-    extra = 0
-    max_num = 1
-
-
-class OicInlineAdmin(admin.StackedInline):
-    model = UserProfile
-    verbose_name_plural = 'oics'
-    fk_name = 'oic'
-    fields = ['user']
-    extra = 0
-    max_num = 1
-
-
-
 class ProfileAdmin(admin.ModelAdmin):
-    # inlines = [SupervisorInlineAdmin, OicInlineAdmin]
     fields = [
         'country',
         'country_override',
@@ -88,8 +67,6 @@ class ProfileAdmin(admin.ModelAdmin):
         'post_number',
         'post_title',
         'vendor_number',
-        # 'supervisor',
-        # 'oic',
         'section_code'
 
     ]
@@ -176,7 +153,7 @@ class ProfileAdmin(admin.ModelAdmin):
 
 class UserAdminPlus(UserAdmin):
 
-    inlines = [ProfileInline,]
+    inlines = [ProfileInline]
 
     list_display = [
         'email',
