@@ -25,6 +25,7 @@ from partners.models import (
     AgreementAmendment,
     Intervention,
     FileType,
+    GovernmentIntervention,
 )
 
 from publics.models import Currency
@@ -244,7 +245,7 @@ class PartnershipDashboardAPIView(APIView):
 
         # If Office pk is given, filter even more
         if office_pk:
-            interventions = interventions.objects.filter(offices=office_pk)
+            interventions = interventions.filter(offices=office_pk)
 
         # Filter out active Intervention
         active_partnerships = interventions.filter(
@@ -252,10 +253,10 @@ class PartnershipDashboardAPIView(APIView):
             start__isnull=False,
             end__isnull=False
         )
-        active_this_year = active_partnerships.filter(start__year=today.year)
+        active_this_year = active_partnerships.filter(start__year=current.year)
         active_last_year = active_partnerships.filter(start__lte=last_year)
         expire_in_two_months = active_partnerships.filter(
-            end__range=[today, today + datetime.timedelta(days=60)])
+            end__range=[current, current + datetime.timedelta(days=60)])
 
         def total_value_for_parternships(partnerships):
             return sum(
