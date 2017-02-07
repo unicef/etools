@@ -44,8 +44,8 @@ urlpatterns = (
     # url(r'^staff-members/$', view=PartnerStaffMemberListAPIVIew.as_view(), name='staff-member-list'),
     # url(r'^staff-members/(?P<pk>\d+)/$', view=PartnerStaffMemberDetailAPIView.as_view(), name='staff-member-detail'),
     # url(r'^staff-members/(?P<pk>\d+)/properties/$', view=PartnerStaffMemberPropertiesAPIView.as_view(), name='staff-member-properties'),
-    url(r'^partnership-dash/(?P<ct_pk>\d+)/(?P<office_pk>\d+)/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash-with-office'),
-    url(r'^partnership-dash/(?P<ct_pk>\d+)/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash'),
+    url(r'^partnership-dash/(?P<ct_pk>\d+)/(?P<office_pk>\d+)/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash-with-ct-office'),
+    url(r'^partnership-dash/(?P<ct_pk>\d+)/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash-with-ct'),
     url(r'^partnership-dash/$', view=PartnershipDashboardAPIView.as_view(), name='partnership-dash'),
 
 
