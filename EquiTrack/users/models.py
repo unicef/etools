@@ -237,6 +237,12 @@ class UserProfile(models.Model):
 
         if self.country_override and self.country != self.country_override:
             self.country = self.country_override
+
+        if self.staff_id == '':
+            self.staff_id = None
+        if self.vendor_number == '':
+            self.vendor_number = None
+
         super(UserProfile, self).save(**kwargs)
 
 

@@ -19,7 +19,7 @@ class TravelListExportSerializer(TravelListSerializer):
 
 class FinanceExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField()
-    traveller = serializers.CharField(source='traveler.get_full_name')
+    traveler = serializers.CharField(source='traveler.get_full_name')
     office = serializers.CharField(source='office.name')
     section = serializers.CharField(source='section.name')
     status = serializers.CharField()
@@ -29,13 +29,13 @@ class FinanceExportSerializer(serializers.Serializer):
     purpose_of_travel = serializers.CharField(source='purpose')
     mode_of_travel = serializers.SerializerMethodField()
     international_travel = serializers.BooleanField()
-    require_ta = serializers.BooleanField()
+    require_ta = serializers.BooleanField(source='ta_required')
     dsa_total = serializers.DecimalField(source='cost_summary.dsa_total', max_digits=20, decimal_places=10)
     expense_total = serializers.DecimalField(source='cost_summary.expenses_total', max_digits=20, decimal_places=10)
     deductions_total = serializers.DecimalField(source='cost_summary.deductions_total', max_digits=20, decimal_places=10)
 
     class Meta:
-        fields = ('reference_number', 'traveller', 'office', 'section', 'status', 'supervisor', 'start_date',
+        fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'supervisor', 'start_date',
                   'end_date', 'purpose_of_travel', 'mode_of_travel', 'international_travel', 'require_ta', 'dsa_total',
                   'expense_total', 'deductions_total')
 
@@ -45,7 +45,7 @@ class FinanceExportSerializer(serializers.Serializer):
 
 class TravelAdminExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number')
-    traveller = serializers.CharField(source='travel.traveler.get_full_name')
+    traveler = serializers.CharField(source='travel.traveler.get_full_name')
     office = serializers.CharField(source='travel.office.name')
     section = serializers.CharField(source='travel.section.name')
     status = serializers.CharField(source='travel.status')
@@ -59,7 +59,7 @@ class TravelAdminExportSerializer(serializers.Serializer):
     airline = serializers.SerializerMethodField()
 
     class Meta:
-        fields = ('reference_number', 'traveller', 'office', 'section', 'status', 'origin', 'destination',
+        fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'origin', 'destination',
                   'departure_time', 'arrival_time', 'dsa_area', 'overnight_travel', 'mode_of_travel', 'airline')
 
     def get_airline(sele, obj):
