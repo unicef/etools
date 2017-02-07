@@ -41,6 +41,8 @@ class ExchangeRate(models.Model):
     valid_to = models.DateField()
     x_rate = models.DecimalField(max_digits=10, decimal_places=5)
 
+    class Meta:
+        ordering = ('valid_from',)
 
 class AirlineCompany(models.Model):
     # This will be populated from vision

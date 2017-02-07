@@ -5,8 +5,7 @@ import factory
 from factory import fuzzy
 
 from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, TravelExpenseType, Country,\
-    BusinessArea, BusinessRegion
-
+    BusinessArea, BusinessRegion, ExchangeRate
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
@@ -39,7 +38,6 @@ class ExpenseTypeFactory(factory.DjangoModelFactory):
 
 class WBSFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=12)
-    # business_area = factory.SubFactory(BusinessAreaFactory)
 
     class Meta:
         model = WBS
@@ -61,9 +59,19 @@ class FundFactory(factory.DjangoModelFactory):
         model = Fund
 
 
+class ExchangeRateFactory(factory.DjangoModelFactory):
+    valid_from = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
+    valid_to = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
+    x_rate = fuzzy.FuzzyDecimal(0.5, 400)
+
+    class Meta:
+        model = ExchangeRate
+
+
 class CurrencyFactory(factory.DjangoModelFactory):
     name = 'United States Dollar'
     code = 'USD'
+    exchange_rates = factory.RelatedFactory(ExchangeRateFactory, 'currency')
 
     class Meta:
         model = Currency
