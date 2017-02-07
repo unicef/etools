@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from datetime import datetime, timedelta
 import factory
@@ -6,107 +7,15 @@ from pytz import UTC
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, LocationFactory,\
     InterventionFactory
-from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, TravelExpenseType, Country,\
-    BusinessArea, BusinessRegion
+from publics.tests.factories import DSARegionFactory, AirlineCompanyFactory, WBSFactory, GrantFactory, FundFactory, \
+    CurrencyFactory, ExpenseTypeFactory
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
     TravelType
 
+
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
-
-
-class BusinessRegionFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=8)
-    code = fuzzy.FuzzyText(length=2)
-
-    class Meta:
-        model = BusinessRegion
-
-
-class BusinessAreaFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=8)
-    code = fuzzy.FuzzyText(length=8)
-    region = factory.SubFactory(BusinessRegionFactory)
-
-    class Meta:
-        model = BusinessArea
-
-
-class ExpenseTypeFactory(factory.DjangoModelFactory):
-    title = fuzzy.FuzzyText(length=12)
-    vendor_number = fuzzy.FuzzyText(length=12)
-
-    class Meta:
-        model = TravelExpenseType
-
-
-class WBSFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=12)
-    # business_area = factory.SubFactory(BusinessAreaFactory)
-
-    class Meta:
-        model = WBS
-
-
-class GrantFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=12)
-    wbs = factory.SubFactory(WBSFactory)
-
-    class Meta:
-        model = Grant
-
-
-class FundFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=12)
-    grant = factory.SubFactory(GrantFactory)
-
-    class Meta:
-        model = Fund
-
-
-class CurrencyFactory(factory.DjangoModelFactory):
-    name = 'United States Dollar'
-    code = 'USD'
-
-    class Meta:
-        model = Currency
-
-
-class AirlineCompanyFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=32)
-    code = factory.Sequence(lambda n: n)
-
-    class Meta:
-        model = AirlineCompany
-
-
-class CountryFactory(factory.DjangoModelFactory):
-    name = fuzzy.FuzzyText(length=32)
-    long_name = fuzzy.FuzzyText(length=32)
-    iso_2 = fuzzy.FuzzyText(length=2)
-    iso_3 = fuzzy.FuzzyText(length=3)
-    valid_from = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
-    valid_to = fuzzy.FuzzyDate(_FUZZY_START_DATE.date(), _FUZZY_END_DATE.date())
-
-    class Meta:
-        model = Country
-
-
-class DSARegionFactory(factory.DjangoModelFactory):
-    country = factory.SubFactory(CountryFactory)
-    area_name = fuzzy.FuzzyText(length=32)
-    area_code = fuzzy.FuzzyText(length=3)
-    dsa_amount_usd = 100
-    dsa_amount_60plus_usd = 80
-    dsa_amount_local = 200
-    dsa_amount_60plus_local = 160
-    room_rate = 150
-    eff_date = datetime.now().date()
-    finalization_date = datetime.now().date()
-
-    class Meta:
-        model = DSARegion
 
 
 class TravelActivityFactory(factory.DjangoModelFactory):
