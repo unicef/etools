@@ -240,6 +240,8 @@ class UserProfile(models.Model):
 
         if self.staff_id == '':
             self.staff_id = None
+        if self.vendor_number == '':
+            self.vendor_number = None
 
         super(UserProfile, self).save(**kwargs)
 
