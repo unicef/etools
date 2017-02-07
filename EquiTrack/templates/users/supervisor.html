@@ -1,0 +1,35 @@
+{% load i18n admin_static admin_modify %}
+
+    <h2>Supervisor</h2>
+    <div id="supervisor">
+     <select id="sp" name="supervisor">
+     </select>
+    </div>
+
+    <h2>OIC</h2>
+    <div>
+     <select name="oic" id="oic">
+     </select>
+    </div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $.getJSON( "/users/api", function( data ) {
+            $.each( data, function( key, val ) {
+                if (val.full_name == "{{ original.supervisor.first_name }} {{ original.supervisor.last_name }}"){
+                    $('#sp').append($('<option selected>').text(val.full_name).attr('value', val.user_id));
+                }
+                else{
+                    $('#sp').append($('<option>').text(val.full_name).attr('value', val.user_id));
+                }
+                if (val.full_name == "{{ original.oic.first_name }} {{ original.oic.last_name }}") {
+                    $('#oic').append($('<option selected>').text(val.full_name).attr('value', val.user_id));
+                }
+                else {
+                    $('#oic').append($('<option>').text(val.full_name).attr('value', val.user_id));
+                }
+            });
+
+        });
+    });
+</script>

@@ -121,7 +121,7 @@ class Section(models.Model):
 
 class UserProfileManager(models.Manager):
     def get_queryset(self):
-        return super(UserProfileManager, self).get_queryset().select_related('country')
+        return super(UserProfileManager, self).get_queryset().select_related('country', 'supervisor', 'oic')
 
 
 class UserProfile(models.Model):
@@ -160,7 +160,7 @@ class UserProfile(models.Model):
     post_title = models.CharField(max_length=64, null=True, blank=True)
     vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True)
     supervisor = models.ForeignKey('self', related_name='supervisee', blank=True, null=True)
-    oic = models.ForeignKey('self', blank=True, null=True)  # related oic_set
+    oic = models.ForeignKey('self', blank=True, null=True, related_name='oicee')  # related oic_set
 
     # TODO: refactor when sections are properly set
     section_code = models.CharField(max_length=32, null=True, blank=True)
@@ -237,6 +237,8 @@ class UserProfile(models.Model):
 
         if self.country_override and self.country != self.country_override:
             self.country = self.country_override
+
+
         super(UserProfile, self).save(**kwargs)
 
 
