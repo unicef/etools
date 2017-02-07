@@ -11,15 +11,18 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GovernmentInterventionResult
-        fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'activities', 'unicef_managers', 'sectors',
-                  'sections')
+        fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'planned_visits',
+                    'activities', 'unicef_managers', 'sectors', 'sections')
 
         def validate(self, data):
-            """
-            Check that the start is before the stop.
-            """
             if not data['intervention']:
                 raise serializers.ValidationError("There is no partner selected")
+            if not data['result']:
+                raise serializers.ValidationError("There is no result selected")
+            if not data['year']:
+                raise serializers.ValidationError("There is no year selected")
+            if not data['planned_amount']:
+                raise serializers.ValidationError("There is no planned amount entered")
             return data
 
 

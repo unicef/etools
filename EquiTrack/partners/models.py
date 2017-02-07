@@ -1749,7 +1749,7 @@ class GovernmentIntervention(models.Model):
 
 def activity_default():
     return {
-        "0": "",
+        "0": "-",
     }
 
 class GovernmentInterventionResult(models.Model):

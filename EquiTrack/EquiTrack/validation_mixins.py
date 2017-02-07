@@ -156,7 +156,7 @@ def update_object(obj, kwdict):
         setattr(obj, k, v)
 
 class CompleteValidation(object):
-    def __init__(self, new, user=None, old=None, instance_class=None):
+    def __init__(self, new, user=None, old=None, instance_class=None, stateless=False):
         if old and isinstance(old, dict):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
 
@@ -187,12 +187,15 @@ class CompleteValidation(object):
             new = new_instance
             old = old_instance
 
+        self.stateless = stateless
         self.new = new
-        self.new_status = self.new.status
+        if not self.stateless:
+            self.new_status = self.new.status
         self.skip_transition = not old
         self.skip_permissions = not user
         self.old = old
-        self.old_status = self.old.status if self.old else None
+        if not self.stateless:
+            self.old_status = self.old.status if self.old else None
         self.user = user
 
     def check_transition_conditions(self, transition):
@@ -365,17 +368,18 @@ class CompleteValidation(object):
         if not self.basic_validation[0]:
             return False, self.map_errors(self.basic_validation[1])
 
-        if not self.skip_transition:
+        if not self.skip_transition and not self.stateless:
             transitional = self.transitional_validation()
             if not transitional[0]:
                 return False, self.map_errors(transitional[1])
 
-        state_valid = self.state_valid()
-        if not state_valid[0]:
-            return False, self.map_errors(state_valid[1])
+        if not self.stateless:
+            state_valid = self.state_valid()
+            if not state_valid[0]:
+                return False, self.map_errors(state_valid[1])
 
-        if self.make_auto_transitions():
-            self.new.save()
+            if self.make_auto_transitions():
+                self.new.save()
         return True, []
 
     @property
