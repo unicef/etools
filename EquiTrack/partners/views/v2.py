@@ -1,5 +1,4 @@
 import datetime
-from dateutil import relativedelta
 import operator
 import functools
 
@@ -221,52 +220,81 @@ class PartnershipDashboardAPIView(APIView):
 
     def get(self, request, ct_pk=None, office_pk=None):
         """
-        Return the aggregation data for Intervention and GovernmentIntervention.
+        Return the aggregation data for Intervention and GovernmentIntervention
         """
 
         current = datetime.date.today()
+        last_year = datetime.date(current.year - 1, 12, 31)
 
-        interventions = Intervention.objects.filter(hrp__country_programme=ct_pk)
+        # Use given CountryProgramme pk to filter Intervention and GovernmentIntervention
+        if ct_pk:
+            interventions = Intervention.objects.filter(hrp__country_programme=ct_pk)
 
+            gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
+
+        # Otherwise, use current CountryProgramme this year to filter Intervention and GovernmentIntervention
+        else:
+            currentCountryProgramme = CountryProgramme.current()
+
+            interventions = Intervention.objects.filter(
+                hrp__country_programme=currentCountryProgramme)
+
+            gov_interventions = GovernmentIntervention.objects.filter(
+                country_programme=currentCountryProgramme)
+
+        # If Office pk is given, filter even more
         if office_pk:
             interventions = interventions.objects.filter(offices=office_pk)
 
-        # Filter out partnerships which are active this year
-        active_partnerships = filter(lambda item: item.status == Intervention.ACTIVE and item.year == current.year, interventions)
+        # Filter out active Intervention
+        active_partnerships = interventions.filter(
+            status=Intervention.ACTIVE,
+            start__isnull=False,
+            end__isnull=False
+        )
+        active_this_year = active_partnerships.filter(start__year=today.year)
+        active_last_year = active_partnerships.filter(start__lte=last_year)
+        expire_in_two_months = active_partnerships.filter(
+            end__range=[today, today + datetime.timedelta(days=60)])
 
-        # Filter out partnerships which are active in the previous years
-        active_approved_previous_years_partnerships = filter(lambda item: item.status == Intervention.ACTIVE and item.year < current.year, interventions)
+        def total_value_for_parternships(partnerships):
+            return sum(
+                map(lambda pd: pd.planned_cash_transfers, partnerships))
 
-        # Filter out active partnerships which are going to be ended in 2 months from now on
-        expiring_in_2_months_partnerships = filter(lambda item: (current + relativedelta(months=2)) == item.end, active_partnerships)
+        result = {'partners': {}}
 
-        gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
+        for p_type in [
+            PartnerType.BILATERAL_MULTILATERAL,
+            PartnerType.CIVIL_SOCIETY_ORGANIZATION,
+            PartnerType.GOVERNMENT,
+            PartnerType.UN_AGENCY,
+        ]:
+            result['partners'][p_type] = active_partnerships.filter(
+                agreement__partner__partner_type=p_type).count()
 
-        def count_by_partnership_type(partnerships, partnership_type=None):
-            return len(filter(lambda item: item.agreement.partner.partner_type == partnership_type, partnerships))
+        # (1) Number and value of Active Partnerships for this year
+        result['active_count'] = len(active_partnerships)
+        result['active_value'] = total_value_for_parternships(active_partnerships)
+        result['active_percentage'] = "{0:.0f}%".format(
+            result['active_count'] / result['active_count'] * 100) \
+            if result['active_count'] else "0%"
 
-        def sum_up_total_value_for_parternships(partnerships):
-            return sum(map(lambda item: item.total_budget, partnerships))
+        # (2a) Number and value of Approved Partnerships this year
+        result['active_this_year_count'] = len(active_this_year)
+        result['active_this_year_value'] = total_value_for_parternships(active_this_year)
+        result['active_this_year_percentage'] = "{0:.0f}%".format(result['active_this_year_count'] / result['active_count'] * 100) \
+        if result['active_count'] else "0%"
 
-        result = {
-            'partnership_type_counts': {
-                'bilateral/multilateral': count_by_partnership_type(interventions, PartnerType.BILATERAL_MULTILATERAL),
-                'cso': count_by_partnership_type(interventions, PartnerType.CIVIL_SOCIETY_ORGANIZATION),
-                'un_agency': count_by_partnership_type(interventions, PartnerType.UN_AGENCY),
-                'government': len(gov_interventions),
-            },
-            'active_partnership': {
-                'count': len(active_partnerships),
-                'total_value': sum_up_total_value_for_parternships(active_partnerships)
-            },
-            'active_approved_previous_years_partnership': {
-                'count': len(active_approved_previous_years_partnerships),
-                'total_value': sum_up_total_value_for_parternships(active_approved_previous_years_partnerships),
-            },
-            'expiring_in_2_months_partnership': {
-                'count': len(expiring_in_2_months_partnerships),
-                'total_value': sum_up_total_value_for_parternships(expiring_in_2_months_partnerships),
-            }
-        }
+        # (2b) Number and value of Approved Partnerships last year
+        result['active_last_year_count'] = len(active_last_year)
+        result['active_last_year_value'] = total_value_for_parternships(active_last_year)
+        result['active_last_year_percentage'] = "{0:.0f}%".format(result['active_last_year_count'] / result['active_count'] * 100) \
+        if result['active_last_year_count'] else "0%"
+
+        # (3) Number and Value of Expiring Partnerships in next two months
+        result['expire_in_two_months_count'] = len(expire_in_two_months)
+        result['expire_in_two_months_value'] = total_value_for_parternships(expire_in_two_months)
+        result['expire_in_two_months_percentage'] = "{0:.0f}%".format(result['expire_in_two_months_count'] / result['active_count'] * 100) \
+        if result['expire_in_two_months_count'] else "0%"
 
         return Response(result, status=status.HTTP_200_OK)
