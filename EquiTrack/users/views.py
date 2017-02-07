@@ -193,7 +193,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Users
     """
-    #queryset = User.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserCreationSerializer
     permission_classes = (IsSuperUser,)
 
