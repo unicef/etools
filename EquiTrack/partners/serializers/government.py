@@ -10,9 +10,6 @@ from partners.models import GovernmentIntervention, GovernmentInterventionResult
 class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
     activity = JsonFieldSerializer()
 
-    def get_activities(self, obj):
-         return json.loads(obj.activity) if isinstance(obj.activity, str) else obj.activity
-
     class Meta:
         model = GovernmentInterventionResult
         fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'activity', 'unicef_managers', 'sectors',
@@ -65,7 +62,6 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = GovernmentIntervention
         fields = '__all__'
-        # fields = ("id", "number", "created_at", "partner", "result_structure", "country_programme", "results")
 
     def validate(self, data):
         """
