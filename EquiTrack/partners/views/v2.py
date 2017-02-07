@@ -266,11 +266,12 @@ class PartnershipDashboardAPIView(APIView):
         for p_type in [
             PartnerType.BILATERAL_MULTILATERAL,
             PartnerType.CIVIL_SOCIETY_ORGANIZATION,
-            PartnerType.GOVERNMENT,
             PartnerType.UN_AGENCY,
         ]:
             result['partners'][p_type] = active_partnerships.filter(
                 agreement__partner__partner_type=p_type).count()
+
+        result['partners'][PartnerType.GOVERNMENT] = gov_interventions.count()
 
         # (1) Number and value of Active Partnerships for this year
         result['active_count'] = len(active_partnerships)
