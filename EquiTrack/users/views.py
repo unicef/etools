@@ -9,6 +9,7 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 
 from users.serializers import MinimalUserSerializer
 from .permissions import IsSuperUser
@@ -160,7 +161,7 @@ class GroupViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -195,7 +196,7 @@ class UserViewSet(mixins.RetrieveModelMixin,
     """
     queryset = User.objects.all()
     serializer_class = UserCreationSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
         # we should only return workspace users.
@@ -253,7 +254,7 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
     Returns a list of all Offices
     """
     serializer_class = OfficeSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
         return Office.objects.all()
@@ -267,7 +268,7 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     Returns a list of all Sections
     """
     serializer_class = SectionSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
         return Section.objects.all()
