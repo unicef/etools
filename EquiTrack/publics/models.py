@@ -14,7 +14,7 @@ class TravelExpenseType(models.Model):
     # TODO simon: explain what's this line here
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
-    title = models.CharField(max_length=32)
+    title = models.CharField(max_length=128)
     vendor_number = models.CharField(max_length=32)
     is_travel_agent = models.BooleanField(default=False)
     rank = models.PositiveIntegerField(default=100)
