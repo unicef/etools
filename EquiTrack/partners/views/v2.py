@@ -1,5 +1,5 @@
 import datetime
-import dateutil import relativedelta
+from dateutil import relativedelta
 import operator
 import functools
 
@@ -242,7 +242,7 @@ class PartnershipDashboardAPIView(APIView):
 
         gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
 
-        def count_by_partnership_type(partnership_type=None, partnerships):
+        def count_by_partnership_type(partnerships, partnership_type=None):
             return len(filter(lambda item: item.agreement.partner.partner_type == partnership_type, partnerships))
 
         def sum_up_total_value_for_parternships(partnerships):
@@ -250,9 +250,9 @@ class PartnershipDashboardAPIView(APIView):
 
         result = {
             'partnership_type_counts': {
-                'bilateral/multilateral': count_by_partnership_type(PartnerType.BILATERAL_MULTILATERAL, interventions),
-                'cso': count_by_partnership_type(PartnerType.CIVIL_SOCIETY_ORGANIZATION, interventions),
-                'un_agency': count_by_partnership_type(PartnerType.UN_AGENCY, interventions),
+                'bilateral/multilateral': count_by_partnership_type(interventions, PartnerType.BILATERAL_MULTILATERAL),
+                'cso': count_by_partnership_type(interventions, PartnerType.CIVIL_SOCIETY_ORGANIZATION),
+                'un_agency': count_by_partnership_type(interventions, PartnerType.UN_AGENCY),
                 'government': len(gov_interventions),
             },
             'active_partnership': {
