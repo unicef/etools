@@ -57,15 +57,13 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-
         related_fields = ['results']
-
         serializer = self.my_create(request, related_fields, **kwargs)
 
         #TOOD: split out related fields and get them validated through the proper serializers
         #(use the validator)
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self, format=None):
         q = GovernmentIntervention.objects.all()

@@ -1,17 +1,21 @@
 import json
-from partners.models import GovernmentIntervention, GovernmentInterventionResult
+
+from django.db import transaction
 from rest_framework import serializers
+
+from EquiTrack.serializers import JsonFieldSerializer
+from partners.models import GovernmentIntervention, GovernmentInterventionResult
 
 
 class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
-    activities = serializers.SerializerMethodField(read_only=True)
+    activity = JsonFieldSerializer()
 
     def get_activities(self, obj):
-        return json.loads(obj.activity) if isinstance(obj.activity, str) else obj.activity
+         return json.loads(obj.activity) if isinstance(obj.activity, str) else obj.activity
 
     class Meta:
         model = GovernmentInterventionResult
-        fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'activities', 'unicef_managers', 'sectors',
+        fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'activity', 'unicef_managers', 'sectors',
                   'sections')
 
         def validate(self, data):
@@ -56,11 +60,12 @@ class GovernmentInterventionListSerializer(serializers.ModelSerializer):
 
 
 class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
-    results = GovernmentInterventionResultNestedSerializer(many=True, read_only=True, required=False)
+    results = GovernmentInterventionResultNestedSerializer(many=True, required=False)
 
     class Meta:
         model = GovernmentIntervention
-        fields = ("id", "number", "created_at", "partner", "result_structure", "country_programme", "results")
+        fields = '__all__'
+        # fields = ("id", "number", "created_at", "partner", "result_structure", "country_programme", "results")
 
     def validate(self, data):
         """
@@ -71,6 +76,11 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         if not 'country_programme' in data:
             raise serializers.ValidationError("There is no country programme selected")
         return data
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        updated = super(GovernmentInterventionCreateUpdateSerializer, self).update(instance, validated_data)
+        return updated
 
 
 class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
