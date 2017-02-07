@@ -411,7 +411,7 @@ class InvoiceMaker(object):
                 currency = self.travel.currency
             else:
                 expense = self.travel.expenses.get(type__vendor_number=vendor_number)
-                currency = expense.account_currency
+                currency = expense.document_currency
 
             invoice_kwargs = {'travel': self.travel,
                               'business_area': self.travel.traveler.profile.country.business_area_code,

@@ -3,7 +3,6 @@ __author__ = 'jcranwellward'
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-
 from .models import UserProfile, Country, Office, Section
 
 
@@ -62,6 +61,14 @@ class ProfileAdmin(admin.ModelAdmin):
         'section',
         'job_title',
         'phone_number',
+        'staff_id',
+        'org_unit_code',
+        'org_unit_name',
+        'post_number',
+        'post_title',
+        'vendor_number',
+        'section_code'
+
     ]
     list_display = (
         'username',
@@ -91,6 +98,9 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = (
         u'user',
         u'country',
+    )
+    suit_form_includes = (
+        ('users/supervisor.html', ),
     )
 
     def has_add_permission(self, request):
@@ -132,6 +142,14 @@ class ProfileAdmin(admin.ModelAdmin):
             db_field, request, **kwargs
         )
 
+    def save_model(self, request, obj, form, change):
+        if 'supervisor' in form.data:
+            supervisor = User.objects.get(id=int(form.data['supervisor'])).profile
+        if 'oic' in form.data:
+            oic = User.objects.get(id=int(form.data['oic'])).profile
+        obj.supervisor = supervisor
+        obj.oic = oic
+        obj.save()
 
 class UserAdminPlus(UserAdmin):
 
