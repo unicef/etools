@@ -51,6 +51,7 @@ from .models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
+    AgreementAmendmentType,
 
 )
 from .filters import (
@@ -1040,6 +1041,7 @@ admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Agreement, AgreementAdmin)
+admin.site.register(AgreementAmendmentType)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 #admin.site.register(Assessment, AssessmentAdmin)

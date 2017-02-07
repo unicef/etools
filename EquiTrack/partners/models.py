@@ -1164,10 +1164,8 @@ class Agreement(TimeStampedModel):
                             target=target, previous=previous, changes=changes)
 
 
-class AgreementAmendment(TimeStampedModel):
-    '''
-    Represents an amendment to an agreement
-    '''
+class AgreementAmendmentType(models.Model):
+
     AMENDMENT_TYPES = Choices(
         ('Change IP name', 'Change in Legal Name of Implementing Partner'),
         ('CP extension', 'Extension of Country Programme Cycle'),
@@ -1176,9 +1174,30 @@ class AgreementAmendment(TimeStampedModel):
         ('Additional clause', 'Additional Clause'),
         ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
     )
+
+    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
+    label = models.TextField(null=True, blank=True)
+    change_description = models.TextField(null=True, blank=True)
+    change_model = models.CharField(max_length=30)
+    change_fields = ArrayField(models.CharField(max_length=30))
+
+
+class AgreementAmendment(TimeStampedModel):
+    '''
+    Represents an amendment to an agreement
+    '''
+    # AMENDMENT_TYPES = Choices(
+    #     ('Change IP name', 'Change in Legal Name of Implementing Partner'),
+    #     ('CP extension', 'Extension of Country Programme Cycle'),
+    #     ('Change authorized officer', 'Change Authorized Officer'),
+    #     ('Change banking info', 'Banking Information'),
+    #     ('Additional clause', 'Additional Clause'),
+    #     ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
+    # )
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
-    type = ArrayField(models.CharField(max_length=64, choices=AMENDMENT_TYPES))
+    # type = ArrayField(models.CharField(max_length=64, choices=AMENDMENT_TYPES))
+    type = models.ForeignKey(AgreementAmendmentType, related_name='+', null=True, blank=True)
     signed_amendment = models.FileField(
         max_length=255,
         null=True, blank=True,
@@ -1213,6 +1232,7 @@ class AgreementAmendment(TimeStampedModel):
         if update_agreement_number_needed:
             self.agreement.save(amendment_number=self.number)
         return super(AgreementAmendment, self).save(**kwargs)
+
 
 class InterventionManager(models.Manager):
     def get_queryset(self):
