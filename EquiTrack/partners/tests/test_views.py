@@ -514,6 +514,26 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+    def test_agreements_create_max_signoff_single_date(self):
+        today = datetime.date.today()
+        data = {
+            "agreement_type":"PCA",
+            "partner": self.partner.id,
+            "status": "draft",
+            "start": date(today.year-1, 1, 1),
+            "end": date(today.year-1, 6, 1),
+            "signed_by": self.unicef_staff.id,
+            "signed_by_unicef_date": date(today.year-1, 1, 1),
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
     def test_agreements_list(self):
         response = self.forced_auth_req(
             'get',

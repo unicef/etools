@@ -54,7 +54,8 @@ def start_end_dates_valid(agreement):
     return True
 
 def start_date_equals_max_signoff(agreement):
-    if agreement.start and agreement.start != max(agreement.signed_by_unicef_date, agreement.signed_by_partner_date):
+    dates = [agreement.signed_by_unicef_date, agreement.signed_by_partner_date]
+    if agreement.start and agreement.start != max(x for x in dates if x):
         return False
     return True
 
