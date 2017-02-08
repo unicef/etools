@@ -1161,6 +1161,143 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
+class TestPartnershipDashboardView(APITenantTestCase):
+
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.agreement = AgreementFactory()
+        self.agreement2 = AgreementFactory(status="draft")
+        self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
+
+        data = {
+            "document_type": Intervention.SHPD,
+            "status": Intervention.ACTIVE,
+            "title": "2016 partnership test",
+            "start": "2016-10-28",
+            "end": "2018-10-28",
+            "unicef_budget": 9,
+            "agreement": self.agreement.id,
+            "planned_budget": [
+                {
+                    "partner_contribution": "2.00",
+                    "unicef_cash": "3.00",
+                    "in_kind_amount": "1.00",
+                    "partner_contribution_local": "3.00",
+                    "unicef_cash_local": "3.00",
+                    "in_kind_amount_local": "0.00",
+                    "year": "2017",
+                    "total": "6.00"
+                },
+                {
+                    "partner_contribution": "2.00",
+                    "unicef_cash": "3.00",
+                    "in_kind_amount": "1.00",
+                    "partner_contribution_local": "3.00",
+                    "unicef_cash_local": "3.00",
+                    "in_kind_amount_local": "0.00",
+                    "year": "2016",
+                    "total": "6.00"
+                }
+            ],
+        }
+
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=data
+        )
+        self.intervention = response.data
+
+        self.sector = Sector.objects.create(name="Sector 1")
+        self.location = LocationFactory()
+        self.isll = InterventionSectorLocationLink.objects.create(
+            intervention=Intervention.objects.get(id=self.intervention["id"]),
+            sector=self.sector,
+        )
+        self.isll.locations.add(LocationFactory())
+        self.isll.save()
+
+        self.office = OfficeFactory()
+
+        # Basic data to adjust in tests
+        self.intervention_data = {
+            "agreement": self.agreement2.id,
+            "partner_id": self.agreement2.partner.id,
+            "document_type": Intervention.SHPD,
+            "hrp": ResultStructureFactory().id,
+            "title": "2016 test 2",
+            "status": Intervention.ACTIVE,
+            "start": "2016-10-28",
+            "end": "2019-10-28",
+            "submission_date_prc": "2016-10-31",
+            "review_date_prc": "2016-10-28",
+            "submission_date": "2016-10-28",
+            "prc_review_document": None,
+            "signed_by_unicef_date": "2016-10-28",
+            "signed_by_partner_date": "2016-10-20",
+            "unicef_signatory": self.unicef_staff.id,
+            "unicef_focal_points": [],
+            "partner_focal_points": [],
+            "partner_authorized_officer_signatory": self.partnerstaff.id,
+            "offices": [self.office.id, ],
+            "fr_numbers": None,
+            "population_focus": "Some focus",
+            "planned_budget": [
+                {
+                    "partner_contribution": "2.00",
+                    "unicef_cash": "3.00",
+                    "in_kind_amount": "1.00",
+                    "partner_contribution_local": "3.00",
+                    "unicef_cash_local": "3.00",
+                    "in_kind_amount_local": "0.00",
+                    "year": "2017",
+                    "total": "6.00"
+                },
+                {
+                    "partner_contribution": "2.00",
+                    "unicef_cash": "3.00",
+                    "in_kind_amount": "1.00",
+                    "partner_contribution_local": "3.00",
+                    "unicef_cash_local": "3.00",
+                    "in_kind_amount_local": "0.00",
+                    "year": "2016",
+                    "total": "6.00"
+                }
+            ],
+            "sector_locations": [
+                {
+                    "sector": self.sector.id,
+                    "locations": [self.location.id],
+                }
+            ],
+            "result_links": [
+                {
+                    "cp_output": ResultFactory().id,
+                    "ram_indicators":[]
+                }
+            ],
+            "amendments": [],
+            "attachments": [],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
+        self.intervention_data = response.data
+
+    def test_intervention_list(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+
+
 # TODO Remove after implementing InterventionTests
 # class TestPCAViews(APITenantTestCase):
 #
