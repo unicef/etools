@@ -1214,14 +1214,13 @@ class AgreementAmendment(TimeStampedModel):
             self.agreement.save(amendment_number=self.number)
         return super(AgreementAmendment, self).save(**kwargs)
 
+
 class InterventionManager(models.Manager):
     def get_queryset(self):
-        return super(InterventionManager, self).get_queryset().prefetch_related('result_links',
-                                                                                'sector_locations__sector',
-                                                                                'unicef_focal_points',
-                                                                                'offices',
-                                                                                'agreement__partner',
-                                                                                'planned_budget')
+        return super(InterventionManager, self).get_queryset().prefetch_related(
+            'result_links', 'sector_locations__sector',
+            'unicef_focal_points', 'offices',
+            'agreement__partner', 'planned_budget')
 
 
 class Intervention(TimeStampedModel):
@@ -1365,14 +1364,11 @@ class Intervention(TimeStampedModel):
     fr_numbers = ArrayField(models.CharField(max_length=50, blank=True), blank=True, null=True)
     population_focus = models.CharField(max_length=130, null=True, blank=True)
 
-
     class Meta:
         ordering = ['-created']
 
     def __unicode__(self):
-        return u'{}'.format(
-            self.number
-        )
+        return u'{}'.format(self.number)
 
     @property
     def sector_names(self):
@@ -1530,6 +1526,8 @@ class Intervention(TimeStampedModel):
             self.update_reference_number(oldself)
 
         super(Intervention, self).save()
+
+
 class InterventionAmendment(TimeStampedModel):
     """
     Represents an amendment for the partner intervention.
@@ -1573,6 +1571,8 @@ class InterventionAmendment(TimeStampedModel):
             self.type,
             self.signed_date
         )
+
+
 class InterventionPlannedVisits(models.Model):
     """
     Represents planned visits for the intervention
@@ -1590,10 +1590,13 @@ class InterventionPlannedVisits(models.Model):
 
     class Meta:
         unique_together = ('intervention', 'year')
+
+
 class InterventionResultLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='result_links')
     cp_output = models.ForeignKey(Result, related_name='intervention_links')
     ram_indicators = models.ManyToManyField(Indicator, blank=True)
+
 
 class InterventionBudget(TimeStampedModel):
     """
