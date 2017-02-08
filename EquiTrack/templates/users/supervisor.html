@@ -14,6 +14,8 @@
 
 <script type="text/javascript">
     $(document).ready(function() {
+        $('#sp').append($('<option selected>').text('').attr('value', ''));
+         $('#oic').append($('<option selected>').text('').attr('value', ''));
         $.getJSON( "/users/api", function( data ) {
             $.each( data, function( key, val ) {
                 if (val.full_name == "{{ original.supervisor.first_name }} {{ original.supervisor.last_name }}"){
