@@ -247,7 +247,7 @@ class PartnershipDashboardAPIView(APIView):
         if office_pk:
             interventions = interventions.filter(offices=office_pk)
 
-        # Filter out active Intervention
+        # Categorize active Interventions
         active_partnerships = interventions.filter(
             status=Intervention.ACTIVE,
             start__isnull=False,
@@ -264,6 +264,7 @@ class PartnershipDashboardAPIView(APIView):
 
         result = {'partners': {}}
 
+        # Count active Interventions by its type
         for p_type in [
             PartnerType.BILATERAL_MULTILATERAL,
             PartnerType.CIVIL_SOCIETY_ORGANIZATION,
@@ -272,28 +273,29 @@ class PartnershipDashboardAPIView(APIView):
             result['partners'][p_type] = active_partnerships.filter(
                 agreement__partner__partner_type=p_type).count()
 
+        # Count GovernmentInterventions separately
         result['partners'][PartnerType.GOVERNMENT] = gov_interventions.count()
 
-        # (1) Number and value of Active Partnerships for this year
+        # (1) Number and value of Active Interventions for this year
         result['active_count'] = len(active_partnerships)
         result['active_value'] = total_value_for_parternships(active_partnerships)
         result['active_percentage'] = "{0:.0f}%".format(
             result['active_count'] / result['active_count'] * 100) \
             if result['active_count'] else "0%"
 
-        # (2a) Number and value of Approved Partnerships this year
+        # (2a) Number and value of Approved Interventions this year
         result['active_this_year_count'] = len(active_this_year)
         result['active_this_year_value'] = total_value_for_parternships(active_this_year)
         result['active_this_year_percentage'] = "{0:.0f}%".format(result['active_this_year_count'] / result['active_count'] * 100) \
         if result['active_count'] else "0%"
 
-        # (2b) Number and value of Approved Partnerships last year
+        # (2b) Number and value of Approved Interventions last year
         result['active_last_year_count'] = len(active_last_year)
         result['active_last_year_value'] = total_value_for_parternships(active_last_year)
         result['active_last_year_percentage'] = "{0:.0f}%".format(result['active_last_year_count'] / result['active_count'] * 100) \
         if result['active_last_year_count'] else "0%"
 
-        # (3) Number and Value of Expiring Partnerships in next two months
+        # (3) Number and Value of Expiring Interventions in next two months
         result['expire_in_two_months_count'] = len(expire_in_two_months)
         result['expire_in_two_months_value'] = total_value_for_parternships(expire_in_two_months)
         result['expire_in_two_months_percentage'] = "{0:.0f}%".format(result['expire_in_two_months_count'] / result['active_count'] * 100) \
