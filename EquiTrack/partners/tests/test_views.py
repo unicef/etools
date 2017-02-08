@@ -25,6 +25,7 @@ from EquiTrack.factories import (
     GroupFactory,
     InterventionFactory,
     GovernmentInterventionFactory,
+    SectionFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
@@ -1264,7 +1265,7 @@ class TestGovernmentInterventionViews(APITenantTestCase):
             "planned_visits": 5,
             "sectors": [Sector.objects.create(name="Sector 1").id],
             # TODO Figure out how to create Section on test schema
-            # "sections": [Section.objects.create(name="Section 1").id],
+            # "sections": [SectionFactory().id],
         }
         data = {
             "partner": self.partner.id,
