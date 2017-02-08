@@ -17,82 +17,156 @@ except ImportError:
     class SiteProfileNotAvailable(Exception):
         pass
 
-special_fields = ['country', 'unicefSectionCode', 'unicefSectionName']
-
-user_fields = [
-    'dn',
-    'upn',
-    'displayName',
-    'functionalTitle',
-    'gender',
-    'email',
-    'givenName',
-    'sn',
-    'unicefBusinessAreaCode',
-    'unicefSectionCode'
-
-]
-
-attr_map = {
-    'dn': 'dn',
-    'mail': 'username',
-    'internetaddress': 'email',
-    'givenName': 'first_name',
-    'sn': 'last_name',
-    'telephoneNumber': 'phone_number',
-    'unicefBusinessAreaCode': 'country',
-    'unicefpernr': 'staff_id',
-    'unicefSectionCode' : 'section_code'
-
-}
-
-countries = {}
-sections = {}
-groups = {}
-
-def _get_country(business_area_code):
-    if not countries.get('UAT', None):
-        countries['UAT'] = Country.objects.get(name='UAT')
-    if business_area_code not in countries:
-        countries[business_area_code] = Country.objects.filter(business_area_code=business_area_code).first()
-    return countries[business_area_code] or countries['UAT']
 
 
-def _get_section(section_name, section_code):
-    if not sections[section_name]:
-        sections[section_name] = Section.objects.get_or_create(name=section_name, code=section_code)
-    return sections[section_name]
 
-def _set_special_attr(obj, attr, cleaned_value):
 
-    if attr == 'country':
-        if not obj.country:
-            obj.country = _get_country(cleaned_value)
-            obj.countries_available.add(obj.country)
+
+
+
+# @transaction.atomic
+# def create_or_update_user(ad_user):
+#     print(ad_user['sn'], ad_user['givenName'])
+#     #TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
+#     user, created = User.objects.get_or_create(email=ad_user['internetaddress'], username=ad_user['internetaddress'])
+#     user.set_unusable_password()
+#     try:
+#         profile = user.profile
+#     except ObjectDoesNotExist:
+#         print 'No profile for user {}'.format(user)
+#         return
+#     except SiteProfileNotAvailable:
+#         print 'No profile for user SPNA {}'.format(user)
+#         return
+#
+#     profile_modified = False
+#     user_modified = False if user.is_staff and user.is_active else True
+#     user.is_staff = user.is_staff or True
+#     user.is_active = user.is_staff or True
+#
+#     if created:
+#         user.groups.add(groups['UNICEF User'])
+#         print 'Group added to user {}'.format(user)
+#
+#     # most attributes are direct maps.
+#     for attr, attr_val in ad_user.iteritems():
+#
+#         if hasattr(user, attr_map.get(attr, 'unusable_attr')):
+#             u_modified = _set_attribute(
+#                 user, attr_map.get(attr, 'unusable_attr'), ad_user[attr]
+#             )
+#             user_modified = user_modified or u_modified
+#
+#         if attr_map.get(attr, 'unusable_attr') not in ['email', 'first_name', 'last_name', 'username'] \
+#                 and hasattr(profile, attr_map.get(attr, 'unusable_attr')):
+#
+#             modified = _set_attribute(
+#                 profile, attr_map.get(attr, 'unusable_attr'), ad_user[attr]
+#             )
+#             profile_modified = profile_modified or modified
+#
+#     # # section requires special attention:
+#     # section_code = ad_user.get('unicefSectionCode', None)
+#     # section_name = ad_user.get('unicefSectionName', None)
+#     #
+#     # if section_name and section_code:
+#     #     modified = _set_attribute(profile, 'section', _get_section(section_name, section_code))
+#     #     profile_modified = profile_modified or modified
+#
+#     if user_modified:
+#         print 'saving modified user'
+#         user.save()
+#     if profile_modified:
+#         print 'saving profile for: {} {}'.format(user, user.profile)
+#         profile.save()
+
+
+
+
+class UserMapper(object):
+
+    SPECIAL_FIELDS = ['country']
+    REQUIRED_USER_FIELDS = [
+        'givenName',
+        'email',
+        'sn'
+    ]
+    USER_FIELDS = [
+        'dn',
+        'upn',
+        'displayName',
+        'functionalTitle',
+        'gender',
+        'email',
+        'givenName',
+        'sn',
+        'unicefBusinessAreaCode',
+        'unicefSectionCode'
+    ]
+    ATTR_MAP = {
+        'dn': 'dn',
+        'mail': 'username',
+        'internetaddress': 'email',
+        'givenName': 'first_name',
+        'sn': 'last_name',
+        'telephoneNumber': 'phone_number',
+        'unicefBusinessAreaCode': 'country',
+        'unicefpernr': 'staff_id',
+        'unicefSectionCode': 'section_code'
+    }
+
+    def __init__(self):
+        self.countries = {}
+        self.sections = {}
+        self.groups = {}
+        self.section_users = {}
+        self.groups['UNICEF User'] = Group.objects.get(name='UNICEF User')
+
+    def _get_country(self, business_area_code):
+        if not self.countries.get('UAT', None):
+            self.countries['UAT'] = Country.objects.get(name='UAT')
+        if business_area_code not in self.countries:
+            self.countries[business_area_code] = Country.objects.filter(business_area_code=business_area_code).first()
+        return self.countries[business_area_code] or self.countries['UAT']
+
+    def _get_section(self, section_name, section_code):
+        if not self.sections[section_name]:
+            self.sections[section_name] = Section.objects.get_or_create(name=section_name, code=section_code)
+        return self.sections[section_name]
+
+    def _set_simple_attr(self, obj, attr, cleaned_value):
+        old_value = getattr(obj, attr)
+        if cleaned_value != old_value:
+            setattr(obj, attr, cleaned_value)
             return True
 
-    return False
+        return False
 
+    def _set_special_attr(self, obj, attr, cleaned_value):
 
-def _set_simple_attr(obj, attr, cleaned_value):
-    old_value = getattr(obj, attr)
-    if cleaned_value != old_value:
-        setattr(obj, attr, cleaned_value)
-        return True
+        if attr == 'country':
+            # ONLY SYNC WORKSPACE IF IT HASN'T BEEN SET ALREADY
+            if not obj.country_override:
+                # cleaned value is actually business area code -> see mapper
+                new_country = self._get_country(cleaned_value)
+                if not obj.country == new_country:
+                    obj.country = self._get_country(cleaned_value)
+                    obj.countries_available.add(obj.country)
+                    print "Country Updated for {}".format(obj)
+                    return True
 
-    return False
+        return False
 
-
-def _set_attribute(obj, attr, value):
+    def _set_attribute(self, obj, attr, value):
         """Set an attribute of an object to a specific value.
         Return True if the attribute was changed and False otherwise.
         """
         # clean the value
         field = obj._meta.get_field_by_name(attr)
-        if len(value) > field[0].max_length:
+        if field[0].get_internal_type() == "CharField" and len(value) > field[0].max_length:
             cleaned_value = value[:field[0].max_length]
             logging.warn('The attribute "%s" was trimmed from "%s" to "%s"' %
-                        (attr, value, cleaned_value))
+                         (attr, value, cleaned_value))
         else:
             cleaned_value = value
         if cleaned_value == '':
@@ -102,133 +176,125 @@ def _set_attribute(obj, attr, value):
         if cleaned_value and attr == 'section_code':
             cleaned_value = cleaned_value[-4:]
 
-        if attr in special_fields:
-            return _set_special_attr(obj, attr, cleaned_value)
+        if attr in self.SPECIAL_FIELDS:
+            return self._set_special_attr(obj, attr, cleaned_value)
 
-        return _set_simple_attr(obj, attr, cleaned_value)
-
-
-@transaction.atomic
-def create_or_update_user(ad_user):
-    print(ad_user['sn'], ad_user['givenName'])
-    #TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
-    user, created = User.objects.get_or_create(email=ad_user['internetaddress'], username=ad_user['internetaddress'])
-    user.set_unusable_password()
-    try:
-        profile = user.profile
-    except ObjectDoesNotExist:
-        print 'No profile for user {}'.format(user)
-        return
-    except SiteProfileNotAvailable:
-        print 'No profile for user SPNA {}'.format(user)
-        return
-
-    profile_modified = False
-    user_modified = False if user.is_staff and user.is_active else True
-    user.is_staff = user.is_staff or True
-    user.is_active = user.is_staff or True
-
-    if created:
-        user.groups.add(groups['UNICEF User'])
-        print 'Group added to user {}'.format(user)
-
-    # most attributes are direct maps.
-    for attr, attr_val in ad_user.iteritems():
-
-        if hasattr(user, attr_map.get(attr, 'unusable_attr')):
-            u_modified = _set_attribute(
-                user, attr_map.get(attr, 'unusable_attr'), ad_user[attr]
-            )
-            user_modified = user_modified or u_modified
-
-        if attr_map.get(attr, 'unusable_attr') not in ['email', 'first_name', 'last_name', 'username'] \
-                and hasattr(profile, attr_map.get(attr, 'unusable_attr')):
-
-            modified = _set_attribute(
-                profile, attr_map.get(attr, 'unusable_attr'), ad_user[attr]
-            )
-            profile_modified = profile_modified or modified
-
-    # # section requires special attention:
-    # section_code = ad_user.get('unicefSectionCode', None)
-    # section_name = ad_user.get('unicefSectionName', None)
-    #
-    # if section_name and section_code:
-    #     modified = _set_attribute(profile, 'section', _get_section(section_name, section_code))
-    #     profile_modified = profile_modified or modified
-
-    if user_modified:
-        print 'saving modified user'
-        user.save()
-    if profile_modified:
-        print 'saving profile for: {} {}'.format(user, user.profile)
-        profile.save()
-
-section_users = {
-
-},
-def _set_supervisor(profile, manager_id):
-    if profile.supervisor and profile.supervisor.staff_id == manager_id:
-        return False
-
-    try:
-        supervisor = section_users.get(manager_id, User.objects.get(profile__staff_id=manager_id))
-        section_users[manager_id] = supervisor
-    except User.DoesNotExist:
-        print "this user does not exist in the db to set as supervisor: {}".format(manager_id)
-        return False
-
-    profile.supervisor = supervisor
-    return True
+        return self._set_simple_attr(obj, attr, cleaned_value)
 
 
 
+    @transaction.atomic
+    def create_or_update_user(self, ad_user):
+        print(ad_user['sn'], ad_user['givenName'])
+        for field in self.REQUIRED_USER_FIELDS:
+            if not ad_user[field]:
+                print "User doesn't have the required fields {}".format(ad_user)
+                return
+
+        # TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
+        user, created = User.objects.get_or_create(email=ad_user['internetaddress'],
+                                                   username=ad_user['internetaddress'])
+        if created:
+            user.set_unusable_password()
+
+        try:
+            profile = user.profile
+        except ObjectDoesNotExist:
+            print 'No profile for user {}'.format(user)
+            return
+        except SiteProfileNotAvailable:
+            print 'No profile for user SPNA {}'.format(user)
+            return
+
+        profile_modified = False
+        # TODO: user.is_staff should not be set for regular UNICEF users.. global refactor needed
+        user_modified = False if user.is_staff and user.is_active else True
+        # TODO: in the future see if ADFS returns somewhere whether users are active or not.
+        user.is_staff = user.is_staff or True
+        user.is_active = user.is_active or True
+
+        if created:
+            user.groups.add(self.groups['UNICEF User'])
+            print 'Group added to user {}'.format(user)
+
+        # most attributes are direct maps.
+        for attr, attr_val in ad_user.iteritems():
+
+            if hasattr(user, self.ATTR_MAP.get(attr, 'unusable_attr')):
+                u_modified = self._set_attribute(
+                    user, self.ATTR_MAP.get(attr, 'unusable_attr'), ad_user[attr]
+                )
+                user_modified = user_modified or u_modified
+
+            if self.ATTR_MAP.get(attr, 'unusable_attr') not in ['email', 'first_name', 'last_name', 'username'] \
+                    and hasattr(profile, self.ATTR_MAP.get(attr, 'unusable_attr')):
+                modified = self._set_attribute(
+                    profile, self.ATTR_MAP.get(attr, 'unusable_attr'), ad_user[attr]
+                )
+                profile_modified = profile_modified or modified
+
+        if user_modified:
+            print 'saving modified user'
+            user.save()
+        if profile_modified:
+            print 'saving profile for: {} {}'.format(user, user.profile)
+            profile.save()
 
 
-def map_users():
-    # get the users from IM (bania's file)
-        # map sections and staff_ids and all other relevant fields
+    def _set_supervisor(self, profile, manager_id):
+        if not manager_id or manager_id == 'Vacant':
+            return False
+        if profile.supervisor and profile.supervisor.staff_id == manager_id:
+            return False
 
-    # get all section codes
-    section_codes = UserProfile.objects.values_list('section_code', flat=True)\
-            .exclude(section_code__isnull=True)\
-            .distinct()
+        try:
+            supervisor = self.section_users.get(manager_id, UserProfile.objects.get(staff_id=manager_id))
+            self.section_users[manager_id] = supervisor
+        except UserProfile.DoesNotExist:
+            print "this user does not exist in the db to set as supervisor: {}".format(manager_id)
+            return False
 
-    for code in section_codes:
-        section_users = {}
-        synchronizer = UserSynchronizer('GetOrgChartUnitsInfo_JSON', code)
-        print "Mapping for section {}".format(code)
-        for in_user in synchronizer.response:
-            if not in_user.get('STAFF_ID'):
-                continue
-            # get user:
-            try:
-                user = section_users.get(in_user['STAFF_ID'], User.objects.get(profile__staff_id=in_user['STAFF_ID']))
-                section_users[in_user['STAFF_ID']] = user
-            except User.DoesNotExist:
-                print "this user does not exist in the db: {}".format(in_user['STAFF_EMAIL'])
-                continue
+        profile.supervisor = supervisor
+        return True
 
-            profile_updated = _set_attribute(user.profile, "post_number", in_user["STAFF_POST_NO"])
+    def map_users(self):
 
-            supervisor_updated = _set_supervisor(user.profile, in_user["MANAGER_ID"])
+        # get all section codes
+        section_codes = UserProfile.objects.values_list('section_code', flat=True)\
+                .exclude(section_code__isnull=True)\
+                .distinct()
 
-            if profile_updated or supervisor_updated:
-                print "saving profile for {}".format(user)
-                user.profile.save()
-    # for each section call the "GetOrgChartUnitsInfo" to get all section org units
-        # for each OrgChart get User by staff_id
-            # set vendor code on user if vendor code changed
-            # set staff post number and title if changed
-            # if not set telephone number set
-            # query the Users on staff_id -> manager_id and set supervisor to the user
+        for code in section_codes:
+            self.section_users = {}
+            synchronizer = UserSynchronizer('GetOrgChartUnitsInfo_JSON', code)
+            print "Mapping for section {}".format(code)
+            for in_user in synchronizer.response:
+                # if the user has no staff id don't bother for supervisor
+                if not in_user.get('STAFF_ID'):
+                    continue
+                # get user:
+                try:
+                    user_profile = self.section_users.get(in_user['STAFF_ID'], UserProfile.objects.get(staff_id=in_user['STAFF_ID']))
+                    self.section_users[in_user['STAFF_ID']] = user_profile
+                except UserProfile.DoesNotExist:
+                    print "this user does not exist in the db: {}".format(in_user['STAFF_EMAIL'])
+                    continue
 
-    pass
+                profile_updated = self._set_attribute(user_profile, "post_number", in_user["STAFF_POST_NO"])
+                profile_updated = self._set_attribute(user_profile, "vendor_number", in_user["VENDOR_CODE"]) or profile_updated
+
+                supervisor_updated = self._set_supervisor(user_profile, in_user["MANAGER_ID"])
+
+                if profile_updated or supervisor_updated:
+                    print "saving profile for {}, supervisor updated: {}, profile updated: {}".\
+                        format(user_profile.user, supervisor_updated, profile_updated)
+                    user_profile.save()
 
 
 def sync_users():
     from storages.backends.azure_storage import AzureStorage
     storage = AzureStorage()
+    user_sync = UserMapper()
     with storage.open('saml/etools.dat') as csvfile:
     #with open('/Users/Rob/Downloads/users.dat') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='|')
@@ -238,10 +304,10 @@ def sync_users():
             # print(row['sn'], row['givenName'])
             if i == 10:
                 break
-            create_or_update_user(row)
+            user_sync.create_or_update_user(row)
 
-def sync_users_local():
-    groups['UNICEF User'] = Group.objects.get(name='UNICEF User')
+def sync_users_local(n=20):
+    user_sync = UserMapper()
     with open('/code/etools.dat') as csvfile:
     #with open('/Users/Rob/Downloads/users.dat') as csvfile:
         reader = csv.DictReader(csvfile, delimiter='|')
@@ -249,9 +315,10 @@ def sync_users_local():
         for row in reader:
             i += 1
             # print(row['sn'], row['givenName'])
-            if i == 20:
+            if i == n:
                 break
-            create_or_update_user(row)
+            user_sync.create_or_update_user(row)
+
 
 class UserSynchronizer(object):
 
@@ -264,6 +331,7 @@ class UserSynchronizer(object):
             "MANAGER_ID",  # VARCHAR2    Manager Id
             "ORG_UNIT_CODE",  # VARCHAR2    Org Unit Code
             "VENDOR_CODE",  # VARCHAR2    Vendor code
+            "STAFF_EMAIL"
         )
     }
 
@@ -276,12 +344,14 @@ class UserSynchronizer(object):
         self.required_keys = self.REQUIRED_KEYS_MAP[endpoint_name]
 
     def _get_json(self, data):
-        return [] if data == self.NO_DATA_MESSAGE else data
+        return '{}' if data == self.NO_DATA_MESSAGE else data
 
     def _filter_records(self, records):
         def is_valid_record(record):
             for key in self.required_keys:
                 if key not in record:
+                    return False
+                if key == "STAFF_EMAIL" and not record[key]:
                     return False
             return True
 
