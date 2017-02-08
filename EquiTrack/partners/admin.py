@@ -931,7 +931,6 @@ class AgreementAmendmentInlineAdmin(admin.TabularInline):
     model = AgreementAmendment
     extra = 0
     fields = (
-        'type',
         'signed_amendment',
         'signed_date',
         'number',

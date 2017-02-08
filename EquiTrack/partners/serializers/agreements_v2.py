@@ -7,17 +7,38 @@ from partners.validation.agreements import AgreementValid
 from partners.models import (
     Agreement,
     AgreementAmendment,
+    AgreementAmendmentType,
 )
+
+
+class AgreementAmendmentTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AgreementAmendmentType
+        fields = "__all__"
 
 
 class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
     number = serializers.CharField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
+    amendment_types = AgreementAmendmentTypeSerializer(many=True)
 
     class Meta:
         model = AgreementAmendment
         fields = "__all__"
+
+    def update(self, instance, validated_data):
+        amd_types = validated_data.pop('amendment_types')
+        print validated_data
+        instance = AgreementAmendment.objects.update(**validated_data)
+        print amd_types
+        instance.amendment_types.delete()
+        for amd_type in amd_types:
+            AgreementAmendmentType.objects.create(**amd_type)
+
+        instance.save()
+        return instance
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
@@ -90,7 +111,7 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
 
-    amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
+    amendments = AgreementAmendmentCreateUpdateSerializer(many=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
