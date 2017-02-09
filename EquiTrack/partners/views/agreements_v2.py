@@ -168,6 +168,5 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
             instance = self.get_object()
-
         return Response(serializer.data)
-
+        #return Response(AgreementRetrieveSerializer(instance).data)
