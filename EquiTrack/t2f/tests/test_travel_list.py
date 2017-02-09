@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import logging
 
 import json
 import csv
@@ -15,6 +16,8 @@ from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, Trave
 from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, FundFactory
 
 from .factories import TravelFactory
+
+log = logging.getLogger('__name__')
 
 
 class TravelList(APITenantTestCase):
@@ -100,6 +103,15 @@ class TravelList(APITenantTestCase):
         self.assertIn('data', response_json)
         reference_numbers = [e['reference_number'] for e in response_json['data']]
         self.assertEqual(reference_numbers, ['2016/000003', '2016/000002', '2016/000001'])
+
+        # Here just iterate over the possible fields and do all the combinations of sorting
+        # to see if all works (non-500)
+        possible_sort_options = response_json['data'][0].keys()
+        for sort_option in possible_sort_options:
+            log.debug('Trying to sort by %s', sort_option)
+            self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'sort_by': sort_option,
+                                                                                 'reverse': False},
+                                 user=self.unicef_staff)
 
     def test_filtering(self):
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.PLANE])

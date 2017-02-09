@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+# TODO move static to files instead of models
 
 from django.db import models
 
@@ -41,6 +42,8 @@ class ExchangeRate(models.Model):
     valid_to = models.DateField()
     x_rate = models.DecimalField(max_digits=10, decimal_places=5)
 
+    class Meta:
+        ordering = ('valid_from',)
 
 class AirlineCompany(models.Model):
     # This will be populated from vision

@@ -7,10 +7,11 @@ from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from publics.tests.factories import CountryFactory
 from t2f.helpers import CostSummaryCalculator
 from t2f.models import Expense
 from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory, \
-    ExpenseTypeFactory, CurrencyFactory, CountryFactory
+    ExpenseTypeFactory, CurrencyFactory
 
 
 class TestDSACalculations(APITenantTestCase):

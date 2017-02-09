@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.tests.factories import BusinessAreaFactory
+from publics.tests.factories import BusinessAreaFactory
 
 
 class WBSGrantFundEndpoint(APITenantTestCase):

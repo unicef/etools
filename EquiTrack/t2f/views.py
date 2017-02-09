@@ -8,7 +8,7 @@ from django.db import connection
 from django.db.transaction import atomic
 from django_fsm import TransitionNotAllowed
 
-from rest_framework import generics, viewsets, mixins, status
+from rest_framework import generics, viewsets, mixins, status, views
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
@@ -17,6 +17,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from rest_framework_csv import renderers
+from rest_framework_xml.parsers import XMLParser
+from rest_framework_xml.renderers import XMLRenderer
 
 from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter
@@ -305,14 +307,18 @@ class PermissionMatrixView(generics.GenericAPIView):
         return Response(PERMISSION_MATRIX, status.HTTP_200_OK)
 
 
-class VisionInvoiceExport(generics.GenericAPIView):
+class VisionInvoiceExport(views.APIView):
+    renderer_classes = (XMLRenderer,)
+
     def get(self, request):
         exporter = InvoiceExport()
         xml_structure = exporter.generate_xml()
         return Response(xml_structure, status.HTTP_200_OK, content_type='application/xml')
 
 
-class VisionInvoiceUpdate(generics.GenericAPIView):
+class VisionInvoiceUpdate(views.APIView):
+    parser_classes = (XMLParser,)
+
     def post(self, request):
         updater = InvoiceUpdater(request.data)
         updater.update_invoices()

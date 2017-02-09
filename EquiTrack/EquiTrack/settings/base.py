@@ -108,6 +108,11 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'EquiTrack.mixins.EToolsTenantJWTAuthentication',
         'EquiTrack.mixins.EtoolsTokenAuthentication',
+    ),
+    'TEST_REQUEST_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+        'rest_framework_xml.renderers.XMLRenderer',
     )
 }
 
