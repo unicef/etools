@@ -1,6 +1,7 @@
 import operator
 import functools
 import logging
+
 from django.db import transaction
 from django.db.models import Q
 
@@ -12,9 +13,9 @@ from rest_framework.generics import (
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-
 from rest_framework_csv import renderers as r
 
+from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import GovernmentIntervention
 from partners.serializers.government import (
@@ -23,9 +24,7 @@ from partners.serializers.government import (
     GovernmentInterventionExportSerializer,
     GovernmentInterventionResultNestedSerializer
 )
-
 from partners.filters import PartnerScopeFilter
-from EquiTrack.validation_mixins import ValidatorViewMixin
 
 
 class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
@@ -60,7 +59,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
 
         related_fields = ['results']
 
-        serializer = self.my_create(request, related_fields, **kwargs)
+        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
 
         #TOOD: split out related fields and get them validated through the proper serializers
         #(use the validator)
@@ -133,7 +132,7 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
         related_fields = ['results']
 
-        instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
+        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True **kwargs)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

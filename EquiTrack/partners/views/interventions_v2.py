@@ -16,6 +16,9 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+from EquiTrack.validation_mixins import ValidatorViewMixin
+
 from partners.models import (
     InterventionBudget,
     Intervention,
@@ -39,7 +42,6 @@ from partners.serializers.interventions_v2 import (
 )
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
-from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.interventions import InterventionValid
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
@@ -92,7 +94,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             'sector_locations'
         ]
 
-        serializer = self.my_create(request, related_fields, **kwargs)
+        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
 
         validator = InterventionValid(serializer.instance, user=request.user)
         if not validator.is_valid:
@@ -195,12 +197,11 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             status=status.HTTP_200_OK
         )
 
-
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget', 'planned_visits', 'attachments', 'amendments', 'sector_locations']
 
-        instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
+        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
 
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:
