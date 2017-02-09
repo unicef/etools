@@ -8,9 +8,10 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
+from publics.tests.factories import BusinessAreaFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
-    DSARegionFactory, BusinessAreaFactory
+    DSARegionFactory
 
 from .factories import TravelFactory
 

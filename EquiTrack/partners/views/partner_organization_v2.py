@@ -183,7 +183,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             instance = self.get_object()
             po_serializer = self.get_serializer(instance)
 
-        return Response(po_serializer.data)
+        return Response(PartnerOrganizationDetailSerializer(instance).data)
 
 
 class PartnerOrganizationHactAPIView(ListCreateAPIView):
@@ -206,14 +206,3 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        # validate and save partner staff member
-        staff_members_serializer = self.get_serializer(data=request.data)
-        staff_members_serializer.is_valid(raise_exception=True)
-
-        staff_member = staff_members_serializer.save()
-
-        headers = self.get_success_headers(staff_members_serializer.data)
-        return Response(staff_members_serializer.data, status=status.HTTP_201_CREATED, headers=headers)

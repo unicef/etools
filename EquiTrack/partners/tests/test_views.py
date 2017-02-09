@@ -511,10 +511,50 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+<<<<<<< HEAD
         # Check for activity action created
         self.assertEquals(model_stream(Agreement).count(), 1)
         self.assertEquals(model_stream(Agreement)[0].verb, 'created')
         self.assertEquals(model_stream(Agreement)[0].target.start, date(today.year-1, 1, 1))
+=======
+    def test_agreements_create_max_signoff_single_date(self):
+        today = datetime.date.today()
+        data = {
+            "agreement_type":"PCA",
+            "partner": self.partner.id,
+            "status": "draft",
+            "start": date(today.year-1, 1, 1),
+            "end": date(today.year-1, 6, 1),
+            "signed_by": self.unicef_staff.id,
+            "signed_by_unicef_date": date(today.year-1, 1, 1),
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_agreements_create_max_signoff_no_date(self):
+        today = datetime.date.today()
+        data = {
+            "agreement_type":"PCA",
+            "partner": self.partner.id,
+            "status": "draft",
+            "start": date(today.year-1, 1, 1),
+            "end": date(today.year-1, 6, 1),
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+>>>>>>> develop
 
     def test_agreements_list(self):
         response = self.forced_auth_req(
@@ -579,7 +619,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(set(response.data["authorized_officers"]), set([self.partner_staff.id, self.partner_staff2.id]))
+        self.assertEquals(len(response.data["authorized_officers"]), 2)
 
         # Check for activity action created
         self.assertEquals(model_stream(Agreement).count(), 1)

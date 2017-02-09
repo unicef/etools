@@ -165,4 +165,4 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             # refresh the instance from the database.
             instance = self.get_object()
 
-        return Response(serializer.data)
+        return Response(AgreementRetrieveSerializer(instance).data)
