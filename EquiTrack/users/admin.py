@@ -145,10 +145,10 @@ class ProfileAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         if 'supervisor' in form.data:
             supervisor = User.objects.get(id=int(form.data['supervisor'])).profile
+            obj.supervisor = supervisor
         if 'oic' in form.data:
             oic = User.objects.get(id=int(form.data['oic'])).profile
-        obj.supervisor = supervisor
-        obj.oic = oic
+            obj.oic = oic
         obj.save()
 
 class UserAdminPlus(UserAdmin):

@@ -213,4 +213,4 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             instance = self.get_object()
             serializer = self.get_serializer(instance)
 
-        return Response(serializer.data)
+        return Response(InterventionDetailSerializer(instance).data)
