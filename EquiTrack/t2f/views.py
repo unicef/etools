@@ -8,7 +8,7 @@ from django.db import connection
 from django.db.transaction import atomic
 from django_fsm import TransitionNotAllowed
 
-from rest_framework import generics, viewsets, mixins, status
+from rest_framework import generics, viewsets, mixins, status, views
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
@@ -307,7 +307,7 @@ class PermissionMatrixView(generics.GenericAPIView):
         return Response(PERMISSION_MATRIX, status.HTTP_200_OK)
 
 
-class VisionInvoiceExport(generics.GenericAPIView):
+class VisionInvoiceExport(views.APIView):
     renderer_classes = (XMLRenderer,)
 
     def get(self, request):
@@ -316,7 +316,7 @@ class VisionInvoiceExport(generics.GenericAPIView):
         return Response(xml_structure, status.HTTP_200_OK, content_type='application/xml')
 
 
-class VisionInvoiceUpdate(generics.GenericAPIView):
+class VisionInvoiceUpdate(views.APIView):
     parser_classes = (XMLParser,)
 
     def post(self, request):
