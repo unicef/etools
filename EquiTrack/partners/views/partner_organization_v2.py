@@ -184,7 +184,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             instance = self.get_object()
             po_serializer = self.get_serializer(instance)
 
-        return Response(po_serializer.data)
+        return Response(PartnerOrganizationDetailSerializer(instance).data)
 
 
 class PartnerOrganizationHactAPIView(ListCreateAPIView):
@@ -207,5 +207,3 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-
-

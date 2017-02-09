@@ -612,7 +612,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(set(response.data["authorized_officers"]), set([self.partner_staff.id, self.partner_staff2.id]))
+        self.assertEquals(len(response.data["authorized_officers"]), 2)
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
