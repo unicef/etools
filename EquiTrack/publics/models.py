@@ -14,7 +14,7 @@ class TravelExpenseType(models.Model):
     # TODO simon: explain what's this line here
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
-    title = models.CharField(max_length=32)
+    title = models.CharField(max_length=128)
     vendor_number = models.CharField(max_length=32)
     is_travel_agent = models.BooleanField(default=False)
     rank = models.PositiveIntegerField(default=100)
@@ -66,6 +66,7 @@ class BusinessArea(models.Model):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=32)
     region = models.ForeignKey('BusinessRegion', related_name='business_areas')
+    default_currency = models.ForeignKey('Currency', related_name='+', null=True)
 
     def __unicode__(self):
         return self.name
