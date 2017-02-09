@@ -1168,79 +1168,31 @@ class TestPartnershipDashboardView(APITenantTestCase):
         self.agreement = AgreementFactory()
         self.agreement2 = AgreementFactory(status="draft")
         self.partnerstaff = PartnerStaffFactory(partner=self.agreement.partner)
-
-        data = {
-            "document_type": Intervention.SHPD,
-            "status": Intervention.ACTIVE,
-            "title": "2016 partnership test",
-            "start": "2016-10-28",
-            "end": "2018-10-28",
-            "unicef_budget": 9,
-            "agreement": self.agreement.id,
-            "planned_budget": [
-                {
-                    "partner_contribution": "2.00",
-                    "unicef_cash": "3.00",
-                    "in_kind_amount": "1.00",
-                    "partner_contribution_local": "3.00",
-                    "unicef_cash_local": "3.00",
-                    "in_kind_amount_local": "0.00",
-                    "year": "2017",
-                    "total": "6.00"
-                },
-                {
-                    "partner_contribution": "2.00",
-                    "unicef_cash": "3.00",
-                    "in_kind_amount": "1.00",
-                    "partner_contribution_local": "3.00",
-                    "unicef_cash_local": "3.00",
-                    "in_kind_amount_local": "0.00",
-                    "year": "2016",
-                    "total": "6.00"
-                }
-            ],
-        }
-
-        response = self.forced_auth_req(
-            'post',
-            '/api/v2/interventions/',
-            user=self.unicef_staff,
-            data=data
-        )
-        self.intervention = response.data
+        self.location = LocationFactory()
 
         self.sector = Sector.objects.create(name="Sector 1")
-        self.location = LocationFactory()
-        self.isll = InterventionSectorLocationLink.objects.create(
-            intervention=Intervention.objects.get(id=self.intervention["id"]),
-            sector=self.sector,
-        )
-        self.isll.locations.add(LocationFactory())
-        self.isll.save()
-
-        self.office = OfficeFactory()
 
         # Basic data to adjust in tests
         self.intervention_data = {
-            "agreement": self.agreement2.id,
-            "partner_id": self.agreement2.partner.id,
+            "agreement": self.agreement.id,
+            "partner_id": self.agreement.partner.id,
             "document_type": Intervention.SHPD,
             "hrp": ResultStructureFactory().id,
-            "title": "2016 test 2",
-            "status": Intervention.ACTIVE,
-            "start": "2016-10-28",
-            "end": "2019-10-28",
-            "submission_date_prc": "2016-10-31",
-            "review_date_prc": "2016-10-28",
-            "submission_date": "2016-10-28",
+            "title": "2017 test",
+            "status": Intervention.DRAFT,
+            "start": "2017-01-04",
+            "end": "2019-01-04",
+            "submission_date_prc": "2017-01-07",
+            "review_date_prc": "2017-01-04",
+            "submission_date": "2017-01-04",
             "prc_review_document": None,
-            "signed_by_unicef_date": "2016-10-28",
-            "signed_by_partner_date": "2016-10-20",
+            "signed_by_unicef_date": "2017-01-04",
+            "signed_by_partner_date": "2017-01-07",
             "unicef_signatory": self.unicef_staff.id,
-            "unicef_focal_points": [],
-            "partner_focal_points": [],
+            "unicef_focal_points": [self.unicef_staff.id, ],
+            "partner_focal_points": [self.partnerstaff.id, ],
             "partner_authorized_officer_signatory": self.partnerstaff.id,
-            "offices": [self.office.id, ],
+            "offices": [],
             "fr_numbers": None,
             "population_focus": "Some focus",
             "planned_budget": [
@@ -1261,14 +1213,14 @@ class TestPartnershipDashboardView(APITenantTestCase):
                     "partner_contribution_local": "3.00",
                     "unicef_cash_local": "3.00",
                     "in_kind_amount_local": "0.00",
-                    "year": "2016",
+                    "year": "2018",
                     "total": "6.00"
                 }
             ],
             "sector_locations": [
                 {
                     "sector": self.sector.id,
-                    "locations": [self.location.id],
+                    "locations": [self.location.id, ],
                 }
             ],
             "result_links": [
@@ -1280,22 +1232,65 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "amendments": [],
             "attachments": [],
         }
+
         response = self.forced_auth_req(
             'post',
             '/api/v2/interventions/',
             user=self.unicef_staff,
             data=self.intervention_data
         )
+        intervention_id = response.data["id"]
+
+        self.intervention_data = {
+            'status': Intervention.ACTIVE,
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(intervention_id),
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
         self.intervention_data = response.data
 
-    def test_intervention_list(self):
+        self.isll = InterventionSectorLocationLink.objects.create(
+            intervention=Intervention.objects.get(id=intervention_id),
+            sector=self.sector,
+        )
+        self.isll.locations.add(LocationFactory())
+        self.isll.save()
+
+    def test_with_ct_pk(self):
         response = self.forced_auth_req(
             'get',
-            '/api/v2/interventions/',
+            '/api/v2/partnership-dash/1/',
             user=self.unicef_staff,
         )
+
+        expected = {
+            "active_value": 84804005,
+            "partners": {
+                "Bilateral / Multilateral": 0,
+                "Civil Society Organization": 94,
+                "UN Agency": 0,
+                "Government": 0
+            },
+            "active_this_year_count": 0,
+            "active_percentage": "100%",
+            "active_this_year_percentage": "0%",
+            "active_count": 94,
+            "active_this_year_value": 0,
+            "expire_in_two_months_percentage": "0%",
+            "expire_in_two_months_value": 0,
+            "expire_in_two_months_count": 0,
+            "active_last_year_percentage": "100%",
+            "active_last_year_value": 84804005,
+            "active_last_year_count": 94
+        }
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 2)
+        self.assertNotEquals(response.data.active_value, 0)
+        self.assertEquals(response.data.active_count, 1)
 
 
 # TODO Remove after implementing InterventionTests
