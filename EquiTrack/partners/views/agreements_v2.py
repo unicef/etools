@@ -152,7 +152,9 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
 
         related_fields = ['amendments']
+        nested_related_fields = ['amendment_types']
         instance, old_instance, serializer = self.my_update(request, related_fields,
+                                                            nested_related_names=nested_related_fields,
                                                             snapshot=True, snapshot_class=Agreement, **kwargs)
 
 

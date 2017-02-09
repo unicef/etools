@@ -1,5 +1,6 @@
 
 from rest_framework import serializers
+from django.db import transaction
 
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
 from users.serializers import SimpleUserSerializer
@@ -22,37 +23,29 @@ class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
     number = serializers.CharField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
-    amendment_types = AgreementAmendmentTypeSerializer(many=True)
+    amendment_types = AgreementAmendmentTypeSerializer(many=True, read_only=True)
 
     class Meta:
         model = AgreementAmendment
         fields = "__all__"
 
     @transaction.atomic
-    def create(self, validated_data):
-        pass
-
-    @transaction.atomic
     def update(self, instance, validated_data):
-        amd_types = validated_data.pop('amendment_types')
-
-        #s you might have to update all records to include the id of the agreementAmendment
-        # test if you actually need this
+        amd_types = self.context.pop('amendment_types')
+        for key, val in validated_data.items():
+            setattr(instance, key, val)
         for a in amd_types:
-            a['agreement'] = instance # or instance.id -> not sure
-
-        amd_type_serializer  = AgreementAmendmentTypeSerializer(data=amd_types, many=True)
-        if amd_type_serializer.is_valid(raise_exception=True):
-            #not sure
-            amd_type_serializer.update()
-
-
-        print validated_data
-        instance = AgreementAmendment.objects.update(**validated_data)
-        print amd_types
-        instance.amendment_types.delete()
-        for amd_type in amd_types:
-            AgreementAmendmentType.objects.create(**amd_type)
+            a["agreement_amendment"] = instance
+            if 'id' in a:
+                try:
+                    agr_amd_type = AgreementAmendmentType.objects.get(id=a['id'])
+                    for key, val in a.items():
+                        setattr(agr_amd_type, key, val)
+                    agr_amd_type.save()
+                except AgreementAmendmentType.DoesNotExist:
+                    continue
+            else:
+                AgreementAmendmentType.objects.create(**a)
 
         instance.save()
         return instance
@@ -128,7 +121,7 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
 
-    amendments = AgreementAmendmentCreateUpdateSerializer(many=True)
+    amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
