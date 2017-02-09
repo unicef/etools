@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+# TODO move static to files instead of models
 
 from django.db import models
 
