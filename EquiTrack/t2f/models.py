@@ -235,7 +235,7 @@ class Travel(models.Model):
     def plan(self):
         pass
 
-    @transition(status, source=[APPROVED], target=SENT_FOR_PAYMENT)
+    @transition(status, source=[APPROVED, SENT_FOR_PAYMENT], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
         self.generate_invoices()

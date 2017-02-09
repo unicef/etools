@@ -9,8 +9,9 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 
-
+from users.serializers import MinimalUserSerializer
 from .permissions import IsSuperUser
 from users.models import Office, Section
 from reports.models import Sector
@@ -160,7 +161,7 @@ class GroupViewSet(mixins.RetrieveModelMixin,
     """
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         """
@@ -193,25 +194,33 @@ class UserViewSet(mixins.RetrieveModelMixin,
     """
     Returns a list of all Users
     """
-    #queryset = User.objects.all()
+    queryset = User.objects.all()
     serializer_class = UserCreationSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
         # we should only return workspace users.
-        qs = User.objects.prefetch_related('profile', 'groups', 'user_permissions')
-        return qs.all()
-
+        queryset = super(UserViewSet, self).get_queryset()
+        queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
+        return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
+        def get_serializer(*args, **kwargs):
+            if request.GET.get('verbosity') == 'minimal':
+                serializer_cls = MinimalUserSerializer
+            else:
+                serializer_cls = SimpleUserSerializer
+
+            return serializer_cls(*args, **kwargs)
+
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = SimpleUserSerializer(page, many=True)
+            serializer = get_serializer(page, many=True, context=self.get_serializer_context())
             return self.get_paginated_response(serializer.data)
 
-        serializer = SimpleUserSerializer(queryset, many=True)
+        serializer = get_serializer(queryset, many=True, context=self.get_serializer_context())
         return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
@@ -245,7 +254,7 @@ class OfficeViewSet(mixins.RetrieveModelMixin,
     Returns a list of all Offices
     """
     serializer_class = OfficeSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
         return Office.objects.all()
@@ -259,7 +268,7 @@ class SectionViewSet(mixins.RetrieveModelMixin,
     Returns a list of all Sections
     """
     serializer_class = SectionSerializer
-    permission_classes = (IsSuperUser,)
+    permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
         return Section.objects.all()

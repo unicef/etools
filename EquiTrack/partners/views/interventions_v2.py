@@ -16,6 +16,9 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+from EquiTrack.validation_mixins import ValidatorViewMixin
+
 from partners.models import (
     InterventionBudget,
     Intervention,
@@ -39,10 +42,9 @@ from partners.serializers.interventions_v2 import (
 )
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
-from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.interventions import InterventionValid
 
-class InterventionListAPIView(ListCreateAPIView):
+class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
     Create new Interventions.
     Returns a list of Interventions.
@@ -51,6 +53,14 @@ class InterventionListAPIView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
     renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
+
+    SERIALIZER_MAP = {
+        'planned_budget' : InterventionBudgetCUSerializer,
+        'planned_visits': PlannedVisitsCUSerializer,
+        'attachments': InterventionAttachmentSerializer,
+        'amendments': InterventionAmendmentCUSerializer,
+        'sector_locations': InterventionSectorLocationCUSerializer
+    }
 
     def get_serializer_class(self):
         """
@@ -71,28 +81,29 @@ class InterventionListAPIView(ListCreateAPIView):
         Add a new Intervention
         :return: JSON
         """
-
-        planned_budget = request.data.pop("planned_budget", [])
-        attachements = request.data.pop("attachments", [])
-        planned_visits = request.data.pop("planned_visits", [])
-        amendments = request.data.pop("amendments", [])
-
         # TODO: rename these
-        supplies = request.data.pop("supplies", [])
-        distributions = request.data.pop("distributions", [])
+        # supplies = request.data.pop("supplies", [])
+        # distributions = request.data.pop("distributions", [])
 
+        # TODO: add supplies, distributions
+        related_fields = [
+            'planned_budget',
+            'planned_visits',
+            'attachments',
+            'amendments',
+            'sector_locations'
+        ]
 
-        intervention_serializer = self.get_serializer(data=request.data)
-        intervention_serializer.is_valid(raise_exception=True)
-        intervention = intervention_serializer.save()
+        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
 
-        # TODO: add planned_budget, planned_visits, attachements, amendments, supplies, distributions
+        validator = InterventionValid(serializer.instance, user=request.user)
+        if not validator.is_valid:
+            logging.debug(validator.errors)
+            raise ValidationError(validator.errors)
 
-
-
-        headers = self.get_success_headers(intervention_serializer.data)
+        headers = self.get_success_headers(serializer.data)
         return Response(
-            intervention_serializer.data,
+            serializer.data,
             status=status.HTTP_201_CREATED,
             headers=headers
         )
@@ -186,12 +197,11 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             status=status.HTTP_200_OK
         )
 
-
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['planned_budget', 'planned_visits', 'attachments', 'amendments', 'sector_locations']
 
-        instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
+        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
 
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:
@@ -204,4 +214,4 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             instance = self.get_object()
             serializer = self.get_serializer(instance)
 
-        return Response(serializer.data)
+        return Response(InterventionDetailSerializer(instance).data)

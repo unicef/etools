@@ -11,7 +11,7 @@ class ShowHiddenFilterSerializer(serializers.Serializer):
 
 
 class TravelSortFilterSerializer(SortFilterSerializer):
-    _SORTABLE_FIELDS = tuple(TravelListSerializer.Meta.fields)
+    SORT_BY_SERIALIZER = TravelListSerializer
 
 
 class TravelFilterBoxSerializer(serializers.Serializer):

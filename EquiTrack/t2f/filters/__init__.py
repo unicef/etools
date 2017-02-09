@@ -41,9 +41,15 @@ class BaseSortFilter(BaseFilterBackend):
             return queryset
         data = serializer.validated_data
 
-        prefix = '-' if data['reverse'] else ''
-        sort_by = '{}{}'.format(prefix, data['sort_by'])
-        return queryset.order_by(sort_by)
+        sort_by = self.compose_sort_key(data['sort_by'], data['reverse'])
+        # This is to support multiple lookups for special cases
+        if not isinstance(sort_by, (list, tuple)):
+            sort_by = [sort_by]
+        return queryset.order_by(*sort_by)
+
+    def compose_sort_key(self, sort_by, reverse):
+        prefix = '-' if reverse else ''
+        return '{}{}'.format(prefix, sort_by)
 
 
 class BaseFilterBoxFilter(BaseFilterBackend):

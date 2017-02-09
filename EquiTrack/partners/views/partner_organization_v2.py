@@ -14,9 +14,12 @@ from rest_framework.generics import (
     RetrieveUpdateDestroyAPIView,
 )
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+
 from partners.models import (
     PartnerStaffMember,
     Intervention,
+    PartnerOrganization
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -27,12 +30,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
 )
-
-
-from partners.models import PartnerOrganization
 from partners.permissions import PartnerPermission, PartneshipManagerPermission
-
-
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
@@ -78,7 +76,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                     hidden = True
                 if query_params.get("hidden").lower() == "false":
                     hidden = False
-                if hidden != None:
+                if hidden is not None:
                     queries.append(Q(hidden=hidden))
             if "search" in query_params.keys():
                 queries.append(
@@ -113,6 +111,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         # validate and save partner org
         po_serializer = self.get_serializer(data=request.data)
         po_serializer.is_valid(raise_exception=True)
+
         partner = po_serializer.save()
 
         if staff_members:
@@ -124,8 +123,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             except ValidationError as e:
                 e.detail = {'staff_members': e.detail}
                 raise e
-            staff_members_serializer.save()
 
+            staff_members = staff_members_serializer.save()
 
         headers = self.get_success_headers(po_serializer.data)
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
@@ -153,6 +152,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         po_serializer = self.get_serializer(instance, data=request.data, partial=partial)
         po_serializer.is_valid(raise_exception=True)
+
         partner = po_serializer.save()
 
         if staff_members:
@@ -164,9 +164,8 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
                     except PartnerStaffMember.DoesNotExist:
                         sm_instance = None
 
-                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance,
-                                                                                       data=item,
-                                                                                       partial=partial)
+                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance, data=item, partial=partial)
+
                 else:
                     staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(data=item)
 
@@ -184,7 +183,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
             instance = self.get_object()
             po_serializer = self.get_serializer(instance)
 
-        return Response(po_serializer.data)
+        return Response(PartnerOrganizationDetailSerializer(instance).data)
 
 
 class PartnerOrganizationHactAPIView(ListCreateAPIView):
@@ -193,7 +192,7 @@ class PartnerOrganizationHactAPIView(ListCreateAPIView):
     Returns a list of Partners.
     """
     queryset = PartnerOrganization.objects.filter(
-            Q(documents__status__in=[Intervention.ACTIVE,Intervention.IMPLEMENTED]) |
+            Q(documents__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
             (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
         ).distinct()
     serializer_class = PartnerOrganizationHactSerializer
@@ -207,5 +206,3 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-
-

@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+# TODO move static to files instead of models
 
 from django.db import models
 
@@ -14,7 +15,7 @@ class TravelExpenseType(models.Model):
     # TODO simon: explain what's this line here
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
-    title = models.CharField(max_length=32)
+    title = models.CharField(max_length=128)
     vendor_number = models.CharField(max_length=32)
     is_travel_agent = models.BooleanField(default=False)
     rank = models.PositiveIntegerField(default=100)
@@ -41,6 +42,8 @@ class ExchangeRate(models.Model):
     valid_to = models.DateField()
     x_rate = models.DecimalField(max_digits=10, decimal_places=5)
 
+    class Meta:
+        ordering = ('valid_from',)
 
 class AirlineCompany(models.Model):
     # This will be populated from vision
@@ -66,6 +69,7 @@ class BusinessArea(models.Model):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=32)
     region = models.ForeignKey('BusinessRegion', related_name='business_areas')
+    default_currency = models.ForeignKey('Currency', related_name='+', null=True)
 
     def __unicode__(self):
         return self.name
