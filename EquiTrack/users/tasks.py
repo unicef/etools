@@ -89,6 +89,7 @@ class UserMapper(object):
     REQUIRED_USER_FIELDS = [
         'givenName',
         'email',
+        'mail',
         'sn'
     ]
     USER_FIELDS = [
@@ -112,7 +113,8 @@ class UserMapper(object):
         'telephoneNumber': 'phone_number',
         'unicefBusinessAreaCode': 'country',
         'unicefpernr': 'staff_id',
-        'unicefSectionCode': 'section_code'
+        'unicefSectionCode': 'section_code',
+        'functionalTitle': 'post_title'
     }
 
     def __init__(self):
