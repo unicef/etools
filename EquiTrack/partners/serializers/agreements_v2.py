@@ -28,8 +28,25 @@ class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
         model = AgreementAmendment
         fields = "__all__"
 
+    @transaction.atomic
+    def create(self, validated_data):
+        pass
+
+    @transaction.atomic
     def update(self, instance, validated_data):
         amd_types = validated_data.pop('amendment_types')
+
+        #s you might have to update all records to include the id of the agreementAmendment
+        # test if you actually need this
+        for a in amd_types:
+            a['agreement'] = instance # or instance.id -> not sure
+
+        amd_type_serializer  = AgreementAmendmentTypeSerializer(data=amd_types, many=True)
+        if amd_type_serializer.is_valid(raise_exception=True):
+            #not sure
+            amd_type_serializer.update()
+
+
         print validated_data
         instance = AgreementAmendment.objects.update(**validated_data)
         print amd_types
