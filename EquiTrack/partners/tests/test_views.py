@@ -511,12 +511,11 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
-<<<<<<< HEAD
         # Check for activity action created
         self.assertEquals(model_stream(Agreement).count(), 1)
         self.assertEquals(model_stream(Agreement)[0].verb, 'created')
         self.assertEquals(model_stream(Agreement)[0].target.start, date(today.year-1, 1, 1))
-=======
+
     def test_agreements_create_max_signoff_single_date(self):
         today = datetime.date.today()
         data = {
@@ -554,7 +553,6 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
->>>>>>> develop
 
     def test_agreements_list(self):
         response = self.forced_auth_req(
