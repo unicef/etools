@@ -9,11 +9,10 @@ from django.core.exceptions import ObjectDoesNotExist
 from publics.models import TravelAgent, Country, Currency, ExchangeRate, WBS, Grant, Fund, TravelExpenseType, \
     BusinessArea
 
-# try:
-#     import xml.etree.cElementTree as ET
-# except ImportError:
-#     import xml.etree.ElementTree as ET
-import xml.etree.ElementTree as ET
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 
 from EquiTrack.celery import app
 
@@ -114,13 +113,19 @@ def import_cost_assignments(xml_structure):
 
         mapping[wbs_code][grant_code].append(fund_code)
 
+    business_area_cache = {}
+
     for wbs_code in mapping.keys():
         business_area_code = wbs_code[:4]
-        try:
-            business_area = BusinessArea.objects.get(code=business_area_code)
-        except ObjectDoesNotExist:
-            log.warning('No business area found with code %s', business_area_code)
-            business_area = None
+        if business_area_code in business_area_cache:
+            business_area = business_area_cache[business_area_code]
+        else:
+            try:
+                business_area = BusinessArea.objects.get(code=business_area_code)
+            except ObjectDoesNotExist:
+                log.warning('No business area found with code %s', business_area_code)
+                business_area = None
+            business_area_cache[business_area_code] = business_area
 
         wbs, created = WBS.objects.get_or_create(name=wbs_code)
         wbs.business_area = business_area
