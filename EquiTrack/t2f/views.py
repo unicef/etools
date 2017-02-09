@@ -17,6 +17,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from rest_framework_csv import renderers
+from rest_framework_xml.parsers import XMLParser
+from rest_framework_xml.renderers import XMLRenderer
 
 from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter
@@ -306,6 +308,8 @@ class PermissionMatrixView(generics.GenericAPIView):
 
 
 class VisionInvoiceExport(generics.GenericAPIView):
+    renderer_classes = (XMLRenderer,)
+
     def get(self, request):
         exporter = InvoiceExport()
         xml_structure = exporter.generate_xml()
@@ -313,6 +317,8 @@ class VisionInvoiceExport(generics.GenericAPIView):
 
 
 class VisionInvoiceUpdate(generics.GenericAPIView):
+    parser_classes = (XMLParser,)
+
     def post(self, request):
         updater = InvoiceUpdater(request.data)
         updater.update_invoices()
