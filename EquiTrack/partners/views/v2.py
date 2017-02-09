@@ -157,17 +157,17 @@ class PmpStaticDropdownsListApiView(APIView):
         """
         Return All Static values used for dropdowns in the frontend
         """
-        cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).order_by('cso_type').distinct('cso_type')))
+        cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).                                      order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
-        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).order_by('type').distinct()))
+        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).                                                  order_by('type').distinct()))
         agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendment.AMENDMENT_TYPES))
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
-        currencies = choices_to_json_ready(list(Currency.objects.values_list('name', flat=True).order_by('name').distinct()))
+        currencies = choices_to_json_ready(list(Currency.objects.values_list('name', flat=True).                                                  order_by('name').distinct()))
 
 
         return Response(
@@ -187,7 +187,6 @@ class PmpStaticDropdownsListApiView(APIView):
             status=status.HTTP_200_OK
         )
 
-
 class PMPDropdownsListApiView(APIView):
     # serializer_class = InterventionSerializer
     # filter_backends = (PartnerScopeFilter,)
@@ -197,7 +196,8 @@ class PMPDropdownsListApiView(APIView):
         """
         Return All dropdown values used for Agreements form
         """
-        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team']).values('id', 'first_name', 'last_name', 'email'))
+        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team'])
+                                .values('id', 'first_name', 'last_name', 'email'))
         hrps = list(ResultStructure.objects.values())
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
@@ -229,7 +229,7 @@ class PartnershipDashboardAPIView(APIView):
 
         # Use given CountryProgramme pk to filter Intervention and GovernmentIntervention
         if ct_pk:
-            interventions = Intervention.objects.filter(hrp__country_programme=ct_pk)
+            interventions = Intervention.objects.filter(agreement__country_programme=ct_pk)
 
             gov_interventions = GovernmentIntervention.objects.filter(country_programme=ct_pk)
 
@@ -238,7 +238,7 @@ class PartnershipDashboardAPIView(APIView):
             currentCountryProgramme = CountryProgramme.current()
 
             interventions = Intervention.objects.filter(
-                hrp__country_programme=currentCountryProgramme)
+                agreement__country_programme=currentCountryProgramme)
 
             gov_interventions = GovernmentIntervention.objects.filter(
                 country_programme=currentCountryProgramme)
