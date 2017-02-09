@@ -210,7 +210,6 @@ class PMPDropdownsListApiView(APIView):
              },
             status=status.HTTP_200_OK
         )
-<<<<<<< HEAD
 
 
 class PartnershipDashboardAPIView(APIView):
@@ -299,5 +298,3 @@ class PartnershipDashboardAPIView(APIView):
         if result['expire_in_two_months_count'] else "0%"
 
         return Response(result, status=status.HTTP_200_OK)
-=======
->>>>>>> develop
