@@ -6,7 +6,9 @@ from decimal import Decimal
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.transaction import atomic
+from django.http.response import HttpResponse
 from django_fsm import TransitionNotAllowed
+from django.views.generic.base import View
 
 from rest_framework import generics, viewsets, mixins, status, views
 from rest_framework.exceptions import ValidationError
@@ -307,19 +309,15 @@ class PermissionMatrixView(generics.GenericAPIView):
         return Response(PERMISSION_MATRIX, status.HTTP_200_OK)
 
 
-class VisionInvoiceExport(views.APIView):
-    renderer_classes = (XMLRenderer,)
-
+class VisionInvoiceExport(View):
     def get(self, request):
         exporter = InvoiceExport()
         xml_structure = exporter.generate_xml()
-        return Response(xml_structure, status.HTTP_200_OK, content_type='application/xml')
+        return HttpResponse(xml_structure, content_type='application/xml')
 
 
-class VisionInvoiceUpdate(views.APIView):
-    parser_classes = (XMLParser,)
-
+class VisionInvoiceUpdate(View):
     def post(self, request):
-        updater = InvoiceUpdater(request.data)
+        updater = InvoiceUpdater(request.body)
         updater.update_invoices()
-        return Response(status=status.HTTP_200_OK)
+        return HttpResponse()
