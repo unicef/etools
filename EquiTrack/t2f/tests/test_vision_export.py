@@ -101,4 +101,4 @@ class VisionXML(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
         xml_data = response.content
 
-        self.assertEqual(xml_data, "<?xml version='1.0' encoding='utf8'?>\n<invoices />")
+        self.assertEqual(xml_data, "<?xml version='1.0' encoding='UTF-8'?>\n<invoices />")
