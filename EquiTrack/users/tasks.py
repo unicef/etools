@@ -2,6 +2,7 @@ import csv
 import json
 import logging
 from django.conf import settings
+from EquiTrack.celery import app
 
 import requests
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
@@ -11,6 +12,8 @@ from .models import User, UserProfile, Country, Section
 from django.contrib.auth.models import Group
 
 from vision.vision_data_synchronizer import VisionException
+from vision.models import VisionSyncLog
+
 try:
     from django.contrib.auth.models import SiteProfileNotAvailable
 except ImportError:
@@ -227,21 +230,48 @@ class UserMapper(object):
                         format(user_profile.user, supervisor_updated, profile_updated)
                     user_profile.save()
 
-
+@app.task
 def sync_users():
-    from storages.backends.azure_storage import AzureStorage
-    storage = AzureStorage()
-    user_sync = UserMapper()
-    with storage.open('saml/etools.dat') as csvfile:
-    #with open('/Users/Rob/Downloads/users.dat') as csvfile:
-        reader = csv.DictReader(csvfile, delimiter='|')
-        i = 0
-        for row in reader:
-            i += 1
-            # print(row['sn'], row['givenName'])
-            if i == 10:
-                break
-            user_sync.create_or_update_user(row)
+    log = VisionSyncLog(
+        country=Country.objects.get(schema_name="public"),
+        handler_name='UserADSync'
+    )
+    try:
+        from storages.backends.azure_storage import AzureStorage
+        storage = AzureStorage()
+        user_sync = UserMapper()
+        with storage.open('saml/etools.dat') as csvfile:
+            # with open('/Users/Rob/Downloads/users.dat') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter='|')
+            i = 0
+            for row in reader:
+                i += 1
+                # print(row['sn'], row['givenName'])
+                if i == 10:
+                    break
+                user_sync.create_or_update_user(row)
+    except Exception as e:
+        log.exception_message = e.message
+        raise VisionException(message=e.message)
+    finally:
+        log.save()
+
+
+@app.task
+def map_users():
+    log = VisionSyncLog(
+        country=Country.objects.get(schema_name="public"),
+        handler_name='UserSupervisorMapper'
+    )
+    try:
+        user_sync = UserMapper()
+        user_sync.map_users()
+    except Exception as e:
+        log.exception_message = e.message
+        raise VisionException(message=e.message)
+    finally:
+        log.save()
+
 
 def sync_users_local(n=20):
     user_sync = UserMapper()
