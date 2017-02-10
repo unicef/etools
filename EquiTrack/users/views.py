@@ -87,7 +87,7 @@ class UsersView(ListAPIView):
         return self.model.objects.filter(
             country=user.profile.country,
             user__is_staff=True
-        )
+        ).order_by('user__first_name')
 
 
 class UsersDetailAPIView(RetrieveAPIView):
