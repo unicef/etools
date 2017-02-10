@@ -51,6 +51,7 @@ from .models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
+    GovernmentInterventionResultActivity,
 
 )
 from .filters import (
@@ -1046,6 +1047,7 @@ admin.site.register(FileType)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
+admin.site.register(GovernmentInterventionResultActivity)
 admin.site.register(IndicatorReport)
 admin.site.register(BankDetails)
 admin.site.register(InterventionPlannedVisits)

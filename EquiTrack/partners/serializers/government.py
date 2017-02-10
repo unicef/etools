@@ -4,24 +4,72 @@ from django.db import transaction
 from rest_framework import serializers
 
 from EquiTrack.serializers import JsonFieldSerializer
-from partners.models import GovernmentIntervention, GovernmentInterventionResult
+from partners.models import GovernmentIntervention, GovernmentInterventionResult, GovernmentInterventionResultActivity
+
+
+class GovernmentInterventionResultActivityNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GovernmentInterventionResultActivity
+        fields = '__all__'
 
 
 class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
-    activity = JsonFieldSerializer()
+    result_activities = GovernmentInterventionResultActivityNestedSerializer(many=True, read_only=True)
 
     class Meta:
         model = GovernmentInterventionResult
-        fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'activity', 'unicef_managers', 'sectors',
+        fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'result_activities', 'unicef_managers', 'sectors',
                   'sections')
 
-        def validate(self, data):
-            """
-            Check that the start is before the stop.
-            """
-            if not data['intervention']:
-                raise serializers.ValidationError("There is no partner selected")
-            return data
+    def validate(self, data):
+        """
+        Check that the start is before the stop.
+        """
+        if not data['intervention']:
+            raise serializers.ValidationError("There is no partner selected")
+        return data
+
+
+    @transaction.atomic()
+    def create(self, validated_data):
+        unicef_managers = validated_data.pop('unicef_managers')
+        sectors = validated_data.pop('sectors')
+        sections = validated_data.pop('sections')
+        gir = GovernmentInterventionResult.objects.create(**validated_data)
+        gir.unicef_managers = unicef_managers
+        gir.save()
+        activities = self.context.pop('result_activities')
+        for act in activities:
+            act['intervention_result'] = gir.pk
+            ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
+            if ac_serializer.is_valid(raise_exception=True):
+                ac_serializer.save()
+
+        return gir
+
+    @transaction.atomic()
+    def update(self, instance, validated_data):
+        activities = self.context.pop('result_activities')
+        for key, val in validated_data.items():
+            setattr(instance, key, val)
+        for act in activities:
+            act['intervention_result'] = instance.pk
+            if 'id' in act:
+                try:
+                    activity = GovernmentInterventionResultActivity.objects.get(id=act['id'])
+                    ac_serializer = GovernmentInterventionResultActivityNestedSerializer(instance=activity,
+                                                                                         data=act, partial=True)
+                except GovernmentInterventionResultActivity.DoesNotExist:
+                    continue
+            else:
+                ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
+
+            if ac_serializer.is_valid(raise_exception=True):
+                ac_serializer.save()
+
+        instance.save()
+        return instance
 
 
 class GovernmentInterventionListSerializer(serializers.ModelSerializer):
