@@ -1222,8 +1222,8 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "document_type": Intervention.SHPD,
             "status": Intervention.DRAFT,
             "title": "2009 EFY AWP",
-            "start": "2017-01-28",
-            "end": "2017-01-28",
+            "start": "2016-10-28",
+            "end": "2016-10-28",
             "unicef_budget": 0,
             "agreement": self.agreement.id,
         }
@@ -1253,7 +1253,7 @@ class TestPartnershipDashboardView(APITenantTestCase):
             "title": "2009 EFY AWP Updated",
             "status": "draft",
             "start": "2017-01-28",
-            "end": "2017-01-28",
+            "end": "2019-01-28",
             "submission_date_prc": "2017-01-31",
             "review_date_prc": "2017-01-28",
             "submission_date": "2017-01-28",
@@ -1310,35 +1310,24 @@ class TestPartnershipDashboardView(APITenantTestCase):
             user=self.unicef_staff,
             data=self.intervention_data
         )
-
         self.intervention_data = response.data
-        self.intervention_data.update(status=Intervention.ACTIVE)
-
-        response = self.forced_auth_req(
-            'patch',
-            '/api/v2/interventions/{}/'.format(self.intervention_data['id']),
-            user=self.unicef_staff,
-            data=self.intervention_data
-        )
-        self.intervention_data = response.data
-
-        self.isll = InterventionSectorLocationLink.objects.create(
-            intervention=Intervention.objects.get(id=self.intervention_data['id']),
-            sector=self.sector,
-        )
-        self.isll.locations.add(LocationFactory())
-        self.isll.save()
 
     def test_with_ct_pk(self):
+        intervention = Intervention.objects.get(id=self.intervention_data['id'])
+        intervention.status = Intervention.ACTIVE
+        intervention.save()
+
         response = self.forced_auth_req(
             'get',
-            '/api/v2/partnership-dash/1/',
+            '/api/v2/partnership-dash/{}/'.format(self.agreement2.country_programme.id),
             user=self.unicef_staff,
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertNotEquals(response.data.active_value, 0)
-        self.assertEquals(response.data.active_count, 1)
+        self.assertNotEquals(response.data['active_value'], 0)
+        self.assertEquals(response.data['active_count'], 1)
+        self.assertEquals(response.data['active_this_year_count'], 1)
+        self.assertEquals(response.data['active_this_year_percentage'], '100%')
 
 
 # TODO Remove after implementing InterventionTests
