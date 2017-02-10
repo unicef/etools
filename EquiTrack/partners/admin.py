@@ -1,7 +1,5 @@
 from __future__ import absolute_import
 
-from partners.exports import PartnerExport, GovernmentExport, InterventionExport, AgreementExport
-
 from django.db import connection, models
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
@@ -12,6 +10,7 @@ from reversion.admin import VersionAdmin
 from import_export.admin import ExportMixin, base_formats
 from generic_links.admin import GenericLinkStackedInline
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.mixins import CountryUsersAdminMixin
 from EquiTrack.forms import ParentInlineAdminFormSet
 from EquiTrack.utils import get_staticfile_link
@@ -20,6 +19,10 @@ from tpm.models import TPMVisit
 from reports.models import Result
 from users.models import Section
 
+from .exports import (
+    PartnerExport, GovernmentExport,
+    InterventionExport, AgreementExport
+)
 from .models import (
     PCA,
     PCAFile,
@@ -129,6 +132,7 @@ class PCAFileInline(admin.TabularInline):
         'download_url',
     )
 
+
 class InterventionAmendmentsInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
     verbose_name = u'Amendment'
@@ -156,6 +160,7 @@ class InterventionAmendmentsInlineAdmin(admin.TabularInline):
 
         return 0
 
+
 class AmendmentLogInlineAdmin(admin.TabularInline):
     suit_classes = u'suit-tab suit-tab-info'
     verbose_name = u'Revision'
@@ -179,6 +184,8 @@ class AmendmentLogInlineAdmin(admin.TabularInline):
             return self.max_num
 
         return 0
+
+
 class PartnershipBudgetInlineAdmin(admin.TabularInline):
     model = PartnershipBudget
     form = PartnershipBudgetAdminForm
@@ -198,6 +205,8 @@ class PartnershipBudgetInlineAdmin(admin.TabularInline):
     readonly_fields = (
         'total',
     )
+
+
 class PcaGrantInlineAdmin(admin.TabularInline):
 
     model = PCAGrant
@@ -211,6 +220,8 @@ class PcaGrantInlineAdmin(admin.TabularInline):
         'amendment',
     )
     ordering = ['amendment']
+
+
 class LinksInlineAdmin(GenericLinkStackedInline):
     suit_classes = u'suit-tab suit-tab-attachments'
     extra = 1
@@ -227,7 +238,8 @@ class IndicatorsInlineAdmin(ReadOnlyMixin, admin.TabularInline):
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
 
         if db_field.name == u'result':
-            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output', ram=True, hidden=False)
+            kwargs['queryset'] = Result.objects.filter(
+                result_type__name=u'Output', ram=True, hidden=False)
 
         return super(IndicatorsInlineAdmin, self).formfield_for_foreignkey(
             db_field, request, **kwargs
@@ -283,10 +295,8 @@ class ResultsLinkInline(admin.TabularInline):
     )
     extra = 0
     formfield_overrides = {
-        models.ManyToManyField: {'widget': SelectMultiple(attrs={'size':'5', 'style': 'width:100%'})},
+        models.ManyToManyField: {'widget': SelectMultiple(attrs={'size': '5', 'style': 'width:100%'})},
     }
-
-
 
 
 class SectorLocationInline(admin.TabularInline):
@@ -294,7 +304,6 @@ class SectorLocationInline(admin.TabularInline):
     form = SectorLocationForm
     model = InterventionSectorLocationLink
     extra = 1
-
 
 
 class SupplyPlanInlineAdmin(admin.TabularInline):
@@ -342,7 +351,8 @@ class DistributionPlanInlineAdmin(admin.TabularInline):
         """
         Prevent distributions being sent to partners before the intervention is saved
         """
-        fields = super(DistributionPlanInlineAdmin, self).get_readonly_fields(request, obj)
+        fields = super(DistributionPlanInlineAdmin,
+                       self).get_readonly_fields(request, obj)
         if obj is None and u'send' not in fields:
             fields.append(u'send')
         elif obj and u'send' in fields:
@@ -452,7 +462,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
         PcaLocationInlineAdmin,
         PCAFileInline,
         LinksInlineAdmin,
-        #ResultsInlineAdmin,
+        # ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
         IndicatorDueDatesAdmin,
@@ -477,8 +487,9 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     def work_plan_template(self, obj):
         return u'<a class="btn btn-primary default" ' \
                u'href="{}" >Download Template</a>'.format(
-                get_staticfile_link('partner/templates/workplan_template.xlsx')
-        )
+                   get_staticfile_link(
+                       'partner/templates/workplan_template.xlsx')
+               )
     work_plan_template.allow_tags = True
     work_plan_template.short_description = 'Template'
 
@@ -522,6 +533,11 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                             assigned_by=request.user
                         )
 
+    def save_model(self, request, obj, form, change):
+        created = False if changed else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(PartnershipAdmin, self).save_model(request, obj, form, change)
 
 
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
@@ -544,12 +560,12 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     list_filter = (
         'document_type',
         'hrp',
-        #PCASectorFilter,
+        # PCASectorFilter,
         'status',
         #'partner',
-        #PCADonorFilter,
-        #PCAGatewayTypeFilter,
-        #PCAGrantFilter,
+        # PCADonorFilter,
+        # PCAGatewayTypeFilter,
+        # PCAGrantFilter,
     )
     search_fields = (
         'number',
@@ -572,13 +588,13 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
             u'classes': (u'suit-tab suit-tab-info',),
             'fields':
                 (
-                 'agreement',
-                 'document_type',
-                 'number',
-                 'hrp',
-                 'title',
-                 'status',
-                 'submission_date',)
+                'agreement',
+                'document_type',
+                'number',
+                'hrp',
+                'title',
+                'status',
+                'submission_date',)
         }),
         (_('Dates and Signatures'), {
             u'classes': (u'suit-tab suit-tab-info',),
@@ -602,17 +618,17 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     )
 
     inlines = (
-        #AmendmentLogInlineAdmin,
+        # AmendmentLogInlineAdmin,
         InterventionAmendmentsInlineAdmin,
         BudgetInlineAdmin,
-        #PcaSectorInlineAdmin,
-        #PartnershipBudgetInlineAdmin,
-        #PcaGrantInlineAdmin,
-        #IndicatorsInlineAdmin,
-        #PcaLocationInlineAdmin,
-        #PCAFileInline,
-        #LinksInlineAdmin,
-        #ResultsInlineAdmin,
+        # PcaSectorInlineAdmin,
+        # PartnershipBudgetInlineAdmin,
+        # PcaGrantInlineAdmin,
+        # IndicatorsInlineAdmin,
+        # PcaLocationInlineAdmin,
+        # PCAFileInline,
+        # LinksInlineAdmin,
+        # ResultsInlineAdmin,
         SupplyPlanInlineAdmin,
         DistributionPlanInlineAdmin,
         PlannedVisitsInline,
@@ -637,11 +653,16 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         #('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 
-
-
     def created_date(self, obj):
         return obj.created_at.strftime('%d-%m-%Y')
+
     created_date.admin_order_field = '-created'
+
+    def save_model(self, request, obj, form, change):
+        created = False if changed else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(InterventionAdmin, self).save_model(request, obj, form, change)
 
     # def get_form(self, request, obj=None, **kwargs):
     #     """
@@ -702,7 +723,8 @@ class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.Stac
 
     def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
         if db_field.name == u'result':
-            kwargs['queryset'] = Result.objects.filter(result_type__name=u'Output', hidden=False)
+            kwargs['queryset'] = Result.objects.filter(
+                result_type__name=u'Output', hidden=False)
 
         return super(GovernmentInterventionResultAdminInline, self).formfield_for_foreignkey(
             db_field, request, **kwargs
@@ -742,6 +764,12 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
             db_field, request, **kwargs
         )
 
+    def save_model(self, request, obj, form, change):
+        created = False if changed else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(GovernmentInterventionAdmin, self).save_model(request, obj, form, change)
+
 
 class AssessmentAdminInline(admin.TabularInline):
     model = Assessment
@@ -775,6 +803,11 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
         'email',
     )
 
+    def save_model(self, request, obj, form, change):
+        created = False if changed else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(PartnerStaffMemberAdmin, self).save_model(request, obj, form, change)
 
 
 class HiddenPartnerFilter(admin.SimpleListFilter):
@@ -869,11 +902,11 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         BankDetailsInlineAdmin,
         PartnerStaffMemberInlineAdmin,
         # TODO: create an html table
-        #InterventionInlineAdmin,
+        # InterventionInlineAdmin,
     ]
     suit_form_includes = (
         ('admin/partners/interventions_inline.html', '', ''),
-        #TODO: Nik get this working
+        # TODO: Nik get this working
         ('admin/partners/assurance_table.html', '', ''),
     )
 
@@ -990,7 +1023,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         u'authorized_officers',
     )
     inlines = [
-        #AgreementAmendmentLogInlineAdmin,
+        # AgreementAmendmentLogInlineAdmin,
         AgreementAmendmentInlineAdmin,
     ]
 
@@ -998,11 +1031,18 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
         if obj and obj.agreement_type == Agreement.PCA:
             return u'<a class="btn btn-primary default" ' \
                    u'href="{}" target="_blank" >Download</a>'.format(
-                    reverse('pca_pdf', args=(obj.id,))
-                    )
+                       reverse('pca_pdf', args=(obj.id,))
+                   )
         return u''
+
     download_url.allow_tags = True
     download_url.short_description = 'PDF Agreement'
+
+    def save_model(self, request, obj, form, change):
+        created = False if changed else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(AgreementAdmin, self).save_model(request, obj, form, change)
 
 
 class FundingCommitmentAdmin(admin.ModelAdmin):
@@ -1035,6 +1075,12 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         return False
 
+    def save_model(self, request, obj, form, change):
+        created = False if changed else True
+        create_snapshot_activity_stream(request.user, obj, created=created)
+
+        super(FundingCommitmentAdmin, self).save_model(request, obj, form, change)
+
 
 admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
@@ -1042,14 +1088,14 @@ admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
-#admin.site.register(Assessment, AssessmentAdmin)
+# admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(IndicatorReport)
 admin.site.register(BankDetails)
 admin.site.register(InterventionPlannedVisits)
-#admin.site.register(Intervention)
+# admin.site.register(Intervention)
 admin.site.register(InterventionAmendment)
 admin.site.register(PartnershipBudget)
 admin.site.register(InterventionSectorLocationLink)

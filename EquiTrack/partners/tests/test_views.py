@@ -33,6 +33,7 @@ from partners.models import (
     PCA,
     Agreement,
     PartnerOrganization,
+    PartnerStaffMember,
     PartnerType,
     PCASector,
     PartnershipBudget,
@@ -125,7 +126,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
                 "active": True,
             }]
         data = {
-            "name": self.partner.name,
+            "name": self.partner.name + ' Updated',
             "partner_type": self.partner.partner_type,
             "vendor_number": self.partner.vendor_number,
             "staff_members": staff_members,
@@ -165,7 +166,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
 
     def test_api_partners_update(self):
         data = {
-            "name": "Updated name",
+            "name": "Updated name again",
         }
         response = self.forced_auth_req(
             'patch',
@@ -302,7 +303,6 @@ class TestPartnershipViews(APITenantTestCase):
             sector=Sector.objects.create(name="Sector 2")
         )
 
-
     def test_api_partners_list(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
 
@@ -326,9 +326,6 @@ class TestPartnershipViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-
-        # Check for activity action created
-        self.assertEquals(model_stream(Agreement).count(), 1)
 
     @skip("different endpoint")
     def test_api_agreements_list(self):
@@ -514,6 +511,49 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
 
+        # Check for activity action created
+        self.assertEquals(model_stream(Agreement).count(), 1)
+        self.assertEquals(model_stream(Agreement)[0].verb, 'created')
+        self.assertEquals(model_stream(Agreement)[0].target.start, date(today.year-1, 1, 1))
+
+    def test_agreements_create_max_signoff_single_date(self):
+        today = datetime.date.today()
+        data = {
+            "agreement_type":"PCA",
+            "partner": self.partner.id,
+            "status": "draft",
+            "start": date(today.year-1, 1, 1),
+            "end": date(today.year-1, 6, 1),
+            "signed_by": self.unicef_staff.id,
+            "signed_by_unicef_date": date(today.year-1, 1, 1),
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_agreements_create_max_signoff_no_date(self):
+        today = datetime.date.today()
+        data = {
+            "agreement_type":"PCA",
+            "partner": self.partner.id,
+            "status": "draft",
+            "start": date(today.year-1, 1, 1),
+            "end": date(today.year-1, 6, 1),
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/agreements/'.format(self.partner.id),
+            user=self.partner_staff_user,
+            data=data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
     def test_agreements_list(self):
         response = self.forced_auth_req(
             'get',
@@ -527,7 +567,7 @@ class TestAgreementAPIView(APITenantTestCase):
 
     def test_agreements_update(self):
         data = {
-            "status":"active",
+            "status": "active",
         }
         response = self.forced_auth_req(
             'patch',
@@ -538,6 +578,9 @@ class TestAgreementAPIView(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "active")
+
+        # There should not be any activity stream item created as there is no delta data
+        self.assertEquals(model_stream(Agreement).count(), 0)
 
     def test_agreements_retrieve(self):
         response = self.forced_auth_req(
@@ -574,7 +617,11 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(set(response.data["authorized_officers"]), set([self.partner_staff.id, self.partner_staff2.id]))
+        self.assertEquals(len(response.data["authorized_officers"]), 2)
+
+        # Check for activity action created
+        self.assertEquals(model_stream(Agreement).count(), 1)
+        self.assertEquals(model_stream(Agreement)[0].verb, 'changed')
 
     def test_agreements_delete(self):
         response = self.forced_auth_req(
@@ -952,7 +999,7 @@ class TestInterventionViews(APITenantTestCase):
             "partner_id": self.agreement2.partner.id,
             "document_type": Intervention.SHPD,
             "hrp": ResultStructureFactory().id,
-            "title": "2009 EFY AWP",
+            "title": "2009 EFY AWP Updated",
             "status": "draft",
             "start": "2016-10-28",
             "end": "2016-10-28",
@@ -1027,7 +1074,7 @@ class TestInterventionViews(APITenantTestCase):
         data = {
             "document_type": Intervention.SHPD,
             "status": Intervention.DRAFT,
-            "title": "2009 EFY AWP",
+            "title": "2009 EFY AWP Updated",
             "start": "2016-10-28",
             "end": "2016-10-28",
             "unicef_budget": 0,
@@ -1040,6 +1087,10 @@ class TestInterventionViews(APITenantTestCase):
             data=data
         )
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+        # Check for activity action created
+        self.assertEquals(model_stream(Intervention).count(), 3)
+        self.assertEquals(model_stream(Intervention)[0].verb, 'created')
 
     def test_intervention_active_update_population_focus(self):
         self.intervention_data.update(population_focus=None)
@@ -1138,7 +1189,6 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(response.data, ['Start date must precede end date'])
-
 
     def test_intervention_filter(self):
         # Test filter
