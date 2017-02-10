@@ -235,7 +235,7 @@ class Result(MPTTModel):
                 node.save()
 
 
-class LowerResult(MPTTModel):
+class LowerResult(models.Model):
 
     result_type = models.ForeignKey(ResultType)
 
@@ -246,19 +246,6 @@ class LowerResult(MPTTModel):
 
     # automatically assigned unless assigned manually in the UI (Lower level WBS - like code)
     code = models.CharField(max_length=50)
-
-    quarters = models.ManyToManyField(Quarter, related_name="lower_results+", blank=True)
-    parent = TreeForeignKey(
-        'self',
-        null=True, blank=True,
-        related_name='children',
-        db_index=True
-    )
-
-    # Lower Activity level attributes
-    partner_contribution = models.IntegerField(default=0, null=True, blank=True)
-    unicef_cash = models.IntegerField(default=0, null=True, blank=True)
-    in_kind_amount = models.IntegerField(default=0, null=True, blank=True)
 
     def __unicode__(self):
         return u'{}: {}'.format(
@@ -306,8 +293,16 @@ class Unit(models.Model):
 
 
 class IndicatorBlueprint(models.Model):
+    NUMBER = u'number'
+    PERCENTAGE = u'percentage'
+    YESNO = u'YESNO'
+    UNIT_CHOICES = (
+        (NUMBER, NUMBER),
+        (PERCENTAGE, PERCENTAGE),
+        (YESNO, YESNO)
+    )
     name = models.CharField(max_length=1024)
-    unit = models.ForeignKey(Unit, null=True, blank=True)
+    unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default=NUMBER)
     description = models.CharField(max_length=3072, null=True, blank=True)
     code = models.CharField(max_length=50, null=True, blank=True, unique=True)
     subdomain = models.CharField(max_length=255, null=True, blank=True)
@@ -342,6 +337,7 @@ class AppliedIndicator(models.Model):
     target = models.CharField(max_length=255, null=True, blank=True)
     baseline = models.CharField(max_length=255, null=True, blank=True)
     assumptions = models.TextField(null=True, blank=True)
+    means_of_verification = models.CharField(max_length=255, null=True, blank=True)
 
     # current total, transactional and dynamically calculated based on IndicatorReports
     total = models.IntegerField(null=True, blank=True, default=0,

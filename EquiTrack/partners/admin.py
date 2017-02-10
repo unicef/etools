@@ -1099,3 +1099,5 @@ admin.site.register(InterventionPlannedVisits)
 admin.site.register(InterventionAmendment)
 admin.site.register(PartnershipBudget)
 admin.site.register(InterventionSectorLocationLink)
+admin.site.register(InterventionResultLink)
+

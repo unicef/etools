@@ -6,6 +6,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
+from reports.serializers.v2 import LowerResultSerializer
 from locations.models import Location
 
 from partners.models import (
@@ -205,16 +206,25 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
     cp_output = ResultLightSerializer()
     ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    ll_results = LowerResultSerializer(many=True, read_only=True)
+
     class Meta:
         model = InterventionResultLink
         fields = (
-            'id', 'intervention', 'cp_output', 'ram_indicators'
+            'id', 'intervention', 'cp_output', 'ram_indicators', 'll_results'
         )
+
 class InterventionResultCUSerializer(serializers.ModelSerializer):
+
+    lower_results = LowerResultSerializer(many=True, read_only=True)
+
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
 
+    def update(self, instance, validated_data):
+        print "don't forget about me"
+        pass
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
