@@ -151,7 +151,10 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['amendments']
-        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
+        nested_related_fields = ['amendment_types']
+        instance, old_instance, serializer = self.my_update(request, related_fields,
+                                                            nested_related_names=nested_related_fields,
+                                                            snapshot=True, **kwargs)
 
         validator = AgreementValid(instance, old=old_instance, user=request.user)
 

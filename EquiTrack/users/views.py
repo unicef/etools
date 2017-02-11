@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 
 from users.serializers import MinimalUserSerializer
-from .permissions import IsSuperUser
+from rest_framework.permissions import IsAdminUser
 from users.models import Office, Section
 from reports.models import Sector
 from .forms import ProfileForm

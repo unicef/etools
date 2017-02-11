@@ -54,6 +54,7 @@ from .models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
+    AgreementAmendmentType,
 
 )
 from .filters import (
@@ -963,7 +964,6 @@ class AgreementAmendmentInlineAdmin(admin.TabularInline):
     model = AgreementAmendment
     extra = 0
     fields = (
-        'type',
         'signed_amendment',
         'signed_date',
         'number',
@@ -1086,6 +1086,7 @@ admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Agreement, AgreementAdmin)
+admin.site.register(AgreementAmendmentType)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 # admin.site.register(Assessment, AssessmentAdmin)
