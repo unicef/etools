@@ -171,7 +171,8 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'amendments': InterventionAmendmentCUSerializer,
-        'sector_locations': InterventionSectorLocationCUSerializer
+        'sector_locations': InterventionSectorLocationCUSerializer,
+        'result_links': InterventionResultCUSerializer
     }
 
     def get_serializer_class(self):
@@ -199,9 +200,15 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['planned_budget', 'planned_visits', 'attachments', 'amendments', 'sector_locations']
-
-        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
+        related_fields = ['planned_budget', 'planned_visits',
+                          'attachments', 'amendments',
+                          'sector_locations', 'result_links']
+        nested_related_names = ['ll_results']
+        instance, old_instance, serializer = self.my_update(
+            request,
+            related_fields,
+            nested_related_names=nested_related_names,
+            snapshot=True, **kwargs)
 
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:

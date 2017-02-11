@@ -178,10 +178,11 @@ class InterventionValid(CompleteValidation):
             'partner_contribution_local',
             'in_kind_amount_local',
         ]
-        for budget in intervention.planned_budget.all():
-            planned_budget_rigid_valid, field = check_rigid_fields(budget, planned_budget_rigid_fields)
-            if not planned_budget_rigid_valid:
-                raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
+        #TODO: @zoli budget won't have old_instance it will be intervention.old_instance.planned_budget_old
+        # for budget in intervention.planned_budget.all():
+        #     planned_budget_rigid_valid, field = check_rigid_fields(budget, planned_budget_rigid_fields)
+        #     if not planned_budget_rigid_valid:
+        #         raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
 
         # Planned visits fields
         planned_visits_rigid_fields = [
@@ -189,9 +190,10 @@ class InterventionValid(CompleteValidation):
             'spot_checks',
             'audit',
         ]
-        for visit in intervention.planned_visits.all():
-            planned_visits_rigid_valid, field = check_rigid_fields(visit, planned_visits_rigid_fields)
-            if not planned_visits_rigid_valid:
-                raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
+        # TODO: @zoli visits won't have old_instance it will be intervention.old_instance.planned_visits_old
+        # for visit in intervention.planned_visits.all():
+        #     planned_visits_rigid_valid, field = check_rigid_fields(visit, planned_visits_rigid_fields)
+        #     if not planned_visits_rigid_valid:
+        #         raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
 
         return True

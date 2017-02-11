@@ -1,3 +1,4 @@
+from django.db import transaction
 from rest_framework import serializers
 
 from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerResult
@@ -23,6 +24,12 @@ class AppliedIndicatorSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = IndicatorBlueprint
+        fields = '__all__'
+
 
 
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
@@ -30,10 +37,6 @@ class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = AppliedIndicator
         fields = '__all__'
-
-
-    def update(self, instance, validated_data):
-        pass
 
 
 class LowerResultSerializer(serializers.ModelSerializer):
@@ -48,3 +51,46 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
     class Meta:
         model = LowerResult
         fields = '__all__'
+
+    def handle_blueprint(self, indicator):
+
+        blueprint_instance = IndicatorBlueprint.objects.get_or_create(
+            name=indicator.pop('name', None),
+            unit=indicator.pop('unit', None),
+            # for now all indicator blueprints will be considered dissagregatable
+            disaggregatable=True
+        )
+
+        return blueprint_instance.pk
+
+    def update_applied_indicators(self, instance, applied_indicators):
+
+        for indicator in applied_indicators:
+            indicator['lower_result'] = instance.pk
+
+            indicator['indicator'] = self.handle_blueprint(indicator)
+
+            indicator_serializer = AppliedIndicatorCUSerializer(
+                data=indicator)
+
+            if indicator_serializer.is_valid(raise_exception=True):
+                indicator_serializer.save()
+
+    @transaction.atomic
+    def create(self, validated_data):
+        applied_indicators = self.context.pop('applied_indicators')
+
+        print ('LowerResultCUSerializer CREATE __ IS THIS WORKING?')
+        instance = super(LowerResultCUSerializer, self).create(validated_data)
+        print instance.pk
+        self.update_applied_indicators(instance, applied_indicators)
+
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        applied_indicators = self.context.pop('applied_indicators')
+
+        self.update_applied_indicators(instance, applied_indicators)
+
+        return super(LowerResultCUSerializer, self).update(instance, validated_data)

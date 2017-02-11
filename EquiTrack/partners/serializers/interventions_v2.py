@@ -6,7 +6,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
-from reports.serializers.v2 import LowerResultSerializer
+from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
 
 from partners.models import (
@@ -222,9 +222,36 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         model = InterventionResultLink
         fields = "__all__"
 
+    def update_ll_results(self, instance, ll_results):
+        for result in ll_results:
+            result['result_link'] = instance.pk
+            applied_indicators = {'applied_indicators': result.pop('applied_indicators')}
+            ll_result_serializer = LowerResultCUSerializer(data=result, context=applied_indicators)
+            if ll_result_serializer.is_valid(raise_exception=True):
+                ll_result_serializer.save()
+
+
+
+    @transaction.atomic
+    def create(self, validated_data):
+        ll_results = self.context.pop('ll_results')
+
+        print ('INTERVENTION RESULT CU SERIALIZER CREATE __ IS THIS WORKING?')
+        instance = super(InterventionResultCUSerializer, self).create(validated_data)
+        print instance.pk
+        self.update_ll_results(instance, ll_results)
+
+        return instance
+
+    @transaction.atomic
     def update(self, instance, validated_data):
-        print "don't forget about me"
-        pass
+        ll_results = self.context.pop('ll_results')
+
+        self.update_ll_results(instance, ll_results)
+
+        print validated_data
+        return super(InterventionResultCUSerializer, self).update(instance, validated_data)
+
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
