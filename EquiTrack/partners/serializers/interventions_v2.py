@@ -226,7 +226,7 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
     def update_ll_results(self, instance, ll_results):
         for result in ll_results:
             result['result_link'] = instance.pk
-            applied_indicators = {'applied_indicators': result.pop('applied_indicators')}
+            applied_indicators = {'applied_indicators': result.pop('applied_indicators', [])}
             instance_id = result.get('id', None)
             if instance_id:
                 try:
@@ -251,7 +251,7 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        ll_results = self.context.pop('ll_results')
+        ll_results = self.context.pop('ll_results', [])
 
         print ('INTERVENTION RESULT CU SERIALIZER CREATE __ IS THIS WORKING?')
         instance = super(InterventionResultCUSerializer, self).create(validated_data)
@@ -262,7 +262,7 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        ll_results = self.context.pop('ll_results')
+        ll_results = self.context.pop('ll_results', [])
 
         self.update_ll_results(instance, ll_results)
 

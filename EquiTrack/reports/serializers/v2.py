@@ -1,5 +1,6 @@
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from reports.models import Result, AppliedIndicator, IndicatorBlueprint, LowerResult
 
@@ -70,15 +71,29 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
 
             indicator['indicator'] = self.handle_blueprint(indicator)
 
-            indicator_serializer = AppliedIndicatorCUSerializer(
-                data=indicator)
+            indicator_id = indicator.get('id')
+            if indicator_id:
+                try:
+                    indicator_instance = AppliedIndicator.objects.get(pk=indicator_id)
+                    indicator_serializer = AppliedIndicatorCUSerializer(
+                        instance=indicator_instance,
+                        data=indicator,
+                        partial=True
+                    )
+                except AppliedIndicator.DoesNotExist:
+                    raise ValidationError('Indicator has an ID but could not be found in the db')
+
+            else:
+                indicator_serializer = AppliedIndicatorCUSerializer(
+                    data=indicator
+                )
 
             if indicator_serializer.is_valid(raise_exception=True):
                 indicator_serializer.save()
 
     @transaction.atomic
     def create(self, validated_data):
-        applied_indicators = self.context.pop('applied_indicators')
+        applied_indicators = self.context.pop('applied_indicators', [])
 
         print ('LowerResultCUSerializer CREATE __ IS THIS WORKING?')
         instance = super(LowerResultCUSerializer, self).create(validated_data)
@@ -89,7 +104,7 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        applied_indicators = self.context.pop('applied_indicators')
+        applied_indicators = self.context.pop('applied_indicators', [])
 
         self.update_applied_indicators(instance, applied_indicators)
 
