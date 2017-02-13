@@ -30,7 +30,7 @@ class TestUserViews(APITenantTestCase):
             'get',
             '/api/users/',
             user=self.unicef_staff,
-            data={"managers": 1}
+            data={"partnership_managers": True}
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)

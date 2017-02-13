@@ -204,7 +204,8 @@ class UserViewSet(mixins.RetrieveModelMixin,
         queryset = super(UserViewSet, self).get_queryset()
         queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
         # Filter for Partnership Managers only
-        if "managers" in self.request.query_params.keys():
+        filter_param = self.request.query_params.get("partnership_managers", "")
+        if filter_param.lower() == "true":
             manager_group = Group.objects.get(name="Partnership Manager")
             queryset = queryset.filter(groups__in=[manager_group])
         return queryset
