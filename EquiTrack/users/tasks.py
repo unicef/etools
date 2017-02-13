@@ -7,6 +7,7 @@ from EquiTrack.celery import app
 import requests
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import transaction
+from django.db import IntegrityError
 
 from .models import User, UserProfile, Country, Section
 from django.contrib.auth.models import Group
@@ -26,7 +27,7 @@ class UserMapper(object):
     SPECIAL_FIELDS = ['country']
     REQUIRED_USER_FIELDS = [
         'givenName',
-        'email',
+        'internetaddress',
         'mail',
         'sn'
     ]
@@ -133,7 +134,7 @@ class UserMapper(object):
 
         # TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
         user, created = User.objects.get_or_create(email=ad_user['internetaddress'],
-                                                   username=ad_user['internetaddress'])
+                                                   username=ad_user['internetaddress'][:30])
         if created:
             user.set_unusable_password()
 
@@ -172,25 +173,27 @@ class UserMapper(object):
                     profile, self.ATTR_MAP.get(attr, 'unusable_attr'), ad_user[attr]
                 )
                 profile_modified = profile_modified or modified
-
-        if user_modified:
-            print 'saving modified user'
-            user.save()
-        if profile_modified:
-            print 'saving profile for: {} {}'.format(user, user.profile)
-            profile.save()
+        try:
+            if user_modified:
+                print 'saving modified user'
+                user.save()
+            if profile_modified:
+                print 'saving profile for: {} {}'.format(user)
+                profile.save()
+        except IntegrityError as e:
+            logging.error('Integrity error on user: {} - exception {}'.format(user.email, e))
 
 
     def _set_supervisor(self, profile, manager_id):
         if not manager_id or manager_id == 'Vacant':
             return False
-        if profile.supervisor and profile.supervisor.staff_id == manager_id:
+        if profile.supervisor and profile.supervisor.profile.staff_id == manager_id:
             return False
 
         try:
-            supervisor = self.section_users.get(manager_id, UserProfile.objects.get(staff_id=manager_id))
+            supervisor = self.section_users.get(manager_id, User.objects.get(profile__staff_id=manager_id))
             self.section_users[manager_id] = supervisor
-        except UserProfile.DoesNotExist:
+        except User.DoesNotExist:
             print "this user does not exist in the db to set as supervisor: {}".format(manager_id)
             return False
 
@@ -214,21 +217,24 @@ class UserMapper(object):
                     continue
                 # get user:
                 try:
-                    user_profile = self.section_users.get(in_user['STAFF_ID'], UserProfile.objects.get(staff_id=in_user['STAFF_ID']))
-                    self.section_users[in_user['STAFF_ID']] = user_profile
-                except UserProfile.DoesNotExist:
+                    user = self.section_users.get(
+                        in_user['STAFF_ID'],
+                        User.objects.get(profile__staff_id=in_user['STAFF_ID'])
+                    )
+                    self.section_users[in_user['STAFF_ID']] = user
+                except User.DoesNotExist:
                     print "this user does not exist in the db: {}".format(in_user['STAFF_EMAIL'])
                     continue
 
-                profile_updated = self._set_attribute(user_profile, "post_number", in_user["STAFF_POST_NO"])
-                profile_updated = self._set_attribute(user_profile, "vendor_number", in_user["VENDOR_CODE"]) or profile_updated
+                profile_updated = self._set_attribute(user.profile, "post_number", in_user["STAFF_POST_NO"])
+                profile_updated = self._set_attribute(user.profile, "vendor_number", in_user["VENDOR_CODE"]) or profile_updated
 
-                supervisor_updated = self._set_supervisor(user_profile, in_user["MANAGER_ID"])
+                supervisor_updated = self._set_supervisor(user.profile, in_user["MANAGER_ID"])
 
                 if profile_updated or supervisor_updated:
                     print "saving profile for {}, supervisor updated: {}, profile updated: {}".\
-                        format(user_profile.user, supervisor_updated, profile_updated)
-                    user_profile.save()
+                        format(user, supervisor_updated, profile_updated)
+                    user.profile.save()
 
 @app.task
 def sync_users():
@@ -249,7 +255,8 @@ def sync_users():
                 # print(row['sn'], row['givenName'])
                 if i == 10:
                     break
-                user_sync.create_or_update_user(row)
+                uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
+                user_sync.create_or_update_user(uni_row)
     except Exception as e:
         log.exception_message = e.message
         raise VisionException(message=e.message)
@@ -284,7 +291,8 @@ def sync_users_local(n=20):
             # print(row['sn'], row['givenName'])
             if i == n:
                 break
-            user_sync.create_or_update_user(row)
+            uni_row = {unicode(key, 'latin-1'):unicode(value, 'latin-1') for key, value in row.iteritems()}
+            user_sync.create_or_update_user(uni_row)
 
 
 class UserSynchronizer(object):
