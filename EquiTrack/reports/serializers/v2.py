@@ -54,7 +54,7 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
 
     def handle_blueprint(self, indicator):
 
-        blueprint_instance = IndicatorBlueprint.objects.get_or_create(
+        blueprint_instance, created = IndicatorBlueprint.objects.get_or_create(
             name=indicator.pop('name', None),
             unit=indicator.pop('unit', None),
             # for now all indicator blueprints will be considered dissagregatable

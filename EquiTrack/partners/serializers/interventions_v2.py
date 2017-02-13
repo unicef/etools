@@ -25,6 +25,7 @@ from partners.models import (
     InterventionSectorLocationLink,
     InterventionResultLink
 )
+from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
 
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
@@ -226,7 +227,23 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         for result in ll_results:
             result['result_link'] = instance.pk
             applied_indicators = {'applied_indicators': result.pop('applied_indicators')}
-            ll_result_serializer = LowerResultCUSerializer(data=result, context=applied_indicators)
+            instance_id = result.get('id', None)
+            if instance_id:
+                try:
+                    ll_result_instance = LowerResult.objects.get(pk=instance_id)
+                except LowerResult.DoesNotExist as e:
+                    raise ValidationError('lower_result has an id but cannot be found in the db')
+
+                ll_result_serializer = LowerResultCUSerializer(
+                    instance=ll_result_instance,
+                    data=result,
+                    context=applied_indicators,
+                    partial=True
+                )
+
+            else:
+                ll_result_serializer = LowerResultCUSerializer(data=result, context=applied_indicators)
+
             if ll_result_serializer.is_valid(raise_exception=True):
                 ll_result_serializer.save()
 
