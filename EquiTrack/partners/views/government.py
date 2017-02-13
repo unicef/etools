@@ -56,7 +56,6 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-
         related_fields = ['results']
 
         serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
@@ -64,7 +63,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
         #TOOD: split out related fields and get them validated through the proper serializers
         #(use the validator)
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self, format=None):
         q = GovernmentIntervention.objects.all()
@@ -131,8 +130,10 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['results']
+        nested_related_fields = ['result_activities']
 
-        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True **kwargs)
+        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True,
+                                                            nested_related_names=nested_related_fields, **kwargs)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

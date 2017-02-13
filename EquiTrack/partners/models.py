@@ -1861,6 +1861,11 @@ class GovernmentInterventionResult(models.Model):
                                 self.result)
 
 
+class GovernmentInterventionResultActivity(models.Model):
+    intervention_result = models.ForeignKey(GovernmentInterventionResult, related_name='result_activities')
+    description = models.TextField()
+
+
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
     """
     Represents an indicator report for the result chain on the location
