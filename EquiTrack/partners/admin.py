@@ -660,7 +660,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     created_date.admin_order_field = '-created'
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(InterventionAdmin, self).save_model(request, obj, form, change)
