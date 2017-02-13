@@ -184,13 +184,13 @@ class UserMapper(object):
     def _set_supervisor(self, profile, manager_id):
         if not manager_id or manager_id == 'Vacant':
             return False
-        if profile.supervisor and profile.supervisor.staff_id == manager_id:
+        if profile.supervisor and profile.supervisor.profile.staff_id == manager_id:
             return False
 
         try:
-            supervisor = self.section_users.get(manager_id, UserProfile.objects.get(staff_id=manager_id))
+            supervisor = self.section_users.get(manager_id, User.objects.get(profile__staff_id=manager_id))
             self.section_users[manager_id] = supervisor
-        except UserProfile.DoesNotExist:
+        except User.DoesNotExist:
             print "this user does not exist in the db to set as supervisor: {}".format(manager_id)
             return False
 
@@ -214,21 +214,24 @@ class UserMapper(object):
                     continue
                 # get user:
                 try:
-                    user_profile = self.section_users.get(in_user['STAFF_ID'], UserProfile.objects.get(staff_id=in_user['STAFF_ID']))
-                    self.section_users[in_user['STAFF_ID']] = user_profile
-                except UserProfile.DoesNotExist:
+                    user = self.section_users.get(
+                        in_user['STAFF_ID'],
+                        User.objects.get(profile__staff_id=in_user['STAFF_ID'])
+                    )
+                    self.section_users[in_user['STAFF_ID']] = user
+                except User.DoesNotExist:
                     print "this user does not exist in the db: {}".format(in_user['STAFF_EMAIL'])
                     continue
 
-                profile_updated = self._set_attribute(user_profile, "post_number", in_user["STAFF_POST_NO"])
-                profile_updated = self._set_attribute(user_profile, "vendor_number", in_user["VENDOR_CODE"]) or profile_updated
+                profile_updated = self._set_attribute(user.profile, "post_number", in_user["STAFF_POST_NO"])
+                profile_updated = self._set_attribute(user.profile, "vendor_number", in_user["VENDOR_CODE"]) or profile_updated
 
-                supervisor_updated = self._set_supervisor(user_profile, in_user["MANAGER_ID"])
+                supervisor_updated = self._set_supervisor(user.profile, in_user["MANAGER_ID"])
 
                 if profile_updated or supervisor_updated:
                     print "saving profile for {}, supervisor updated: {}, profile updated: {}".\
-                        format(user_profile.user, supervisor_updated, profile_updated)
-                    user_profile.save()
+                        format(user, supervisor_updated, profile_updated)
+                    user.profile.save()
 
 @app.task
 def sync_users():
