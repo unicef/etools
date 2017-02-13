@@ -7,6 +7,7 @@ from EquiTrack.celery import app
 import requests
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import transaction
+from django.db import IntegrityError
 
 from .models import User, UserProfile, Country, Section
 from django.contrib.auth.models import Group
@@ -26,7 +27,7 @@ class UserMapper(object):
     SPECIAL_FIELDS = ['country']
     REQUIRED_USER_FIELDS = [
         'givenName',
-        'email',
+        'internetaddress',
         'mail',
         'sn'
     ]
@@ -133,7 +134,7 @@ class UserMapper(object):
 
         # TODO: MODIFY THIS TO USER THE GUID ON THE PROFILE INSTEAD OF EMAIL on the USer
         user, created = User.objects.get_or_create(email=ad_user['internetaddress'],
-                                                   username=ad_user['internetaddress'])
+                                                   username=ad_user['internetaddress'][:30])
         if created:
             user.set_unusable_password()
 
@@ -172,13 +173,15 @@ class UserMapper(object):
                     profile, self.ATTR_MAP.get(attr, 'unusable_attr'), ad_user[attr]
                 )
                 profile_modified = profile_modified or modified
-
-        if user_modified:
-            print 'saving modified user'
-            user.save()
-        if profile_modified:
-            print 'saving profile for: {} {}'.format(user, user.profile)
-            profile.save()
+        try:
+            if user_modified:
+                print 'saving modified user'
+                user.save()
+            if profile_modified:
+                print 'saving profile for: {} {}'.format(user)
+                profile.save()
+        except IntegrityError as e:
+            logging.error('Integrity error on user: {} - exception {}'.format(user.email, e))
 
 
     def _set_supervisor(self, profile, manager_id):
@@ -287,7 +290,8 @@ def sync_users_local(n=20):
             # print(row['sn'], row['givenName'])
             if i == n:
                 break
-            user_sync.create_or_update_user(row)
+            utf8_row = {unicode(key, 'latin-1'):unicode(value, 'latin-1') for key, value in row.iteritems()}
+            user_sync.create_or_update_user(utf8_row)
 
 
 class UserSynchronizer(object):
