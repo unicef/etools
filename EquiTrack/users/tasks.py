@@ -255,7 +255,8 @@ def sync_users():
                 # print(row['sn'], row['givenName'])
                 if i == 10:
                     break
-                user_sync.create_or_update_user(row)
+                uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
+                user_sync.create_or_update_user(uni_row)
     except Exception as e:
         log.exception_message = e.message
         raise VisionException(message=e.message)
@@ -290,8 +291,8 @@ def sync_users_local(n=20):
             # print(row['sn'], row['givenName'])
             if i == n:
                 break
-            utf8_row = {unicode(key, 'latin-1'):unicode(value, 'latin-1') for key, value in row.iteritems()}
-            user_sync.create_or_update_user(utf8_row)
+            uni_row = {unicode(key, 'latin-1'):unicode(value, 'latin-1') for key, value in row.iteritems()}
+            user_sync.create_or_update_user(uni_row)
 
 
 class UserSynchronizer(object):
