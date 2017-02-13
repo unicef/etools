@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
@@ -31,6 +29,8 @@ class ProfileInline(admin.StackedInline):
         u'user',
         u'country',
     )
+
+    fk_name = 'user'
 
     def get_fields(self, request, obj=None):
 
@@ -144,10 +144,10 @@ class ProfileAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         if 'supervisor' in form.data:
-            supervisor = User.objects.get(id=int(form.data['supervisor'])).profile
+            supervisor = User.objects.get(id=int(form.data['supervisor']))
             obj.supervisor = supervisor
         if 'oic' in form.data:
-            oic = User.objects.get(id=int(form.data['oic'])).profile
+            oic = User.objects.get(id=int(form.data['oic']))
             obj.oic = oic
         obj.save()
 
