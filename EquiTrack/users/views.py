@@ -2,6 +2,7 @@ import string
 
 from django.db import connection
 from django.views.generic import FormView
+from django.contrib.auth.models import Group
 
 from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
@@ -202,6 +203,10 @@ class UserViewSet(mixins.RetrieveModelMixin,
         # we should only return workspace users.
         queryset = super(UserViewSet, self).get_queryset()
         queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
+        # Filter for Partnership Managers only
+        if "managers" in self.request.query_params.keys():
+            manager_group = Group.objects.get(name="Partnership Manager")
+            queryset = queryset.filter(groups__in=[manager_group])
         return queryset
 
     def list(self, request, *args, **kwargs):
