@@ -8,6 +8,7 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import transaction
 from django.db import IntegrityError
+from django.db.models import Q
 
 from .models import User, UserProfile, Country, Section
 from django.contrib.auth.models import Group
@@ -51,7 +52,7 @@ class UserMapper(object):
         'sn': 'last_name',
         'telephoneNumber': 'phone_number',
         'unicefBusinessAreaCode': 'country',
-        'unicefpernr': 'staff_id',
+        'unicefIndexNumber': 'staff_id',
         'unicefSectionCode': 'section_code',
         'functionalTitle': 'post_title'
     }
@@ -204,7 +205,7 @@ class UserMapper(object):
 
         # get all section codes
         section_codes = UserProfile.objects.values_list('section_code', flat=True)\
-                .exclude(section_code__isnull=True)\
+                .exclude(Q(section_code__isnull=True) | Q(section_code=''))\
                 .distinct()
 
         for code in section_codes:
@@ -339,7 +340,6 @@ class UserSynchronizer(object):
             auth=(settings.VISION_USER, settings.VISION_PASSWORD),
             verify=False
         )
-
         if response.status_code != 200:
             raise VisionException(
                 message=('Load data failed! Http code: {}'.format(response.status_code))
