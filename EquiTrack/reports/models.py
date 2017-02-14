@@ -295,7 +295,7 @@ class Unit(models.Model):
 class IndicatorBlueprint(models.Model):
     NUMBER = u'number'
     PERCENTAGE = u'percentage'
-    YESNO = u'YESNO'
+    YESNO = u'yesno'
     UNIT_CHOICES = (
         (NUMBER, NUMBER),
         (PERCENTAGE, PERCENTAGE),

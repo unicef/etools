@@ -205,8 +205,8 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
         )
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    cp_output = ResultLightSerializer()
-    ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    #cp_output = ResultLightSerializer()
+    #ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
     ll_results = LowerResultSerializer(many=True, read_only=True)
 
     class Meta:

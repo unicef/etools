@@ -20,6 +20,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='indicatorblueprint',
             name='unit',
-            field=models.CharField(choices=[('number', 'number'), ('percentage', 'percentage'), ('YESNO', 'YESNO')], default='number', max_length=10),
+            field=models.CharField(choices=[('number', 'number'), ('percentage', 'percentage'), ('yesno', 'yesno')], default='number', max_length=10),
         ),
     ]
