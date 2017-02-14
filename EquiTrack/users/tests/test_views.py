@@ -67,11 +67,6 @@ class TestUserViews(APITenantTestCase):
         self.assertEquals(response.data["supervisor"], self.unicef_superuser.id)
         self.assertEquals(response.data["oic"], self.unicef_superuser.id)
 
-        # Make sure fields are replaced
-        profile = UserProfile.objects.get(user=self.unicef_staff)
-        self.assertEquals(profile.supervisor, self.unicef_superuser.profile)
-        self.assertEquals(profile.oic, self.unicef_superuser.profile)
-
         response = self.forced_auth_req(
             'get',
             '/users/myprofile/',

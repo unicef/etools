@@ -108,30 +108,6 @@ class MyProfileAPIView(RetrieveUpdateAPIView):
         self.check_object_permissions(self.request, obj)
         return obj
 
-    def retrieve(self, request, *args, **kwargs):
-        """
-        Returns a UserProfile object for current user.
-        Replaces supervisor and OIC with user id.
-        """
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        if serializer.data["supervisor"]:
-            serializer.data["supervisor"] = instance.supervisor.user.id
-        if serializer.data["oic"]:
-            serializer.data["oic"] = instance.oic.user.id
-        return Response(serializer.data)
-
-    def update(self, request, **kwargs):
-        """
-        Updates a UserProfile object.
-        Replaces supervisor and OIC with profile id.
-        """
-        supervisor_profile = UserProfile.objects.get(user__id=request.data["supervisor"])
-        oic_profile = UserProfile.objects.get(user__id=request.data["oic"])
-        request.data.update(supervisor=supervisor_profile.id)
-        request.data.update(oic=oic_profile.id)
-        return super(MyProfileAPIView, self).update(request, **kwargs)
-
 
 class UsersDetailAPIView(RetrieveAPIView):
     """
