@@ -178,7 +178,7 @@ class UserMapper(object):
                 print 'saving modified user'
                 user.save()
             if profile_modified:
-                print 'saving profile for: {} {}'.format(user)
+                print 'saving profile for: {}'.format(user)
                 profile.save()
         except IntegrityError as e:
             logging.error('Integrity error on user: {} - exception {}'.format(user.email, e))
