@@ -2,6 +2,7 @@ import json
 
 from django.db import transaction
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
 
 from EquiTrack.serializers import JsonFieldSerializer
 from partners.models import GovernmentIntervention, GovernmentInterventionResult, GovernmentInterventionResultActivity
@@ -33,13 +34,13 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
 
     @transaction.atomic()
     def create(self, validated_data):
-        unicef_managers = validated_data.pop('unicef_managers')
-        sectors = validated_data.pop('sectors')
-        sections = validated_data.pop('sections')
+        unicef_managers = validated_data.pop('unicef_managers', [])
+        sectors = validated_data.pop('sectors', [])
+        sections = validated_data.pop('sections', [])
         gir = GovernmentInterventionResult.objects.create(**validated_data)
         gir.unicef_managers = unicef_managers
         gir.save()
-        activities = self.context.pop('result_activities')
+        activities = self.context.pop('result_activities', [])
         for act in activities:
             act['intervention_result'] = gir.pk
             ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
@@ -61,7 +62,7 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
                     ac_serializer = GovernmentInterventionResultActivityNestedSerializer(instance=activity,
                                                                                          data=act, partial=True)
                 except GovernmentInterventionResultActivity.DoesNotExist:
-                    continue
+                    raise ValidationError('government intervention result activity received an id but cannot be found in DB')
             else:
                 ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
 

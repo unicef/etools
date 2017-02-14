@@ -31,7 +31,7 @@ class ValidatorViewMixin(object):
             return
         for item in field:
             item.update({reverse_name: mother_obj.pk})
-            nested_related_data = None
+            nested_related_data = {}
             if nested_related_names:
                 nested_related_data = {k: v for k, v in item.items() if k in nested_related_names}
             if item.get('id', None):
