@@ -51,7 +51,7 @@ class UserMapper(object):
         'sn': 'last_name',
         'telephoneNumber': 'phone_number',
         'unicefBusinessAreaCode': 'country',
-        'unicefpernr': 'staff_id',
+        'unicefIndexNumber': 'staff_id',
         'unicefSectionCode': 'section_code',
         'functionalTitle': 'post_title'
     }
