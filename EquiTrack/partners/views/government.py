@@ -73,6 +73,8 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
         if query_params:
             queries = []
 
+            if "partner" in query_params.keys():
+                queries.append(Q(partner__id=query_params.get("partner")))
             if "country_programme" in query_params.keys():
                 queries.append(Q(country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
