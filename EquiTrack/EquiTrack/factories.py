@@ -139,6 +139,16 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
+class CountryProgrammeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = report_models.CountryProgramme
+
+    name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
+    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    from_date = date(date.today().year, 1, 1)
+    to_date = date(date.today().year, 12, 31)
+
+
 class AgreementFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Agreement
@@ -147,6 +157,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     agreement_type = u'PCA'
     signed_by_unicef_date = date.today()
     status = 'active'
+    country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
 
@@ -217,17 +228,6 @@ class ResultFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'Result {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
-
-
-class CountryProgrammeFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = report_models.CountryProgramme
-
-    name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
-    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
-    from_date = date(date.today().year, 1, 1)
-    to_date = date(date.today().year, 12, 31)
-
 
 
 class WorkplanFactory(factory.django.DjangoModelFactory):

@@ -159,8 +159,8 @@ class UserProfile(models.Model):
     post_number = models.CharField(max_length=32, null=True, blank=True)
     post_title = models.CharField(max_length=64, null=True, blank=True)
     vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True)
-    supervisor = models.ForeignKey('self', related_name='supervisee', blank=True, null=True)
-    oic = models.ForeignKey('self', blank=True, null=True)  # related oic_set
+    supervisor = models.ForeignKey(User, related_name='supervisee', on_delete=models.SET_NULL, blank=True, null=True)
+    oic = models.ForeignKey(User, blank=True, on_delete=models.SET_NULL, null=True)  # related oic_set
 
     # TODO: refactor when sections are properly set
     section_code = models.CharField(max_length=32, null=True, blank=True)
