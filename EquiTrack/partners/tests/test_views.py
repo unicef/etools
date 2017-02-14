@@ -1067,6 +1067,7 @@ class TestInterventionViews(APITenantTestCase):
             '/api/v2/interventions/',
             user=self.unicef_staff,
         )
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
 
@@ -1120,19 +1121,8 @@ class TestInterventionViews(APITenantTestCase):
         self.assertEquals(response.data, ["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."])
 
     def test_intervention_active_update_planned_budget_rigid(self):
-        budget = InterventionBudget.objects.filter(intervention=self.intervention_data.get("id"))[0]
-        budget_data = {
-            "id": budget.id,
-            "partner_contribution": "0.00",
-            "unicef_cash": "0.00",
-            "in_kind_amount": "0.00",
-            "partner_contribution_local": "0.00",
-            "unicef_cash_local": "0.00",
-            "in_kind_amount_local": "0.00",
-            "year": "0",
-            "total": "0.00"
-        }
-        self.intervention_data.update(planned_budget=[budget_data])
+        self.intervention_data["planned_budget"][0].update(unicef_cash=0)
+        self.intervention_data["planned_budget"][1].update(unicef_cash=0)
         self.intervention_data.update(status="active")
         response = self.forced_auth_req(
             'patch',
