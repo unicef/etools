@@ -236,6 +236,18 @@ class UserMapper(object):
                         format(user, supervisor_updated, profile_updated)
                     user.profile.save()
 
+
+def sync_users_remote():
+    from storages.backends.azure_storage import AzureStorage
+    storage = AzureStorage()
+    user_sync = UserMapper()
+    with storage.open('saml/etools.dat') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter='|')
+        for row in reader:
+            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
+            user_sync.create_or_update_user(uni_row)
+
+
 @app.task
 def sync_users():
     log = VisionSyncLog(
@@ -243,20 +255,7 @@ def sync_users():
         handler_name='UserADSync'
     )
     try:
-        from storages.backends.azure_storage import AzureStorage
-        storage = AzureStorage()
-        user_sync = UserMapper()
-        with storage.open('saml/etools.dat') as csvfile:
-            # with open('/Users/Rob/Downloads/users.dat') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter='|')
-            i = 0
-            for row in reader:
-                i += 1
-                # print(row['sn'], row['givenName'])
-                if i == 10:
-                    break
-                uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
-                user_sync.create_or_update_user(uni_row)
+        sync_users_remote()
     except Exception as e:
         log.exception_message = e.message
         raise VisionException(message=e.message)
@@ -291,7 +290,7 @@ def sync_users_local(n=20):
             # print(row['sn'], row['givenName'])
             if i == n:
                 break
-            uni_row = {unicode(key, 'latin-1'):unicode(value, 'latin-1') for key, value in row.iteritems()}
+            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
             user_sync.create_or_update_user(uni_row)
 
 
