@@ -1,11 +1,12 @@
+import json
+
 from rest_framework import serializers
 
 
-class JSONField(serializers.Field):
-    def to_internal_value(self, data):
+class JsonFieldSerializer(serializers.Field):
 
-        pass
     def to_representation(self, value):
+        return json.loads(value) if isinstance(value, str) else value
 
-        pass
-
+    def to_internal_value(self, data):
+        return json.dumps(data) if isinstance(data, dict) else data

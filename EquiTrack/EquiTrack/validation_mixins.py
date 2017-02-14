@@ -1,6 +1,5 @@
 import copy
 import logging
-
 from django.apps import apps
 from django.utils.functional import cached_property
 
@@ -31,7 +30,7 @@ class ValidatorViewMixin(object):
             return
         for item in field:
             item.update({reverse_name: mother_obj.pk})
-            nested_related_data = None
+            nested_related_data = {}
             if nested_related_names:
                 nested_related_data = {k: v for k, v in item.items() if k in nested_related_names}
             if item.get('id', None):
@@ -82,7 +81,6 @@ class ValidatorViewMixin(object):
         return main_serializer
 
     def my_update(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
-
         partial = kwargs.pop('partial', False)
         my_relations = {}
         for f in related_f:
