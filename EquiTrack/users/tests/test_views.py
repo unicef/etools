@@ -43,7 +43,7 @@ class TestUserViews(APITenantTestCase):
     def test_api_users_retrieve_myprofile(self):
         response = self.forced_auth_req(
             'get',
-            '/users/myprofile/',
+            '/api/v2/users/myprofile/',
             user=self.unicef_staff,
         )
 
@@ -58,7 +58,7 @@ class TestUserViews(APITenantTestCase):
         }
         response = self.forced_auth_req(
             'patch',
-            '/users/myprofile/',
+            '/api/v2/users/myprofile/',
             user=self.unicef_staff,
             data=data
         )
@@ -69,7 +69,7 @@ class TestUserViews(APITenantTestCase):
 
         response = self.forced_auth_req(
             'get',
-            '/users/myprofile/',
+            '/api/v2/users/myprofile/',
             user=self.unicef_staff,
         )
 
