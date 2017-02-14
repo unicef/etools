@@ -208,10 +208,16 @@ class UserViewSet(mixins.RetrieveModelMixin,
         if filter_param.lower() == "true":
             manager_group = Group.objects.get(name="Partnership Manager")
             queryset = queryset.filter(groups__in=[manager_group])
+
         return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
+        unicef_user_group = Group.objects.get(name="UNICEF User")
+        queryset = queryset.filter(groups__in=[unicef_user_group])
+        filter_param = self.request.query_params.get("all", "")
+        if filter_param.lower() != "true":
+            queryset = queryset.filter(profile__country=self.request.user.profile.country)
 
         def get_serializer(*args, **kwargs):
             if request.GET.get('verbosity') == 'minimal':
