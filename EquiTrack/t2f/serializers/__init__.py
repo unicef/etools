@@ -443,6 +443,16 @@ class TravelListSerializer(TravelDetailsSerializer):
         read_only_fields = ('status',)
 
 
+class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
+    locations = serializers.SlugRelatedField(slug_field='name', many=True, read_only=True)
+    travels = TravelListSerializer(many=True)
+    primary_traveler = serializers.CharField(source='primary_traveler.get_full_name')
+
+    class Meta:
+        model = TravelActivity
+        fields = ("primary_traveler", "travel_type", "date", "locations", "travels",)
+
+
 class CloneOutputSerializer(TravelDetailsSerializer):
     class Meta:
         model = Travel
