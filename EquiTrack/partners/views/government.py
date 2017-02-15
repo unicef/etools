@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    DestroyAPIView,
 )
 from rest_framework import status
 from rest_framework.response import Response
@@ -17,12 +18,13 @@ from rest_framework_csv import renderers as r
 
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
-from partners.models import GovernmentIntervention
+from partners.models import GovernmentIntervention, GovernmentInterventionResultActivity, GovernmentInterventionResult
 from partners.serializers.government import (
     GovernmentInterventionListSerializer,
     GovernmentInterventionCreateUpdateSerializer,
     GovernmentInterventionExportSerializer,
-    GovernmentInterventionResultNestedSerializer
+    GovernmentInterventionResultNestedSerializer,
+    GovernmentInterventionResultActivityNestedSerializer,
 )
 from partners.filters import PartnerScopeFilter
 
@@ -144,3 +146,25 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             serializer = self.get_serializer(instance)
 
         return Response(serializer.data)
+
+
+class GovernmentInterventionResultDeleteView(DestroyAPIView):
+    """
+    Delete Government Intervention Result Activities.
+    Returns a .
+    """
+    serializer_class = GovernmentInterventionResultNestedSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
+    queryset = GovernmentInterventionResult.objects.all()
+
+
+class GovernmentInterventionResultActivityDeleteView(DestroyAPIView):
+    """
+    Delete Government Intervention Result Activities.
+    Returns a .
+    """
+    serializer_class = GovernmentInterventionResultActivityNestedSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
+    queryset = GovernmentInterventionResultActivity.objects.all()

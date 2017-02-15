@@ -1843,31 +1843,22 @@ class GovernmentInterventionResult(models.Model):
 
     @transaction.atomic
     def save(self, **kwargs):
-        # if self.pk:
-        #     prev_result = GovernmentInterventionResult.objects.get(id=self.id)
-        #     if prev_result.planned_amount != self.planned_amount:
-        #         PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
-        #     if prev_result.planned_visits != self.planned_visits:
-        #         PartnerOrganization.planned_visits(self.intervention.partner, self)
-        # else:
-        #     PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
-        #     PartnerOrganization.planned_visits(self.intervention.partner, self)
-
-        # JSONFIELD has an issue where it keeps escaping characters
-        activity_is_string = isinstance(self.activity, str)
-        try:
-
-            self.activity = json.loads(self.activity) if activity_is_string else self.activity
-        except ValueError as e:
-            e.message = 'Activities needs to be a valid format (dict)'
-            raise e
+        if self.pk:
+            prev_result = GovernmentInterventionResult.objects.get(id=self.id)
+            if prev_result.planned_amount != self.planned_amount:
+                PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            if prev_result.planned_visits != self.planned_visits:
+                PartnerOrganization.planned_visits(self.intervention.partner, self)
+        else:
+            PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            PartnerOrganization.planned_visits(self.intervention.partner, self)
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
     @transaction.atomic
     def delete(self, using=None):
 
-        self.activities_list.all().delete()
+        self.result_activities.all().delete()
         super(GovernmentInterventionResult, self).delete(using=using)
 
     def __unicode__(self):
