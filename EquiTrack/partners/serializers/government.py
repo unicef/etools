@@ -4,7 +4,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from EquiTrack.serializers import JsonFieldSerializer
-from partners.models import GovernmentIntervention, GovernmentInterventionResult
+from partners.models import GovernmentIntervention, GovernmentInterventionResult, PartnerType
 
 
 class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
@@ -72,6 +72,8 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         """
         if not 'partner' in data:
             raise serializers.ValidationError("There is no partner selected")
+        if data['partner'].partner_type != PartnerType.GOVERNMENT:
+            raise serializers.ValidationError("Partner type must be Government")
         if not 'country_programme' in data:
             raise serializers.ValidationError("There is no country programme selected")
         return data

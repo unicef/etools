@@ -1220,6 +1220,7 @@ class TestGovernmentInterventionViews(APITenantTestCase):
     def setUp(self):
         self.unicef_staff = UserFactory(is_staff=True)
         self.partner = PartnerFactory(partner_type="Government")
+        self.partner_non_gov = PartnerFactory(partner_type="UN Agency")
         self.cp = CountryProgrammeFactory()
         self.govint = GovernmentInterventionFactory(
             partner=self.partner,
@@ -1270,6 +1271,31 @@ class TestGovernmentInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_govint_create_non_gov_partner(self):
+        govint_result = {
+            "intervention": self.govint.id,
+            "result": self.result.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+            "sectors": [Sector.objects.create(name="Sector 1").id],
+            # TODO Figure out how to create Section on test schema
+            # "sections": [Section.objects.create(name="Section 1").id],
+        }
+        data = {
+            "partner": self.partner_non_gov.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, {"non_field_errors":["Partner type must be Government"]})
 
     def test_govint_create_update_amount_valid(self):
         govint_result = {
