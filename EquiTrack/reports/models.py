@@ -235,7 +235,7 @@ class Result(MPTTModel):
                 node.save()
 
 
-class LowerResult(models.Model):
+class LowerResult(TimeStampedModel):
 
     # Lower result is always an output
 
@@ -255,6 +255,7 @@ class LowerResult(models.Model):
 
     class Meta:
         unique_together = (('result_link', 'code'),)
+        ordering = ('-created',)
 
     def save(self, **kwargs):
         if not self.code:
