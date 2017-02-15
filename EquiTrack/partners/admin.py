@@ -767,7 +767,7 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         )
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(GovernmentInterventionAdmin, self).save_model(request, obj, form, change)
@@ -806,7 +806,7 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(PartnerStaffMemberAdmin, self).save_model(request, obj, form, change)
@@ -1040,7 +1040,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     download_url.short_description = 'PDF Agreement'
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(AgreementAdmin, self).save_model(request, obj, form, change)
@@ -1077,7 +1077,7 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
         return False
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(FundingCommitmentAdmin, self).save_model(request, obj, form, change)

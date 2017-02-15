@@ -1,5 +1,6 @@
 
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
 from django.db import transaction
 
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
@@ -30,25 +31,44 @@ class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     @transaction.atomic
-    def update(self, instance, validated_data):
-        amd_types = self.context.pop('amendment_types')
-        for key, val in validated_data.items():
-            setattr(instance, key, val)
+    def create(self, validated_data):
+        amd_types = self.context.pop('amendment_types', [])
+        if not amd_types:
+            raise ValidationError('Agreement Amendment needs a type')
+
+        instance = super(AgreementAmendmentCreateUpdateSerializer, self).create(validated_data)
+
         for a in amd_types:
-            a["agreement_amendment"] = instance
+            a["agreement_amendment"] = instance.pk
+
+            agr_amd_type_serializer = AgreementAmendmentTypeSerializer(data=a)
+            if agr_amd_type_serializer.is_valid(raise_exception=True):
+                agr_amd_type_serializer.save()
+
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        amd_types = self.context.pop('amendment_types', [])
+
+        for a in amd_types:
+            a["agreement_amendment"] = instance.pk
             if 'id' in a:
                 try:
                     agr_amd_type = AgreementAmendmentType.objects.get(id=a['id'])
-                    for key, val in a.items():
-                        setattr(agr_amd_type, key, val)
-                    agr_amd_type.save()
+                    agr_amd_type_serializer = AgreementAmendmentTypeSerializer(instance=agr_amd_type,
+                                                                               data=a,
+                                                                               partial=True)
                 except AgreementAmendmentType.DoesNotExist:
-                    continue
+                    raise ValidationError('Agreement Amendment received an id that is not present in the db {}'.
+                                          format(a['id']))
             else:
-                AgreementAmendmentType.objects.create(**a)
+                agr_amd_type_serializer = AgreementAmendmentTypeSerializer(data=a)
 
-        instance.save()
-        return instance
+            if agr_amd_type_serializer.is_valid(raise_exception=True):
+                agr_amd_type_serializer.save()
+
+        return super(AgreementAmendmentCreateUpdateSerializer, self).update(instance, validated_data)
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
