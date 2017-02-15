@@ -43,6 +43,7 @@ class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
 class LowerResultSerializer(serializers.ModelSerializer):
 
     applied_indicators = AppliedIndicatorSerializer(many=True, read_only=True)
+    code = serializers.CharField(read_only=True)
     class Meta:
         model = LowerResult
         fields = '__all__'
