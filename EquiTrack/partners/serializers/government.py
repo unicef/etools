@@ -134,11 +134,6 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("There is no country programme selected")
         return data
 
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        updated = super(GovernmentInterventionCreateUpdateSerializer, self).update(instance, validated_data)
-        return updated
-
 
 class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
 
