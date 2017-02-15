@@ -47,6 +47,13 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         )
 
 
+class MyProfileSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserProfile
+        fields = '__all__'
+
+
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     full_name = serializers.CharField(source='get_full_name')

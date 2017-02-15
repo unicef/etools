@@ -169,7 +169,6 @@ class Travel(models.Model):
     @property
     def cost_summary(self):
         calculator = CostSummaryCalculator(self)
-        calculator.calculate_cost_summary()
         return calculator.get_cost_summary()
 
     # State machine transitions

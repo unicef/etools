@@ -1,6 +1,7 @@
 import operator
 import functools
 import logging
+
 from django.db import transaction
 from django.db.models import Q
 
@@ -12,9 +13,9 @@ from rest_framework.generics import (
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
-
 from rest_framework_csv import renderers as r
 
+from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import GovernmentIntervention
 from partners.serializers.government import (
@@ -23,7 +24,6 @@ from partners.serializers.government import (
     GovernmentInterventionExportSerializer,
     GovernmentInterventionResultNestedSerializer
 )
-
 from partners.filters import PartnerScopeFilter
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.government_intervention_results import GovernmentInterventionResultValid
@@ -59,7 +59,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         related_fields = ['results']
-        serializer = self.my_create(request, related_fields, **kwargs)
+        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
 
         if not serializer.instance.results.exists():
             raise ValidationError({'results': [u'This field is required.']})
@@ -78,6 +78,8 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
         if query_params:
             queries = []
 
+            if "partner" in query_params.keys():
+                queries.append(Q(partner__id=query_params.get("partner")))
             if "country_programme" in query_params.keys():
                 queries.append(Q(country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
@@ -137,7 +139,7 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     def update(self, request, *args, **kwargs):
         related_fields = ['results']
 
-        instance, old_instance, serializer = self.my_update(request, related_fields, **kwargs)
+        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
 
         if not serializer.instance.results.exists():
             raise ValidationError({'results': [u'This field is required.']})

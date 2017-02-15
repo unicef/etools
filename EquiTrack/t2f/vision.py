@@ -25,7 +25,9 @@ def run_on_tenants(func):
     def wrapper(self, *args, **kwargs):
         original_tenant = connection.tenant
         try:
-            for workspace in Workspace.objects.exclude(Q(business_area_code='') | Q(business_area_code__isnull=True)):
+            workspace_q = Q(business_area_code='') | Q(business_area_code__isnull=True) | Q(schema_name='public')
+            for workspace in Workspace.objects.exclude(workspace_q):
+                log.error('Setting tenant to %s', workspace.schema_name)
                 connection.set_tenant(workspace)
                 func(self, workspace, *args, **kwargs)
         finally:
@@ -83,7 +85,8 @@ class InvoiceExport(object):
         ET.SubElement(expense, 'pernr').text = invoice_item.invoice.travel.traveler.profile.staff_id
 
     def generate_tree(self, root):
-        return ET.tostring(root, encoding='utf8', method='xml')
+        # https://docs.python.org/2/library/xml.etree.elementtree.html
+        return ET.tostring(root, encoding='UTF-8', method='xml')
 
     @staticmethod
     def get_posting_key(amount):

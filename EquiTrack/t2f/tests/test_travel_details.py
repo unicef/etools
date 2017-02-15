@@ -8,9 +8,10 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
+from publics.tests.factories import BusinessAreaFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
-    DSARegionFactory, BusinessAreaFactory
+    DSARegionFactory
 
 from .factories import TravelFactory
 
@@ -41,7 +42,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(duplicate_travel_url, '/api/t2f/travels/1/duplicate_travel/')
 
     def test_details_view(self):
-        with self.assertNumQueries(20):
+        with self.assertNumQueries(16):
             self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                 kwargs={'travel_pk': self.travel.id}),
                                  user=self.unicef_staff)

@@ -135,7 +135,9 @@ class TravelDetails(APITenantTestCase):
         # Update invoices like vision would do it
         self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
                              data=updater_xml_structure,
-                             user=self.unicef_staff)
+                             user=self.unicef_staff,
+                             request_format=None,
+                             content_type='text/xml')
 
         self.assertEqual(Invoice.objects.filter(status=Invoice.PENDING).count(), 0)
         self.assertEqual(Invoice.objects.filter(status=Invoice.PROCESSING).count(), 0)

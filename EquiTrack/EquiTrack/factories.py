@@ -56,6 +56,11 @@ class GroupFactory(factory.django.DjangoModelFactory):
 
     name = "Partnership Manager"
 
+class UnicefUserGroupFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Group
+
+    name = "UNICEF User"
 
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -79,6 +84,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
+    #group = factory.SubFactory(UnicefUserGroupFactory)
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
@@ -93,6 +99,10 @@ class UserFactory(factory.django.DjangoModelFactory):
         post_save.connect(user_models.UserProfile.create_user_profile, user_models.User)
         return user
 
+    @factory.post_generation
+    def groups(self, create, extracted, **kwargs):
+        group, created = Group.objects.get_or_create(name='UNICEF User')
+        self.groups.add(group)
 
 class TripFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -139,6 +149,16 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
+class CountryProgrammeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = report_models.CountryProgramme
+
+    name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
+    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    from_date = date(date.today().year, 1, 1)
+    to_date = date(date.today().year, 12, 31)
+
+
 class AgreementFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Agreement
@@ -147,6 +167,7 @@ class AgreementFactory(factory.django.DjangoModelFactory):
     agreement_type = u'PCA'
     signed_by_unicef_date = date.today()
     status = 'active'
+    country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
 
