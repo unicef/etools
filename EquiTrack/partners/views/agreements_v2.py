@@ -30,6 +30,7 @@ from partners.serializers.agreements_v2 import (
 )
 
 from partners.filters import PartnerScopeFilter
+from partners.permissions import PartneshipManagerRepPermission
 
 from partners.exports_v2 import AgreementCvsRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -171,5 +172,13 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
 class AgreementAmendmentDeleteView(DestroyAPIView):
     queryset = AgreementAmendment.objects.all()
-    serializer_class = AgreementAmendmentCreateUpdateSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, pk):
+        amendment = self.queryset.get(pk)
+        if amendment.signed_amendment or amendment.signed_date:
+            amendment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("Cannot delete a signed amendment")
+            return Response(status=status.HTTP_404_NOT_FOUND)

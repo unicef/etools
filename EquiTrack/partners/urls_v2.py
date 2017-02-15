@@ -8,7 +8,8 @@ from .views.partner_organization_v2 import (
 )
 from .views.agreements_v2 import (
     AgreementListAPIView,
-    AgreementDetailAPIView
+    AgreementDetailAPIView,
+    AgreementAmendmentDeleteView,
 )
 from views.interventions_v2 import (
     InterventionListAPIView,
@@ -30,6 +31,8 @@ urlpatterns = (
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
     url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
     url(r'^agreements/(?P<agr>\d+)/pdf', PcaPDFView.as_view(), name='pca_pdf'),
+    url(r'^agreements/amendments/(?P<pk>\d+)/$', view=AgreementAmendmentDeleteView.as_view(http_method_names=['delete']), name='agreement-amendment-del'),
+
     # url(r'^agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='agreement-interventions-list'),
 
     url(r'^partners/$', view=PartnerOrganizationListAPIView.as_view(http_method_names=['get', 'post']), name='partner-list'),
