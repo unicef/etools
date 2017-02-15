@@ -237,7 +237,7 @@ class Result(MPTTModel):
 
 class LowerResult(models.Model):
 
-    result_type = models.ForeignKey(ResultType)
+    # Lower result is always an output
 
     # link to intermediary model to intervention and cp ouptut
     result_link = models.ForeignKey('partners.InterventionResultLink', related_name='ll_results', null=True)
@@ -255,6 +255,15 @@ class LowerResult(models.Model):
 
     class Meta:
         unique_together = (('result_link', 'code'),)
+
+    def save(self, **kwargs):
+        if not self.code:
+            self.code = '{}-{}'.format(
+                self.result_link.intervention.id,
+                self.result_link.ll_results.count()+1
+            )
+        return super(LowerResult, self).save(**kwargs)
+
 
 
 class Goal(models.Model):
