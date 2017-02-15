@@ -179,24 +179,10 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         """
         Use different serilizers for methods
         """
-        if self.request.method == "PUT":
+        if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
         return super(InterventionDetailAPIView, self).get_serializer_class()
 
-    def retrieve(self, request, pk=None, format=None):
-        """
-        Returns an Intervention object for this PK
-        """
-        try:
-            queryset = self.queryset.get(id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except Intervention.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):

@@ -122,12 +122,7 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DistributionPlan
-        fields = (
-            "id,"
-            "item",
-            "quantity",
-            "site",
-        )
+        fields = "__all__"
 
 
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
