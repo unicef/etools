@@ -21,7 +21,9 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GovernmentInterventionResult
-        fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'result_activities', 'unicef_managers', 'sectors',
+        fields = ('id', 'intervention', 'result',
+                  'year', 'planned_amount', 'result_activities',
+                  'unicef_managers', 'sectors', 'planned_visits',
                   'sections')
 
     def validate(self, data):
