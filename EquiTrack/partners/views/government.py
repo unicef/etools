@@ -27,6 +27,7 @@ from partners.serializers.government import (
     GovernmentInterventionResultActivityNestedSerializer,
 )
 from partners.filters import PartnerScopeFilter
+from partners.permissions import PartneshipManagerRepPermission
 
 
 class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
@@ -154,7 +155,7 @@ class GovernmentInterventionResultDeleteView(DestroyAPIView):
     Returns a .
     """
     serializer_class = GovernmentInterventionResultNestedSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (PartneshipManagerRepPermission,)
     filter_backends = (PartnerScopeFilter,)
     queryset = GovernmentInterventionResult.objects.all()
 
@@ -165,6 +166,6 @@ class GovernmentInterventionResultActivityDeleteView(DestroyAPIView):
     Returns a .
     """
     serializer_class = GovernmentInterventionResultActivityNestedSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (PartneshipManagerRepPermission,)
     filter_backends = (PartnerScopeFilter,)
     queryset = GovernmentInterventionResultActivity.objects.all()
