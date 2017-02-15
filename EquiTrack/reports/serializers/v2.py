@@ -50,6 +50,7 @@ class LowerResultSerializer(serializers.ModelSerializer):
 
 
 class LowerResultCUSerializer(serializers.ModelSerializer):
+    code = serializers.CharField(read_only=True)
     class Meta:
         model = LowerResult
         fields = '__all__'
