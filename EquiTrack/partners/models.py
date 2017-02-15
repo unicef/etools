@@ -1855,11 +1855,11 @@ class GovernmentInterventionResult(models.Model):
 
         super(GovernmentInterventionResult, self).save(**kwargs)
 
-    @transaction.atomic
-    def delete(self, using=None):
-
-        self.result_activities.all().delete()
-        super(GovernmentInterventionResult, self).delete(using=using)
+    # @transaction.atomic
+    # def delete(self, using=None):
+    #
+    #     self.result_activities.all().delete()
+    #     super(GovernmentInterventionResult, self).delete(using=using)
 
     def __unicode__(self):
         return u'{}, {}'.format(self.intervention.number,
