@@ -14,6 +14,7 @@ from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    DestroyAPIView,
 )
 
 from partners.models import (
@@ -166,3 +167,9 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             instance = self.get_object()
 
         return Response(AgreementRetrieveSerializer(instance).data)
+
+
+class AgreementAmendmentDeleteView(DestroyAPIView):
+    queryset = AgreementAmendment.objects.all()
+    serializer_class = AgreementAmendmentCreateUpdateSerializer
+    permission_classes = (IsAdminUser,)
