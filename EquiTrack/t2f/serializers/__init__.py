@@ -101,6 +101,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
             raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(statuses)))
         return value
 
+
 class IteneraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.objects.all(), required=False,
