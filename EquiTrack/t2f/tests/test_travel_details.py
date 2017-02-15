@@ -108,6 +108,7 @@ class TravelDetails(APITenantTestCase):
                                 'dinner': False,
                                 'accomodation': True}],
                 'traveler': self.traveler.id,
+                'ta_required': True,
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
@@ -140,6 +141,45 @@ class TravelDetails(APITenantTestCase):
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.00')
+
+    def test_detailed_expenses(self):
+        currency = CurrencyFactory()
+        user_et = ExpenseTypeFactory(vendor_number='user')
+        travel_agent_1_et = ExpenseTypeFactory(vendor_number='ta1')
+        travel_agent_2_et = ExpenseTypeFactory(vendor_number='ta2')
+        parking_money_et = ExpenseTypeFactory(vendor_number='')
+
+        data = {'cost_assignments': [],
+                'traveler': self.traveler.id,
+                'supervisor': self.unicef_staff.id,
+                'ta_required': True,
+                'expenses': [{'amount': '120',
+                              'type': user_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id},
+                             {'amount': '80',
+                              'type': user_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id},
+                             {'amount': '100',
+                              'type': travel_agent_1_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id},
+                             {'amount': '500',
+                              'type': travel_agent_2_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id},
+                             {'amount': '1000',
+                              'type': parking_money_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id}]}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['expenses'],
+                         [{'amount': '200.00', 'vendor_number': 'user'},
+                          {'amount': '100.00', 'vendor_number': 'ta1'},
+                          {'amount': '500.00', 'vendor_number': 'ta2'},
+                          {'amount': '1000.00', 'vendor_number': ''}])
 
     def test_cost_assignments(self):
         fund = FundFactory()
