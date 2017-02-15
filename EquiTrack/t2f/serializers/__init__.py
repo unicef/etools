@@ -256,8 +256,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         return value
 
     def validate_itinerary(self, value):
-        if self.transition_name == 'submit_for_approval' and len(value) < 1:
-            raise ValidationError('Travel must have at least one itinerary item')
+        if self.transition_name == 'submit_for_approval' and len(value) < 2:
+            raise ValidationError('Travel must have at least two itinerary item')
 
         if not value:
             return value

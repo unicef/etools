@@ -240,7 +240,7 @@ class TravelDetails(APITenantTestCase):
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {'itinerary': ['Travel must have at least one itinerary item']})
+        self.assertEqual(response_json, {'itinerary': ['Travel must have at least two itinerary item']})
 
     def test_itinerary_origin_destination(self):
         dsaregion = DSARegion.objects.first()
