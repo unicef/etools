@@ -1,6 +1,7 @@
 import json
 
 from django.db import transaction
+from django.contrib.auth.models import Group
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
@@ -31,15 +32,26 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("There is no partner selected")
         return data
 
+    def validate_unicef_managers(self, value):
+        manager_group = Group.objects.get(name='Senior Management Team')
+        for usr in value:
+            try:
+                usr.groups.get(name='Senior Management Team')
+            except Group.DoesNotExist as e:
+                raise ValidationError('User {} not in Senior Management Team'.format(usr))
+        return value
+
+    def validate_sectors(self, value):
+        return value
+
+    def validate_sections(self, value):
+        return value
 
     @transaction.atomic()
     def create(self, validated_data):
-        unicef_managers = validated_data.pop('unicef_managers', [])
-        sectors = validated_data.pop('sectors', [])
-        sections = validated_data.pop('sections', [])
-        gir = GovernmentInterventionResult.objects.create(**validated_data)
-        gir.unicef_managers = unicef_managers
-        gir.save()
+
+        gir = super(GovernmentInterventionResultNestedSerializer, self).create(validated_data)
+
         activities = self.context.pop('result_activities', [])
         for act in activities:
             act['intervention_result'] = gir.pk
@@ -51,9 +63,9 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
 
     @transaction.atomic()
     def update(self, instance, validated_data):
-        activities = self.context.pop('result_activities')
-        for key, val in validated_data.items():
-            setattr(instance, key, val)
+        activities = self.context.pop('result_activities', [])
+
+        instance = super(GovernmentInterventionResultNestedSerializer, self).update(instance, validated_data)
         for act in activities:
             act['intervention_result'] = instance.pk
             if 'id' in act:
@@ -62,14 +74,14 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
                     ac_serializer = GovernmentInterventionResultActivityNestedSerializer(instance=activity,
                                                                                          data=act, partial=True)
                 except GovernmentInterventionResultActivity.DoesNotExist:
-                    raise ValidationError('government intervention result activity received an id but cannot be found in DB')
+                    raise ValidationError('government intervention result activity '
+                                          'received an id but cannot be found in DB')
             else:
                 ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
 
             if ac_serializer.is_valid(raise_exception=True):
                 ac_serializer.save()
 
-        instance.save()
         return instance
 
 
