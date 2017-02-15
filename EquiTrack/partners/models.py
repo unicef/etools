@@ -1829,15 +1829,15 @@ class GovernmentInterventionResult(models.Model):
 
     @transaction.atomic
     def save(self, **kwargs):
-        if self.pk:
-            prev_result = GovernmentInterventionResult.objects.get(id=self.id)
-            if prev_result.planned_amount != self.planned_amount:
-                PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
-            if prev_result.planned_visits != self.planned_visits:
-                PartnerOrganization.planned_visits(self.intervention.partner, self)
-        else:
-            PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
-            PartnerOrganization.planned_visits(self.intervention.partner, self)
+        # if self.pk:
+        #     prev_result = GovernmentInterventionResult.objects.get(id=self.id)
+        #     if prev_result.planned_amount != self.planned_amount:
+        #         PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+        #     if prev_result.planned_visits != self.planned_visits:
+        #         PartnerOrganization.planned_visits(self.intervention.partner, self)
+        # else:
+        #     PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+        #     PartnerOrganization.planned_visits(self.intervention.partner, self)
 
         # JSONFIELD has an issue where it keeps escaping characters
         activity_is_string = isinstance(self.activity, str)
@@ -1859,6 +1859,12 @@ class GovernmentInterventionResult(models.Model):
     def __unicode__(self):
         return u'{}, {}'.format(self.intervention.number,
                                 self.result)
+
+
+class GovernmentInterventionResultActivity(models.Model):
+    intervention_result = models.ForeignKey(GovernmentInterventionResult, related_name='result_activities')
+    code = models.CharField(max_length=36)
+    description = models.CharField(max_length=1024)
 
 
 class IndicatorReport(TimeStampedModel, TimeFramedModel):
