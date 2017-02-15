@@ -7,7 +7,8 @@ from .views import (
     ProfileEdit,
     UsersView,
     ChangeUserCountryView,
-    UsersDetailAPIView
+    UsersDetailAPIView,
+    MyProfileAPIView,
 )
 
 
@@ -19,6 +20,7 @@ urlpatterns = patterns(
     url(r'^api/changecountry/$', ChangeUserCountryView.as_view(http_method_names=['post'])),
     url(r'^api/', UsersView.as_view()),  # TODO: staff required , partners should not be able to hit this
     url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view(http_method_names=['get'])),
+    url(r'^myprofile/$', MyProfileAPIView.as_view(), name="myprofile-detail"),
 
     # url(r'^api/(?P<pk>\d+)/$', UsersDetailAPIView.as_view()),
 
