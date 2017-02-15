@@ -155,21 +155,26 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
     locations = serializers.PrimaryKeyRelatedField(many=True, queryset=Location.objects.all(), required=False,
                                                    allow_null=True)
     travel_type = LowerTitleField(required=False, allow_null=True)
+    is_primary_traveler = serializers.BooleanField(required=False)
     primary_traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
 
     class Meta:
         model = TravelActivity
-        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date')
+        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date',
+                  'is_primary_traveler')
 
     def validate(self, attrs):
         if 'id' not in attrs:
-            if 'primary_traveler' in attrs:
-                if not attrs['primary_traveler']:
-                    raise ValidationError({'primary_traveler': 'This field have to be true upon creation'})
-            else:
-                raise ValidationError({'primary_traveler': 'This field is required'})
+            if not attrs.get('is_primary_traveler'):
+                if not attrs.get('primary_traveler'):
+                    raise ValidationError({'primary_traveler': 'This field is required'})
 
         return attrs
+
+    def to_internal_value(self, data):
+        ret = super(TravelActivitySerializer, self).to_internal_value(data)
+        ret.pop('is_primary_traveler', None)
+        return ret
 
 
 class TravelAttachmentSerializer(serializers.ModelSerializer):
@@ -304,9 +309,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         traveler_id = data.get('traveler', traveler_id)
 
         for travel_activity_data in data.get('activities', []):
-            if travel_activity_data.get('primary_traveler') is False:
-                travel_activity_data['primary_traveler'] = None
-            else:
+            if travel_activity_data.get('is_primary_traveler'):
                 travel_activity_data['primary_traveler'] = traveler_id
 
         return super(TravelDetailsSerializer, self).to_internal_value(data)
@@ -316,9 +319,9 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         for travel_activity_data in data.get('activities', []):
             if travel_activity_data['primary_traveler'] == data.get('traveler', None):
-                travel_activity_data['primary_traveler'] = True
+                travel_activity_data['is_primary_traveler'] = True
             else:
-                travel_activity_data['primary_traveler'] = False
+                travel_activity_data['is_primary_traveler'] = False
 
         return data
 

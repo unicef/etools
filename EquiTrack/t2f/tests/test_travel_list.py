@@ -295,7 +295,7 @@ class TravelList(APITenantTestCase):
                                'departure_date': '2016-12-15T15:02:13+01:00',
                                'arrival_date': '2016-12-16T15:02:13+01:00',
                                'mode_of_travel': ModeOfTravel.BOAT}],
-                'activities': [{'primary_traveler': True,
+                'activities': [{'is_primary_traveler': True,
                                 'locations': [location.id],
                                 'travel_type': TravelType.ADVOCACY,
                                 'date': '2016-12-15T15:02:13+01:00'}],
