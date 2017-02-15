@@ -8,6 +8,7 @@ import requests
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db import transaction
 from django.db import IntegrityError
+from django.db.models import Q
 
 from .models import User, UserProfile, Country, Section
 from django.contrib.auth.models import Group
@@ -51,7 +52,7 @@ class UserMapper(object):
         'sn': 'last_name',
         'telephoneNumber': 'phone_number',
         'unicefBusinessAreaCode': 'country',
-        'unicefpernr': 'staff_id',
+        'unicefIndexNumber': 'staff_id',
         'unicefSectionCode': 'section_code',
         'functionalTitle': 'post_title'
     }
@@ -178,7 +179,7 @@ class UserMapper(object):
                 print 'saving modified user'
                 user.save()
             if profile_modified:
-                print 'saving profile for: {} {}'.format(user)
+                print 'saving profile for: {}'.format(user)
                 profile.save()
         except IntegrityError as e:
             logging.error('Integrity error on user: {} - exception {}'.format(user.email, e))
@@ -204,7 +205,7 @@ class UserMapper(object):
 
         # get all section codes
         section_codes = UserProfile.objects.values_list('section_code', flat=True)\
-                .exclude(section_code__isnull=True)\
+                .exclude(Q(section_code__isnull=True) | Q(section_code=''))\
                 .distinct()
 
         for code in section_codes:
@@ -236,6 +237,18 @@ class UserMapper(object):
                         format(user, supervisor_updated, profile_updated)
                     user.profile.save()
 
+
+def sync_users_remote():
+    from storages.backends.azure_storage import AzureStorage
+    storage = AzureStorage()
+    user_sync = UserMapper()
+    with storage.open('saml/etools.dat') as csvfile:
+        reader = csv.DictReader(csvfile, delimiter='|')
+        for row in reader:
+            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
+            user_sync.create_or_update_user(uni_row)
+
+
 @app.task
 def sync_users():
     log = VisionSyncLog(
@@ -243,20 +256,7 @@ def sync_users():
         handler_name='UserADSync'
     )
     try:
-        from storages.backends.azure_storage import AzureStorage
-        storage = AzureStorage()
-        user_sync = UserMapper()
-        with storage.open('saml/etools.dat') as csvfile:
-            # with open('/Users/Rob/Downloads/users.dat') as csvfile:
-            reader = csv.DictReader(csvfile, delimiter='|')
-            i = 0
-            for row in reader:
-                i += 1
-                # print(row['sn'], row['givenName'])
-                if i == 10:
-                    break
-                uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
-                user_sync.create_or_update_user(uni_row)
+        sync_users_remote()
     except Exception as e:
         log.exception_message = e.message
         raise VisionException(message=e.message)
@@ -291,7 +291,7 @@ def sync_users_local(n=20):
             # print(row['sn'], row['givenName'])
             if i == n:
                 break
-            uni_row = {unicode(key, 'latin-1'):unicode(value, 'latin-1') for key, value in row.iteritems()}
+            uni_row = {unicode(key, 'latin-1'): unicode(value, 'latin-1') for key, value in row.iteritems()}
             user_sync.create_or_update_user(uni_row)
 
 
@@ -340,7 +340,6 @@ class UserSynchronizer(object):
             auth=(settings.VISION_USER, settings.VISION_PASSWORD),
             verify=False
         )
-
         if response.status_code != 200:
             raise VisionException(
                 message=('Load data failed! Http code: {}'.format(response.status_code))
