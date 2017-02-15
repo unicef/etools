@@ -45,6 +45,7 @@ class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
             "in_kind_amount_local",
             "year",
             "total",
+            "currency"
         )
 
 
@@ -70,6 +71,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "in_kind_amount_local",
             "year",
             "total",
+            'currency'
         )
         #read_only_fields = [u'total']
 

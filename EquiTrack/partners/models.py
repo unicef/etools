@@ -1651,7 +1651,8 @@ class InterventionBudget(TimeStampedModel):
         max_length=5,
         blank=True, null=True
     )
-    # TODO add Currency field
+
+    currency = models.ForeignKey('publics.Currency', on_delete=models.SET_NULL, null=True, blank=True)
     total = models.DecimalField(max_digits=20, decimal_places=2)
 
     tracker = FieldTracker()
