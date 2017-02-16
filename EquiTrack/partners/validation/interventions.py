@@ -178,8 +178,12 @@ class InterventionValid(CompleteValidation):
             'partner_contribution_local',
             'in_kind_amount_local',
         ]
-        for budget in intervention.planned_budget.all():
-            planned_budget_rigid_valid, field = check_rigid_fields(budget, planned_budget_rigid_fields)
+
+        # avoid n*m list traversal with dict lookup
+        old_instance_dict = {x.id: x for x in intervention.old_instance.planned_budget_old}
+        for budget in intervention.planned_budget.filter():
+            old_instance = old_instance_dict.get(budget.id)
+            planned_budget_rigid_valid, field = check_rigid_fields(budget, planned_budget_rigid_fields, old_instance)
             if not planned_budget_rigid_valid:
                 raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
 
@@ -189,8 +193,12 @@ class InterventionValid(CompleteValidation):
             'spot_checks',
             'audit',
         ]
-        for visit in intervention.planned_visits.all():
-            planned_visits_rigid_valid, field = check_rigid_fields(visit, planned_visits_rigid_fields)
+
+        # avoid n*m list traversal with dict lookup
+        old_instance_dict = {x.id: x for x in intervention.old_instance.planned_visits_old}
+        for visit in intervention.planned_visits.filter():
+            old_instance = old_instance_dict.get(visit.id)
+            planned_visits_rigid_valid, field = check_rigid_fields(visit, planned_visits_rigid_fields, old_instance)
             if not planned_visits_rigid_valid:
                 raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
 

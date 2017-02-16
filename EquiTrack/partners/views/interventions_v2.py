@@ -171,37 +171,30 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'amendments': InterventionAmendmentCUSerializer,
-        'sector_locations': InterventionSectorLocationCUSerializer
+        'sector_locations': InterventionSectorLocationCUSerializer,
+        'result_links': InterventionResultCUSerializer
     }
 
     def get_serializer_class(self):
         """
         Use different serilizers for methods
         """
-        if self.request.method == "PUT":
+        if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
         return super(InterventionDetailAPIView, self).get_serializer_class()
 
-    def retrieve(self, request, pk=None, format=None):
-        """
-        Returns an Intervention object for this PK
-        """
-        try:
-            queryset = self.queryset.get(id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except Intervention.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['planned_budget', 'planned_visits', 'attachments', 'amendments', 'sector_locations']
-
-        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
+        related_fields = ['planned_budget', 'planned_visits',
+                          'attachments', 'amendments',
+                          'sector_locations', 'result_links']
+        nested_related_names = ['ll_results']
+        instance, old_instance, serializer = self.my_update(
+            request,
+            related_fields,
+            nested_related_names=nested_related_names,
+            snapshot=True, **kwargs)
 
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:

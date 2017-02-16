@@ -321,6 +321,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         blank=True, null=True
     )
 
+
     vendor_number = models.CharField(
         blank=True,
         null=True,
@@ -1163,18 +1164,9 @@ class AgreementAmendment(TimeStampedModel):
     '''
     Represents an amendment to an agreement
     '''
-    AMENDMENT_TYPES = Choices(
-        ('Change IP name', 'Change in Legal Name of Implementing Partner'),
-        ('CP extension', 'Extension of Country Programme Cycle'),
-        ('Change authorized officer', 'Change Authorized Officer'),
-        ('Change banking info', 'Banking Information'),
-        ('Additional clause', 'Additional Clause'),
-        # previously known as Agreement Changes
-        ('Amend existing clause', 'Amend Existing Clause')
-    )
+
     number = models.CharField(max_length=5)
     agreement = models.ForeignKey(Agreement, related_name='amendments')
-    type = ArrayField(models.CharField(max_length=64, choices=AMENDMENT_TYPES))
     signed_amendment = models.FileField(
         max_length=255,
         null=True, blank=True,
@@ -1213,6 +1205,28 @@ class AgreementAmendment(TimeStampedModel):
         if update_agreement_number_needed:
             self.agreement.save(amendment_number=self.number)
         return super(AgreementAmendment, self).save(**kwargs)
+
+
+
+class AgreementAmendmentType(models.Model):
+
+    AMENDMENT_TYPES = Choices(
+        ('Change IP name', 'Change in Legal Name of Implementing Partner'),
+        ('CP extension', 'Extension of Country Programme Cycle'),
+        ('Change authorized officer', 'Change Authorized Officer'),
+        ('Change banking info', 'Banking Information'),
+        ('Additional clause', 'Additional Clause'),
+        ('Amend existing clause', 'Amend Existing Clause')  # previously known as Agreement Changes
+    )
+    agreement_amendment = models.ForeignKey(AgreementAmendment, related_name='amendment_types')
+    type = models.CharField(max_length=64, choices=AMENDMENT_TYPES)
+    label = models.TextField(null=True, blank=True)
+    officer = models.IntegerField(null=True, blank=True)
+    bank_info = models.TextField(null=True, blank=True)
+    legal_name_of_ip = models.CharField(null=True, blank=True, max_length=255)
+    cp_cycle_end = models.DateField(null=True, blank=True)
+    additional_clauses = models.TextField(null=True, blank=True)
+    existing_clause_amended = models.TextField(null=True, blank=True)
 
 
 class InterventionManager(models.Manager):
@@ -1637,7 +1651,8 @@ class InterventionBudget(TimeStampedModel):
         max_length=5,
         blank=True, null=True
     )
-    # TODO add Currency field
+
+    currency = models.ForeignKey('publics.Currency', on_delete=models.SET_NULL, null=True, blank=True)
     total = models.DecimalField(max_digits=20, decimal_places=2)
 
     tracker = FieldTracker()
@@ -1839,26 +1854,17 @@ class GovernmentInterventionResult(models.Model):
             PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
             PartnerOrganization.planned_visits(self.intervention.partner, self)
 
-        # JSONFIELD has an issue where it keeps escaping characters
-        activity_is_string = isinstance(self.activity, str)
-        try:
-
-            self.activity = json.loads(self.activity) if activity_is_string else self.activity
-        except ValueError as e:
-            e.message = 'Activities needs to be a valid format (dict)'
-            raise e
-
         super(GovernmentInterventionResult, self).save(**kwargs)
-
-    @transaction.atomic
-    def delete(self, using=None):
-
-        self.activities_list.all().delete()
-        super(GovernmentInterventionResult, self).delete(using=using)
 
     def __unicode__(self):
         return u'{}, {}'.format(self.intervention.number,
                                 self.result)
+
+
+class GovernmentInterventionResultActivity(models.Model):
+    intervention_result = models.ForeignKey(GovernmentInterventionResult, related_name='result_activities')
+    code = models.CharField(max_length=36)
+    description = models.CharField(max_length=1024)
 
 
 class IndicatorReport(TimeStampedModel, TimeFramedModel):

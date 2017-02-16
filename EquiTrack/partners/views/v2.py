@@ -33,7 +33,7 @@ from partners.models import (
     PartnerType,
     Assessment,
     InterventionAmendment,
-    AgreementAmendment,
+    AgreementAmendmentType,
     Intervention,
     FileType,
     GovernmentIntervention,
@@ -155,17 +155,23 @@ class PmpStaticDropdownsListApiView(APIView):
         """
         Return All Static values used for dropdowns in the frontend
         """
+
+        local_workspace = self.request.user.profile.country
         cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
         assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).order_by('type').distinct()))
         agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
-        agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendment.AMENDMENT_TYPES))
+        agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
         intervention_status = choices_to_json_ready(Intervention.INTERVENTION_STATUS)
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
-        currencies = choices_to_json_ready(list(Currency.objects.values_list('name', flat=True).order_by('name').distinct()))
+
+        currencies = map(lambda x: {"label": x[0], "value": x[1]},
+                         Currency.objects.values_list('name', 'id').order_by('name').distinct())
+
+        local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
         return Response(
             {
@@ -180,6 +186,7 @@ class PmpStaticDropdownsListApiView(APIView):
                 'intervention_status': intervention_status,
                 'intervention_amendment_types': intervention_amendment_types,
                 'currencies': currencies,
+                'local_currency': local_currency
              },
             status=status.HTTP_200_OK
         )

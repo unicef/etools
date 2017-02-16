@@ -54,6 +54,8 @@ from .models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
+    AgreementAmendmentType,
+    GovernmentInterventionResultActivity,
 
 )
 from .filters import (
@@ -1083,12 +1085,14 @@ admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Agreement, AgreementAdmin)
+admin.site.register(AgreementAmendmentType)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 # admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
+admin.site.register(GovernmentInterventionResultActivity)
 admin.site.register(IndicatorReport)
 admin.site.register(BankDetails)
 admin.site.register(InterventionPlannedVisits)
@@ -1096,3 +1100,5 @@ admin.site.register(InterventionPlannedVisits)
 admin.site.register(InterventionAmendment)
 admin.site.register(PartnershipBudget)
 admin.site.register(InterventionSectorLocationLink)
+admin.site.register(InterventionResultLink)
+

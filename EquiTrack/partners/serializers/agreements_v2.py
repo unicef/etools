@@ -1,58 +1,79 @@
-import json
-from operator import xor
 
-from django.db import transaction
-from django.db.models import Q
-from django.core.exceptions import ValidationError
-from django.db.models import Q
-from django.contrib.auth.models import User
-from django.db import transaction
 from rest_framework import serializers
-from actstream import action
+from rest_framework.serializers import ValidationError
+from django.db import transaction
 
-from reports.serializers.v1 import IndicatorSerializer, OutputSerializer
-from partners.serializers.v1 import (
-    PartnerOrganizationSerializer,
-    PartnerStaffMemberEmbedSerializer,
-    InterventionSerializer,
-)
 from partners.serializers.partner_organization_v2 import PartnerStaffMemberNestedSerializer, SimpleStaffMemberSerializer
-from locations.models import Location
-from reports.models import CountryProgramme
 from users.serializers import SimpleUserSerializer
-
-from .v1 import PartnerStaffMemberSerializer
-#from EquiTrack.validation_mixins import CompleteValidation
 from partners.validation.agreements import AgreementValid
 from partners.models import (
-    PCA,
-    InterventionBudget,
-    SupplyPlan,
-    DistributionPlan,
-    InterventionPlannedVisits,
-    Intervention,
-    InterventionAmendment,
-    PartnerOrganization,
-    PartnerType,
     Agreement,
     AgreementAmendment,
-    PartnerStaffMember,
-
+    AgreementAmendmentType,
 )
+
+
+class AgreementAmendmentTypeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AgreementAmendmentType
+        fields = "__all__"
+
 
 class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
     number = serializers.CharField(read_only=True)
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
+    amendment_types = AgreementAmendmentTypeSerializer(many=True, read_only=True)
+
     class Meta:
         model = AgreementAmendment
         fields = "__all__"
+
+    @transaction.atomic
+    def create(self, validated_data):
+        amd_types = self.context.pop('amendment_types', [])
+        if not amd_types:
+            raise ValidationError('Agreement Amendment needs a type')
+
+        instance = super(AgreementAmendmentCreateUpdateSerializer, self).create(validated_data)
+
+        for a in amd_types:
+            a["agreement_amendment"] = instance.pk
+
+            agr_amd_type_serializer = AgreementAmendmentTypeSerializer(data=a)
+            if agr_amd_type_serializer.is_valid(raise_exception=True):
+                agr_amd_type_serializer.save()
+
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        amd_types = self.context.pop('amendment_types', [])
+
+        for a in amd_types:
+            a["agreement_amendment"] = instance.pk
+            if 'id' in a:
+                try:
+                    agr_amd_type = AgreementAmendmentType.objects.get(id=a['id'])
+                    agr_amd_type_serializer = AgreementAmendmentTypeSerializer(instance=agr_amd_type,
+                                                                               data=a,
+                                                                               partial=True)
+                except AgreementAmendmentType.DoesNotExist:
+                    raise ValidationError('Agreement Amendment received an id that is not present in the db {}'.
+                                          format(a['id']))
+            else:
+                agr_amd_type_serializer = AgreementAmendmentTypeSerializer(data=a)
+
+            if agr_amd_type_serializer.is_valid(raise_exception=True):
+                agr_amd_type_serializer.save()
+
+        return super(AgreementAmendmentCreateUpdateSerializer, self).update(instance, validated_data)
 
 
 class AgreementListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='partner.name', read_only=True)
-
 
     class Meta:
         model = Agreement
