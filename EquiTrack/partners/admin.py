@@ -252,6 +252,7 @@ class BudgetInlineAdmin(admin.TabularInline):
     model = InterventionBudget
     fields = (
         'year',
+        'currency',
         'partner_contribution',
         'unicef_cash',
         'in_kind_amount',

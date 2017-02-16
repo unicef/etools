@@ -20,6 +20,7 @@ from rest_framework.generics import (
 from partners.models import (
     Agreement,
     AgreementAmendment,
+    AgreementAmendmentType,
 )
 from partners.serializers.agreements_v2 import (
     AgreementListSerializer,
@@ -185,4 +186,19 @@ class AgreementAmendmentDeleteView(DestroyAPIView):
             raise ValidationError("Cannot delete a signed amendment")
         else:
             amendment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AgreementAmendmentTypeDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            amendment_type = AgreementAmendmentType.objects.get(id=int(kwargs['pk']))
+        except AgreementAmendment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if amendment_type.agreement_amendment.signed_amendment or amendment_type.agreement_amendment.signed_date:
+            raise ValidationError("Cannot delete an amendment type once amendment is signed")
+        else:
+            amendment_type.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

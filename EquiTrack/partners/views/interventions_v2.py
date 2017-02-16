@@ -14,6 +14,7 @@ from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    DestroyAPIView,
 )
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
@@ -43,6 +44,7 @@ from partners.serializers.interventions_v2 import (
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
+from partners.permissions import PartneshipManagerRepPermission
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
@@ -208,3 +210,103 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             serializer = self.get_serializer(instance)
 
         return Response(InterventionDetailSerializer(instance).data)
+
+
+class InterventionBudgetDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_budget = InterventionBudget.objects.get(id=int(kwargs['pk']))
+        except InterventionBudget.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_budget.intervention.status in \
+                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
+            raise ValidationError("Cannot delete a planned budget once PD is {}".format(
+                intervention_budget.intervention.status))
+        else:
+            intervention_budget.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionPlannedVisitsDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_planned_visit = InterventionPlannedVisits.objects.get(id=int(kwargs['pk']))
+        except InterventionPlannedVisits.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_planned_visit.intervention.status in \
+                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
+            raise ValidationError("Cannot delete a planned visit once PD is {}".format(
+                intervention_planned_visit.intervention.status))
+        else:
+            intervention_planned_visit.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionAttachmentDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_attachment = InterventionAttachment.objects.get(id=int(kwargs['pk']))
+        except InterventionAttachment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_attachment.intervention.status in \
+                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
+            raise ValidationError("Cannot delete a planned visit once PD is {}".format(
+                intervention_attachment.intervention.status))
+        else:
+            intervention_attachment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionResultLinkDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_result = InterventionResultLink.objects.get(id=int(kwargs['pk']))
+        except InterventionResultLink.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_result.intervention.status in \
+                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
+            raise ValidationError("Cannot delete a planned visit once PD is {}".format(
+                intervention_result.intervention.status))
+        else:
+            intervention_result.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionAmendmentDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_amendment = InterventionAmendment.objects.get(id=int(kwargs['pk']))
+        except InterventionAmendment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_amendment.signed_amendment or intervention_amendment.signed_date:
+            raise ValidationError("Cannot delete a signed amendment")
+        else:
+            intervention_amendment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_sector_location = InterventionSectorLocationLink.objects.get(id=int(kwargs['pk']))
+        except InterventionSectorLocationLink.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_sector_location.intervention.status in \
+                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
+            raise ValidationError("Cannot delete a sector location once PD is {}".format(
+                intervention_sector_location.intervention.status))
+        else:
+            intervention_sector_location.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
