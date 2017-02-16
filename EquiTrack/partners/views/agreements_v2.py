@@ -171,14 +171,15 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
 
 class AgreementAmendmentDeleteView(DestroyAPIView):
-    queryset = AgreementAmendment.objects.all()
     permission_classes = (PartneshipManagerRepPermission,)
 
-    def delete(self, request, pk):
-        amendment = self.queryset.get(pk)
+    def delete(self, request, *args, **kwargs):
+        try:
+            amendment = AgreementAmendment.objects.get(id=int(kwargs['pk']))
+        except AgreementAmendment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         if amendment.signed_amendment or amendment.signed_date:
+            raise ValidationError("Cannot delete a signed amendment")
+        else:
             amendment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            raise ValidationError("Cannot delete a signed amendment")
-            return Response(status=status.HTTP_404_NOT_FOUND)
