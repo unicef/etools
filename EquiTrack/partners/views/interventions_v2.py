@@ -220,12 +220,14 @@ class InterventionBudgetDeleteView(DestroyAPIView):
             intervention_budget = InterventionBudget.objects.get(id=int(kwargs['pk']))
         except InterventionBudget.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_budget.intervention.status in \
-                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
-            raise ValidationError("Cannot delete a planned budget once PD is {}".format(
-                intervention_budget.intervention.status))
-        else:
+        if intervention_budget.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_budget.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
             intervention_budget.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a planned budget")
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -237,12 +239,14 @@ class InterventionPlannedVisitsDeleteView(DestroyAPIView):
             intervention_planned_visit = InterventionPlannedVisits.objects.get(id=int(kwargs['pk']))
         except InterventionPlannedVisits.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_planned_visit.intervention.status in \
-                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
-            raise ValidationError("Cannot delete a planned visit once PD is {}".format(
-                intervention_planned_visit.intervention.status))
-        else:
+        if intervention_planned_visit.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_planned_visit.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
             intervention_planned_visit.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a planned visit")
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -254,12 +258,14 @@ class InterventionAttachmentDeleteView(DestroyAPIView):
             intervention_attachment = InterventionAttachment.objects.get(id=int(kwargs['pk']))
         except InterventionAttachment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_attachment.intervention.status in \
-                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
-            raise ValidationError("Cannot delete a planned visit once PD is {}".format(
-                intervention_attachment.intervention.status))
-        else:
+        if intervention_attachment.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_attachment.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
             intervention_attachment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete an attachment")
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -271,12 +277,14 @@ class InterventionResultLinkDeleteView(DestroyAPIView):
             intervention_result = InterventionResultLink.objects.get(id=int(kwargs['pk']))
         except InterventionResultLink.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_result.intervention.status in \
-                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
-            raise ValidationError("Cannot delete a planned visit once PD is {}".format(
-                intervention_result.intervention.status))
-        else:
+        if intervention_result.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_result.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
             intervention_result.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a result")
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -288,10 +296,14 @@ class InterventionAmendmentDeleteView(DestroyAPIView):
             intervention_amendment = InterventionAmendment.objects.get(id=int(kwargs['pk']))
         except InterventionAmendment.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_amendment.signed_amendment or intervention_amendment.signed_date:
-            raise ValidationError("Cannot delete a signed amendment")
-        else:
+        if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
             intervention_amendment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete an amendment")
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -303,10 +315,13 @@ class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
             intervention_sector_location = InterventionSectorLocationLink.objects.get(id=int(kwargs['pk']))
         except InterventionSectorLocationLink.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        if intervention_sector_location.intervention.status in \
-                [Intervention.ACTIVE, Intervention.IMPLEMENTED, Intervention.TERMINATED]:
-            raise ValidationError("Cannot delete a sector location once PD is {}".format(
-                intervention_sector_location.intervention.status))
-        else:
+        if intervention_sector_location.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_sector_location.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
             intervention_sector_location.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a sector location")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
