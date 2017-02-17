@@ -292,8 +292,6 @@ class Travel(models.Model):
                 PartnerOrganization.spot_checks(act.partner, update_one=True)
         except:
             pass
-        # TODO nic: :)
-        # jsonfield += self.activites.filter(primary_traveler=self.traveler, partner=<partner>, travel_type='Prog visit').count()
 
     @transition(status, target=PLANNED)
     def reset_status(self):

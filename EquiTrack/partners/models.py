@@ -649,7 +649,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @classmethod
     def spot_checks(cls, partner, update_one=False):
         '''
-        :return: all completed programmatic visits
+        :return: all completed spot checks
         '''
         sc = partner.hact_values['spot_checks'] if partner.hact_values['spot_checks'] else 0
         if update_one:
