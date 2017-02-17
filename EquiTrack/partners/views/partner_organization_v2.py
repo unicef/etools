@@ -132,6 +132,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 # from rest_framework.parsers import  FormParser, MultiPartParser
+from EquiTrack.parsers import parse_multipart_data
 
 class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
@@ -151,12 +152,14 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):
 
-
+        print request.data
+        dt = parse_multipart_data(request.data)
+        print dt
 
         partial = kwargs.pop('partial', False)
-        staff_members = request.data.pop('staff_members', None)
+        staff_members = dt.pop('staff_members', None)
         instance = self.get_object()
-        po_serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        po_serializer = self.get_serializer(instance, data=dt, partial=partial)
         po_serializer.is_valid(raise_exception=True)
 
         partner = po_serializer.save()
