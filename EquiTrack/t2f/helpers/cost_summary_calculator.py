@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
 
@@ -7,31 +8,58 @@ from django.db.models import Sum
 
 
 class CostSummaryCalculator(object):
+    class ExpenseDTO(object):
+        def __init__(self, vendor_number, amount):
+            self.vendor_number = vendor_number
+            self.amount = amount
+
     def __init__(self, travel):
         self.travel = travel
 
     def get_cost_summary(self):
-        expenses = self._calculate_total_expenses()
+        expense_mapping = self.get_expesnses()
 
-        expenses = expenses.quantize(Decimal('1.0000'))
+        total_expense = sum(expense_mapping.values(), Decimal(0))
+        total_expense = total_expense.quantize(Decimal('1.0000'))
+
+        # Order the expenses
+        expenses = []
+        if 'user' in expense_mapping:
+            expenses.append(self.ExpenseDTO('user', expense_mapping.pop('user')))
+        parking_money = expense_mapping.pop('', None)
+
+        travel_agent_expenses = sorted([self.ExpenseDTO(*e) for e in expense_mapping.items()],
+                                       key=lambda o: o.vendor_number)
+        expenses.extend(travel_agent_expenses)
+
+        # explicit None checking should happen here otherwise the 0 will be filtered out
+        if parking_money is not None:
+            expenses.append(self.ExpenseDTO('', parking_money))
+
         if self.travel.preserved_expenses is not None:
-            expenses_delta = self.travel.preserved_expenses - expenses
+            expenses_delta = self.travel.preserved_expenses - total_expense
         else:
             expenses_delta = Decimal(0)
+
 
         dsa_calculator = DSACalculator(self.travel)
         dsa_calculator.calculate_dsa()
 
         result = {'dsa_total': dsa_calculator.total_dsa.quantize(Decimal('1.0000')),
-                  'expenses_total': expenses,
+                  'expenses_total': total_expense,
                   'deductions_total': dsa_calculator.total_deductions.quantize(Decimal('1.0000')),
                   'dsa': dsa_calculator.detailed_dsa,
                   'preserved_expenses': self.travel.preserved_expenses,
-                  'expenses_delta': expenses_delta}
+                  'expenses_delta': expenses_delta,
+                  'expenses': expenses}
         return result
 
-    def _calculate_total_expenses(self):
-        return self.travel.expenses.all().aggregate(Sum('amount'))['amount__sum'] or Decimal(0)
+    def get_expesnses(self):
+        expenses_mapping = defaultdict(Decimal)
+        expenses_qs = self.travel.expenses.select_related('type')
+        for expense in expenses_qs:
+            expenses_mapping[expense.type.vendor_number] += expense.amount
+        return expenses_mapping
 
 
 class DSACalculator(object):
