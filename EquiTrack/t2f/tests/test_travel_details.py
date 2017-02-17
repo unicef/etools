@@ -47,7 +47,7 @@ class TravelDetails(APITenantTestCase):
                                                 kwargs={'travel_pk': self.travel.id}),
                                  user=self.unicef_staff)
 
-    @skip("Fix this")
+    @skip('Fix this')
     def test_file_attachments(self):
         class FakeFile(StringIO):
             def size(self):
@@ -108,6 +108,7 @@ class TravelDetails(APITenantTestCase):
                                 'dinner': False,
                                 'accomodation': True}],
                 'traveler': self.traveler.id,
+                'ta_required': True,
                 'supervisor': self.unicef_staff.id,
                 'expenses': [{'amount': '120',
                               'type': expense_type.id,
@@ -140,6 +141,45 @@ class TravelDetails(APITenantTestCase):
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.00')
+
+    def test_detailed_expenses(self):
+        currency = CurrencyFactory()
+        user_et = ExpenseTypeFactory(vendor_number='user')
+        travel_agent_1_et = ExpenseTypeFactory(vendor_number='ta1')
+        travel_agent_2_et = ExpenseTypeFactory(vendor_number='ta2')
+        parking_money_et = ExpenseTypeFactory(vendor_number='')
+
+        data = {'cost_assignments': [],
+                'traveler': self.traveler.id,
+                'supervisor': self.unicef_staff.id,
+                'ta_required': True,
+                'expenses': [{'amount': '120',
+                              'type': user_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id},
+                             {'amount': '80',
+                              'type': user_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id},
+                             {'amount': '100',
+                              'type': travel_agent_1_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id},
+                             {'amount': '500',
+                              'type': travel_agent_2_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id},
+                             {'amount': '1000',
+                              'type': parking_money_et.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id}]}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['expenses'],
+                         [{'amount': '200.00', 'vendor_number': 'user'},
+                          {'amount': '100.00', 'vendor_number': 'ta1'},
+                          {'amount': '500.00', 'vendor_number': 'ta2'},
+                          {'amount': '1000.00', 'vendor_number': ''}])
 
     def test_cost_assignments(self):
         fund = FundFactory()
@@ -178,7 +218,7 @@ class TravelDetails(APITenantTestCase):
         location_3 = LocationFactory()
 
         data = {'cost_assignments': [],
-                'activities': [{'primary_traveler': True,
+                'activities': [{'is_primary_traveler': True,
                                 'locations': [location.id, location_2.id]}],
                 'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
@@ -186,7 +226,8 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         data = response_json
-        data['activities'].append({'locations': [location_3.id]})
+        data['activities'].append({'locations': [location_3.id],
+                                   'is_primary_traveler': True})
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                          kwargs={'travel_pk': response_json['id']}),
                                         data=data, user=self.unicef_staff)
@@ -240,7 +281,7 @@ class TravelDetails(APITenantTestCase):
                                                                 'transition_name': 'submit_for_approval'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json, {'itinerary': ['Travel must have at least one itinerary item']})
+        self.assertEqual(response_json, {'itinerary': ['Travel must have at least two itinerary item']})
 
     def test_itinerary_origin_destination(self):
         dsaregion = DSARegion.objects.first()
@@ -280,8 +321,10 @@ class TravelDetails(APITenantTestCase):
                 'activities': [{}],
                 'traveler': self.traveler.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data,
-                                        user=self.unicef_staff)
-        self.assertEqual(response.status_code, 201)
+                                        user=self.unicef_staff, expected_status_code=None)
+        self.assertEqual(response.status_code, 400)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
     def test_action_points(self):
         response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
@@ -314,28 +357,28 @@ class TravelDetails(APITenantTestCase):
         dsa_1 = DSARegion.objects.first()
         dsa_2 = DSARegionFactory()
 
-        data = {"itinerary": [{"airlines": [],
-                               "origin": "a",
-                               "destination": "b",
-                               "dsa_region": dsa_1.id,
-                               "departure_date": "2017-01-18T23:00:01.224Z",
-                               "arrival_date": "2017-01-19T23:00:01.237Z",
-                               "mode_of_travel": "car"},
-                              {"origin": "b",
-                               "destination": "c",
-                               "dsa_region": dsa_2.id,
-                               "departure_date": "2017-01-20T23:00:01.892Z",
-                               "arrival_date": "2017-01-27T23:00:01.905Z",
-                               "mode_of_travel": "car"}],
-                "activities": [{"primary_traveler": True,
-                                "locations": []}],
-                "cost_assignments": [],
-                "expenses": [],
-                "action_points": [],
-                "ta_required": True,
-                "international_travel": False,
-                "traveler": self.traveler.id,
-                "mode_of_travel": []}
+        data = {'itinerary': [{'airlines': [],
+                               'origin': 'a',
+                               'destination': 'b',
+                               'dsa_region': dsa_1.id,
+                               'departure_date': '2017-01-18T23:00:01.224Z',
+                               'arrival_date': '2017-01-19T23:00:01.237Z',
+                               'mode_of_travel': 'car'},
+                              {'origin': 'b',
+                               'destination': 'c',
+                               'dsa_region': dsa_2.id,
+                               'departure_date': '2017-01-20T23:00:01.892Z',
+                               'arrival_date': '2017-01-27T23:00:01.905Z',
+                               'mode_of_travel': 'car'}],
+                'activities': [{'is_primary_traveler': True,
+                                'locations': []}],
+                'cost_assignments': [],
+                'expenses': [],
+                'action_points': [],
+                'ta_required': True,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
 
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
@@ -345,16 +388,16 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(extracted_origin_destination, itinerary_origin_destination_expectation)
 
     def test_ta_not_required(self):
-        data = {"itinerary": [{}],
-                "activities": [{"primary_traveler": True,
-                                "locations": []}],
-                "cost_assignments": [],
-                "expenses": [{}],
-                "action_points": [],
-                "ta_required": False,
-                "international_travel": False,
-                "traveler": self.traveler.id,
-                "mode_of_travel": []}
+        data = {'itinerary': [{}],
+                'activities': [{'is_primary_traveler': True,
+                                'locations': []}],
+                'cost_assignments': [],
+                'expenses': [{}],
+                'action_points': [],
+                'ta_required': False,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
 
         # Check only if 200
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
