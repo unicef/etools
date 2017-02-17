@@ -121,7 +121,7 @@ def sector_location_valid(sl):
 
 def amendments_valid(i):
     for a in i.amendments.all():
-        if not a.type or not a.signed_amendment or not a.signed_date:
+        if not a.type or not a.signed_date:
             return False
     return True
 

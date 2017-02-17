@@ -129,7 +129,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         headers = self.get_success_headers(po_serializer.data)
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-#from rest_framework.parsers import  FormParser, MultiPartParser
+# from rest_framework.parsers import  FormParser, MultiPartParser
 
 class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
@@ -148,6 +148,8 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
+
+
 
         partial = kwargs.pop('partial', False)
         staff_members = request.data.pop('staff_members', None)

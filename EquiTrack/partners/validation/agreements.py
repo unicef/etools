@@ -89,8 +89,8 @@ def signed_by_everyone_valid(agreement):
 
 def signed_agreement_present(agreement):
 
-    if not agreement.attached_agreement:
-        return False
+    # if not agreement.attached_agreement:
+    #     return False
     return True
 
 def partner_type_valid_cso(agreement):
