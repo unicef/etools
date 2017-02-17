@@ -102,7 +102,6 @@ def parse_multipart_data(myd):
                     # print pth
                     # print r
                     exec_str = 'r' + pth + ' = ' + 'myd[form_myd_path(parcurs)]'
-                    print 'ASDSFSDFDS', exec_str
                     exec exec_str in globals(), locals()
                 else:
                     pth = form_path_from_list(parcurs)
