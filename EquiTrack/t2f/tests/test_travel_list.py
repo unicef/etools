@@ -12,7 +12,7 @@ from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, TravelType
-from t2f.tests.factories import CurrencyFactory, FundFactory
+from t2f.tests.factories import CurrencyFactory, FundFactory, TravelActivityFactory
 
 from .factories import TravelFactory
 
@@ -156,11 +156,16 @@ class TravelList(APITenantTestCase):
                                  user=self.unicef_staff)
 
     def test_filtering(self):
-        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.PLANE])
-        TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff, mode_of_travel=[ModeOfTravel.RAIL])
+        t1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        a1 = TravelActivityFactory(travel_type=TravelType.MEETING, primary_traveler=self.unicef_staff)
+        a1.travels.add(t1)
+
+        t2 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        a2 = TravelActivityFactory(travel_type=TravelType.PROGRAMME_MONITORING, primary_traveler=self.unicef_staff)
+        a2.travels.add(t2)
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'),
-                                        data={'f_travel_type': ModeOfTravel.PLANE},
+                                        data={'f_travel_type': TravelType.MEETING},
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('data', response_json)
