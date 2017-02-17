@@ -575,7 +575,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @cached_property
     def cp_cycle_trip_links(self):
-        from trips.models import Trip
+        from t2f.models import Travel, TravelActivity
         cry = datetime.datetime.now().year
         if self.partner_type == u'Government':
             return self.linkedgovernmentpartner_set.filter(
@@ -639,18 +639,23 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def programmatic_visits(cls, partner, trip=None):
+    def programmatic_visits(cls, partner, update_one=False):
         '''
         :return: all done programmatic visits
         '''
-        from trips.models import Trip
-        pv = partner.cp_cycle_trip_links.filter(
-            trip__travel_type=Trip.PROGRAMME_MONITORING,
-            trip__status__in=[Trip.COMPLETED]
-        ).count() or 0
-        if trip and trip.travel_type == Trip.PROGRAMME_MONITORING \
-                and trip.status in [Trip.COMPLETED]:
+        pv = partner.hact_values['programmatic_visits'] if partner.hact_values['programmatic_visits'] else 0
+        if update_one:
             pv += 1
+        else:
+            from t2f.models import Travel, TravelActivity, TravelType
+            travelers = Travel.objects.filter(status__in=[Travel.COMPLETED]).values_list('traveler', flat=True)
+            pv = TravelActivity.objects.filter(
+                travel_type=TravelType.PROGRAMME_MONITORING,
+                travels__status__in=[Travel.COMPLETED],
+                partner=partner,
+                primary_traveler__in=travelers
+            ).count() or 0
+
         partner.hact_values['programmatic_visits'] = pv
         partner.save()
 
@@ -1207,7 +1212,6 @@ class AgreementAmendment(TimeStampedModel):
         return super(AgreementAmendment, self).save(**kwargs)
 
 
-
 class AgreementAmendmentType(models.Model):
 
     AMENDMENT_TYPES = Choices(
@@ -1651,7 +1655,8 @@ class InterventionBudget(TimeStampedModel):
         max_length=5,
         blank=True, null=True
     )
-    # TODO add Currency field
+
+    currency = models.ForeignKey('publics.Currency', on_delete=models.SET_NULL, null=True, blank=True)
     total = models.DecimalField(max_digits=20, decimal_places=2)
 
     tracker = FieldTracker()
@@ -1843,32 +1848,17 @@ class GovernmentInterventionResult(models.Model):
 
     @transaction.atomic
     def save(self, **kwargs):
-        # if self.pk:
-        #     prev_result = GovernmentInterventionResult.objects.get(id=self.id)
-        #     if prev_result.planned_amount != self.planned_amount:
-        #         PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
-        #     if prev_result.planned_visits != self.planned_visits:
-        #         PartnerOrganization.planned_visits(self.intervention.partner, self)
-        # else:
-        #     PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
-        #     PartnerOrganization.planned_visits(self.intervention.partner, self)
-
-        # JSONFIELD has an issue where it keeps escaping characters
-        activity_is_string = isinstance(self.activity, str)
-        try:
-
-            self.activity = json.loads(self.activity) if activity_is_string else self.activity
-        except ValueError as e:
-            e.message = 'Activities needs to be a valid format (dict)'
-            raise e
+        if self.pk:
+            prev_result = GovernmentInterventionResult.objects.get(id=self.id)
+            if prev_result.planned_amount != self.planned_amount:
+                PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            if prev_result.planned_visits != self.planned_visits:
+                PartnerOrganization.planned_visits(self.intervention.partner, self)
+        else:
+            PartnerOrganization.planned_cash_transfers(self.intervention.partner, self)
+            PartnerOrganization.planned_visits(self.intervention.partner, self)
 
         super(GovernmentInterventionResult, self).save(**kwargs)
-
-    @transaction.atomic
-    def delete(self, using=None):
-
-        self.activities_list.all().delete()
-        super(GovernmentInterventionResult, self).delete(using=using)
 
     def __unicode__(self):
         return u'{}, {}'.format(self.intervention.number,
