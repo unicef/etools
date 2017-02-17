@@ -151,7 +151,7 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
 class GovernmentInterventionResultDeleteView(DestroyAPIView):
     """
-    Delete Government Intervention Result Activities.
+    Delete Government Intervention Results.
     Returns a .
     """
     serializer_class = GovernmentInterventionResultNestedSerializer

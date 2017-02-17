@@ -27,11 +27,6 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
                   'sections')
 
     def validate(self, data):
-        """
-        Check that the start is before the stop.
-        """
-        if not data['intervention']:
-            raise serializers.ValidationError("There is no partner selected")
         return data
 
     def validate_unicef_managers(self, value):

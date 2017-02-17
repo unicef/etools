@@ -37,6 +37,7 @@ from reports.models import (
     LowerResult,
     AppliedIndicator
 )
+from t2f.models import Travel, TravelActivity, TravelType
 from locations.models import Location
 from supplies.models import SupplyItem
 from supplies.tasks import (
@@ -573,19 +574,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.hact_values = hact
         partner.save()
 
-    @cached_property
-    def cp_cycle_trip_links(self):
-        from t2f.models import Travel, TravelActivity
-        cry = datetime.datetime.now().year
-        if self.partner_type == u'Government':
-            return self.linkedgovernmentpartner_set.filter(
-                trip__from_date__year=cry,
-            ).distinct('trip')
-        else:
-            return self.linkedpartner_set.filter(
-                trip__from_date__year=cry,
-            ).distinct('trip')
-
     @property
     def trips(self):
         year = datetime.date.today().year
@@ -641,13 +629,12 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     @classmethod
     def programmatic_visits(cls, partner, update_one=False):
         '''
-        :return: all done programmatic visits
+        :return: all completed programmatic visits
         '''
         pv = partner.hact_values['programmatic_visits'] if partner.hact_values['programmatic_visits'] else 0
         if update_one:
             pv += 1
         else:
-            from t2f.models import Travel, TravelActivity, TravelType
             travelers = Travel.objects.filter(status__in=[Travel.COMPLETED]).values_list('traveler', flat=True)
             pv = TravelActivity.objects.filter(
                 travel_type=TravelType.PROGRAMME_MONITORING,
@@ -660,16 +647,22 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def spot_checks(cls, partner, trip=None):
-        from trips.models import Trip
-        sc = partner.cp_cycle_trip_links.filter(
-            trip__travel_type=Trip.SPOT_CHECK,
-            trip__status__in=[Trip.COMPLETED]
-        ).count()
-
-        if trip and trip.travel_type == Trip.SPOT_CHECK \
-                and trip.status in [Trip.COMPLETED]:
+    def spot_checks(cls, partner, update_one=False):
+        '''
+        :return: all completed programmatic visits
+        '''
+        sc = partner.hact_values['spot_checks'] if partner.hact_values['spot_checks'] else 0
+        if update_one:
             sc += 1
+        else:
+            travelers = Travel.objects.filter(status__in=[Travel.COMPLETED]).values_list('traveler', flat=True)
+            sc = TravelActivity.objects.filter(
+                travel_type=TravelType.SPOT_CHECK,
+                travels__status__in=[Travel.COMPLETED],
+                partner=partner,
+                primary_traveler__in=travelers
+            ).count() or 0
+
         partner.hact_values['spot_checks'] = sc
         partner.save()
 

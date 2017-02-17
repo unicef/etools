@@ -17,7 +17,6 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
 from publics.models import TravelExpenseType
-from partners.models import PartnerOrganization
 from t2f.helpers import CostSummaryCalculator, InvoiceMaker
 
 log = logging.getLogger(__name__)
@@ -279,10 +278,20 @@ class Travel(models.Model):
         self.send_notification_email('Travel #{} was completed.'.format(self.id),
                                      self.supervisor.email,
                                      'emails/trip_completed.html')
-        for act in self.activities.filter(primary_traveler=self.traveler,
-                                          travel_type=TravelType.PROGRAMME_MONITORING,
-                                          date__year=datetime.now().year):
-            PartnerOrganization.programmatic_visits(act.partner, update_one=True)
+
+        try:
+            from partners.models import PartnerOrganization
+            for act in self.activities.filter(primary_traveler=self.traveler,
+                                              travel_type=TravelType.PROGRAMME_MONITORING,
+                                              date__year=datetime.now().year):
+                PartnerOrganization.programmatic_visits(act.partner, update_one=True)
+
+            for act in self.activities.filter(primary_traveler=self.traveler,
+                                              travel_type=TravelType.SPOT_CHECK,
+                                              date__year=datetime.now().year):
+                PartnerOrganization.spot_checks(act.partner, update_one=True)
+        except:
+            pass
         # TODO nic: :)
         # jsonfield += self.activites.filter(primary_traveler=self.traveler, partner=<partner>, travel_type='Prog visit').count()
 
