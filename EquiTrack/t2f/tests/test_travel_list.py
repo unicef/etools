@@ -341,7 +341,7 @@ class TravelActivityList(APITenantTestCase):
         self.travel_activity = TravelActivityFactory(primary_traveler=self.traveler2)
 
     def test_list_view(self):
-        with self.assertNumQueries(7):
+        with self.assertNumQueries(8):
             response = self.forced_auth_req(
                 'get',
                 reverse(
@@ -352,7 +352,7 @@ class TravelActivityList(APITenantTestCase):
             )
 
         response_json = json.loads(response.rendered_content)
-        expected_keys = ["primary_traveler", "travel_type", "date", "locations", "travels"]
+        expected_keys = ["primary_traveler", "travel_type", "date", "locations", "status", "reference_number"]
 
         self.assertKeysIn(expected_keys, response_json[0])
         self.assertEqual(len(response_json), 1)

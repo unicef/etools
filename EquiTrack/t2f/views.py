@@ -260,7 +260,6 @@ class TravelActivityViewSet(mixins.ListModelMixin,
     filter_backends = (TravelActivityPartnerFilter,)
     lookup_url_kwarg = 'partner_organization_pk'
 
-
 class ActionPointViewSet(mixins.ListModelMixin,
                          mixins.RetrieveModelMixin,
                          mixins.UpdateModelMixin,
