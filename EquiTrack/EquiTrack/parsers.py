@@ -5,15 +5,9 @@ def int_or_str(c):
     except:
         return c
 
-
-def last_element_in_container(el_index, container):
-    return len(container) - el_index == 1
-
 def list_or_dict(a):
     return '[]' if isinstance(a, int) else '{}'
 
-def index_exists(array, k):
-    return k <= len(array) - 1
 
 def l_o_k(myd):
     r = []
@@ -75,9 +69,6 @@ def form_myd_path(path):
             mys += '[' + str(path[i]) + ']'
     return mys
 
-def end_of_the_road(path, original_list):
-    return len(path)+1 == len(original_list)
-
 def parse_multipart_data(myd):
     r = {}
     lok = l_o_k(myd)
@@ -94,7 +85,6 @@ def parse_multipart_data(myd):
             r = set_current_path_in_dict(r, path, list_or_dict(next_value))
 
         return r
-
 
     for k in lok:
         i = 0
@@ -122,4 +112,3 @@ def parse_multipart_data(myd):
             i+=1
 
     return r
-
