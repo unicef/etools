@@ -169,7 +169,6 @@ class AmendmentLogInlineAdmin(admin.TabularInline):
     model = AmendmentLog
     extra = 0
     fields = (
-        'type',
         'status',
         'amended_at',
         'amendment_number',
@@ -253,6 +252,7 @@ class BudgetInlineAdmin(admin.TabularInline):
     model = InterventionBudget
     fields = (
         'year',
+        'currency',
         'partner_contribution',
         'unicef_cash',
         'in_kind_amount',
@@ -536,7 +536,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                         )
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(PartnershipAdmin, self).save_model(request, obj, form, change)
@@ -941,7 +941,6 @@ class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
     model = AgreementAmendmentLog
     extra = 0
     fields = (
-        'type',
         'status',
         'amended_at',
         'amendment_number',

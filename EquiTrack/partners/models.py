@@ -1207,7 +1207,6 @@ class AgreementAmendment(TimeStampedModel):
         return super(AgreementAmendment, self).save(**kwargs)
 
 
-
 class AgreementAmendmentType(models.Model):
 
     AMENDMENT_TYPES = Choices(
