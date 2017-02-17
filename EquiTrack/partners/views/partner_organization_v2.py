@@ -129,8 +129,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         headers = self.get_success_headers(po_serializer.data)
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-from rest_framework.parsers import  FormParser, MultiPartParser
-from querystring_parser import parser as qsp
+#from rest_framework.parsers import  FormParser, MultiPartParser
+
 class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update PartnerOrganization.
@@ -138,7 +138,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
-    parser_classes = (FormParser, MultiPartParser)
+    #parser_classes = (FormParser, MultiPartParser)
 
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
@@ -148,9 +148,6 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-
-
-        print request.data
 
         partial = kwargs.pop('partial', False)
         staff_members = request.data.pop('staff_members', None)
