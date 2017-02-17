@@ -223,17 +223,19 @@ class UserViewSet(mixins.RetrieveModelMixin,
         queryset = super(UserViewSet, self).get_queryset()
         queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
         # Filter for Partnership Managers only
+        driver_qps = self.request.query_params.get("drivers", "")
+        if driver_qps.lower() == "true":
+            queryset = queryset.filter(groups__name='Driver')
+
         filter_param = self.request.query_params.get("partnership_managers", "")
         if filter_param.lower() == "true":
-            manager_group = Group.objects.get(name="Partnership Manager")
-            queryset = queryset.filter(groups__in=[manager_group])
+            queryset = queryset.filter(groups__name="Partnership Manager")
 
         return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        unicef_user_group = Group.objects.get(name="UNICEF User")
-        queryset = queryset.filter(groups__in=[unicef_user_group])
+        queryset = queryset.filter(groups__name="UNICEF User")
         filter_param = self.request.query_params.get("all", "")
         if filter_param.lower() != "true":
             queryset = queryset.filter(profile__country=self.request.user.profile.country)

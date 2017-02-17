@@ -14,11 +14,13 @@ from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    DestroyAPIView,
 )
 
 from partners.models import (
     Agreement,
     AgreementAmendment,
+    AgreementAmendmentType,
 )
 from partners.serializers.agreements_v2 import (
     AgreementListSerializer,
@@ -29,6 +31,7 @@ from partners.serializers.agreements_v2 import (
 )
 
 from partners.filters import PartnerScopeFilter
+from partners.permissions import PartneshipManagerRepPermission
 
 from partners.exports_v2 import AgreementCvsRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -169,3 +172,33 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             instance = self.get_object()
 
         return Response(AgreementRetrieveSerializer(instance).data)
+
+
+class AgreementAmendmentDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            amendment = AgreementAmendment.objects.get(id=int(kwargs['pk']))
+        except AgreementAmendment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if amendment.signed_amendment or amendment.signed_date:
+            raise ValidationError("Cannot delete a signed amendment")
+        else:
+            amendment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class AgreementAmendmentTypeDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            amendment_type = AgreementAmendmentType.objects.get(id=int(kwargs['pk']))
+        except AgreementAmendment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if amendment_type.agreement_amendment.signed_amendment or amendment_type.agreement_amendment.signed_date:
+            raise ValidationError("Cannot delete an amendment type once amendment is signed")
+        else:
+            amendment_type.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

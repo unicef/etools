@@ -12,6 +12,7 @@ from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    DestroyAPIView,
 )
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
@@ -19,7 +20,8 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from partners.models import (
     PartnerStaffMember,
     Intervention,
-    PartnerOrganization
+    PartnerOrganization,
+    Assessment,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -30,7 +32,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
 )
-from partners.permissions import PartnerPermission, PartneshipManagerPermission
+from partners.permissions import PartneshipManagerRepPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
@@ -129,6 +131,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         headers = self.get_success_headers(po_serializer.data)
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+# from rest_framework.parsers import  FormParser, MultiPartParser
 
 class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     """
@@ -137,6 +140,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
+    #parser_classes = (FormParser, MultiPartParser)
 
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
@@ -146,6 +150,8 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
+
+
 
         partial = kwargs.pop('partial', False)
         staff_members = request.data.pop('staff_members', None)
@@ -206,3 +212,18 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
+
+
+class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            assessment = Assessment.objects.get(id=int(kwargs['pk']))
+        except Assessment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if assessment.completed_date or assessment.report:
+            raise ValidationError("Cannot delete a completed assessment")
+        else:
+            assessment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
