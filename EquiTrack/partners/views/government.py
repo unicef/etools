@@ -62,8 +62,9 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         related_fields = ['results']
-
-        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
+        nested_related_fields = ['result_activities']
+        serializer = self.my_create(request, related_fields, nested_related_names=nested_related_fields,
+                                    snapshot=True, **kwargs)
 
         if not serializer.instance.results.exists():
             raise ValidationError({'results': [u'This field is required.']})

@@ -56,7 +56,7 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
 
         gir = super(GovernmentInterventionResultNestedSerializer, self).create(validated_data)
 
-        activities = self.initial_data.data.pop('result_activities', [])
+        activities = self.context.pop('result_activities', [])
         for act in activities:
             act['intervention_result'] = gir.pk
             ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
