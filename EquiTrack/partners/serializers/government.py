@@ -132,11 +132,11 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         """
         Check that the start is before the stop.
         """
-        if not 'partner' in data:
+        if 'partner' not in data:
             raise serializers.ValidationError("There is no partner selected")
         if data['partner'].partner_type != PartnerType.GOVERNMENT:
             raise serializers.ValidationError("Partner type must be Government")
-        if not 'country_programme' in data:
+        if 'country_programme' not in data:
             raise serializers.ValidationError("There is no country programme selected")
         return data
 
