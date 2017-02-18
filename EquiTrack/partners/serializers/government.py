@@ -26,19 +26,18 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
                   'unicef_managers', 'sectors', 'planned_visits',
                   'sections')
 
-        def validate(self, data):
-            if not data['intervention']:
-                raise serializers.ValidationError("There is no partner selected")
-            if not data['result']:
-                raise serializers.ValidationError("There is no result selected")
-            if not data['year']:
-                raise serializers.ValidationError("There is no year selected")
-            if not data['planned_amount']:
-                raise serializers.ValidationError("There is no planned amount entered")
-            return data
+    def validate(self, data):
+        if 'intervention' not in data:
+            raise serializers.ValidationError("There is no partner selected")
+        if 'result' not in data:
+            raise serializers.ValidationError("There is no result selected")
+        if not data.get('year'):
+            raise serializers.ValidationError("There is no year selected")
+        if not data.get('planned_amount'):
+            raise serializers.ValidationError("There is no planned amount entered")
+        return data
 
     def validate_unicef_managers(self, value):
-        manager_group = Group.objects.get(name='Senior Management Team')
         for usr in value:
             try:
                 usr.groups.get(name='Senior Management Team')
