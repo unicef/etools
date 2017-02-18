@@ -195,10 +195,11 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
         )
 
 class InterventionAttachmentSerializer(serializers.ModelSerializer):
+    attachment_file = serializers.FileField(source="attachment", read_only=True)
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'type', 'attachment'
+            'id', 'intervention', 'type', 'attachment', "attachment_file"
         )
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
