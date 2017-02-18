@@ -4,19 +4,29 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from .views.v1 import PcaPDFView
 from .views.partner_organization_v2 import (
     PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView, PartnerStaffMemberListAPIVIew,
-    PartnerOrganizationHactAPIView
+    PartnerOrganizationHactAPIView, PartnerOrganizationAssessmentDeleteView
 )
 from .views.agreements_v2 import (
     AgreementListAPIView,
-    AgreementDetailAPIView
+    AgreementDetailAPIView,
+    AgreementAmendmentDeleteView,
+    AgreementAmendmentTypeDeleteView,
 )
 from views.interventions_v2 import (
     InterventionListAPIView,
-    InterventionDetailAPIView
+    InterventionDetailAPIView,
+    InterventionBudgetDeleteView,
+    InterventionPlannedVisitsDeleteView,
+    InterventionAttachmentDeleteView,
+    InterventionResultLinkDeleteView,
+    InterventionAmendmentDeleteView,
+    InterventionSectorLocationLinkDeleteView,
 )
 from views.government import (
     GovernmentInterventionListAPIView,
-    GovernmentDetailAPIView
+    GovernmentDetailAPIView,
+    GovernmentInterventionResultActivityDeleteView,
+    GovernmentInterventionResultDeleteView,
 )
 from views.v2 import (
     PmpStaticDropdownsListApiView, PMPDropdownsListApiView, PartnershipDashboardAPIView
@@ -30,11 +40,14 @@ urlpatterns = (
     url(r'^agreements/$', view=AgreementListAPIView.as_view(), name='agreement-list'),
     url(r'^agreements/(?P<pk>\d+)/$', view=AgreementDetailAPIView.as_view(), name='agreement-detail'),
     url(r'^agreements/(?P<agr>\d+)/pdf', PcaPDFView.as_view(), name='pca_pdf'),
+    url(r'^agreements/amendments/(?P<pk>\d+)/$', view=AgreementAmendmentDeleteView.as_view(http_method_names=['delete']), name='agreement-amendment-del'),
+    url(r'^agreements/amendments/types/(?P<pk>\d+)/$', view=AgreementAmendmentTypeDeleteView.as_view(http_method_names=['delete']), name='agreement-amendment-type-del'),
     # url(r'^agreements/(?P<pk>\d+)/interventions/$', view=AgreementInterventionsListAPIView.as_view(), name='agreement-interventions-list'),
 
     url(r'^partners/$', view=PartnerOrganizationListAPIView.as_view(http_method_names=['get', 'post']), name='partner-list'),
     url(r'^partners/hact/$', view=PartnerOrganizationHactAPIView.as_view(http_method_names=['get', ]), name='partner-hact'),
     url(r'^partners/(?P<pk>\d+)/$', view=PartnerOrganizationDetailAPIView.as_view(http_method_names=['get', 'patch']), name='partner-detail'),
+    url(r'^partners/assessments/(?P<pk>\d+)/$', view=PartnerOrganizationAssessmentDeleteView.as_view(http_method_names=['delete', ]), name='partner-assessment-del'),
 
     # url(r'^partners/(?P<pk>\d+)/interventions/$', view=PartnerInterventionListAPIView.as_view(), name='partner-interventions-list'),
     # url(r'^partners/(?P<partner_pk>\d+)/agreements/$', view=AgreementListAPIView.as_view(), name='parter-agreement-list'),
@@ -51,11 +64,20 @@ urlpatterns = (
 
     url(r'^interventions/$', view=InterventionListAPIView.as_view(http_method_names=['get', 'post']), name='intervention-list'),
     url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(http_method_names=['get', 'patch']), name='intervention-detail'),
+    url(r'^interventions/budgets/(?P<pk>\d+)/$', view=InterventionBudgetDeleteView.as_view(http_method_names=['delete', ]), name='intervention-budget-del'),
+    url(r'^interventions/planned-visits/(?P<pk>\d+)/$', view=InterventionPlannedVisitsDeleteView.as_view(http_method_names=['delete', ]), name='intervention-visits-del'),
+    url(r'^interventions/attachments/(?P<pk>\d+)/$', view=InterventionAttachmentDeleteView.as_view(http_method_names=['delete', ]), name='intervention-attachments-del'),
+    url(r'^interventions/results/(?P<pk>\d+)/$', view=InterventionResultLinkDeleteView.as_view(http_method_names=['delete', ]), name='intervention-results-del'),
+    url(r'^interventions/amendments/(?P<pk>\d+)/$', view=InterventionAmendmentDeleteView.as_view(http_method_names=['delete', ]), name='intervention-amendments-del'),
+    url(r'^interventions/sector-locations/(?P<pk>\d+)/$', view=InterventionSectorLocationLinkDeleteView.as_view(http_method_names=['delete', ]), name='intervention-sector-locations-del'),
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
 
     #GOVERNMENT
     url(r'^government_interventions/$', view=GovernmentInterventionListAPIView.as_view(http_method_names=['get', 'post']), name='government-intervention-list'),
     url(r'^government_interventions/(?P<pk>\d+)/$', view=GovernmentDetailAPIView.as_view(http_method_names=['get', 'patch']), name='government-intervention-detail'),
+    url(r'^government_interventions/results/(?P<pk>\d+)/$', view=GovernmentInterventionResultDeleteView.as_view(http_method_names=['delete', ]), name='government-intervention-results-del'),
+    url(r'^government_interventions/results/activities/(?P<pk>\d+)/$', view=GovernmentInterventionResultActivityDeleteView.as_view(http_method_names=['delete', ]), name='government-intervention-activities-del'),
+
 
     # TODO: figure this out
     # url(r'^partners/interventions/$', view=InterventionsView.as_view()),

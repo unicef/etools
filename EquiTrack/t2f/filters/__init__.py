@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.db.models.query_utils import Q
+from django.db.models import F
 from rest_framework.filters import BaseFilterBackend
 
 from t2f.serializers.filters import SearchFilterSerializer
@@ -10,6 +11,14 @@ class TravelRelatedModelFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         # This should be attached only to viewsets which gets travel_pk
         return queryset.filter(travel__pk=view.kwargs['travel_pk'])
+
+
+class TravelActivityPartnerFilter(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        return queryset \
+                .filter(partner__pk=view.kwargs['partner_organization_pk']) \
+                .prefetch_related('travels') \
+                .filter(travels__traveler=F("primary_traveler"))
 
 
 class BaseSearchFilter(BaseFilterBackend):

@@ -1,19 +1,30 @@
 import json
 
 from django.db import transaction
+from django.contrib.auth.models import Group
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
 
 from EquiTrack.serializers import JsonFieldSerializer
-from partners.models import GovernmentIntervention, GovernmentInterventionResult, PartnerType
+from partners.models import GovernmentIntervention, PartnerType, GovernmentInterventionResult, GovernmentInterventionResultActivity
+
+
+class GovernmentInterventionResultActivityNestedSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = GovernmentInterventionResultActivity
+        fields = '__all__'
 
 
 class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
-    activity = JsonFieldSerializer(required=False)
+    result_activities = GovernmentInterventionResultActivityNestedSerializer(many=True, read_only=True)
 
     class Meta:
         model = GovernmentInterventionResult
-        fields = ('id', 'intervention', 'result', 'year', 'planned_amount', 'activity',
-                    'planned_visits', 'unicef_managers', 'sectors', 'sections')
+        fields = ('id', 'intervention', 'result',
+                  'year', 'planned_amount', 'result_activities',
+                  'unicef_managers', 'sectors', 'planned_visits',
+                  'sections')
 
         def validate(self, data):
             if not data['intervention']:
@@ -25,6 +36,58 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
             if not data['planned_amount']:
                 raise serializers.ValidationError("There is no planned amount entered")
             return data
+
+    def validate_unicef_managers(self, value):
+        manager_group = Group.objects.get(name='Senior Management Team')
+        for usr in value:
+            try:
+                usr.groups.get(name='Senior Management Team')
+            except Group.DoesNotExist as e:
+                raise ValidationError('User {} not in Senior Management Team'.format(usr))
+        return value
+
+    def validate_sectors(self, value):
+        return value
+
+    def validate_sections(self, value):
+        return value
+
+    @transaction.atomic()
+    def create(self, validated_data):
+
+        gir = super(GovernmentInterventionResultNestedSerializer, self).create(validated_data)
+
+        activities = self.initial_data.data.pop('result_activities', [])
+        for act in activities:
+            act['intervention_result'] = gir.pk
+            ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
+            if ac_serializer.is_valid(raise_exception=True):
+                ac_serializer.save()
+
+        return gir
+
+    @transaction.atomic()
+    def update(self, instance, validated_data):
+        activities = self.context.pop('result_activities', [])
+
+        instance = super(GovernmentInterventionResultNestedSerializer, self).update(instance, validated_data)
+        for act in activities:
+            act['intervention_result'] = instance.pk
+            if 'id' in act:
+                try:
+                    activity = GovernmentInterventionResultActivity.objects.get(id=act['id'])
+                    ac_serializer = GovernmentInterventionResultActivityNestedSerializer(instance=activity,
+                                                                                         data=act, partial=True)
+                except GovernmentInterventionResultActivity.DoesNotExist:
+                    raise ValidationError('government intervention result activity '
+                                          'received an id but cannot be found in DB')
+            else:
+                ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
+
+            if ac_serializer.is_valid(raise_exception=True):
+                ac_serializer.save()
+
+        return instance
 
 
 class GovernmentInterventionListSerializer(serializers.ModelSerializer):
@@ -77,11 +140,6 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         if not 'country_programme' in data:
             raise serializers.ValidationError("There is no country programme selected")
         return data
-
-    @transaction.atomic
-    def update(self, instance, validated_data):
-        updated = super(GovernmentInterventionCreateUpdateSerializer, self).update(instance, validated_data)
-        return updated
 
 
 class GovernmentInterventionExportSerializer(serializers.ModelSerializer):

@@ -155,21 +155,26 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
     locations = serializers.PrimaryKeyRelatedField(many=True, queryset=Location.objects.all(), required=False,
                                                    allow_null=True)
     travel_type = LowerTitleField(required=False, allow_null=True)
+    is_primary_traveler = serializers.BooleanField(required=False)
     primary_traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
 
     class Meta:
         model = TravelActivity
-        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date')
+        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date',
+                  'is_primary_traveler')
 
     def validate(self, attrs):
         if 'id' not in attrs:
-            if 'primary_traveler' in attrs:
-                if not attrs['primary_traveler']:
-                    raise ValidationError({'primary_traveler': 'This field have to be true upon creation'})
-            else:
-                raise ValidationError({'primary_traveler': 'This field is required'})
+            if not attrs.get('is_primary_traveler'):
+                if not attrs.get('primary_traveler'):
+                    raise ValidationError({'primary_traveler': 'This field is required'})
 
         return attrs
+
+    def to_internal_value(self, data):
+        ret = super(TravelActivitySerializer, self).to_internal_value(data)
+        ret.pop('is_primary_traveler', None)
+        return ret
 
 
 class TravelAttachmentSerializer(serializers.ModelSerializer):
@@ -194,6 +199,11 @@ class DSASerializer(serializers.Serializer):
     dsa_region_name = serializers.CharField()
 
 
+class CostSummaryExpensesSerializer(serializers.Serializer):
+    vendor_number = serializers.CharField(read_only=True)
+    amount = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=2)
+
+
 class CostSummarySerializer(serializers.Serializer):
     dsa_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     expenses_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
@@ -201,6 +211,7 @@ class CostSummarySerializer(serializers.Serializer):
     dsa = DSASerializer(many=True)
     preserved_expenses = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     expenses_delta = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    expenses = CostSummaryExpensesSerializer(many=True)
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):
@@ -256,8 +267,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         return value
 
     def validate_itinerary(self, value):
-        if self.transition_name == 'submit_for_approval' and len(value) < 1:
-            raise ValidationError('Travel must have at least one itinerary item')
+        if self.transition_name == 'submit_for_approval' and len(value) < 2:
+            raise ValidationError('Travel must have at least two itinerary item')
 
         if not value:
             return value
@@ -298,9 +309,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         traveler_id = data.get('traveler', traveler_id)
 
         for travel_activity_data in data.get('activities', []):
-            if travel_activity_data.get('primary_traveler') is False:
-                travel_activity_data['primary_traveler'] = None
-            else:
+            if travel_activity_data.get('is_primary_traveler'):
                 travel_activity_data['primary_traveler'] = traveler_id
 
         return super(TravelDetailsSerializer, self).to_internal_value(data)
@@ -310,9 +319,9 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         for travel_activity_data in data.get('activities', []):
             if travel_activity_data['primary_traveler'] == data.get('traveler', None):
-                travel_activity_data['primary_traveler'] = True
+                travel_activity_data['is_primary_traveler'] = True
             else:
-                travel_activity_data['primary_traveler'] = False
+                travel_activity_data['is_primary_traveler'] = False
 
         return data
 
@@ -441,6 +450,23 @@ class TravelListSerializer(TravelDetailsSerializer):
         fields = ('id', 'reference_number', 'traveler', 'purpose', 'status', 'section', 'office', 'start_date',
                   'end_date')
         read_only_fields = ('status',)
+
+
+class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
+    locations = serializers.SlugRelatedField(slug_field='name', many=True, read_only=True)
+    primary_traveler = serializers.CharField(source='primary_traveler.get_full_name')
+    reference_number = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, obj):
+        return obj.travels.first().status
+
+    def get_reference_number(self, obj):
+        return obj.travels.first().reference_number
+
+    class Meta:
+        model = TravelActivity
+        fields = ("primary_traveler", "travel_type", "date", "locations", "reference_number", "status",)
 
 
 class CloneOutputSerializer(TravelDetailsSerializer):

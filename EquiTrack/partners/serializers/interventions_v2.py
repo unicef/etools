@@ -6,6 +6,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
+from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
 
 from partners.models import (
@@ -24,6 +25,7 @@ from partners.models import (
     InterventionSectorLocationLink,
     InterventionResultLink
 )
+from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
 
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
@@ -43,6 +45,7 @@ class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
             "in_kind_amount_local",
             "year",
             "total",
+            "currency"
         )
 
 
@@ -68,6 +71,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "in_kind_amount_local",
             "year",
             "total",
+            'currency'
         )
         #read_only_fields = [u'total']
 
@@ -120,12 +124,7 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DistributionPlan
-        fields = (
-            "id,"
-            "item",
-            "quantity",
-            "site",
-        )
+        fields = "__all__"
 
 
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
@@ -203,17 +202,69 @@ class InterventionAttachmentSerializer(serializers.ModelSerializer):
         )
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    cp_output = ResultLightSerializer()
-    ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    #cp_output = ResultLightSerializer()
+    #ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    ll_results = LowerResultSerializer(many=True, read_only=True)
+
     class Meta:
         model = InterventionResultLink
         fields = (
-            'id', 'intervention', 'cp_output', 'ram_indicators'
+            'id', 'intervention', 'cp_output', 'ram_indicators', 'll_results'
         )
+
 class InterventionResultCUSerializer(serializers.ModelSerializer):
+
+    lower_results = LowerResultSerializer(many=True, read_only=True)
+
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+
+    def update_ll_results(self, instance, ll_results):
+        for result in ll_results:
+            result['result_link'] = instance.pk
+            applied_indicators = {'applied_indicators': result.pop('applied_indicators', [])}
+            instance_id = result.get('id', None)
+            if instance_id:
+                try:
+                    ll_result_instance = LowerResult.objects.get(pk=instance_id)
+                except LowerResult.DoesNotExist as e:
+                    raise ValidationError('lower_result has an id but cannot be found in the db')
+
+                ll_result_serializer = LowerResultCUSerializer(
+                    instance=ll_result_instance,
+                    data=result,
+                    context=applied_indicators,
+                    partial=True
+                )
+
+            else:
+                ll_result_serializer = LowerResultCUSerializer(data=result, context=applied_indicators)
+
+            if ll_result_serializer.is_valid(raise_exception=True):
+                ll_result_serializer.save()
+
+
+
+    @transaction.atomic
+    def create(self, validated_data):
+        ll_results = self.context.pop('ll_results', [])
+
+        print ('INTERVENTION RESULT CU SERIALIZER CREATE __ IS THIS WORKING?')
+        instance = super(InterventionResultCUSerializer, self).create(validated_data)
+        print instance.pk
+        self.update_ll_results(instance, ll_results)
+
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        ll_results = self.context.pop('ll_results', [])
+
+        self.update_ll_results(instance, ll_results)
+
+        print validated_data
+        return super(InterventionResultCUSerializer, self).update(instance, validated_data)
 
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
