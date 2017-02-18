@@ -1,6 +1,5 @@
 import copy
 import logging
-
 from django.apps import apps
 from django.utils.functional import cached_property
 
@@ -14,21 +13,26 @@ from rest_framework.exceptions import ValidationError
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 
-def check_rigid_fields(obj, fields):
-    if not obj.old_instance:
+def check_rigid_fields(obj, fields, old_instance=None):
+    if not old_instance and not obj.old_instance:
         return False, None
     for field in fields:
-        if getattr(obj, field) != getattr(obj.old_instance, field):
+        old_instance = old_instance or obj.old_instance
+        if getattr(obj, field) != getattr(old_instance, field):
             return False, field
     return True, None
 
 
 class ValidatorViewMixin(object):
-    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name, partial=False):
+    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name,
+                         partial=False, nested_related_names=None):
         if not field:
             return
         for item in field:
             item.update({reverse_name: mother_obj.pk})
+            nested_related_data = {}
+            if nested_related_names:
+                nested_related_data = {k: v for k, v in item.items() if k in nested_related_names}
             if item.get('id', None):
                 try:
                     instance = fieldClass.objects.get(id=item['id'])
@@ -37,9 +41,11 @@ class ValidatorViewMixin(object):
 
                 instance_serializer = fieldSerializer(instance=instance,
                                                       data=item,
-                                                      partial=partial)
+                                                      partial=partial,
+                                                      context=nested_related_data)
             else:
-                instance_serializer = fieldSerializer(data=item)
+                instance_serializer = fieldSerializer(data=item,
+                                                      context=nested_related_data)
 
             try:
                 instance_serializer.is_valid(raise_exception=True)
@@ -74,7 +80,7 @@ class ValidatorViewMixin(object):
 
         return main_serializer
 
-    def my_update(self, request, related_f, snapshot=None, **kwargs):
+    def my_update(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
         partial = kwargs.pop('partial', False)
         my_relations = {}
         for f in related_f:
@@ -104,7 +110,7 @@ class ValidatorViewMixin(object):
 
         for k, v in my_relations.iteritems():
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
-                                  k, _get_reverse_for_field(k), partial)
+                                  k, _get_reverse_for_field(k), partial, nested_related_names)
 
         return instance, old_instance, main_serializer
 

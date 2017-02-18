@@ -1067,6 +1067,7 @@ class TestInterventionViews(APITenantTestCase):
             '/api/v2/interventions/',
             user=self.unicef_staff,
         )
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
 
@@ -1118,6 +1119,20 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(response.data, ["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."])
+
+    def test_intervention_active_update_planned_budget_rigid(self):
+        self.intervention_data["planned_budget"][0].update(unicef_cash=0)
+        self.intervention_data["planned_budget"][1].update(unicef_cash=0)
+        self.intervention_data.update(status="active")
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
 
     def test_intervention_active_update_sector_locations(self):
         InterventionSectorLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()

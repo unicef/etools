@@ -279,8 +279,19 @@ class Travel(models.Model):
                                      self.supervisor.email,
                                      'emails/trip_completed.html')
 
-        # TODO nic: :)
-        # jsonfield += self.activites.filter(primary_traveler=self.traveler, partner=<partner>, travel_type='Prog visit').count()
+        try:
+            from partners.models import PartnerOrganization
+            for act in self.activities.filter(primary_traveler=self.traveler,
+                                              travel_type=TravelType.PROGRAMME_MONITORING,
+                                              date__year=datetime.now().year):
+                PartnerOrganization.programmatic_visits(act.partner, update_one=True)
+
+            for act in self.activities.filter(primary_traveler=self.traveler,
+                                              travel_type=TravelType.SPOT_CHECK,
+                                              date__year=datetime.now().year):
+                PartnerOrganization.spot_checks(act.partner, update_one=True)
+        except Exception as e:
+            logging.info('Exception while trying to update hact values {}'.format(e))
 
     @transition(status, target=PLANNED)
     def reset_status(self):
@@ -342,6 +353,10 @@ class TravelActivity(models.Model):
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.ForeignKey(User)
     date = models.DateTimeField(null=True)
+
+    @property
+    def travel_status(self):
+        return self.travels.filter(traveler=self.primary_traveler).first().status
 
 
 class IteneraryItem(models.Model):

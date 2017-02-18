@@ -9,6 +9,7 @@ from rest_framework.permissions import IsAdminUser
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    DestroyAPIView,
 )
 from rest_framework import status
 from rest_framework.response import Response
@@ -17,14 +18,16 @@ from rest_framework_csv import renderers as r
 
 from EquiTrack.validation_mixins import ValidatorViewMixin
 
-from partners.models import GovernmentIntervention
+from partners.models import GovernmentIntervention, GovernmentInterventionResultActivity, GovernmentInterventionResult
 from partners.serializers.government import (
     GovernmentInterventionListSerializer,
     GovernmentInterventionCreateUpdateSerializer,
     GovernmentInterventionExportSerializer,
-    GovernmentInterventionResultNestedSerializer
+    GovernmentInterventionResultNestedSerializer,
+    GovernmentInterventionResultActivityNestedSerializer,
 )
 from partners.filters import PartnerScopeFilter
+from partners.permissions import PartneshipManagerRepPermission
 
 
 class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
@@ -56,7 +59,6 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-
         related_fields = ['results']
 
         serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
@@ -64,7 +66,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
         #TOOD: split out related fields and get them validated through the proper serializers
         #(use the validator)
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_queryset(self, format=None):
         q = GovernmentIntervention.objects.all()
@@ -133,8 +135,10 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         related_fields = ['results']
+        nested_related_fields = ['result_activities']
 
-        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True **kwargs)
+        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True,
+                                                            nested_related_names=nested_related_fields, **kwargs)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
@@ -143,3 +147,25 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
             serializer = self.get_serializer(instance)
 
         return Response(serializer.data)
+
+
+class GovernmentInterventionResultDeleteView(DestroyAPIView):
+    """
+    Delete Government Intervention Results.
+    Returns a .
+    """
+    serializer_class = GovernmentInterventionResultNestedSerializer
+    permission_classes = (PartneshipManagerRepPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    queryset = GovernmentInterventionResult.objects.all()
+
+
+class GovernmentInterventionResultActivityDeleteView(DestroyAPIView):
+    """
+    Delete Government Intervention Result Activities.
+    Returns a .
+    """
+    serializer_class = GovernmentInterventionResultActivityNestedSerializer
+    permission_classes = (PartneshipManagerRepPermission,)
+    filter_backends = (PartnerScopeFilter,)
+    queryset = GovernmentInterventionResultActivity.objects.all()
