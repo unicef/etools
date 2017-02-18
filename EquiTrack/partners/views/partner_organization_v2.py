@@ -152,9 +152,8 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):
 
-        print request.data
+
         dt = parse_multipart_data(request.data)
-        print dt
 
         partial = kwargs.pop('partial', False)
         staff_members = dt.pop('staff_members', None)
