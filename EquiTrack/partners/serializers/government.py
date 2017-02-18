@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
 from EquiTrack.serializers import JsonFieldSerializer
-from partners.models import GovernmentIntervention, GovernmentInterventionResult, GovernmentInterventionResultActivity
+from partners.models import GovernmentIntervention, PartnerType, GovernmentInterventionResult, GovernmentInterventionResultActivity
 
 
 class GovernmentInterventionResultActivityNestedSerializer(serializers.ModelSerializer):
@@ -27,10 +27,17 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
                   'sections')
 
     def validate(self, data):
+        if 'intervention' not in data:
+            raise serializers.ValidationError("There is no partner selected")
+        if 'result' not in data:
+            raise serializers.ValidationError("There is no result selected")
+        if not data.get('year'):
+            raise serializers.ValidationError("There is no year selected")
+        if not data.get('planned_amount'):
+            raise serializers.ValidationError("There is no planned amount entered")
         return data
 
     def validate_unicef_managers(self, value):
-        manager_group = Group.objects.get(name='Senior Management Team')
         for usr in value:
             try:
                 usr.groups.get(name='Senior Management Team')
@@ -49,7 +56,7 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
 
         gir = super(GovernmentInterventionResultNestedSerializer, self).create(validated_data)
 
-        activities = self.initial_data.data.pop('result_activities', [])
+        activities = self.context.pop('result_activities', [])
         for act in activities:
             act['intervention_result'] = gir.pk
             ac_serializer = GovernmentInterventionResultActivityNestedSerializer(data=act)
@@ -125,9 +132,11 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         """
         Check that the start is before the stop.
         """
-        if not 'partner' in data:
+        if 'partner' not in data:
             raise serializers.ValidationError("There is no partner selected")
-        if not 'country_programme' in data:
+        if data['partner'].partner_type != PartnerType.GOVERNMENT:
+            raise serializers.ValidationError("Partner type must be Government")
+        if 'country_programme' not in data:
             raise serializers.ValidationError("There is no country programme selected")
         return data
 

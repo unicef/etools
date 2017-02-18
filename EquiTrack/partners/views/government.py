@@ -27,13 +27,15 @@ from partners.serializers.government import (
     GovernmentInterventionResultActivityNestedSerializer,
 )
 from partners.filters import PartnerScopeFilter
+from EquiTrack.validation_mixins import ValidatorViewMixin
+from partners.validation.government_intervention_results import GovernmentInterventionResultValid
 from partners.permissions import PartneshipManagerRepPermission
 
 
 class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
     """
-    Create new Interventions.
-    Returns a list of Interventions.
+    Create new GovernmentInterventions.
+    Returns a list of GovernmentInterventions.
     """
     serializer_class = GovernmentInterventionListSerializer
     permission_classes = (IsAdminUser,)
@@ -60,11 +62,17 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         related_fields = ['results']
+        nested_related_fields = ['result_activities']
+        serializer = self.my_create(request, related_fields, nested_related_names=nested_related_fields,
+                                    snapshot=True, **kwargs)
 
-        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
+        if not serializer.instance.results.exists():
+            raise ValidationError({'results': [u'This field is required.']})
 
-        #TOOD: split out related fields and get them validated through the proper serializers
-        #(use the validator)
+        for govint_result in serializer.instance.results.all():
+            validator = GovernmentInterventionResultValid(govint_result, user=request.user, stateless=True)
+            if not validator.is_valid:
+                raise ValidationError({'errors': validator.errors})
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -107,7 +115,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
 
 class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
-    Retrieve and Update Agreement.
+    Retrieve and Update GovernmentIntervention.
     """
     queryset = GovernmentIntervention.objects.all()
     serializer_class = GovernmentInterventionCreateUpdateSerializer
@@ -139,6 +147,15 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
         instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True,
                                                             nested_related_names=nested_related_fields, **kwargs)
+        if not serializer.instance.results.exists():
+            raise ValidationError({'results': [u'This field is required.']})
+
+        for govint_result in instance.results.all():
+            # Old instance should be the instance with the same id from old_instance.results
+            old_govint_result = old_instance.results.filter(id=govint_result.id).first()
+            validator = GovernmentInterventionResultValid(govint_result, old=old_govint_result, user=request.user, stateless=True)
+            if not validator.is_valid:
+                raise ValidationError({'errors': validator.errors})
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

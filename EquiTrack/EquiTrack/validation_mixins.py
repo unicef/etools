@@ -54,8 +54,9 @@ class ValidatorViewMixin(object):
                 raise e
             instance_serializer.save()
 
-    def my_create(self, request, related_f, snapshot=None, **kwargs):
+    def my_create(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
         my_relations = {}
+        partial = kwargs.pop('partial', False)
         for f in related_f:
             my_relations[f] = request.data.pop(f, [])
 
@@ -73,10 +74,9 @@ class ValidatorViewMixin(object):
 
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
-
         for k, v in my_relations.iteritems():
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
-                                  k, _get_reverse_for_field(k))
+                                  k, _get_reverse_for_field(k), partial, nested_related_names)
 
         return main_serializer
 
@@ -170,7 +170,7 @@ def update_object(obj, kwdict):
         setattr(obj, k, v)
 
 class CompleteValidation(object):
-    def __init__(self, new, user=None, old=None, instance_class=None):
+    def __init__(self, new, user=None, old=None, instance_class=None, stateless=False):
         if old and isinstance(old, dict):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
 
@@ -201,12 +201,15 @@ class CompleteValidation(object):
             new = new_instance
             old = old_instance
 
+        self.stateless = stateless
         self.new = new
-        self.new_status = self.new.status
+        if not self.stateless:
+            self.new_status = self.new.status
         self.skip_transition = not old
         self.skip_permissions = not user
         self.old = old
-        self.old_status = self.old.status if self.old else None
+        if not self.stateless:
+            self.old_status = self.old.status if self.old else None
         self.user = user
 
     def check_transition_conditions(self, transition):
@@ -379,17 +382,18 @@ class CompleteValidation(object):
         if not self.basic_validation[0]:
             return False, self.map_errors(self.basic_validation[1])
 
-        if not self.skip_transition:
+        if not self.skip_transition and not self.stateless:
             transitional = self.transitional_validation()
             if not transitional[0]:
                 return False, self.map_errors(transitional[1])
 
-        state_valid = self.state_valid()
-        if not state_valid[0]:
-            return False, self.map_errors(state_valid[1])
+        if not self.stateless:
+            state_valid = self.state_valid()
+            if not state_valid[0]:
+                return False, self.map_errors(state_valid[1])
 
-        if self.make_auto_transitions():
-            self.new.save()
+            if self.make_auto_transitions():
+                self.new.save()
         return True, []
 
     @property
