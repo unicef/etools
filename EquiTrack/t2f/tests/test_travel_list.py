@@ -15,7 +15,7 @@ from publics.models import DSARegion
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, TravelType
 from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, FundFactory
 
-from .factories import TravelFactory
+from .factories import TravelFactory, TravelActivityFactory
 
 log = logging.getLogger('__name__')
 
@@ -325,3 +325,34 @@ class TravelList(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['itinerary']), 1)
+
+
+class TravelActivityList(APITenantTestCase):
+
+    def setUp(self):
+        super(TravelActivityList, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.traveler1 = UserFactory()
+        self.traveler2 = UserFactory()
+        self.travel = TravelFactory(reference_number=make_travel_reference_number(),
+                                    traveler=self.traveler1,
+                                    supervisor=self.unicef_staff)
+        # to filter against
+        self.travel_activity = TravelActivityFactory(primary_traveler=self.traveler2)
+
+    def test_list_view(self):
+        with self.assertNumQueries(8):
+            response = self.forced_auth_req(
+                'get',
+                reverse(
+                    't2f:travels:list:activities',
+                    kwargs={"partner_organization_pk": self.travel.activities.first().partner.id}
+                ),
+                user=self.unicef_staff,
+            )
+
+        response_json = json.loads(response.rendered_content)
+        expected_keys = ["primary_traveler", "travel_type", "date", "locations", "status", "reference_number"]
+
+        self.assertKeysIn(expected_keys, response_json[0])
+        self.assertEqual(len(response_json), 1)

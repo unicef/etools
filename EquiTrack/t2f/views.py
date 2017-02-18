@@ -23,7 +23,7 @@ from rest_framework_xml.parsers import XMLParser
 from rest_framework_xml.renderers import XMLRenderer
 
 from publics.models import TravelExpenseType
-from t2f.filters import TravelRelatedModelFilter
+from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
 from t2f.filters import travel_list, action_points, invoices
 from locations.models import Location
 from partners.models import PartnerOrganization, Intervention
@@ -32,9 +32,10 @@ from t2f.serializers.export import TravelListExportSerializer, FinanceExportSeri
     InvoiceExportSerializer
 
 from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice, IteneraryItem, \
-    InvoiceItem
+    InvoiceItem, TravelActivity
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
-    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer
+    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer, \
+    TravelActivityByPartnerSerializer
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 from t2f.permission_matrix import PERMISSION_MATRIX
@@ -250,6 +251,14 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
         context['travel'] = travel
         return context
 
+
+class TravelActivityViewSet(mixins.ListModelMixin,
+                            viewsets.GenericViewSet):
+    queryset = TravelActivity.objects.all()
+    permission_classes = (IsAdminUser,)
+    serializer_class = TravelActivityByPartnerSerializer
+    filter_backends = (TravelActivityPartnerFilter,)
+    lookup_url_kwarg = 'partner_organization_pk'
 
 class ActionPointViewSet(mixins.ListModelMixin,
                          mixins.RetrieveModelMixin,
