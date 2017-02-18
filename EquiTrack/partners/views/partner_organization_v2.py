@@ -196,10 +196,12 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
 
 
 class PartnerOrganizationHactAPIView(ListCreateAPIView):
+
     """
     Create new Partners.
     Returns a list of Partners.
     """
+    permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(
             Q(documents__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
             (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
