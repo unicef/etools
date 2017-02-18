@@ -152,7 +152,7 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     @transaction.atomic
     def update(self, request, *args, **kwargs):
 
-
+        # TODO: use the mixin
         dt = parse_multipart_data(request.data)
 
         partial = kwargs.pop('partial', False)

@@ -25,6 +25,7 @@ class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
     created = serializers.DateTimeField(read_only=True)
     modified = serializers.DateTimeField(read_only=True)
     amendment_types = AgreementAmendmentTypeSerializer(many=True, read_only=True)
+    signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
 
     class Meta:
         model = AgreementAmendment
@@ -131,6 +132,7 @@ class AgreementRetrieveSerializer(serializers.ModelSerializer):
     amendments = AgreementAmendmentCreateUpdateSerializer(many=True, read_only=True)
     unicef_signatory = SimpleUserSerializer(source='signed_by')
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager')
+    attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
 
     class Meta:
         model = Agreement
@@ -145,6 +147,7 @@ class AgreementCreateUpdateSerializer(serializers.ModelSerializer):
     unicef_signatory = SimpleUserSerializer(source='signed_by', read_only=True)
     partner_signatory = SimpleStaffMemberSerializer(source='partner_manager', read_only=True)
     agreement_number = serializers.CharField(read_only=True)
+    attached_agreement_file = serializers.FileField(source="attached_agreement", read_only=True)
 
     class Meta:
         model = Agreement
