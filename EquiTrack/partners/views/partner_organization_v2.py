@@ -31,11 +31,14 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
+    AssessmentDetailSerializer
 )
 from partners.permissions import PartneshipManagerRepPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
+from EquiTrack.parsers import parse_multipart_data
+from EquiTrack.validation_mixins import ValidatorViewMixin
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
     """
@@ -131,10 +134,8 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         headers = self.get_success_headers(po_serializer.data)
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-# from rest_framework.parsers import  FormParser, MultiPartParser
-from EquiTrack.parsers import parse_multipart_data
 
-class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
+class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update PartnerOrganization.
     """
@@ -142,6 +143,11 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
     #parser_classes = (FormParser, MultiPartParser)
+
+    SERIALIZER_MAP = {
+        'assessments': AssessmentDetailSerializer,
+        'staff_members': PartnerStaffMemberCreateUpdateSerializer
+    }
 
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
@@ -151,39 +157,12 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
+        related_fields = ['assessments', 'staff_members']
 
-        # TODO: use the mixin
-        dt = parse_multipart_data(request.data)
-
-        partial = kwargs.pop('partial', False)
-        staff_members = dt.pop('staff_members', None)
-        instance = self.get_object()
-        po_serializer = self.get_serializer(instance, data=dt, partial=partial)
-        po_serializer.is_valid(raise_exception=True)
-
-        partner = po_serializer.save()
-
-        if staff_members:
-            for item in staff_members:
-                item.update({u"partner": partner.pk})
-                if item.get('id', None):
-                    try:
-                        sm_instance = PartnerStaffMember.objects.get(id=item['id'])
-                    except PartnerStaffMember.DoesNotExist:
-                        sm_instance = None
-
-                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance, data=item, partial=partial)
-
-                else:
-                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(data=item)
-
-                try:
-                    staff_member_serializer.is_valid(raise_exception=True)
-                except ValidationError as e:
-                    e.detail = {'staff_members': e.detail}
-                    raise e
-
-                staff_member_serializer.save()
+        instance, old_instance, serializer = self.my_update(
+            request,
+            related_fields,
+            snapshot=True,  **kwargs)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to

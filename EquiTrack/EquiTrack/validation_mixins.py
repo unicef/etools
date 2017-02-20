@@ -11,7 +11,7 @@ from django_fsm import (
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
-
+from EquiTrack.parsers import parse_multipart_data
 
 def check_rigid_fields(obj, fields, old_instance=None):
     if not old_instance and not obj.old_instance:
@@ -24,6 +24,22 @@ def check_rigid_fields(obj, fields, old_instance=None):
 
 
 class ValidatorViewMixin(object):
+
+    def _parse_data(self, request):
+        dt_cp = request.data
+        for k in dt_cp:
+            if dt_cp[k] in [u'', u'null']:
+                dt_cp[k] = None
+            elif dt_cp[k] == u'true':
+                dt_cp[k] = True
+            elif dt_cp[k] == u'false':
+                dt_cp[k] = False
+            elif type(dt_cp[k]) == unicode:
+                dt_cp[k] = str(dt_cp[k])
+
+        dt = parse_multipart_data(dt_cp)
+        return dt
+
     def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name,
                          partial=False, nested_related_names=None):
         if not field:
@@ -54,13 +70,15 @@ class ValidatorViewMixin(object):
                 raise e
             instance_serializer.save()
 
-    def my_create(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
+    def my_create(self, request, related_f, snapshot=None, nested_related_names=None, data=None, **kwargs):
         my_relations = {}
         partial = kwargs.pop('partial', False)
-        for f in related_f:
-            my_relations[f] = request.data.pop(f, [])
+        data = self._parse_data(request)
 
-        main_serializer = self.get_serializer(data=request.data)
+        for f in related_f:
+            my_relations[f] = data.pop(f, [])
+
+        main_serializer = self.get_serializer(data=data)
         main_serializer.context['skip_global_validator'] = True
         main_serializer.is_valid(raise_exception=True)
 
@@ -80,20 +98,22 @@ class ValidatorViewMixin(object):
 
         return main_serializer
 
-    def my_update(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
+    def my_update(self, request, related_f, snapshot=None, nested_related_names=None, data=None, **kwargs):
         partial = kwargs.pop('partial', False)
+        data = self._parse_data(request)
+
         my_relations = {}
         for f in related_f:
-            my_relations[f] = request.data.pop(f, [])
+            my_relations[f] = data.pop(f, [])
 
         old_instance = self.get_object()
         instance = self.get_object()
-        main_serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        main_serializer = self.get_serializer(instance, data=data, partial=partial)
         main_serializer.context['skip_global_validator'] = True
         main_serializer.is_valid(raise_exception=True)
 
         if snapshot:
-            create_snapshot_activity_stream(request.user, main_serializer.instance, delta_dict=request.data)
+            create_snapshot_activity_stream(request.user, main_serializer.instance, delta_dict=data)
 
         main_object = main_serializer.save()
 
