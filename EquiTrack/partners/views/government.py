@@ -147,10 +147,11 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
         instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True,
                                                             nested_related_names=nested_related_fields, **kwargs)
-        if not serializer.instance.results.exists():
+
+        if not instance.results.filter().exists():
             raise ValidationError({'results': [u'This field is required.']})
 
-        for govint_result in instance.results.all():
+        for govint_result in instance.results.filter():
             # Old instance should be the instance with the same id from old_instance.results
             old_govint_result = old_instance.results.filter(id=govint_result.id).first()
             validator = GovernmentInterventionResultValid(govint_result, old=old_govint_result, user=request.user, stateless=True)
