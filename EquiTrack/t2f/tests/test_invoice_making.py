@@ -38,7 +38,7 @@ class TravelDetails(APITenantTestCase):
         for invoice in Invoice.objects.filter(status=Invoice.PROCESSING):
             main = ET.SubElement(root, 'ta_invoice_ack')
             ET.SubElement(main, 'invoice_reference').text = invoice.reference_number
-            ET.SubElement(main, 'status').text = 'Success'
+            ET.SubElement(main, 'status').text = 'success'
             ET.SubElement(main, 'message').text = 'explanation'
             ET.SubElement(main, 'vision_fi_doc').text = 'vision_fi'
 
@@ -133,11 +133,12 @@ class TravelDetails(APITenantTestCase):
         updater_xml_structure = self.make_invoice_updater()
 
         # Update invoices like vision would do it
-        self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
-                             data=updater_xml_structure,
-                             user=self.unicef_staff,
-                             request_format=None,
-                             content_type='text/xml')
+        response = self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
+                                        data=updater_xml_structure,
+                                        user=self.unicef_staff,
+                                        request_format=None,
+                                        content_type='text/xml')
+        self.assertEqual(response.status_code, 200, response.content)
 
         self.assertEqual(Invoice.objects.filter(status=Invoice.PENDING).count(), 0)
         self.assertEqual(Invoice.objects.filter(status=Invoice.PROCESSING).count(), 0)
