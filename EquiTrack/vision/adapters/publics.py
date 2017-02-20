@@ -16,6 +16,7 @@ log = logging.getLogger(__name__)
 
 class CurrencySyncronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetCurrencyXrate_JSON'
+    GLOBAL_CALL = True
 
     REQUIRED_KEYS = (
         'CURRENCY_NAME',
@@ -30,6 +31,7 @@ class CurrencySyncronizer(VisionDataSynchronizer):
         return json.loads(records)
 
     def _save_records(self, records):
+        records = records['ROWSET']['ROW']
         processed = 0
 
         for row in records:
@@ -70,6 +72,7 @@ class CurrencySyncronizer(VisionDataSynchronizer):
 
 class TravelAgenciesSyncronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetTravelAgenciesInfo_JSON'
+    GLOBAL_CALL = True
 
     REQUIRED_KEYS = (
         'VENDOR_NAME',
@@ -82,6 +85,7 @@ class TravelAgenciesSyncronizer(VisionDataSynchronizer):
         return json.loads(records)
 
     def _save_records(self, records):
+        records = records['ROWSET']['ROW']
         processed = 0
 
         for row in records:
@@ -139,6 +143,8 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         return json.loads(records)
 
     def _save_records(self, records):
+        records = records['ROWSET']['ROW']
+
         # This will hold the wbs/grant/fund grouping
         mapping = defaultdict(lambda: defaultdict(list))
 
