@@ -376,6 +376,9 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         related_attributes = {}
         for attr_name in ('itinerary', 'expenses', 'deductions', 'cost_assignments', 'activities', 'clearances',
                           'action_points'):
+            if self.partial and attr_name not in validated_data:
+                continue
+
             if isinstance(self._fields[attr_name], serializers.ListSerializer):
                 default = []
             elif self._fields[attr_name].allow_null:

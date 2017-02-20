@@ -39,7 +39,7 @@ from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, Trave
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 from t2f.permission_matrix import PERMISSION_MATRIX
-from t2f.vision import InvoiceExport, InvoiceUpdater
+from t2f.vision import InvoiceExport, InvoiceUpdater, InvoiceUpdateError
 
 
 class T2FPagePagination(PageNumberPagination):
@@ -328,5 +328,9 @@ class VisionInvoiceExport(View):
 class VisionInvoiceUpdate(View):
     def post(self, request):
         updater = InvoiceUpdater(request.body)
-        updater.update_invoices()
+        try:
+            with atomic():
+                updater.update_invoices()
+        except InvoiceUpdateError as exc:
+            return HttpResponse('\n'.join(exc.errors), status=status.HTTP_400_BAD_REQUEST)
         return HttpResponse()
