@@ -1229,6 +1229,21 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    def test_intervention_filter_my_partnerships(self):
+        # Test filter
+        params = {
+            "my_partnerships": True,
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+
 
 class TestGovernmentInterventionViews(APITenantTestCase):
 
