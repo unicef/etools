@@ -24,11 +24,14 @@ from EquiTrack.factories import (
     CountryProgrammeFactory,
     GroupFactory,
     InterventionFactory,
+    GovernmentInterventionFactory,
+    SectionFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
 from funds.models import Grant, Donor
 from supplies.models import SupplyItem
+from users.models import Section
 from partners.models import (
     PCA,
     Agreement,
@@ -46,6 +49,14 @@ from partners.models import (
     InterventionSectorLocationLink,
     InterventionBudget,
     InterventionAmendment,
+    GovernmentInterventionResult,
+    AgreementAmendment,
+    AgreementAmendmentType,
+    Assessment,
+    InterventionPlannedVisits,
+    InterventionAttachment,
+    FileType,
+    InterventionResultLink,
 )
 
 
@@ -60,6 +71,36 @@ class TestPartnerOrganizationViews(APITenantTestCase):
                             vendor_number="DDD",
                             short_name="Short name",
                         )
+        report = SimpleUploadedFile("report.pdf", "foobar", "application/pdf")
+        self.assessment1 = Assessment.objects.create(
+            partner=self.partner,
+            type="Micro Assessment"
+        )
+        self.assessment2 = Assessment.objects.create(
+            partner=self.partner,
+            type="Micro Assessment",
+            report=report,
+            completed_date=datetime.date.today()
+        )
+
+    def test_api_partners_delete_asssessment_valid(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/assessments/{}/'.format(self.assessment1.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_api_partners_delete_asssessment_error(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/assessments/{}/'.format(self.assessment2.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Cannot delete a completed assessment"])
 
     def test_api_partners_list_restricted(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
@@ -475,6 +516,25 @@ class TestAgreementAPIView(APITenantTestCase):
                         )
         self.agreement.authorized_officers.add(self.partner_staff)
         self.agreement.save()
+        amendment = SimpleUploadedFile("amendment.pdf", "blah", "application/pdf")
+        self.amendment1 = AgreementAmendment.objects.create(
+            number="001",
+            agreement=self.agreement,
+            signed_amendment="application/pdf",
+            signed_date=datetime.date.today(),
+        )
+        self.amendment2 = AgreementAmendment.objects.create(
+            number="002",
+            agreement=self.agreement,
+        )
+        self.amendment_type1 = AgreementAmendmentType.objects.create(
+            agreement_amendment=self.amendment1,
+            type="CP extension"
+        )
+        self.amendment_type2 = AgreementAmendmentType.objects.create(
+            agreement_amendment=self.amendment2,
+            type="CP extension"
+        )
         self.agreement2 = AgreementFactory(
                                 partner=self.partner,
                                 agreement_type="MOU",
@@ -800,6 +860,44 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.data["status"], "suspended")
         self.assertEquals(Intervention.objects.get(agreement=self.agreement).status, "suspended")
 
+    def test_agreement_amendment_delete_valid(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/amendments/{}/'.format(self.agreement.amendments.last().id),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_agreement_amendment_delete_error(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/amendments/{}/'.format(self.agreement.amendments.first().id),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Cannot delete a signed amendment"])
+
+    def test_agreement_amendment_type_delete_valid(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/amendments/types/{}/'.format(self.amendment_type2.id),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_agreement_amendment_delete_error(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/amendments/types/{}/'.format(self.amendment_type1.id),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Cannot delete an amendment type once amendment is signed"])
+
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
@@ -1060,6 +1158,36 @@ class TestInterventionViews(APITenantTestCase):
             data=self.intervention_data
         )
         self.intervention_data = response.data
+        intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
+        self.planned_visit = InterventionPlannedVisits.objects.create(
+            intervention=intervention_obj
+        )
+        attachment = SimpleUploadedFile("attachment.pdf", "foobar", "application/pdf")
+        self.attachment = InterventionAttachment.objects.create(
+            intervention=intervention_obj,
+            attachment=attachment,
+            type=FileType.objects.create(name="pdf")
+        )
+        self.result = InterventionResultLink.objects.create(
+            intervention=intervention_obj,
+            cp_output=ResultFactory(),
+        )
+        amendment = SimpleUploadedFile("amendment.pdf", "foobar", "application/pdf")
+        self.amendment = InterventionAmendment.objects.create(
+            intervention=intervention_obj,
+            type="Change in Programme Result",
+            signed_date=datetime.date.today(),
+            signed_amendment=amendment
+        )
+        self.sector = Sector.objects.create(name="Sector 2")
+        self.location = LocationFactory()
+        self.isll = InterventionSectorLocationLink.objects.create(
+            intervention=intervention_obj,
+            sector=self.sector,
+        )
+        self.isll.locations.add(LocationFactory())
+        self.isll.save()
+
 
     def test_intervention_list(self):
         response = self.forced_auth_req(
@@ -1067,6 +1195,7 @@ class TestInterventionViews(APITenantTestCase):
             '/api/v2/interventions/',
             user=self.unicef_staff,
         )
+
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 2)
 
@@ -1118,6 +1247,20 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(response.data, ["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."])
+
+    def test_intervention_active_update_planned_budget_rigid(self):
+        self.intervention_data["planned_budget"][0].update(unicef_cash=0)
+        self.intervention_data["planned_budget"][1].update(unicef_cash=0)
+        self.intervention_data.update(status="active")
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            user=self.unicef_staff,
+            data=self.intervention_data
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Cannot change fields while intervention is active: unicef_cash"])
 
     def test_intervention_active_update_sector_locations(self):
         InterventionSectorLocationLink.objects.filter(intervention=self.intervention_data.get("id")).delete()
@@ -1209,6 +1352,423 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_intervention_filter_my_partnerships(self):
+        # Test filter
+        params = {
+            "my_partnerships": True,
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+
+    def test_intervention_planned_budget_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/budgets/{}/'.format(self.intervention_data["planned_budget"][0]["id"]),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_planned_budget_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/budgets/{}/'.format(self.intervention_data["planned_budget"][0]["id"]),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete a planned budget"])
+
+    def test_intervention_planned_visits_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/planned-visits/{}/'.format(self.planned_visit.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_planned_visits_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/planned-visits/{}/'.format(self.planned_visit.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete a planned visit"])
+
+    def test_intervention_attachments_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/attachments/{}/'.format(self.attachment.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_attachments_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/attachments/{}/'.format(self.attachment.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete an attachment"])
+
+    def test_intervention_results_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/results/{}/'.format(self.result.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_results_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/results/{}/'.format(self.result.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete a result"])
+
+    def test_intervention_amendments_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/amendments/{}/'.format(self.amendment.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_amendments_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/amendments/{}/'.format(self.amendment.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete an amendment"])
+
+    def test_intervention_sector_locations_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/sector-locations/{}/'.format(self.isll.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_sector_locations_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/sector-locations/{}/'.format(self.isll.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete a sector location"])
+
+
+class TestGovernmentInterventionViews(APITenantTestCase):
+
+    def setUp(self):
+        self.unicef_staff = UserFactory(is_staff=True)
+        self.partner = PartnerFactory(partner_type="Government")
+        self.partner_non_gov = PartnerFactory(partner_type="UN Agency")
+        self.cp = CountryProgrammeFactory()
+
+        output_res_type, _ = ResultType.objects.get_or_create(name='Output')
+        self.cp_output = ResultFactory(result_type=output_res_type)
+
+        self.govint = GovernmentInterventionFactory(
+            partner=self.partner,
+            country_programme=self.cp
+        )
+
+        self.result = ResultFactory()
+        self.govint_result = GovernmentInterventionResult.objects.create(
+            intervention=self.govint,
+            result=self.result,
+            year=datetime.date.today().year,
+            planned_amount=100,
+        )
+
+    def test_govint_list(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.govint.id)
+        self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
+        self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
+
+    def test_govint_create(self):
+        govint_result = {
+            #"intervention": self.govint.id,
+            "result": self.cp_output.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+            "sectors": [Sector.objects.create(name="Sector 1").id],
+            # TODO Figure out how to create Section on test schema
+            # "sections": [Section.objects.create(name="Section 1").id],
+        }
+        data = {
+            "partner": self.partner.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+
+    def test_govint_create_non_gov_partner(self):
+        govint_result = {
+            "intervention": self.govint.id,
+            "result": self.result.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+            "sectors": [Sector.objects.create(name="Sector 1").id],
+            # TODO Figure out how to create Section on test schema
+            # "sections": [Section.objects.create(name="Section 1").id],
+        }
+        data = {
+            "partner": self.partner_non_gov.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, {"non_field_errors":["Partner type must be Government"]})
+
+    def test_govint_create_update_amount_valid(self):
+        govint_result = {
+            "result": self.cp_output.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+            "planned_visits": 5,
+            "sectors": [Sector.objects.create(name="Sector 1").id],
+            # TODO Figure out how to create Section on test schema
+            # "sections": [Section.objects.create(name="Section 1").id],
+        }
+        data = {
+            "partner": self.partner.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        data = response.data
+        # Fix planned amount can change
+        # data["results"][0].update(planned_amount=90)
+        # response = self.forced_auth_req(
+        #     'patch',
+        #     '/api/v2/government_interventions/{}/'.format(data["id"]),
+        #     user=self.unicef_staff,
+        #     data=data,
+        # )
+        #
+        # self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        # self.assertEquals(response.data, {'errors': [u'Planned amount cannot be changed.']})
+
+    def test_govint_create_update_visits_valid(self):
+        govint_result = {
+            "result": self.cp_output.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+            "planned_visits": 5,
+            "sectors": [Sector.objects.create(name="Sector 1").id],
+            # TODO Figure out how to create Section on test schema
+            # "sections": [SectionFactory().id],
+        }
+        data = {
+            "partner": self.partner.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        data = response.data
+        data["results"][0].update(planned_visits=3)
+
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/government_interventions/{}/'.format(data["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        #self.assertEquals(response.data, {'errors': [u'Planned visits cannot be changed.']})
+
+    def test_govint_create_validation_sectors_sections(self):
+        govint_result = {
+            "intervention": self.govint.id,
+            "result": self.cp_output.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+            "sectors": [],
+            "sections": [],
+        }
+        data = {
+            "partner": self.partner.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        # TODO Figure out how to create Section on test schema
+        # self.assertEquals(response.data, {"errors":["Sector is required.","Section is required."]})
+        # self.assertEquals(response.data, {"errors":["Sector is required."]})
+
+
+    def test_govint_create_validation_results(self):
+        govint_result = {
+            "intervention": self.govint.id,
+        }
+        data = {
+            "partner": self.partner.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_201_CREATED)
+        self.assertEquals(response.data, {"results":{"result":["This field is required."],"year":["This field is required."]}})
+
+    def test_govint_retrieve(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/{}/'.format(self.govint.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["id"], self.govint.id)
+
+    def test_govint_create_validation_partner(self):
+        govint_result = {
+            "intervention": self.govint.id,
+            "result": self.result.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+        }
+        data = {
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, {"partner":["This field is required."]})
+
+    def test_govint_create_validation_cp(self):
+        govint_result = {
+            "intervention": self.govint.id,
+            "result": self.result.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+        }
+        data = {
+            "partner": self.partner.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, {"non_field_errors":["There is no country programme selected"]})
+
+    def test_govint_create_validation_results(self):
+        data = {
+            "partner": self.partner.id,
+            "country_programme": self.cp.id,
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, {'results': [u'This field is required.']} )
 
 
 class TestPartnershipDashboardView(APITenantTestCase):
@@ -1328,198 +1888,3 @@ class TestPartnershipDashboardView(APITenantTestCase):
         self.assertEquals(response.data['active_count'], 1)
         self.assertEquals(response.data['active_this_year_count'], 1)
         self.assertEquals(response.data['active_this_year_percentage'], '100%')
-
-
-# TODO Remove after implementing InterventionTests
-# class TestPCAViews(APITenantTestCase):
-#
-#     def setUp(self):
-#         self.unicef_staff = UserFactory(is_staff=True)
-#         self.partner = PartnerFactory()
-#         self.agreement = AgreementFactory()
-#         self.pca = PCA.objects.create(
-#                                 partner=self.partner,
-#                                 agreement=self.agreement,
-#                                 title="PCA 1",
-#                                 initiation_date=datetime.date.today(),
-#                                 status=PCA.DRAFT,
-#                             )
-#
-#     def test_pca_list(self):
-#         response = self.forced_auth_req(
-#             'get',
-#             '/api/v2/interventions/',
-#             user=self.unicef_staff
-#         )
-#
-#         self.assertEquals(response.status_code, status.HTTP_200_OK)
-#         self.assertEquals(len(response.data), 1)
-#
-#     def test_pca_retrieve(self):
-#         response = self.forced_auth_req(
-#             'get',
-#             '/api/v2/interventions/{}/'.format(self.pca.id),
-#             user=self.unicef_staff
-#         )
-#
-#         self.assertEquals(response.status_code, status.HTTP_200_OK)
-#         self.assertEquals(response.data["id"], self.pca.id)
-#
-#     def test_pca_create_errors(self):
-#         today = datetime.date.today()
-#         data = {
-#             "partner": self.partner.id,
-#             "title": "PCA 2",
-#             "agreement": self.agreement.id,
-#             "initiation_date": datetime.date.today(),
-#             "status": PCA.ACTIVE,
-#             "signed_by_unicef_date": datetime.date(today.year-1, 1, 1),
-#             "signed_by_partner_date": datetime.date(today.year-2, 1, 1),
-#             "budget_log": [],
-#         }
-#         response = self.forced_auth_req(
-#             'post',
-#             '/api/v2/interventions/',
-#             user=self.unicef_staff,
-#             data=data,
-#         )
-#
-#         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-#         self.assertEquals(response.data["partnership_type"], ["This field is required.","This field must be PD or SHPD in case of agreement is PCA."])
-#         self.assertEquals(response.data["office"], ["This field is required."])
-#         self.assertEquals(response.data["programme_focal_points"], ["This field is required if PCA status is ACTIVE or IMPLEMENTED."])
-#         self.assertEquals(response.data["unicef_managers"], ["This field is required if PCA status is ACTIVE or IMPLEMENTED."])
-#         self.assertEquals(response.data["partner_focal_point"], ["This field is required if PCA status is ACTIVE or IMPLEMENTED."])
-#         self.assertEquals(response.data["start_date"], ["This field is required."])
-#         self.assertEquals(response.data["end_date"], ["This field is required."])
-#         self.assertEquals(response.data["signed_by_unicef_date"], ["signed_by_unicef_date and unicef_manager must be provided."])
-#         self.assertEquals(response.data["signed_by_partner_date"], ["signed_by_partner_date and partner_manager must be provided."])
-#         self.assertEquals(response.data["partner_manager"], ["partner_manager and signed_by_partner_date must be provided."])
-#         self.assertEquals(response.data["unicef_manager"], ["unicef_manager and signed_by_unicef_date must be provided."])
-#         self.assertEquals(response.data["population_focus"], ["This field is required if PCA status is ACTIVE or IMPLEMENTED."])
-#
-#     def test_pca_create_update(self):
-#         today = datetime.date.today()
-#         partner_staff = PartnerStaffFactory(partner=self.partner)
-#         supply_item = SupplyItem.objects.create(name="Item1")
-#         sector = Sector.objects.create(name="Sector1")
-#         pcasector = {
-#             "sector": sector.id,
-#         }
-#         supply_plan = {
-#             "item": supply_item.id,
-#             "quantity": 5,
-#         }
-#         budget_log = {
-#             "year": today.year,
-#             "partner_contribution": 1000,
-#             "unicef_cash": 1000,
-#         }
-#         distribution_plan = {
-#             "item": supply_item.id,
-#             "site": LocationFactory().id,
-#             "quantity": 5,
-#         }
-#         amendment_log = {
-#             "amended_at": today,
-#             "type": "Change in Programme Result",
-#         }
-#         unicef_manager = UserFactory()
-#         result_structure = ResultStructureFactory()
-#         office = OfficeFactory()
-#         location = LocationFactory()
-#         gwpcalocation = {
-#             "location": location.id,
-#         }
-#         visit = {
-#             "year": 2016,
-#             "programmatic": 1,
-#             "spot_checks": 1,
-#             "audit": 1,
-#         }
-#         data = {
-#             "partner": self.partner.id,
-#             "title": "PCA 2",
-#             "agreement": self.agreement.id,
-#             "initiation_date": datetime.date.today(),
-#             "status": PCA.ACTIVE,
-#             "partnership_type": PCA.PD,
-#             "result_structure": result_structure.id,
-#             "office": [office.id],
-#             "programme_focal_points": [UserFactory().id],
-#             "unicef_managers": [unicef_manager.id],
-#             "partner_focal_point": [partner_staff.id],
-#             "partner_manager": partner_staff.id,
-#             "unicef_manager": self.unicef_staff.id,
-#             "start_date": today,
-#             "end_date": datetime.date(today.year+1, 1, 1),
-#             "signed_by_unicef_date": datetime.date(today.year-1, 1, 1),
-#             "signed_by_partner_date": datetime.date(today.year-2, 1, 1),
-#             "population_focus": "focus1",
-#             "pcasectors": [pcasector],
-#             "locations": [gwpcalocation],
-#             "budget_log": [budget_log],
-#             "supply_plans": [supply_plan],
-#             "distribution_plans": [distribution_plan],
-#             "fr_numbers": ["Grant"],
-#             "amendments_log": [amendment_log],
-#             "visits": [visit],
-#         }
-#         response = self.forced_auth_req(
-#             'post',
-#             '/api/v2/interventions/',
-#             user=self.unicef_staff,
-#             data=data,
-#         )
-#
-#         self.assertEquals(response.status_code, status.HTTP_201_CREATED)
-#
-#         # Test updates
-#         data = response.data
-#         data.update(budget_log=[budget_log, budget_log])
-#         data.update(supply_plans=[supply_plan, supply_plan])
-#         data.update(distribution_plans=[distribution_plan, distribution_plan])
-#         data.update(amendments_log=[amendment_log, amendment_log])
-#         data.update(pcasectors=[pcasector, pcasector])
-#         data.update(locations=[gwpcalocation, gwpcalocation])
-#         data.update(fr_numbers=["Grant", "WBS"])
-#         data.update(visits=[visit, visit])
-#
-#         response = self.forced_auth_req(
-#             'put',
-#             '/api/v2/interventions/{}/'.format(data["id"]),
-#             user=self.unicef_staff,
-#             data=data,
-#         )
-#
-#         self.assertEquals(response.status_code, status.HTTP_200_OK)
-#         self.assertEquals(len(response.data["budget_log"]), 2)
-#         self.assertEquals(len(response.data["supply_plans"]), 2)
-#         self.assertEquals(len(response.data["distribution_plans"]), 2)
-#         self.assertEquals(len(response.data["amendments_log"]), 2)
-#         self.assertEquals(len(response.data["pcasectors"]), 2)
-#         self.assertEquals(len(response.data["locations"]), 2)
-#         self.assertEquals(len(response.data["fr_numbers"]), 2)
-#         self.assertEquals(len(response.data["visits"]), 2)
-#
-#         # Test filter
-#         params = {
-#             "partnership_type": PCA.PD,
-#             "sector": sector.id,
-#             "location": location.id,
-#             "status": PCA.ACTIVE,
-#             "unicef_managers": unicef_manager.id,
-#             "start_date": datetime.date(today.year-1, 1, 1),
-#             "end_date": datetime.date(today.year+1, 1, 1),
-#             "office": office.id,
-#             "search": "PCA 2",
-#         }
-#         response = self.forced_auth_req(
-#             'get',
-#             '/api/v2/interventions/',
-#             user=self.unicef_staff,
-#             data=params
-#         )
-#
-#         self.assertEquals(response.status_code, status.HTTP_200_OK)
-#         self.assertEquals(response.data[0]["id"], data["id"])

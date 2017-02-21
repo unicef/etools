@@ -3,7 +3,7 @@ from django.conf.urls import url, patterns, include
 
 from t2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, \
     TravelAttachmentViewSet, ActionPointViewSet, InvoiceViewSet, VendorNumberListView, VisionInvoiceExport, \
-    VisionInvoiceUpdate
+    VisionInvoiceUpdate, TravelActivityViewSet
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
@@ -57,6 +57,7 @@ travel_list_patterns = patterns(
     url(r'^travel-admin-export/$', TravelListViewSet.as_view({'get': 'export_travel_admins'}),
         name='travel_admin_export'),
     url(r'^invoice-export/$', TravelListViewSet.as_view({'get': 'export_invoices'}), name='invoice_export'),
+    url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}), name='activities'),
 )
 
 

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from decimal import Decimal
+from decimal import Decimal, getcontext, InvalidOperation
 from itertools import chain
 from datetime import datetime
 
@@ -74,7 +74,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
                   'trip_id')
 
     def validate_due_date(self, value):
-        if value.date() < datetime.now().date():
+        if value.date() < datetime.utcnow().date():
             raise ValidationError('Due date cannot be earlier than today.')
         return value
 
@@ -100,6 +100,7 @@ class ActionPointSerializer(serializers.ModelSerializer):
         if value not in statuses:
             raise ValidationError('Invalid status. Possible choices: {}'.format(', '.join(statuses)))
         return value
+
 
 class IteneraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -154,21 +155,26 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
     locations = serializers.PrimaryKeyRelatedField(many=True, queryset=Location.objects.all(), required=False,
                                                    allow_null=True)
     travel_type = LowerTitleField(required=False, allow_null=True)
+    is_primary_traveler = serializers.BooleanField(required=False)
     primary_traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
 
     class Meta:
         model = TravelActivity
-        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date')
+        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date',
+                  'is_primary_traveler')
 
     def validate(self, attrs):
         if 'id' not in attrs:
-            if 'primary_traveler' in attrs:
-                if not attrs['primary_traveler']:
-                    raise ValidationError({'primary_traveler': 'This field have to be true upon creation'})
-            else:
-                raise ValidationError({'primary_traveler': 'This field is required'})
+            if not attrs.get('is_primary_traveler'):
+                if not attrs.get('primary_traveler'):
+                    raise ValidationError({'primary_traveler': 'This field is required'})
 
         return attrs
+
+    def to_internal_value(self, data):
+        ret = super(TravelActivitySerializer, self).to_internal_value(data)
+        ret.pop('is_primary_traveler', None)
+        return ret
 
 
 class TravelAttachmentSerializer(serializers.ModelSerializer):
@@ -193,6 +199,11 @@ class DSASerializer(serializers.Serializer):
     dsa_region_name = serializers.CharField()
 
 
+class CostSummaryExpensesSerializer(serializers.Serializer):
+    vendor_number = serializers.CharField(read_only=True)
+    amount = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=2)
+
+
 class CostSummarySerializer(serializers.Serializer):
     dsa_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     expenses_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
@@ -200,6 +211,7 @@ class CostSummarySerializer(serializers.Serializer):
     dsa = DSASerializer(many=True)
     preserved_expenses = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     expenses_delta = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    expenses = CostSummaryExpensesSerializer(many=True)
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):
@@ -255,8 +267,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         return value
 
     def validate_itinerary(self, value):
-        if self.transition_name == 'submit_for_approval' and len(value) < 1:
-            raise ValidationError('Travel must have at least one itinerary item')
+        if self.transition_name == 'submit_for_approval' and len(value) < 2:
+            raise ValidationError('Travel must have at least two itinerary item')
 
         if not value:
             return value
@@ -297,9 +309,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         traveler_id = data.get('traveler', traveler_id)
 
         for travel_activity_data in data.get('activities', []):
-            if travel_activity_data.get('primary_traveler') is False:
-                travel_activity_data['primary_traveler'] = None
-            else:
+            if travel_activity_data.get('is_primary_traveler'):
                 travel_activity_data['primary_traveler'] = traveler_id
 
         return super(TravelDetailsSerializer, self).to_internal_value(data)
@@ -309,9 +319,9 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         for travel_activity_data in data.get('activities', []):
             if travel_activity_data['primary_traveler'] == data.get('traveler', None):
-                travel_activity_data['primary_traveler'] = True
+                travel_activity_data['is_primary_traveler'] = True
             else:
-                travel_activity_data['primary_traveler'] = False
+                travel_activity_data['is_primary_traveler'] = False
 
         return data
 
@@ -362,13 +372,19 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             new_models.append(related_instance)
         return new_models
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data, model_serializer=None):
+        model_serializer = model_serializer or self
+
         related_attributes = {}
-        for attr_name in ('itinerary', 'expenses', 'deductions', 'cost_assignments', 'activities', 'clearances',
-                          'action_points'):
-            if isinstance(self._fields[attr_name], serializers.ListSerializer):
+        related_fields = {n:f for n, f in model_serializer.get_fields().items()
+                          if isinstance(f, serializers.BaseSerializer) and f.read_only == False}
+        for attr_name in related_fields:
+            if model_serializer.partial and attr_name not in validated_data:
+                continue
+
+            if isinstance(related_fields[attr_name], serializers.ListSerializer):
                 default = []
-            elif self._fields[attr_name].allow_null:
+            elif related_fields[attr_name].allow_null:
                 default = None
             else:
                 default = {}
@@ -390,6 +406,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         for field_name, value in m2m_fields.items():
             related_manager = getattr(obj, field_name)
+            to_remove = [r for r in related_manager.all() if r.id not in {r.id for r in value}]
+            related_manager.remove(*to_remove)
             related_manager.add(*value)
 
     def update_related_objects(self, attr_name, related_data):
@@ -397,7 +415,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         related = getattr(self.instance, attr_name)
         if many:
-            # Load the 1ueryset
+            # Load the queryset
             related = related.all()
 
             model = self._fields[attr_name].child.Meta.model
@@ -442,6 +460,23 @@ class TravelListSerializer(TravelDetailsSerializer):
         read_only_fields = ('status',)
 
 
+class TravelActivityByPartnerSerializer(serializers.ModelSerializer):
+    locations = serializers.SlugRelatedField(slug_field='name', many=True, read_only=True)
+    primary_traveler = serializers.CharField(source='primary_traveler.get_full_name')
+    reference_number = serializers.SerializerMethodField()
+    status = serializers.SerializerMethodField()
+
+    def get_status(self, obj):
+        return obj.travels.first().status
+
+    def get_reference_number(self, obj):
+        return obj.travels.first().reference_number
+
+    class Meta:
+        model = TravelActivity
+        fields = ("primary_traveler", "travel_type", "date", "locations", "reference_number", "status",)
+
+
 class CloneOutputSerializer(TravelDetailsSerializer):
     class Meta:
         model = Travel
@@ -455,30 +490,42 @@ class CloneParameterSerializer(serializers.Serializer):
         fields = ('traveler',)
 
 
+def rount_to_currency_precision(currency, amount):
+    if currency.decimal_places:
+        q = Decimal('1.' + '0'*currency.decimal_places)
+    else:
+        q = Decimal('1')
+
+    try:
+        return amount.quantize(q)
+    except InvalidOperation:
+        # Fall back to a slower option but make sure to get the best precision possible
+        max_precision = getcontext().prec
+        amount_tuple = amount.as_tuple()
+        max_decimal_places = max_precision - len(amount_tuple[1]) - amount_tuple[2]
+        return amount.quantize(Decimal('1.' + '0'*max_decimal_places))
+
+
 class InvoiceItemSerializer(serializers.ModelSerializer):
+    amount = serializers.SerializerMethodField()
+
     class Meta:
         model = InvoiceItem
         fields = ('wbs', 'grant', 'fund', 'amount')
 
+    def get_amount(self, obj):
+        return str(rount_to_currency_precision(obj.invoice.currency, obj.amount))
+
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    message = serializers.SerializerMethodField()
-    vision_fi_id = serializers.SerializerMethodField()
     ta_number = serializers.CharField(source='travel.reference_number', read_only=True)
     items = InvoiceItemSerializer(many=True, read_only=True)
+    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
         fields = ('id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
                   'message', 'vision_fi_id', 'ta_number', 'items')
 
-    def get_message(self, obj):
-        return ''
-
-    def get_vision_fi_id(self, obj):
-        return ''
-
-    def to_representation(self, instance):
-        ret = super(InvoiceSerializer, self).to_representation(instance)
-        ret['amount'] = Decimal(ret['amount']).quantize(Decimal('1.'+'0'*instance.currency.decimal_places))
-        return ret
+    def get_amount(self, obj):
+        return str(rount_to_currency_precision(obj.currency, obj.amount))

@@ -1,6 +1,5 @@
 import copy
 import logging
-
 from django.apps import apps
 from django.utils.functional import cached_property
 
@@ -12,23 +11,44 @@ from django_fsm import (
 from rest_framework.exceptions import ValidationError
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+from EquiTrack.parsers import parse_multipart_data
 
-
-def check_rigid_fields(obj, fields):
-    if not obj.old_instance:
+def check_rigid_fields(obj, fields, old_instance=None):
+    if not old_instance and not obj.old_instance:
         return False, None
     for field in fields:
-        if getattr(obj, field) != getattr(obj.old_instance, field):
+        old_instance = old_instance or obj.old_instance
+        if getattr(obj, field) != getattr(old_instance, field):
             return False, field
     return True, None
 
 
 class ValidatorViewMixin(object):
-    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name, partial=False):
+
+    def _parse_data(self, request):
+        dt_cp = request.data
+        for k in dt_cp:
+            if dt_cp[k] in [u'', u'null']:
+                dt_cp[k] = None
+            elif dt_cp[k] == u'true':
+                dt_cp[k] = True
+            elif dt_cp[k] == u'false':
+                dt_cp[k] = False
+            elif type(dt_cp[k]) == unicode:
+                dt_cp[k] = str(dt_cp[k])
+
+        dt = parse_multipart_data(dt_cp)
+        return dt
+
+    def up_related_field(self, mother_obj, field, fieldClass, fieldSerializer, rel_prop_name, reverse_name,
+                         partial=False, nested_related_names=None):
         if not field:
             return
         for item in field:
             item.update({reverse_name: mother_obj.pk})
+            nested_related_data = {}
+            if nested_related_names:
+                nested_related_data = {k: v for k, v in item.items() if k in nested_related_names}
             if item.get('id', None):
                 try:
                     instance = fieldClass.objects.get(id=item['id'])
@@ -37,9 +57,11 @@ class ValidatorViewMixin(object):
 
                 instance_serializer = fieldSerializer(instance=instance,
                                                       data=item,
-                                                      partial=partial)
+                                                      partial=partial,
+                                                      context=nested_related_data)
             else:
-                instance_serializer = fieldSerializer(data=item)
+                instance_serializer = fieldSerializer(data=item,
+                                                      context=nested_related_data)
 
             try:
                 instance_serializer.is_valid(raise_exception=True)
@@ -48,12 +70,15 @@ class ValidatorViewMixin(object):
                 raise e
             instance_serializer.save()
 
-    def my_create(self, request, related_f, snapshot=None, **kwargs):
+    def my_create(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
         my_relations = {}
-        for f in related_f:
-            my_relations[f] = request.data.pop(f, [])
+        partial = kwargs.pop('partial', False)
+        data = self._parse_data(request)
 
-        main_serializer = self.get_serializer(data=request.data)
+        for f in related_f:
+            my_relations[f] = data.pop(f, [])
+
+        main_serializer = self.get_serializer(data=data)
         main_serializer.context['skip_global_validator'] = True
         main_serializer.is_valid(raise_exception=True)
 
@@ -67,27 +92,28 @@ class ValidatorViewMixin(object):
 
         def _get_reverse_for_field(field):
             return main_object.__class__._meta.get_field(field).remote_field.name
-
         for k, v in my_relations.iteritems():
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
-                                  k, _get_reverse_for_field(k))
+                                  k, _get_reverse_for_field(k), partial, nested_related_names)
 
         return main_serializer
 
-    def my_update(self, request, related_f, snapshot=None, **kwargs):
+    def my_update(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
         partial = kwargs.pop('partial', False)
+        data = self._parse_data(request)
+
         my_relations = {}
         for f in related_f:
-            my_relations[f] = request.data.pop(f, [])
+            my_relations[f] = data.pop(f, [])
 
         old_instance = self.get_object()
         instance = self.get_object()
-        main_serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        main_serializer = self.get_serializer(instance, data=data, partial=partial)
         main_serializer.context['skip_global_validator'] = True
         main_serializer.is_valid(raise_exception=True)
 
         if snapshot:
-            create_snapshot_activity_stream(request.user, main_serializer.instance, delta_dict=request.data)
+            create_snapshot_activity_stream(request.user, main_serializer.instance, delta_dict=data)
 
         main_object = main_serializer.save()
 
@@ -104,7 +130,7 @@ class ValidatorViewMixin(object):
 
         for k, v in my_relations.iteritems():
             self.up_related_field(main_object, v, _get_model_for_field(k), self.SERIALIZER_MAP[k],
-                                  k, _get_reverse_for_field(k), partial)
+                                  k, _get_reverse_for_field(k), partial, nested_related_names)
 
         return instance, old_instance, main_serializer
 
@@ -164,7 +190,7 @@ def update_object(obj, kwdict):
         setattr(obj, k, v)
 
 class CompleteValidation(object):
-    def __init__(self, new, user=None, old=None, instance_class=None):
+    def __init__(self, new, user=None, old=None, instance_class=None, stateless=False):
         if old and isinstance(old, dict):
             raise TypeError('if old is transmitted to complete validation it needs to be a model instance')
 
@@ -195,12 +221,15 @@ class CompleteValidation(object):
             new = new_instance
             old = old_instance
 
+        self.stateless = stateless
         self.new = new
-        self.new_status = self.new.status
+        if not self.stateless:
+            self.new_status = self.new.status
         self.skip_transition = not old
         self.skip_permissions = not user
         self.old = old
-        self.old_status = self.old.status if self.old else None
+        if not self.stateless:
+            self.old_status = self.old.status if self.old else None
         self.user = user
 
     def check_transition_conditions(self, transition):
@@ -373,17 +402,18 @@ class CompleteValidation(object):
         if not self.basic_validation[0]:
             return False, self.map_errors(self.basic_validation[1])
 
-        if not self.skip_transition:
+        if not self.skip_transition and not self.stateless:
             transitional = self.transitional_validation()
             if not transitional[0]:
                 return False, self.map_errors(transitional[1])
 
-        state_valid = self.state_valid()
-        if not state_valid[0]:
-            return False, self.map_errors(state_valid[1])
+        if not self.stateless:
+            state_valid = self.state_valid()
+            if not state_valid[0]:
+                return False, self.map_errors(state_valid[1])
 
-        if self.make_auto_transitions():
-            self.new.save()
+            if self.make_auto_transitions():
+                self.new.save()
         return True, []
 
     @property

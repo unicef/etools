@@ -12,6 +12,7 @@ from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    DestroyAPIView,
 )
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
@@ -19,7 +20,8 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from partners.models import (
     PartnerStaffMember,
     Intervention,
-    PartnerOrganization
+    PartnerOrganization,
+    Assessment,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -29,11 +31,14 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
+    AssessmentDetailSerializer
 )
-from partners.permissions import PartnerPermission, PartneshipManagerPermission
+from partners.permissions import PartneshipManagerRepPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
+from EquiTrack.parsers import parse_multipart_data
+from EquiTrack.validation_mixins import ValidatorViewMixin
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
     """
@@ -130,13 +135,19 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
+class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     Retrieve and Update PartnerOrganization.
     """
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
+    #parser_classes = (FormParser, MultiPartParser)
+
+    SERIALIZER_MAP = {
+        'assessments': AssessmentDetailSerializer,
+        'staff_members': PartnerStaffMemberCreateUpdateSerializer
+    }
 
     def get_serializer_class(self, format=None):
         if self.request.method in ["PUT", "PATCH"]:
@@ -146,36 +157,12 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
+        related_fields = ['assessments', 'staff_members']
 
-        partial = kwargs.pop('partial', False)
-        staff_members = request.data.pop('staff_members', None)
-        instance = self.get_object()
-        po_serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        po_serializer.is_valid(raise_exception=True)
-
-        partner = po_serializer.save()
-
-        if staff_members:
-            for item in staff_members:
-                item.update({u"partner": partner.pk})
-                if item.get('id', None):
-                    try:
-                        sm_instance = PartnerStaffMember.objects.get(id=item['id'])
-                    except PartnerStaffMember.DoesNotExist:
-                        sm_instance = None
-
-                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(instance=sm_instance, data=item, partial=partial)
-
-                else:
-                    staff_member_serializer = PartnerStaffMemberCreateUpdateSerializer(data=item)
-
-                try:
-                    staff_member_serializer.is_valid(raise_exception=True)
-                except ValidationError as e:
-                    e.detail = {'staff_members': e.detail}
-                    raise e
-
-                staff_member_serializer.save()
+        instance, old_instance, serializer = self.my_update(
+            request,
+            related_fields,
+            snapshot=True,  **kwargs)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
@@ -187,10 +174,12 @@ class PartnerOrganizationDetailAPIView(RetrieveUpdateDestroyAPIView):
 
 
 class PartnerOrganizationHactAPIView(ListCreateAPIView):
+
     """
     Create new Partners.
     Returns a list of Partners.
     """
+    permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(
             Q(documents__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
             (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
@@ -206,3 +195,18 @@ class PartnerStaffMemberListAPIVIew(ListCreateAPIView):
     serializer_class = PartnerStaffMemberDetailSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
+
+
+class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            assessment = Assessment.objects.get(id=int(kwargs['pk']))
+        except Assessment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if assessment.completed_date or assessment.report:
+            raise ValidationError("Cannot delete a completed assessment")
+        else:
+            assessment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)

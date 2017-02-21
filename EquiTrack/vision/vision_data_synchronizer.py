@@ -25,6 +25,7 @@ class VisionDataSynchronizer:
     URL = settings.VISION_URL
     NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS = {}
+    GLOBAL_CALL = False
 
     def __init__(self, country=None):
         if not country:
@@ -33,11 +34,13 @@ class VisionDataSynchronizer:
             raise VisionException(message='You must set the ENDPOINT name')
 
         self.county = country
-        self.url = '{}/{}/{}'.format(
+        self.url = '{}/{}'.format(
             self.URL,
-            self.ENDPOINT,
-            country.business_area_code
+            self.ENDPOINT
         )
+        if not self.GLOBAL_CALL:
+            self.url += '/{}'.format(country.business_area_code)
+
         logger.info("Vision sync url:%s" % self.url)
         connection.set_tenant(country)
         logger.info('Country is {}'.format(country.name))

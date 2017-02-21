@@ -54,6 +54,8 @@ from .models import (
     InterventionResultLink,
     InterventionBudget,
     InterventionAttachment,
+    AgreementAmendmentType,
+    GovernmentInterventionResultActivity,
 
 )
 from .filters import (
@@ -167,7 +169,6 @@ class AmendmentLogInlineAdmin(admin.TabularInline):
     model = AmendmentLog
     extra = 0
     fields = (
-        'type',
         'status',
         'amended_at',
         'amendment_number',
@@ -251,6 +252,7 @@ class BudgetInlineAdmin(admin.TabularInline):
     model = InterventionBudget
     fields = (
         'year',
+        'currency',
         'partner_contribution',
         'unicef_cash',
         'in_kind_amount',
@@ -534,7 +536,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
                         )
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(PartnershipAdmin, self).save_model(request, obj, form, change)
@@ -765,7 +767,7 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         )
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(GovernmentInterventionAdmin, self).save_model(request, obj, form, change)
@@ -804,7 +806,7 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
     )
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(PartnerStaffMemberAdmin, self).save_model(request, obj, form, change)
@@ -939,7 +941,6 @@ class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
     model = AgreementAmendmentLog
     extra = 0
     fields = (
-        'type',
         'status',
         'amended_at',
         'amendment_number',
@@ -963,7 +964,6 @@ class AgreementAmendmentInlineAdmin(admin.TabularInline):
     model = AgreementAmendment
     extra = 0
     fields = (
-        'type',
         'signed_amendment',
         'signed_date',
         'number',
@@ -1039,7 +1039,7 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     download_url.short_description = 'PDF Agreement'
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(AgreementAdmin, self).save_model(request, obj, form, change)
@@ -1076,7 +1076,7 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
         return False
 
     def save_model(self, request, obj, form, change):
-        created = False if changed else True
+        created = False if change else True
         create_snapshot_activity_stream(request.user, obj, created=created)
 
         super(FundingCommitmentAdmin, self).save_model(request, obj, form, change)
@@ -1086,12 +1086,14 @@ admin.site.register(SupplyItem)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Agreement, AgreementAdmin)
+admin.site.register(AgreementAmendmentType)
 admin.site.register(PartnerOrganization, PartnerAdmin)
 admin.site.register(FileType)
 # admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
+admin.site.register(GovernmentInterventionResultActivity)
 admin.site.register(IndicatorReport)
 admin.site.register(BankDetails)
 admin.site.register(InterventionPlannedVisits)
@@ -1099,3 +1101,5 @@ admin.site.register(InterventionPlannedVisits)
 admin.site.register(InterventionAmendment)
 admin.site.register(PartnershipBudget)
 admin.site.register(InterventionSectorLocationLink)
+admin.site.register(InterventionResultLink)
+

@@ -14,6 +14,7 @@ from rest_framework_csv import renderers as r
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
+    DestroyAPIView,
 )
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
@@ -43,6 +44,7 @@ from partners.serializers.interventions_v2 import (
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
+from partners.permissions import PartneshipManagerRepPermission
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
@@ -114,7 +116,9 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
         if query_params:
             queries = []
-
+            if query_params.get("my_partnerships", "").lower() == "true":
+                queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
+                               Q(unicef_signatory=self.request.user))
             if "document_type" in query_params.keys():
                 queries.append(Q(partnership_type=query_params.get("document_type")))
             if "country_programme" in query_params.keys():
@@ -171,37 +175,30 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'amendments': InterventionAmendmentCUSerializer,
-        'sector_locations': InterventionSectorLocationCUSerializer
+        'sector_locations': InterventionSectorLocationCUSerializer,
+        'result_links': InterventionResultCUSerializer
     }
 
     def get_serializer_class(self):
         """
         Use different serilizers for methods
         """
-        if self.request.method == "PUT":
+        if self.request.method in ["PATCH", "PUT"]:
             return InterventionCreateUpdateSerializer
         return super(InterventionDetailAPIView, self).get_serializer_class()
 
-    def retrieve(self, request, pk=None, format=None):
-        """
-        Returns an Intervention object for this PK
-        """
-        try:
-            queryset = self.queryset.get(id=pk)
-            serializer = self.serializer_class(queryset)
-            data = serializer.data
-        except Intervention.DoesNotExist:
-            data = {}
-        return Response(
-            data,
-            status=status.HTTP_200_OK
-        )
 
     @transaction.atomic
     def update(self, request, *args, **kwargs):
-        related_fields = ['planned_budget', 'planned_visits', 'attachments', 'amendments', 'sector_locations']
-
-        instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True, **kwargs)
+        related_fields = ['planned_budget', 'planned_visits',
+                          'attachments', 'amendments',
+                          'sector_locations', 'result_links']
+        nested_related_names = ['ll_results']
+        instance, old_instance, serializer = self.my_update(
+            request,
+            related_fields,
+            nested_related_names=nested_related_names,
+            snapshot=True, **kwargs)
 
         validator = InterventionValid(instance, old=old_instance, user=request.user)
         if not validator.is_valid:
@@ -215,3 +212,117 @@ class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView
             serializer = self.get_serializer(instance)
 
         return Response(InterventionDetailSerializer(instance).data)
+
+
+class InterventionBudgetDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_budget = InterventionBudget.objects.get(id=int(kwargs['pk']))
+        except InterventionBudget.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_budget.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_budget.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
+            intervention_budget.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a planned budget")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionPlannedVisitsDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_planned_visit = InterventionPlannedVisits.objects.get(id=int(kwargs['pk']))
+        except InterventionPlannedVisits.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_planned_visit.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_planned_visit.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
+            intervention_planned_visit.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a planned visit")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionAttachmentDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_attachment = InterventionAttachment.objects.get(id=int(kwargs['pk']))
+        except InterventionAttachment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_attachment.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_attachment.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
+            intervention_attachment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete an attachment")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionResultLinkDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_result = InterventionResultLink.objects.get(id=int(kwargs['pk']))
+        except InterventionResultLink.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_result.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_result.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
+            intervention_result.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a result")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionAmendmentDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_amendment = InterventionAmendment.objects.get(id=int(kwargs['pk']))
+        except InterventionAmendment.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_amendment.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_amendment.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
+            intervention_amendment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete an amendment")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            intervention_sector_location = InterventionSectorLocationLink.objects.get(id=int(kwargs['pk']))
+        except InterventionSectorLocationLink.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if intervention_sector_location.intervention.status in [Intervention.DRAFT] or \
+                        request.user in intervention_sector_location.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
+            intervention_sector_location.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a sector location")
+            return Response(status=status.HTTP_400_BAD_REQUEST)

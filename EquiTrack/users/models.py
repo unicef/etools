@@ -53,6 +53,12 @@ class Country(TenantMixin):
     vision_sync_enabled = models.BooleanField(default=True)
     vision_last_synced = models.DateTimeField(null=True, blank=True)
 
+    local_currency = models.ForeignKey('publics.Currency',
+                                       related_name='workspaces',
+                                       null=True,
+                                       on_delete=models.SET_NULL,
+                                       blank=True)
+
     # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
     offices = models.ManyToManyField('Office', related_name='offices')
     sections = models.ManyToManyField('Section', related_name='sections')

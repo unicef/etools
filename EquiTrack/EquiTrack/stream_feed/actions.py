@@ -44,12 +44,12 @@ def create_snapshot_activity_stream(actor, target, created=False, delta_dict={})
             # Stringify any non-JSON Serializeable data types for previous
             for key, value in previous.items():
                 if type(value) not in [int, float, bool, str]:
-                    previous[key] = str(previous[key])
+                    previous[key] = unicode(previous[key])
 
             # Stringify any non-JSON Serializeable data types for changes
             for key, value in changes.items():
                 if type(value) not in [int, float, bool, str]:
-                    changes[key] = str(changes[key])
+                    changes[key] = unicode(changes[key])
 
             # We only want to generate a new activity stream item if there is field changes
             if changes:

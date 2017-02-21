@@ -3,17 +3,18 @@ import string
 from django.db import connection
 from django.views.generic import FormView
 from django.contrib.auth.models import Group
+from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets, mixins
 from rest_framework.views import APIView
-from rest_framework.generics import RetrieveAPIView, ListAPIView
+from rest_framework.generics import RetrieveAPIView, ListAPIView, RetrieveUpdateAPIView
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
 
 from users.serializers import MinimalUserSerializer
-from .permissions import IsSuperUser
+from rest_framework.permissions import IsAdminUser
 from users.models import Office, Section
 from reports.models import Sector
 from .forms import ProfileForm
@@ -25,7 +26,8 @@ from .serializers import (
     SectionSerializer,
     UserCreationSerializer,
     SimpleProfileSerializer,
-    SimpleUserSerializer
+    SimpleUserSerializer,
+    MyProfileSerializer,
 )
 
 
@@ -90,6 +92,23 @@ class UsersView(ListAPIView):
         ).order_by('user__first_name')
 
 
+class MyProfileAPIView(RetrieveUpdateAPIView):
+    """
+    Updates a UserProfile object
+    """
+    queryset = UserProfile.objects.all()
+    serializer_class = MyProfileSerializer
+
+    def get_object(self):
+        """
+        Always returns current user's profile
+        """
+        obj = get_object_or_404(UserProfile, user__id=self.request.user.id)
+        # May raise a permission denied
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+
 class UsersDetailAPIView(RetrieveAPIView):
     """
     Retrieve a User in the current country
@@ -99,7 +118,7 @@ class UsersDetailAPIView(RetrieveAPIView):
 
     def retrieve(self, request, pk=None):
         """
-        Returns an Intervention object for this PK
+        Returns a UserProfile object for this PK
         """
         try:
             queryset = self.queryset.get(user__id=pk)
@@ -204,17 +223,19 @@ class UserViewSet(mixins.RetrieveModelMixin,
         queryset = super(UserViewSet, self).get_queryset()
         queryset = queryset.prefetch_related('profile', 'groups', 'user_permissions')
         # Filter for Partnership Managers only
+        driver_qps = self.request.query_params.get("drivers", "")
+        if driver_qps.lower() == "true":
+            queryset = queryset.filter(groups__name='Driver')
+
         filter_param = self.request.query_params.get("partnership_managers", "")
         if filter_param.lower() == "true":
-            manager_group = Group.objects.get(name="Partnership Manager")
-            queryset = queryset.filter(groups__in=[manager_group])
+            queryset = queryset.filter(groups__name="Partnership Manager")
 
         return queryset
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        unicef_user_group = Group.objects.get(name="UNICEF User")
-        queryset = queryset.filter(groups__in=[unicef_user_group])
+        queryset = queryset.filter(groups__name="UNICEF User")
         filter_param = self.request.query_params.get("all", "")
         if filter_param.lower() != "true":
             queryset = queryset.filter(profile__country=self.request.user.profile.country)

@@ -1,4 +1,5 @@
 import json
+import logging
 from operator import xor
 
 from django.core.exceptions import ValidationError
@@ -6,6 +7,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
+from reports.serializers.v2 import LowerResultSerializer, LowerResultCUSerializer
 from locations.models import Location
 
 from partners.models import (
@@ -24,6 +26,7 @@ from partners.models import (
     InterventionSectorLocationLink,
     InterventionResultLink
 )
+from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
 
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
@@ -43,6 +46,7 @@ class InterventionBudgetNestedSerializer(serializers.ModelSerializer):
             "in_kind_amount_local",
             "year",
             "total",
+            "currency"
         )
 
 
@@ -68,6 +72,7 @@ class InterventionBudgetCUSerializer(serializers.ModelSerializer):
             "in_kind_amount_local",
             "year",
             "total",
+            'currency'
         )
         #read_only_fields = [u'total']
 
@@ -120,12 +125,7 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DistributionPlan
-        fields = (
-            "id,"
-            "item",
-            "quantity",
-            "site",
-        )
+        fields = "__all__"
 
 
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
@@ -196,31 +196,79 @@ class InterventionSectorLocationCUSerializer(serializers.ModelSerializer):
         )
 
 class InterventionAttachmentSerializer(serializers.ModelSerializer):
+    attachment_file = serializers.FileField(source="attachment", read_only=True)
     class Meta:
         model = InterventionAttachment
         fields = (
-            'id', 'intervention', 'type', 'attachment'
+            'id', 'intervention', 'type', 'attachment', "attachment_file"
         )
 
 class InterventionResultNestedSerializer(serializers.ModelSerializer):
-    cp_output = ResultLightSerializer()
-    ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    #cp_output = ResultLightSerializer()
+    #ram_indicators = RAMIndicatorLightSerializer(many=True, read_only=True)
+    ll_results = LowerResultSerializer(many=True, read_only=True)
+
     class Meta:
         model = InterventionResultLink
         fields = (
-            'id', 'intervention', 'cp_output', 'ram_indicators'
+            'id', 'intervention', 'cp_output', 'ram_indicators', 'll_results'
         )
+
 class InterventionResultCUSerializer(serializers.ModelSerializer):
+
+    lower_results = LowerResultSerializer(many=True, read_only=True)
+
     class Meta:
         model = InterventionResultLink
         fields = "__all__"
+
+    def update_ll_results(self, instance, ll_results):
+        ll_results = ll_results if ll_results else []
+
+        for result in ll_results:
+            result['result_link'] = instance.pk
+            applied_indicators = {'applied_indicators': result.pop('applied_indicators', [])}
+            instance_id = result.get('id', None)
+            if instance_id:
+                try:
+                    ll_result_instance = LowerResult.objects.get(pk=instance_id)
+                except LowerResult.DoesNotExist as e:
+                    raise ValidationError('lower_result has an id but cannot be found in the db')
+
+                ll_result_serializer = LowerResultCUSerializer(
+                    instance=ll_result_instance,
+                    data=result,
+                    context=applied_indicators,
+                    partial=True
+                )
+
+            else:
+                ll_result_serializer = LowerResultCUSerializer(data=result, context=applied_indicators)
+
+            if ll_result_serializer.is_valid(raise_exception=True):
+                ll_result_serializer.save()
+
+
+
+    @transaction.atomic
+    def create(self, validated_data):
+        ll_results = self.context.pop('ll_results', [])
+        instance = super(InterventionResultCUSerializer, self).create(validated_data)
+        self.update_ll_results(instance, ll_results)
+        return instance
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        ll_results = self.context.pop('ll_results', [])
+        self.update_ll_results(instance, ll_results)
+        return super(InterventionResultCUSerializer, self).update(instance, validated_data)
 
 
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
-
+    prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     supplies = SupplyPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -242,6 +290,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
+    prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -252,7 +301,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner", "agreement", "document_type", "hrp", "number",
+            "id", "partner", "agreement", "document_type", "hrp", "number", "prc_review_document_file",
             "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "signed_by_unicef_date", "signed_by_partner_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",

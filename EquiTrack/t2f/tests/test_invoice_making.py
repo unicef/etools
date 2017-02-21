@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 
-from time import time
-from StringIO import StringIO
-
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -19,9 +16,9 @@ from t2f.models import Travel, Expense, CostAssignment, InvoiceItem, Invoice
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory
 
 
-class TravelDetails(APITenantTestCase):
+class InvoiceMaking(APITenantTestCase):
     def setUp(self):
-        super(TravelDetails, self).setUp()
+        super(InvoiceMaking, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
         self.traveler = UserFactory()
 
@@ -38,7 +35,7 @@ class TravelDetails(APITenantTestCase):
         for invoice in Invoice.objects.filter(status=Invoice.PROCESSING):
             main = ET.SubElement(root, 'ta_invoice_ack')
             ET.SubElement(main, 'invoice_reference').text = invoice.reference_number
-            ET.SubElement(main, 'status').text = 'Success'
+            ET.SubElement(main, 'status').text = 'success'
             ET.SubElement(main, 'message').text = 'explanation'
             ET.SubElement(main, 'vision_fi_doc').text = 'vision_fi'
 
@@ -50,8 +47,6 @@ class TravelDetails(APITenantTestCase):
             maker.do_invoicing()
 
         # Currencies
-        usd = CurrencyFactory(name='USD',
-                              code='usd')
         huf = CurrencyFactory(name='HUF',
                               code='huf')
 
@@ -64,16 +59,13 @@ class TravelDetails(APITenantTestCase):
         grant_3 = GrantFactory(name='Grant #3', wbs=wbs_2)
 
         fund_1 = FundFactory(name='Fund #1', grant=grant_1)
-        fund_2 = FundFactory(name='Fund #2', grant=grant_2)
-        fund_3 = FundFactory(name='Fund #3', grant=grant_3)
-        fund_4 = FundFactory(name='Fund #4', grant=grant_3)
+        fund_2 = FundFactory(name='Fund #4', grant=grant_3)
 
         # Expense types
         et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
         et_t_travel = ExpenseTypeFactory(title='Travel', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
         et_t_other = ExpenseTypeFactory(title='Other', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)
 
-        et_a_andras = ExpenseTypeFactory(title='Andras Travel', vendor_number='a_andras')
         et_a_nico = ExpenseTypeFactory(title='Nico Travel', vendor_number='a_nico')
         et_a_torben = ExpenseTypeFactory(title='Torben Travel', vendor_number='a_torben')
 
@@ -101,6 +93,12 @@ class TravelDetails(APITenantTestCase):
                                                account_currency=huf,
                                                amount=15)
 
+        Expense.objects.create(travel=travel,
+                               type=et_t_travel,
+                               document_currency=huf,
+                               account_currency=huf,
+                               amount=None)
+
         # Add cost assignments
         ca_1 = CostAssignment.objects.create(travel=travel,
                                              share=70,
@@ -111,7 +109,7 @@ class TravelDetails(APITenantTestCase):
                                              share=30,
                                              wbs=wbs_2,
                                              grant=grant_3,
-                                             fund=fund_4)
+                                             fund=fund_2)
 
         # Do the testing
         self.assertEqual(travel.invoices.all().count(), 0)
@@ -133,11 +131,12 @@ class TravelDetails(APITenantTestCase):
         updater_xml_structure = self.make_invoice_updater()
 
         # Update invoices like vision would do it
-        self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
-                             data=updater_xml_structure,
-                             user=self.unicef_staff,
-                             request_format=None,
-                             content_type='text/xml')
+        response = self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
+                                        data=updater_xml_structure,
+                                        user=self.unicef_staff,
+                                        request_format=None,
+                                        content_type='text/xml')
+        self.assertEqual(response.status_code, 200, response.content)
 
         self.assertEqual(Invoice.objects.filter(status=Invoice.PENDING).count(), 0)
         self.assertEqual(Invoice.objects.filter(status=Invoice.PROCESSING).count(), 0)

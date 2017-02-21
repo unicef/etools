@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.transaction import atomic
@@ -23,7 +24,7 @@ from rest_framework_xml.parsers import XMLParser
 from rest_framework_xml.renderers import XMLRenderer
 
 from publics.models import TravelExpenseType
-from t2f.filters import TravelRelatedModelFilter
+from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
 from t2f.filters import travel_list, action_points, invoices
 from locations.models import Location
 from partners.models import PartnerOrganization, Intervention
@@ -32,13 +33,14 @@ from t2f.serializers.export import TravelListExportSerializer, FinanceExportSeri
     InvoiceExportSerializer
 
 from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice, IteneraryItem, \
-    InvoiceItem
+    InvoiceItem, TravelActivity
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
-    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer
+    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer, \
+    TravelActivityByPartnerSerializer
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 from t2f.permission_matrix import PERMISSION_MATRIX
-from t2f.vision import InvoiceExport, InvoiceUpdater
+from t2f.vision import InvoiceExport, InvoiceUpdater, InvoiceUpdateError
 
 
 class T2FPagePagination(PageNumberPagination):
@@ -92,7 +94,7 @@ class TravelListViewSet(mixins.ListModelMixin,
             transition_name = kwargs['transition_name']
             request.data['transition_name'] = self._transition_name_mapping.get(transition_name, transition_name)
 
-        serializer = TravelDetailsSerializer(data=request.data)
+        serializer = TravelDetailsSerializer(data=request.data, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -174,6 +176,11 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
             serializer.transition_name = 'submit_for_approval'
         run_transition(serializer)
 
+        # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
+        if serializer.transition_name == 'approve' and settings.DISABLE_INVOICING:
+            serializer.transition_name = 'send_for_payment'
+            run_transition(serializer)
+
     def check_treshold(self, travel):
         expenses = {'user': Decimal(0),
                     'travel_agent': Decimal(0)}
@@ -251,6 +258,14 @@ class TravelAttachmentViewSet(mixins.ListModelMixin,
         return context
 
 
+class TravelActivityViewSet(mixins.ListModelMixin,
+                            viewsets.GenericViewSet):
+    queryset = TravelActivity.objects.all()
+    permission_classes = (IsAdminUser,)
+    serializer_class = TravelActivityByPartnerSerializer
+    filter_backends = (TravelActivityPartnerFilter,)
+    lookup_url_kwarg = 'partner_organization_pk'
+
 class ActionPointViewSet(mixins.ListModelMixin,
                          mixins.RetrieveModelMixin,
                          mixins.UpdateModelMixin,
@@ -319,5 +334,9 @@ class VisionInvoiceExport(View):
 class VisionInvoiceUpdate(View):
     def post(self, request):
         updater = InvoiceUpdater(request.body)
-        updater.update_invoices()
+        try:
+            with atomic():
+                updater.update_invoices()
+        except InvoiceUpdateError as exc:
+            return HttpResponse('\n'.join(exc.errors), status=status.HTTP_400_BAD_REQUEST)
         return HttpResponse()
