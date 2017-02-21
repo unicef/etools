@@ -177,7 +177,7 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
         run_transition(serializer)
 
         # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
-        if serializer.transition_name == 'approve' and not settings.USE_INVOICING:
+        if serializer.transition_name == 'approve' and settings.DISABLE_INVOICING:
             serializer.transition_name = 'send_for_payment'
             run_transition(serializer)
 

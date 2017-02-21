@@ -236,7 +236,7 @@ USE_L10N = True
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
 
-USE_INVOICING = os.getenv('USE_INVOICING', False)
+DISABLE_INVOICING = os.getenv('DISABLE_INVOICING', False)
 ########## END GENERAL CONFIGURATION
 
 

@@ -166,7 +166,7 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airlines_1.id, airlines_3.id])
 
-    @override_settings(USE_INVOICING=True)
+    @override_settings(DISABLE_INVOICING=False)
     def test_preserved_expenses(self):
         currency = CurrencyFactory()
         expense_type = ExpenseTypeFactory()

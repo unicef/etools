@@ -179,7 +179,7 @@ class Travel(models.Model):
 
     def check_pending_invoices(self):
         # If invoicing is turned off, don't check pending invoices
-        if not settings.USE_INVOICING:
+        if settings.DISABLE_INVOICING:
             return True
 
         if self.invoices.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]).exists():
@@ -244,7 +244,7 @@ class Travel(models.Model):
         self.generate_invoices()
 
         # If invoicing is turned off, don't send a mail
-        if not settings.USE_INVOICING:
+        if settings.DISABLE_INVOICING:
             return
 
         self.send_notification_email('Travel #{} sent for payment.'.format(self.reference_number),

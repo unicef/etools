@@ -22,7 +22,7 @@ class MailingTest(APITenantTestCase):
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
-    @override_settings(USE_INVOICING=True)
+    @override_settings(DISABLE_INVOICING=False)
     def test_mailing(self):
         tenant_country = self.travel.traveler.profile.country
         tenant_country.business_area_code = '0'
