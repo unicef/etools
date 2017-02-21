@@ -37,3 +37,6 @@ class MailingTest(APITenantTestCase):
         self.travel.mark_as_completed()
 
         self.assertEqual(len(mail.outbox), 7)
+
+        for email in mail.outbox:
+            self.assertIn(self.travel.reference_number, email.subject, email.subject)

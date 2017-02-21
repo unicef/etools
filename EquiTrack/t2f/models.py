@@ -188,7 +188,7 @@ class Travel(models.Model):
         # TODO validate this!!!
         if not self.supervisor:
             return
-        self.send_notification_email('Travel #{} was sent for approval.'.format(self.id),
+        self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
 
@@ -207,14 +207,14 @@ class Travel(models.Model):
         self.approved_cost_travel_agencies = expenses['travel_agent']
 
         self.approved_at = datetime.now()
-        self.send_notification_email('Travel #{} was approved.'.format(self.id),
+        self.send_notification_email('Travel #{} was approved.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/approved.html')
 
     @transition(status, source=[SUBMITTED], target=REJECTED)
     def reject(self):
         self.rejected_at = datetime.now()
-        self.send_notification_email('Travel #{} was rejected.'.format(self.id),
+        self.send_notification_email('Travel #{} was rejected.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/rejected.html')
 
@@ -226,7 +226,7 @@ class Travel(models.Model):
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = datetime.now()
-        self.send_notification_email('Travel #{} was cancelled.'.format(self.id),
+        self.send_notification_email('Travel #{} was cancelled.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/cancelled.html')
 
@@ -238,7 +238,7 @@ class Travel(models.Model):
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
         self.generate_invoices()
-        self.send_notification_email('Travel #{} sent for payment.'.format(self.id),
+        self.send_notification_email('Travel #{} sent for payment.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/sent_for_payment.html')
 
@@ -246,20 +246,20 @@ class Travel(models.Model):
                 target=CERTIFICATION_SUBMITTED,
                 conditions=[check_pending_invoices])
     def submit_certificate(self):
-        self.send_notification_email('Travel #{} certification was submitted.'.format(self.id),
+        self.send_notification_email('Travel #{} certification was submitted.'.format(self.reference_number),
                                      self.supervisor.email,
                                      'emails/certificate_submitted.html')
 
     @transition(status, source=[CERTIFICATION_SUBMITTED], target=CERTIFICATION_APPROVED)
     def approve_certificate(self):
-        self.send_notification_email('Travel #{} certification was approved.'.format(self.id),
+        self.send_notification_email('Travel #{} certification was approved.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/certificate_approved.html')
 
     @transition(status, source=[CERTIFICATION_APPROVED, CERTIFICATION_SUBMITTED],
                 target=CERTIFICATION_REJECTED)
     def reject_certificate(self):
-        self.send_notification_email('Travel #{} certification was rejected.'.format(self.id),
+        self.send_notification_email('Travel #{} certification was rejected.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/certificate_rejected.html')
 
@@ -267,7 +267,7 @@ class Travel(models.Model):
                 target=CERTIFIED,
                 conditions=[check_pending_invoices])
     def mark_as_certified(self):
-        self.send_notification_email('Travel #{} certification was certified.'.format(self.id),
+        self.send_notification_email('Travel #{} certification was certified.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/certified.html')
 
@@ -275,7 +275,7 @@ class Travel(models.Model):
                 conditions=[check_completion_conditions])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
-        self.send_notification_email('Travel #{} was completed.'.format(self.id),
+        self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
                                      self.supervisor.email,
                                      'emails/trip_completed.html')
 
