@@ -388,7 +388,7 @@ class Expense(models.Model):
     type = models.ForeignKey('publics.TravelExpenseType', related_name='+', null=True)
     document_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     account_currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=4)
+    amount = models.DecimalField(max_digits=10, decimal_places=4, null=True)
 
 
 class Deduction(models.Model):

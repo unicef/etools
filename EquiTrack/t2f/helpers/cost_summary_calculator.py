@@ -54,7 +54,7 @@ class CostSummaryCalculator(object):
 
     def get_expenses(self):
         expenses_mapping = defaultdict(Decimal)
-        expenses_qs = self.travel.expenses.select_related('type')
+        expenses_qs = self.travel.expenses.exclude(amount=None).select_related('type')
         for expense in expenses_qs:
             expenses_mapping[expense.type.vendor_number] += expense.amount
         return expenses_mapping
