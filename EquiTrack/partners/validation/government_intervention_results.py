@@ -6,7 +6,7 @@ def check_if_year_correct(year):
     try:
         y = int(year)
         return 1980 < y < 2030
-    except Exception as e:
+    except ValueError:
         return False
     return True
 
