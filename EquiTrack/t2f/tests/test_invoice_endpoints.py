@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from decimal import getcontext
 import json
 
 from django.core.urlresolvers import reverse
@@ -125,3 +126,17 @@ class InvoiceEndpoints(APITenantTestCase):
 
         self.assertEqual(invoice_data['amount'], '123')
         self.assertEqual(invoice_data['items'][0]['amount'], '123')
+
+        # 10 decimal places, just to make sure if unrealistically big numbers are handled correctly too
+        currency.decimal_places = 50
+        currency.save()
+
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        invoice_data = response_json['data'][0]
+
+        really_precise_number = '123.4567000000000000000000000'
+        self.assertEqual(len(really_precise_number), getcontext().prec + 1) # +1 because of the decimal separator
+        self.assertEqual(invoice_data['amount'], really_precise_number)
+        self.assertEqual(invoice_data['items'][0]['amount'], really_precise_number)

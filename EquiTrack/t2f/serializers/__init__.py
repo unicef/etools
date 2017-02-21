@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from decimal import Decimal
+from decimal import Decimal, getcontext, InvalidOperation
 from itertools import chain
 from datetime import datetime
 
@@ -490,6 +490,22 @@ class CloneParameterSerializer(serializers.Serializer):
         fields = ('traveler',)
 
 
+def rount_to_currency_precision(currency, amount):
+    if currency.decimal_places:
+        q = Decimal('1.' + '0'*currency.decimal_places)
+    else:
+        q = Decimal('1')
+
+    try:
+        return amount.quantize(q)
+    except InvalidOperation:
+        # Fall back to a slower option but make sure to get the best precision possible
+        max_precision = getcontext().prec
+        amount_tuple = amount.as_tuple()
+        max_decimal_places = max_precision - len(amount_tuple[1]) - amount_tuple[2]
+        return amount.quantize(Decimal('1.' + '0'*max_decimal_places))
+
+
 class InvoiceItemSerializer(serializers.ModelSerializer):
     amount = serializers.SerializerMethodField()
 
@@ -498,11 +514,7 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
         fields = ('wbs', 'grant', 'fund', 'amount')
 
     def get_amount(self, obj):
-        if obj.invoice.currency.decimal_places:
-            q = Decimal('1.' + '0'*obj.invoice.currency.decimal_places)
-        else:
-            q = Decimal('1')
-        return str(obj.amount.quantize(q))
+        return str(rount_to_currency_precision(obj.invoice.currency, obj.amount))
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
@@ -516,8 +528,4 @@ class InvoiceSerializer(serializers.ModelSerializer):
                   'message', 'vision_fi_id', 'ta_number', 'items')
 
     def get_amount(self, obj):
-        if obj.currency.decimal_places:
-            q = Decimal('1.' + '0'*obj.currency.decimal_places)
-        else:
-            q = Decimal('1')
-        return str(obj.amount.quantize(q))
+        return str(rount_to_currency_precision(obj.currency, obj.amount))
