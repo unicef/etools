@@ -5,21 +5,28 @@ import logging
 from collections import defaultdict
 
 from decimal import Decimal
-from django.core.exceptions import ObjectDoesNotExist
+
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.mail.message import EmailMultiAlternatives
+from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
+from django.template.context import Context
+from django.template.loader import render_to_string
 
 from t2f.models import Invoice
 from users.models import Country as Workspace
 
 try:
     import xml.etree.cElementTree as ET
-    raise ImportError
 except ImportError:
     import xml.etree.ElementTree as ET
 
 
 log = logging.getLogger(__name__)
+
+User = get_user_model()
 
 
 class InvoiceUpdateError(Exception):
@@ -166,3 +173,28 @@ class InvoiceUpdater(object):
             invoice.message = invoice_data['message']
             invoice.vision_fi_id = invoice_data['vision_fi_doc']
             invoice.save()
+
+            if invoice.status == Invoice.ERROR:
+                self.send_mail_for_error(workspace, invoice)
+
+    def send_mail_for_error(self, workspace, invoice):
+        url = reverse('t2f:invoices:details', kwargs={'invoice_pk': invoice.id})
+
+        context = Context({'invoice': invoice,
+                           'url': url})
+        html_content = render_to_string('emails/failed_invoice_sync.html', context)
+
+        recipients = User.objects.filter(profile__country=workspace,
+                                         groups__name='Finance Focal Point').values_list('email', flat=True)
+
+        # TODO what should it be?
+        sender = ''
+        msg = EmailMultiAlternatives('[Travel2Field VISION Error] {}'.format(invoice.reference_number),
+                                     '',
+                                     sender, recipients)
+        msg.attach_alternative(html_content, 'text/html')
+
+        try:
+            msg.send(fail_silently=False)
+        except ValidationError as exc:
+            log.error('Was not able to send the email. Exception: %s', exc.message)
