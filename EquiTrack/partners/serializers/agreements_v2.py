@@ -54,14 +54,14 @@ class AgreementAmendmentCreateUpdateSerializer(serializers.ModelSerializer):
 
         for a in amd_types:
             a["agreement_amendment"] = instance.pk
-            if 'id' in a:
+            if a.get('id'):
                 try:
                     agr_amd_type = AgreementAmendmentType.objects.get(id=a['id'])
                     agr_amd_type_serializer = AgreementAmendmentTypeSerializer(instance=agr_amd_type,
                                                                                data=a,
                                                                                partial=True)
                 except AgreementAmendmentType.DoesNotExist:
-                    raise ValidationError('Agreement Amendment received an id that is not present in the db {}'.
+                    raise ValidationError('Agreement Amendment Type received an id that is not present in the db {}'.
                                           format(a['id']))
             else:
                 agr_amd_type_serializer = AgreementAmendmentTypeSerializer(data=a)
