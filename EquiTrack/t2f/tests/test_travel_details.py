@@ -112,6 +112,7 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['deductions']), 1)
+
     def test_duplication(self):
         data = {'traveler': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_driver',
@@ -129,6 +130,40 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertIn('id', response_json)
+
+    def test_airlines(self):
+        dsaregion = DSARegion.objects.first()
+        airlines_1 = AirlineCompanyFactory()
+        airlines_2 = AirlineCompanyFactory()
+        airlines_3 = AirlineCompanyFactory()
+
+        data = {'cost_assignments': [],
+                'deductions': [],
+                'expenses': [],
+                'itinerary': [{'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-17T12:06:55.821490',
+                               'dsa_region': dsaregion.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.PLANE,
+                               'airlines': [airlines_1.id, airlines_2.id]}],
+                'traveler': self.traveler.id,
+                'ta_required': True,
+                'supervisor': self.unicef_staff.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+
+        travel_id = response_json['id']
+
+        data = response_json
+        data['itinerary'][0]['airlines'] = [airlines_1.id, airlines_3.id]
+        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
+                                                         kwargs={'travel_pk': travel_id}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['itinerary'][0]['airlines'], [airlines_1.id, airlines_3.id])
 
     def test_preserved_expenses(self):
         currency = CurrencyFactory()
@@ -436,6 +471,7 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
+
     def test_action_point_500(self):
         dsa = DSARegionFactory()
         currency = CurrencyFactory()

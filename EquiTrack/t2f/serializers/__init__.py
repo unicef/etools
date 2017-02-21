@@ -372,16 +372,19 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             new_models.append(related_instance)
         return new_models
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data, model_serializer=None):
+        model_serializer = model_serializer or self
+
         related_attributes = {}
-        for attr_name in ('itinerary', 'expenses', 'deductions', 'cost_assignments', 'activities', 'clearances',
-                          'action_points'):
-            if self.partial and attr_name not in validated_data:
+        related_fields = {n:f for n, f in model_serializer.get_fields().items()
+                          if isinstance(f, serializers.BaseSerializer) and f.read_only == False}
+        for attr_name in related_fields:
+            if model_serializer.partial and attr_name not in validated_data:
                 continue
 
-            if isinstance(self._fields[attr_name], serializers.ListSerializer):
+            if isinstance(related_fields[attr_name], serializers.ListSerializer):
                 default = []
-            elif self._fields[attr_name].allow_null:
+            elif related_fields[attr_name].allow_null:
                 default = None
             else:
                 default = {}
@@ -403,6 +406,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         for field_name, value in m2m_fields.items():
             related_manager = getattr(obj, field_name)
+            to_remove = [r for r in related_manager.all() if r.id not in {r.id for r in value}]
+            related_manager.remove(*to_remove)
             related_manager.add(*value)
 
     def update_related_objects(self, attr_name, related_data):
@@ -410,7 +415,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         related = getattr(self.instance, attr_name)
         if many:
-            # Load the 1ueryset
+            # Load the queryset
             related = related.all()
 
             model = self._fields[attr_name].child.Meta.model
