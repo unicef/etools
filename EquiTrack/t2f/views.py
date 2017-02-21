@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.transaction import atomic
@@ -93,7 +94,7 @@ class TravelListViewSet(mixins.ListModelMixin,
             transition_name = kwargs['transition_name']
             request.data['transition_name'] = self._transition_name_mapping.get(transition_name, transition_name)
 
-        serializer = TravelDetailsSerializer(data=request.data)
+        serializer = TravelDetailsSerializer(data=request.data, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -174,6 +175,11 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
         if self.check_treshold(serializer.instance):
             serializer.transition_name = 'submit_for_approval'
         run_transition(serializer)
+
+        # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
+        if serializer.transition_name == 'approve' and settings.DISABLE_INVOICING:
+            serializer.transition_name = 'send_for_payment'
+            run_transition(serializer)
 
     def check_treshold(self, travel):
         expenses = {'user': Decimal(0),
