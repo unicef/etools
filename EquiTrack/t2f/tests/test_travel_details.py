@@ -79,6 +79,39 @@ class TravelDetails(APITenantTestCase):
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 204)
 
+    def test_patch_request(self):
+        currency = CurrencyFactory()
+        expense_type = ExpenseTypeFactory()
+
+        data = {'cost_assignments': [],
+                'deductions': [{'date': '2016-11-03',
+                                'breakfast': True,
+                                'lunch': True,
+                                'dinner': False,
+                                'accomodation': True}],
+                'traveler': self.traveler.id,
+                'ta_required': True,
+                'supervisor': self.unicef_staff.id,
+                'expenses': [{'amount': '120',
+                              'type': expense_type.id,
+                              'account_currency': currency.id,
+                              'document_currency': currency.id}]}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+
+        travel_id = response_json['id']
+
+        data = {'expenses': response_json['expenses']}
+        data['expenses'].append({'amount': '200',
+                                 'type': expense_type.id,
+                                 'account_currency': currency.id,
+                                 'document_currency': currency.id})
+        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
+                                                        kwargs={'travel_pk': travel_id}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['deductions']), 1)
     def test_duplication(self):
         data = {'traveler': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:details:clone_for_driver',
