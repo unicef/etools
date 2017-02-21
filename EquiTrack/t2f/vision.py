@@ -14,7 +14,6 @@ from users.models import Country as Workspace
 
 try:
     import xml.etree.cElementTree as ET
-    raise ImportError
 except ImportError:
     import xml.etree.ElementTree as ET
 
