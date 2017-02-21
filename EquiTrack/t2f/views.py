@@ -25,6 +25,7 @@ from rest_framework_xml.renderers import XMLRenderer
 from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
 from t2f.filters import travel_list, action_points, invoices
+from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization, Intervention
 from reports.models import Result
@@ -228,6 +229,45 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
         return traveler
 
 
+class TravelDashboardViewSet(mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+    queryset = Travel.objects.all()
+    permission_classes = (IsAdminUser,)
+
+    def list(self, request, year, month, office_id, **kwargs):
+        data = {}
+
+        travels_all = Travel.objects.filter(
+            start_date__year=year,
+            start_date__month=month,
+            office_id=office_id,
+        )
+        data["planned"] = travels_all.filter(status=Travel.PLANNED).count()
+        data["approved"] = travels_all.filter(status=Travel.APPROVED).count()
+        data["completed"] = travels_all.filter(status=Travel.COMPLETED).count()
+
+        section_ids = Travel.objects.all().values_list('section', flat=True)
+        travels_by_section = []
+        for section_id in section_ids:
+            travels = travels_all.filter(section=section_id)
+            if travels:
+                planned = travels.filter(status=Travel.PLANNED).count()
+                approved = travels.filter(status=Travel.APPROVED).count()
+                completed = travels.filter(status=Travel.COMPLETED).count()
+                section_trips = {
+                    "section_id": travels.first().section.id,
+                    "section_name": travels.first().section.name,
+                    "planned_travels": planned,
+                    "approved_travels": approved,
+                    "completed_travels": completed,
+                }
+                travels_by_section.append(section_trips)
+
+        data["travels_by_section"] = travels_by_section
+
+        return Response(data)
+
+
 class TravelAttachmentViewSet(mixins.ListModelMixin,
                               mixins.CreateModelMixin,
                               mixins.DestroyModelMixin,
@@ -272,6 +312,35 @@ class ActionPointViewSet(mixins.ListModelMixin,
                        action_points.ActionPointSortFilter,
                        action_points.ActionPointFilterBoxFilter)
     lookup_url_kwarg = 'action_point_pk'
+
+
+class ActionPointDashboardViewSet(mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+    queryset = ActionPoint.objects.all()
+    permission_classes = (IsAdminUser,)
+
+    def list(self, request, office_id, **kwargs):
+        data = {}
+
+        section_ids = Travel.objects.all().values_list('section', flat=True)
+        action_points_by_section = []
+        for section_id in section_ids:
+            travels = Travel.objects.filter(section=section_id, office_id=office_id)
+            if travels:
+                action_points = ActionPoint.objects.filter(travel__in=travels)
+                total = action_points.count()
+                completed = action_points.filter(status=Travel.COMPLETED).count()
+                section_action_points = {
+                    "section_id": travels.first().section.id,
+                    "section_name": travels.first().section.name,
+                    "total_action_points": total,
+                    "completed_action_points": completed,
+                }
+                action_points_by_section.append(section_action_points)
+
+        data["action_points_by_section"] = action_points_by_section
+
+        return Response(data)
 
 
 class InvoiceViewSet(mixins.ListModelMixin,
