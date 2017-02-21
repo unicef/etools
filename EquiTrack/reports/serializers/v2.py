@@ -98,12 +98,8 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         applied_indicators = self.context.pop('applied_indicators', [])
-
-        logging.debug('LowerResultCUSerializer CREATE __ IS THIS WORKING?')
         instance = super(LowerResultCUSerializer, self).create(validated_data)
-        logging.debug(instance.pk)
         self.update_applied_indicators(instance, applied_indicators)
-
         return instance
 
     @transaction.atomic
