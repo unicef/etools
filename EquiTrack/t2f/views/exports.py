@@ -6,11 +6,11 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
-from t2f.filters import travel_list
+from t2f.filters import travel_list, action_points
 from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
-    InvoiceExportSerializer
+    InvoiceExportSerializer, ActionPointExportSerializer
 
-from t2f.models import Travel, IteneraryItem, InvoiceItem
+from t2f.models import Travel, IteneraryItem, InvoiceItem, ActionPoint
 from t2f.views import T2FPagePagination
 
 
@@ -79,4 +79,29 @@ class InvoiceExport(ExportBaseView):
 
         response = Response(data=serialzier.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="InvoiceExport.csv"'
+        return response
+
+
+class ActionPointExportView(generics.GenericAPIView):
+    queryset = ActionPoint.objects.all()
+    serializer_class = ActionPointExportSerializer
+    pagination_class = T2FPagePagination
+    permission_classes = (IsAdminUser,)
+    filter_backends = (action_points.ActionPointSearchFilter,
+                       action_points.ActionPointSortFilter,
+                       action_points.ActionPointFilterBoxFilter)
+    renderer_classes = (renderers.CSVRenderer,)
+    lookup_url_kwarg = 'action_point_pk'
+
+    def get_renderer_context(self):
+        context = super(ActionPointExportView, self).get_renderer_context()
+        context['header'] = self.serializer_class.Meta.fields
+        return context
+
+    def export(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serialzier = self.get_serializer(queryset, many=True)
+
+        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
+        response['Content-Disposition'] = 'attachment; filename="ActionPointExport.csv"'
         return response

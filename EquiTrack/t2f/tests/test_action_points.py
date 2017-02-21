@@ -1,8 +1,11 @@
 from __future__ import unicode_literals
 
+import csv
 import json
 from datetime import datetime, timedelta
+from unittest import skip
 
+from StringIO import StringIO
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
@@ -252,3 +255,22 @@ class ActionPoints(APITenantTestCase):
         response_json = json.loads(response.rendered_content)['action_points']
         self.assertEqual(response_json,
                          [{'status': ['Invalid status. Possible choices: cancelled, ongoing, completed, open']}])
+
+    def test_export(self):
+        response = self.forced_auth_req('get', reverse('t2f:action_points:export'),
+                                        data={'format': 'csv'}, user=self.unicef_staff)
+        export_csv = csv.reader(StringIO(response.content))
+
+        # check header
+        self.assertEqual(export_csv.next(),
+                         ['action_point_number',
+                          'trip_reference_number',
+                          'description',
+                          'due_date',
+                          'person_responsible',
+                          'status',
+                          'completed_date',
+                          'actions_taken',
+                          'flag_for_follow_up',
+                          'assigned_by',
+                          'url'])

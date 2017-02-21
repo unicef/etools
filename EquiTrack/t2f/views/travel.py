@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db.transaction import atomic
 
-from rest_framework import generics, viewsets, mixins, status
+from rest_framework import viewsets, mixins, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
 from rest_framework.permissions import IsAdminUser
@@ -237,4 +237,5 @@ class ActionPointViewSet(mixins.ListModelMixin,
     filter_backends = (action_points.ActionPointSearchFilter,
                        action_points.ActionPointSortFilter,
                        action_points.ActionPointFilterBoxFilter)
+    renderer_classes = (renderers.JSONRenderer,)
     lookup_url_kwarg = 'action_point_pk'

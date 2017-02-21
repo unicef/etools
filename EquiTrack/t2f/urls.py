@@ -2,7 +2,7 @@
 from django.conf.urls import url, patterns, include
 
 from t2f.views.dashboard import TravelDashboardViewSet, ActionPointDashboardViewSet
-from t2f.views.exports import TravelListExport, FinanceExport, TravelAdminExport, InvoiceExport
+from t2f.views.exports import TravelListExport, FinanceExport, TravelAdminExport, InvoiceExport, ActionPointExportView
 from t2f.views.generics import SettingsView, StaticDataView, PermissionMatrixView, VendorNumberListView
 from t2f.views.invoices import InvoiceViewSet
 from t2f.views.travel import TravelListViewSet, TravelDetailsViewSet, TravelAttachmentViewSet, ActionPointViewSet,\
@@ -30,7 +30,7 @@ clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_drive
 
 action_points_list = ActionPointViewSet.as_view({'get': 'list'})
 action_points_dashboard_list = ActionPointDashboardViewSet.as_view({'get': 'list'})
-
+action_points_export = ActionPointExportView.as_view()
 action_points_details = ActionPointViewSet.as_view({'get': 'retrieve',
                                                     'put': 'update',
                                                     'patch': 'partial_update'})
@@ -82,6 +82,7 @@ action_points_patterns = patterns(
     url(r'^$', action_points_list, name='list'),
     url(r'^(?P<action_point_pk>[0-9]+)/$', action_points_details, name='details'),
     url(r'^dashboard/', action_points_dashboard_list, name='dashboard'),
+    url(r'^export/$', action_points_export, name='export')
 )
 
 invoice_patterns = patterns(
