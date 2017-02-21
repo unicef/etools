@@ -62,5 +62,5 @@ class TravelMethods(APITenantTestCase):
                                account_currency=huf,
                                amount=None)
 
-        cost_summary = travel.cost_summary
-        self.assertEqual(cost_summary, {})
+        # This should not raise 500
+        travel.cost_summary

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.core import mail
+from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -21,6 +22,7 @@ class MailingTest(APITenantTestCase):
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
 
+    @override_settings(USE_INVOICING=True)
     def test_mailing(self):
         tenant_country = self.travel.traveler.profile.country
         tenant_country.business_area_code = '0'

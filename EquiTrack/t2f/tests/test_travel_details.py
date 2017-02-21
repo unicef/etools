@@ -4,6 +4,7 @@ import json
 from StringIO import StringIO
 
 from django.core.urlresolvers import reverse
+from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -165,6 +166,7 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airlines_1.id, airlines_3.id])
 
+    @override_settings(USE_INVOICING=True)
     def test_preserved_expenses(self):
         currency = CurrencyFactory()
         expense_type = ExpenseTypeFactory()
