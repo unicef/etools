@@ -93,7 +93,7 @@ class TravelListViewSet(mixins.ListModelMixin,
             transition_name = kwargs['transition_name']
             request.data['transition_name'] = self._transition_name_mapping.get(transition_name, transition_name)
 
-        serializer = TravelDetailsSerializer(data=request.data)
+        serializer = TravelDetailsSerializer(data=request.data, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)

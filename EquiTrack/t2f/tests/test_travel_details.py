@@ -108,7 +108,7 @@ class TravelDetails(APITenantTestCase):
                                  'account_currency': currency.id,
                                  'document_currency': currency.id})
         response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
-                                                        kwargs={'travel_pk': travel_id}),
+                                                         kwargs={'travel_pk': travel_id}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['deductions']), 1)
@@ -436,3 +436,60 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
+    def test_action_point_500(self):
+        dsa = DSARegionFactory()
+        currency = CurrencyFactory()
+
+        data = {'deductions': [{'date': '2017-02-20',
+                                'breakfast': False,
+                                'lunch': False,
+                                'dinner': False,
+                                'accomodation': False,
+                                'no_dsa': False},
+                               {'date': '2017-02-21',
+                                'breakfast': False,
+                                'lunch': False,
+                                'dinner': False,
+                                'accomodation': False,
+                                'no_dsa': False},
+                               {'date': '2017-02-22',
+                                'breakfast': False,
+                                'lunch': False,
+                                'dinner': False,
+                                'accomodation': False,
+                                'no_dsa': False},
+                               {'date': '2017-02-23',
+                                'breakfast': False,
+                                'lunch': False,
+                                'dinner': False,
+                                'accomodation': False,
+                                'no_dsa': False}],
+                'itinerary': [{'airlines': [],
+                               'origin': 'A',
+                               'destination': 'B',
+                               'dsa_region': dsa.id,
+                               'departure_date': '2017-02-19T23:00:00.355Z',
+                               'arrival_date': '2017-02-20T23:00:00.362Z',
+                               'mode_of_travel': 'car'},
+                              {'origin': 'B',
+                               'destination': 'A',
+                               'dsa_region': dsa.id,
+                               'departure_date': '2017-02-22T23:00:00.376Z',
+                               'arrival_date': '2017-02-23T23:00:00.402Z',
+                               'mode_of_travel': 'car'}],
+                'cost_assignments': [],
+                'expenses': [],
+                'action_points': [{'description': 'Test',
+                                   'due_date': '2017-02-21T23:00:00.237Z',
+                                   'person_responsible': self.unicef_staff.id,
+                                   'follow_up': True,
+                                   'status': 'open',
+                                   'completed_at': '2017-02-21T23:00:00.259Z',
+                                   'actions_taken': 'asdasd'}],
+                'ta_required': True,
+                'currency': currency.id,
+                'supervisor': self.unicef_staff.id,
+                'traveler': self.traveler.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201, response.rendered_content)
