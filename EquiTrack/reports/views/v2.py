@@ -77,4 +77,3 @@ class LowerResultsDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a lower result")
-            return Response(status=status.HTTP_204_NO_CONTENT)

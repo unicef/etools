@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -97,9 +99,9 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         applied_indicators = self.context.pop('applied_indicators', [])
 
-        print ('LowerResultCUSerializer CREATE __ IS THIS WORKING?')
+        logging.debug('LowerResultCUSerializer CREATE __ IS THIS WORKING?')
         instance = super(LowerResultCUSerializer, self).create(validated_data)
-        print instance.pk
+        logging.debug(instance.pk)
         self.update_applied_indicators(instance, applied_indicators)
 
         return instance

@@ -1,4 +1,5 @@
 import json
+import logging
 from operator import xor
 
 from django.core.exceptions import ValidationError
@@ -253,9 +254,9 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         ll_results = self.context.pop('ll_results', [])
 
-        print ('INTERVENTION RESULT CU SERIALIZER CREATE __ IS THIS WORKING?')
+        logging.debug('INTERVENTION RESULT CU SERIALIZER CREATE __ IS THIS WORKING?')
         instance = super(InterventionResultCUSerializer, self).create(validated_data)
-        print instance.pk
+        logging.debug(instance.pk)
         self.update_ll_results(instance, ll_results)
 
         return instance
@@ -264,10 +265,9 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         ll_results = self.context.pop('ll_results', [])
 
-
         self.update_ll_results(instance, ll_results)
 
-        print validated_data
+        logging.debug(validated_data)
         return super(InterventionResultCUSerializer, self).update(instance, validated_data)
 
 
