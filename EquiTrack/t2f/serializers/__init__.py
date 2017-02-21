@@ -486,29 +486,33 @@ class CloneParameterSerializer(serializers.Serializer):
 
 
 class InvoiceItemSerializer(serializers.ModelSerializer):
+    amount = serializers.SerializerMethodField()
+
     class Meta:
         model = InvoiceItem
         fields = ('wbs', 'grant', 'fund', 'amount')
 
+    def get_amount(self, obj):
+        if obj.invoice.currency.decimal_places:
+            q = Decimal('1.' + '0'*obj.invoice.currency.decimal_places)
+        else:
+            q = Decimal('1')
+        return str(obj.amount.quantize(q))
+
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    message = serializers.SerializerMethodField()
-    vision_fi_id = serializers.SerializerMethodField()
     ta_number = serializers.CharField(source='travel.reference_number', read_only=True)
     items = InvoiceItemSerializer(many=True, read_only=True)
+    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
         fields = ('id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
                   'message', 'vision_fi_id', 'ta_number', 'items')
 
-    def get_message(self, obj):
-        return ''
-
-    def get_vision_fi_id(self, obj):
-        return ''
-
-    def to_representation(self, instance):
-        ret = super(InvoiceSerializer, self).to_representation(instance)
-        ret['amount'] = Decimal(ret['amount']).quantize(Decimal('1.'+'0'*instance.currency.decimal_places))
-        return ret
+    def get_amount(self, obj):
+        if obj.currency.decimal_places:
+            q = Decimal('1.' + '0'*obj.currency.decimal_places)
+        else:
+            q = Decimal('1')
+        return str(obj.amount.quantize(q))

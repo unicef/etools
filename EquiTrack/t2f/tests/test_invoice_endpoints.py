@@ -7,6 +7,7 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from t2f.helpers import InvoiceMaker
+from t2f.models import Invoice
 
 from t2f.tests.factories import TravelFactory
 
@@ -77,3 +78,50 @@ class InvoiceEndpoints(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
                                         data={'sort_by': 'trip_reference_number'},
                                         user=self.unicef_staff)
+
+    def test_decimal_places(self):
+        invoice = Invoice.objects.all().last()
+        invoice.amount = '123.4567'
+        invoice.save()
+
+        invoice_item = invoice.items.first()
+        invoice_item.amount = invoice.amount
+        invoice_item.save()
+
+        currency = invoice.currency
+
+        # 3 decimal places
+        currency.decimal_places = 3
+        currency.save()
+
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        invoice_data = response_json['data'][0]
+
+        self.assertEqual(invoice_data['amount'], '123.457')
+        self.assertEqual(invoice_data['items'][0]['amount'], '123.457')
+
+        # 2 decimal places
+        currency.decimal_places = 2
+        currency.save()
+
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        invoice_data = response_json['data'][0]
+
+        self.assertEqual(invoice_data['amount'], '123.46')
+        self.assertEqual(invoice_data['items'][0]['amount'], '123.46')
+
+        # 0 decimal places
+        currency.decimal_places = 0
+        currency.save()
+
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        invoice_data = response_json['data'][0]
+
+        self.assertEqual(invoice_data['amount'], '123')
+        self.assertEqual(invoice_data['items'][0]['amount'], '123')
