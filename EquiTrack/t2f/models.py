@@ -182,6 +182,10 @@ class Travel(models.Model):
     def check_completion_conditions(self):
         if self.status == Travel.SUBMITTED and not self.international_travel:
             return False
+
+        if not self.report_note or len(self.report_note) < 1:
+            raise TransitionError('Field report has to be filled.')
+
         return True
 
     def check_pending_invoices(self):
@@ -237,7 +241,8 @@ class Travel(models.Model):
                                 SUBMITTED,
                                 REJECTED,
                                 APPROVED,
-                                SENT_FOR_PAYMENT],
+                                SENT_FOR_PAYMENT,
+                                CERTIFIED],
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = datetime.now()
@@ -249,7 +254,7 @@ class Travel(models.Model):
     def plan(self):
         pass
 
-    @transition(status, source=[APPROVED, SENT_FOR_PAYMENT], target=SENT_FOR_PAYMENT)
+    @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
         self.generate_invoices()

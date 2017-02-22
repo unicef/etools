@@ -1,19 +1,15 @@
 from __future__ import unicode_literals
 
-from unittest import skip
 import json
-from StringIO import StringIO
+from collections import defaultdict
 
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 
-from EquiTrack.factories import UserFactory, LocationFactory
+from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory
-from t2f.models import TravelAttachment, Travel, ModeOfTravel, Invoice
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
-    DSARegionFactory
+from t2f.models import Travel, Invoice
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory
 
 from .factories import TravelFactory
 
@@ -23,6 +19,41 @@ class StateMachineTest(APITenantTestCase):
         super(StateMachineTest, self).setUp()
         self.traveler = UserFactory()
         self.unicef_staff = UserFactory(is_staff=True)
+
+    def test_possible_transitions(self):
+        travel = TravelFactory()
+        transition_mapping = defaultdict(list)
+        for transition in list(travel._meta.get_field('status').get_all_transitions(travel.__class__)):
+            transition_mapping[transition.source].append(transition.target)
+
+        # mapping == {source: [target list]}
+        self.assertEqual(dict(transition_mapping),
+                         {'*': ['planned'],
+                          'approved': ['sent_for_payment',
+                                       'cancelled'],
+                          'cancelled': ['planned'],
+                          'certification_approved': ['certification_rejected',
+                                                     'certified'],
+                          'certification_rejected': ['certification_submitted'],
+                          'certification_submitted': ['certification_rejected',
+                                                      'certification_approved'],
+                          'certified': ['sent_for_payment',
+                                        'cancelled',
+                                        'completed'],
+                          'planned': ['submitted',
+                                      'cancelled'],
+                          'rejected': ['submitted',
+                                       'planned',
+                                       'cancelled'],
+                          'sent_for_payment': ['sent_for_payment',
+                                               'submitted',
+                                               'certified',
+                                               'certification_submitted',
+                                               'cancelled'],
+                          'submitted': ['rejected',
+                                        'cancelled',
+                                        'approved',
+                                        'completed']})
 
     def test_state_machine_flow(self):
         currency = CurrencyFactory()
@@ -96,3 +127,19 @@ class StateMachineTest(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.CERTIFIED)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_completed'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['non_field_errors'], ['Field report has to be filled.'])
+
+        data = response_json
+        data['report'] = 'Something'
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'mark_as_completed'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.COMPLETED)
