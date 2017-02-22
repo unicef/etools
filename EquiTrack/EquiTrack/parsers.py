@@ -2,7 +2,7 @@
 def int_or_str(c):
     try:
         return int(c)
-    except:
+    except ValueError:
         return c
 
 def list_or_dict(a):
@@ -99,8 +99,6 @@ def parse_multipart_data(myd):
                 if not isinstance(k[i+1], int):
                     parcurs.append(k[i + 1])
                     pth = form_path_from_list(parcurs)
-                    # print pth
-                    # print r
                     exec_str = 'r' + pth + ' = ' + 'myd[form_myd_path(parcurs)]'
                     exec exec_str in globals(), locals()
                 else:

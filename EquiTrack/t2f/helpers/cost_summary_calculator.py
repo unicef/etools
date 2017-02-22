@@ -4,8 +4,6 @@ from collections import defaultdict
 from datetime import timedelta
 from decimal import Decimal
 
-from django.db.models import Sum
-
 
 class CostSummaryCalculator(object):
     class ExpenseDTO(object):
@@ -17,7 +15,7 @@ class CostSummaryCalculator(object):
         self.travel = travel
 
     def get_cost_summary(self):
-        expense_mapping = self.get_expesnses()
+        expense_mapping = self.get_expenses()
 
         total_expense = sum(expense_mapping.values(), Decimal(0))
         total_expense = total_expense.quantize(Decimal('1.0000'))
@@ -28,8 +26,9 @@ class CostSummaryCalculator(object):
             expenses.append(self.ExpenseDTO('user', expense_mapping.pop('user')))
         parking_money = expense_mapping.pop('', None)
 
-        travel_agent_expenses = sorted([self.ExpenseDTO(*e) for e in expense_mapping.items()],
-                                       key=lambda o: o.vendor_number)
+        # Create data transfer object for each expense
+        travel_agent_expenses = [self.ExpenseDTO(*e) for e in expense_mapping.items()]
+        travel_agent_expenses = sorted(travel_agent_expenses, key=lambda o: o.vendor_number)
         expenses.extend(travel_agent_expenses)
 
         # explicit None checking should happen here otherwise the 0 will be filtered out
@@ -40,7 +39,6 @@ class CostSummaryCalculator(object):
             expenses_delta = self.travel.preserved_expenses - total_expense
         else:
             expenses_delta = Decimal(0)
-
 
         dsa_calculator = DSACalculator(self.travel)
         dsa_calculator.calculate_dsa()
@@ -54,15 +52,18 @@ class CostSummaryCalculator(object):
                   'expenses': expenses}
         return result
 
-    def get_expesnses(self):
+    def get_expenses(self):
         expenses_mapping = defaultdict(Decimal)
-        expenses_qs = self.travel.expenses.select_related('type')
+        expenses_qs = self.travel.expenses.exclude(amount=None).select_related('type')
         for expense in expenses_qs:
             expenses_mapping[expense.type.vendor_number] += expense.amount
         return expenses_mapping
 
 
 class DSACalculator(object):
+    LAST_DAY_DEDUCTION = Decimal('0.6')
+    SAME_DAY_TRAVEL_MULTIPLIER = Decimal('0.4')
+
     class DSAdto(object):
         def __init__(self, d, itinerary_item):
             self.itinerary_item = itinerary_item
@@ -118,7 +119,7 @@ class DSACalculator(object):
             self.total_dsa += dto.final_amount
 
             if dto == dsa_dto_list[-1]:
-                dto.deduction_multiplier -= Decimal('0.6')
+                dto.deduction_multiplier -= self.LAST_DAY_DEDUCTION
 
             self.total_deductions += dto.deduction
 
@@ -230,7 +231,7 @@ class DSACalculator(object):
             else:
                 same_day_dsa = sdt.dsa_region.dsa_amount_60plus_usd
 
-            dto.dsa_amount += same_day_dsa * Decimal('0.4')
+            dto.dsa_amount += same_day_dsa * self.SAME_DAY_TRAVEL_MULTIPLIER
 
     def calculate_daily_deduction(self, dsa_dto_list):
         if not dsa_dto_list:
@@ -243,7 +244,7 @@ class DSACalculator(object):
 
         # If it's the last day, 40% of dsa should go only, so apply a 60% deduction
         last_day_dto = dsa_dto_list[-1]
-        new_deduction_multiplier = last_day_dto.deduction_multiplier + Decimal('0.6')
+        new_deduction_multiplier = last_day_dto.deduction_multiplier + self.LAST_DAY_DEDUCTION
         last_day_dto.deduction_multiplier = min(new_deduction_multiplier, Decimal(1))
 
         return dsa_dto_list
