@@ -245,7 +245,7 @@ class PartnerOrganizationOverviewAPIView(APIView):
             'planned_cash_transfer': partner.hact_values.get('planned_cash_transfer', 0)
         }
 
-        if not partner.partner_type == PartnerType.GOVERNMENT:
+        if partner.partner_type != PartnerType.GOVERNMENT:
             interventions = Intervention.objects.filter(agreement__partner=partner)
 
             interventions = InterventionListSerializer(interventions, many=True)
