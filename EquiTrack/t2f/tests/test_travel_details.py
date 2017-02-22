@@ -1,10 +1,11 @@
 from __future__ import unicode_literals
+
 from unittest import skip
 import json
 from StringIO import StringIO
+from freezegun import freeze_time
 
 from django.core.urlresolvers import reverse
-from django.test.utils import override_settings
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -166,7 +167,6 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airlines_1.id, airlines_3.id])
 
-    @override_settings(DISABLE_INVOICING=False)
     def test_preserved_expenses(self):
         currency = CurrencyFactory()
         expense_type = ExpenseTypeFactory()
@@ -474,6 +474,7 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
 
+    @freeze_time('2017-02-15')
     def test_action_point_500(self):
         dsa = DSARegionFactory()
         currency = CurrencyFactory()
