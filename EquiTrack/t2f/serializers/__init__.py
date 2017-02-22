@@ -520,12 +520,13 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
 class InvoiceSerializer(serializers.ModelSerializer):
     ta_number = serializers.CharField(source='travel.reference_number', read_only=True)
     items = InvoiceItemSerializer(many=True, read_only=True)
-    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
         fields = ('id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
                   'message', 'vision_fi_id', 'ta_number', 'items')
 
-    def get_amount(self, obj):
-        return str(rount_to_currency_precision(obj.currency, obj.amount))
+    def to_representation(self, instance):
+        data = super(InvoiceSerializer, self).to_representation(instance)
+        data['amount'] = str(rount_to_currency_precision(instance.currency, instance.amount))
+        return data

@@ -79,6 +79,17 @@ class InvoiceEndpoints(APITenantTestCase):
         response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
                                         data={'sort_by': 'trip_reference_number'},
                                         user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        data={'sort_by': 'amount'},
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.forced_auth_req('get', reverse('t2f:invoices:list'),
+                                        data={'sort_by': 'currency'},
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
 
     def test_decimal_places(self):
         invoice = Invoice.objects.all().last()

@@ -2,12 +2,12 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
-from t2f.serializers import ActionPointSerializer
+from t2f.serializers import InvoiceSerializer
 from t2f.serializers.filters import SortFilterSerializer
 
 
 class InvoiceSortFilterSerializer(SortFilterSerializer):
-    SORT_BY_SERIALIZER = ActionPointSerializer
+    SORT_BY_SERIALIZER = InvoiceSerializer
 
 
 class InvoiceFilterBoxSerializer(serializers.Serializer):
