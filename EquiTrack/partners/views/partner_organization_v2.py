@@ -23,6 +23,7 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from partners.models import (
     PartnerStaffMember,
     Intervention,
+    GovernmentIntervention,
     PartnerOrganization,
     Assessment,
     PartnerType
