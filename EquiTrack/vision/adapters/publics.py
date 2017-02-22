@@ -146,6 +146,8 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         return json.loads(records)
 
     def _save_records(self, records):
+        self.processed = 0
+
         records = records['ROWSET']['ROW']
 
         # This will hold the wbs/grant/fund grouping
