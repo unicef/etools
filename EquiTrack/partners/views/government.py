@@ -30,6 +30,7 @@ from partners.filters import PartnerScopeFilter
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.government_intervention_results import GovernmentInterventionResultValid
 from partners.permissions import PartneshipManagerRepPermission
+from partners.exports_v2 import GovernmentInterventionCvsRenderer
 
 
 class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
@@ -40,7 +41,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
     serializer_class = GovernmentInterventionListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, GovernmentInterventionCvsRenderer)
 
     SERIALIZER_MAP = {
         'results': GovernmentInterventionResultNestedSerializer

@@ -142,7 +142,25 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
+    partner_name = serializers.CharField(source='partner.name')
+    country_programme_name = serializers.CharField(source='country_programme.name')
+    cp_outputs = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField()
+
+    def get_cp_outputs(self, obj):
+        cp_outputs = [
+            'Output: {} ({},{},{})'.format(
+                gr.result.name,
+                gr.year,
+                gr.planned_amount,
+                gr.planned_visits)
+            for gr in obj.results.all()
+        ]
+        return ', '.join(cp_outputs)
+
+    def get_url(self, obj):
+        return 'https://{}/api/v2/government_intervention/{}/'.format(self.context['request'].get_host(), obj.id)
 
     class Meta:
         model = GovernmentIntervention
-        fields = '__all__'
+        fields = ["partner_name", "country_programme_name", "number", "cp_outputs", "url",]
