@@ -135,7 +135,6 @@ class AgreementValid(CompleteValidation):
         return True
 
     def state_active_valid(self, agreement, user=None):
-        logging.debug('STATE ACTIVE VALID CALLED')
         if not agreement.old_instance:
             raise StateValidError(['cant_create_in_active_state'])
 
@@ -160,5 +159,4 @@ class AgreementValid(CompleteValidation):
         return True
 
     def state_cancelled_valid(self, agreement, user=None):
-        logging.debug('STATE CANCELLED VALID CALLED')
         return False
