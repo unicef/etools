@@ -11,7 +11,7 @@ from tablib.core import Dataset
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, PartnershipFactory, \
     GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import GovernmentInterventionResult
+from partners.models import GovernmentInterventionResult, ResultType
 
 
 class TestModelExport(APITenantTestCase):
@@ -28,7 +28,8 @@ class TestModelExport(APITenantTestCase):
         self.intervention = InterventionFactory(agreement=self.agreement)
         self.government_intervention = GovernmentInterventionFactory(partner=self.partner)
 
-        self.result = ResultFactory()
+        output_res_type, _ = ResultType.objects.get_or_create(name='Output')
+        self.result = ResultFactory(result_type=output_res_type)
         self.govint_result = GovernmentInterventionResult.objects.create(
             intervention=self.government_intervention,
             result=self.result,
