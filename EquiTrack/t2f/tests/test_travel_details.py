@@ -274,7 +274,8 @@ class TravelDetails(APITenantTestCase):
                                       'share': 100,
                                       'business_area': business_area.id,
                                       'delegate': False}],
-                'ta_required': True}
+                'ta_required': True,
+                'supervisor': self.unicef_staff.id}
         response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
                                                         kwargs={'transition_name': 'save_and_submit'}),
                                         data=data, user=self.unicef_staff)

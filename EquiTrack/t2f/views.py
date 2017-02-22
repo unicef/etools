@@ -20,8 +20,6 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from rest_framework_csv import renderers
-from rest_framework_xml.parsers import XMLParser
-from rest_framework_xml.renderers import XMLRenderer
 
 from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
@@ -34,7 +32,7 @@ from t2f.serializers.export import TravelListExportSerializer, FinanceExportSeri
     InvoiceExportSerializer
 
 from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice, IteneraryItem, \
-    InvoiceItem, TravelActivity
+    InvoiceItem, TravelActivity, TransitionError
 from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer, \
     TravelActivityByPartnerSerializer
@@ -69,8 +67,8 @@ def run_transition(serializer):
         transition = getattr(instance, transition_name)
         try:
             transition()
-        except TransitionNotAllowed as exc:
-            raise ValidationError(exc.message)
+        except (TransitionNotAllowed, TransitionError) as exc:
+            raise ValidationError({'non_field_errors': [exc.message]})
         instance.save()
 
 
