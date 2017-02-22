@@ -13,16 +13,20 @@ from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.funding import (
     FundingSynchronizer,
+    FundReservationsSynchronizer,
+    FundCommitmentSynchronizer,
     DCTSynchronizer,
 )
 from .models import VisionSyncLog
 
 
 SYNC_HANDLERS = [
-    ProgrammeSynchronizer,
-    RAMSynchronizer,
-    PartnerSynchronizer,
-    FundingSynchronizer,
+    # ProgrammeSynchronizer,
+    # RAMSynchronizer,
+    # PartnerSynchronizer,
+    # FundingSynchronizer,
+    # FundReservationsSynchronizer,
+    FundCommitmentSynchronizer,
     #DCTSynchronizer
 ]
 
