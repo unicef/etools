@@ -159,7 +159,7 @@ class InvoiceUpdater(object):
 
     @run_on_tenants
     def _update_invoices_in_tenants(self, workspace, invoice_grouping):
-        workspace_group = invoice_grouping.pop(workspace.business_area_code)
+        workspace_group = invoice_grouping.pop(workspace.business_area_code, [])
         for invoice_data in workspace_group:
             invoice_number = invoice_data['invoice_reference']
             try:
