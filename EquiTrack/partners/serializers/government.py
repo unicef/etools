@@ -159,7 +159,7 @@ class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join(cp_outputs)
 
     def get_url(self, obj):
-        return 'https://{}/api/v2/government_intervention/{}/'.format(self.context['request'].get_host(), obj.id)
+        return 'https://{}/pmp/governments/{}/'.format(self.context['request'].get_host(), obj.id)
 
     class Meta:
         model = GovernmentIntervention
