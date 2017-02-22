@@ -3,12 +3,14 @@ import functools
 
 from django.db import transaction
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
+from rest_framework.views import APIView
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -210,3 +212,11 @@ class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
         else:
             assessment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PartnerOrganizationOverviewAPIView(APIView):
+
+    def get(self, request, partner_pk=None):
+        partner = get_object_or_404(PartnerOrganization, partner_pk=partner_pk)
+
+        return Response({}, status=status.HTTP_200_OK)
