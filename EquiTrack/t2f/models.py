@@ -328,21 +328,15 @@ class Travel(models.Model):
         from t2f.serializers.mailing import TravelMailSerializer
         serializer = TravelMailSerializer(self, context={})
 
-        url = reverse('t2f:travels:details:index', kwargs={'travel_pk': self.id})
-        approve_url = reverse('t2f:travels:details:state_change', kwargs={'travel_pk': self.id,
-                                                                          'transition_name': 'approve'})
-        approve_certification_url = reverse('t2f:travels:details:state_change',
-                                            kwargs={'travel_pk': self.id,
-                                                    'transition_name': 'approve_certificate'})
+        url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
+                                                                   travel_id=self.id)
+
         context = Context({'travel': serializer.data,
-                           'url': url,
-                           'approve_url': approve_url,
-                           'approve_certification_url': approve_certification_url})
+                           'url': url})
         html_content = render_to_string(template_name, context)
 
-
         # TODO what should be used?
-        sender = ''
+        sender = settings.DEFAULT_FROM_EMAIL
         msg = EmailMultiAlternatives(subject, '',
                                      sender, [recipient])
         msg.attach_alternative(html_content, 'text/html')
