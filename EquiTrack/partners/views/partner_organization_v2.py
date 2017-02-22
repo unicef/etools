@@ -1,3 +1,4 @@
+import json
 import operator
 import functools
 
@@ -224,13 +225,13 @@ class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
 class PartnerOrganizationOverviewAPIView(APIView):
 
     def get(self, request, partner_pk=None):
-        partner = get_object_or_404(PartnerOrganization, partner_pk=partner_pk)
+        partner = get_object_or_404(PartnerOrganization, pk=partner_pk)
         hact_min_reqs = partner.hact_min_requirements
 
         if isinstance(partner.hact_values, str):
             partner.hact_values = json.loads(partner.hact_values)
 
-        partner = {
+        partner_data = {
             'risk_rating': partner.rating,
             'prog_visit_done': partner.hact_values.get('programmatic_visits', 0),
             'prog_visit_mr': hact_min_reqs.get('programme_visits', 0),
@@ -243,7 +244,7 @@ class PartnerOrganizationOverviewAPIView(APIView):
             'planned_cash_transfer': partner.hact_values.get('planned_cash_transfer', 0)
         }
 
-        if not partner.partner_type = PartnerType.GOVERNMENT:
+        if not partner.partner_type == PartnerType.GOVERNMENT:
             interventions = Intervention.objects.filter(agreement__partner=partner)
 
             interventions = InterventionListSerializer(interventions, many=True)
@@ -254,6 +255,6 @@ class PartnerOrganizationOverviewAPIView(APIView):
             interventions = GovernmentInterventionListSerializer(interventions, many=True)
 
         return Response({
-            'partner': partner,
+            'partner': partner_data,
             'interventions': interventions.data,
         }, status=status.HTTP_200_OK)
