@@ -240,23 +240,27 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
     queryset = Travel.objects.all()
     permission_classes = (IsAdminUser,)
 
-    def list(self, request, year, month, office_id, **kwargs):
+    def list(self, request, year, month, **kwargs):
         data = {}
 
         travels_all = Travel.objects.filter(
             start_date__year=year,
             start_date__month=month,
-            office_id=office_id,
         )
+
+        office_id = request.query_params.get("office_id", None)
+        if office_id:
+            travels_all = travels_all.filter(office_id=office_id)
+
         data["planned"] = travels_all.filter(status=Travel.PLANNED).count()
         data["approved"] = travels_all.filter(status=Travel.APPROVED).count()
         data["completed"] = travels_all.filter(status=Travel.COMPLETED).count()
 
-        section_ids = Travel.objects.all().values_list('section', flat=True)
+        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
         travels_by_section = []
         for section_id in section_ids:
             travels = travels_all.filter(section=section_id)
-            if travels:
+            if travels.exists():
                 planned = travels.filter(status=Travel.PLANNED).count()
                 approved = travels.filter(status=Travel.APPROVED).count()
                 completed = travels.filter(status=Travel.COMPLETED).count()
@@ -325,14 +329,17 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin,
     queryset = ActionPoint.objects.all()
     permission_classes = (IsAdminUser,)
 
-    def list(self, request, office_id, **kwargs):
+    def list(self, request, **kwargs):
         data = {}
 
-        section_ids = Travel.objects.all().values_list('section', flat=True)
+        office_id = request.query_params.get("office_id", None)
+        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
         action_points_by_section = []
         for section_id in section_ids:
-            travels = Travel.objects.filter(section=section_id, office_id=office_id)
-            if travels:
+            travels = Travel.objects.filter(section=section_id)
+            if office_id:
+                travels = travels.filter(office_id=office_id)
+            if travels.exists():
                 action_points = ActionPoint.objects.filter(travel__in=travels)
                 total = action_points.count()
                 completed = action_points.filter(status=Travel.COMPLETED).count()
