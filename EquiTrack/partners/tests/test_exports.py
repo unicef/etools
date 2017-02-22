@@ -22,11 +22,17 @@ class TestModelExport(APITenantTestCase):
         self.agreement = AgreementFactory(
             partner=self.partner,
             signed_by_unicef_date=datetime.date.today(),
-            country_programme=CountryProgrammeFactory(wbs="random WBS"))
+            country_programme=CountryProgrammeFactory(wbs="random WBS")
+        )
+
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
+
         self.intervention = InterventionFactory(agreement=self.agreement)
-        self.government_intervention = GovernmentInterventionFactory(partner=self.partner)
+        self.government_intervention = GovernmentInterventionFactory(
+            partner=self.partner,
+            country_programme=self.agreement.country_programme
+        )
 
         output_res_type, _ = ResultType.objects.get_or_create(name='Output')
         self.result = ResultFactory(result_type=output_res_type)
