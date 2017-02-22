@@ -1,4 +1,6 @@
 
+import sys
+
 from django.db import connection
 from django.conf import settings
 
@@ -98,7 +100,7 @@ class VisionDataSynchronizer:
             log.successful = True
         except Exception as e:
             log.exception_message = e.message
-            raise VisionException(message=e.message)
+            raise VisionException(message=e.message), None, sys.exc_info()[2]
         finally:
             log.save()
 

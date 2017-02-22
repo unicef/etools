@@ -6,7 +6,7 @@ from django.db import models
 
 class TravelAgent(models.Model):
     name = models.CharField(max_length=128)
-    code = models.CharField(max_length=12)
+    code = models.CharField(max_length=128)
     city = models.CharField(max_length=128, null=True)
     country = models.ForeignKey('publics.Country')
 
@@ -16,7 +16,7 @@ class TravelExpenseType(models.Model):
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
     title = models.CharField(max_length=128)
-    vendor_number = models.CharField(max_length=32)
+    vendor_number = models.CharField(max_length=128)
     is_travel_agent = models.BooleanField(default=False)
     rank = models.PositiveIntegerField(default=100)
 
