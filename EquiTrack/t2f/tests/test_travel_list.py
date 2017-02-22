@@ -46,7 +46,7 @@ class TravelList(APITenantTestCase):
         self.assertEqual(export_url, '/api/t2f/travels/invoice-export/')
 
     def test_list_view(self):
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)

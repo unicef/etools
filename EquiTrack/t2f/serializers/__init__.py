@@ -455,7 +455,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 class TravelListSerializer(TravelDetailsSerializer):
     # TODO: reserve field names to pks for related fields and add _name for the names
     traveler = serializers.CharField(source='traveler.get_full_name')
-    supervisor_name = serializers.CharField(source='supervisor.get_full_name', read_only=True)
+    supervisor_name = serializers.CharField(source='supervisor.get_full_name')
 
     class Meta:
         model = Travel
