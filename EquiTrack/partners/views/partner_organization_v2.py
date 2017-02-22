@@ -24,6 +24,7 @@ from partners.models import (
     Intervention,
     PartnerOrganization,
     Assessment,
+    PartnerType
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -34,6 +35,12 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
     AssessmentDetailSerializer
+)
+from partners.serializers.interventions_v2 import (
+    InterventionListSerializer,
+)
+from partners.serializers.government import (
+    GovernmentInterventionListSerializer,
 )
 from partners.permissions import PartneshipManagerRepPermission
 from partners.filters import PartnerScopeFilter
@@ -218,5 +225,35 @@ class PartnerOrganizationOverviewAPIView(APIView):
 
     def get(self, request, partner_pk=None):
         partner = get_object_or_404(PartnerOrganization, partner_pk=partner_pk)
+        hact_min_reqs = partner.hact_min_requirements
 
-        return Response({}, status=status.HTTP_200_OK)
+        if isinstance(partner.hact_values, str):
+            partner.hact_values = json.loads(partner.hact_values)
+
+        partner = {
+            'risk_rating': partner.rating,
+            'prog_visit_done': partner.hact_values.get('programmatic_visits', 0),
+            'prog_visit_mr': hact_min_reqs.get('programme_visits', 0),
+            'spot_checks_done': partner.hact_values.get('spot_checks', 0),
+            'spot_checks_mr': hact_min_reqs.get('spot_checks', 0),
+            'audit_done': partner.hact_values.get('audit_done', 0),
+            'audit_mr': partner.hact_values.get('audit_mr', 0),
+            'total_ct_cp': partner.total_ct_cp,
+            'total_ct_cy': partner.total_ct_cy,
+            'planned_cash_transfer': partner.hact_values.get('planned_cash_transfer', 0)
+        }
+
+        if not partner.partner_type = PartnerType.GOVERNMENT:
+            interventions = Intervention.objects.filter(agreement__partner=partner)
+
+            interventions = InterventionListSerializer(interventions, many=True)
+
+        else:
+            interventions = GovernmentIntervention.objects.filter(partner=partner)
+
+            interventions = GovernmentInterventionListSerializer(interventions, many=True)
+
+        return Response({
+            'partner': partner,
+            'interventions': interventions.data,
+        }, status=status.HTTP_200_OK)
