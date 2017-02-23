@@ -248,6 +248,9 @@ class PartnerOrganizationOverviewAPIView(APIView):
         if partner.partner_type != PartnerType.GOVERNMENT:
             interventions = Intervention.objects.filter(agreement__partner=partner)
 
+            if 'status' in request.GET and request.GET['status'] != '':
+                interventions = interventions.filter(status=request.GET['status'])
+
             interventions = InterventionListSerializer(interventions, many=True)
 
         else:
