@@ -7,10 +7,18 @@ from rest_framework.serializers import ValidationError
 
 from EquiTrack.serializers import JsonFieldSerializer
 
-from funds.models import FundingCommitment
 from reports.models import Result
 
-from partners.models import GovernmentIntervention, PartnerType, GovernmentInterventionResult, GovernmentInterventionResultActivity
+from partners.models import (
+    GovernmentIntervention, PartnerType,
+    GovernmentInterventionResult, GovernmentInterventionResultActivity,
+    FundingCommitment)
+
+
+class FundingCommitmentListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FundingCommitment
+        fields = '__all__'
 
 
 class GovernmentInterventionResultActivityNestedSerializer(serializers.ModelSerializer):
@@ -140,7 +148,7 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         # Query FundingCommitment objects with above Result wbs list
         target_funding_commitments = FundingCommitment.objects.filter(wbs__in=cp_output_results.values_list('wbs', flat=True))
 
-        return []
+        return FundingCommitmentListSerializer(target_funding_commitments, many=True).data
 
     def validate(self, data):
         """
