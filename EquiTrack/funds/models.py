@@ -75,7 +75,7 @@ class FundsReservationItem(models.Model):
     line_item_text = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
-        unique_together = ('fund_reservation', 'line_item')
+        unique_together = ('fund_reservation', 'line_item', 'wbs')
 
 
 class FundsCommitmentHeader(models.Model):
@@ -87,6 +87,10 @@ class FundsCommitmentHeader(models.Model):
     document_text = models.CharField(max_length=255, null=True, blank=True)
     exchange_rate = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
     responsible_person = models.CharField(max_length=100, blank=True, null=True)
+
+    class Meta:
+        ordering = ['fc_number']
+        unique_together = ('vendor_code', 'fc_number')
 
 
 class FundsCommitmentItem(models.Model):
@@ -103,6 +107,9 @@ class FundsCommitmentItem(models.Model):
     commitment_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     amount_changed = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     line_item_text = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('fund_commitment', 'line_item', 'wbs')
 
 
 

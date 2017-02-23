@@ -1,1 +1,1 @@
-default_app_config = 'publics.apps.PublicsAppConfig'
+from __future__ import unicode_literals

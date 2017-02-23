@@ -9,7 +9,9 @@ from funds.models import (
     Grant, Donor,
     FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 )
-from partners.models import FundingCommitment, DirectCashTransfer
+from partners.models import (
+    FundingCommitment, DirectCashTransfer
+)
 from publics.models import Currency
 
 
@@ -258,9 +260,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         def _changed_fields(fields, local_obj, api_obj):
             for field in fields:
                 apiobj_field = api_obj[self.MAPPING[field]]
-                if field in ['wbs']:
-                    apiobj_field = api_obj[self.MAPPING[field]]
-                if field in ['overall_amount' 'overall_amount_dc']:
+                if field in ['overall_amount', 'overall_amount_dc']:
                     return not comp_decimals(getattr(local_obj, field), apiobj_field)
                 if field in ['start_date', 'end_date', 'document_date', 'due_date']:
                     apiobj_field = datetime.datetime.strptime(api_obj[self.MAPPING[field]], '%d-%b-%y').date()
@@ -306,15 +306,15 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
                 fr_item, saved = FundsReservationItem.objects.get_or_create(
                     fund_reservation=fr,
                     line_item=int(fr_line["LINE_ITEM"]),
+                    wbs=fr_line["WBS_ELEMENT"],
                 )
             except FundsReservationItem.MultipleObjectsReturned as exp:
                 exp.message += 'FR Ref ' + fr_line["FR_NUMBER"]
                 raise
 
             #adding FundReservationItem
-            fr_item_fields = ['wbs', 'grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date']
+            fr_item_fields = ['grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date']
             if saved or _changed_fields(fr_item_fields, fr_item, fr_line):
-                fr_item.wbs = str(fr_line["WBS_ELEMENT"]),
                 fr_item.fund = fr_line["FUND"]
                 fr_item.grant_number = fr_line['GRANT_NBR']
                 fr_item.overall_amount = fr_line["OVERALL_AMOUNT"]
@@ -402,9 +402,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         def _changed_fields(fields, local_obj, api_obj):
             for field in fields:
                 apiobj_field = api_obj[self.MAPPING[field]]
-                if field in ['wbs']:
-                    apiobj_field = api_obj[self.MAPPING[field]][0]
-                if field in ['overall_amount' 'overall_amount_dc', 'exchange_rate', 'amount_changed']:
+                if field in ['overall_amount', 'overall_amount_dc', 'exchange_rate', 'amount_changed']:
                     return not comp_decimals(getattr(local_obj, field), apiobj_field)
                 if field in ['document_date', 'due_date']:
                     apiobj_field = datetime.datetime.strptime(api_obj[self.MAPPING[field]], '%d-%b-%y').date()
@@ -450,16 +448,16 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                 fc_item, saved = FundsCommitmentItem.objects.get_or_create(
                     fund_commitment=fc,
                     line_item=int(fc_line["LINE_ITEM"]),
+                    wbs=fc_line["WBS_ELEMENT"],
                 )
             except FundsCommitmentItem.MultipleObjectsReturned as exp:
                 exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
                 raise
 
             #adding FundCommitmentItem
-            fc_item_fields = ['wbs', 'grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date',
-                              'gl_account', 'commitment_amount', 'amount_changed', 'fr_number']
+            fc_item_fields = ['grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date',
+                              'gl_account', 'commitment_amount', 'amount_changed']
             if saved or _changed_fields(fc_item_fields, fc_item, fc_line):
-                fc_item.wbs = fc_line["WBS_ELEMENT"][0],
                 fc_item.fund = fc_line["FUND"]
                 fc_item.grant_number = fc_line['GRANT_NBR']
                 fc_item.gl_account = fc_line['GL_ACCOUNT']
