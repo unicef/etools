@@ -404,7 +404,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                 apiobj_field = api_obj[self.MAPPING[field]]
                 if field in ['wbs']:
                     apiobj_field = api_obj[self.MAPPING[field]][0]
-                if field in ['overall_amount' 'overall_amount_dc']:
+                if field in ['overall_amount' 'overall_amount_dc', 'exchange_rate', 'amount_changed']:
                     return not comp_decimals(getattr(local_obj, field), apiobj_field)
                 if field in ['document_date', 'due_date']:
                     apiobj_field = datetime.datetime.strptime(api_obj[self.MAPPING[field]], '%d-%b-%y').date()
@@ -468,7 +468,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                 fc_item.due_date = datetime.datetime.strptime(fc_line["DUE_DATE"], '%d-%b-%y')
                 fc_item.fr_number = fc_line['FR_NUMBER'] if 'FR_NUMBER' in fc_line else None
                 fc_item.commitment_amount = fc_line['COMMITMENT_AMOUNT']
-                fc_item.amount_changed = fc_line['AMOUNT_CHANGED']
+                fc_item.amount_changed = fc_line['AMOUNT_CHANGED'].replace(",", "")
                 fc_item.line_item_text = fc_line["FC_LINE_ITEM_TEXT"]
 
                 fc_item.save()
