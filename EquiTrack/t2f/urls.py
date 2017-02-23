@@ -1,7 +1,7 @@
 
 from django.conf.urls import url, patterns, include
 
-from t2f.views import TravelListViewSet
+from t2f.views import TravelListViewSet, SettingsView
 from t2f.views import TravelDetailsViewSet
 from t2f.views import StaticDataView
 from t2f.views import PermissionMatrixView
@@ -111,4 +111,7 @@ urlpatterns = patterns(
     # Vision related endpoints
     url(r'^vision_invoice_export/$', VisionInvoiceExport.as_view(), name='vision_invoice_export'),
     url(r'^vision_invoice_update/$', VisionInvoiceUpdate.as_view(), name='vision_invoice_update'),
+
+    # Settings view
+    url(r'^settings/$', SettingsView.as_view(), name='settings'),
 )

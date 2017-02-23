@@ -418,3 +418,9 @@ class VisionInvoiceUpdate(View):
         except InvoiceUpdateError as exc:
             return HttpResponse('\n'.join(exc.errors), status=status.HTTP_400_BAD_REQUEST)
         return HttpResponse()
+
+
+class SettingsView(generics.GenericAPIView):
+    def get(self, request):
+        data = {'disable_invoicing': settings.DISABLE_INVOICING}
+        return Response(data=data, status=status.HTTP_200_OK)
