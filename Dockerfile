@@ -31,9 +31,6 @@ RUN apt-get install -y --no-install-recommends \
 
 RUN pip install --upgrade \
     setuptools \
-    virtualenv \
-    virtualenvwrapper \
-    fabric \
     pip \
     wheel
 
