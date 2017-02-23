@@ -1,4 +1,5 @@
 import json
+import logging
 from operator import xor
 
 from django.core.exceptions import ValidationError
@@ -222,6 +223,8 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
     def update_ll_results(self, instance, ll_results):
+        ll_results = ll_results if ll_results else []
+
         for result in ll_results:
             result['result_link'] = instance.pk
             applied_indicators = {'applied_indicators': result.pop('applied_indicators', [])}
@@ -250,21 +253,14 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         ll_results = self.context.pop('ll_results', [])
-
-        print ('INTERVENTION RESULT CU SERIALIZER CREATE __ IS THIS WORKING?')
         instance = super(InterventionResultCUSerializer, self).create(validated_data)
-        print instance.pk
         self.update_ll_results(instance, ll_results)
-
         return instance
 
     @transaction.atomic
     def update(self, instance, validated_data):
         ll_results = self.context.pop('ll_results', [])
-
         self.update_ll_results(instance, ll_results)
-
-        print validated_data
         return super(InterventionResultCUSerializer, self).update(instance, validated_data)
 
 
@@ -272,7 +268,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name', read_only=True)
-
+    prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     supplies = SupplyPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanCreateUpdateSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -294,6 +290,7 @@ class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 class InterventionDetailSerializer(serializers.ModelSerializer):
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
     partner = serializers.CharField(source='agreement.partner.name')
+    prc_review_document_file = serializers.FileField(source='prc_review_document', read_only=True)
     supplies = SupplyPlanNestedSerializer(many=True, read_only=True, required=False)
     distributions = DistributionPlanNestedSerializer(many=True, read_only=True, required=False)
     amendments = InterventionAmendmentCUSerializer(many=True, read_only=True, required=False)
@@ -304,7 +301,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner", "agreement", "document_type", "hrp", "number",
+            "id", "partner", "agreement", "document_type", "hrp", "number", "prc_review_document_file",
             "title", "status", "start", "end", "submission_date_prc", "review_date_prc",
             "submission_date", "prc_review_document", "signed_by_unicef_date", "signed_by_partner_date",
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",

@@ -122,7 +122,7 @@ class GovernmentInterventionListSerializer(serializers.ModelSerializer):
 
 
 class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
-    results = GovernmentInterventionResultNestedSerializer(many=True, required=False)
+    results = GovernmentInterventionResultNestedSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = GovernmentIntervention

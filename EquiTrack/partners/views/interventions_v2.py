@@ -116,7 +116,9 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
         if query_params:
             queries = []
-
+            if query_params.get("my_partnerships", "").lower() == "true":
+                queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
+                               Q(unicef_signatory=self.request.user))
             if "document_type" in query_params.keys():
                 queries.append(Q(partnership_type=query_params.get("document_type")))
             if "country_programme" in query_params.keys():
@@ -323,5 +325,4 @@ class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             raise ValidationError("You do not have permissions to delete a sector location")
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
+            return Response(status=status.HTTP_400_BAD_REQUEST)

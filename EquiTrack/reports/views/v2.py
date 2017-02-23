@@ -2,15 +2,17 @@ import operator
 import functools
 
 from django.db.models import Q
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework import status
 
-from reports.models import Result, CountryProgramme, Indicator
+from reports.models import Result, CountryProgramme, Indicator, LowerResult
 from reports.serializers.v2 import ResultListSerializer
 from reports.serializers.v1 import IndicatorSerializer
-
+from partners.models import Intervention
+from rest_framework.exceptions import ValidationError
+from partners.permissions import PartneshipManagerRepPermission
 
 class ResultListAPIView(ListAPIView):
     serializer_class = ResultListSerializer
@@ -58,3 +60,20 @@ class ResultIndicatorListAPIView(ListAPIView):
             serializer.data,
             status=status.HTTP_200_OK
         )
+
+class LowerResultsDeleteView(DestroyAPIView):
+    permission_classes = (PartneshipManagerRepPermission,)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            lower_result = LowerResult.objects.get(id=int(kwargs['pk']))
+        except LowerResult.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        if lower_result.result_link.intervention.status in [Intervention.DRAFT] or \
+                        request.user in lower_result.result_link.intervention.unicef_focal_points.all() or \
+                        request.user.groups.filter(name__in=['Partnership Manager',
+                                                             'Senior Management Team']).exists():
+            lower_result.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            raise ValidationError("You do not have permissions to delete a lower result")

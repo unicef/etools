@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.transaction import atomic
@@ -25,6 +26,7 @@ from rest_framework_xml.renderers import XMLRenderer
 from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
 from t2f.filters import travel_list, action_points, invoices
+from users.models import Section
 from locations.models import Location
 from partners.models import PartnerOrganization, Intervention
 from reports.models import Result
@@ -39,7 +41,7 @@ from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, Trave
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 from t2f.permission_matrix import PERMISSION_MATRIX
-from t2f.vision import InvoiceExport, InvoiceUpdater
+from t2f.vision import InvoiceExport, InvoiceUpdater, InvoiceUpdateError
 
 
 class T2FPagePagination(PageNumberPagination):
@@ -93,7 +95,7 @@ class TravelListViewSet(mixins.ListModelMixin,
             transition_name = kwargs['transition_name']
             request.data['transition_name'] = self._transition_name_mapping.get(transition_name, transition_name)
 
-        serializer = TravelDetailsSerializer(data=request.data)
+        serializer = TravelDetailsSerializer(data=request.data, context=self.get_serializer_context())
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
@@ -175,6 +177,11 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
             serializer.transition_name = 'submit_for_approval'
         run_transition(serializer)
 
+        # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
+        if serializer.transition_name == 'approve' and settings.DISABLE_INVOICING:
+            serializer.transition_name = 'send_for_payment'
+            run_transition(serializer)
+
     def check_treshold(self, travel):
         expenses = {'user': Decimal(0),
                     'travel_agent': Decimal(0)}
@@ -228,6 +235,49 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
         return traveler
 
 
+class TravelDashboardViewSet(mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+    queryset = Travel.objects.all()
+    permission_classes = (IsAdminUser,)
+
+    def list(self, request, year, month, **kwargs):
+        data = {}
+
+        travels_all = Travel.objects.filter(
+            start_date__year=year,
+            start_date__month=month,
+        )
+
+        office_id = request.query_params.get("office_id", None)
+        if office_id:
+            travels_all = travels_all.filter(office_id=office_id)
+
+        data["planned"] = travels_all.filter(status=Travel.PLANNED).count()
+        data["approved"] = travels_all.filter(status=Travel.APPROVED).count()
+        data["completed"] = travels_all.filter(status=Travel.COMPLETED).count()
+
+        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
+        travels_by_section = []
+        for section_id in section_ids:
+            travels = travels_all.filter(section=section_id)
+            if travels.exists():
+                planned = travels.filter(status=Travel.PLANNED).count()
+                approved = travels.filter(status=Travel.APPROVED).count()
+                completed = travels.filter(status=Travel.COMPLETED).count()
+                section_trips = {
+                    "section_id": travels.first().section.id,
+                    "section_name": travels.first().section.name,
+                    "planned_travels": planned,
+                    "approved_travels": approved,
+                    "completed_travels": completed,
+                }
+                travels_by_section.append(section_trips)
+
+        data["travels_by_section"] = travels_by_section
+
+        return Response(data)
+
+
 class TravelAttachmentViewSet(mixins.ListModelMixin,
                               mixins.CreateModelMixin,
                               mixins.DestroyModelMixin,
@@ -272,6 +322,38 @@ class ActionPointViewSet(mixins.ListModelMixin,
                        action_points.ActionPointSortFilter,
                        action_points.ActionPointFilterBoxFilter)
     lookup_url_kwarg = 'action_point_pk'
+
+
+class ActionPointDashboardViewSet(mixins.ListModelMixin,
+                             viewsets.GenericViewSet):
+    queryset = ActionPoint.objects.all()
+    permission_classes = (IsAdminUser,)
+
+    def list(self, request, **kwargs):
+        data = {}
+
+        office_id = request.query_params.get("office_id", None)
+        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
+        action_points_by_section = []
+        for section_id in section_ids:
+            travels = Travel.objects.filter(section=section_id)
+            if office_id:
+                travels = travels.filter(office_id=office_id)
+            if travels.exists():
+                action_points = ActionPoint.objects.filter(travel__in=travels)
+                total = action_points.count()
+                completed = action_points.filter(status=Travel.COMPLETED).count()
+                section_action_points = {
+                    "section_id": travels.first().section.id,
+                    "section_name": travels.first().section.name,
+                    "total_action_points": total,
+                    "completed_action_points": completed,
+                }
+                action_points_by_section.append(section_action_points)
+
+        data["action_points_by_section"] = action_points_by_section
+
+        return Response(data)
 
 
 class InvoiceViewSet(mixins.ListModelMixin,
@@ -328,5 +410,9 @@ class VisionInvoiceExport(View):
 class VisionInvoiceUpdate(View):
     def post(self, request):
         updater = InvoiceUpdater(request.body)
-        updater.update_invoices()
+        try:
+            with atomic():
+                updater.update_invoices()
+        except InvoiceUpdateError as exc:
+            return HttpResponse('\n'.join(exc.errors), status=status.HTTP_400_BAD_REQUEST)
         return HttpResponse()
