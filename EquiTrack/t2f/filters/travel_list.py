@@ -21,12 +21,16 @@ class TravelSortFilter(BaseSortFilter):
     serializer_class = TravelSortFilterSerializer
 
     def compose_sort_key(self, sort_by, reverse):
-        if sort_by != 'traveler__get_full_name':
+        if sort_by == 'traveler__get_full_name':
+            first_name_lookup = super(TravelSortFilter, self).compose_sort_key('traveler__first_name', reverse)
+            last_name_lookup = super(TravelSortFilter, self).compose_sort_key('traveler__last_name', reverse)
+        elif sort_by == 'supervisor__get_full_name':
+            first_name_lookup = super(TravelSortFilter, self).compose_sort_key('supervisor__first_name', reverse)
+            last_name_lookup = super(TravelSortFilter, self).compose_sort_key('supervisor__last_name', reverse)
+        else:
             return super(TravelSortFilter, self).compose_sort_key(sort_by, reverse)
-
-        first_name_lookup = super(TravelSortFilter, self).compose_sort_key('traveler__first_name', reverse)
-        last_name_lookup = super(TravelSortFilter, self).compose_sort_key('traveler__last_name', reverse)
         return first_name_lookup, last_name_lookup
+
 
 
 class TravelFilterBoxFilter(BaseFilterBoxFilter):

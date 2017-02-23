@@ -22,6 +22,13 @@ from t2f.helpers import CostSummaryCalculator, InvoiceMaker
 log = logging.getLogger(__name__)
 
 
+class TransitionError(RuntimeError):
+    """
+    Custom exception to send proprer error messages from transitions to the frontend
+    """
+    pass
+
+
 class UserTypes(object):
 
     #TODO: remove God
@@ -175,6 +182,10 @@ class Travel(models.Model):
     def check_completion_conditions(self):
         if self.status == Travel.SUBMITTED and not self.international_travel:
             return False
+
+        if (not self.report_note) or (len(self.report_note) < 1):
+            raise TransitionError('Field report has to be filled.')
+
         return True
 
     def check_pending_invoices(self):
@@ -183,15 +194,19 @@ class Travel(models.Model):
             return True
 
         if self.invoices.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]).exists():
-            return False
+            raise TransitionError('Your TA has pending payments to be processed through VISION. '
+                                  'Until payments are completed, you can not certify your TA. '
+                                  'Please check with your Finance focal point on how to proceed.')
+        return True
+
+    def has_supervisor(self):
+        if not self.supervisor:
+            raise TransitionError('Travel has no supervisor defined. Please select one.')
         return True
 
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED,
-                conditions=[check_pending_invoices])
+                conditions=[has_supervisor, check_pending_invoices])
     def submit_for_approval(self):
-        # TODO validate this!!!
-        if not self.supervisor:
-            return
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
@@ -226,7 +241,8 @@ class Travel(models.Model):
                                 SUBMITTED,
                                 REJECTED,
                                 APPROVED,
-                                SENT_FOR_PAYMENT],
+                                SENT_FOR_PAYMENT,
+                                CERTIFIED],
                 target=CANCELLED)
     def cancel(self):
         self.canceled_at = datetime.now()
@@ -238,7 +254,7 @@ class Travel(models.Model):
     def plan(self):
         pass
 
-    @transition(status, source=[APPROVED, SENT_FOR_PAYMENT], target=SENT_FOR_PAYMENT)
+    @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
         self.generate_invoices()
@@ -312,21 +328,15 @@ class Travel(models.Model):
         from t2f.serializers.mailing import TravelMailSerializer
         serializer = TravelMailSerializer(self, context={})
 
-        url = reverse('t2f:travels:details:index', kwargs={'travel_pk': self.id})
-        approve_url = reverse('t2f:travels:details:state_change', kwargs={'travel_pk': self.id,
-                                                                          'transition_name': 'approve'})
-        approve_certification_url = reverse('t2f:travels:details:state_change',
-                                            kwargs={'travel_pk': self.id,
-                                                    'transition_name': 'approve_certificate'})
+        url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
+                                                                   travel_id=self.id)
+
         context = Context({'travel': serializer.data,
-                           'url': url,
-                           'approve_url': approve_url,
-                           'approve_certification_url': approve_certification_url})
+                           'url': url})
         html_content = render_to_string(template_name, context)
 
-
         # TODO what should be used?
-        sender = ''
+        sender = settings.DEFAULT_FROM_EMAIL
         msg = EmailMultiAlternatives(subject, '',
                                      sender, [recipient])
         msg.attach_alternative(html_content, 'text/html')
