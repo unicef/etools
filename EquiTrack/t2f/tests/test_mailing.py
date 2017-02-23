@@ -36,6 +36,7 @@ class MailingTest(APITenantTestCase):
         self.travel.submit_certificate()
         self.travel.approve_certificate()
         self.travel.mark_as_certified()
+        self.travel.report_note = 'Note'
         self.travel.mark_as_completed()
 
         self.assertEqual(len(mail.outbox), 7)

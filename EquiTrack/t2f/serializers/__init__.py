@@ -61,17 +61,19 @@ class ActionPointSerializer(serializers.ModelSerializer):
     action_point_number = serializers.CharField(read_only=True)
     trip_id = serializers.IntegerField(source='travel.id', read_only=True)
     assigned_by = serializers.IntegerField(source='assigned_by.id', read_only=True)
+    assigned_by_name = serializers.CharField(source='assigned_by.get_full_name', read_only=True)
 
     description = serializers.CharField(required=True)
     due_date = serializers.DateTimeField(required=True)
     person_responsible = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    person_responsible_name = serializers.CharField(source='person_responsible.get_full_name', read_only=True)
     status = serializers.CharField(required=True)
 
     class Meta:
         model = ActionPoint
         fields = ('id', 'action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
                   'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at', 'assigned_by',
-                  'trip_id')
+                  'assigned_by_name', 'person_responsible_name', 'trip_id')
 
     def validate_due_date(self, value):
         if value.date() < datetime.utcnow().date():
@@ -451,12 +453,14 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
 
 class TravelListSerializer(TravelDetailsSerializer):
+    # TODO: reserve field names to pks for related fields and add _name for the names
     traveler = serializers.CharField(source='traveler.get_full_name')
+    supervisor_name = serializers.CharField(source='supervisor.get_full_name')
 
     class Meta:
         model = Travel
         fields = ('id', 'reference_number', 'traveler', 'purpose', 'status', 'section', 'office', 'start_date',
-                  'end_date')
+                  'end_date', 'supervisor_name')
         read_only_fields = ('status',)
 
 
@@ -520,12 +524,13 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
 class InvoiceSerializer(serializers.ModelSerializer):
     ta_number = serializers.CharField(source='travel.reference_number', read_only=True)
     items = InvoiceItemSerializer(many=True, read_only=True)
-    amount = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
         fields = ('id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
                   'message', 'vision_fi_id', 'ta_number', 'items')
 
-    def get_amount(self, obj):
-        return str(rount_to_currency_precision(obj.currency, obj.amount))
+    def to_representation(self, instance):
+        data = super(InvoiceSerializer, self).to_representation(instance)
+        data['amount'] = str(rount_to_currency_precision(instance.currency, instance.amount))
+        return data
