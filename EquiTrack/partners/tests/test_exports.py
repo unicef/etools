@@ -238,7 +238,7 @@ class TestModelExport(APITenantTestCase):
                         ])
 
         cp_outputs = ', '.join([
-            'Output: {} ({},{},{})'.format(
+            'Output: {} ({}/{}/{})'.format(
                 gr.result.name,
                 gr.year,
                 gr.planned_amount,
