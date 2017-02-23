@@ -24,7 +24,8 @@ from partners.models import (
     Agreement,
     PartnerStaffMember,
     InterventionSectorLocationLink,
-    InterventionResultLink
+    InterventionResultLink,
+    FundingCommitment,
 )
 from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
@@ -264,6 +265,22 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         return super(InterventionResultCUSerializer, self).update(instance, validated_data)
 
 
+class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
+    grant = serializers.CharField(source='grant.name')
+
+    class Meta:
+        model = FundingCommitment
+        fields = (
+            "grant",
+            "wbs",
+            "fc_type",
+            "fc_ref",
+            "agreement_amount",
+            "commitment_amount",
+            "expenditure_amount",
+        )
+
+
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
@@ -298,6 +315,21 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
+    fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
+
+    def get_fr_numbers_details(self, obj):
+        data = {}
+        if obj.fr_numbers:
+            for fr_number in obj.fr_numbers:
+                try:
+                    fc = FundingCommitment.objects.get(fr_number=fr_number)
+                except FundingCommitment.ObjectDoesNotExist:
+                    raise
+                else:
+                    serializer = FundingCommitmentNestedSerializer(fc)
+                    data.update({fr_number: serializer.data})
+        return data
+
     class Meta:
         model = Intervention
         fields = (
@@ -307,7 +339,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations",
             "created", "modified", "planned_budget", "result_links",
-            "amendments", "planned_visits", "attachments", "supplies", "distributions"
+            "amendments", "planned_visits", "attachments", "supplies", "distributions", "fr_numbers_details",
         )
 
 class InterventionExportSerializer(serializers.ModelSerializer):

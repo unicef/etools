@@ -26,6 +26,7 @@ from EquiTrack.factories import (
     InterventionFactory,
     GovernmentInterventionFactory,
     SectionFactory,
+    GrantFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector
@@ -57,6 +58,7 @@ from partners.models import (
     InterventionAttachment,
     FileType,
     InterventionResultLink,
+    FundingCommitment,
 )
 
 
@@ -1091,6 +1093,30 @@ class TestInterventionViews(APITenantTestCase):
         self.isll.locations.add(LocationFactory())
         self.isll.save()
 
+        self.funding_commitment1 = FundingCommitment.objects.create(
+            grant=GrantFactory(),
+            fr_number="12345",
+            wbs="some_wbs",
+            fc_type="some_fc_type",
+            fc_ref="some_fc_ref",
+            fr_item_amount_usd=100,
+            agreement_amount=50,
+            commitment_amount=200,
+            expenditure_amount=300
+        )
+
+        self.funding_commitment2 = FundingCommitment.objects.create(
+            grant=GrantFactory(),
+            fr_number="45678",
+            wbs="some_wbs2",
+            fc_type="some_fc_type2",
+            fc_ref="some_fc_ref2",
+            fr_item_amount_usd=100,
+            agreement_amount=50,
+            commitment_amount=200,
+            expenditure_amount=300
+        )
+
         # Basic data to adjust in tests
         self.intervention_data = {
             "agreement": self.agreement2.id,
@@ -1112,7 +1138,10 @@ class TestInterventionViews(APITenantTestCase):
             "partner_focal_points": [],
             "partner_authorized_officer_signatory": self.partnerstaff.id,
             "offices": [],
-            "fr_numbers": None,
+            "fr_numbers": [
+                self.funding_commitment1.fr_number,
+                self.funding_commitment2.fr_number
+            ],
             "population_focus": "Some focus",
             "planned_budget": [
                 {
@@ -1220,6 +1249,17 @@ class TestInterventionViews(APITenantTestCase):
         # Check for activity action created
         self.assertEquals(model_stream(Intervention).count(), 3)
         self.assertEquals(model_stream(Intervention)[0].verb, 'created')
+
+    def test_intervention_retrieve_fr_numbers(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["fr_numbers_details"]["12345"]["wbs"], "some_wbs")
+        self.assertEquals(response.data["fr_numbers_details"]["45678"]["wbs"], "some_wbs2")
 
     def test_intervention_active_update_population_focus(self):
         self.intervention_data.update(population_focus=None)
