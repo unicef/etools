@@ -91,9 +91,9 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
             if "sector" in query_params.keys():
                 queries.append(Q(results__sectors=query_params.get("sector")))
             if "year" in query_params.keys():
-                queries.append(Q(results__year=query_params.get("sector")))
+                queries.append(Q(results__year=query_params.get("year")))
             if "unicef_focal_point" in query_params.keys():
-                queries.append(Q(results__unicef_managers=query_params.get("sector")))
+                queries.append(Q(results__unicef_managers=query_params.get("unicef_focal_point")))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
