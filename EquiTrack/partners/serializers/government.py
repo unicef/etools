@@ -146,9 +146,12 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         cp_output_results = Result.objects.filter(result_type__name="Output", governmentinterventionresult=obj.results.all())
 
         # Query FundingCommitment objects with above Result wbs list
-        target_funding_commitments = FundingCommitment.objects.filter(wbs__in=cp_output_results.values_list('wbs', flat=True))
+        target_funding_commitments = list(FundingCommitment.objects.filter(wbs__in=cp_output_results.values_list('wbs', flat=True)))
 
-        return FundingCommitmentListSerializer(target_funding_commitments, many=True).data
+        # Create a dictionary where each key is Result object's name and each value is a list of serialized FundingCommitment objects
+        implementation_details = {result.name: FundingCommitmentListSerializer(map(lambda item: item.wbs == result.wbs, target_funding_commitments), many=True).data for result in cp_output_results}
+
+        return implementation_details
 
     def validate(self, data):
         """
