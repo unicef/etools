@@ -157,6 +157,7 @@ class UserCreationSerializer(serializers.ModelSerializer):
     groups = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
     profile = UserProfileCreationSerializer()
+    t2f = T2FUserDataSerializer(source='*', read_only=True)
 
     def get_groups(self, user):
         return [grp.id for grp in user.groups.all()]
@@ -209,5 +210,6 @@ class UserCreationSerializer(serializers.ModelSerializer):
             'is_active',
             'groups',
             'user_permissions',
-            'profile'
+            'profile',
+            't2f',
         )
