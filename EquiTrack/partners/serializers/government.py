@@ -37,14 +37,6 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("There is no planned amount entered")
         return data
 
-    def validate_unicef_managers(self, value):
-        for usr in value:
-            try:
-                usr.groups.get(name='Senior Management Team')
-            except Group.DoesNotExist as e:
-                raise ValidationError('User {} not in Senior Management Team'.format(usr))
-        return value
-
     def validate_sectors(self, value):
         return value
 
@@ -149,7 +141,7 @@ class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
 
     def get_cp_outputs(self, obj):
         cp_outputs = [
-            'Output: {} ({},{},{})'.format(
+            'Output: {} ({}/{:,}/{})'.format(
                 gr.result.name,
                 gr.year,
                 gr.planned_amount,
@@ -159,7 +151,7 @@ class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
         return ', '.join(cp_outputs)
 
     def get_url(self, obj):
-        return 'https://{}/pmp/governments/{}/'.format(self.context['request'].get_host(), obj.id)
+        return 'https://{}/pmp/governments/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
     class Meta:
         model = GovernmentIntervention
