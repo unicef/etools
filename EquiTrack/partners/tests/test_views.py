@@ -1546,6 +1546,24 @@ class TestGovernmentInterventionViews(APITenantTestCase):
         self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
         self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
 
+    def test_govint_list_filter(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data={
+                "year": datetime.date.today().year,
+                "country_programme": self.cp.id,
+                "partner": self.partner.id
+            }
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.govint.id)
+        self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
+        self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
+
     def test_govint_create(self):
         govint_result = {
             #"intervention": self.govint.id,
