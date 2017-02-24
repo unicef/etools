@@ -1224,6 +1224,11 @@ class AgreementAmendmentType(models.Model):
     additional_clauses = models.TextField(null=True, blank=True)
     existing_clause_amended = models.TextField(null=True, blank=True)
 
+    def save(self, **kwargs):
+        if self.pk is None and self.type == 'CP extension':
+            self.cp_cycle_end = CountryProgramme.current().to_date
+        return super(AgreementAmendmentType, self).save(**kwargs)
+
 
 class InterventionManager(models.Manager):
 
