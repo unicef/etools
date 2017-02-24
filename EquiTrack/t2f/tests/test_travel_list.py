@@ -1,10 +1,8 @@
 from __future__ import unicode_literals
+
 import logging
 
 import json
-import csv
-from cStringIO import StringIO
-from unittest import skip
 from freezegun import freeze_time
 
 from django.core.urlresolvers import reverse
@@ -14,9 +12,9 @@ from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, TravelType
-from t2f.tests.factories import AirlineCompanyFactory, CurrencyFactory, FundFactory
+from t2f.tests.factories import CurrencyFactory, FundFactory
 
-from .factories import TravelFactory, TravelActivityFactory
+from .factories import TravelFactory
 
 log = logging.getLogger('__name__')
 
@@ -33,18 +31,6 @@ class TravelList(APITenantTestCase):
     def test_urls(self):
         list_url = reverse('t2f:travels:list:index')
         self.assertEqual(list_url, '/api/t2f/travels/')
-
-        list_export_url = reverse('t2f:travels:list:export')
-        self.assertEqual(list_export_url, '/api/t2f/travels/export/')
-
-        export_url = reverse('t2f:travels:list:finance_export')
-        self.assertEqual(export_url, '/api/t2f/travels/finance-export/')
-
-        export_url = reverse('t2f:travels:list:travel_admin_export')
-        self.assertEqual(export_url, '/api/t2f/travels/travel-admin-export/')
-
-        export_url = reverse('t2f:travels:list:invoice_export')
-        self.assertEqual(export_url, '/api/t2f/travels/invoice-export/')
 
     def test_list_view(self):
         with self.assertNumQueries(5):
@@ -83,7 +69,6 @@ class TravelList(APITenantTestCase):
         self.assertEqual(len(response_json['travels_by_section']), 1)
         self.assertEqual(response_json['planned'], 1)
 
-
     def test_dashboard_action_points_list_view(self):
         with self.assertNumQueries(8):
             response = self.forced_auth_req(
@@ -117,7 +102,6 @@ class TravelList(APITenantTestCase):
         self.assertEqual(len(response_json['action_points_by_section']), 1)
         self.assertEqual(response_json['action_points_by_section'][0]['total_action_points'], 1)
 
-    @skip("Fix this")
     def test_pagination(self):
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
@@ -204,122 +188,8 @@ class TravelList(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['data']), 1)
 
-    @skip('How can I make a non-json request?')
-    def test_export(self):
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:export'),
-                                        content_type='text/csv', user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
-
-        # check header
-        self.assertEqual(export_csv.next(),
-                         ['id',
-                          'reference_number',
-                          'traveler',
-                          'purpose',
-                          'start_date',
-                          'end_date',
-                          'status',
-                          'created',
-                          'section',
-                          'office',
-                          'supervisor',
-                          'ta_required',
-                          'ta_reference_number',
-                          'approval_date',
-                          'is_driver',
-                          'attachment_count'])
-
-    @skip('How can I make a non-json request?')
-    def test_finance_export(self):
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
-                                        content_type='text/csv', user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
-
-        # check header
-        self.assertEqual(export_csv.next(),
-                         ['reference_number',
-                          'traveller',
-                          'office',
-                          'section',
-                          'status',
-                          'supervisor',
-                          'start_date',
-                          'end_date',
-                          'purpose_of_travel',
-                          'mode_of_travel',
-                          'international_travel',
-                          'require_ta',
-                          'dsa_total',
-                          'expense_total',
-                          'deductions_total'])
-
-    @skip('How can I make a non-json request?')
-    def test_travel_admin_export(self):
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
-                                        content_type='text/csv', user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
-
-        # check header
-        self.assertEqual(export_csv.next(),
-                         ['reference_number',
-                          'traveller',
-                          'office',
-                          'section',
-                          'status',
-                          'origin',
-                          'destination',
-                          'departure_time',
-                          'arrival_time',
-                          'dsa_area',
-                          'overnight_travel',
-                          'mode_of_travel',
-                          'airline'])
-
-    @skip('How can I make a non-json request?')
-    def test_invoice_export(self):
-        response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
-                                        content_type='text/csv', user=self.unicef_staff)
-        export_csv = csv.reader(StringIO(response.content))
-
-        # check header
-        self.assertEqual(export_csv.next(),
-                         ['reference_number',
-                          'ta_number',
-                          'vendor_number',
-                          'currency',
-                          'amount',
-                          'status',
-                          'message',
-                          'vision_fi_doc',
-                          'wbs',
-                          'grant',
-                          'fund'])
-
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()
-        airlines = AirlineCompanyFactory()
-        airlines2 = AirlineCompanyFactory()
-
-        # data = {'cost_assignments': [],
-        #         'deductions': [{'date': '2016-11-03',
-        #                         'breakfast': True,
-        #                         'lunch': True,
-        #                         'dinner': False,
-        #                         'accomodation': True}],
-        #         'expenses': [],
-        #         'itinerary': [{'origin': 'Budapest',
-        #                        'destination': 'Berlin',
-        #                        'departure_date': '2016-11-16T12:06:55.821490',
-        #                        'arrival_date': '2016-11-16T12:06:55.821490',
-        #                        'dsa_region': dsaregion.id,
-        #                        'overnight_travel': False,
-        #                        'mode_of_travel': ModeOfTravel.RAIL,
-        #                        'airlines': [airlines.id, airlines2.id]}],
-        #         'activities': []}
-        #
-        # self.forced_auth_req('post', reverse('t2f:travels:list:index'),
-        #                      data=data, user=self.unicef_staff)
-
         currency = CurrencyFactory()
         fund = FundFactory()
         grant = fund.grant
@@ -383,34 +253,3 @@ class TravelList(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(len(response_json['itinerary']), 1)
-
-
-class TravelActivityList(APITenantTestCase):
-
-    def setUp(self):
-        super(TravelActivityList, self).setUp()
-        self.unicef_staff = UserFactory(is_staff=True)
-        self.traveler1 = UserFactory()
-        self.traveler2 = UserFactory()
-        self.travel = TravelFactory(reference_number=make_travel_reference_number(),
-                                    traveler=self.traveler1,
-                                    supervisor=self.unicef_staff)
-        # to filter against
-        self.travel_activity = TravelActivityFactory(primary_traveler=self.traveler2)
-
-    def test_list_view(self):
-        with self.assertNumQueries(8):
-            response = self.forced_auth_req(
-                'get',
-                reverse(
-                    't2f:travels:list:activities',
-                    kwargs={"partner_organization_pk": self.travel.activities.first().partner.id}
-                ),
-                user=self.unicef_staff,
-            )
-
-        response_json = json.loads(response.rendered_content)
-        expected_keys = ["primary_traveler", "travel_type", "date", "locations", "status", "reference_number"]
-
-        self.assertKeysIn(expected_keys, response_json[0])
-        self.assertEqual(len(response_json), 1)
