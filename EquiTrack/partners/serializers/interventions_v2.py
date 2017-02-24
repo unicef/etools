@@ -322,9 +322,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
         if obj.fr_numbers:
             for fr_number in obj.fr_numbers:
                 try:
-                    fc = FundingCommitment.objects.get(fr_number=fr_number)
+                    fc = FundingCommitment.objects.filter(fr_number=fr_number).select_related("grant").first()
                 except FundingCommitment.DoesNotExist:
-                    raise
+                    pass
                 else:
                     serializer = FundingCommitmentNestedSerializer(fc)
                     data.update({fr_number: serializer.data})
