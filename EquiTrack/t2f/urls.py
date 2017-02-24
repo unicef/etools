@@ -1,19 +1,12 @@
 
 from django.conf.urls import url, patterns, include
 
-from t2f.views import TravelListViewSet, SettingsView
-from t2f.views import TravelDetailsViewSet
-from t2f.views import StaticDataView
-from t2f.views import PermissionMatrixView
-from t2f.views import TravelAttachmentViewSet
-from t2f.views import ActionPointViewSet
-from t2f.views import InvoiceViewSet
-from t2f.views import VendorNumberListView
-from t2f.views import VisionInvoiceExport
-from t2f.views import VisionInvoiceUpdate
-from t2f.views import TravelActivityViewSet
-from t2f.views import TravelDashboardViewSet
-from t2f.views import ActionPointDashboardViewSet
+from t2f.views.dashboard import TravelDashboardViewSet, ActionPointDashboardViewSet
+from t2f.views.generics import SettingsView, StaticDataView, PermissionMatrixView, VendorNumberListView
+from t2f.views.invoices import InvoiceViewSet
+from t2f.views.travel import TravelListViewSet, TravelDetailsViewSet, TravelAttachmentViewSet, ActionPointViewSet,\
+    TravelActivityViewSet
+from t2f.views.vision import VisionInvoiceExport, VisionInvoiceUpdate
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
