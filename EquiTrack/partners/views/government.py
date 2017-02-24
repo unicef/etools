@@ -30,6 +30,7 @@ from partners.filters import PartnerScopeFilter
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.government_intervention_results import GovernmentInterventionResultValid
 from partners.permissions import PartneshipManagerRepPermission
+from partners.exports_v2 import GovernmentInterventionCvsRenderer
 
 
 class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
@@ -40,7 +41,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
     serializer_class = GovernmentInterventionListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, GovernmentInterventionCvsRenderer)
 
     SERIALIZER_MAP = {
         'results': GovernmentInterventionResultNestedSerializer
@@ -90,9 +91,9 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
             if "sector" in query_params.keys():
                 queries.append(Q(results__sectors=query_params.get("sector")))
             if "year" in query_params.keys():
-                queries.append(Q(results__year=query_params.get("sector")))
+                queries.append(Q(results__year=query_params.get("year")))
             if "unicef_focal_point" in query_params.keys():
-                queries.append(Q(results__unicef_managers=query_params.get("sector")))
+                queries.append(Q(results__unicef_managers=query_params.get("unicef_focal_point")))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
