@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from rest_framework import serializers
 
 from t2f.models import Travel
-from t2f.serializers import TravelListSerializer
+from t2f.serializers.travel import TravelListSerializer
 
 
 class TravelListExportSerializer(TravelListSerializer):

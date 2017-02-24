@@ -33,9 +33,9 @@ from t2f.serializers.export import TravelListExportSerializer, FinanceExportSeri
 
 from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice, IteneraryItem, \
     InvoiceItem, TravelActivity, TransitionError
-from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
-    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer, \
-    TravelActivityByPartnerSerializer
+from t2f.serializers.travel import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
+    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, TravelActivityByPartnerSerializer
+from t2f.serializers.invoices import InvoiceSerializer
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
 from t2f.permission_matrix import PERMISSION_MATRIX
