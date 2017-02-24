@@ -22,6 +22,7 @@ class CostSummarySerializer(serializers.Serializer):
     dsa_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     expenses_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     deductions_total = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
+    paid_to_traveler = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     dsa = DSASerializer(many=True)
     preserved_expenses = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)
     expenses_delta = serializers.DecimalField(max_digits=20, decimal_places=2, read_only=True)

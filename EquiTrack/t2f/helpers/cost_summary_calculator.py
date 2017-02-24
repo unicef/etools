@@ -43,13 +43,14 @@ class CostSummaryCalculator(object):
         dsa_calculator = DSACalculator(self.travel)
         dsa_calculator.calculate_dsa()
 
-        result = {'dsa_total': dsa_calculator.total_dsa.quantize(Decimal('1.0000')),
+        result = {'dsa_total': dsa_calculator.total_dsa,
                   'expenses_total': total_expense,
                   'deductions_total': dsa_calculator.total_deductions.quantize(Decimal('1.0000')),
                   'dsa': dsa_calculator.detailed_dsa,
                   'preserved_expenses': self.travel.preserved_expenses,
                   'expenses_delta': expenses_delta,
-                  'expenses': expenses}
+                  'expenses': expenses,
+                  'paid_to_traveler': dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000'))}
         return result
 
     def get_expenses(self):
@@ -71,6 +72,7 @@ class DSACalculator(object):
             self.region = itinerary_item.dsa_region
             self.dsa_amount = Decimal(0)
             self.deduction_multiplier = Decimal(0)
+            self.last_day = False
 
         def __repr__(self):
             return 'Date: {} | Region: {} | DSA amount: {} | Deduction: {} => Final: {}'.format(self.date,
@@ -91,6 +93,7 @@ class DSACalculator(object):
         self.travel = travel
         self.total_dsa = None
         self.total_deductions = None
+        self.paid_to_traveler = None
         self.detailed_dsa = None
 
     def _cast_datetime(self, dt):
@@ -115,11 +118,15 @@ class DSACalculator(object):
         self.detailed_dsa = self.aggregate_detailed_dsa(dsa_dto_list)
         self.total_dsa = Decimal(0)
         self.total_deductions = Decimal(0)
+        self.paid_to_traveler = Decimal(0)
         for dto in dsa_dto_list:
-            self.total_dsa += dto.final_amount
+            self.paid_to_traveler += dto.final_amount
 
             if dto == dsa_dto_list[-1]:
                 dto.deduction_multiplier -= self.LAST_DAY_DEDUCTION
+                self.total_dsa += dto.dsa_amount - (dto.dsa_amount * self.LAST_DAY_DEDUCTION)
+            else:
+                self.total_dsa += dto.dsa_amount
 
             self.total_deductions += dto.deduction
 
@@ -185,6 +192,9 @@ class DSACalculator(object):
         for date, itinerary in mapping.items():
             dto = self.DSAdto(date, itinerary)
             dsa_dto_list.append(dto)
+
+        if dsa_dto_list:
+            dsa_dto_list[-1].last_day = True
 
         return sorted(dsa_dto_list, cmp=lambda x, y: cmp(x.date, y.date))
 
