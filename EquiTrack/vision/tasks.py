@@ -8,15 +8,16 @@ from celery.utils.log import get_task_logger
 from EquiTrack.celery import app, send_to_slack
 from partners.models import PartnerOrganization
 from users.models import Country
-from vision.adapters.publics import CurrencySyncronizer, TravelAgenciesSyncronizer, CostAssignmentsSyncronizer
 from vision_data_synchronizer import VisionException
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
 from vision.adapters.funding import (
     FundingSynchronizer,
+    FundReservationsSynchronizer,
+    FundCommitmentSynchronizer,
     DCTSynchronizer,
 )
-from .models import VisionSyncLog
+from vision.models import VisionSyncLog
 
 
 PUBLIC_SYNC_HANDLERS = []
@@ -27,9 +28,8 @@ SYNC_HANDLERS = [
     RAMSynchronizer,
     PartnerSynchronizer,
     FundingSynchronizer,
-    CurrencySyncronizer,
-    TravelAgenciesSyncronizer,
-    CostAssignmentsSyncronizer,
+    FundReservationsSynchronizer,
+    FundCommitmentSynchronizer,
     #DCTSynchronizer
 ]
 

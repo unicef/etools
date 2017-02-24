@@ -1,12 +1,18 @@
 import json
-
+import datetime
 
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 from vision.utils import wcf_json_date_as_datetime, comp_decimals
 from django.utils import timezone
 
-from funds.models import Grant, Donor
-from partners.models import FundingCommitment, DirectCashTransfer, PCA
+from funds.models import (
+    Grant, Donor,
+    FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
+)
+from partners.models import (
+    FundingCommitment, DirectCashTransfer
+)
+from publics.models import Currency
 
 
 class FundingSynchronizer(VisionDataSynchronizer):
@@ -57,7 +63,6 @@ class FundingSynchronizer(VisionDataSynchronizer):
             return True
 
         return filter(bad_record, records)
-
 
     def _save_records(self, records):
 
@@ -185,6 +190,288 @@ class DCTSynchronizer(VisionDataSynchronizer):
             dct.amount_more_than_9_Months_usd = dct_line["AMT_MORE9_MONTHS_USD"]
             processed += 1
 
+        return processed
+
+
+class FundReservationsSynchronizer(VisionDataSynchronizer):
+
+    ENDPOINT = 'GetFundsReservationInfo_JSON'
+    REQUIRED_KEYS = (
+        "VENDOR_CODE",
+        "FR_NUMBER",
+        "FR_DOC_DATE",
+        "FR_TYPE",
+        "CURRENCY",
+        "FR_DOCUMENT_TEXT",
+        "FR_START_DATE",
+        "FR_END_DATE",
+        "LINE_ITEM",
+        "WBS_ELEMENT",
+        "GRANT_NBR",
+        "FUND",
+        "OVERALL_AMOUNT",
+        "OVERALL_AMOUNT_DC",
+        "FC_LINE_ITEM_TEXT",
+        "DUE_DATE",
+    )
+    MAPPING = {
+        "vendor_code": "VENDOR_CODE",
+        "fr_number": "FR_NUMBER",
+        "document_date": "FR_DOC_DATE",
+        "fr_type": "FR_TYPE",
+        "currency": "CURRENCY",
+        "document_text": "FR_DOCUMENT_TEXT",
+        "start_date": "FR_START_DATE",
+        "end_date": "FR_END_DATE",
+        "line_item": "LINE_ITEM",
+        "wbs": "WBS_ELEMENT",
+        "grant_number": "GRANT_NBR",
+        "fund": "FUND",
+        "overall_amount": "OVERALL_AMOUNT",
+        "overall_amount_dc": "OVERALL_AMOUNT_DC",
+        "line_item_text": "FC_LINE_ITEM_TEXT",
+        "due_date": "DUE_DATE",
+    }
+
+    def _convert_records(self, records):
+        return json.loads(records)
+
+    def _filter_records(self, records):
+        records = records["ROWSET"]["ROW"]
+
+        records = super(FundReservationsSynchronizer, self)._filter_records(records)
+
+        def bad_record(record):
+            # We don't care about FCs without expenditure
+            if not record['OVERALL_AMOUNT']:
+                return False
+            if not record['FR_NUMBER']:
+                return False
+            return True
+
+        return filter(bad_record, records)
+
+    def _save_records(self, records):
+
+        processed = 0
+        filtered_records = self._filter_records(records)
+        frs = {}
+
+        def _changed_fields(fields, local_obj, api_obj):
+            for field in fields:
+                apiobj_field = api_obj[self.MAPPING[field]]
+                if field in ['overall_amount', 'overall_amount_dc']:
+                    return not comp_decimals(getattr(local_obj, field), apiobj_field)
+                if field in ['start_date', 'end_date', 'document_date', 'due_date']:
+                    apiobj_field = datetime.datetime.strptime(api_obj[self.MAPPING[field]], '%d-%b-%y').date()
+                if field == 'fr_type':
+                    apiobj_field = api_obj[self.MAPPING[field]] or 'No Record'
+                if getattr(local_obj, field) != apiobj_field:
+                    print "field changed", field
+                    return True
+            return False
+
+        for fr_line in filtered_records:
+            saving = False
+
+            try:
+                fr, saving = FundsReservationHeader.objects.get_or_create(
+                    vendor_code=fr_line["VENDOR_CODE"],
+                    fr_number=fr_line["FR_NUMBER"],
+                )
+            except FundsReservationHeader.MultipleObjectsReturned as exp:
+                exp.message += 'FR Ref ' + fr_line["FR_NUMBER"]
+                raise
+
+            try:
+                currency = Currency.objects.get(
+                    code=fr_line["CURRENCY"],
+                )
+            except Currency.DoesNotExist:
+                print 'Currency: {} does not exist'.format(fr_line["CURRENCY"])
+                currency = None
+                continue
+
+            fr_fields = ['start_date', 'end_date', 'fr_type']
+            if saving or _changed_fields(fr_fields, fr, fr_line):
+                fr.start_date = datetime.datetime.strptime(fr_line["FR_START_DATE"], '%d-%b-%y')
+                fr.end_date = datetime.datetime.strptime(fr_line["FR_END_DATE"], '%d-%b-%y')
+                fr.document_date = datetime.datetime.strptime(fr_line["FR_DOC_DATE"], '%d-%b-%y')
+                fr.fr_type = fr_line["FR_TYPE"] or 'No Record'
+                fr.currency = currency
+                fr.document_text = fr_line["FR_DOCUMENT_TEXT"]
+                fr.save()
+
+            try:
+                fr_item, saved = FundsReservationItem.objects.get_or_create(
+                    fund_reservation=fr,
+                    line_item=int(fr_line["LINE_ITEM"]),
+                    wbs=fr_line["WBS_ELEMENT"],
+                )
+            except FundsReservationItem.MultipleObjectsReturned as exp:
+                exp.message += 'FR Ref ' + fr_line["FR_NUMBER"]
+                raise
+
+            #adding FundReservationItem
+            fr_item_fields = ['grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date']
+            if saved or _changed_fields(fr_item_fields, fr_item, fr_line):
+                fr_item.fund = fr_line["FUND"]
+                fr_item.grant_number = fr_line['GRANT_NBR']
+                fr_item.overall_amount = fr_line["OVERALL_AMOUNT"]
+                fr_item.overall_amount_dc = fr_line["OVERALL_AMOUNT_DC"]
+                fr_item.line_item_text = fr_line["FC_LINE_ITEM_TEXT"]
+                fr_item.due_date = datetime.datetime.strptime(fr_line["DUE_DATE"], '%d-%b-%y')
+                fr_item.save()
+
+            processed += 1
+        return processed
+
+
+class FundCommitmentSynchronizer(VisionDataSynchronizer):
+
+    ENDPOINT = 'GetFundsCommitmentInfo_JSON'
+    REQUIRED_KEYS = (
+        "VENDOR_CODE",
+        "FC_NUMBER",
+        "FC_DOC_DATE",
+        "FR_TYPE",
+        "CURRENCY",
+        "FC_DOCUMENT_TEXT",
+        "EXCHANGE_RATE",
+        "RESP_PERSON",
+        "LINE_ITEM",
+        "WBS_ELEMENT",
+        "GRANT_NBR",
+        "FUND",
+        "GL_ACCOUNT",
+        "OVERALL_AMOUNT",
+        "OVERALL_AMOUNT_DC",
+        "DUE_DATE",
+        "COMMITMENT_AMOUNT",
+        "AMOUNT_CHANGED",
+        "FC_LINE_ITEM_TEXT",
+    )
+    MAPPING = {
+        "vendor_code": "VENDOR_CODE",
+        "fc_number": "FR_NUMBER",
+        "document_date": "FC_DOC_DATE",
+        "fc_type": "FR_TYPE",
+        "currency": "CURRENCY",
+        "document_text": "FC_DOCUMENT_TEXT",
+        "exchange_rate": "EXCHANGE_RATE",
+        "responsible_person": "RESP_PERSON",
+        "line_item": "LINE_ITEM",
+        "wbs": "WBS_ELEMENT",
+        "grant_number": "GRANT_NBR",
+        "fund": "FUND",
+        "gl_account": "GL_ACCOUNT",
+        "overall_amount": "OVERALL_AMOUNT",
+        "overall_amount_dc": "OVERALL_AMOUNT_DC",
+        "due_date": "DUE_DATE",
+        "fr_number": "FR_NUMBER",
+        "commitment_amount": "COMMITMENT_AMOUNT",
+        "amount_changed": "AMOUNT_CHANGED",
+        "line_item_text": "FC_LINE_ITEM_TEXT",
+
+    }
+
+    def _convert_records(self, records):
+        return json.loads(records)
+
+    def _filter_records(self, records):
+        records = records["ROWSET"]["ROW"]
+
+        records = super(FundCommitmentSynchronizer, self)._filter_records(records)
+
+        def bad_record(record):
+            # We don't care about FCs without expenditure
+            if not record['OVERALL_AMOUNT']:
+                return False
+            if not record['FC_NUMBER']:
+                return False
+            return True
+
+        return filter(bad_record, records)
+
+    def _save_records(self, records):
+
+        processed = 0
+        filtered_records = self._filter_records(records)
+        fcs = {}
+
+        def _changed_fields(fields, local_obj, api_obj):
+            for field in fields:
+                apiobj_field = api_obj[self.MAPPING[field]]
+                if field in ['overall_amount', 'overall_amount_dc', 'exchange_rate', 'amount_changed']:
+                    return not comp_decimals(getattr(local_obj, field), apiobj_field)
+                if field in ['document_date', 'due_date']:
+                    apiobj_field = datetime.datetime.strptime(api_obj[self.MAPPING[field]], '%d-%b-%y').date()
+                if field in ['fc_type', 'fr_number']:
+                    apiobj_field = api_obj[self.MAPPING[field]] or 'No Record'
+                if getattr(local_obj, field) != apiobj_field:
+                    print "field changed", field
+                    return True
+            return False
+
+        for fc_line in filtered_records:
+            saving = False
+
+            try:
+                fc, saving = FundsCommitmentHeader.objects.get_or_create(
+                    vendor_code=fc_line["VENDOR_CODE"],
+                    fc_number=fc_line["FC_NUMBER"],
+                )
+            except FundsCommitmentHeader.MultipleObjectsReturned as exp:
+                exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
+                raise
+
+            try:
+                currency = Currency.objects.get(
+                    code=fc_line["CURRENCY"],
+                )
+            except Currency.DoesNotExist:
+                print 'Currency: {} does not exist'.format(fc_line["CURRENCY"])
+                currency = None
+                continue
+
+            fc_fields = ['document_date', 'responsible_person', 'fc_type', 'exchange_rate']
+            if saving or _changed_fields(fc_fields, fc, fc_line):
+                fc.document_date = datetime.datetime.strptime(fc_line["FC_DOC_DATE"], '%d-%b-%y')
+                fc.fc_type = fc_line["FR_TYPE"] or 'No Record'
+                fc.currency = currency
+                fc.document_text = fc_line["FC_DOCUMENT_TEXT"]
+                fc.exchange_rate = fc_line["EXCHANGE_RATE"]
+                fc.responsible_person = fc_line["RESP_PERSON"]
+                fc.save()
+
+            try:
+                fc_item, saved = FundsCommitmentItem.objects.get_or_create(
+                    fund_commitment=fc,
+                    line_item=int(fc_line["LINE_ITEM"]),
+                    wbs=fc_line["WBS_ELEMENT"],
+                )
+            except FundsCommitmentItem.MultipleObjectsReturned as exp:
+                exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
+                raise
+
+            #adding FundCommitmentItem
+            fc_item_fields = ['grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date',
+                              'gl_account', 'commitment_amount', 'amount_changed']
+            if saved or _changed_fields(fc_item_fields, fc_item, fc_line):
+                fc_item.fund = fc_line["FUND"]
+                fc_item.grant_number = fc_line['GRANT_NBR']
+                fc_item.gl_account = fc_line['GL_ACCOUNT']
+                fc_item.overall_amount = fc_line["OVERALL_AMOUNT"]
+                fc_item.overall_amount_dc = fc_line["OVERALL_AMOUNT_DC"]
+                fc_item.due_date = datetime.datetime.strptime(fc_line["DUE_DATE"], '%d-%b-%y')
+                fc_item.fr_number = fc_line['FR_NUMBER'] if 'FR_NUMBER' in fc_line else None
+                fc_item.commitment_amount = fc_line['COMMITMENT_AMOUNT']
+                fc_item.amount_changed = fc_line['AMOUNT_CHANGED'].replace(",", "")
+                fc_item.line_item_text = fc_line["FC_LINE_ITEM_TEXT"]
+
+                fc_item.save()
+
+            processed += 1
         return processed
 
 
