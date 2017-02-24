@@ -39,10 +39,10 @@ from partners.serializers.partner_organization_v2 import (
     AssessmentDetailSerializer
 )
 from partners.serializers.interventions_v2 import (
-    InterventionListSerializer,
+    InterventionSummaryListSerializer,
 )
 from partners.serializers.government import (
-    GovernmentInterventionListSerializer,
+    GovernmentInterventionSummaryListSerializer,
 )
 from partners.permissions import PartneshipManagerRepPermission
 from partners.filters import PartnerScopeFilter
@@ -251,12 +251,12 @@ class PartnerOrganizationOverviewAPIView(APIView):
             if 'status' in request.GET and request.GET['status'] != '':
                 interventions = interventions.filter(status=request.GET['status'])
 
-            interventions = InterventionListSerializer(interventions, many=True)
+            interventions = InterventionSummaryListSerializer(interventions, many=True)
 
         else:
             interventions = GovernmentIntervention.objects.filter(partner=partner)
 
-            interventions = GovernmentInterventionListSerializer(interventions, many=True)
+            interventions = GovernmentInterventionSummaryListSerializer(interventions, many=True)
 
         return Response({
             'partner': partner_data,

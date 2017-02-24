@@ -394,3 +394,14 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_distribution_plans(self, obj):
         return ', '.join(['"{}"/{} ({})'.format(d.item.name, d.quantity, d.site) for d in obj.distributions.all()])
+
+
+class InterventionSummaryListSerializer(serializers.ModelSerializer):
+
+    partner_name = serializers.CharField(source='agreement.partner.name')
+
+    class Meta:
+        model = Intervention
+        fields = (
+            'id', 'partner_name', 'status', 'title', 'start', 'end',
+        )
