@@ -220,7 +220,9 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
 
     def get_partnership_overview(self, obj):
         if obj.partner_type != PartnerType.GOVERNMENT:
-            interventions = Intervention.objects.filter(agreement__partner=obj, status='active')
+            interventions = Intervention.objects \
+                .filter(agreement__partner=obj) \
+                .exclude(status='draft')
 
             interventions = InterventionSummaryListSerializer(interventions, many=True)
 
