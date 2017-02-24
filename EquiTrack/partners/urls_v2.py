@@ -32,6 +32,10 @@ from views.v2 import (
     PmpStaticDropdownsListApiView, PMPDropdownsListApiView, PartnershipDashboardAPIView
 )
 
+from users.models import Country
+c = Country.objects.get(name='Lebanon')
+from vision.adapters.funding import FundReservationsSynchronizer
+f = FundReservationsSynchronizer(c)
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
 
@@ -85,3 +89,4 @@ urlpatterns = (
     url(r'^dropdowns/pmp/$', view=PMPDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-pmp-list'),
 )
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'csv'])
+

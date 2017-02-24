@@ -1,8 +1,4 @@
-__author__ = 'jcranwellward'
-
 from django.db import models
-
-from publics.models import Currency
 
 
 class Donor(models.Model):
@@ -50,10 +46,10 @@ class Grant(models.Model):
 
 class FundsReservationHeader(models.Model):
     vendor_code = models.CharField(max_length=20)
-    fr_number = models.CharField(max_length=20)
+    fr_number = models.CharField(max_length=20, unique=True)
     document_date = models.DateField(null=True, blank=True)
     fr_type = models.CharField(max_length=50, null=True, blank=True)
-    currency = models.ForeignKey(Currency, null=True, blank=True, related_name='+')
+    currency = models.CharField(max_length=50, null=True, blank=True)
     document_text = models.CharField(max_length=255, null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
@@ -65,6 +61,7 @@ class FundsReservationHeader(models.Model):
 
 class FundsReservationItem(models.Model):
     fund_reservation = models.ForeignKey(FundsReservationHeader, related_name="fr_items")
+    fr_ref_number = models.CharField(max_length=30, null=True, blank=True)
     line_item = models.IntegerField(default=0)
     wbs = models.CharField(max_length=30, null=True, blank=True)
     grant_number = models.CharField(max_length=20, null=True, blank=True)
@@ -77,13 +74,18 @@ class FundsReservationItem(models.Model):
     class Meta:
         unique_together = ('fund_reservation', 'line_item')
 
+    def save(self, **kwargs):
+        if not self.fr_ref_number:
+            self.fr_ref_number = '{}-{}'.format(self.fund_reservation.fr_number, self.line_item)
+        return super(FundsReservationItem, self).save(**kwargs)
+
 
 class FundsCommitmentHeader(models.Model):
     vendor_code = models.CharField(max_length=20)
     fc_number = models.CharField(max_length=20)
     document_date = models.DateField(null=True, blank=True)
     fc_type = models.CharField(max_length=50, null=True, blank=True)
-    currency = models.ForeignKey(Currency, null=True, blank=True, related_name='+')
+    currency = models.CharField(max_length=50, null=True, blank=True)
     document_text = models.CharField(max_length=255, null=True, blank=True)
     exchange_rate = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
     responsible_person = models.CharField(max_length=100, blank=True, null=True)

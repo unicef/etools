@@ -94,8 +94,7 @@ class VisionDataSynchronizer:
             log.total_processed = self._save_records(converted_records)
             log.successful = True
         except Exception as e:
-            log.exception_message = e.message
-            raise VisionException(message=e.message)
+            raise e
         finally:
             log.save()
 
