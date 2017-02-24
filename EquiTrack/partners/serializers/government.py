@@ -164,4 +164,4 @@ class GovernmentInterventionSummaryListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GovernmentIntervention
-        fields = ("id", "created_at", "partner_name", "country_programme_name")
+        fields = ("id", 'number', "created_at", "partner_name", "country_programme_name")

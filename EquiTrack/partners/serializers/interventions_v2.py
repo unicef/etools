@@ -403,5 +403,5 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Intervention
         fields = (
-            'id', 'partner_name', 'status', 'title', 'start', 'end',
+            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end',
         )
