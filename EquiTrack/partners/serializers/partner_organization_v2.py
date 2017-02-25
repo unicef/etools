@@ -213,12 +213,12 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
-    partnership_overview = serializers.SerializerMethodField(read_only=True)
+    interventions = serializers.SerializerMethodField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
-    def get_partnership_overview(self, obj):
+    def get_interventions(self, obj):
         if obj.partner_type != PartnerType.GOVERNMENT:
             interventions = Intervention.objects \
                 .filter(agreement__partner=obj) \
