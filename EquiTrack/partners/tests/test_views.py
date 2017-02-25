@@ -240,7 +240,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
-        self.assertEquals(response.data['partnership_overview'], [])
+        self.assertEquals(response.data['interventions'], [])
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
