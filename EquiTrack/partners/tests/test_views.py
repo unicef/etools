@@ -28,7 +28,7 @@ from EquiTrack.factories import (
     SectionFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
-from reports.models import ResultType, Sector
+from reports.models import ResultType, Sector, CountryProgramme
 from funds.models import Grant, Donor
 from supplies.models import SupplyItem
 from users.models import Section
@@ -517,6 +517,11 @@ class TestAgreementAPIView(APITenantTestCase):
         self.agreement.authorized_officers.add(self.partner_staff)
         self.agreement.save()
         amendment = SimpleUploadedFile("amendment.pdf", "blah", "application/pdf")
+        today = datetime.date.today()
+        self.country_programme = CountryProgrammeFactory(
+                                        wbs='/A0/',
+                                        from_date=date(today.year-1, 1, 1),
+                                        to_date=date(today.year+1, 1, 1))
         self.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=self.agreement,
@@ -543,11 +548,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.intervention = InterventionFactory(
                                 agreement=self.agreement,
                                 document_type=Intervention.PD)
-        today = datetime.date.today()
-        self.country_programme = CountryProgrammeFactory(
-                                        wbs='/A0/',
-                                        from_date=date(today.year-1, 1, 1),
-                                        to_date=date(today.year+1, 1, 1))
 
     def test_agreements_create(self):
         today = datetime.date.today()
@@ -859,6 +859,14 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "suspended")
         self.assertEquals(Intervention.objects.get(agreement=self.agreement).status, "suspended")
+
+    def test_partner_agreement_amendment_cp_cycle_end(self):
+        amendment_type = AgreementAmendmentType.objects.create(
+            agreement_amendment=self.amendment1,
+            type="CP extension"
+        )
+
+        self.assertEquals(amendment_type.cp_cycle_end, CountryProgramme.current().to_date)
 
     def test_agreement_amendment_delete_valid(self):
         response = self.forced_auth_req(
@@ -1530,6 +1538,24 @@ class TestGovernmentInterventionViews(APITenantTestCase):
             'get',
             '/api/v2/government_interventions/',
             user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.govint.id)
+        self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
+        self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
+
+    def test_govint_list_filter(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data={
+                "year": datetime.date.today().year,
+                "country_programme": self.cp.id,
+                "partner": self.partner.id
+            }
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)

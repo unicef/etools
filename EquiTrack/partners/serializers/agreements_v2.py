@@ -122,7 +122,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
         return ', '.join([sm.get_full_name() for sm in obj.authorized_officers.all()])
 
     def get_amendments(self, obj):
-        return ', '.join(['{} ({}/{})'.format(am.number, am.signed_date, am.type) for am in obj.amendments.all()])
+        return ', '.join(['{} ({})'.format(am.number, am.signed_date) for am in obj.amendments.all()])
 
 
 class AgreementRetrieveSerializer(serializers.ModelSerializer):
