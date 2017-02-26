@@ -94,7 +94,7 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
 
 
 class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
-
+    email = serializers.EmailField(required=True)
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
@@ -103,6 +103,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+
 
         try:
             existing_user = User.objects.get(email=email)
