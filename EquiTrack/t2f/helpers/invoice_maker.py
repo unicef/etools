@@ -53,7 +53,7 @@ class InvoiceMaker(object):
         vendor_grouping = defaultdict(lambda: defaultdict(Decimal))
         cost_assignment_list = self.travel.cost_assignments.all()
 
-        for expense in self.travel.expenses.all():
+        for expense in self.travel.expenses.exclude(amount=None):
             vendor_number = expense.type.vendor_number
 
             # Parking expense

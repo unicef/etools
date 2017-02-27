@@ -38,7 +38,7 @@ class VisionXML(APITenantTestCase):
         for invoice in Invoice.objects.filter(status__in=[Invoice.PENDING, Invoice.PROCESSING]):
             main = ET.SubElement(root, 'ta_invoice_ack')
             ET.SubElement(main, 'invoice_reference').text = invoice.reference_number
-            ET.SubElement(main, 'status').text = 'Success'
+            ET.SubElement(main, 'status').text = 'success'
             ET.SubElement(main, 'message').text = 'explanation'
             ET.SubElement(main, 'vision_fi_doc').text = 'vision_fi'
 

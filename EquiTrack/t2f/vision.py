@@ -4,9 +4,16 @@ from functools import wraps
 import logging
 from collections import defaultdict
 
-from django.core.exceptions import ObjectDoesNotExist
+from decimal import Decimal
+
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.core.mail.message import EmailMultiAlternatives
+from django.core.urlresolvers import reverse
 from django.db import connection
 from django.db.models.query_utils import Q
+from django.template.context import Context
+from django.template.loader import render_to_string
 
 from t2f.models import Invoice
 from users.models import Country as Workspace
@@ -18,6 +25,13 @@ except ImportError:
 
 
 log = logging.getLogger(__name__)
+
+User = get_user_model()
+
+
+class InvoiceUpdateError(Exception):
+    def __init__(self, errors):
+        self.errors = errors
 
 
 def run_on_tenants(func):
@@ -62,7 +76,7 @@ class InvoiceExport(object):
 
     def generate_vendor_node(self, main, invoice):
         vendor = ET.SubElement(main, 'vendor')
-        ET.SubElement(vendor, 'amount').text = str(invoice.amount)
+        ET.SubElement(vendor, 'amount').text = str(invoice.amount.quantize(Decimal('1.000')))
         ET.SubElement(vendor, 'posting_key').text = self.get_posting_key(invoice.amount)
         ET.SubElement(vendor, 'vendor').text = invoice.vendor_number
         ET.SubElement(vendor, 'payment_terms')
@@ -76,7 +90,7 @@ class InvoiceExport(object):
 
     def _generate_expense_node(self, main, invoice_item, item_no):
         expense = ET.SubElement(main, 'expense')
-        ET.SubElement(expense, 'amount').text = str(invoice_item.amount)
+        ET.SubElement(expense, 'amount').text = str(invoice_item.amount.quantize(Decimal('1.000')))
         ET.SubElement(expense, 'item_no').text = str(item_no)
         ET.SubElement(expense, 'posting_key').text = self.get_posting_key(invoice_item.amount)
         ET.SubElement(expense, 'wbs').text = invoice_item.wbs.name
@@ -101,32 +115,53 @@ class InvoiceUpdater(object):
         possible_statuses = {s[0] for s in Invoice.STATUS}
 
         invoice_grouping = defaultdict(list)
+        errors = []
 
-        for invoice_ack in self.root.iter('ta_invoice_ack'):
-            invoice_number = invoice_ack.find('invoice_reference').text
-            status = invoice_ack.find('status').text
-            status = status.lower()
-
-            if status not in possible_statuses:
-                # TODO refine error handling
-                log.error('Invalid invoice (%s) status: %s', invoice_number, status)
+        for element in self.root:
+            if element.tag != 'ta_invoice_ack':
+                errors.append('Invalid tag: {}'.format(element.tag))
                 continue
 
-            data = {'invoice_number': invoice_number,
-                    'status': status,
-                    'message': getattr(invoice_ack.find('message'), 'text'),
-                    'vision_fi_id': getattr(invoice_ack.find('vision_fi_doc'), 'text')}
+            # Parsing the incoming data and making error messages if needed
+            required_tags = {'invoice_reference', 'status'}
+            optional_tags = {'message', 'vision_fi_doc'}
+            extra_elements = set()
+            data_dict = {}
+            for sub_element in element:
+                if sub_element.tag in required_tags:
+                    required_tags.remove(sub_element.tag)
+                    data_dict[sub_element.tag] = sub_element.text
+                elif sub_element.tag in optional_tags:
+                    data_dict[sub_element.tag] = sub_element.text
+                else:
+                    extra_elements.add(sub_element.tag)
 
-            business_area_code, _ = invoice_number.split('/', 1)
+            if required_tags:
+                errors.append('Missing tags: {}'.format(', '.join(required_tags)))
 
-            invoice_grouping[business_area_code].append(data)
+            if extra_elements:
+                errors.append('Extra elements found: {}'.format(', '.join(extra_elements)))
+
+            if data_dict['status'] not in possible_statuses:
+                errors.append('Invalid invoice status: {}'.format(data_dict['status']))
+
+            business_area_code, _ = data_dict['invoice_reference'].split('/', 1)
+            invoice_grouping[business_area_code].append(data_dict)
+
+        if errors:
+            raise InvoiceUpdateError(errors)
 
         self._update_invoices_in_tenants(invoice_grouping)
 
+        if invoice_grouping:
+            errors.append('Unknown workspaces: {}'.format(', '.join(invoice_grouping.keys())))
+            raise InvoiceUpdateError(errors)
+
     @run_on_tenants
     def _update_invoices_in_tenants(self, workspace, invoice_grouping):
-        for invoice_data in invoice_grouping[workspace.business_area_code]:
-            invoice_number = invoice_data['invoice_number']
+        workspace_group = invoice_grouping.pop(workspace.business_area_code, [])
+        for invoice_data in workspace_group:
+            invoice_number = invoice_data['invoice_reference']
             try:
                 invoice = Invoice.objects.get(reference_number=invoice_number)
             except ObjectDoesNotExist:
@@ -136,5 +171,30 @@ class InvoiceUpdater(object):
 
             invoice.status = invoice_data['status']
             invoice.message = invoice_data['message']
-            invoice.vision_fi_id = invoice_data['vision_fi_id']
+            invoice.vision_fi_id = invoice_data['vision_fi_doc']
             invoice.save()
+
+            if invoice.status == Invoice.ERROR:
+                self.send_mail_for_error(workspace, invoice)
+
+    def send_mail_for_error(self, workspace, invoice):
+        url = reverse('t2f:invoices:details', kwargs={'invoice_pk': invoice.id})
+
+        context = Context({'invoice': invoice,
+                           'url': url})
+        html_content = render_to_string('emails/failed_invoice_sync.html', context)
+
+        recipients = User.objects.filter(profile__country=workspace,
+                                         groups__name='Finance Focal Point').values_list('email', flat=True)
+
+        # TODO what should it be?
+        sender = ''
+        msg = EmailMultiAlternatives('[Travel2Field VISION Error] {}'.format(invoice.reference_number),
+                                     '',
+                                     sender, recipients)
+        msg.attach_alternative(html_content, 'text/html')
+
+        try:
+            msg.send(fail_silently=False)
+        except ValidationError as exc:
+            log.error('Was not able to send the email. Exception: %s', exc.message)

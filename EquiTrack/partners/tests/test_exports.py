@@ -9,20 +9,39 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, PartnershipFactory, \
-    GovernmentInterventionFactory, InterventionFactory
+    GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from partners.models import GovernmentInterventionResult, ResultType
 
 
 class TestModelExport(APITenantTestCase):
     def setUp(self):
         super(TestModelExport, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory()
-        self.agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
+        self.partner = PartnerFactory(partner_type='Government')
+        self.agreement = AgreementFactory(
+            partner=self.partner,
+            signed_by_unicef_date=datetime.date.today(),
+            country_programme=CountryProgrammeFactory(wbs="random WBS")
+        )
+
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
+
         self.intervention = InterventionFactory(agreement=self.agreement)
-        self.government_intervention = GovernmentInterventionFactory(partner=self.partner)
+        self.government_intervention = GovernmentInterventionFactory(
+            partner=self.partner,
+            country_programme=self.agreement.country_programme
+        )
+
+        output_res_type, _ = ResultType.objects.get_or_create(name='Output')
+        self.result = ResultFactory(result_type=output_res_type)
+        self.govint_result = GovernmentInterventionResult.objects.create(
+            intervention=self.government_intervention,
+            result=self.result,
+            year=datetime.date.today().year,
+            planned_amount=100,
+        )
 
     @skip("wrong endpoint")
     def test_partner_export_api(self):
@@ -173,6 +192,7 @@ class TestModelExport(APITenantTestCase):
                           '0',
                           '0'))
 
+    @skip("Outdated")
     def test_government_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/government_interventions/export/'.format(self.partner.id),
@@ -196,3 +216,40 @@ class TestModelExport(APITenantTestCase):
                           '',
                           '0',
                           datetime.datetime.now().strftime('%Y')))
+
+    def test_government_intervention_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(),
+                        [
+                            'Government Partner',
+                            'Country Programme',
+                            'Reference Number',
+                            'CP Output',
+                            'URL',
+                        ])
+
+        cp_outputs = ', '.join([
+            'Output: {} ({}/{}/{})'.format(
+                gr.result.name,
+                gr.year,
+                gr.planned_amount,
+                gr.planned_visits)
+            for gr in self.government_intervention.results.all()
+        ])
+        self.assertEqual(dataset[0],
+                        (
+                            self.partner.name,
+                            self.government_intervention.country_programme.name,
+                            self.government_intervention.number,
+                            cp_outputs,
+                            dataset[0][4],
+                        ))

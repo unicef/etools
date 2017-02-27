@@ -1,3 +1,5 @@
+import logging
+
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -96,12 +98,8 @@ class LowerResultCUSerializer(serializers.ModelSerializer):
     @transaction.atomic
     def create(self, validated_data):
         applied_indicators = self.context.pop('applied_indicators', [])
-
-        print ('LowerResultCUSerializer CREATE __ IS THIS WORKING?')
         instance = super(LowerResultCUSerializer, self).create(validated_data)
-        print instance.pk
         self.update_applied_indicators(instance, applied_indicators)
-
         return instance
 
     @transaction.atomic

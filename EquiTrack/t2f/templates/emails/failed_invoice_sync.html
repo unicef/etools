@@ -3,7 +3,7 @@
   <head>
     <meta name="viewport" content="width=device-width">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Certificate Submitted</title>
+    <title>Approved</title>
     <style type="text/css">
       /* -------------------------------------
           RESPONSIVE AND MOBILE FRIENDLY STYLES
@@ -132,66 +132,54 @@
                   <table border="0" cellpadding="0" cellspacing="0" style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;width:100%;">
                     <tr>
                       <td style="font-family:sans-serif;font-size:14px;vertical-align:top;">
-                        <h1 style="color:#212121;font-family:sans-serif;line-height:1.4;margin:0;margin-bottom:24px;margin-top:8px;color:#0099FF;font-size:22px;font-weight:normal;">Dear {{ travel.supervisor }},</h1>
-                        <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">
-                          <strong style="font-weight:bold;white-space:nowrap;">{{ travel.traveler }}</strong> has indicated that trip <strong style="font-weight:bold;white-space:nowrap;">{{ travel.reference_number }}</strong> did <b><u>not</u></b> go as planned.
-                        </p>
+                        <h1 style="color:#212121;font-family:sans-serif;line-height:1.4;margin:0;margin-bottom:24px;margin-top:8px;color:#0099FF;font-size:22px;font-weight:normal;">Dear {{ travel.traveler }},</h1>
+                        <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">VISION has sent back an ERROR message for Invoice Number {{ invoice.reference number }}</p>
+                        <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">Error Message: {{ invoice.message }}</p>
+                        <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">Please make the proper corrections to the TA and resubmit for payment.</p>
+
                         <!-- START DATA-TABLE -->
                         <table border="0" cellpadding="0" cellspacing="0" class="data-table" style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;width:100%;margin-bottom:12px;">
                           <tr>
                             <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">TA Number:</td>
-                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ travel.reference_number }}</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ invoice.travel.reference_number }}</td>
                           </tr>
                           <tr>
-                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Certificate Comments:</td>
-                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ travel.certification_note }}</td>
+                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Vendor Number:</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ invoice.vendor_number }}</td>
                           </tr>
                           <tr>
-                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Purpose of Trip:</td>
-                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ travel.purpose }}</td>
+                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Amount:</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ invoice.amount }}</td>
                           </tr>
                           <tr>
-                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Start Date:</td>
-                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ travel.start_date }}</td>
+                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Currency:</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ invoice.currency.code }}</td>
                           </tr>
                           <tr>
-                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">End Date:</td>
-                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ travel.end_date }}</td>
+                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Link:</td>
+                            <!-- TODO: add link -->
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;"><a href="{{ url }}" target="_blank" style="color:#0099FF;text-decoration:underline;word-break:break-all !important;">{{ url }}</a></td>
                           </tr>
                         </table>
                         <table border="0" cellpadding="0" cellspacing="0" class="data-table" style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;width:100%;margin-bottom:12px;">
                           <tr>
-                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Total DSA to be Paid:</td>
-                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ travel.cost_summary.dsa_total }} {{ travel.currency }}</td>
+                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Estimated Trip Cost:</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ travel.estimated_trip_cost }} {{ travel.currency }}</td>
                           </tr>
                           <tr>
-                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Total Expense to be Paid to Traveler:</td>
-                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">{{ travel.cost_summary.expenses_total }} {{ travel.currency }}</td>
+                            <td class="dt" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;width:120px;padding:8px 8px 8px;color:#6F6F6F;font-size:10px;font-weight:bold;border-top:1px solid #FFFFFF;background-color:#F2F2F2;">Cost Assignment:</td>
+                            <td class="df" style="font-family:sans-serif;font-size:14px;box-sizing:border-box;vertical-align:top;border-bottom:1px solid #E0E0E0;padding:8px 8px;font-size:12px;word-break:break-word;">
+                              <ol style="font-family:sans-serif;font-size:14px;font-weight:normal;margin-bottom:24px;font-size:12px;margin:0;padding:0;">
+                                  {% for cost_assignment in travel.cost_assignments %}
+                                <li style="list-style-position:inside;margin-left:12px;margin:0 0 12px;{% if forloop.last %}margin:0;{% endif %}">{{ cost_assignment.name }}</li>
+                                  {% endfor %}
+                              </ol>
+                            </td>
                           </tr>
                         </table>
                         <br/><br/>
                         <!-- END DATA-TABLE -->
-                        <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">If you approve, click this link:</p>
-                        <table border="0" cellpadding="0" cellspacing="0" class="btn btn-primary" style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;box-sizing:border-box;width:100%;">
-                          <tbody>
-                            <tr>
-                              <td align="left" style="font-family:sans-serif;font-size:14px;vertical-align:top;padding-bottom:24px;">
-                                <table border="0" cellpadding="0" cellspacing="0" style="border-collapse:separate;mso-table-lspace:0pt;mso-table-rspace:0pt;width:100%;width:auto;">
-                                  <tbody>
-                                    <tr>
-                                      <td style="font-family:sans-serif;font-size:14px;vertical-align:top;background-color:#FFFFFF;border-radius:3px;text-align:center;background-color:#0099FF;">
-                                        <!-- TODO: add call to action link -->
-                                        <a href="{{ url }}" target="_blank" style="text-decoration:underline;background-color:#FFFFFF;border:solid 1px #0099FF;border-radius:3px;box-sizing:border-box;color:#0099FF;cursor:pointer;display:inline-block;font-size:14px;line-height:1;font-weight:bold;margin:0;padding:12px 16px;text-decoration:none;text-transform:uppercase;box-shadow:0 0 2px rgba(0,0,0,.12), 0 2px 2px rgba(0,0,0,.24);background-color:#0099FF;border-color:#0099FF;color:#FFFFFF;">Approve Trip Certification</a>
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                        <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">To reject, visit the trip record.</p>
-                        <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">Thank you.</p>
+                        <p style="font-family:sans-serif;font-size:14px;font-weight:normal;margin:0;margin-bottom:24px;">Have a safe trip.</p>
                       </td>
                     </tr>
                   </table>

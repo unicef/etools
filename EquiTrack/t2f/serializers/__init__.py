@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from decimal import Decimal
+from decimal import Decimal, getcontext, InvalidOperation
 from itertools import chain
 from datetime import datetime
 
@@ -61,20 +61,22 @@ class ActionPointSerializer(serializers.ModelSerializer):
     action_point_number = serializers.CharField(read_only=True)
     trip_id = serializers.IntegerField(source='travel.id', read_only=True)
     assigned_by = serializers.IntegerField(source='assigned_by.id', read_only=True)
+    assigned_by_name = serializers.CharField(source='assigned_by.get_full_name', read_only=True)
 
     description = serializers.CharField(required=True)
     due_date = serializers.DateTimeField(required=True)
     person_responsible = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    person_responsible_name = serializers.CharField(source='person_responsible.get_full_name', read_only=True)
     status = serializers.CharField(required=True)
 
     class Meta:
         model = ActionPoint
         fields = ('id', 'action_point_number', 'trip_reference_number', 'description', 'due_date', 'person_responsible',
                   'status', 'completed_at', 'actions_taken', 'follow_up', 'comments', 'created_at', 'assigned_by',
-                  'trip_id')
+                  'assigned_by_name', 'person_responsible_name', 'trip_id')
 
     def validate_due_date(self, value):
-        if value.date() < datetime.now().date():
+        if value.date() < datetime.utcnow().date():
             raise ValidationError('Due date cannot be earlier than today.')
         return value
 
@@ -372,13 +374,19 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             new_models.append(related_instance)
         return new_models
 
-    def update(self, instance, validated_data):
+    def update(self, instance, validated_data, model_serializer=None):
+        model_serializer = model_serializer or self
+
         related_attributes = {}
-        for attr_name in ('itinerary', 'expenses', 'deductions', 'cost_assignments', 'activities', 'clearances',
-                          'action_points'):
-            if isinstance(self._fields[attr_name], serializers.ListSerializer):
+        related_fields = {n:f for n, f in model_serializer.get_fields().items()
+                          if isinstance(f, serializers.BaseSerializer) and f.read_only == False}
+        for attr_name in related_fields:
+            if model_serializer.partial and attr_name not in validated_data:
+                continue
+
+            if isinstance(related_fields[attr_name], serializers.ListSerializer):
                 default = []
-            elif self._fields[attr_name].allow_null:
+            elif related_fields[attr_name].allow_null:
                 default = None
             else:
                 default = {}
@@ -400,6 +408,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         for field_name, value in m2m_fields.items():
             related_manager = getattr(obj, field_name)
+            to_remove = [r for r in related_manager.all() if r.id not in {r.id for r in value}]
+            related_manager.remove(*to_remove)
             related_manager.add(*value)
 
     def update_related_objects(self, attr_name, related_data):
@@ -407,7 +417,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
         related = getattr(self.instance, attr_name)
         if many:
-            # Load the 1ueryset
+            # Load the queryset
             related = related.all()
 
             model = self._fields[attr_name].child.Meta.model
@@ -443,12 +453,14 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
 
 class TravelListSerializer(TravelDetailsSerializer):
+    # TODO: reserve field names to pks for related fields and add _name for the names
     traveler = serializers.CharField(source='traveler.get_full_name')
+    supervisor_name = serializers.CharField(source='supervisor.get_full_name')
 
     class Meta:
         model = Travel
         fields = ('id', 'reference_number', 'traveler', 'purpose', 'status', 'section', 'office', 'start_date',
-                  'end_date')
+                  'end_date', 'supervisor_name')
         read_only_fields = ('status',)
 
 
@@ -482,15 +494,34 @@ class CloneParameterSerializer(serializers.Serializer):
         fields = ('traveler',)
 
 
+def rount_to_currency_precision(currency, amount):
+    if currency.decimal_places:
+        q = Decimal('1.' + '0'*currency.decimal_places)
+    else:
+        q = Decimal('1')
+
+    try:
+        return amount.quantize(q)
+    except InvalidOperation:
+        # Fall back to a slower option but make sure to get the best precision possible
+        max_precision = getcontext().prec
+        amount_tuple = amount.as_tuple()
+        max_decimal_places = max_precision - len(amount_tuple[1]) - amount_tuple[2]
+        return amount.quantize(Decimal('1.' + '0'*max_decimal_places))
+
+
 class InvoiceItemSerializer(serializers.ModelSerializer):
+    amount = serializers.SerializerMethodField()
+
     class Meta:
         model = InvoiceItem
         fields = ('wbs', 'grant', 'fund', 'amount')
 
+    def get_amount(self, obj):
+        return str(rount_to_currency_precision(obj.invoice.currency, obj.amount))
+
 
 class InvoiceSerializer(serializers.ModelSerializer):
-    message = serializers.SerializerMethodField()
-    vision_fi_id = serializers.SerializerMethodField()
     ta_number = serializers.CharField(source='travel.reference_number', read_only=True)
     items = InvoiceItemSerializer(many=True, read_only=True)
 
@@ -499,13 +530,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
         fields = ('id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
                   'message', 'vision_fi_id', 'ta_number', 'items')
 
-    def get_message(self, obj):
-        return ''
-
-    def get_vision_fi_id(self, obj):
-        return ''
-
     def to_representation(self, instance):
-        ret = super(InvoiceSerializer, self).to_representation(instance)
-        ret['amount'] = Decimal(ret['amount']).quantize(Decimal('1.'+'0'*instance.currency.decimal_places))
-        return ret
+        data = super(InvoiceSerializer, self).to_representation(instance)
+        data['amount'] = str(rount_to_currency_precision(instance.currency, instance.amount))
+        return data

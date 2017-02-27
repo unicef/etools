@@ -159,7 +159,6 @@ class InterventionValid(CompleteValidation):
         return True
 
     def state_active_valid(self, intervention, user=None):
-        print 'state_active_called'
         # Intervention fields
         rigid_fields = [
             'signed_by_unicef_date',

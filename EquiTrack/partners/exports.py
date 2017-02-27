@@ -286,7 +286,7 @@ class AgreementExport(resources.ModelResource):
         return ''
 
     def dehydrate_authorized_officers(self, agreement):
-        names = [ao.officer.get_full_name() for ao in agreement.authorized_officers.all()]
+        names = [ao.get_full_name() for ao in agreement.authorized_officers.all()]
         return ', '.join(names)
 
     def dehydrate_start_date(self, agreement):
