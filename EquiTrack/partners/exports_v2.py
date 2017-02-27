@@ -110,3 +110,17 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "supply_plans": "Supply Plan",
         "distribution_plans": "Distribution Plan",
     }
+
+
+class GovernmentInterventionCvsRenderer(r.CSVRenderer):
+    header = [
+        "partner_name", "country_programme_name", "number", "cp_outputs", "url",
+    ]
+
+    labels = {
+        "partner_name": "Government Partner",
+        "country_programme_name": "Country Programme",
+        "number": "Reference Number",
+        "cp_outputs": "CP Output",
+        "url": "URL",
+    }

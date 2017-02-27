@@ -30,6 +30,7 @@ from partners.filters import PartnerScopeFilter
 from EquiTrack.validation_mixins import ValidatorViewMixin
 from partners.validation.government_intervention_results import GovernmentInterventionResultValid
 from partners.permissions import PartneshipManagerRepPermission
+from partners.exports_v2 import GovernmentInterventionCvsRenderer
 
 
 class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
@@ -40,7 +41,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
     serializer_class = GovernmentInterventionListSerializer
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
-    renderer_classes = (r.JSONRenderer, r.CSVRenderer)
+    renderer_classes = (r.JSONRenderer, GovernmentInterventionCvsRenderer)
 
     SERIALIZER_MAP = {
         'results': GovernmentInterventionResultNestedSerializer
@@ -90,9 +91,9 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
             if "sector" in query_params.keys():
                 queries.append(Q(results__sectors=query_params.get("sector")))
             if "year" in query_params.keys():
-                queries.append(Q(results__year=query_params.get("sector")))
+                queries.append(Q(results__year=query_params.get("year")))
             if "unicef_focal_point" in query_params.keys():
-                queries.append(Q(results__unicef_managers=query_params.get("sector")))
+                queries.append(Q(results__unicef_managers=query_params.get("unicef_focal_point")))
 
             if queries:
                 expression = functools.reduce(operator.and_, queries)
@@ -147,10 +148,11 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
 
         instance, old_instance, serializer = self.my_update(request, related_fields, snapshot=True,
                                                             nested_related_names=nested_related_fields, **kwargs)
-        if not serializer.instance.results.exists():
+
+        if not instance.results.filter().exists():
             raise ValidationError({'results': [u'This field is required.']})
 
-        for govint_result in instance.results.all():
+        for govint_result in instance.results.filter():
             # Old instance should be the instance with the same id from old_instance.results
             old_govint_result = old_instance.results.filter(id=govint_result.id).first()
             validator = GovernmentInterventionResultValid(govint_result, old=old_govint_result, user=request.user, stateless=True)

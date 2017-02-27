@@ -37,14 +37,6 @@ class GovernmentInterventionResultNestedSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("There is no planned amount entered")
         return data
 
-    def validate_unicef_managers(self, value):
-        for usr in value:
-            try:
-                usr.groups.get(name='Senior Management Team')
-            except Group.DoesNotExist as e:
-                raise ValidationError('User {} not in Senior Management Team'.format(usr))
-        return value
-
     def validate_sectors(self, value):
         return value
 
@@ -122,7 +114,7 @@ class GovernmentInterventionListSerializer(serializers.ModelSerializer):
 
 
 class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
-    results = GovernmentInterventionResultNestedSerializer(many=True, required=False)
+    results = GovernmentInterventionResultNestedSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = GovernmentIntervention
@@ -142,7 +134,25 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
+    partner_name = serializers.CharField(source='partner.name')
+    country_programme_name = serializers.CharField(source='country_programme.name')
+    cp_outputs = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField()
+
+    def get_cp_outputs(self, obj):
+        cp_outputs = [
+            'Output: {} ({}/{:,}/{})'.format(
+                gr.result.name,
+                gr.year,
+                gr.planned_amount,
+                gr.planned_visits)
+            for gr in obj.results.all()
+        ]
+        return ', '.join(cp_outputs)
+
+    def get_url(self, obj):
+        return 'https://{}/pmp/governments/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
     class Meta:
         model = GovernmentIntervention
-        fields = '__all__'
+        fields = ["partner_name", "country_programme_name", "number", "cp_outputs", "url",]

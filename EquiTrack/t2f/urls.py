@@ -1,12 +1,24 @@
 
 from django.conf.urls import url, patterns, include
 
-from t2f.views import TravelListViewSet, TravelDetailsViewSet, StaticDataView, PermissionMatrixView, \
-    TravelAttachmentViewSet, ActionPointViewSet, InvoiceViewSet, VendorNumberListView, VisionInvoiceExport, \
-    VisionInvoiceUpdate, TravelActivityViewSet
+from t2f.views import TravelListViewSet
+from t2f.views import TravelDetailsViewSet
+from t2f.views import StaticDataView
+from t2f.views import PermissionMatrixView
+from t2f.views import TravelAttachmentViewSet
+from t2f.views import ActionPointViewSet
+from t2f.views import InvoiceViewSet
+from t2f.views import VendorNumberListView
+from t2f.views import VisionInvoiceExport
+from t2f.views import VisionInvoiceUpdate
+from t2f.views import TravelActivityViewSet
+from t2f.views import TravelDashboardViewSet
+from t2f.views import ActionPointDashboardViewSet
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
+travel_dashboard_list = TravelDashboardViewSet.as_view({'get': 'list'})
+
 travel_list_state_change = TravelListViewSet.as_view({'post': 'create'})
 
 travel_details = TravelDetailsViewSet.as_view({'get': 'retrieve',
@@ -23,6 +35,8 @@ clone_travel_for_secondary_traveler = TravelDetailsViewSet.as_view({'post': 'clo
 clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_driver'})
 
 action_points_list = ActionPointViewSet.as_view({'get': 'list'})
+action_points_dashboard_list = ActionPointDashboardViewSet.as_view({'get': 'list'})
+
 action_points_details = ActionPointViewSet.as_view({'get': 'retrieve',
                                                     'put': 'update',
                                                     'patch': 'partial_update'})
@@ -58,6 +72,7 @@ travel_list_patterns = patterns(
         name='travel_admin_export'),
     url(r'^invoice-export/$', TravelListViewSet.as_view({'get': 'export_invoices'}), name='invoice_export'),
     url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}), name='activities'),
+    url(r'^dashboard/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/', travel_dashboard_list, name='dashboard'),
 )
 
 
@@ -72,6 +87,7 @@ action_points_patterns = patterns(
     '',
     url(r'^$', action_points_list, name='list'),
     url(r'^(?P<action_point_pk>[0-9]+)/$', action_points_details, name='details'),
+    url(r'^dashboard/', action_points_dashboard_list, name='dashboard'),
 )
 
 invoice_patterns = patterns(

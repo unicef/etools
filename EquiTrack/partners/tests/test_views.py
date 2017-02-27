@@ -28,7 +28,7 @@ from EquiTrack.factories import (
     SectionFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
-from reports.models import ResultType, Sector
+from reports.models import ResultType, Sector, CountryProgramme
 from funds.models import Grant, Donor
 from supplies.models import SupplyItem
 from users.models import Section
@@ -50,6 +50,13 @@ from partners.models import (
     InterventionBudget,
     InterventionAmendment,
     GovernmentInterventionResult,
+    AgreementAmendment,
+    AgreementAmendmentType,
+    Assessment,
+    InterventionPlannedVisits,
+    InterventionAttachment,
+    FileType,
+    InterventionResultLink,
 )
 
 
@@ -64,6 +71,36 @@ class TestPartnerOrganizationViews(APITenantTestCase):
                             vendor_number="DDD",
                             short_name="Short name",
                         )
+        report = SimpleUploadedFile("report.pdf", "foobar", "application/pdf")
+        self.assessment1 = Assessment.objects.create(
+            partner=self.partner,
+            type="Micro Assessment"
+        )
+        self.assessment2 = Assessment.objects.create(
+            partner=self.partner,
+            type="Micro Assessment",
+            report=report,
+            completed_date=datetime.date.today()
+        )
+
+    def test_api_partners_delete_asssessment_valid(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/assessments/{}/'.format(self.assessment1.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_api_partners_delete_asssessment_error(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/partners/assessments/{}/'.format(self.assessment2.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Cannot delete a completed assessment"])
 
     def test_api_partners_list_restricted(self):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
@@ -479,6 +516,30 @@ class TestAgreementAPIView(APITenantTestCase):
                         )
         self.agreement.authorized_officers.add(self.partner_staff)
         self.agreement.save()
+        amendment = SimpleUploadedFile("amendment.pdf", "blah", "application/pdf")
+        today = datetime.date.today()
+        self.country_programme = CountryProgrammeFactory(
+                                        wbs='/A0/',
+                                        from_date=date(today.year-1, 1, 1),
+                                        to_date=date(today.year+1, 1, 1))
+        self.amendment1 = AgreementAmendment.objects.create(
+            number="001",
+            agreement=self.agreement,
+            signed_amendment="application/pdf",
+            signed_date=datetime.date.today(),
+        )
+        self.amendment2 = AgreementAmendment.objects.create(
+            number="002",
+            agreement=self.agreement,
+        )
+        self.amendment_type1 = AgreementAmendmentType.objects.create(
+            agreement_amendment=self.amendment1,
+            type="CP extension"
+        )
+        self.amendment_type2 = AgreementAmendmentType.objects.create(
+            agreement_amendment=self.amendment2,
+            type="CP extension"
+        )
         self.agreement2 = AgreementFactory(
                                 partner=self.partner,
                                 agreement_type="MOU",
@@ -487,11 +548,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.intervention = InterventionFactory(
                                 agreement=self.agreement,
                                 document_type=Intervention.PD)
-        today = datetime.date.today()
-        self.country_programme = CountryProgrammeFactory(
-                                        wbs='/A0/',
-                                        from_date=date(today.year-1, 1, 1),
-                                        to_date=date(today.year+1, 1, 1))
 
     def test_agreements_create(self):
         today = datetime.date.today()
@@ -804,6 +860,52 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.data["status"], "suspended")
         self.assertEquals(Intervention.objects.get(agreement=self.agreement).status, "suspended")
 
+    def test_partner_agreement_amendment_cp_cycle_end(self):
+        amendment_type = AgreementAmendmentType.objects.create(
+            agreement_amendment=self.amendment1,
+            type="CP extension"
+        )
+
+        self.assertEquals(amendment_type.cp_cycle_end, CountryProgramme.current().to_date)
+
+    def test_agreement_amendment_delete_valid(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/amendments/{}/'.format(self.agreement.amendments.last().id),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_agreement_amendment_delete_error(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/amendments/{}/'.format(self.agreement.amendments.first().id),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Cannot delete a signed amendment"])
+
+    def test_agreement_amendment_type_delete_valid(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/amendments/types/{}/'.format(self.amendment_type2.id),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_agreement_amendment_delete_error(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/agreements/amendments/types/{}/'.format(self.amendment_type1.id),
+            user=self.partnership_manager_user,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["Cannot delete an amendment type once amendment is signed"])
+
 
 class TestPartnerStaffMemberAPIView(APITenantTestCase):
 
@@ -1064,6 +1166,36 @@ class TestInterventionViews(APITenantTestCase):
             data=self.intervention_data
         )
         self.intervention_data = response.data
+        intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
+        self.planned_visit = InterventionPlannedVisits.objects.create(
+            intervention=intervention_obj
+        )
+        attachment = SimpleUploadedFile("attachment.pdf", "foobar", "application/pdf")
+        self.attachment = InterventionAttachment.objects.create(
+            intervention=intervention_obj,
+            attachment=attachment,
+            type=FileType.objects.create(name="pdf")
+        )
+        self.result = InterventionResultLink.objects.create(
+            intervention=intervention_obj,
+            cp_output=ResultFactory(),
+        )
+        amendment = SimpleUploadedFile("amendment.pdf", "foobar", "application/pdf")
+        self.amendment = InterventionAmendment.objects.create(
+            intervention=intervention_obj,
+            type="Change in Programme Result",
+            signed_date=datetime.date.today(),
+            signed_amendment=amendment
+        )
+        self.sector = Sector.objects.create(name="Sector 2")
+        self.location = LocationFactory()
+        self.isll = InterventionSectorLocationLink.objects.create(
+            intervention=intervention_obj,
+            sector=self.sector,
+        )
+        self.isll.locations.add(LocationFactory())
+        self.isll.save()
+
 
     def test_intervention_list(self):
         response = self.forced_auth_req(
@@ -1229,6 +1361,153 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    def test_intervention_filter_my_partnerships(self):
+        # Test filter
+        params = {
+            "my_partnerships": True,
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data=params
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+
+    def test_intervention_planned_budget_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/budgets/{}/'.format(self.intervention_data["planned_budget"][0]["id"]),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_planned_budget_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/budgets/{}/'.format(self.intervention_data["planned_budget"][0]["id"]),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete a planned budget"])
+
+    def test_intervention_planned_visits_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/planned-visits/{}/'.format(self.planned_visit.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_planned_visits_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/planned-visits/{}/'.format(self.planned_visit.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete a planned visit"])
+
+    def test_intervention_attachments_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/attachments/{}/'.format(self.attachment.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_attachments_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/attachments/{}/'.format(self.attachment.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete an attachment"])
+
+    def test_intervention_results_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/results/{}/'.format(self.result.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_results_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/results/{}/'.format(self.result.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete a result"])
+
+    def test_intervention_amendments_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/amendments/{}/'.format(self.amendment.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_amendments_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/amendments/{}/'.format(self.amendment.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete an amendment"])
+
+    def test_intervention_sector_locations_delete(self):
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/sector-locations/{}/'.format(self.isll.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_intervention_sector_locations_delete_invalid(self):
+        intervention = Intervention.objects.get(id=self.intervention_data["id"])
+        intervention.status = "active"
+        intervention.save()
+        response = self.forced_auth_req(
+            'delete',
+            '/api/v2/interventions/sector-locations/{}/'.format(self.isll.id),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ["You do not have permissions to delete a sector location"])
+
 
 class TestGovernmentInterventionViews(APITenantTestCase):
 
@@ -1259,6 +1538,24 @@ class TestGovernmentInterventionViews(APITenantTestCase):
             'get',
             '/api/v2/government_interventions/',
             user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.govint.id)
+        self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
+        self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
+
+    def test_govint_list_filter(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data={
+                "year": datetime.date.today().year,
+                "country_programme": self.cp.id,
+                "partner": self.partner.id
+            }
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)

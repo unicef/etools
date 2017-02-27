@@ -71,7 +71,7 @@ SUIT_CONFIG = {
 }
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/dash/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
@@ -235,6 +235,8 @@ USE_L10N = True
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
+
+DISABLE_INVOICING = os.getenv('DISABLE_INVOICING', False)
 ########## END GENERAL CONFIGURATION
 
 
