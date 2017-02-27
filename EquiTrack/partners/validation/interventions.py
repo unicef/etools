@@ -7,7 +7,7 @@ from EquiTrack.validation_mixins import TransitionError, CompleteValidation, che
 def transition_to_active(i):
     # i = intervention
     if not (i.signed_by_unicef_date and i.unicef_signatory and i.signed_by_partner_date and
-            i.partner_authorized_officer_signatory):
+            i.partner_authorized_officer_signatory and i.start and i.end):
         raise TransitionError(['Transition to active illegal: signatories and dates required'])
     today = date.today()
     if not i.start < today and i.end > today:
