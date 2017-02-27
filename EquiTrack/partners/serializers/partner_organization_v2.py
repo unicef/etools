@@ -97,7 +97,7 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
 
 
 class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
-
+    email = serializers.EmailField(required=True)
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
@@ -106,6 +106,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+
 
         try:
             existing_user = User.objects.get(email=email)
@@ -165,7 +166,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
                   'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
                   'email_address', 'phone_number', 'risk_rating', 'type_of_assessment', 'date_assessed',
                   'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'staff_members',
-                  'date_last_assessment_against_core_values', 'assessments', )
+                  'date_last_assessment_against_core_values', 'assessments')
 
     def get_staff_members(self, obj):
         return ', '.join([sm.get_full_name() for sm in obj.staff_members.filter(active=True).all()])
@@ -204,6 +205,7 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "phone_number",
             "total_ct_cp",
             "total_ct_cy",
+            "hidden"
         )
 
 
