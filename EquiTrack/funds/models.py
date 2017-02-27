@@ -93,6 +93,7 @@ class FundsCommitmentHeader(models.Model):
 
 class FundsCommitmentItem(models.Model):
     fund_commitment = models.ForeignKey(FundsCommitmentHeader, related_name='fc_items')
+    fc_ref_number = models.CharField(max_length=30, null=True, blank=True)
     line_item = models.IntegerField(default=0)
     wbs = models.CharField(max_length=30, null=True, blank=True)
     grant_number = models.CharField(max_length=20, null=True, blank=True)
