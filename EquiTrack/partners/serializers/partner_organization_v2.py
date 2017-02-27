@@ -13,6 +13,8 @@ from partners.serializers.v1 import (
     PartnerStaffMemberEmbedSerializer,
     InterventionSerializer,
 )
+from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
+from partners.serializers.government import GovernmentInterventionSummaryListSerializer
 from locations.models import Location
 
 from .v1 import PartnerStaffMemberSerializer
@@ -28,6 +30,7 @@ from partners.models import (
     InterventionPlannedVisits,
     Intervention,
     InterventionAmendment,
+    GovernmentIntervention,
     PartnerOrganization,
     PartnerType,
     Agreement,
@@ -212,9 +215,25 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    interventions = serializers.SerializerMethodField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+
+    def get_interventions(self, obj):
+        if obj.partner_type != PartnerType.GOVERNMENT:
+            interventions = Intervention.objects \
+                .filter(agreement__partner=obj) \
+                .exclude(status='draft')
+
+            interventions = InterventionSummaryListSerializer(interventions, many=True)
+
+        else:
+            interventions = GovernmentIntervention.objects.filter(partner=obj)
+
+            interventions = GovernmentInterventionSummaryListSerializer(interventions, many=True)
+
+        return interventions.data
 
     class Meta:
         model = PartnerOrganization
