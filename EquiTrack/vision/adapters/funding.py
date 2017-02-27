@@ -448,84 +448,84 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
     def _save_records(self, records):
 
         processed = 0
-        filtered_records = self._filter_records(records)
-        fcs = {}
+        # filtered_records = self._filter_records(records)
+        # fcs = {}
+        #
+        # def _changed_fields(fields, local_obj, api_obj):
+        #     for field in fields:
+        #         apiobj_field = api_obj[self.MAPPING[field]]
+        #         if field in ['wbs']:
+        #             apiobj_field = api_obj[self.MAPPING[field]][0]
+        #         if field in ['overall_amount' 'overall_amount_dc', 'exchange_rate', 'amount_changed']:
+        #             return not comp_decimals(getattr(local_obj, field), apiobj_field)
+        #         if field in ['document_date', 'due_date']:
+        #             apiobj_field = datetime.datetime.strptime(api_obj[self.MAPPING[field]], '%d-%b-%y').date()
+        #         if field in ['fc_type', 'fr_number']:
+        #             apiobj_field = api_obj[self.MAPPING[field]] or 'No Record'
+        #         if getattr(local_obj, field) != apiobj_field:
+        #             print "field changed", field
+        #             return True
+        #     return False
+        #
+        # for fc_line in filtered_records:
+        #     saving = False
 
-        def _changed_fields(fields, local_obj, api_obj):
-            for field in fields:
-                apiobj_field = api_obj[self.MAPPING[field]]
-                if field in ['wbs']:
-                    apiobj_field = api_obj[self.MAPPING[field]][0]
-                if field in ['overall_amount' 'overall_amount_dc', 'exchange_rate', 'amount_changed']:
-                    return not comp_decimals(getattr(local_obj, field), apiobj_field)
-                if field in ['document_date', 'due_date']:
-                    apiobj_field = datetime.datetime.strptime(api_obj[self.MAPPING[field]], '%d-%b-%y').date()
-                if field in ['fc_type', 'fr_number']:
-                    apiobj_field = api_obj[self.MAPPING[field]] or 'No Record'
-                if getattr(local_obj, field) != apiobj_field:
-                    print "field changed", field
-                    return True
-            return False
-
-        for fc_line in filtered_records:
-            saving = False
-
-            try:
-                fc, saving = FundsCommitmentHeader.objects.get_or_create(
-                    vendor_code=fc_line["VENDOR_CODE"],
-                    fc_number=fc_line["FC_NUMBER"],
-                )
-            except FundsCommitmentHeader.MultipleObjectsReturned as exp:
-                exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
-                raise
-
-            try:
-                currency = Currency.objects.get(
-                    code=fc_line["CURRENCY"],
-                )
-            except Currency.DoesNotExist:
-                print 'Currency: {} does not exist'.format(fc_line["CURRENCY"])
-                currency = None
-                continue
-
-            fc_fields = ['document_date', 'responsible_person', 'fc_type', 'exchange_rate']
-            if saving or _changed_fields(fc_fields, fc, fc_line):
-                fc.document_date = datetime.datetime.strptime(fc_line["FC_DOC_DATE"], '%d-%b-%y')
-                fc.fc_type = fc_line["FR_TYPE"] or 'No Record'
-                fc.currency = currency
-                fc.document_text = fc_line["FC_DOCUMENT_TEXT"]
-                fc.exchange_rate = fc_line["EXCHANGE_RATE"]
-                fc.responsible_person = fc_line["RESP_PERSON"]
-                fc.save()
-
-            try:
-                fc_item, saved = FundsCommitmentItem.objects.get_or_create(
-                    fund_commitment=fc,
-                    line_item=int(fc_line["LINE_ITEM"]),
-                )
-            except FundsCommitmentItem.MultipleObjectsReturned as exp:
-                exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
-                raise
-
-            #adding FundCommitmentItem
-            fc_item_fields = ['wbs', 'grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date',
-                              'gl_account', 'commitment_amount', 'amount_changed', 'fr_number']
-            if saved or _changed_fields(fc_item_fields, fc_item, fc_line):
-                fc_item.wbs = fc_line["WBS_ELEMENT"][0],
-                fc_item.fund = fc_line["FUND"]
-                fc_item.grant_number = fc_line['GRANT_NBR']
-                fc_item.gl_account = fc_line['GL_ACCOUNT']
-                fc_item.overall_amount = fc_line["OVERALL_AMOUNT"]
-                fc_item.overall_amount_dc = fc_line["OVERALL_AMOUNT_DC"]
-                fc_item.due_date = datetime.datetime.strptime(fc_line["DUE_DATE"], '%d-%b-%y')
-                fc_item.fr_number = fc_line['FR_NUMBER'] if 'FR_NUMBER' in fc_line else None
-                fc_item.commitment_amount = fc_line['COMMITMENT_AMOUNT']
-                fc_item.amount_changed = fc_line['AMOUNT_CHANGED'].replace(",", "")
-                fc_item.line_item_text = fc_line["FC_LINE_ITEM_TEXT"]
-
-                fc_item.save()
-
-            processed += 1
+            # try:
+            #     fc, saving = FundsCommitmentHeader.objects.get_or_create(
+            #         vendor_code=fc_line["VENDOR_CODE"],
+            #         fc_number=fc_line["FC_NUMBER"],
+            #     )
+            # except FundsCommitmentHeader.MultipleObjectsReturned as exp:
+            #     exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
+            #     raise
+            #
+            # try:
+            #     currency = Currency.objects.get(
+            #         code=fc_line["CURRENCY"],
+            #     )
+            # except Currency.DoesNotExist:
+            #     print 'Currency: {} does not exist'.format(fc_line["CURRENCY"])
+            #     currency = None
+            #     continue
+            #
+            # fc_fields = ['document_date', 'responsible_person', 'fc_type', 'exchange_rate']
+            # if saving or _changed_fields(fc_fields, fc, fc_line):
+            #     fc.document_date = datetime.datetime.strptime(fc_line["FC_DOC_DATE"], '%d-%b-%y')
+            #     fc.fc_type = fc_line["FR_TYPE"] or 'No Record'
+            #     fc.currency = currency
+            #     fc.document_text = fc_line["FC_DOCUMENT_TEXT"]
+            #     fc.exchange_rate = fc_line["EXCHANGE_RATE"]
+            #     fc.responsible_person = fc_line["RESP_PERSON"]
+            #     fc.save()
+            #
+            # try:
+            #     fc_item, saved = FundsCommitmentItem.objects.get_or_create(
+            #         fund_commitment=fc,
+            #         line_item=int(fc_line["LINE_ITEM"]),
+            #     )
+            # except FundsCommitmentItem.MultipleObjectsReturned as exp:
+            #     exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
+            #     raise
+            #
+            # #adding FundCommitmentItem
+            # fc_item_fields = ['wbs', 'grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date',
+            #                   'gl_account', 'commitment_amount', 'amount_changed', 'fr_number']
+            # if saved or _changed_fields(fc_item_fields, fc_item, fc_line):
+            #     fc_item.wbs = fc_line["WBS_ELEMENT"][0],
+            #     fc_item.fund = fc_line["FUND"]
+            #     fc_item.grant_number = fc_line['GRANT_NBR']
+            #     fc_item.gl_account = fc_line['GL_ACCOUNT']
+            #     fc_item.overall_amount = fc_line["OVERALL_AMOUNT"]
+            #     fc_item.overall_amount_dc = fc_line["OVERALL_AMOUNT_DC"]
+            #     fc_item.due_date = datetime.datetime.strptime(fc_line["DUE_DATE"], '%d-%b-%y')
+            #     fc_item.fr_number = fc_line['FR_NUMBER'] if 'FR_NUMBER' in fc_line else None
+            #     fc_item.commitment_amount = fc_line['COMMITMENT_AMOUNT']
+            #     fc_item.amount_changed = fc_line['AMOUNT_CHANGED'].replace(",", "")
+            #     fc_item.line_item_text = fc_line["FC_LINE_ITEM_TEXT"]
+            #
+            #     fc_item.save()
+            #
+            # processed += 1
         return processed
 
 

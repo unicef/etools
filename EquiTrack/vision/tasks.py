@@ -8,7 +8,7 @@ from celery.utils.log import get_task_logger
 from EquiTrack.celery import app, send_to_slack
 from partners.models import PartnerOrganization
 from users.models import Country
-from vision.adapters.publics import CurrencySyncronizer, TravelAgenciesSyncronizer, CostAssignmentsSyncronizer
+from vision.adapters.publics_adapter import CurrencySyncronizer, TravelAgenciesSyncronizer, CostAssignmentsSyncronizer
 from vision_data_synchronizer import VisionException
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
