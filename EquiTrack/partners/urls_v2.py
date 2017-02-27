@@ -85,4 +85,3 @@ urlpatterns = (
     url(r'^dropdowns/pmp/$', view=PMPDropdownsListApiView.as_view(http_method_names=['get']), name='dropdown-pmp-list'),
 )
 urlpatterns = format_suffix_patterns(urlpatterns, allowed=['json', 'csv'])
-

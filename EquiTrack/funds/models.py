@@ -54,6 +54,11 @@ class FundsReservationHeader(models.Model):
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
 
+    def __unicode__(self):
+        return u'{}'.format(
+            self.fr_number,
+        )
+
     class Meta:
         ordering = ['fr_number']
         unique_together = ('vendor_code', 'fr_number')
@@ -70,6 +75,11 @@ class FundsReservationItem(models.Model):
     overall_amount_dc = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     due_date = models.DateField(null=True, blank=True)
     line_item_text = models.CharField(max_length=255, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'{}'.format(
+            self.fr_ref_number,
+        )
 
     class Meta:
         unique_together = ('fund_reservation', 'line_item')
@@ -90,6 +100,11 @@ class FundsCommitmentHeader(models.Model):
     exchange_rate = models.CharField(max_length=20, null=True, blank=True)
     responsible_person = models.CharField(max_length=100, blank=True, null=True)
 
+    def __unicode__(self):
+        return u'{}'.format(
+            self.fc_number,
+        )
+
 
 class FundsCommitmentItem(models.Model):
     fund_commitment = models.ForeignKey(FundsCommitmentHeader, related_name='fc_items')
@@ -105,6 +120,11 @@ class FundsCommitmentItem(models.Model):
     commitment_amount_dc = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     amount_changed = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     line_item_text = models.CharField(max_length=255, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'{}'.format(
+            self.fc_ref_number,
+        )
 
     class Meta:
         unique_together = ('fund_commitment', 'line_item')

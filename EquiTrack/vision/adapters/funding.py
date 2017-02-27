@@ -85,7 +85,6 @@ class FundingSynchronizer(VisionDataSynchronizer):
                 if field == 'fc_type':
                     apiobj_field = api_obj[self.MAPPING[field]] or 'No Record'
                 if getattr(local_obj, field) != apiobj_field:
-                    logging.info("field changed {}".format(field))
                     return True
             return False
 
