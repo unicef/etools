@@ -32,10 +32,6 @@ from views.v2 import (
     PmpStaticDropdownsListApiView, PMPDropdownsListApiView, PartnershipDashboardAPIView
 )
 
-# from users.models import Country
-# c = Country.objects.get(name='Lebanon')
-# from vision.adapters.funding import FundReservationsSynchronizer
-# f = FundReservationsSynchronizer(c)
 
 # http://www.django-rest-framework.org/api-guide/format-suffixes/
 

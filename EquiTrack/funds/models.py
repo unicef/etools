@@ -62,7 +62,7 @@ class FundsReservationHeader(models.Model):
 class FundsReservationItem(models.Model):
     fund_reservation = models.ForeignKey(FundsReservationHeader, related_name="fr_items")
     fr_ref_number = models.CharField(max_length=30, null=True, blank=True)
-    line_item = models.IntegerField(default=0)
+    line_item = models.CharField(max_length=5)
     wbs = models.CharField(max_length=30, null=True, blank=True)
     grant_number = models.CharField(max_length=20, null=True, blank=True)
     fund = models.CharField(max_length=10, null=True, blank=True)
@@ -87,23 +87,22 @@ class FundsCommitmentHeader(models.Model):
     fc_type = models.CharField(max_length=50, null=True, blank=True)
     currency = models.CharField(max_length=50, null=True, blank=True)
     document_text = models.CharField(max_length=255, null=True, blank=True)
-    exchange_rate = models.DecimalField(blank=True, null=True, max_digits=10, decimal_places=2)
+    exchange_rate = models.CharField(max_length=20, null=True, blank=True)
     responsible_person = models.CharField(max_length=100, blank=True, null=True)
 
 
 class FundsCommitmentItem(models.Model):
     fund_commitment = models.ForeignKey(FundsCommitmentHeader, related_name='fc_items')
     fc_ref_number = models.CharField(max_length=30, null=True, blank=True)
-    line_item = models.IntegerField(default=0)
+    line_item = models.CharField(max_length=5)
     wbs = models.CharField(max_length=30, null=True, blank=True)
     grant_number = models.CharField(max_length=20, null=True, blank=True)
     fund = models.CharField(max_length=10, null=True, blank=True)
     gl_account = models.CharField(max_length=15, null=True, blank=True)
-    overall_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
-    overall_amount_dc = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     due_date = models.DateField(null=True, blank=True)
     fr_number = models.CharField(max_length=20, blank=True, null=True)
     commitment_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    commitment_amount_dc = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     amount_changed = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     line_item_text = models.CharField(max_length=255, null=True, blank=True)
 

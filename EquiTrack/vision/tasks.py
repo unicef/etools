@@ -29,7 +29,7 @@ SYNC_HANDLERS = [
     # RAMSynchronizer,
     # PartnerSynchronizer,
     # FundingSynchronizer,
-    FundReservationsSynchronizer,
+    # FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
     #DCTSynchronizer
 ]
