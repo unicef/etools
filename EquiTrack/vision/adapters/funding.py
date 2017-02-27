@@ -1,5 +1,6 @@
 import json
 import datetime
+import logging
 from decimal import Decimal
 
 from vision.vision_data_synchronizer import VisionDataSynchronizer
@@ -11,7 +12,6 @@ from funds.models import (
     FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 )
 from partners.models import FundingCommitment, DirectCashTransfer
-from publics.models import Currency
 
 
 class FundingSynchronizer(VisionDataSynchronizer):
@@ -85,7 +85,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
                 if field == 'fc_type':
                     apiobj_field = api_obj[self.MAPPING[field]] or 'No Record'
                 if getattr(local_obj, field) != apiobj_field:
-                    print "field changed", field
+                    logging.info("field changed {}".format(field))
                     return True
             return False
 
@@ -105,7 +105,7 @@ class FundingSynchronizer(VisionDataSynchronizer):
                             name=fc_line["GRANT_REF"],
                         )
                     except Grant.DoesNotExist:
-                        print 'Grant: {} does not exist'.format(fc_line["GRANT_REF"])
+                        logging.info('Grant: {} does not exist'.format(fc_line["GRANT_REF"]))
                         continue
                     else:
                         fetched_grants[fc_line["GRANT_REF"]] = grant
@@ -315,7 +315,6 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         to_update = []
 
-
         fr_numbers_from_records = {k for k in self.header_records.iterkeys()}
 
         list_of_headers = FundsReservationHeader.objects.filter(fr_number__in=fr_numbers_from_records)
@@ -329,7 +328,6 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
             record = self.header_records[item]
             to_create.append(FundsReservationHeader(**record))
 
-        print 'tocreate', len(to_create)
         if to_create:
             created_objects = FundsReservationHeader.objects.bulk_create(to_create)
             # TODO in Django 1.10 the following line is not needed because ids are returned
@@ -337,11 +335,13 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
             self.map_header_objects(created_objects)
 
         self.map_header_objects(to_update)
-        print 'toupdate', len(to_update)
+        updated = 0
         for h in to_update:
             if self.update_obj(h, self.header_records.get(h.fr_number)):
                 h.save()
-                print 'updated', h
+                updated += 1
+
+        return updated, len(to_create)
 
     def li_sync(self):
 
@@ -363,27 +363,29 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
             del record['fr_number']
             to_create.append(FundsReservationItem(**record))
 
-        print 'tocreate li', len(to_create)
         FundsReservationItem.objects.bulk_create(to_create)
-
-        print 'toupdate li', len(to_update)
+        updated = 0
         for li in to_update:
             local_record = self.item_records.get(li.fr_ref_number)
             del local_record['fr_number']
             if self.update_obj(li, local_record):
                 li.save()
-                print 'updated', li
+                updated += 1
+
+        return updated, len(to_create)
 
     def _save_records(self, records):
 
-        processed = 0
         filtered_records = self._filter_records(records)
-
         self.set_mapping(filtered_records)
-        self.header_sync()
-        self.li_sync()
+        h_processed = self.header_sync()
+        i_processed = self.li_sync()
 
-        processed += 1
+        logging.info('tocreate {}'.format(h_processed[1]))
+        logging.info('toupdate {}'.format(h_processed[0]))
+        logging.info('tocreate li {}'.format(i_processed[1]))
+        logging.info('toupdate li {}'.format(i_processed[0]))
+        processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
         return processed
 
 
@@ -579,121 +581,16 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
     def _save_records(self, records):
 
-        processed = 0
         filtered_records = self._filter_records(records)
-
         self.set_mapping(filtered_records)
         h_processed = self.header_sync()
         i_processed = self.li_sync()
 
-        print 'tocreate', h_processed[1]
-        print 'toupdate', h_processed[0]
-        print 'tocreate li', i_processed[1]
-        print 'toupdate li', i_processed[0]
-
+        logging.info('tocreate {}'.format(h_processed[1]))
+        logging.info('toupdate {}'.format(h_processed[0]))
+        logging.info('tocreate li {}'.format(i_processed[1]))
+        logging.info('toupdate li {}'.format(i_processed[0]))
         processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
+
         return processed
-
-    # def _convert_records(self, records):
-    #     return json.loads(records)
-    #
-    # def _filter_records(self, records):
-    #     records = records["ROWSET"]["ROW"]
-    #
-    #     records = super(FundCommitmentSynchronizer, self)._filter_records(records)
-    #
-    #     def bad_record(record):
-    #         # We don't care about FCs without expenditure
-    #         if not record['OVERALL_AMOUNT']:
-    #             return False
-    #         if not record['FC_NUMBER']:
-    #             return False
-    #         return True
-    #
-    #     return filter(bad_record, records)
-    #
-    # def _save_records(self, records):
-    #
-    #     processed = 0
-    #     filtered_records = self._filter_records(records)
-    #     fcs = {}
-    #
-    #     def _changed_fields(fields, local_obj, api_obj):
-    #         for field in fields:
-    #             apiobj_field = api_obj[self.MAPPING[field]]
-    #             if field in ['wbs']:
-    #                 apiobj_field = api_obj[self.MAPPING[field]][0]
-    #             if field in ['overall_amount' 'overall_amount_dc', 'exchange_rate', 'amount_changed']:
-    #                 return not comp_decimals(getattr(local_obj, field), apiobj_field)
-    #             if field in ['document_date', 'due_date']:
-    #                 apiobj_field = datetime.datetime.strptime(api_obj[self.MAPPING[field]], '%d-%b-%y').date()
-    #             if field in ['fc_type', 'fr_number']:
-    #                 apiobj_field = api_obj[self.MAPPING[field]] or 'No Record'
-    #             if getattr(local_obj, field) != apiobj_field:
-    #                 print "field changed", field
-    #                 return True
-    #         return False
-    #
-    #     for fc_line in filtered_records:
-    #         saving = False
-    #
-    #         try:
-    #             fc, saving = FundsCommitmentHeader.objects.get_or_create(
-    #                 vendor_code=fc_line["VENDOR_CODE"],
-    #                 fc_number=fc_line["FC_NUMBER"],
-    #             )
-    #         except FundsCommitmentHeader.MultipleObjectsReturned as exp:
-    #             exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
-    #             raise
-    #
-    #         try:
-    #             currency = Currency.objects.get(
-    #                 code=fc_line["CURRENCY"],
-    #             )
-    #         except Currency.DoesNotExist:
-    #             print 'Currency: {} does not exist'.format(fc_line["CURRENCY"])
-    #             currency = None
-    #             continue
-    #
-    #         fc_fields = ['document_date', 'responsible_person', 'fc_type', 'exchange_rate']
-    #         if saving or _changed_fields(fc_fields, fc, fc_line):
-    #             fc.document_date = datetime.datetime.strptime(fc_line["FC_DOC_DATE"], '%d-%b-%y')
-    #             fc.fc_type = fc_line["FR_TYPE"] or 'No Record'
-    #             fc.currency = currency
-    #             fc.document_text = fc_line["FC_DOCUMENT_TEXT"]
-    #             fc.exchange_rate = fc_line["EXCHANGE_RATE"]
-    #             fc.responsible_person = fc_line["RESP_PERSON"]
-    #             fc.save()
-    #
-    #         try:
-    #             fc_item, saved = FundsCommitmentItem.objects.get_or_create(
-    #                 fund_commitment=fc,
-    #                 line_item=int(fc_line["LINE_ITEM"]),
-    #             )
-    #         except FundsCommitmentItem.MultipleObjectsReturned as exp:
-    #             exp.message += 'FR Ref ' + fc_line["FC_NUMBER"]
-    #             raise
-    #
-    #         #adding FundCommitmentItem
-    #         fc_item_fields = ['wbs', 'grant_number', 'fund', 'overall_amount', 'overall_amount_dc' 'due_date',
-    #                           'gl_account', 'commitment_amount', 'amount_changed', 'fr_number']
-    #         if saved or _changed_fields(fc_item_fields, fc_item, fc_line):
-    #             fc_item.wbs = fc_line["WBS_ELEMENT"][0],
-    #             fc_item.fund = fc_line["FUND"]
-    #             fc_item.grant_number = fc_line['GRANT_NBR']
-    #             fc_item.gl_account = fc_line['GL_ACCOUNT']
-    #             fc_item.overall_amount = fc_line["OVERALL_AMOUNT"]
-    #             fc_item.overall_amount_dc = fc_line["OVERALL_AMOUNT_DC"]
-    #             fc_item.due_date = datetime.datetime.strptime(fc_line["DUE_DATE"], '%d-%b-%y')
-    #             fc_item.fr_number = fc_line['FR_NUMBER'] if 'FR_NUMBER' in fc_line else None
-    #             fc_item.commitment_amount = fc_line['COMMITMENT_AMOUNT']
-    #             fc_item.amount_changed = fc_line['AMOUNT_CHANGED'].replace(",", "")
-    #             fc_item.line_item_text = fc_line["FC_LINE_ITEM_TEXT"]
-    #
-    #             fc_item.save()
-    #
-    #         processed += 1
-    #     return processed
-
-
 

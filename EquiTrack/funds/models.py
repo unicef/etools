@@ -106,6 +106,14 @@ class FundsCommitmentItem(models.Model):
     amount_changed = models.DecimalField(default=0, max_digits=12, decimal_places=2)
     line_item_text = models.CharField(max_length=255, null=True, blank=True)
 
+    class Meta:
+        unique_together = ('fund_commitment', 'line_item')
+
+    def save(self, **kwargs):
+        if not self.fc_ref_number:
+            self.fc_ref_number = '{}-{}'.format(self.fund_commitment.fc_number, self.line_item)
+        return super(FundsCommitmentItem, self).save(**kwargs)
+
 
 
 
