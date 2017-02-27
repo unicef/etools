@@ -6,9 +6,9 @@ from rest_framework import serializers, ISO_8601
 class DSASerializer(serializers.Serializer):
     start_date = serializers.DateTimeField(format=ISO_8601)
     end_date = serializers.DateTimeField(format=ISO_8601)
-    daily_rate_usd = serializers.DecimalField(max_digits=20, decimal_places=4)
+    daily_rate = serializers.DecimalField(max_digits=20, decimal_places=4)
     night_count = serializers.IntegerField()
-    amount_usd = serializers.DecimalField(max_digits=20, decimal_places=4)
+    amount = serializers.DecimalField(max_digits=20, decimal_places=4)
     dsa_region = serializers.IntegerField()
     dsa_region_name = serializers.CharField()
 
