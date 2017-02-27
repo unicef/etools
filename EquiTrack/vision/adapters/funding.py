@@ -408,7 +408,8 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         "GL_ACCOUNT",
         "DUE_DATE",
         "FR_NUMBER",
-        "COMMITMENT_AMOUNT",
+        "COMMITMENT_AMOUNT_USD",
+        "COMMITMENT_AMOUNT_DC",
         "AMOUNT_CHANGED",
         "FC_LINE_ITEM_TEXT",
     )
@@ -428,7 +429,8 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         "gl_account": "GL_ACCOUNT",
         "due_date": "DUE_DATE",
         "fr_number": "FR_NUMBER",
-        "commitment_amount": "COMMITMENT_AMOUNT",
+        "commitment_amount": "COMMITMENT_AMOUNT_USD",
+        "commitment_amount_dc": "COMMITMENT_AMOUNT_DC",
         "amount_changed": "AMOUNT_CHANGED",
         "line_item_text": "FC_LINE_ITEM_TEXT",
     }
@@ -438,7 +440,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                      'EXCHANGE_RATE', 'RESP_PERSON']
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'WBS_ELEMENT', 'GRANT_NBR', 'FC_NUMBER',
-                        'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT', 'AMOUNT_CHANGED', 'FC_LINE_ITEM_TEXT']
+                        'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT_USD', 'COMMITMENT_AMOUNT_DC', 'AMOUNT_CHANGED', 'FC_LINE_ITEM_TEXT']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}
@@ -462,7 +464,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         def bad_record(record):
             # We don't care about FCs without expenditure
-            if not record['COMMITMENT_AMOUNT']:
+            if not record['COMMITMENT_AMOUNT_USD']:
                 return False
             if not record['FC_NUMBER']:
                 return False
@@ -474,7 +476,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         if field in ['document_date', 'due_date']:
             return datetime.datetime.strptime(value, '%d-%b-%y').date()
 
-        if field in ['commitment_amount', 'amount_changed']:
+        if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return Decimal(value.replace(",", ""))
         return value
 
@@ -501,7 +503,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
             self.item_records[self.get_fc_item_number(r)] = self.map_line_item_record(r)
 
     def equal_fields(self, field, obj_field, record_field):
-        if field in ['commitment_amount', 'amount_changed']:
+        if field in ['commitment_amount', 'commitment_amount_dc', 'amount_changed']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
             return str(obj_field) == record_field
