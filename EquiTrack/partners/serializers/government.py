@@ -156,3 +156,18 @@ class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
     class Meta:
         model = GovernmentIntervention
         fields = ["partner_name", "country_programme_name", "number", "cp_outputs", "url",]
+
+
+class GovernmentInterventionSummaryListSerializer(serializers.ModelSerializer):
+    partner_name = serializers.CharField(source='partner.name')
+    country_programme_name = serializers.CharField(source='country_programme.name')
+
+    # government intervention = true, for distinguishing on the front end
+    government_intervention = serializers.SerializerMethodField()
+
+    def get_government_intervention(self, obj):
+        return True
+
+    class Meta:
+        model = GovernmentIntervention
+        fields = ("id", 'number', "created_at", "partner_name", "country_programme_name", "government_intervention")
