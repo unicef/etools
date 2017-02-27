@@ -374,6 +374,7 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
 
         self.set_mapping(filtered_records)
         self.header_sync()
+        self.li_sync()
 
         processed += 1
         return processed
