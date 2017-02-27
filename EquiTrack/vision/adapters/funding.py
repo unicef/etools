@@ -406,8 +406,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         "GL_ACCOUNT",
         "DUE_DATE",
         "FR_NUMBER",
-        "COMMITMENT_AMOUNT_USD",
-        "COMMITMENT_AMOUNT_DC",
+        "COMMITMENT_AMOUNT",
         "AMOUNT_CHANGED",
         "FC_LINE_ITEM_TEXT",
     )
@@ -427,8 +426,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         "gl_account": "GL_ACCOUNT",
         "due_date": "DUE_DATE",
         "fr_number": "FR_NUMBER",
-        "commitment_amount": "COMMITMENT_AMOUNT_USD",
-        "commitment_amount_dc": "COMMITMENT_AMOUNT_DC",
+        "commitment_amount": "COMMITMENT_AMOUNT",
         "amount_changed": "AMOUNT_CHANGED",
         "line_item_text": "FC_LINE_ITEM_TEXT",
     }
@@ -438,7 +436,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                      'EXCHANGE_RATE', 'RESP_PERSON']
 
     LINE_ITEM_FIELDS = ['LINE_ITEM', 'WBS_ELEMENT', 'GRANT_NBR', 'FC_NUMBER',
-                        'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT_USD', 'COMMITMENT_AMOUNT_DC', 'AMOUNT_CHANGED', 'FC_LINE_ITEM_TEXT']
+                        'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT', 'AMOUNT_CHANGED', 'FC_LINE_ITEM_TEXT']
 
     def __init__(self, *args, **kwargs):
         self.header_records = {}
@@ -462,7 +460,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
 
         def bad_record(record):
             # We don't care about FCs without expenditure
-            if not record['COMMITMENT_AMOUNT_USD']:
+            if not record['COMMITMENT_AMOUNT']:
                 return False
             if not record['FC_NUMBER']:
                 return False
@@ -474,7 +472,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         if field in ['document_date', 'due_date']:
             return datetime.datetime.strptime(value, '%d-%b-%y').date()
 
-        if field in ['commitment_amount_dc', 'commitment_amount', 'amount_changed']:
+        if field in ['commitment_amount', 'amount_changed']:
             return Decimal(value.replace(",", ""))
         return value
 
@@ -501,7 +499,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
             self.item_records[self.get_fc_item_number(r)] = self.map_line_item_record(r)
 
     def equal_fields(self, field, obj_field, record_field):
-        if field in ['commitment_amount_dc', 'commitment_amount', 'amount_changed']:
+        if field in ['commitment_amount', 'amount_changed']:
             return comp_decimals(obj_field, record_field)
         if field == 'line_item':
             return str(obj_field) == record_field
@@ -532,7 +530,6 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
             record = self.header_records[item]
             to_create.append(FundsCommitmentHeader(**record))
 
-        print 'tocreate', len(to_create)
         if to_create:
             created_objects = FundsCommitmentHeader.objects.bulk_create(to_create)
             # TODO in Django 1.10 the following line is not needed because ids are returned
@@ -540,11 +537,12 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
             self.map_header_objects(created_objects)
 
         self.map_header_objects(to_update)
-        print 'toupdate', len(to_update)
+        updated = 0
         for h in to_update:
             if self.update_obj(h, self.header_records.get(h.fc_number)):
                 h.save()
-                print 'updated', h
+                updated += 1
+        return updated, len(to_create)
 
     def li_sync(self):
 
@@ -566,16 +564,18 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
             del record['fc_number']
             to_create.append(FundsCommitmentItem(**record))
 
-        print 'tocreate li', len(to_create)
+        # print 'tocreate li', len(to_create)
         FundsCommitmentItem.objects.bulk_create(to_create)
 
-        print 'toupdate li', len(to_update)
+        # print 'toupdate li', len(to_update)
+        updated = 0
         for li in to_update:
             local_record = self.item_records.get(li.fc_ref_number)
             del local_record['fc_number']
             if self.update_obj(li, local_record):
                 li.save()
-                print 'updated', li
+                updated += 1
+        return updated, len(to_create)
 
     def _save_records(self, records):
 
@@ -583,10 +583,15 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         filtered_records = self._filter_records(records)
 
         self.set_mapping(filtered_records)
-        self.header_sync()
-        self.li_sync()
+        h_processed = self.header_sync()
+        i_processed = self.li_sync()
 
-        processed += 1
+        print 'tocreate', h_processed[1]
+        print 'toupdate', h_processed[0]
+        print 'tocreate li', i_processed[1]
+        print 'toupdate li', i_processed[0]
+
+        processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
         return processed
 
     # def _convert_records(self, records):
