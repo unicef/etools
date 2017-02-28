@@ -1170,6 +1170,14 @@ class TestInterventionViews(APITenantTestCase):
             "offices": [],
             "fr_numbers": None,
             "population_focus": "Some focus",
+            "planned_visits":  [
+                {
+                  "year": 2016,
+                  "programmatic": 2,
+                  "spot_checks": 1,
+                  "audit": 1
+                },
+            ],
             "planned_budget": [
                 {
                     "partner_contribution": "2.00",
@@ -1388,6 +1396,28 @@ class TestInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(response.data, ['Start date must precede end date'])
+
+    def test_intervention_update_planned_visits(self):
+        import copy
+        a = copy.deepcopy(self.intervention_data["planned_visits"])
+        a.append({
+          "year": 2015,
+          "programmatic": 2,
+          "spot_checks": 1,
+          "audit": 1
+        })
+        data={
+            "planned_visits": a,
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
 
     def test_intervention_filter(self):
         # Test filter
