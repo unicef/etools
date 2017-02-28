@@ -1,19 +1,13 @@
 
 from django.conf.urls import url, patterns, include
 
-from t2f.views import TravelListViewSet
-from t2f.views import TravelDetailsViewSet
-from t2f.views import StaticDataView
-from t2f.views import PermissionMatrixView
-from t2f.views import TravelAttachmentViewSet
-from t2f.views import ActionPointViewSet
-from t2f.views import InvoiceViewSet
-from t2f.views import VendorNumberListView
-from t2f.views import VisionInvoiceExport
-from t2f.views import VisionInvoiceUpdate
-from t2f.views import TravelActivityViewSet
-from t2f.views import TravelDashboardViewSet
-from t2f.views import ActionPointDashboardViewSet
+from t2f.views.dashboard import TravelDashboardViewSet, ActionPointDashboardViewSet
+from t2f.views.exports import TravelListExport, FinanceExport, TravelAdminExport, InvoiceExport
+from t2f.views.generics import SettingsView, StaticDataView, PermissionMatrixView, VendorNumberListView
+from t2f.views.invoices import InvoiceViewSet
+from t2f.views.travel import TravelListViewSet, TravelDetailsViewSet, TravelAttachmentViewSet, ActionPointViewSet,\
+    TravelActivityViewSet
+from t2f.views.vision import VisionInvoiceExport, VisionInvoiceUpdate
 
 travel_list = TravelListViewSet.as_view({'get': 'list',
                                          'post': 'create'})
@@ -66,11 +60,11 @@ travel_list_patterns = patterns(
     '',
     url(r'^$', travel_list, name='index'),
     url(r'^(?P<transition_name>save_and_submit)/$', travel_list_state_change, name='state_change'),
-    url(r'^export/$', TravelListViewSet.as_view({'get': 'export'}), name='export'),
-    url(r'^finance-export/$', TravelListViewSet.as_view({'get': 'export_finances'}), name='finance_export'),
-    url(r'^travel-admin-export/$', TravelListViewSet.as_view({'get': 'export_travel_admins'}),
+    url(r'^export/$', TravelListExport.as_view(), name='export'),
+    url(r'^finance-export/$', FinanceExport.as_view(), name='finance_export'),
+    url(r'^travel-admin-export/$', TravelAdminExport.as_view(),
         name='travel_admin_export'),
-    url(r'^invoice-export/$', TravelListViewSet.as_view({'get': 'export_invoices'}), name='invoice_export'),
+    url(r'^invoice-export/$', InvoiceExport.as_view(), name='invoice_export'),
     url(r'^activities/(?P<partner_organization_pk>[0-9]+)/', TravelActivityViewSet.as_view({'get': 'list'}), name='activities'),
     url(r'^dashboard/(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/', travel_dashboard_list, name='dashboard'),
 )
@@ -111,4 +105,7 @@ urlpatterns = patterns(
     # Vision related endpoints
     url(r'^vision_invoice_export/$', VisionInvoiceExport.as_view(), name='vision_invoice_export'),
     url(r'^vision_invoice_update/$', VisionInvoiceUpdate.as_view(), name='vision_invoice_update'),
+
+    # Settings view
+    url(r'^settings/$', SettingsView.as_view(), name='settings'),
 )

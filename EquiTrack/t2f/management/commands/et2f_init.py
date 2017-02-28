@@ -13,7 +13,6 @@ from tenant_schemas.postgresql_backend.base import FakeTenant
 
 from publics.models import Currency, AirlineCompany, DSARegion, TravelExpenseType, WBS, Grant, Fund, BusinessRegion, \
     BusinessArea, Country
-from t2f.models import TravelType, ModeOfTravel
 from partners.models import PartnerOrganization
 from users.models import Country as UserCountry, Office, Section
 
