@@ -1,18 +1,11 @@
 from __future__ import unicode_literals
 
-from collections import OrderedDict
 from decimal import Decimal
 
 from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.db import connection
 from django.db.transaction import atomic
-from django.http.response import HttpResponse
-from django_fsm import TransitionNotAllowed
-from django.views.generic.base import View
 
-from rest_framework import generics, viewsets, mixins, status, views
-from rest_framework.exceptions import ValidationError
+from rest_framework import generics, viewsets, mixins, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
 from rest_framework.permissions import IsAdminUser
@@ -23,53 +16,15 @@ from rest_framework_csv import renderers
 
 from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
-from t2f.filters import travel_list, action_points, invoices
-from users.models import Section
-from locations.models import Location
-from partners.models import PartnerOrganization, Intervention
-from reports.models import Result
+from t2f.filters import travel_list, action_points
 from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
     InvoiceExportSerializer
 
-from t2f.models import Travel, TravelAttachment, TravelType, ModeOfTravel, ActionPoint, Invoice, IteneraryItem, \
-    InvoiceItem, TravelActivity, TransitionError
-from t2f.serializers import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
-    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, InvoiceSerializer, \
-    TravelActivityByPartnerSerializer
-from t2f.serializers.static_data import StaticDataSerializer
+from t2f.models import Travel, TravelAttachment, ActionPoint, IteneraryItem, InvoiceItem, TravelActivity
+from t2f.serializers.travel import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
+    CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, TravelActivityByPartnerSerializer
 from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
-from t2f.permission_matrix import PERMISSION_MATRIX
-from t2f.vision import InvoiceExport, InvoiceUpdater, InvoiceUpdateError
-
-
-class T2FPagePagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    page_query_param = 'page'
-
-    def get_paginated_response(self, data):
-        return Response(OrderedDict([
-            ('page_count', self.page.paginator.num_pages),
-            ('data', data),
-            ('total_count', self.page.paginator.object_list.count()),
-        ]))
-
-
-def get_filtered_users(request):
-    User = get_user_model()
-    return User.objects.exclude(first_name='', last_name='')
-
-
-def run_transition(serializer):
-    transition_name = serializer.transition_name
-    if transition_name:
-        instance = serializer.instance
-        transition = getattr(instance, transition_name)
-        try:
-            transition()
-        except (TransitionNotAllowed, TransitionError) as exc:
-            raise ValidationError({'non_field_errors': [exc.message]})
-        instance.save()
+from t2f.views import T2FPagePagination, run_transition
 
 
 class TravelListViewSet(mixins.ListModelMixin,
@@ -237,49 +192,6 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
         return traveler
 
 
-class TravelDashboardViewSet(mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
-    queryset = Travel.objects.all()
-    permission_classes = (IsAdminUser,)
-
-    def list(self, request, year, month, **kwargs):
-        data = {}
-
-        travels_all = Travel.objects.filter(
-            start_date__year=year,
-            start_date__month=month,
-        )
-
-        office_id = request.query_params.get("office_id", None)
-        if office_id:
-            travels_all = travels_all.filter(office_id=office_id)
-
-        data["planned"] = travels_all.filter(status=Travel.PLANNED).count()
-        data["approved"] = travels_all.filter(status=Travel.APPROVED).count()
-        data["completed"] = travels_all.filter(status=Travel.COMPLETED).count()
-
-        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
-        travels_by_section = []
-        for section_id in section_ids:
-            travels = travels_all.filter(section=section_id)
-            if travels.exists():
-                planned = travels.filter(status=Travel.PLANNED).count()
-                approved = travels.filter(status=Travel.APPROVED).count()
-                completed = travels.filter(status=Travel.COMPLETED).count()
-                section_trips = {
-                    "section_id": travels.first().section.id,
-                    "section_name": travels.first().section.name,
-                    "planned_travels": planned,
-                    "approved_travels": approved,
-                    "completed_travels": completed,
-                }
-                travels_by_section.append(section_trips)
-
-        data["travels_by_section"] = travels_by_section
-
-        return Response(data)
-
-
 class TravelAttachmentViewSet(mixins.ListModelMixin,
                               mixins.CreateModelMixin,
                               mixins.DestroyModelMixin,
@@ -312,6 +224,7 @@ class TravelActivityViewSet(mixins.ListModelMixin,
     filter_backends = (TravelActivityPartnerFilter,)
     lookup_url_kwarg = 'partner_organization_pk'
 
+
 class ActionPointViewSet(mixins.ListModelMixin,
                          mixins.RetrieveModelMixin,
                          mixins.UpdateModelMixin,
@@ -324,97 +237,3 @@ class ActionPointViewSet(mixins.ListModelMixin,
                        action_points.ActionPointSortFilter,
                        action_points.ActionPointFilterBoxFilter)
     lookup_url_kwarg = 'action_point_pk'
-
-
-class ActionPointDashboardViewSet(mixins.ListModelMixin,
-                             viewsets.GenericViewSet):
-    queryset = ActionPoint.objects.all()
-    permission_classes = (IsAdminUser,)
-
-    def list(self, request, **kwargs):
-        data = {}
-
-        office_id = request.query_params.get("office_id", None)
-        section_ids = Travel.objects.all().values_list('section', flat=True).distinct()
-        action_points_by_section = []
-        for section_id in section_ids:
-            travels = Travel.objects.filter(section=section_id)
-            if office_id:
-                travels = travels.filter(office_id=office_id)
-            if travels.exists():
-                action_points = ActionPoint.objects.filter(travel__in=travels)
-                total = action_points.count()
-                completed = action_points.filter(status=Travel.COMPLETED).count()
-                section_action_points = {
-                    "section_id": travels.first().section.id,
-                    "section_name": travels.first().section.name,
-                    "total_action_points": total,
-                    "completed_action_points": completed,
-                }
-                action_points_by_section.append(section_action_points)
-
-        data["action_points_by_section"] = action_points_by_section
-
-        return Response(data)
-
-
-class InvoiceViewSet(mixins.ListModelMixin,
-                     mixins.RetrieveModelMixin,
-                     viewsets.GenericViewSet):
-    queryset = Invoice.objects.all()
-    serializer_class = InvoiceSerializer
-    pagination_class = T2FPagePagination
-    permission_classes = (IsAdminUser,)
-    filter_backends = (invoices.InvoiceSearchFilter,
-                       invoices.InvoiceSortFilter,
-                       invoices.InvoiceFilterBoxFilter)
-    lookup_url_kwarg = 'invoice_pk'
-
-
-class StaticDataView(generics.GenericAPIView):
-    serializer_class = StaticDataSerializer
-
-    def get(self, request):
-        data = {'partners': PartnerOrganization.objects.all(),
-                'partnerships': Intervention.objects.all(),
-                'results': Result.objects.all(),
-                'locations': Location.objects.all(),
-                'travel_types': [c[0] for c in TravelType.CHOICES],
-                'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],
-                'action_point_statuses': [c[0] for c in ActionPoint.STATUS]}
-
-        serializer = self.get_serializer(data)
-        return Response(serializer.data, status.HTTP_200_OK)
-
-
-class VendorNumberListView(generics.GenericAPIView):
-    def get(self, request):
-        vendor_numbers = [u.profile.vendor_number for u in get_filtered_users(request)]
-        # Add numbers from travel agents
-        vendor_numbers.extend([])
-        vendor_numbers = list(set(vendor_numbers))
-        vendor_numbers.sort()
-        return Response(vendor_numbers, status.HTTP_200_OK)
-
-
-class PermissionMatrixView(generics.GenericAPIView):
-    def get(self, request):
-        return Response(PERMISSION_MATRIX, status.HTTP_200_OK)
-
-
-class VisionInvoiceExport(View):
-    def get(self, request):
-        exporter = InvoiceExport()
-        xml_structure = exporter.generate_xml()
-        return HttpResponse(xml_structure, content_type='application/xml')
-
-
-class VisionInvoiceUpdate(View):
-    def post(self, request):
-        updater = InvoiceUpdater(request.body)
-        try:
-            with atomic():
-                updater.update_invoices()
-        except InvoiceUpdateError as exc:
-            return HttpResponse('\n'.join(exc.errors), status=status.HTTP_400_BAD_REQUEST)
-        return HttpResponse()

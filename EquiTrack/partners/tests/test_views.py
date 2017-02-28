@@ -28,7 +28,7 @@ from EquiTrack.factories import (
     SectionFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
-from reports.models import ResultType, Sector
+from reports.models import ResultType, Sector, CountryProgramme
 from funds.models import Grant, Donor
 from supplies.models import SupplyItem
 from users.models import Section
@@ -49,6 +49,7 @@ from partners.models import (
     InterventionSectorLocationLink,
     InterventionBudget,
     InterventionAmendment,
+    GovernmentIntervention,
     GovernmentInterventionResult,
     AgreementAmendment,
     AgreementAmendmentType,
@@ -83,6 +84,52 @@ class TestPartnerOrganizationViews(APITenantTestCase):
             completed_date=datetime.date.today()
         )
 
+        self.partner_gov = PartnerFactory(partner_type="Government")
+
+        agreement = AgreementFactory(
+            partner=self.partner,
+            signed_by_unicef_date=datetime.date.today())
+
+        self.intervention = InterventionFactory(agreement=agreement)
+        self.output_res_type, _ = ResultType.objects.get_or_create(name='Output')
+
+        self.result = ResultFactory(
+            result_type=self.output_res_type,
+            result_structure=ResultStructureFactory())
+        self.pcasector = InterventionSectorLocationLink.objects.create(
+            intervention=self.intervention,
+            sector=Sector.objects.create(name="Sector 1")
+        )
+        self.partnership_budget = InterventionBudget.objects.create(
+            intervention=self.intervention,
+            unicef_cash=100,
+            unicef_cash_local=10,
+            partner_contribution=200,
+            partner_contribution_local=20,
+            in_kind_amount_local=10,
+        )
+        self.amendment = InterventionAmendment.objects.create(
+            intervention=self.intervention,
+            type="Change in Programme Result"
+        )
+        self.location = InterventionSectorLocationLink.objects.create(
+            intervention=self.intervention,
+            sector=Sector.objects.create(name="Sector 2")
+        )
+        self.cp = CountryProgrammeFactory(wbs="WBS ", __sequence=10)
+        self.cp_output = ResultFactory(result_type=self.output_res_type)
+        self.govint = GovernmentInterventionFactory(
+            partner=self.partner_gov,
+            country_programme=self.cp
+        )
+        self.result = ResultFactory()
+        self.govint_result = GovernmentInterventionResult.objects.create(
+            intervention=self.govint,
+            result=self.result,
+            year=datetime.date.today().year,
+            planned_amount=100,
+        )
+
     def test_api_partners_delete_asssessment_valid(self):
         response = self.forced_auth_req(
             'delete',
@@ -106,7 +153,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         response = self.forced_auth_req('get', '/api/v2/partners/', user=self.unicef_staff)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEquals(len(response.data), 2)
         self.assertIn("vendor_number", response.data[0].keys())
         self.assertNotIn("address", response.data[0].keys())
 
@@ -193,6 +240,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
+        self.assertEquals(response.data['interventions'], [])
 
     def test_api_partners_retrieve_staff_members(self):
         response = self.forced_auth_req(
@@ -262,7 +310,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEquals(len(response.data), 2)
         self.assertEquals(response.data[0]["id"], self.partner.id)
 
     def test_api_partners_filter_multiple(self):
@@ -294,7 +342,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(len(response.data), 1)
+        self.assertEquals(len(response.data), 2)
         self.assertEquals(response.data[0]["id"], self.partner.id)
 
     def test_api_partners_short_name(self):
@@ -517,6 +565,11 @@ class TestAgreementAPIView(APITenantTestCase):
         self.agreement.authorized_officers.add(self.partner_staff)
         self.agreement.save()
         amendment = SimpleUploadedFile("amendment.pdf", "blah", "application/pdf")
+        today = datetime.date.today()
+        self.country_programme = CountryProgrammeFactory(
+                                        wbs='/A0/',
+                                        from_date=date(today.year-1, 1, 1),
+                                        to_date=date(today.year+1, 1, 1))
         self.amendment1 = AgreementAmendment.objects.create(
             number="001",
             agreement=self.agreement,
@@ -543,11 +596,6 @@ class TestAgreementAPIView(APITenantTestCase):
         self.intervention = InterventionFactory(
                                 agreement=self.agreement,
                                 document_type=Intervention.PD)
-        today = datetime.date.today()
-        self.country_programme = CountryProgrammeFactory(
-                                        wbs='/A0/',
-                                        from_date=date(today.year-1, 1, 1),
-                                        to_date=date(today.year+1, 1, 1))
 
     def test_agreements_create(self):
         today = datetime.date.today()
@@ -859,6 +907,14 @@ class TestAgreementAPIView(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "suspended")
         self.assertEquals(Intervention.objects.get(agreement=self.agreement).status, "suspended")
+
+    def test_partner_agreement_amendment_cp_cycle_end(self):
+        amendment_type = AgreementAmendmentType.objects.create(
+            agreement_amendment=self.amendment1,
+            type="CP extension"
+        )
+
+        self.assertEquals(amendment_type.cp_cycle_end, CountryProgramme.current().to_date)
 
     def test_agreement_amendment_delete_valid(self):
         response = self.forced_auth_req(
@@ -1530,6 +1586,24 @@ class TestGovernmentInterventionViews(APITenantTestCase):
             'get',
             '/api/v2/government_interventions/',
             user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 1)
+        self.assertEquals(response.data[0]["id"], self.govint.id)
+        self.assertEquals(response.data[0]["partner"], self.govint.partner.id)
+        self.assertEquals(response.data[0]["country_programme"], self.govint.country_programme.id)
+
+    def test_govint_list_filter(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data={
+                "year": datetime.date.today().year,
+                "country_programme": self.cp.id,
+                "partner": self.partner.id
+            }
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
