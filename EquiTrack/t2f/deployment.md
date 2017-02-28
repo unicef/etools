@@ -15,6 +15,5 @@ $ python EquiTrack/manage.py load_initial_data
 $ python EquiTrack/manage.py import_travel_agents
 ```
 
-
 ### Generate invoices
 To generate some invoices a travel has to be created and has to be sent for payment.
