@@ -18,6 +18,7 @@ from django_fsm import FSMField, transition
 
 from publics.models import TravelExpenseType
 from t2f.helpers import CostSummaryCalculator, InvoiceMaker
+from t2f.serializers.mailing import TravelMailSerializer
 
 log = logging.getLogger(__name__)
 
@@ -324,8 +325,6 @@ class Travel(models.Model):
 
     def send_notification_email(self, subject, recipient, template_name):
         # TODO this could be async to avoid too long api calls in case of mail server issue
-        # TODO move this out from here
-        from t2f.serializers.mailing import TravelMailSerializer
         serializer = TravelMailSerializer(self, context={})
 
         url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
