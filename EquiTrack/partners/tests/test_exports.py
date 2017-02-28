@@ -253,3 +253,112 @@ class TestModelExport(APITenantTestCase):
                             cp_outputs,
                             dataset[0][4],
                         ))
+
+    def test_intervention_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            'Status',
+            'Partner',
+            'Agreement',
+            'Document Type',
+            'Reference Number',
+            'Document Title',
+            'Start Date',
+            'End Date',
+            'UNICEF Office',
+            'Sectors',
+            'Locations',
+            'UNICEF Focal Points',
+            'CSO Authorized Officials',
+            'Population Focus',
+            'Humanitarian Response Plan',
+            'CP Outputs',
+            'RAM Indicators',
+            'FR Number(s)',
+            'Total UNICEF Budget (Local)',
+            'Total CSO Budget (USD)',
+            'Total CSO Budget (Local)',
+            'Planned Programmatic Visits',
+            'Planned Spot Checks',
+            'Planned Audits',
+            'Document Submission Date by CSO',
+            'Submission Date to PRC',
+            'Review Date by PRC',
+            'Signed by Partner',
+            'Signed by Partner Date',
+            'Signed by UNICEF',
+            'Signed by UNICEF Date',
+            'Supply Plan',
+            'Distribution Plan',
+            'URL'
+        ])
+
+    def test_agreement_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset._get_headers(), [
+            'Reference Number',
+            'Status',
+            'Partner Name',
+            'Agreement Type',
+            'Start Date',
+            'End Date',
+            'Signed By Partner',
+            'Signed By Partner Date',
+            'Signed By UNICEF',
+            'Signed By UNICEF Date',
+            'Partner Authorized Officer',
+            'Amendments',
+            'URL'
+        ])
+
+    def test_partners_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset._get_headers(), [
+            'Vendor Number',
+            'Organizations Full Name',
+            'Short Name',
+            'Alternate Name',
+            'Partner Type',
+            'Shared Partner',
+            'Address',
+            'Phone Number',
+            'Email Address',
+            'Risk Rating',
+            'Date Last Assessed Against Core Values',
+            'Actual Cash Transfer for CP (USD)',
+            'Actual Cash Transfer for Current Year (USD)',
+            'Marked for Deletion',
+            'Blocked',
+            'Assessment Type',
+            'Date Assessed',
+            'Assessment Type (Date Assessed)',
+            'Staff Members',
+            'URL'
+        ])
