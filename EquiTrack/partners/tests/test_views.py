@@ -30,7 +30,7 @@ from EquiTrack.factories import (
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector, CountryProgramme
-from funds.models import Grant, Donor
+from funds.models import Grant, Donor, FundsCommitmentItem, FundsCommitmentHeader
 from supplies.models import SupplyItem
 from users.models import Section
 from partners.models import (
@@ -1148,29 +1148,29 @@ class TestInterventionViews(APITenantTestCase):
         )
         self.isll.locations.add(LocationFactory())
         self.isll.save()
-
-        self.funding_commitment1 = FundingCommitment.objects.create(
-            grant=GrantFactory(),
-            fr_number="12345",
-            wbs="some_wbs",
-            fc_type="some_fc_type",
-            fc_ref="some_fc_ref",
-            fr_item_amount_usd=100,
-            agreement_amount=50,
-            commitment_amount=200,
-            expenditure_amount=300
+        self.fund_commitment_header = FundsCommitmentHeader.objects.create(
+            vendor_code="test1",
+            fc_number="3454354",
         )
 
-        self.funding_commitment2 = FundingCommitment.objects.create(
-            grant=GrantFactory(),
-            fr_number="45678",
-            wbs="some_wbs2",
-            fc_type="some_fc_type2",
-            fc_ref="some_fc_ref2",
-            fr_item_amount_usd=100,
-            agreement_amount=50,
+        self.funding_commitment1 = FundsCommitmentItem.objects.create(
+            fund_commitment=self.fund_commitment_header,
+            line_item="1",
+            grant_number="grant 1",
+            fr_number="12345",
+            wbs="some_wbs",
+            fc_ref_number="some_fc_ref",
             commitment_amount=200,
-            expenditure_amount=300
+        )
+
+        self.funding_commitment2 = FundsCommitmentItem.objects.create(
+            fund_commitment=self.fund_commitment_header,
+            line_item="2",
+            grant_number="grant 1",
+            fr_number="45678",
+            wbs="some_wbs",
+            fc_ref_number="some_fc_ref",
+            commitment_amount=300,
         )
 
         # Basic data to adjust in tests
@@ -1314,8 +1314,8 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["fr_numbers_details"]["12345"]["wbs"], "some_wbs")
-        self.assertEquals(response.data["fr_numbers_details"]["45678"]["wbs"], "some_wbs2")
+        self.assertEquals(response.data["fr_numbers_details"]["12345"][0]["wbs"], "some_wbs")
+        self.assertEquals(response.data["fr_numbers_details"]["45678"][0]["wbs"], "some_wbs")
 
     def test_intervention_active_update_population_focus(self):
         self.intervention_data.update(population_focus=None)
