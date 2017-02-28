@@ -139,7 +139,10 @@ def choices_to_json_ready(choices):
     elif isinstance(choices, list):
         choice_list = []
         for c in choices:
-            choice_list.append([c, c])
+            if isinstance(c, tuple):
+                choice_list.append([c[0], c[1]])
+            else:
+                choice_list.append([c, c])
     else:
         choice_list = []
     final_list = []
@@ -161,7 +164,7 @@ class PmpStaticDropdownsListApiView(APIView):
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
         assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).order_by('type').distinct()))
-        agreement_types = choices_to_json_ready(Agreement.AGREEMENT_TYPES)
+        agreement_types = choices_to_json_ready([typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
         intervention_doc_type = choices_to_json_ready(Intervention.INTERVENTION_TYPES)
