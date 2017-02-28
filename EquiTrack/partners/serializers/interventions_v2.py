@@ -25,10 +25,10 @@ from partners.models import (
     PartnerStaffMember,
     InterventionSectorLocationLink,
     InterventionResultLink,
-    FundingCommitment,
 )
 from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
+from funds.models import FundsCommitmentHeader, FundsCommitmentItem
 
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
 
@@ -266,18 +266,17 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
 
 
 class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
-    grant = serializers.CharField(source='grant.name')
+    fc_type = serializers.CharField(source='fund_commitment.fc_type')
 
     class Meta:
-        model = FundingCommitment
+        model = FundsCommitmentItem
         fields = (
-            "grant",
+            "grant_number",
             "wbs",
             "fc_type",
-            "fc_ref",
-            "agreement_amount",
+            "fc_ref_number",
             "commitment_amount",
-            "expenditure_amount",
+            "commitment_amount_dc",
         )
 
 
@@ -318,16 +317,16 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
 
     def get_fr_numbers_details(self, obj):
-        data = {}
+        data = {k:[] for k in obj.fr_numbers}
         if obj.fr_numbers:
-            for fr_number in obj.fr_numbers:
-                try:
-                    fc = FundingCommitment.objects.filter(fr_number=fr_number).select_related("grant").first()
-                except FundingCommitment.DoesNotExist:
-                    pass
-                else:
+            try:
+                fc_items = FundsCommitmentItem.objects.filter(fr_number__in=obj.fr_numbers).select_related('fund_commitment')
+            except FundsCommitmentItem.DoesNotExist:
+                pass
+            else:
+                for fc in fc_items:
                     serializer = FundingCommitmentNestedSerializer(fc)
-                    data.update({fr_number: serializer.data})
+                    data[fc.fr_number].append(serializer.data)
         return data
 
     class Meta:

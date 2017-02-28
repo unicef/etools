@@ -438,7 +438,7 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
                      'FR_TYPE', 'CURRENCY', 'FC_DOCUMENT_TEXT',
                      'EXCHANGE_RATE', 'RESP_PERSON']
 
-    LINE_ITEM_FIELDS = ['LINE_ITEM', 'WBS_ELEMENT', 'GRANT_NBR', 'FC_NUMBER',
+    LINE_ITEM_FIELDS = ['LINE_ITEM', 'WBS_ELEMENT', 'GRANT_NBR', 'FC_NUMBER', 'FR_NUMBER',
                         'FUND', 'DUE_DATE', 'COMMITMENT_AMOUNT_USD', 'COMMITMENT_AMOUNT_DC', 'AMOUNT_CHANGED', 'FC_LINE_ITEM_TEXT']
 
     def __init__(self, *args, **kwargs):
