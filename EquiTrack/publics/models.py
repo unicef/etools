@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 # TODO move static to files instead of models
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 
 
@@ -9,19 +9,26 @@ class TravelAgent(models.Model):
     code = models.CharField(max_length=128)
     city = models.CharField(max_length=128, null=True)
     country = models.ForeignKey('publics.Country')
+    expense_type = models.OneToOneField('TravelExpenseType', related_name='travel_agent')
 
 
 class TravelExpenseType(models.Model):
-    # TODO simon: explain what's this line here
+    # User related expense types have this placeholder as the vendor code
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
     title = models.CharField(max_length=128)
     vendor_number = models.CharField(max_length=128)
-    is_travel_agent = models.BooleanField(default=False)
     rank = models.PositiveIntegerField(default=100)
 
     class Meta:
         ordering = ('rank', 'title')
+
+    @property
+    def is_travel_agent(self):
+        try:
+            return bool(self.travel_agent)
+        except ObjectDoesNotExist:
+            return False
 
     def __unicode__(self):
         return self.title

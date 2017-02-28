@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.db.models.query_utils import Q
 from rest_framework import viewsets, mixins, generics, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -33,16 +34,18 @@ class StaticDataView(generics.GenericAPIView):
         dsa_regions = DSARegion.objects.filter(country__business_area__code=country.business_area_code).select_related('country')
         currencies = Currency.objects.all().prefetch_related('exchange_rates')
         business_areas = BusinessArea.objects.all().select_related('region')
+        expense_type_q = Q(travel_agent__isnull=True) | Q(travel_agent__country__business_area__code=country.business_area_code)
+        expense_types = TravelExpenseType.objects.select_related('travel_agent').filter(expense_type_q)
 
         data = {'currencies': currencies,
                 'airlines': AirlineCompany.objects.all(),
                 'dsa_regions': dsa_regions,
                 'countries': Country.objects.all(),
                 'business_areas': business_areas,
-                'wbs': WBS.objects.all().prefetch_related('grants'),
-                'grants': Grant.objects.all().prefetch_related('funds'),
+                'wbs': WBS.objects.prefetch_related('grants'),
+                'grants': Grant.objects.prefetch_related('funds'),
                 'funds': Fund.objects.all(),
-                'expense_types': TravelExpenseType.objects.all(),
+                'expense_types': expense_types,
                 'travel_types': [c[0].lower() for c in TravelType.CHOICES],
                 'travel_modes': [c[0].lower() for c in ModeOfTravel.CHOICES]}
 
