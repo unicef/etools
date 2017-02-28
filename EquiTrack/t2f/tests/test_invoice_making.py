@@ -54,12 +54,18 @@ class InvoiceMaking(APITenantTestCase):
         wbs_1 = WBSFactory(name='WBS #1')
         wbs_2 = WBSFactory(name='WBS #2')
 
-        grant_1 = GrantFactory(name='Grant #1', wbs=wbs_1)
-        grant_2 = GrantFactory(name='Grant #2', wbs=wbs_2)
-        grant_3 = GrantFactory(name='Grant #3', wbs=wbs_2)
+        grant_1 = GrantFactory(name='Grant #1')
+        grant_2 = GrantFactory(name='Grant #2')
+        grant_3 = GrantFactory(name='Grant #3')
 
-        fund_1 = FundFactory(name='Fund #1', grant=grant_1)
-        fund_2 = FundFactory(name='Fund #4', grant=grant_3)
+        wbs_1.grants.add(grant_1)
+        wbs_2.grants.add(grant_2, grant_3)
+
+        fund_1 = FundFactory(name='Fund #1')
+        fund_2 = FundFactory(name='Fund #4')
+
+        grant_1.funds.add(fund_1)
+        grant_3.funds.add(fund_2)
 
         # Expense types
         et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)

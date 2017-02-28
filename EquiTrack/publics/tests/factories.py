@@ -42,18 +42,26 @@ class WBSFactory(factory.DjangoModelFactory):
     class Meta:
         model = WBS
 
+    @factory.post_generation
+    def populate_grants(self, create, extracted, **kwargs):
+        grant = GrantFactory()
+        self.grants.add(grant)
+
 
 class GrantFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=12)
-    wbs = factory.SubFactory(WBSFactory)
 
     class Meta:
         model = Grant
 
+    @factory.post_generation
+    def populate_funds(self, create, extracted, **kwargs):
+        fund = FundFactory()
+        self.funds.add(fund)
+
 
 class FundFactory(factory.DjangoModelFactory):
     name = fuzzy.FuzzyText(length=12)
-    grant = factory.SubFactory(GrantFactory)
 
     class Meta:
         model = Fund

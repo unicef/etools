@@ -62,19 +62,19 @@ class AirlineSerializer(serializers.ModelSerializer):
 class WBSSerializer(serializers.ModelSerializer):
     class Meta:
         model = WBS
-        fields = ('id', 'name', 'business_area')
+        fields = ('id', 'name', 'business_area', 'grants')
 
 
 class GrantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Grant
-        fields = ('id', 'name', 'wbs')
+        fields = ('id', 'name', 'funds')
 
 
 class FundSerializer(serializers.ModelSerializer):
     class Meta:
         model = Fund
-        fields = ('id', 'name', 'grant')
+        fields = ('id', 'name')
 
 
 class ExpenseTypeSerializer(serializers.ModelSerializer):

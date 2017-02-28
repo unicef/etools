@@ -39,8 +39,8 @@ class StaticDataView(generics.GenericAPIView):
                 'dsa_regions': dsa_regions,
                 'countries': Country.objects.all(),
                 'business_areas': business_areas,
-                'wbs': WBS.objects.all(),
-                'grants': Grant.objects.all(),
+                'wbs': WBS.objects.all().prefetch_related('grants'),
+                'grants': Grant.objects.all().prefetch_related('funds'),
                 'funds': Fund.objects.all(),
                 'expense_types': TravelExpenseType.objects.all(),
                 'travel_types': [c[0].lower() for c in TravelType.CHOICES],
@@ -59,9 +59,9 @@ class WBSGrantFundView(generics.GenericAPIView):
 
         business_area = parameter_serializer.validated_data['business_area']
 
-        wbs_qs = WBS.objects.filter(business_area=business_area)
-        grant_qs = Grant.objects.filter(wbs__in=wbs_qs)
-        funds_qs = Fund.objects.filter(grant__in=grant_qs)
+        wbs_qs = WBS.objects.filter(business_area=business_area).prefetch_related('grants')
+        grant_qs = Grant.objects.filter(wbs__in=wbs_qs).prefetch_related('funds')
+        funds_qs = Fund.objects.filter(grants__in=grant_qs)
         data = {'wbs': wbs_qs,
                 'funds': funds_qs,
                 'grants': grant_qs}

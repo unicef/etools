@@ -150,31 +150,47 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
 
         records = records['ROWSET']['ROW']
 
-        # This will hold the wbs/grant/fund grouping
-        mapping = defaultdict(lambda: defaultdict(list))
-
+        groups = []
         for row in records:
-            wbs_code = row['WBS_ELEMENT_EX']
-            grant_code = row['GRANT_REF']
-            fund_code = row['FUND_TYPE_CODE']
+            g = {'wbs_code': row['WBS_ELEMENT_EX'],
+                 'grant_code': row['GRANT_REF'],
+                 'fund_code': row['FUND_TYPE_CODE']}
+            groups.append(g)
 
-            mapping[wbs_code][grant_code].append(fund_code)
+        wbs_code_set = {g['wbs_code'] for g in groups}
+        grant_code_set = {g['grant_code'] for g in groups}
+        fund_code_set = {g['fund_code'] for g in groups}
 
-        business_area_cache = self._fetch_business_areas(mapping)
+        wbs_mapping = self.create_wbs_objects(wbs_code_set)
+        grant_mapping = self.create_grant_objects(grant_code_set)
+        fund_mapping = self.create_fund_objects(fund_code_set)
 
-        wbs_mapping = self._process_wbs(mapping, business_area_cache)
-        grant_mapping = self._process_grants(mapping, wbs_mapping)
-        self._process_funds(mapping, grant_mapping)
+        wbs_grant_mapping = defaultdict(list)
+        grant_fund_mapping = defaultdict(list)
+        for g in groups:
+            wbs = wbs_mapping[g['wbs_code']]
+            grant = grant_mapping[g['grant_code']]
+            fund = fund_mapping[g['fund_code']]
+
+            wbs_grant_mapping[wbs].append(grant)
+            grant_fund_mapping[grant].append(fund)
+
+        for wbs, grants in wbs_grant_mapping.items():
+            wbs.grants.set(grants)
+
+        for grant, funds in grant_fund_mapping.items():
+            grant.funds.set(funds)
 
         return self.processed
 
-    def _fetch_business_areas(self, mapping):
-        business_area_codes = {wbs_code[:4] for wbs_code in mapping}
+    def _fetch_business_areas(self, wbs_set):
+        business_area_codes = {wbs_code[:4] for wbs_code in wbs_set}
         business_area_qs = BusinessArea.objects.filter(code__in=business_area_codes)
         return {ba.code: ba for ba in business_area_qs}
 
-    def _process_wbs(self, mapping, business_area_cache):
-        wbs_code_set = set(mapping.keys())
+    def create_wbs_objects(self, wbs_code_set):
+        business_area_cache = self._fetch_business_areas(wbs_code_set)
+
         existing_wbs_objects = WBS.objects.filter(name__in=wbs_code_set).select_related('business_area')
         existing_wbs_codes = {wbs.name for wbs in existing_wbs_objects}
 
@@ -188,49 +204,37 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         new_wbs_list = WBS.objects.bulk_create(bulk_wbs_list)
         self.processed += len(new_wbs_list)
 
-        all_wbs_codes = wbs_code_set | existing_wbs_codes
-        wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=all_wbs_codes)}
+        wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=wbs_code_set)}
         return wbs_mapping
 
-    def _process_grants(self, mapping, wbs_mapping):
-        grant_mapping = {}
+    def create_grant_objects(self, grant_code_set):
+        grant_objects = Grant.objects.filter(name__in=grant_code_set)
+        existing_grants = {g.name for g in grant_objects}
 
-        for wbs_code, wbs in wbs_mapping.items():
-            grant_code_set = set(mapping[wbs_code].keys())
-            grant_objects = Grant.objects.filter(name__in=grant_code_set)
-            existing_grants = {g.name for g in grant_objects}
+        grant_to_create = grant_code_set - existing_grants
+        bulk_grant_list = []
+        for grant_code in grant_to_create:
+            grant = Grant(name=grant_code)
+            bulk_grant_list.append(grant)
 
-            grant_to_create = grant_code_set - existing_grants
-            bulk_grant_list = []
-            for grant_code in grant_to_create:
-                grant = Grant(name=grant_code, wbs=wbs)
-                bulk_grant_list.append(grant)
+        new_grant_list = Grant.objects.bulk_create(bulk_grant_list)
+        self.processed += len(new_grant_list)
 
-            new_grant_list = Grant.objects.bulk_create(bulk_grant_list)
-            self.processed += len(new_grant_list)
-
-            # Set wbs to the current one (update if it was different)
-            grant_objects.update(wbs=wbs)
-
-            all_grant_codes = grant_code_set | existing_grants
-            grant_mapping.update({g.name: g for g in Grant.objects.filter(name__in=all_grant_codes)})
-
+        grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_code_set)}
         return grant_mapping
 
-    def _process_funds(self, mapping, grant_mapping):
-        for wbs_code in mapping:
-            for grant_code in mapping[wbs_code]:
-                fund_code_set = set(mapping[wbs_code][grant_code])
-                fund_objects = Fund.objects.filter(name__in=fund_code_set)
-                existing_funds = {f.name for f in fund_objects}
+    def create_fund_objects(self, fund_code_set):
+        fund_objects = Fund.objects.filter(name__in=fund_code_set)
+        existing_funds = {f.name for f in fund_objects}
 
-                fund_to_create = fund_code_set - existing_funds
-                bulk_fund_list = []
-                for fund_code in fund_to_create:
-                    fund = Fund(name=fund_code, grant=grant_mapping[grant_code])
-                    bulk_fund_list.append(fund)
+        fund_to_create = fund_code_set - existing_funds
+        bulk_fund_list = []
+        for fund_code in fund_to_create:
+            fund = Fund(name=fund_code)
+            bulk_fund_list.append(fund)
 
-                new_fund_list = Fund.objects.bulk_create(bulk_fund_list)
-                self.processed += len(new_fund_list)
+        new_fund_list = Fund.objects.bulk_create(bulk_fund_list)
+        self.processed += len(new_fund_list)
 
-                fund_objects.update(grant=grant_mapping[grant_code])
+        fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_code_set)}
+        return fund_mapping

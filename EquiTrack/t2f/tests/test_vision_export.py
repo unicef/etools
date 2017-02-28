@@ -55,8 +55,10 @@ class VisionXML(APITenantTestCase):
 
         # Add wbs/grant/fund
         wbs_1 = WBSFactory(name='WBS #1')
-        grant_1 = GrantFactory(name='Grant #1', wbs=wbs_1)
-        fund_1 = FundFactory(name='Fund #1', grant=grant_1)
+        grant_1 = GrantFactory(name='Grant #1')
+        wbs_1.grants.add(grant_1)
+        fund_1 = FundFactory(name='Fund #1')
+        grant_1.funds.add(fund_1)
 
         # Expense types
         et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)

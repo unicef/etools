@@ -38,7 +38,7 @@ class StaticDataEndpoint(APITenantTestCase):
         FundFactory()
         ExpenseTypeFactory()
 
-        with self.assertNumQueries(14):
+        with self.assertNumQueries(16):
             response = self.forced_auth_req('get', reverse('public_static'),
                                             user=self.unicef_staff)
 

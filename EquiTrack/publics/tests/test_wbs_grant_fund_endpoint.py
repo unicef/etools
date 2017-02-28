@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory
+from publics.tests.factories import BusinessAreaFactory, WBSFactory
 
 
 class WBSGrantFundEndpoint(APITenantTestCase):
@@ -21,9 +21,16 @@ class WBSGrantFundEndpoint(APITenantTestCase):
     def test_wbs_grant_fund_view(self):
         business_area = BusinessAreaFactory()
 
-        response = self.forced_auth_req('get', reverse('wbs_grants_funds'),
-                                        data={'business_area': business_area.id},
-                                        user=self.unicef_staff)
+        # Create a few wbs/grant/fund to see if the query count grows
+        WBSFactory(business_area=business_area)
+        WBSFactory(business_area=business_area)
+        WBSFactory(business_area=business_area)
+        WBSFactory(business_area=business_area)
+
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req('get', reverse('wbs_grants_funds'),
+                                            data={'business_area': business_area.id},
+                                            user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
         self.assertKeysIn(['wbs', 'grants', 'funds'], response_json)

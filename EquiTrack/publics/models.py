@@ -78,21 +78,21 @@ class BusinessArea(models.Model):
 class WBS(models.Model):
     business_area = models.ForeignKey('BusinessArea', null=True)
     name = models.CharField(max_length=25)
+    grants = models.ManyToManyField('Grant', related_name='wbs')
 
     def __unicode__(self):
         return self.name
 
 
 class Grant(models.Model):
-    wbs = models.ForeignKey('WBS', related_name='grants')
     name = models.CharField(max_length=25)
+    funds = models.ManyToManyField('Fund', related_name='grants')
 
     def __unicode__(self):
         return self.name
 
 
 class Fund(models.Model):
-    grant = models.ForeignKey('Grant', related_name='funds')
     name = models.CharField(max_length=25)
 
     def __unicode__(self):
