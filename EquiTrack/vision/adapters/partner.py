@@ -50,6 +50,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         'rating': 'RISK_RATING_NAME',
         'type_of_assessment': "TYPE_OF_ASSESSMENT",
         'address': "STREET_ADDRESS",
+        'city': "VENDOR_CITY",
+        'country': "VENDOR_CTRY_NAME",
         'phone_number': 'PHONE_NUMBER',
         'email': "EMAIL",
         'deleted_flag': "DELETED_FLAG",
@@ -177,13 +179,15 @@ class PartnerSynchronizer(VisionDataSynchronizer):
 
                 if new or _changed_fields(['name', 'cso_type', 'rating', 'type_of_assessment',
                                                 'address', 'phone_number', 'email', 'deleted_flag',
-                                                'last_assessment_date', 'core_values_assessment_date'],
+                                                'last_assessment_date', 'core_values_assessment_date', 'city', 'country'],
                                                partner_org, partner):
                     partner_org.name = partner["VENDOR_NAME"]
                     partner_org.cso_type = partner["CSO_TYPE_NAME"]
                     partner_org.rating = partner["RISK_RATING_NAME"]
                     partner_org.type_of_assessment = partner["TYPE_OF_ASSESSMENT"]
                     partner_org.address = partner["STREET_ADDRESS"]
+                    partner_org.city = partner["VENDOR_CITY"]
+                    partner_org.country = partner["VENDOR_CTRY_NAME"]
                     partner_org.phone_number = partner["PHONE_NUMBER"]
                     partner_org.email = partner["EMAIL"]
                     partner_org.core_values_assessment_date = wcf_json_date_as_datetime(partner["CORE_VALUE_ASSESSMENT_DT"])
