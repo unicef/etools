@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from t2f.vision import InvoiceUpdater
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -34,10 +36,10 @@ class InvoiceMaking(APITenantTestCase):
         root = ET.Element('ta_invoice_acks')
         for invoice in Invoice.objects.filter(status=Invoice.PROCESSING):
             main = ET.SubElement(root, 'ta_invoice_ack')
-            ET.SubElement(main, 'invoice_reference').text = invoice.reference_number
-            ET.SubElement(main, 'status').text = 'success'
-            ET.SubElement(main, 'message').text = 'explanation'
-            ET.SubElement(main, 'vision_fi_doc').text = 'vision_fi'
+            ET.SubElement(main, InvoiceUpdater.REFERENCE_NUMBER_FIELD).text = invoice.reference_number
+            ET.SubElement(main, InvoiceUpdater.STATUS_FIELD).text = 'success'
+            ET.SubElement(main, InvoiceUpdater.MESSAGE_FIELD).text = 'explanation'
+            ET.SubElement(main, InvoiceUpdater.VISON_REFERENCE_NUMBER_FIELD).text = 'vision_fi'
 
         return ET.tostring(root)
 
