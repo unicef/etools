@@ -12,12 +12,12 @@ from reports.models import Result
 from partners.models import (
     GovernmentIntervention, PartnerType,
     GovernmentInterventionResult, GovernmentInterventionResultActivity,
-    FundingCommitment)
+    FundsCommitmentItem)
 
 
-class FundingCommitmentListSerializer(serializers.ModelSerializer):
+class FundsCommitmentItemListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = FundingCommitment
+        model = FundsCommitmentItem
         fields = '__all__'
 
 
@@ -137,11 +137,11 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         # Grab all Result objects which result type is Output and has a link to governmentinterventionresult
         cp_output_results = Result.objects.filter(result_type__name="Output", governmentinterventionresult=obj.results.all())
 
-        # Query FundingCommitment objects with above Result wbs list
-        target_funding_commitments = list(FundingCommitment.objects.filter(wbs__in=cp_output_results.values_list('wbs', flat=True)))
+        # Query FundsCommitmentItem objects with above Result wbs list
+        target_funding_commitments = list(FundsCommitmentItem.objects.filter(wbs__in=cp_output_results.values_list('wbs', flat=True)))
 
-        # Create a dictionary where each key is Result object's name and each value is a list of serialized FundingCommitment objects
-        implementation_details = {result.name: FundingCommitmentListSerializer(map(lambda item: item.wbs == result.wbs, target_funding_commitments), many=True).data for result in cp_output_results}
+        # Create a dictionary where each key is Result object's name and each value is a list of serialized FundsCommitmentItem objects
+        implementation_details = {result.name: FundsCommitmentItemListSerializer(map(lambda item: item.wbs == result.wbs, target_funding_commitments), many=True).data for result in cp_output_results}
 
         return implementation_details
 
