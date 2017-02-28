@@ -4,7 +4,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from .views.v1 import PcaPDFView
 from .views.partner_organization_v2 import (
     PartnerOrganizationListAPIView, PartnerOrganizationDetailAPIView, PartnerStaffMemberListAPIVIew,
-    PartnerOrganizationHactAPIView, PartnerOrganizationAssessmentDeleteView
+    PartnerOrganizationHactAPIView, PartnerOrganizationAssessmentDeleteView,
 )
 from .views.agreements_v2 import (
     AgreementListAPIView,

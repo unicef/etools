@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from rest_framework import serializers
 
-from t2f.serializers import InvoiceSerializer
+from t2f.serializers.invoices import InvoiceSerializer
 from t2f.serializers.filters import SortFilterSerializer
 
 

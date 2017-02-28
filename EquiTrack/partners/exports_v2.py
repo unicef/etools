@@ -6,7 +6,7 @@ class PartnerOrganizationCsvRenderer(r.CSVRenderer):
               'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
               'phone_number', 'email_address', 'risk_rating', 'date_last_assessment_against_core_values',
               'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'marked_for_deletion', 'blocked',
-              'type_of_assessment', 'date_assessed', 'assessments', 'staff_members']
+              'type_of_assessment', 'date_assessed', 'assessments', 'staff_members', 'url',]
 
     labels = {
         'vendor_number': 'Vendor Number',
@@ -28,7 +28,7 @@ class PartnerOrganizationCsvRenderer(r.CSVRenderer):
         'date_assessed': 'Date Assessed',
         'assessments': 'Assessment Type (Date Assessed)',
         'staff_members': 'Staff Members',
-
+        'url': 'URL',
     }
 
 
@@ -45,7 +45,8 @@ class AgreementCvsRenderer(r.CSVRenderer):
         "signed_by_name",
         "signed_by_unicef_date",
         "staff_members",
-        "amendments"
+        "amendments",
+        "url",
     ]
 
     labels = {
@@ -60,7 +61,8 @@ class AgreementCvsRenderer(r.CSVRenderer):
         "signed_by_name": 'Signed By UNICEF',
         "signed_by_unicef_date": 'Signed By UNICEF Date',
         "staff_members": 'Partner Authorized Officer',
-        "amendments": 'Amendments'
+        "amendments": 'Amendments',
+        "url": "URL",
     }
 
 class InterventionCvsRenderer(r.CSVRenderer):
@@ -71,7 +73,7 @@ class InterventionCvsRenderer(r.CSVRenderer):
             "planned_budget_local", "cso_contribution",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
             "submission_date_prc", "review_date_prc", "partner_authorized_officer_signatory", "signed_by_partner_date",
-            "unicef_signatory", "signed_by_unicef_date", "supply_plans", "distribution_plans",
+            "unicef_signatory", "signed_by_unicef_date", "supply_plans", "distribution_plans", "url",
     ]
 
     labels = {
@@ -109,6 +111,7 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "signed_by_unicef_date": "Signed by UNICEF Date",
         "supply_plans": "Supply Plan",
         "distribution_plans": "Distribution Plan",
+        "url": "URL",
     }
 
 

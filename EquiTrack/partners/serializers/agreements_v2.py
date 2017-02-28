@@ -100,6 +100,7 @@ class AgreementExportSerializer(serializers.ModelSerializer):
     partner_manager_name = serializers.CharField(source='partner_manager.get_full_name')
     signed_by_name = serializers.CharField(source='signed_by.get_full_name')
     amendments = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = Agreement
@@ -115,14 +116,18 @@ class AgreementExportSerializer(serializers.ModelSerializer):
             "signed_by_name",
             "signed_by_unicef_date",
             "staff_members",
-            "amendments"
+            "amendments",
+            "url",
         )
 
     def get_staff_members(self, obj):
         return ', '.join([sm.get_full_name() for sm in obj.authorized_officers.all()])
 
     def get_amendments(self, obj):
-        return ', '.join(['{} ({}/{})'.format(am.number, am.signed_date, am.type) for am in obj.amendments.all()])
+        return ', '.join(['{} ({})'.format(am.number, am.signed_date) for am in obj.amendments.all()])
+
+    def get_url(self, obj):
+        return 'https://{}/pmp/agreements/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
 
 class AgreementRetrieveSerializer(serializers.ModelSerializer):

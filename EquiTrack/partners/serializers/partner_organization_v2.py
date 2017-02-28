@@ -13,6 +13,8 @@ from partners.serializers.v1 import (
     PartnerStaffMemberEmbedSerializer,
     InterventionSerializer,
 )
+from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
+from partners.serializers.government import GovernmentInterventionSummaryListSerializer
 from locations.models import Location
 
 from .v1 import PartnerStaffMemberSerializer
@@ -28,6 +30,7 @@ from partners.models import (
     InterventionPlannedVisits,
     Intervention,
     InterventionAmendment,
+    GovernmentIntervention,
     PartnerOrganization,
     PartnerType,
     Agreement,
@@ -94,7 +97,7 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
 
 
 class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
-
+    email = serializers.EmailField(required=True)
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
@@ -103,6 +106,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
+
 
         try:
             existing_user = User.objects.get(email=email)
@@ -151,6 +155,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
     actual_cash_transfer_for_current_year = serializers.CharField(source='total_ct_cy')
     marked_for_deletion = serializers.CharField(source='deleted_flag')
     date_assessed = serializers.CharField(source='last_assessment_date')
+    url = serializers.SerializerMethodField()
 
 
     class Meta:
@@ -162,7 +167,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
                   'short_name', 'alternate_name', 'partner_type', 'shared_with', 'address',
                   'email_address', 'phone_number', 'risk_rating', 'type_of_assessment', 'date_assessed',
                   'actual_cash_transfer_for_cp', 'actual_cash_transfer_for_current_year', 'staff_members',
-                  'date_last_assessment_against_core_values', 'assessments', )
+                  'date_last_assessment_against_core_values', 'assessments', 'url',)
 
     def get_staff_members(self, obj):
         return ', '.join([sm.get_full_name() for sm in obj.staff_members.filter(active=True).all()])
@@ -170,6 +175,8 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
     def get_assessments(self, obj):
         return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])
 
+    def get_url(self, obj):
+        return 'https://{}/pmp/partners/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
@@ -201,6 +208,7 @@ class PartnerOrganizationListSerializer(serializers.ModelSerializer):
             "phone_number",
             "total_ct_cp",
             "total_ct_cy",
+            "hidden"
         )
 
 
@@ -210,9 +218,25 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     assessments = AssessmentDetailSerializer(many=True, read_only=True)
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
+    interventions = serializers.SerializerMethodField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+
+    def get_interventions(self, obj):
+        if obj.partner_type != PartnerType.GOVERNMENT:
+            interventions = Intervention.objects \
+                .filter(agreement__partner=obj) \
+                .exclude(status='draft')
+
+            interventions = InterventionSummaryListSerializer(interventions, many=True)
+
+        else:
+            interventions = GovernmentIntervention.objects.filter(partner=obj)
+
+            interventions = GovernmentInterventionSummaryListSerializer(interventions, many=True)
+
+        return interventions.data
 
     class Meta:
         model = PartnerOrganization
