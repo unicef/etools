@@ -8,11 +8,12 @@ from rest_framework.serializers import ValidationError
 from EquiTrack.serializers import JsonFieldSerializer
 
 from reports.models import Result
+from funds.models import FundsCommitmentItem
 
 from partners.models import (
     GovernmentIntervention, PartnerType,
     GovernmentInterventionResult, GovernmentInterventionResultActivity,
-    FundsCommitmentItem)
+    )
 
 
 class FundsCommitmentItemListSerializer(serializers.ModelSerializer):
@@ -135,13 +136,13 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     def get_implementation_details(self, obj):
         # Grab all Result objects which result type is Output and has a link to governmentinterventionresult
-        cp_output_results = Result.objects.filter(result_type__name="Output", governmentinterventionresult=obj.results.all())
+        cp_output_results = Result.objects.filter(result_type__name="Output", governmentinterventionresult__in=obj.results.all())
 
         # Query FundsCommitmentItem objects with above Result wbs list
         target_funding_commitments = list(FundsCommitmentItem.objects.filter(wbs__in=cp_output_results.values_list('wbs', flat=True)))
 
         # Create a dictionary where each key is Result object's name and each value is a list of serialized FundsCommitmentItem objects
-        implementation_details = {result.name: FundsCommitmentItemListSerializer(map(lambda item: item.wbs == result.wbs, target_funding_commitments), many=True).data for result in cp_output_results}
+        implementation_details = {result.name: FundsCommitmentItemListSerializer(filter(lambda item: item.wbs == result.wbs, target_funding_commitments), many=True).data for result in cp_output_results}
 
         return implementation_details
 
