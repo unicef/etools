@@ -8,7 +8,9 @@ class DSASerializer(serializers.Serializer):
     end_date = serializers.DateTimeField(format=ISO_8601)
     daily_rate = serializers.DecimalField(max_digits=20, decimal_places=4)
     night_count = serializers.IntegerField()
-    amount = serializers.DecimalField(max_digits=20, decimal_places=4)
+    total_amount = serializers.DecimalField(max_digits=20, decimal_places=4)
+    paid_to_traveler = serializers.DecimalField(max_digits=20, decimal_places=4)
+    deduction = serializers.DecimalField(max_digits=20, decimal_places=4)
     dsa_region = serializers.IntegerField()
     dsa_region_name = serializers.CharField()
 

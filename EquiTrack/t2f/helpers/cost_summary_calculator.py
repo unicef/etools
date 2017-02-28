@@ -150,12 +150,16 @@ class DSACalculator(object):
                                 'dsa_region_name': dto.region.label,
                                 'night_count': -1, # -1 because nights are always days-1
                                 'daily_rate': self.get_dsa_amount(dto.region, over_60),
-                                'amount': Decimal(0)}
+                                'paid_to_traveler': Decimal(0),
+                                'total_amount': Decimal(0),
+                                'deduction': Decimal(0)}
                 previous_region = dto.region
 
             current_data['end_date'] = dto.date
             current_data['night_count'] += 1
-            current_data['amount'] += dto.final_amount
+            current_data['paid_to_traveler'] += dto.final_amount
+            current_data['total_amount'] += dto.dsa_amount
+            current_data['deduction'] += dto.deduction
 
         if current_data:
             detailed_dsa.append(current_data)
