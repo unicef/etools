@@ -3,18 +3,22 @@ from __future__ import unicode_literals
 from rest_framework import serializers
 
 from t2f.models import Travel
-from t2f.serializers import TravelListSerializer
+from t2f.serializers.travel import TravelListSerializer
 
 
 class TravelListExportSerializer(TravelListSerializer):
     traveler = serializers.CharField(source='traveler.get_full_name')
     section = serializers.CharField(source='section.name')
     office = serializers.CharField(source='office.name')
+    ta_reference_number = serializers.CharField(source='reference_number')
+    approval_date = serializers.DateTimeField(source='approved_at')
+    attachment_count = serializers.IntegerField(source='attachments.count')
 
     class Meta:
         model = Travel
-        fields = ('id', 'reference_number', 'traveler', 'purpose', 'status', 'section', 'office', 'start_date',
-                  'end_date')
+        fields = ('id', 'reference_number', 'traveler', 'purpose', 'start_date', 'end_date', 'status', 'created',
+                  'section', 'office', 'supervisor', 'ta_required', 'ta_reference_number', 'approval_date', 'is_driver',
+                  'attachment_count')
 
 
 class FinanceExportSerializer(serializers.Serializer):
@@ -74,11 +78,11 @@ class InvoiceExportSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=20, decimal_places=10)
     status = serializers.CharField(source='invoice.status')
     message = serializers.CharField(source='invoice.message')
-    vision_fi_id = serializers.CharField(source='invoice.vision_fi_id')
+    vision_fi_doc = serializers.CharField(source='invoice.vision_fi_id')
     wbs = serializers.CharField(source='wbs.name')
     grant = serializers.CharField(source='grant.name')
     fund = serializers.CharField(source='fund.name')
 
     class Meta:
         fields = ('reference_number', 'ta_number', 'vendor_number', 'currency', 'amount', 'status', 'message',
-                  'vision_fi_id', 'wbs', 'grant', 'fund')
+                  'vision_fi_doc', 'wbs', 'grant', 'fund')
