@@ -1,16 +1,19 @@
 from __future__ import print_function
 from string import translate
 import json
+import logging
+import time
+
 from django.db import connection
 from django.db.models import Count
-import time
 from datetime import datetime, timedelta
+
 from users.models import Country
 from reports.models import ResultType, Result, CountryProgramme, Indicator, ResultStructure, LowerResult
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
     InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
-    InterventionSectorLocationLink, SupplyPlan, DistributionPlan
+    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement
 
 def printtf(*args):
     print([arg for arg in args])
@@ -357,10 +360,10 @@ def dissasociate_result_structures(country_name):
 
 
 def all_countries_do(function, name):
+    printtf("CALLING {} for all countries".format(name))
     for cntry in Country.objects.order_by('name').all():
         if cntry.name in ['Global']:
             continue
-        printtf("CALLING {} for all countries".format(name))
         function(cntry.name)
 
 
@@ -392,22 +395,6 @@ def after_code_merge(): #and after migrations
     all_countries_do(dissasociate_result_structures, 'Dissasociate Result Structure')
 
     print("don't forget to sync")
-
-def migrate_authorized_officers():
-    """
-    Migrates AuthorizedOfficer from schema  , cntryinstances back to the Agreement as a M2M field
-    to PartnerStaffMember
-    """
-    for cntry in Country.objects.order_by('name').exclude(name='Global'):
-        set_country(cntry.name)
-        authorized_officers = AuthorizedOfficer.objects.all()
-        for item in authorized_officers:
-            agreement = item.agreement
-            officer = item.officer
-            agreement.authorized_officers.add(officer)
-            agreement.save()
-
-from partners.models import Agreement
 
 
 def populate_reference_numbers():
@@ -799,20 +786,41 @@ def local_country_keep():
     Country.objects.exclude(name__in=keeping).all().delete()
 
 
+def migrate_authorized_officers(country_name):
+    """
+    Migrates AuthorizedOfficer from schema  , cntryinstances back to the Agreement as a M2M field
+    to PartnerStaffMember
+    """
+    if not country_name:
+        logging.info("country name required")
+    set_country(country_name)
+    logging.info("Migrating authorized officers for {}".format(country_name))
+    authorized_officers = AuthorizedOfficer.objects.all()
+    for item in authorized_officers:
+        agreement = item.agreement
+        officer = item.officer
+        agreement.authorized_officers.add(officer)
+        agreement.save()
 
 
 def after_partner_migration():
+
     copy_pca_fields_to_intervention()
     agreement_amendments_copy()
     copy_pca_results_to_intervention()
     copy_pca_attachments_to_intervention()
+    #
+    # # copy_pca_amendments_to_intervention() # this needs to be manual since we can't map type of amendment
+    # copy_pca_budgets_to_intervention()
+    # copy_pca_sector_locations_to_intervention()
+    # copy_pca_supply_plan_to_intervention()
+    # copy_pca_distribution_plan_to_intervention()
 
-    # copy_pca_amendments_to_intervention() # this needs to be manual since we can't map type of amendment
-    copy_pca_budgets_to_intervention()
-    copy_pca_sector_locations_to_intervention()
-    copy_pca_supply_plan_to_intervention()
-    copy_pca_distribution_plan_to_intervention()
+
     # TODO:
     # all_countries_do(pca_intervention_fr_numbers)
     # planned_visits
+
+def release_3_migrations():
+    all_countries_do(migrate_authorized_officers, 'migrate authorized officers')
 

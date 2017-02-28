@@ -1,19 +1,14 @@
 from __future__ import unicode_literals
 
 from datetime import datetime, date
-from decimal import Decimal
-from unittest.case import skip
 
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CountryFactory
-from t2f.helpers import CostSummaryCalculator
 from t2f.helpers.cost_summary_calculator import DSACalculator
-from t2f.models import Expense
-from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory, \
-    ExpenseTypeFactory, CurrencyFactory
+from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory
 
 
 class TestDSACalculations(APITenantTestCase):
@@ -87,8 +82,9 @@ class TestDSACalculations(APITenantTestCase):
         calculator = DSACalculator(self.travel)
         calculator.calculate_dsa()
 
-        self.assertEqual(calculator.total_dsa, 60)
+        self.assertEqual(calculator.total_dsa, 80)
         self.assertEqual(calculator.total_deductions, 20)
+        self.assertEqual(calculator.paid_to_traveler, 60)
 
     def test_case_2(self):
         IteneraryItemFactory(travel=self.travel,
@@ -128,8 +124,9 @@ class TestDSACalculations(APITenantTestCase):
         calculator = DSACalculator(self.travel)
         calculator.calculate_dsa()
 
-        self.assertEqual(calculator.total_dsa, 700)
+        self.assertEqual(calculator.total_dsa, 1160)
         self.assertEqual(calculator.total_deductions, 460)
+        self.assertEqual(calculator.paid_to_traveler, 700)
 
     def test_case_3(self):
         IteneraryItemFactory(travel=self.travel,
@@ -158,8 +155,9 @@ class TestDSACalculations(APITenantTestCase):
         calculator = DSACalculator(self.travel)
         calculator.calculate_dsa()
 
-        self.assertEqual(calculator.total_dsa, 495)
+        self.assertEqual(calculator.total_dsa, 520)
         self.assertEqual(calculator.total_deductions, 25)
+        self.assertEqual(calculator.paid_to_traveler, 495)
 
     def test_case_4(self):
         IteneraryItemFactory(travel=self.travel,
@@ -201,8 +199,9 @@ class TestDSACalculations(APITenantTestCase):
         calculator = DSACalculator(self.travel)
         calculator.calculate_dsa()
 
-        self.assertEqual(calculator.total_dsa, 12615)
+        self.assertEqual(calculator.total_dsa, 12708)
         self.assertEqual(calculator.total_deductions, 93)
+        self.assertEqual(calculator.paid_to_traveler, 12615)
 
     def test_case_5(self):
         IteneraryItemFactory(travel=self.travel,
@@ -228,5 +227,6 @@ class TestDSACalculations(APITenantTestCase):
         calculator = DSACalculator(self.travel)
         calculator.calculate_dsa()
 
-        self.assertEqual(calculator.total_dsa, 460)
+        self.assertEqual(calculator.total_dsa, 480)
         self.assertEqual(calculator.total_deductions, 20)
+        self.assertEqual(calculator.paid_to_traveler, 460)

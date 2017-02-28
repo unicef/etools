@@ -4,6 +4,9 @@ from collections import defaultdict
 from copy import deepcopy
 from decimal import Decimal
 
+from django.core.exceptions import ObjectDoesNotExist
+from django.utils.functional import cached_property
+
 from publics.models import WBS, Grant, Fund, TravelExpenseType
 
 
@@ -11,6 +14,12 @@ class InvoiceMaker(object):
     def __init__(self, travel):
         self.travel = travel
         self.user_vendor_number = self.travel.traveler.profile.vendor_number
+
+    @cached_property
+    def invoice_queryset(self):
+        from t2f.models import Invoice
+        return self.travel.invoices.filter(status=Invoice.SUCCESS)
+
 
     def do_invoicing(self):
         """Main entry point of the class"""
@@ -35,7 +44,7 @@ class InvoiceMaker(object):
 
         vendor_grouping = defaultdict(lambda: defaultdict(Decimal))
 
-        for invoice in self.travel.invoices.filter(status=Invoice.SUCCESS):
+        for invoice in self.invoice_queryset:
             for item in invoice.items.all():
                 key = (item.wbs.id, item.grant.id, item.fund.id)
                 vendor_grouping[invoice.vendor_number][key] += item.amount
@@ -92,6 +101,13 @@ class InvoiceMaker(object):
 
         return vendor_grouping
 
+    @cached_property
+    def invoice_currencies(self):
+        vendor_currency_mapping = {}
+        for invoice in self.invoice_queryset:
+            vendor_currency_mapping[invoice.vendor_number] = invoice.currency
+        return vendor_currency_mapping
+
     def make_invoices(self, vendor_grouping):
         """
         Based on the diff calculated before, makes the models for the newly created invoices.
@@ -108,8 +124,12 @@ class InvoiceMaker(object):
             if vendor_number == self.user_vendor_number:
                 currency = self.travel.currency
             else:
-                expense = self.travel.expenses.get(type__vendor_number=vendor_number)
-                currency = expense.document_currency
+                try:
+                    expense = self.travel.expenses.get(type__vendor_number=vendor_number)
+                    currency = expense.document_currency
+                except ObjectDoesNotExist:
+                    # In case an expense type got deleted, the currency have to be looked up from the existing invoi
+                    currency = self.invoice_currencies[vendor_number]
 
             invoice_kwargs = {'travel': self.travel,
                               'business_area': self.travel.traveler.profile.country.business_area_code,
