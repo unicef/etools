@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.conf import settings
 from django.conf.urls import patterns, include, url
+from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import REDIRECT_FIELD_NAME
 
@@ -101,6 +102,7 @@ actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='act
 # api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
 
 
+
 # ******************  API version 1  ******************************
 api.register(r'partners/file-types', FileTypeViewSet, base_name='filetypes')
 
@@ -133,6 +135,8 @@ urlpatterns = patterns(
     # Used for admin and dashboard pages in django
     url(r'^$', staff_required(UserDashboardView.as_view()), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
+    url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
+        name='workspace-inactive'),
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
@@ -155,25 +159,6 @@ urlpatterns = patterns(
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
-
-    # ***************  API version 1 - not used ****************
-    # url(r'^api/', include(agreement_api.urls)),
-    # url(r'^api/', include(simple_agreements_api.urls)),
-    # url(r'^api/', include(interventions_api.urls)),
-    # url(r'^api/', include(simple_results_api.urls)),
-    # url(r'^api/', include(results_api.urls)),
-    # url(r'^api/', include(pcasectors_api.urls)),
-    # url(r'^api/', include(pcabudgets_api.urls)),
-    # url(r'^api/', include(pcafiles_api.urls)),
-    # url(r'^api/', include(pcagrants_api.urls)),
-    # url(r'^api/', include(pcaamendments_api.urls)),
-    # url(r'^api/', include(pcalocations_api.urls)),
-    # url(r'^api/', include(intervention_reports_api.urls)),
-    # url(r'^api/', include(simple_interventions_api.urls)),
-    # url(r'^api/', include(bulk_reports_api.urls)),
-    # url(r'^management/', include('management.urls')),
-    # url(r'^partners/', include('partners.urls')),
-    # url(r'^api/', include(partners_api.urls)),
 
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
