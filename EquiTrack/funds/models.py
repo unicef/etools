@@ -92,7 +92,7 @@ class FundsReservationItem(models.Model):
 
 class FundsCommitmentHeader(models.Model):
     vendor_code = models.CharField(max_length=20)
-    fc_number = models.CharField(max_length=20)
+    fc_number = models.CharField(max_length=20, unique=True)
     document_date = models.DateField(null=True, blank=True)
     fc_type = models.CharField(max_length=50, null=True, blank=True)
     currency = models.CharField(max_length=50, null=True, blank=True)

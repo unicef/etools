@@ -11,8 +11,9 @@ from rest_framework import status
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
+from publics.tests.factories import WBSFactory
 from t2f.models import ModeOfTravel, make_travel_reference_number, Travel, TravelType
-from t2f.tests.factories import CurrencyFactory, FundFactory, TravelActivityFactory
+from t2f.tests.factories import CurrencyFactory, TravelActivityFactory
 
 from .factories import TravelFactory
 
@@ -196,9 +197,9 @@ class TravelList(APITenantTestCase):
     def test_travel_creation(self):
         dsaregion = DSARegion.objects.first()
         currency = CurrencyFactory()
-        fund = FundFactory()
-        grant = fund.grant
-        wbs = grant.wbs
+        wbs = WBSFactory()
+        grant = wbs.grants.first()
+        fund = grant.funds.first()
         location = LocationFactory()
 
         data = {'0': {},

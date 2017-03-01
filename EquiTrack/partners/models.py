@@ -714,7 +714,7 @@ class PartnerStaffMember(models.Model):
 
     partner = models.ForeignKey(
         PartnerOrganization, related_name='staff_members')
-    title = models.CharField(max_length=64L)
+    title = models.CharField(max_length=64L, null=True, blank=True)
     first_name = models.CharField(max_length=64L)
     last_name = models.CharField(max_length=64L)
     email = models.CharField(max_length=128L, unique=True, blank=False)

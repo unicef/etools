@@ -13,8 +13,9 @@ from rest_framework.exceptions import ValidationError
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.parsers import parse_multipart_data
 
+
 def check_rigid_fields(obj, fields, old_instance=None):
-    if not old_instance and not obj.old_instance:
+    if not old_instance and not getattr(obj, 'old_instance', None):
         return False, None
     for field in fields:
         old_instance = old_instance or obj.old_instance
