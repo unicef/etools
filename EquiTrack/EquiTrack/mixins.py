@@ -94,6 +94,10 @@ class EToolsTenantMiddleware(TenantMiddleware):
         if not request.user:
             return
 
+        if any(x in request.path for x in [
+                u'workspace_inactive']):
+            return None
+
         if request.user.is_anonymous():
             # check if user is trying to reach an authentication endpoint
             if any(x in request.path for x in [
@@ -109,6 +113,10 @@ class EToolsTenantMiddleware(TenantMiddleware):
         if request.user.is_superuser and not request.user.profile.country:
             return None
 
+        if not request.user.is_superuser and \
+                (not request.user.profile.country or
+                 request.user.profile.country.business_area_code in settings.INACTIVE_BUSINESS_AREAS):
+            return HttpResponseRedirect("/workspace_inactive/")
         try:
             set_country(request.user, request)
 

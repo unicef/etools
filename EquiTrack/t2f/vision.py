@@ -14,6 +14,7 @@ from django.db import connection
 from django.db.models.query_utils import Q
 from django.template.context import Context
 from django.template.loader import render_to_string
+from django.utils.datastructures import MultiValueDict
 
 from t2f.models import Invoice
 from users.models import Country as Workspace
@@ -51,7 +52,7 @@ def run_on_tenants(func):
 
 class InvoiceExport(object):
     def generate_xml(self):
-        root = ET.Element('invoices')
+        root = ET.Element('ta_invoices')
         self.generate_invoices(root)
         return self.generate_tree(root)
 
@@ -63,7 +64,7 @@ class InvoiceExport(object):
         invoices_qs.update(status=Invoice.PROCESSING)
 
     def generate_invoice_node(self, root, invoice):
-        main = ET.SubElement(root, 'invoice')
+        main = ET.SubElement(root, 'ta_invoice')
         self.generate_header_node(main, invoice)
         self.generate_vendor_node(main, invoice)
         self.generate_expense_nodes(main, invoice)
@@ -108,6 +109,11 @@ class InvoiceExport(object):
 
 
 class InvoiceUpdater(object):
+    REFERENCE_NUMBER_FIELD = 'reference_number'
+    VISON_REFERENCE_NUMBER_FIELD = 'vision_invoice_number'
+    STATUS_FIELD = 'status'
+    MESSAGE_FIELD = 'message'
+
     def __init__(self, xml_data):
         self.root = ET.fromstring(xml_data)
 
@@ -123,16 +129,16 @@ class InvoiceUpdater(object):
                 continue
 
             # Parsing the incoming data and making error messages if needed
-            required_tags = {'invoice_reference', 'status'}
-            optional_tags = {'message', 'vision_fi_doc'}
+            required_tags = {self.REFERENCE_NUMBER_FIELD, self.STATUS_FIELD}
+            optional_tags = {self.MESSAGE_FIELD, self.VISON_REFERENCE_NUMBER_FIELD}
             extra_elements = set()
-            data_dict = {}
+            data_dict = MultiValueDict()
             for sub_element in element:
                 if sub_element.tag in required_tags:
                     required_tags.remove(sub_element.tag)
-                    data_dict[sub_element.tag] = sub_element.text
+                    data_dict.appendlist(sub_element.tag, sub_element.text)
                 elif sub_element.tag in optional_tags:
-                    data_dict[sub_element.tag] = sub_element.text
+                    data_dict.appendlist(sub_element.tag, sub_element.text)
                 else:
                     extra_elements.add(sub_element.tag)
 
@@ -143,9 +149,13 @@ class InvoiceUpdater(object):
                 errors.append('Extra elements found: {}'.format(', '.join(extra_elements)))
 
             if data_dict['status'] not in possible_statuses:
-                errors.append('Invalid invoice status: {}'.format(data_dict['status']))
+                errors.append('Invalid invoice status: {}'.format(data_dict[self.STATUS_FIELD]))
 
-            business_area_code, _ = data_dict['invoice_reference'].split('/', 1)
+            if errors:
+                # To avoid key error just go on here
+                continue
+
+            business_area_code, _ = data_dict[self.REFERENCE_NUMBER_FIELD].split('/', 1)
             invoice_grouping[business_area_code].append(data_dict)
 
         if errors:
@@ -161,7 +171,7 @@ class InvoiceUpdater(object):
     def _update_invoices_in_tenants(self, workspace, invoice_grouping):
         workspace_group = invoice_grouping.pop(workspace.business_area_code, [])
         for invoice_data in workspace_group:
-            invoice_number = invoice_data['invoice_reference']
+            invoice_number = invoice_data[self.REFERENCE_NUMBER_FIELD]
             try:
                 invoice = Invoice.objects.get(reference_number=invoice_number)
             except ObjectDoesNotExist:
@@ -169,9 +179,9 @@ class InvoiceUpdater(object):
                 log.error('Cannot find invoice with reference number %s', invoice_number)
                 continue
 
-            invoice.status = invoice_data['status']
-            invoice.message = invoice_data['message']
-            invoice.vision_fi_id = invoice_data['vision_fi_doc']
+            invoice.status = invoice_data[self.STATUS_FIELD]
+            invoice.messages = invoice_data.getlist(self.MESSAGE_FIELD)
+            invoice.vision_fi_id = invoice_data[self.VISON_REFERENCE_NUMBER_FIELD]
             invoice.save()
 
             if invoice.status == Invoice.ERROR:
