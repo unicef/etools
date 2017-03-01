@@ -1,19 +1,19 @@
 from __future__ import unicode_literals
 
-from unittest import skip
+from datetime import datetime
 import json
-from StringIO import StringIO
 from freezegun import freeze_time
+from StringIO import StringIO
+from unittest import skip
 
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
-from publics.tests.factories import BusinessAreaFactory
+from publics.tests.factories import BusinessAreaFactory, WBSFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
-    DSARegionFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, DSARegionFactory
 
 from .factories import TravelFactory
 
@@ -252,9 +252,9 @@ class TravelDetails(APITenantTestCase):
                           {'amount': '1000.00', 'vendor_number': ''}])
 
     def test_cost_assignments(self):
-        fund = FundFactory()
-        grant = fund.grant
-        wbs = grant.wbs
+        wbs = WBSFactory()
+        grant = wbs.grants.first()
+        fund = grant.funds.first()
         business_area = BusinessAreaFactory()
 
         data = {'cost_assignments': [{'wbs': wbs.id,
@@ -533,3 +533,28 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201, response.rendered_content)
+
+    def test_travel_count_at_approval(self):
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      status=Travel.SENT_FOR_PAYMENT)
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      status=Travel.SENT_FOR_PAYMENT)
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      status=Travel.SENT_FOR_PAYMENT)
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      status=Travel.SENT_FOR_PAYMENT)
+
+        extra_travel = TravelFactory(traveler=self.traveler,
+                                     supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': extra_travel.id,
+                                                                'transition_name': 'submit_for_approval'}),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response_json, {'non_field_errors': ['Maximum 4 open travels are allowed.']})

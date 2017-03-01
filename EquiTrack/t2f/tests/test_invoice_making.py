@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from t2f.vision import InvoiceUpdater
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -10,7 +12,7 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
-from t2f.helpers import InvoiceMaker
+from t2f.helpers.invoice_maker import InvoiceMaker
 
 from t2f.models import Travel, Expense, CostAssignment, InvoiceItem, Invoice
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory
@@ -34,10 +36,10 @@ class InvoiceMaking(APITenantTestCase):
         root = ET.Element('ta_invoice_acks')
         for invoice in Invoice.objects.filter(status=Invoice.PROCESSING):
             main = ET.SubElement(root, 'ta_invoice_ack')
-            ET.SubElement(main, 'invoice_reference').text = invoice.reference_number
-            ET.SubElement(main, 'status').text = 'success'
-            ET.SubElement(main, 'message').text = 'explanation'
-            ET.SubElement(main, 'vision_fi_doc').text = 'vision_fi'
+            ET.SubElement(main, InvoiceUpdater.REFERENCE_NUMBER_FIELD).text = invoice.reference_number
+            ET.SubElement(main, InvoiceUpdater.STATUS_FIELD).text = 'success'
+            ET.SubElement(main, InvoiceUpdater.MESSAGE_FIELD).text = 'explanation'
+            ET.SubElement(main, InvoiceUpdater.VISON_REFERENCE_NUMBER_FIELD).text = 'vision_fi'
 
         return ET.tostring(root)
 
@@ -54,12 +56,18 @@ class InvoiceMaking(APITenantTestCase):
         wbs_1 = WBSFactory(name='WBS #1')
         wbs_2 = WBSFactory(name='WBS #2')
 
-        grant_1 = GrantFactory(name='Grant #1', wbs=wbs_1)
-        grant_2 = GrantFactory(name='Grant #2', wbs=wbs_2)
-        grant_3 = GrantFactory(name='Grant #3', wbs=wbs_2)
+        grant_1 = GrantFactory(name='Grant #1')
+        grant_2 = GrantFactory(name='Grant #2')
+        grant_3 = GrantFactory(name='Grant #3')
 
-        fund_1 = FundFactory(name='Fund #1', grant=grant_1)
-        fund_2 = FundFactory(name='Fund #4', grant=grant_3)
+        wbs_1.grants.add(grant_1)
+        wbs_2.grants.add(grant_2, grant_3)
+
+        fund_1 = FundFactory(name='Fund #1')
+        fund_2 = FundFactory(name='Fund #4')
+
+        grant_1.funds.add(fund_1)
+        grant_3.funds.add(fund_2)
 
         # Expense types
         et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)

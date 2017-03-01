@@ -196,6 +196,26 @@ class ActionPoints(APITenantTestCase):
                          [{'actions_taken': ['This field is required']}])
 
     def test_automatic_state_change(self):
+        # Check switch to ongoing
+        data = {'action_points': [{'description': 'Something',
+                                   'due_date': self.due_date,
+                                   'person_responsible': self.unicef_staff.id,
+                                   'status': 'open',
+                                   'completed_at': None,
+                                   'actions_taken': 'some actions were done',
+                                   'follow_up': True,
+                                   'comments': '',
+                                   'trip_id': self.travel.id}],
+                'ta_required': True}
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': self.travel.id}),
+                                        data=data,
+                                        user=self.unicef_staff)
+
+        action_point_json = json.loads(response.rendered_content)['action_points']
+        self.assertEqual(action_point_json[0]['status'], ActionPoint.ONGOING)
+
+        # Check switch to completed
         data = {'action_points': [{'description': 'Something',
                                    'due_date': self.due_date,
                                    'person_responsible': self.unicef_staff.id,
@@ -212,7 +232,7 @@ class ActionPoints(APITenantTestCase):
                                         user=self.unicef_staff)
 
         action_point_json = json.loads(response.rendered_content)['action_points']
-        self.assertEqual(action_point_json[0]['status'], ActionPoint.ONGOING)
+        self.assertEqual(action_point_json[0]['status'], ActionPoint.COMPLETED)
 
     def test_invalid_status(self):
         data = {'action_points': [{'description': 'Something',

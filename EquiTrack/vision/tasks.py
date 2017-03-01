@@ -33,6 +33,7 @@ SYNC_HANDLERS = [
     TravelAgenciesSyncronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
+    # CostAssignmentsSyncronizer
     #DCTSynchronizer
 ]
 

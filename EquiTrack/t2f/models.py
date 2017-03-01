@@ -1,13 +1,12 @@
 from __future__ import unicode_literals
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
 
 from django.contrib.postgres.fields.array import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
-from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
@@ -17,7 +16,9 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
 from publics.models import TravelExpenseType
-from t2f.helpers import CostSummaryCalculator, InvoiceMaker
+from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
+from t2f.helpers.invoice_maker import InvoiceMaker
+from t2f.serializers.mailing import TravelMailSerializer
 
 log = logging.getLogger(__name__)
 
@@ -204,8 +205,26 @@ class Travel(models.Model):
             raise TransitionError('Travel has no supervisor defined. Please select one.')
         return True
 
+    def check_travel_count(self):
+        from t2f.helpers.misc import get_open_travels_for_check
+        travels = get_open_travels_for_check(self.traveler)
+
+        if travels.count() >= 4:
+            raise TransitionError('Maximum 4 open travels are allowed.')
+
+        end_date_limit = datetime.utcnow() + timedelta(days=15)
+        if travels.filter(end_date__lte=end_date_limit).exists():
+            raise TransitionError('Travel is older than 15 days. Please complete it first.')
+
+        return True
+
+    def check_ta_required(self):
+        if not self.ta_required:
+            raise TransitionError('TA required to send for approval.')
+        return True
+
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED,
-                conditions=[has_supervisor, check_pending_invoices])
+                conditions=[has_supervisor, check_pending_invoices, check_ta_required, check_travel_count])
     def submit_for_approval(self):
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
@@ -324,8 +343,6 @@ class Travel(models.Model):
 
     def send_notification_email(self, subject, recipient, template_name):
         # TODO this could be async to avoid too long api calls in case of mail server issue
-        # TODO move this out from here
-        from t2f.serializers.mailing import TravelMailSerializer
         serializer = TravelMailSerializer(self, context={})
 
         url = 'https://{host}/t2f/edit-travel/{travel_id}/'.format(host=settings.HOST,
@@ -438,9 +455,9 @@ class CostAssignment(models.Model):
     share = models.PositiveIntegerField()
     delegate = models.BooleanField(default=False)
     business_area = models.ForeignKey('publics.BusinessArea', related_name='+', null=True)
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, on_delete=models.DO_NOTHING)
 
 
 class Clearances(models.Model):
@@ -557,6 +574,10 @@ class ActionPoint(models.Model):
     def save(self, *args, **kwargs):
         if self.status == ActionPoint.OPEN and self.actions_taken:
             self.status = ActionPoint.ONGOING
+
+        if self.status in [ActionPoint.OPEN, ActionPoint.ONGOING] and self.actions_taken and self.completed_at:
+            self.status = ActionPoint.COMPLETED
+
         super(ActionPoint, self).save(*args, **kwargs)
 
 
@@ -580,7 +601,7 @@ class Invoice(models.Model):
     currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
-    message = models.TextField(null=True, blank=True)
+    messages = ArrayField(models.TextField(null=True, blank=True), default=[])
     vision_fi_id = models.CharField(max_length=16, null=True, blank=True)
 
     def save(self, **kwargs):
@@ -601,12 +622,16 @@ class Invoice(models.Model):
     def normalized_amount(self):
         return abs(self.amount.normalize())
 
+    @property
+    def message(self):
+        return '\n'.join(self.messages)
+
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey('Invoice', related_name='items')
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, on_delete=models.DO_NOTHING)
     amount = models.DecimalField(max_digits=20, decimal_places=10)
 
     @property

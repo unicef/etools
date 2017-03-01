@@ -7,9 +7,9 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import BusinessAreaFactory
+from publics.tests.factories import BusinessAreaFactory, WBSFactory
 from t2f.models import Travel, Invoice
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory
 
 from .factories import TravelFactory
 
@@ -60,11 +60,9 @@ class StateMachineTest(APITenantTestCase):
         expense_type = ExpenseTypeFactory()
         business_area = BusinessAreaFactory()
 
-        fund = FundFactory()
-        grant = fund.grant
-        wbs = grant.wbs
-        wbs.business_area = business_area
-        wbs.save()
+        wbs = WBSFactory(business_area=business_area)
+        grant = wbs.grants.first()
+        fund = grant.funds.first()
 
         workspace = self.unicef_staff.profile.country
         workspace.business_area_code = business_area.code

@@ -6,7 +6,20 @@ from rest_framework import serializers
 from rest_framework.serializers import ValidationError
 
 from EquiTrack.serializers import JsonFieldSerializer
-from partners.models import GovernmentIntervention, PartnerType, GovernmentInterventionResult, GovernmentInterventionResultActivity
+
+from reports.models import Result
+from funds.models import FundsCommitmentItem
+
+from partners.models import (
+    GovernmentIntervention, PartnerType,
+    GovernmentInterventionResult, GovernmentInterventionResultActivity,
+    )
+
+
+class FundsCommitmentItemListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FundsCommitmentItem
+        fields = '__all__'
 
 
 class GovernmentInterventionResultActivityNestedSerializer(serializers.ModelSerializer):
@@ -115,10 +128,23 @@ class GovernmentInterventionListSerializer(serializers.ModelSerializer):
 
 class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
     results = GovernmentInterventionResultNestedSerializer(many=True, read_only=True, required=False)
+    implementation_status = serializers.SerializerMethodField()
 
     class Meta:
         model = GovernmentIntervention
         fields = '__all__'
+
+    def get_implementation_status(self, obj):
+        # Grab all Result objects which result type is Output and has a link to governmentinterventionresult
+        cp_output_results = Result.objects.filter(result_type__name="Output", governmentinterventionresult__in=obj.results.all())
+
+        # Query FundsCommitmentItem objects with above Result wbs list
+        target_funding_commitments = list(FundsCommitmentItem.objects.filter(wbs__in=cp_output_results.values_list('wbs', flat=True)))
+
+        # Create a dictionary where each key is Result object's name and each value is a list of serialized FundsCommitmentItem objects
+        implementation_status = [{"cp_output": result.id, 'fc_records':FundsCommitmentItemListSerializer(filter(lambda item: item.wbs == result.wbs, target_funding_commitments), many=True).data} for result in cp_output_results]
+
+        return implementation_status
 
     def validate(self, data):
         """

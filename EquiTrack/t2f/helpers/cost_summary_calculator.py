@@ -43,13 +43,14 @@ class CostSummaryCalculator(object):
         dsa_calculator = DSACalculator(self.travel)
         dsa_calculator.calculate_dsa()
 
-        result = {'dsa_total': dsa_calculator.total_dsa.quantize(Decimal('1.0000')),
+        result = {'dsa_total': dsa_calculator.total_dsa,
                   'expenses_total': total_expense,
                   'deductions_total': dsa_calculator.total_deductions.quantize(Decimal('1.0000')),
                   'dsa': dsa_calculator.detailed_dsa,
                   'preserved_expenses': self.travel.preserved_expenses,
                   'expenses_delta': expenses_delta,
-                  'expenses': expenses}
+                  'expenses': expenses,
+                  'paid_to_traveler': dsa_calculator.paid_to_traveler.quantize(Decimal('1.0000'))}
         return result
 
     def get_expenses(self):
@@ -63,14 +64,17 @@ class CostSummaryCalculator(object):
 class DSACalculator(object):
     LAST_DAY_DEDUCTION = Decimal('0.6')
     SAME_DAY_TRAVEL_MULTIPLIER = Decimal('0.4')
+    USD_CODE = 'USD'
 
     class DSAdto(object):
         def __init__(self, d, itinerary_item):
-            self.itinerary_item = itinerary_item
             self.date = d
+            self.itinerary_item = itinerary_item
             self.region = itinerary_item.dsa_region
+
             self.dsa_amount = Decimal(0)
             self.deduction_multiplier = Decimal(0)
+            self.last_day = False
 
         def __repr__(self):
             return 'Date: {} | Region: {} | DSA amount: {} | Deduction: {} => Final: {}'.format(self.date,
@@ -80,17 +84,30 @@ class DSACalculator(object):
                                                                                                 self.final_amount)
 
         @property
+        def corrected_dsa_amount(self):
+            if self.last_day:
+                return self.dsa_amount - (self.dsa_amount * DSACalculator.LAST_DAY_DEDUCTION)
+            return self.dsa_amount
+
+        @property
         def final_amount(self):
-            return self.dsa_amount - self.deduction
+            return self.dsa_amount - self.deduction - self._internal_deduction
 
         @property
         def deduction(self):
             return self.dsa_amount * self.deduction_multiplier
 
+        @property
+        def _internal_deduction(self):
+            if self.last_day:
+                return self.dsa_amount * DSACalculator.LAST_DAY_DEDUCTION
+            return Decimal(0)
+
     def __init__(self, travel):
         self.travel = travel
         self.total_dsa = None
         self.total_deductions = None
+        self.paid_to_traveler = None
         self.detailed_dsa = None
 
     def _cast_datetime(self, dt):
@@ -112,46 +129,20 @@ class DSACalculator(object):
         dsa_dto_list = self.calculate_daily_dsa_rate(dsa_dto_list)
         dsa_dto_list = self.calculate_daily_deduction(dsa_dto_list)
 
-        self.detailed_dsa = self.aggregate_detailed_dsa(dsa_dto_list)
         self.total_dsa = Decimal(0)
         self.total_deductions = Decimal(0)
+        self.paid_to_traveler = Decimal(0)
         for dto in dsa_dto_list:
-            self.total_dsa += dto.final_amount
-
-            if dto == dsa_dto_list[-1]:
-                dto.deduction_multiplier -= self.LAST_DAY_DEDUCTION
-
+            self.paid_to_traveler += dto.final_amount
+            self.total_dsa += dto.corrected_dsa_amount
             self.total_deductions += dto.deduction
+        self.detailed_dsa = self.aggregate_detailed_dsa(dsa_dto_list)
 
-    def aggregate_detailed_dsa(self, dsa_dto_list):
-        detailed_dsa = []
-        previous_region = None
-        current_data = None
-
-        for dto in dsa_dto_list:
-            if previous_region != dto.region:
-                # If there is data, put to the result list
-                if current_data:
-                    detailed_dsa.append(current_data)
-
-                # Create new data holder
-                current_data = {'start_date': dto.date,
-                                'end_date': dto.date,
-                                'dsa_region': dto.region.id,
-                                'dsa_region_name': dto.region.label,
-                                'night_count': -1, # -1 because nights are always days-1
-                                'daily_rate_usd': dto.region.dsa_amount_usd,
-                                'amount_usd': Decimal(0)}
-                previous_region = dto.region
-
-            current_data['end_date'] = dto.date
-            current_data['night_count'] += 1
-            current_data['amount_usd'] += dto.final_amount
-
-        if current_data:
-            detailed_dsa.append(current_data)
-
-        return detailed_dsa
+    def get_dsa_amount(self, dsa_region, over_60_days):
+        currency = 'usd' if self.travel.currency.code == self.USD_CODE else 'local'
+        over_60 = '60plus_' if over_60_days else ''
+        field_name = 'dsa_amount_{over_60}{currency}'.format(over_60=over_60, currency=currency)
+        return getattr(dsa_region, field_name)
 
     def get_by_day_grouping(self):
         """
@@ -182,11 +173,20 @@ class DSACalculator(object):
             tmp_date += timedelta(days=1)
 
         dsa_dto_list = []
+        counter = 1
         for date, itinerary in mapping.items():
             dto = self.DSAdto(date, itinerary)
+            over_60 = counter > 60
+            dto.daily_rate = self.get_dsa_amount(dto.region, over_60)
             dsa_dto_list.append(dto)
+            counter += 1
 
-        return sorted(dsa_dto_list, cmp=lambda x, y: cmp(x.date, y.date))
+        dsa_dto_list = sorted(dsa_dto_list, cmp=lambda x, y: cmp(x.date, y.date))
+
+        if dsa_dto_list:
+            dsa_dto_list[-1].last_day = True
+
+        return dsa_dto_list
 
     def calculate_daily_dsa_rate(self, dsa_dto_list):
         if not dsa_dto_list:
@@ -197,10 +197,8 @@ class DSACalculator(object):
         for dto in dsa_dto_list:
             departure_date = self._cast_datetime(dto.itinerary_item.departure_date).date()
             if departure_date != dto.date or not dto.itinerary_item.overnight_travel:
-                if day_counter <= 60:
-                    dto.dsa_amount += dto.region.dsa_amount_usd
-                else:
-                    dto.dsa_amount += dto.region.dsa_amount_60plus_usd
+                over_60 = day_counter > 60
+                dto.dsa_amount += self.get_dsa_amount(dto.region, over_60)
 
             # Last day does not add same day travel
             if dto != dsa_dto_list[-1]:
@@ -226,11 +224,8 @@ class DSACalculator(object):
             if (departure - arrival) < timedelta(hours=8):
                 continue
 
-            if day_counter <= 60:
-                same_day_dsa = sdt.dsa_region.dsa_amount_usd
-            else:
-                same_day_dsa = sdt.dsa_region.dsa_amount_60plus_usd
-
+            over_60 = day_counter > 60
+            same_day_dsa = self.get_dsa_amount(sdt.dsa_region, over_60)
             dto.dsa_amount += same_day_dsa * self.SAME_DAY_TRAVEL_MULTIPLIER
 
     def calculate_daily_deduction(self, dsa_dto_list):
@@ -242,9 +237,39 @@ class DSACalculator(object):
         for dto in dsa_dto_list:
             dto.deduction_multiplier = deduction_mapping.get(dto.date, Decimal(0))
 
-        # If it's the last day, 40% of dsa should go only, so apply a 60% deduction
-        last_day_dto = dsa_dto_list[-1]
-        new_deduction_multiplier = last_day_dto.deduction_multiplier + self.LAST_DAY_DEDUCTION
-        last_day_dto.deduction_multiplier = min(new_deduction_multiplier, Decimal(1))
-
         return dsa_dto_list
+
+    def aggregate_detailed_dsa(self, dsa_dto_list):
+        detailed_dsa = []
+        previous_region = None
+        current_data = None
+
+        for day_index, dto in enumerate(dsa_dto_list):
+            if previous_region != dto.region or day_index == 60:
+                # If there is data, put to the result list
+                if current_data:
+                    detailed_dsa.append(current_data)
+
+                # Create new data holder
+                over_60 = day_index >= 60   # bigger or equal (not just bigger) because index starts from zero
+                current_data = {'start_date': dto.date,
+                                'end_date': dto.date,
+                                'dsa_region': dto.region.id,
+                                'dsa_region_name': dto.region.label,
+                                'night_count': -1, # -1 because nights are always days-1
+                                'daily_rate': self.get_dsa_amount(dto.region, over_60),
+                                'paid_to_traveler': Decimal(0),
+                                'total_amount': Decimal(0),
+                                'deduction': Decimal(0)}
+                previous_region = dto.region
+
+            current_data['end_date'] = dto.date
+            current_data['night_count'] += 1
+            current_data['paid_to_traveler'] += dto.final_amount
+            current_data['total_amount'] += dto.dsa_amount
+            current_data['deduction'] += dto.deduction
+
+        if current_data:
+            detailed_dsa.append(current_data)
+
+        return detailed_dsa

@@ -26,10 +26,11 @@ from EquiTrack.factories import (
     InterventionFactory,
     GovernmentInterventionFactory,
     SectionFactory,
+    GrantFactory,
 )
 from EquiTrack.tests.mixins import APITenantTestCase
 from reports.models import ResultType, Sector, CountryProgramme
-from funds.models import Grant, Donor
+from funds.models import Grant, Donor, FundsCommitmentItem, FundsCommitmentHeader
 from supplies.models import SupplyItem
 from users.models import Section
 from partners.models import (
@@ -58,6 +59,7 @@ from partners.models import (
     InterventionAttachment,
     FileType,
     InterventionResultLink,
+    FundingCommitment,
 )
 
 
@@ -1146,6 +1148,30 @@ class TestInterventionViews(APITenantTestCase):
         )
         self.isll.locations.add(LocationFactory())
         self.isll.save()
+        self.fund_commitment_header = FundsCommitmentHeader.objects.create(
+            vendor_code="test1",
+            fc_number="3454354",
+        )
+
+        self.funding_commitment1 = FundsCommitmentItem.objects.create(
+            fund_commitment=self.fund_commitment_header,
+            line_item="1",
+            grant_number="grant 1",
+            fr_number="12345",
+            wbs="some_wbs",
+            fc_ref_number="some_fc_ref",
+            commitment_amount=200,
+        )
+
+        self.funding_commitment2 = FundsCommitmentItem.objects.create(
+            fund_commitment=self.fund_commitment_header,
+            line_item="2",
+            grant_number="grant 1",
+            fr_number="45678",
+            wbs="some_wbs",
+            fc_ref_number="some_fc_ref",
+            commitment_amount=300,
+        )
 
         # Basic data to adjust in tests
         self.intervention_data = {
@@ -1168,7 +1194,10 @@ class TestInterventionViews(APITenantTestCase):
             "partner_focal_points": [],
             "partner_authorized_officer_signatory": self.partnerstaff.id,
             "offices": [],
-            "fr_numbers": None,
+            "fr_numbers": [
+                self.funding_commitment1.fr_number,
+                self.funding_commitment2.fr_number
+            ],
             "population_focus": "Some focus",
             "planned_budget": [
                 {
@@ -1276,6 +1305,17 @@ class TestInterventionViews(APITenantTestCase):
         # Check for activity action created
         self.assertEquals(model_stream(Intervention).count(), 3)
         self.assertEquals(model_stream(Intervention)[0].verb, 'created')
+
+    def test_intervention_retrieve_fr_numbers(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/{}/'.format(self.intervention_data.get("id")),
+            user=self.unicef_staff,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["fr_numbers_details"]["12345"][0]["wbs"], "some_wbs")
+        self.assertEquals(response.data["fr_numbers_details"]["45678"][0]["wbs"], "some_wbs")
 
     def test_intervention_active_update_population_focus(self):
         self.intervention_data.update(population_focus=None)
