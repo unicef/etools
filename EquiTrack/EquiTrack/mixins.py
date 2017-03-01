@@ -170,7 +170,15 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         return user, jwt_value
 
 
-class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
+class WorksapceRemovedMixin(object):
+    def get_login_redirect_url(self, request):
+        if request.user.profile.country:
+            return settings.LOGIN_REDIRECT_URL
+        else:
+            return reverse("workspace-removed")
+
+
+class CustomSocialAccountAdapter(WorksapceRemovedMixin, DefaultSocialAccountAdapter):
 
     def pre_social_login(self, request, sociallogin):
         # TODO: make sure that the partnership is still in good standing or valid or whatever
@@ -196,7 +204,7 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
         )
 
 
-class CustomAccountAdapter(DefaultAccountAdapter):
+class CustomAccountAdapter(WorksapceRemovedMixin, DefaultAccountAdapter):
 
     def is_open_for_signup(self, request):
         # quick way of disabling signups.
