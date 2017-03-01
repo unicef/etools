@@ -28,5 +28,3 @@ class GrantSerializer(serializers.ModelSerializer):
             'name',
             'donor'
         )
-
-
