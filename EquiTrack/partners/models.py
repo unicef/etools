@@ -232,7 +232,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('IOM', 'IOM'),
         ('OHCHR', 'OHCHR'),
         ('UN', 'UN'),
-        ('Women', 'Women'),
+        ('UN Women', 'UN Women'),
         ('UNAIDS', 'UNAIDS'),
         ('UNDP', 'UNDP'),
         ('UNESCO', 'UNESCO'),

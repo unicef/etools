@@ -13,7 +13,7 @@ from reports.models import ResultType, Result, CountryProgramme, Indicator, Resu
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
     InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
-    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement
+    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement, PartnerOrganization
 
 def printtf(*args):
     print([arg for arg in args])
@@ -802,6 +802,18 @@ def migrate_authorized_officers(country_name):
         agreement.authorized_officers.add(officer)
         agreement.save()
 
+def change_partner_shared_women(country_name):
+    if not country_name:
+        logging.info("country name required")
+    set_country(country_name)
+    logging.info("Migrating authorized officers for {}".format(country_name))
+    partners = PartnerOrganization.objects.filter(shared_with__contains=['Women'])
+    for partner in partners:
+        partner.shared_with.remove('Women')
+        partner.shared_with.append('UN Women')
+        partner.save()
+        logging.info('updating partner {}'.format(partner.id))
+
 
 def after_partner_migration():
 
@@ -823,4 +835,4 @@ def after_partner_migration():
 
 def release_3_migrations():
     all_countries_do(migrate_authorized_officers, 'migrate authorized officers')
-
+    all_countries_do(change_partner_shared_women, 'change Women to UN Women migrations')
