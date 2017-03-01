@@ -317,6 +317,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
 
     def get_fr_numbers_details(self, obj):
+        data = {}
         if obj.fr_numbers:
             data = {k:[] for k in obj.fr_numbers}
             try:
