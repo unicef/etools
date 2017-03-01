@@ -7,7 +7,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import serializers
 
 from publics.models import BusinessArea
-from t2f.models import UserTypes, Travel
+from t2f.helpers.misc import get_open_travels_for_check
+from t2f.models import UserTypes
 
 log = logging.getLogger(__name__)
 
@@ -39,10 +40,7 @@ class T2FUserDataSerializer(serializers.ModelSerializer):
         return roles
 
     def get_travel_count(self, obj):
-        excluded_statuses = [Travel.CANCELLED,
-                             Travel.CERTIFIED,
-                             Travel.COMPLETED]
-        return Travel.objects.filter(traveler=obj).exclude(status__in=excluded_statuses).count()
+        return get_open_travels_for_check(obj).count()
 
     def get_business_area(self, obj):
         workspace = obj.profile.country_override
