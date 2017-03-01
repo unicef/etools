@@ -368,6 +368,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     spot_checks = serializers.SerializerMethodField()
     audit = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
+    days_from_submission_to_signed = serializers.SerializerMethodField()
+    days_from_review_to_signed = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
@@ -378,7 +380,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "planned_budget_local", "unicef_budget", "cso_contribution",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
             "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
-            "signed_by_partner_date", "supply_plans", "distribution_plans", "url"
+            "signed_by_partner_date", "supply_plans", "distribution_plans", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
         )
 
     def get_unicef_signatory(self, obj):
@@ -430,6 +432,12 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
+
+    def get_days_from_submission_to_signed(self, obj):
+        return obj.days_from_submission_to_signed
+
+    def get_days_from_review_to_signed(self, obj):
+        return obj.days_from_review_to_signed
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
