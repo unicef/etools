@@ -7,7 +7,7 @@ from rest_framework import serializers
 from t2f.models import Invoice, InvoiceItem
 
 
-def rount_to_currency_precision(currency, amount):
+def round_to_currency_precision(currency, amount):
     if currency.decimal_places:
         q = Decimal('1.' + '0'*currency.decimal_places)
     else:
@@ -31,19 +31,20 @@ class InvoiceItemSerializer(serializers.ModelSerializer):
         fields = ('wbs', 'grant', 'fund', 'amount')
 
     def get_amount(self, obj):
-        return str(rount_to_currency_precision(obj.invoice.currency, obj.amount))
+        return str(round_to_currency_precision(obj.invoice.currency, obj.amount))
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
     ta_number = serializers.CharField(source='travel.reference_number', read_only=True)
     items = InvoiceItemSerializer(many=True, read_only=True)
+    message = serializers.CharField(read_only=True)
 
     class Meta:
         model = Invoice
         fields = ('id', 'travel', 'reference_number', 'business_area', 'vendor_number', 'currency', 'amount', 'status',
-                  'message', 'vision_fi_id', 'ta_number', 'items')
+                  'messages', 'message', 'vision_fi_id', 'ta_number', 'items')
 
     def to_representation(self, instance):
         data = super(InvoiceSerializer, self).to_representation(instance)
-        data['amount'] = str(rount_to_currency_precision(instance.currency, instance.amount))
+        data['amount'] = str(round_to_currency_precision(instance.currency, instance.amount))
         return data
