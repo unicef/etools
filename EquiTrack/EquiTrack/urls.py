@@ -53,26 +53,6 @@ from reports.views.v1 import (
     UnitViewSet
 )
 
-from partners.urls import (
-    simple_interventions_api,
-    # interventions_api,
-    government_interventions_api,
-    simple_government_interventions_api,
-    # results_api,
-    # simple_results_api,
-    # intervention_reports_api,
-    bulk_reports_api,
-    # pcasectors_api,
-    # pcabudgets_api,
-    # pcafiles_api,
-    # pcaamendments_api,
-    # pcalocations_api,
-    # pcagrants_api,
-    partners_api,
-    staffm_api,
-    # agreement_api,
-    # simple_agreements_api,
-)
 
 from workplan.views import (
     CommentViewSet,
@@ -147,33 +127,11 @@ urlpatterns = patterns(
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
     url(r'^api/', include(api.urls)),
-    url(r'^api/', include(staffm_api.urls)),
-    url(r'^api/', include(government_interventions_api.urls)),
-    url(r'^api/', include(simple_government_interventions_api.urls)),
 
     url(r'^trips/', include('trips.urls')),
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
-
-    # ***************  API version 1 - not used ****************
-    # url(r'^api/', include(agreement_api.urls)),
-    # url(r'^api/', include(simple_agreements_api.urls)),
-    # url(r'^api/', include(interventions_api.urls)),
-    # url(r'^api/', include(simple_results_api.urls)),
-    # url(r'^api/', include(results_api.urls)),
-    # url(r'^api/', include(pcasectors_api.urls)),
-    # url(r'^api/', include(pcabudgets_api.urls)),
-    # url(r'^api/', include(pcafiles_api.urls)),
-    # url(r'^api/', include(pcagrants_api.urls)),
-    # url(r'^api/', include(pcaamendments_api.urls)),
-    # url(r'^api/', include(pcalocations_api.urls)),
-    # url(r'^api/', include(intervention_reports_api.urls)),
-    # url(r'^api/', include(simple_interventions_api.urls)),
-    # url(r'^api/', include(bulk_reports_api.urls)),
-    # url(r'^management/', include('management.urls')),
-    # url(r'^partners/', include('partners.urls')),
-    # url(r'^api/', include(partners_api.urls)),
 
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
