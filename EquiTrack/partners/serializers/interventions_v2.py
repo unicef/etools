@@ -317,8 +317,9 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
 
     def get_fr_numbers_details(self, obj):
-        data = {k:[] for k in obj.fr_numbers}
+        data = {}
         if obj.fr_numbers:
+            data = {k:[] for k in obj.fr_numbers}
             try:
                 fc_items = FundsCommitmentItem.objects.filter(fr_number__in=obj.fr_numbers).select_related('fund_commitment')
             except FundsCommitmentItem.DoesNotExist:
