@@ -263,14 +263,14 @@ class ActionPoints(APITenantTestCase):
 
         # check header
         self.assertEqual(export_csv.next(),
-                         ['action_point_number',
-                          'trip_reference_number',
-                          'description',
-                          'due_date',
-                          'person_responsible',
-                          'status',
-                          'completed_date',
-                          'actions_taken',
-                          'flag_for_follow_up',
-                          'assigned_by',
-                          'url'])
+                         ['Action Point Number',
+                          'Trip Reference Number',
+                          'Description',
+                          'Due Date',
+                          'Person Responsible',
+                          'Status',
+                          'Completed Date',
+                          'Actions Taken',
+                          'Flag For Follow Up',
+                          'Assigned By',
+                          'URL'])
