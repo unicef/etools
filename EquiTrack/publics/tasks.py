@@ -99,6 +99,63 @@ def import_exchange_rates(xml_structure):
         log.info('Exchange rate %s was updated.', currency_name)
 
 
+def _fetch_business_areas(wbs_set):
+   business_area_codes = {wbs_code[:4] for wbs_code in wbs_set}
+   business_area_qs = BusinessArea.objects.filter(code__in=business_area_codes)
+   return {ba.code: ba for ba in business_area_qs}
+
+
+def create_wbs_objects(wbs_code_set):
+   business_area_cache = _fetch_business_areas(wbs_code_set)
+
+   existing_wbs_objects = WBS.objects.filter(name__in=wbs_code_set).select_related('business_area')
+   existing_wbs_codes = {wbs.name for wbs in existing_wbs_objects}
+
+   wbs_to_create = wbs_code_set - existing_wbs_codes
+   bulk_wbs_list = []
+   for wbs_code in wbs_to_create:
+       business_area_code = wbs_code[:4]
+       wbs = WBS(name=wbs_code, business_area=business_area_cache[business_area_code])
+       bulk_wbs_list.append(wbs)
+
+   WBS.objects.bulk_create(bulk_wbs_list)
+
+   wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=wbs_code_set)}
+   return wbs_mapping
+
+
+def create_grant_objects(grant_code_set):
+   grant_objects = Grant.objects.filter(name__in=grant_code_set)
+   existing_grants = {g.name for g in grant_objects}
+
+   grant_to_create = grant_code_set - existing_grants
+   bulk_grant_list = []
+   for grant_code in grant_to_create:
+       grant = Grant(name=grant_code)
+       bulk_grant_list.append(grant)
+
+   Grant.objects.bulk_create(bulk_grant_list)
+   
+   grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_code_set)}
+   return grant_mapping
+
+
+def create_fund_objects(fund_code_set):
+   fund_objects = Fund.objects.filter(name__in=fund_code_set)
+   existing_funds = {f.name for f in fund_objects}
+
+   fund_to_create = fund_code_set - existing_funds
+   bulk_fund_list = []
+   for fund_code in fund_to_create:
+       fund = Fund(name=fund_code)
+       bulk_fund_list.append(fund)
+
+   Fund.objects.bulk_create(bulk_fund_list)
+   
+   fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_code_set)}
+   return fund_mapping
+
+
 @app.task
 def import_cost_assignments(xml_structure):
     root = ET.fromstring(xml_structure)
@@ -106,40 +163,33 @@ def import_cost_assignments(xml_structure):
     # This will hold the wbs/grant/fund grouping
     mapping = defaultdict(lambda: defaultdict(list))
 
+    groups = []
     for row in root.iter('ROW'):
-        wbs_code = row.find('WBS_ELEMENT_EX').text
-        grant_code = row.find('GRANT_REF').text
-        fund_code = row.find('FUND_TYPE_CODE').text
+        g = {'wbs_code': row.find('WBS_ELEMENT_EX').text,
+             'grant_code': row.find('GRANT_REF').text,
+             'fund_code': row.find('FUND_TYPE_CODE').text}
+        groups.append(g)
 
-        mapping[wbs_code][grant_code].append(fund_code)
+    wbs_code_set = {g['wbs_code'] for g in groups}
+    grant_code_set = {g['grant_code'] for g in groups}
+    fund_code_set = {g['fund_code'] for g in groups}
 
-    business_area_cache = {}
+    wbs_mapping = create_wbs_objects(wbs_code_set)
+    grant_mapping = create_grant_objects(grant_code_set)
+    fund_mapping = create_fund_objects(fund_code_set)
 
-    for wbs_code in mapping.keys():
-        business_area_code = wbs_code[:4]
-        if business_area_code in business_area_cache:
-            business_area = business_area_cache[business_area_code]
-        else:
-            try:
-                business_area = BusinessArea.objects.get(code=business_area_code)
-            except ObjectDoesNotExist:
-                log.warning('No business area found with code %s', business_area_code)
-                business_area = None
-            business_area_cache[business_area_code] = business_area
+    wbs_grant_mapping = defaultdict(list)
+    grant_fund_mapping = defaultdict(list)
+    for g in groups:
+        wbs = wbs_mapping[g['wbs_code']]
+        grant = grant_mapping[g['grant_code']]
+        fund = fund_mapping[g['fund_code']]
 
-        wbs, created = WBS.objects.get_or_create(name=wbs_code)
-        wbs.business_area = business_area
-        wbs.save()
+        wbs_grant_mapping[wbs].append(grant)
+        grant_fund_mapping[grant].append(fund)
 
-        if created:
-            log.info('WBS %s was created.', wbs_code)
+    for wbs, grants in wbs_grant_mapping.items():
+        wbs.grants.set(grants)
 
-        for grant_code in mapping[wbs_code].keys():
-            grant, created = Grant.objects.get_or_create(name=grant_code, wbs=wbs)
-            if created:
-                log.info('Grant %s was created.', grant_code)
-
-            for fund_code in mapping[wbs_code][grant_code]:
-                f, created = Fund.objects.get_or_create(name=fund_code, grant=grant)
-                if created:
-                    log.info('Fund %s was created.', fund_code)
+    for grant, funds in grant_fund_mapping.items():
+        grant.funds.set(funds)
