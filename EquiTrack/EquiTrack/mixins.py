@@ -94,6 +94,10 @@ class EToolsTenantMiddleware(TenantMiddleware):
         if not request.user:
             return
 
+        if any(x in request.path for x in [
+                u'workspace_inactive']):
+            return None
+
         if request.user.is_anonymous():
             # check if user is trying to reach an authentication endpoint
             if any(x in request.path for x in [
@@ -112,7 +116,7 @@ class EToolsTenantMiddleware(TenantMiddleware):
         if not request.user.is_superuser and \
                 (not request.user.profile.country or
                  request.user.profile.country.business_area_code in settings.INACTIVE_BUSINESS_AREAS):
-            return HttpResponseRedirect("/no_active_workspace")
+            return HttpResponseRedirect("/workspace_inactive/")
         try:
             set_country(request.user, request)
 
@@ -174,15 +178,7 @@ class EToolsTenantJWTAuthentication(JSONWebTokenAuthentication):
         return user, jwt_value
 
 
-class WorksapceRemovedMixin(object):
-    def get_login_redirect_url(self, request):
-        if request.user.profile.country:
-            return settings.LOGIN_REDIRECT_URL
-        else:
-            return reverse("workspace-removed")
-
-
-class CustomSocialAccountAdapter(WorksapceRemovedMixin, DefaultSocialAccountAdapter):
+class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
 
     def pre_social_login(self, request, sociallogin):
         # TODO: make sure that the partnership is still in good standing or valid or whatever
@@ -208,7 +204,7 @@ class CustomSocialAccountAdapter(WorksapceRemovedMixin, DefaultSocialAccountAdap
         )
 
 
-class CustomAccountAdapter(WorksapceRemovedMixin, DefaultAccountAdapter):
+class CustomAccountAdapter(DefaultAccountAdapter):
 
     def is_open_for_signup(self, request):
         # quick way of disabling signups.

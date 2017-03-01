@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.conf import settings
 from django.conf.urls import patterns, include, url
+from django.views.generic import TemplateView
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import REDIRECT_FIELD_NAME
 
@@ -113,6 +114,7 @@ urlpatterns = patterns(
     # Used for admin and dashboard pages in django
     url(r'^$', staff_required(UserDashboardView.as_view()), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
+    url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'), name='sdasdsa'),
     url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
     url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
     url(r'^map/$', login_required(MapView.as_view()), name='map'),
@@ -120,7 +122,6 @@ urlpatterns = patterns(
     url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
     url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
-    url(r'^api/wbs_grants_funds/$', WBSGrantFundView.as_view(), name='wbs_grants_funds'),
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),

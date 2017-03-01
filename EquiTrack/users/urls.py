@@ -32,8 +32,4 @@ urlpatterns = patterns(
         TemplateView.as_view(
             template_name='users/profile_change_done.html'),
         name='profile_complete'),
-    url(r'^profile_view/workspace_removed/$',
-        TemplateView.as_view(
-            template_name='users/removed_workspace.html'),
-        name='workspace-removed'),
 )
