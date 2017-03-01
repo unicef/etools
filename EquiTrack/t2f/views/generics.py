@@ -7,12 +7,14 @@ from rest_framework.response import Response
 
 from locations.models import Location
 from partners.models import PartnerOrganization, Intervention
+from publics.models import TravelAgent
 from reports.models import Result
 
 from t2f.models import TravelType, ModeOfTravel, ActionPoint
 from t2f.serializers.static_data import StaticDataSerializer
 from t2f.permission_matrix import PERMISSION_MATRIX
 from t2f.views import get_filtered_users
+from users.models import UserProfile
 
 
 class StaticDataView(generics.GenericAPIView):
@@ -33,10 +35,13 @@ class StaticDataView(generics.GenericAPIView):
 
 class VendorNumberListView(generics.GenericAPIView):
     def get(self, request):
-        vendor_numbers = [u.profile.vendor_number for u in get_filtered_users(request)]
+        vendor_numbers = UserProfile.objects.filter(user__in=get_filtered_users(request), vendor_number__isnull=False)
+        vendor_numbers = list(vendor_numbers.distinct('vendor_number').values_list('vendor_number', flat=True))
+
         # Add numbers from travel agents
-        vendor_numbers.extend([])
-        vendor_numbers = list(set(vendor_numbers))
+        travel_agent_vendor_numbers = list(TravelAgent.objects.distinct('code').values_list('code', flat=True))
+
+        vendor_numbers.extend(travel_agent_vendor_numbers)
         vendor_numbers.sort()
         return Response(vendor_numbers, status.HTTP_200_OK)
 

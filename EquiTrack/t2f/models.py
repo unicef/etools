@@ -1,13 +1,12 @@
 from __future__ import unicode_literals
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
 
 from django.contrib.postgres.fields.array import ArrayField
 from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
-from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
@@ -17,7 +16,8 @@ from django.utils.translation import ugettext_lazy as _
 from django_fsm import FSMField, transition
 
 from publics.models import TravelExpenseType
-from t2f.helpers import CostSummaryCalculator, InvoiceMaker
+from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
+from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.serializers.mailing import TravelMailSerializer
 
 log = logging.getLogger(__name__)
@@ -205,8 +205,26 @@ class Travel(models.Model):
             raise TransitionError('Travel has no supervisor defined. Please select one.')
         return True
 
+    def check_travel_count(self):
+        from t2f.helpers.misc import get_open_travels_for_check
+        travels = get_open_travels_for_check(self.traveler)
+
+        if travels.count() >= 4:
+            raise TransitionError('Maximum 4 open travels are allowed.')
+
+        end_date_limit = datetime.utcnow() + timedelta(days=15)
+        if travels.filter(end_date__lte=end_date_limit).exists():
+            raise TransitionError('Travel is older than 15 days. Please complete it first.')
+
+        return True
+
+    def check_ta_required(self):
+        if not self.ta_required:
+            raise TransitionError('TA required to send for approval.')
+        return True
+
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED,
-                conditions=[has_supervisor, check_pending_invoices])
+                conditions=[has_supervisor, check_pending_invoices, check_ta_required, check_travel_count])
     def submit_for_approval(self):
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
@@ -556,6 +574,10 @@ class ActionPoint(models.Model):
     def save(self, *args, **kwargs):
         if self.status == ActionPoint.OPEN and self.actions_taken:
             self.status = ActionPoint.ONGOING
+
+        if self.status in [ActionPoint.OPEN, ActionPoint.ONGOING] and self.actions_taken and self.completed_at:
+            self.status = ActionPoint.COMPLETED
+
         super(ActionPoint, self).save(*args, **kwargs)
 
 
