@@ -192,6 +192,7 @@ SLACK_URL = os.environ.get('SLACK_URL')
 COUCHBASE_URL = os.environ.get('COUCHBASE_URL')
 COUCHBASE_USER = os.environ.get('COUCHBASE_USER')
 COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
+INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
 
 MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')
 MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
@@ -215,7 +216,6 @@ USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # # See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
 # MANAGERS = ADMINS
 # ########## END MANAGER CONFIGURATION
-
 
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone

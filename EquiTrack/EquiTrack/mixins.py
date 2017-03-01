@@ -109,6 +109,10 @@ class EToolsTenantMiddleware(TenantMiddleware):
         if request.user.is_superuser and not request.user.profile.country:
             return None
 
+        if not request.user.is_superuser and \
+                (not request.user.profile.country or
+                 request.user.profile.country.business_area_code in settings.INACTIVE_BUSINESS_AREAS):
+            return HttpResponseRedirect("/no_active_workspace")
         try:
             set_country(request.user, request)
 
