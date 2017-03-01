@@ -21,7 +21,8 @@ from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 
 from locations.models import Location
 from reports.models import CountryProgramme
-
+from publics.models import Country as PublicsCountry, BusinessArea
+from users.models import Country
 from partners.models import (
     FileType,
     PartnershipBudget,
@@ -90,7 +91,7 @@ class PcaPDFView(PDFTemplateView):
             bank_details=agreement.partner.bank_details.all(),
             cp=CountryProgramme.current(),
             auth_officers=officers_list,
-            country=self.request.tenant.name,
+            country=self.request.tenant.long_name,
             **kwargs
         )
 
