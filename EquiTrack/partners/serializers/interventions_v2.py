@@ -24,10 +24,11 @@ from partners.models import (
     Agreement,
     PartnerStaffMember,
     InterventionSectorLocationLink,
-    InterventionResultLink
+    InterventionResultLink,
 )
 from reports.models import LowerResult
 from locations.serializers import LocationLightSerializer
+from funds.models import FundsCommitmentHeader, FundsCommitmentItem
 
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
 
@@ -264,6 +265,21 @@ class InterventionResultCUSerializer(serializers.ModelSerializer):
         return super(InterventionResultCUSerializer, self).update(instance, validated_data)
 
 
+class FundingCommitmentNestedSerializer(serializers.ModelSerializer):
+    fc_type = serializers.CharField(source='fund_commitment.fc_type')
+
+    class Meta:
+        model = FundsCommitmentItem
+        fields = (
+            "grant_number",
+            "wbs",
+            "fc_type",
+            "fc_ref_number",
+            "commitment_amount",
+            "commitment_amount_dc",
+        )
+
+
 class InterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     planned_budget = InterventionBudgetNestedSerializer(many=True, read_only=True)
@@ -298,6 +314,21 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
     sector_locations = InterventionLocationSectorNestedSerializer(many=True, read_only=True, required=False)
     attachments = InterventionAttachmentSerializer(many=True, read_only=True, required=False)
     result_links = InterventionResultNestedSerializer(many=True, read_only=True, required=False)
+    fr_numbers_details = serializers.SerializerMethodField(read_only=True, required=False)
+
+    def get_fr_numbers_details(self, obj):
+        data = {k:[] for k in obj.fr_numbers}
+        if obj.fr_numbers:
+            try:
+                fc_items = FundsCommitmentItem.objects.filter(fr_number__in=obj.fr_numbers).select_related('fund_commitment')
+            except FundsCommitmentItem.DoesNotExist:
+                pass
+            else:
+                for fc in fc_items:
+                    serializer = FundingCommitmentNestedSerializer(fc)
+                    data[fc.fr_number].append(serializer.data)
+        return data
+
     class Meta:
         model = Intervention
         fields = (
@@ -307,7 +338,7 @@ class InterventionDetailSerializer(serializers.ModelSerializer):
             "unicef_signatory", "unicef_focal_points", "partner_focal_points", "partner_authorized_officer_signatory",
             "offices", "fr_numbers", "planned_visits", "population_focus", "sector_locations",
             "created", "modified", "planned_budget", "result_links",
-            "amendments", "planned_visits", "attachments", "supplies", "distributions"
+            "amendments", "planned_visits", "attachments", "supplies", "distributions", "fr_numbers_details",
         )
 
 class InterventionExportSerializer(serializers.ModelSerializer):
@@ -335,6 +366,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     planned_visits = serializers.SerializerMethodField()
     spot_checks = serializers.SerializerMethodField()
     audit = serializers.SerializerMethodField()
+    url = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
@@ -345,7 +377,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
             "planned_budget_local", "unicef_budget", "cso_contribution",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
             "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
-            "signed_by_partner_date", "supply_plans", "distribution_plans",
+            "signed_by_partner_date", "supply_plans", "distribution_plans", "url"
         )
 
     def get_unicef_signatory(self, obj):
@@ -394,6 +426,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_distribution_plans(self, obj):
         return ', '.join(['"{}"/{} ({})'.format(d.item.name, d.quantity, d.site) for d in obj.distributions.all()])
+
+    def get_url(self, obj):
+        return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
