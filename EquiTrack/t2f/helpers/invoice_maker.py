@@ -79,6 +79,13 @@ class InvoiceMaker(object):
                 share = Decimal(ca.share) / Decimal(100)
                 vendor_grouping[vendor_number][key] += share * amount
 
+        # Add dsa amount to user vendor number too
+        dsa_amount = self.travel.cost_summary['paid_to_traveler']
+        for ca in cost_assignment_list:
+            key = (ca.wbs.id, ca.grant.id, ca.fund.id)
+            share = Decimal(ca.share) / Decimal(100)
+            vendor_grouping[self.user_vendor_number][key] += share * dsa_amount
+
         return vendor_grouping
 
     def calculate_delta(self, existing_values, current_values):

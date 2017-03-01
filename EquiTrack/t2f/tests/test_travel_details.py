@@ -10,10 +10,9 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import DSARegion
-from publics.tests.factories import BusinessAreaFactory
+from publics.tests.factories import BusinessAreaFactory, WBSFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, FundFactory, AirlineCompanyFactory, \
-    DSARegionFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, DSARegionFactory
 
 from .factories import TravelFactory
 
@@ -252,9 +251,9 @@ class TravelDetails(APITenantTestCase):
                           {'amount': '1000.00', 'vendor_number': ''}])
 
     def test_cost_assignments(self):
-        fund = FundFactory()
-        grant = fund.grant
-        wbs = grant.wbs
+        wbs = WBSFactory()
+        grant = wbs.grants.first()
+        fund = grant.funds.first()
         business_area = BusinessAreaFactory()
 
         data = {'cost_assignments': [{'wbs': wbs.id,

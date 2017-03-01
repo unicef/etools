@@ -437,9 +437,9 @@ class CostAssignment(models.Model):
     share = models.PositiveIntegerField()
     delegate = models.BooleanField(default=False)
     business_area = models.ForeignKey('publics.BusinessArea', related_name='+', null=True)
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, on_delete=models.DO_NOTHING)
 
 
 class Clearances(models.Model):
@@ -579,7 +579,7 @@ class Invoice(models.Model):
     currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
-    message = models.TextField(null=True, blank=True)
+    messages = ArrayField(models.TextField(null=True, blank=True), default=[])
     vision_fi_id = models.CharField(max_length=16, null=True, blank=True)
 
     def save(self, **kwargs):
@@ -600,12 +600,16 @@ class Invoice(models.Model):
     def normalized_amount(self):
         return abs(self.amount.normalize())
 
+    @property
+    def message(self):
+        return '\n'.join(self.messages)
+
 
 class InvoiceItem(models.Model):
     invoice = models.ForeignKey('Invoice', related_name='items')
-    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True)
-    grant = models.ForeignKey('publics.Grant', related_name='+', null=True)
-    fund = models.ForeignKey('publics.Fund', related_name='+', null=True)
+    wbs = models.ForeignKey('publics.WBS', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    grant = models.ForeignKey('publics.Grant', related_name='+', null=True, on_delete=models.DO_NOTHING)
+    fund = models.ForeignKey('publics.Fund', related_name='+', null=True, on_delete=models.DO_NOTHING)
     amount = models.DecimalField(max_digits=20, decimal_places=10)
 
     @property
