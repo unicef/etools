@@ -54,6 +54,26 @@ from reports.views.v1 import (
     UnitViewSet
 )
 
+from partners.urls import (
+    simple_interventions_api,
+    # interventions_api,
+    government_interventions_api,
+    simple_government_interventions_api,
+    # results_api,
+    # simple_results_api,
+    # intervention_reports_api,
+    bulk_reports_api,
+    # pcasectors_api,
+    # pcabudgets_api,
+    # pcafiles_api,
+    # pcaamendments_api,
+    # pcalocations_api,
+    # pcagrants_api,
+    partners_api,
+    staffm_api,
+    # agreement_api,
+    # simple_agreements_api,
+)
 
 from workplan.views import (
     CommentViewSet,
@@ -80,6 +100,7 @@ tripsfiles_api.register(r'files', TripFileViewSet, base_name='files')
 actionpoint_api = routers.NestedSimpleRouter(trips_api, r'trips', lookup='trips')
 actionpoint_api.register(r'actionpoints', TripActionPointViewSet, base_name='actionpoints')
 # api.register(r'reports/result-structures', ResultStructureViewSet, base_name='resultstructures')
+
 
 
 # ******************  API version 1  ******************************
@@ -123,12 +144,16 @@ urlpatterns = patterns(
     url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
     url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
+    url(r'^api/wbs_grants_funds/$', WBSGrantFundView.as_view(), name='wbs_grants_funds'),
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
     url(r'^api/', include(api.urls)),
+    url(r'^api/', include(staffm_api.urls)),
+    url(r'^api/', include(government_interventions_api.urls)),
+    url(r'^api/', include(simple_government_interventions_api.urls)),
 
     url(r'^trips/', include('trips.urls')),
     url(r'^api/', include(trips_api.urls)),
