@@ -1,6 +1,6 @@
 from __future__ import unicode_literals, absolute_import
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from datetime import datetime
 import json
 import logging
@@ -138,6 +138,9 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         'GRANT_REF',
         'FUND_TYPE_CODE',
     )
+
+    Group = namedtuple('Group', ['wbs_code', 'grant_code', 'fund_code'])
+
     def __init__(self, country=None):
         super(CostAssignmentsSyncronizer, self).__init__(country)
         self.processed = 0
@@ -152,14 +155,12 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
 
         groups = []
         for row in records:
-            g = {'wbs_code': row['WBS_ELEMENT_EX'],
-                 'grant_code': row['GRANT_REF'],
-                 'fund_code': row['FUND_TYPE_CODE']}
+            g = self.Group(row['WBS_ELEMENT_EX'], row['GRANT_REF'], row['FUND_TYPE_CODE'])
             groups.append(g)
 
-        wbs_code_set = {g['wbs_code'] for g in groups}
-        grant_code_set = {g['grant_code'] for g in groups}
-        fund_code_set = {g['fund_code'] for g in groups}
+        wbs_code_set = {g.wbs_code for g in groups}
+        grant_code_set = {g.grant_code for g in groups}
+        fund_code_set = {g.fund_code for g in groups}
 
         wbs_mapping = self.create_wbs_objects(wbs_code_set)
         grant_mapping = self.create_grant_objects(grant_code_set)
@@ -168,9 +169,9 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         wbs_grant_mapping = defaultdict(list)
         grant_fund_mapping = defaultdict(list)
         for g in groups:
-            wbs = wbs_mapping[g['wbs_code']]
-            grant = grant_mapping[g['grant_code']]
-            fund = fund_mapping[g['fund_code']]
+            wbs = wbs_mapping[g.wbs_code]
+            grant = grant_mapping[g.grant_code]
+            fund = fund_mapping[g.fund_code]
 
             wbs_grant_mapping[wbs].append(grant)
             grant_fund_mapping[grant].append(fund)
@@ -191,7 +192,7 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
     def create_wbs_objects(self, wbs_code_set):
         business_area_cache = self._fetch_business_areas(wbs_code_set)
 
-        existing_wbs_objects = WBS.objects.filter(name__in=wbs_code_set).select_related('business_area')
+        existing_wbs_objects = WBS.objects.filter(name__in=wbs_code_set)
         existing_wbs_codes = {wbs.name for wbs in existing_wbs_objects}
 
         wbs_to_create = wbs_code_set - existing_wbs_codes
@@ -204,7 +205,9 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         new_wbs_list = WBS.objects.bulk_create(bulk_wbs_list)
         self.processed += len(new_wbs_list)
 
-        wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=wbs_code_set)}
+        wbs_mapping = {wbs.name: wbs for wbs in existing_wbs_objects}
+        new_wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=wbs_to_create)}
+        wbs_mapping.update(new_wbs_mapping)
         return wbs_mapping
 
     def create_grant_objects(self, grant_code_set):
@@ -220,7 +223,9 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         new_grant_list = Grant.objects.bulk_create(bulk_grant_list)
         self.processed += len(new_grant_list)
 
-        grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_code_set)}
+        grant_mapping = {g.name: g for g in existing_grants}
+        new_grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_to_create)}
+        grant_mapping.update(new_grant_mapping)
         return grant_mapping
 
     def create_fund_objects(self, fund_code_set):
@@ -236,5 +241,7 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         new_fund_list = Fund.objects.bulk_create(bulk_fund_list)
         self.processed += len(new_fund_list)
 
-        fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_code_set)}
+        fund_mapping = {f.name: f for f in existing_funds}
+        new_fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_to_create)}
+        fund_mapping.update(new_fund_mapping)
         return fund_mapping
