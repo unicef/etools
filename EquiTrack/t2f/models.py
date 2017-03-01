@@ -574,6 +574,10 @@ class ActionPoint(models.Model):
     def save(self, *args, **kwargs):
         if self.status == ActionPoint.OPEN and self.actions_taken:
             self.status = ActionPoint.ONGOING
+
+        if self.status in [ActionPoint.OPEN, ActionPoint.ONGOING] and self.actions_taken and self.completed_at:
+            self.status = ActionPoint.COMPLETED
+
         super(ActionPoint, self).save(*args, **kwargs)
 
 
