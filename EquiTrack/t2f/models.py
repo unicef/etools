@@ -579,7 +579,7 @@ class Invoice(models.Model):
     currency = models.ForeignKey('publics.Currency', related_name='+', null=True)
     amount = models.DecimalField(max_digits=20, decimal_places=4)
     status = models.CharField(max_length=16, choices=STATUS)
-    message = models.TextField(null=True, blank=True)
+    messages = ArrayField(models.TextField(null=True, blank=True), default=[])
     vision_fi_id = models.CharField(max_length=16, null=True, blank=True)
 
     def save(self, **kwargs):
@@ -599,6 +599,10 @@ class Invoice(models.Model):
     @property
     def normalized_amount(self):
         return abs(self.amount.normalize())
+
+    @property
+    def message(self):
+        return '\n'.join(self.messages)
 
 
 class InvoiceItem(models.Model):
