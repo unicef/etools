@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
 
-from unittest import skip
+from datetime import datetime
 import json
-from StringIO import StringIO
 from freezegun import freeze_time
+from StringIO import StringIO
+from unittest import skip
 
 from django.core.urlresolvers import reverse
 
@@ -532,3 +533,28 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201, response.rendered_content)
+
+    def test_travel_count_at_approval(self):
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      status=Travel.SENT_FOR_PAYMENT)
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      status=Travel.SENT_FOR_PAYMENT)
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      status=Travel.SENT_FOR_PAYMENT)
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      status=Travel.SENT_FOR_PAYMENT)
+
+        extra_travel = TravelFactory(traveler=self.traveler,
+                                     supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': extra_travel.id,
+                                                                'transition_name': 'submit_for_approval'}),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response_json, {'non_field_errors': ['Maximum 4 open travels are allowed.']})

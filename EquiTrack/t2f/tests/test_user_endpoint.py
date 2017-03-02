@@ -27,7 +27,7 @@ class UserT2FData(APITenantTestCase):
         response_json = self.get_user_t2f_data()
         self.assertEqual(response_json['t2f'],
                          {'roles': ['Anyone'],
-                          'travel_count': 1,
+                          'travel_count': 0,
                           'business_area': None})
 
         self.forced_auth_req('post', reverse('t2f:travels:details:state_change',

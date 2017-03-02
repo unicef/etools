@@ -5,7 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.db.transaction import atomic
 
-from rest_framework import generics, viewsets, mixins, status
+from rest_framework import viewsets, mixins, status
 from rest_framework.generics import get_object_or_404
 from rest_framework.parsers import FormParser, MultiPartParser, FileUploadParser
 from rest_framework.permissions import IsAdminUser
@@ -17,13 +17,15 @@ from rest_framework_csv import renderers
 from publics.models import TravelExpenseType
 from t2f.filters import TravelRelatedModelFilter, TravelActivityPartnerFilter
 from t2f.filters import travel_list, action_points
+from t2f.renderers import ActionPointCSVRenderer
 from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
-    InvoiceExportSerializer
+    InvoiceExportSerializer, ActionPointExportSerializer
 
 from t2f.models import Travel, TravelAttachment, ActionPoint, IteneraryItem, InvoiceItem, TravelActivity
 from t2f.serializers.travel import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, TravelActivityByPartnerSerializer
-from t2f.helpers import PermissionMatrix, CloneTravelHelper, FakePermissionMatrix
+from t2f.helpers.permission_matrix import PermissionMatrix, FakePermissionMatrix
+from t2f.helpers.clone_travel import CloneTravelHelper
 from t2f.views import T2FPagePagination, run_transition
 
 
@@ -236,4 +238,13 @@ class ActionPointViewSet(mixins.ListModelMixin,
     filter_backends = (action_points.ActionPointSearchFilter,
                        action_points.ActionPointSortFilter,
                        action_points.ActionPointFilterBoxFilter)
+    renderer_classes = (renderers.JSONRenderer, ActionPointCSVRenderer)
     lookup_url_kwarg = 'action_point_pk'
+
+    def export(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serialzier = ActionPointExportSerializer(queryset, many=True, context=self.get_serializer_context())
+
+        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
+        response['Content-Disposition'] = 'attachment; filename="ActionPointExport.csv"'
+        return response
