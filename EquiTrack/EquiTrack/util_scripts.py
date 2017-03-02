@@ -806,7 +806,7 @@ def change_partner_shared_women(country_name):
     if not country_name:
         logging.info("country name required")
     set_country(country_name)
-    logging.info("Migrating authorized officers for {}".format(country_name))
+    logging.info("Migrating UN Women for {}".format(country_name))
     partners = PartnerOrganization.objects.filter(shared_with__contains=['Women'])
     for partner in partners:
         partner.shared_with.remove('Women')
@@ -815,8 +815,23 @@ def change_partner_shared_women(country_name):
         logging.info('updating partner {}'.format(partner.id))
 
 
-def after_partner_migration():
+def change_partner_cso_type(country_name):
+    if not country_name:
+        logging.info("country name required")
+    set_country(country_name)
+    logging.info("Migrating cso_type for {}".format(country_name))
+    partners = PartnerOrganization.objects.filter(cso_type__isnull=False)
+    for partner in partners:
+        if partner.cso_type == 'International NGO':
+            partner.cso_type = 'International'
+        if partner.cso_type == 'National NGO':
+            partner.cso_type = 'National'
+        if partner.cso_type in ['Community based organization', 'Community Based Organisation']:
+            partner.cso_type = 'Community Based Organization'
+        partner.save()
 
+
+def after_partner_migration():
     copy_pca_fields_to_intervention()
     agreement_amendments_copy()
     copy_pca_results_to_intervention()
@@ -836,3 +851,4 @@ def after_partner_migration():
 def release_3_migrations():
     all_countries_do(migrate_authorized_officers, 'migrate authorized officers')
     all_countries_do(change_partner_shared_women, 'change Women to UN Women migrations')
+    all_countries_do(change_partner_cso_type, 'change old partner cso types')

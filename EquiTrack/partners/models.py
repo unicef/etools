@@ -182,7 +182,7 @@ RISK_RATINGS = (
 CSO_TYPES = Choices(
     u'International',
     u'National',
-    u'Community Based Organisation',
+    u'Community Based Organization',
     u'Academic Institution',
 )
 
@@ -767,20 +767,22 @@ class Assessment(models.Model):
     Relates to :model:`auth.User`
     """
 
+    ASSESMENT_TYPES = (
+        ('Micro Assessment', u'Micro Assessment'),
+        ('Simplified Checklist', u'Simplified Checklist'),
+        ('Scheduled Audit report', u'Scheduled Audit report'),
+        ('Special Audit report', u'Special Audit report'),
+        ('High Risk Assumed', u'High Risk Assumed'),
+        ('Other', u'Other'),
+    )
+
     partner = models.ForeignKey(
         PartnerOrganization,
         related_name='assessments'
     )
     type = models.CharField(
         max_length=50,
-        choices=Choices(
-            u'Micro Assessment',
-            u'Simplified Checklist',
-            u'Scheduled Audit report',
-            u'Special Audit report',
-            u'High Risk Assumed',
-            u'Other',
-        ),
+        choices=ASSESMENT_TYPES,
     )
     names_of_other_agencies = models.CharField(
         max_length=255,
