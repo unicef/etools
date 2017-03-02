@@ -30,7 +30,7 @@ clone_travel_for_driver = TravelDetailsViewSet.as_view({'post': 'clone_for_drive
 
 action_points_list = ActionPointViewSet.as_view({'get': 'list'})
 action_points_dashboard_list = ActionPointDashboardViewSet.as_view({'get': 'list'})
-
+action_points_export = ActionPointViewSet.as_view({'get': 'export'})
 action_points_details = ActionPointViewSet.as_view({'get': 'retrieve',
                                                     'put': 'update',
                                                     'patch': 'partial_update'})
@@ -82,6 +82,7 @@ action_points_patterns = patterns(
     url(r'^$', action_points_list, name='list'),
     url(r'^(?P<action_point_pk>[0-9]+)/$', action_points_details, name='details'),
     url(r'^dashboard/', action_points_dashboard_list, name='dashboard'),
+    url(r'^export/$', action_points_export, name='export')
 )
 
 invoice_patterns = patterns(
