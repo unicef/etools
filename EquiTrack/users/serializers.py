@@ -47,17 +47,23 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         )
 
 
-class MyProfileSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = UserProfile
-        fields = '__all__'
-
-
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ('id', 'name')
+
+
+class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
+    countries_available = SimpleCountrySerializer(many=True, read_only=True)
+    supervisor = serializers.CharField(read_only=True)
+    groups = GroupSerializer(read_only=True, many=True)
+    supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
+
+    class Meta:
+        model = UserProfile
+        fields = ('office', 'section', 'supervisor', 'countries_available',
+                  'oic', 'groups', 'supervisees')
+
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
