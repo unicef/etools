@@ -54,11 +54,16 @@ class MyProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('id', 'name')
+
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
     full_name = serializers.CharField(source='get_full_name')
     t2f = T2FUserDataSerializer(source='*')
-
+    groups = GroupSerializer(many=True)
     class Meta:
         model = User
         exclude = ('password', 'groups', 'user_permissions')
