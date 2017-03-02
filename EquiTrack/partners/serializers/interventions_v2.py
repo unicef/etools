@@ -137,7 +137,8 @@ class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
-
+    spot_checks = serializers.IntegerField(read_only=True)
+    audit = serializers.IntegerField(read_only=True)
     class Meta:
         model = InterventionPlannedVisits
         fields = "__all__"

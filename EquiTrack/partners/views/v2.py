@@ -205,7 +205,9 @@ class PMPDropdownsListApiView(APIView):
         """
         signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team']).values('id', 'first_name', 'last_name', 'email'))
         hrps = list(ResultStructure.objects.values())
-        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False).values('id', 'name', 'wbs'))
+        current_country_programme = CountryProgramme.current()
+        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
+                                                country_programme=current_country_programme).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.all().values())
 

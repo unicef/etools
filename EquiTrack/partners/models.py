@@ -1528,7 +1528,7 @@ class Intervention(TimeStampedModel):
             self.number = self.reference_number
 
         elif self.status != oldself.status:
-            if self.status not in [self.CANCELLED, self.DRAFT] and self.number.startswith('TempRef'):
+            if self.status not in [self.CANCELLED, self.DRAFT] and 'TempRef' in self.number:
                 self.number = self.reference_number
 
     @transaction.atomic

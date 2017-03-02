@@ -5,13 +5,24 @@ from EquiTrack.validation_mixins import TransitionError, CompleteValidation, che
 from reports.models import CountryProgramme
 
 def agreement_transition_to_active_valid(agreement):
-    logging.debug(agreement.status, agreement.start, agreement.end, agreement.signed_by_partner_date, agreement.signed_by_unicef_date, agreement.signed_by, agreement.partner_manager)
-    if agreement.status == agreement.DRAFT and agreement.start and agreement.end and \
-            agreement.signed_by_unicef_date and agreement.signed_by_partner_date and \
-            agreement.signed_by and agreement.partner_manager:
+
+    if not(agreement.status == agreement.DRAFT and agreement.start and agreement.end and
+            agreement.signed_by_unicef_date and agreement.signed_by_partner_date and
+            agreement.signed_by and agreement.partner_manager):
         logging.debug("moving to active ok")
-        return True
-    raise TransitionError(['agreement_transition_to_active_invalid'])
+        raise TransitionError(['agreement_transition_to_active_invalid'])
+    print agreement.country_programme
+    if agreement.agreement_type == agreement.PCA and \
+            agreement.__class__.objects.filter(partner=agreement.partner,
+                                     status=agreement.ACTIVE,
+                                     agreement_type=agreement.PCA,
+                                     country_programme=agreement.country_programme).count():
+
+        raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
+    return True
+
+
+
 
 def agreement_transition_to_ended_valid(agreement):
     today = date.today()
@@ -133,12 +144,12 @@ class AgreementValid(CompleteValidation):
         'suspended_invalid': 'Cant suspend an agreement that was supposed to be ended',
         'state_active_not_signed': 'This agreement needs to be signed in order to be active, no signed dates',
         'agreement_transition_to_active_invalid': "You can't transition to active without having the proper signatures",
+        'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
         'cant_create_in_active_state': 'When adding a new object the state needs to be "Draft"',
         'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
         'signed_by_valid': 'Partner manager and signed by must be provided.',
-        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
-        'start_date_country_programme_valid': 'PCA cannot start after the latest Country Programme.',
+        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.'
     }
 
     def state_suspended_valid(self, agreement, user=None):
