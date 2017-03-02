@@ -2,6 +2,7 @@ import logging
 from datetime import date, datetime
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
+from reports.models import CountryProgramme
 
 def agreement_transition_to_active_valid(agreement):
 
@@ -63,6 +64,16 @@ def start_end_dates_valid(agreement):
         return False
     return True
 
+def end_date_country_programme_valid(agreement):
+    if agreement.agreement_type == agreement.PCA and agreement.start and agreement.end:
+        try:
+            cp = CountryProgramme.encapsulates(agreement.start, agreement.start)
+        except CountryProgramme.DoesNotExist:
+            return True
+        if agreement.end > cp.to_date:
+            return False
+    return True
+
 def start_date_equals_max_signoff(agreement):
     # if not all dates are present no validation necessary
     if agreement.start and agreement.signed_by_unicef_date and agreement.signed_by_partner_date \
@@ -120,13 +131,14 @@ class AgreementValid(CompleteValidation):
         signed_date_valid,
         start_date_equals_max_signoff,
         partner_type_valid_cso,
+        end_date_country_programme_valid,
     ]
 
     VALID_ERRORS = {
         'signed_agreement_present': 'Signed agreement must be included in order to activate',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
         'signed_by_everyone_valid': 'Agreement needs to be signed by UNICEF and Partner',
-        'signed_date_valid': 'Signed dates cannot be greater than today, only magical creatures can sign in the future',
+        'signed_date_valid': 'Signed dates cannot be greater than today',
         'transitional_one': 'Cannot Transition to draft',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
         'suspended_invalid': 'Cant suspend an agreement that was supposed to be ended',
@@ -137,6 +149,7 @@ class AgreementValid(CompleteValidation):
         'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
         'signed_by_valid': 'Partner manager and signed by must be provided.',
+        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.'
     }
 
     def state_suspended_valid(self, agreement, user=None):

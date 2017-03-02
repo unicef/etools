@@ -164,7 +164,6 @@ class PmpStaticDropdownsListApiView(APIView):
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
         assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
-            # list(Assessment.objects.values_list('type', flat=True).order_by('type').distinct()))
         agreement_types = choices_to_json_ready([typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
@@ -173,7 +172,7 @@ class PmpStaticDropdownsListApiView(APIView):
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
 
         currencies = map(lambda x: {"label": x[0], "value": x[1]},
-                         Currency.objects.values_list('name', 'id').order_by('name').distinct())
+                         Currency.objects.values_list('code', 'id').order_by('code').distinct())
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
