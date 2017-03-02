@@ -15,7 +15,7 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
-from t2f.helpers import InvoiceMaker
+from t2f.helpers.invoice_maker import InvoiceMaker
 
 from t2f.models import Travel, Expense, CostAssignment, InvoiceItem, Invoice
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory

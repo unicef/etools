@@ -223,7 +223,7 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         new_grant_list = Grant.objects.bulk_create(bulk_grant_list)
         self.processed += len(new_grant_list)
 
-        grant_mapping = {g.name: g for g in existing_grants}
+        grant_mapping = {g.name: g for g in grant_objects}
         new_grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_to_create)}
         grant_mapping.update(new_grant_mapping)
         return grant_mapping
@@ -241,7 +241,7 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         new_fund_list = Fund.objects.bulk_create(bulk_fund_list)
         self.processed += len(new_fund_list)
 
-        fund_mapping = {f.name: f for f in existing_funds}
+        fund_mapping = {f.name: f for f in fund_objects}
         new_fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_to_create)}
         fund_mapping.update(new_fund_mapping)
         return fund_mapping
