@@ -8,10 +8,9 @@ def agreement_transition_to_active_valid(agreement):
 
     if not(agreement.status == agreement.DRAFT and agreement.start and agreement.end and
             agreement.signed_by_unicef_date and agreement.signed_by_partner_date and
-            agreement.signed_by and agreement.partner_manager):
+            agreement.signed_by and agreement.partner_manager and agreement.country_programme):
         logging.debug("moving to active ok")
         raise TransitionError(['agreement_transition_to_active_invalid'])
-    print agreement.country_programme
     if agreement.agreement_type == agreement.PCA and \
             agreement.__class__.objects.filter(partner=agreement.partner,
                                      status=agreement.ACTIVE,
