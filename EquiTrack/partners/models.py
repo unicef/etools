@@ -1036,23 +1036,23 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.status in [self.DRAFT, self.CANCELLED]:
-            number = 'TempRef:{}'.format(self.id)
-        else:
-            agreements_count = Agreement.objects.filter(
-                status__in=[self.ACTIVE, self.SUSPENDED,
-                            self.TERMINATED, self.ENDED],
-                signed_by_unicef_date__year=self.year,
-                agreement_type=self.agreement_type
-            ).count()
+        # if self.status in [self.DRAFT, self.CANCELLED]:
+        #     number = 'TempRef:{}'.format(self.id)
+        # else:
+        agreements_count = Agreement.objects.filter(
+            # status__in=[self.ACTIVE, self.SUSPENDED,
+            #             self.TERMINATED, self.ENDED],
+            signed_by_unicef_date__year=self.year,
+            #agreement_type=self.agreement_type #removing type: in case agreement saved and agreement_type changed after
+        ).count()
 
-            sequence = '{0:02d}'.format(agreements_count + 1)
-            number = u'{code}/{type}{year}{seq}'.format(
-                code=connection.tenant.country_short_code or '',
-                type=self.agreement_type,
-                year=self.year,
-                seq=sequence,
-            )
+        sequence = '{0:02d}'.format(agreements_count + 1)
+        number = u'{code}/{type}{year}{seq}'.format(
+            code=connection.tenant.country_short_code or '',
+            type=self.agreement_type,
+            year=self.year,
+            seq=sequence,
+        )
         # assuming in tempRef (status Draft or Cancelled we don't have
         # amendments)
         return u'{}'.format(number)

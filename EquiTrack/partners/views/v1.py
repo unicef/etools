@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import datetime
 
+from collections import namedtuple
 from django.conf import settings
 from django.db import transaction
 from django.http import HttpResponse
@@ -68,14 +69,45 @@ from partners.serializers.v1 import (
     PCAFileSerializer,
     GovernmentInterventionSerializer,
 )
-
+from EquiTrack.utils import get_data_from_insight
 
 class PcaPDFView(PDFTemplateView):
     template_name = "partners/pca_pdf.html"
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
-        agreement = Agreement.objects.get(id=agr_id)
+        error = None
+        try:
+            agreement = Agreement.objects.get(id=agr_id)
+        except Agreement.DoesNotExist:
+            return {"error": 'Agreement with specified ID does not exist'}
+
+        if not agreement.partner.vendor_number:
+            return {"error": "Partner Organization has no vendor number stored, please report to an etools focal point"}
+
+        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+                                                         {"vendor_code": agreement.partner.vendor_number})
+
+        if not valid_response:
+            return {"error": response}
+        try:
+            banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
+        except KeyError as e:
+            return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
+
+        bank_key_values = [
+            ('bank_address', "BANK_ADDRESS"),
+            ('bank_name', 'BANK_NAME'),
+            ('account_title', "ACCT_HOLDER"),
+            ('routing_details', "SWIFT_CODE"),
+            ('account_number', "BANK_ACCOUNT_NO")
+        ]
+        Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
+        bank_objects = []
+        for b in banks_records:
+            b["BANK_ADDRESS"] = '{}, {}'.format(b['STREET'], b['CITY'])
+            bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
+
         officers_list = []
         for officer in agreement.authorized_officers.all():
             officers_list.append(
@@ -85,10 +117,11 @@ class PcaPDFView(PDFTemplateView):
             )
 
         return super(PcaPDFView, self).get_context_data(
+            error=error,
             pagesize="Letter",
             title="Partnership",
             agreement=agreement,
-            bank_details=agreement.partner.bank_details.all(),
+            bank_details=bank_objects,
             cp=CountryProgramme.current(),
             auth_officers=officers_list,
             country=self.request.tenant.long_name,
