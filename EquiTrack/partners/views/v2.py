@@ -163,7 +163,7 @@ class PmpStaticDropdownsListApiView(APIView):
         cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
-        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).order_by('type').distinct()))
+        assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
         agreement_types = choices_to_json_ready([typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
@@ -172,7 +172,7 @@ class PmpStaticDropdownsListApiView(APIView):
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
 
         currencies = map(lambda x: {"label": x[0], "value": x[1]},
-                         Currency.objects.values_list('name', 'id').order_by('name').distinct())
+                         Currency.objects.values_list('code', 'id').order_by('code').distinct())
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -205,7 +205,9 @@ class PMPDropdownsListApiView(APIView):
         """
         signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team']).values('id', 'first_name', 'last_name', 'email'))
         hrps = list(ResultStructure.objects.values())
-        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False).values('id', 'name', 'wbs'))
+        current_country_programme = CountryProgramme.current()
+        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
+                                                country_programme=current_country_programme).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.all().values())
 

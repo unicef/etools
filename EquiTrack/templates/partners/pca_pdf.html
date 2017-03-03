@@ -73,6 +73,9 @@
 {% endblock %}
 
 {% block content %}
+{% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+{% else %}
     <div id="content">
         <div id="title" style="text-align: center; padding-top: 15px">
             <div style="text-align: right"><b><u>REF #: {{ agreement.agreement_number }}</u></b></div>
@@ -98,9 +101,9 @@
                     Nations established by the General Assembly pursuant to resolution 57(I) of 11 December 1946.
                 </li>
                 <li>“<u>Implementing Partner</u>” or “<u>IP</u>”
-                    means {{ agreement.partner }}, {{ agreement.partner.address }} </li>
+                    means {{ agreement.partner }}, {{ agreement.partner.address }}, {{ agreement.partner.city }} {{ agreement.partner.country }} </li>
                 <li>“<u>Country Programme</u>” means the UNICEF [country programme for {{ country }}], approved by the
-                    Executive Board of the United Nations Children’s Fund for the period [{{ cp.from_date|date:"Y" }} to {{ cp.from_date|date:"Y" }}].
+                    Executive Board of the United Nations Children’s Fund for the period [{{ cp.from_date|date:"Y" }} to {{ cp.to_date|date:"Y" }}].
                 </li>
                 <li>“<u>Programme Document</u>” means the formal document (in standard format) attached to this
                     Agreement, which is concluded by the Parties and reflects expected results, detailed activities,
@@ -297,7 +300,7 @@
             </ol>
         </div>
         <div id="article-VIII" style="padding-bottom: 10px">
-            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VII</b></div>
+            <div style="text-align: center; padding-top: 10px; padding-bottom: 0px"><b>ARTICLE VIII</b></div>
             <div style="padding-top: 0px; text-align: center"><b>INPUTS BY UNICEF TOWARDS IMPLEMENTATION OF PROGRAMME
                 DOCUMENTS</b></div>
             <div><b>(A) Cash Transfer by UNICEF to/on behalf of IP</b></div>
@@ -421,9 +424,9 @@
                         <div class="bank_details">Account No.: {{ bank_detail.account_number }}</div>
                         <div class="bank_details">Routing Details, including SWIFT/IBAN (if
                             applicable): {{ bank_detail.routing_details }}</div>
-                        <div style=class="bank_details" style="padding-bottom: 20px">Bank contact
-                            person: {{ bank_detail.bank_contact_person }}</div>
-
+{#                        <div style=class="bank_details" style="padding-bottom: 20px">Bank contact#}
+{#                            person: {{ bank_detail.bank_contact_person }}</div>#}
+                        <br>
                 {% endfor %}
                 <div><p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p></div>
                 <li>Supplies and equipment transferred to the IP by UNICEF will be used exclusively for the
@@ -1069,5 +1072,5 @@
             <pdf:pagenumber>
                 {#        of <pdf:pagecount>#}
 
-
+{% endif %}
 {% endblock %}

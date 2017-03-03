@@ -24,7 +24,7 @@ def agreement_unique_reference_number(apps, schema_editor):
     for agr in agreements:
         if agr.agreement_number == '':
             print(agr)
-            agr.agreement_number = 'blk:{}'.format(agr.id)
+            agr.agreement_number = 'TempRef:{}'.format(agr.id)
             agr.save()
     dupes = Agreement.objects.values('agreement_number').annotate(Count('agreement_number')).order_by().filter(agreement_number__count__gt=1).all()
     for dup in dupes:

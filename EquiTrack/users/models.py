@@ -35,6 +35,7 @@ class Country(TenantMixin):
         max_length=10,
         null=True, blank=True
     )
+    long_name = models.CharField(max_length=255, null=True, blank=True)
     business_area_code = models.CharField(
         max_length=10,
         null=True, blank=True
