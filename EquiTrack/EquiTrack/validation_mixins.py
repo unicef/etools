@@ -35,8 +35,6 @@ class ValidatorViewMixin(object):
                 dt_cp[k] = True
             elif dt_cp[k] == u'false':
                 dt_cp[k] = False
-            elif type(dt_cp[k]) == unicode:
-                dt_cp[k] = str(dt_cp[k])
 
         dt = parse_multipart_data(dt_cp)
         return dt

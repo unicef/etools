@@ -182,7 +182,7 @@ RISK_RATINGS = (
 CSO_TYPES = Choices(
     u'International',
     u'National',
-    u'Community Based Organisation',
+    u'Community Based Organization',
     u'Academic Institution',
 )
 
@@ -232,7 +232,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         ('IOM', 'IOM'),
         ('OHCHR', 'OHCHR'),
         ('UN', 'UN'),
-        ('Women', 'Women'),
+        ('UN Women', 'UN Women'),
         ('UNAIDS', 'UNAIDS'),
         ('UNDP', 'UNDP'),
         ('UNESCO', 'UNESCO'),
@@ -767,20 +767,22 @@ class Assessment(models.Model):
     Relates to :model:`auth.User`
     """
 
+    ASSESMENT_TYPES = (
+        ('Micro Assessment', u'Micro Assessment'),
+        ('Simplified Checklist', u'Simplified Checklist'),
+        ('Scheduled Audit report', u'Scheduled Audit report'),
+        ('Special Audit report', u'Special Audit report'),
+        ('High Risk Assumed', u'High Risk Assumed'),
+        ('Other', u'Other'),
+    )
+
     partner = models.ForeignKey(
         PartnerOrganization,
         related_name='assessments'
     )
     type = models.CharField(
         max_length=50,
-        choices=Choices(
-            u'Micro Assessment',
-            u'Simplified Checklist',
-            u'Scheduled Audit report',
-            u'Special Audit report',
-            u'High Risk Assumed',
-            u'Other',
-        ),
+        choices=ASSESMENT_TYPES,
     )
     names_of_other_agencies = models.CharField(
         max_length=255,
@@ -1034,23 +1036,24 @@ class Agreement(TimeStampedModel):
 
     @property
     def reference_number(self):
-        if self.status in [self.DRAFT, self.CANCELLED]:
-            number = 'TempRef:{}'.format(self.id)
-        else:
-            agreements_count = Agreement.objects.filter(
-                status__in=[self.ACTIVE, self.SUSPENDED,
-                            self.TERMINATED, self.ENDED],
-                signed_by_unicef_date__year=self.year,
-                agreement_type=self.agreement_type
-            ).count()
+        # if self.status in [self.DRAFT, self.CANCELLED]:
+        #     number = 'TempRef:{}'.format(self.id)
+        # else:
+        agreements_count = Agreement.objects.filter(
+            # status__in=[self.ACTIVE, self.SUSPENDED,
+            #             self.TERMINATED, self.ENDED],
+            created__year=self.created.year,
+            #agreement_type=self.agreement_type #removing type: in case agreement saved and agreement_type changed after
+        ).count()
 
-            sequence = '{0:02d}'.format(agreements_count + 1)
-            number = u'{code}/{type}{year}{seq}'.format(
-                code=connection.tenant.country_short_code or '',
-                type=self.agreement_type,
-                year=self.year,
-                seq=sequence,
-            )
+
+        sequence = '{0:02d}'.format(agreements_count + 1)
+        number = u'{code}/{type}{year}{seq}'.format(
+            code=connection.tenant.country_short_code or '',
+            type=self.agreement_type,
+            year=self.created.year,
+            seq=sequence,
+        )
         # assuming in tempRef (status Draft or Cancelled we don't have
         # amendments)
         return u'{}'.format(number)
@@ -1544,7 +1547,7 @@ class Intervention(TimeStampedModel):
             self.number = self.reference_number
 
         elif self.status != oldself.status:
-            if self.status not in [self.CANCELLED, self.DRAFT] and self.number.startswith('TempRef'):
+            if self.status not in [self.CANCELLED, self.DRAFT] and 'TempRef' in self.number:
                 self.number = self.reference_number
 
     @transaction.atomic
@@ -1606,6 +1609,36 @@ class InterventionAmendment(TimeStampedModel):
     )
 
     tracker = FieldTracker()
+
+    def compute_reference_number(self):
+        if self.signed_date:
+            return '{0:02d}'.format(self.intervention.amendments.filter(signed_date__isnull=False).count() + 1)
+        else:
+            seq = self.intervention.amendments.filter(signed_date__isnull=True).count() + 1
+            return 'tmp{0:02d}'.format(seq)
+
+    @transaction.atomic
+    def save(self, **kwargs):
+        # TODO: make the folowing scenario work:
+        # agreement amendment and agreement are saved in the same time... avoid race conditions for reference number
+        # TODO: validation don't allow save on objects that have attached
+        # signed amendment but don't have a signed date
+
+        # check if temporary number is needed or amendment number needs to be
+        # set
+        update_intervention_number_needed = False
+        oldself = InterventionAmendment.objects.get(id=self.pk) if self.pk else None
+        if self.signed_amendment:
+            if not oldself or not oldself.signed_amendment:
+                self.amendment_number = self.compute_reference_number()
+                update_intervention_number_needed = True
+        else:
+            if not oldself:
+                self.number = self.compute_reference_number()
+
+        if update_intervention_number_needed:
+            self.intervention.save(amendment_number=self.amendment_number)
+        return super(InterventionAmendment, self).save(**kwargs)
 
     def __unicode__(self):
         return u'{}: {} - {}'.format(

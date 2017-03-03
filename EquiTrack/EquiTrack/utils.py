@@ -1,8 +1,9 @@
 """
 Project wide base classes and utility functions for apps
 """
+import requests
+import json
 from collections import OrderedDict as SortedDict
-
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.contrib.auth.decorators import user_passes_test
@@ -145,3 +146,24 @@ def set_country(user, request):
 
     request.tenant = user.profile.country or user.profile.country_override
     connection.set_tenant(request.tenant)
+
+
+def get_data_from_insight(endpoint, data={}):
+    url = '{}/{}'.format(
+        settings.VISION_URL,
+        endpoint
+    ).format(**data)
+
+    response = requests.get(
+        url,
+        headers={'Content-Type': 'application/json'},
+        auth=(settings.VISION_USER, settings.VISION_PASSWORD),
+        verify=False
+    )
+    if response.status_code != 200:
+        return False, 'Loading data from Vision Failed, status {}'.format(response.status_code)
+    try:
+        result = json.loads(response.json())
+    except ValueError as e:
+        return False, 'Loading data from Vision Failed, no valid response returned for data: {}'.format(data)
+    return True, result
