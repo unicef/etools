@@ -223,7 +223,7 @@ class Travel(models.Model):
             raise TransitionError('TA required to send for approval.')
         return True
 
-    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED,
+    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
                 conditions=[has_supervisor, check_pending_invoices, check_ta_required, check_travel_count])
     def submit_for_approval(self):
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
