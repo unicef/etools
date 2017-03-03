@@ -130,7 +130,8 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
 
 
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
-
+    amendment_number = serializers.CharField(read_only=True)
+    signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
