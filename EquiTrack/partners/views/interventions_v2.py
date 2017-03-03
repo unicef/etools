@@ -161,6 +161,21 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
 
         return response
 
+class InterventionListDashView(ValidatorViewMixin, ListCreateAPIView):
+    """
+    Create new Interventions.
+    Returns a list of Interventions.
+    """
+    serializer_class = InterventionListSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
+
+    def get_queryset(self):
+        # if Partnership Manager get all
+        if self.request.user.groups.filter(name='Partnership Manager').exists():
+            return Intervention.objects.all()
+
+        return Intervention.objects.filter(unicef_focal_points__in=[self.request.user])
 
 class InterventionDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
