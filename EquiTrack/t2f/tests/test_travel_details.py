@@ -246,7 +246,7 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['expenses'],
-                         [{'amount': '200.00', 'vendor_number': 'user'},
+                         [{'amount': '200.00', 'vendor_number': 'Traveler'},
                           {'amount': '100.00', 'vendor_number': 'ta1'},
                           {'amount': '500.00', 'vendor_number': 'ta2'},
                           {'amount': '1000.00', 'vendor_number': ''}])
