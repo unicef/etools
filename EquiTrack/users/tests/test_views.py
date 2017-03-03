@@ -41,7 +41,7 @@ class TestUserViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
-    @skip('no user data returned')
+
     def test_api_users_retrieve_myprofile(self):
         response = self.forced_auth_req(
             'get',
@@ -50,7 +50,7 @@ class TestUserViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
-        self.assertEquals(response.data["user"], self.unicef_staff.id)
+        self.assertEquals(response.data["name"], self.unicef_staff.get_full_name())
 
     @skip('no update method on view')
     def test_api_users_patch_myprofile(self):
