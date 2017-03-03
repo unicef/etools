@@ -73,6 +73,9 @@
 {% endblock %}
 
 {% block content %}
+{% if error %}
+    PDF could not be generated properly: <br> {{ error }}
+{% else %}
     <div id="content">
         <div id="title" style="text-align: center; padding-top: 15px">
             <div style="text-align: right"><b><u>REF #: {{ agreement.agreement_number }}</u></b></div>
@@ -421,9 +424,9 @@
                         <div class="bank_details">Account No.: {{ bank_detail.account_number }}</div>
                         <div class="bank_details">Routing Details, including SWIFT/IBAN (if
                             applicable): {{ bank_detail.routing_details }}</div>
-                        <div style=class="bank_details" style="padding-bottom: 20px">Bank contact
-                            person: {{ bank_detail.bank_contact_person }}</div>
-
+{#                        <div style=class="bank_details" style="padding-bottom: 20px">Bank contact#}
+{#                            person: {{ bank_detail.bank_contact_person }}</div>#}
+                        <br>
                 {% endfor %}
                 <div><p><b>(B) Transfer of supplies/equipment by UNICEF to IP</b></p></div>
                 <li>Supplies and equipment transferred to the IP by UNICEF will be used exclusively for the
@@ -1069,5 +1072,5 @@
             <pdf:pagenumber>
                 {#        of <pdf:pagecount>#}
 
-
+{% endif %}
 {% endblock %}
