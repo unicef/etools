@@ -91,11 +91,16 @@ class DSACalculator(object):
 
         @property
         def final_amount(self):
-            return self.dsa_amount - self.deduction - self._internal_deduction
+            final_amount = self.dsa_amount - self._internal_deduction
+            final_amount -= self.deduction
+            return max(final_amount, Decimal(0))
 
         @property
         def deduction(self):
-            return self.dsa_amount * self.deduction_multiplier
+            multiplier = self.deduction_multiplier
+            if self.last_day:
+                multiplier = min(multiplier, Decimal(1)-DSACalculator.LAST_DAY_DEDUCTION)
+            return self.dsa_amount * multiplier
 
         @property
         def _internal_deduction(self):
@@ -266,7 +271,7 @@ class DSACalculator(object):
             current_data['end_date'] = dto.date
             current_data['night_count'] += 1
             current_data['paid_to_traveler'] += dto.final_amount
-            current_data['total_amount'] += dto.dsa_amount
+            current_data['total_amount'] += dto.corrected_dsa_amount
             current_data['deduction'] += dto.deduction
 
         if current_data:
