@@ -82,10 +82,27 @@ class BusinessArea(models.Model):
         return self.name
 
 
+# Explicit through models are used to speed up syncers
+class WBSGrantThrough(models.Model):
+    wbs = models.ForeignKey('WBS', on_delete=models.CASCADE)
+    grant = models.ForeignKey('Grant', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'publics_wbs_grants'
+
+
+class GrantFundThrough(models.Model):
+    grant = models.ForeignKey('Grant', on_delete=models.CASCADE)
+    fund = models.ForeignKey('Fund', on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'publics_grant_funds'
+
+
 class WBS(models.Model):
     business_area = models.ForeignKey('BusinessArea', null=True)
     name = models.CharField(max_length=25)
-    grants = models.ManyToManyField('Grant', related_name='wbs')
+    grants = models.ManyToManyField('Grant', through='WBSGrantThrough', related_name='wbs')
 
     def __unicode__(self):
         return self.name
@@ -93,7 +110,7 @@ class WBS(models.Model):
 
 class Grant(models.Model):
     name = models.CharField(max_length=25)
-    funds = models.ManyToManyField('Fund', related_name='grants')
+    funds = models.ManyToManyField('Fund', through='GrantFundThrough', related_name='grants')
 
     def __unicode__(self):
         return self.name

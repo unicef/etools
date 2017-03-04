@@ -78,6 +78,7 @@ def sync(country_name=None):
 
     public_tenant = Country.objects.get(schema_name='public')
     for handler in global_handlers:
+        handler.pre_run_cleanup()
         try:
             logger.info('Starting vision sync handler {} for country {}'.format(
                 handler.__name__, public_tenant.name
@@ -89,6 +90,10 @@ def sync(country_name=None):
             logger.error("{} sync failed, Reason: {}".format(
                 handler.__name__, e.message
             ))
+
+    # Execute cleanup method only once
+    for handler in tenant_handlers:
+        handler.pre_run_cleanup()
 
     for country in countries:
         connection.set_tenant(country)

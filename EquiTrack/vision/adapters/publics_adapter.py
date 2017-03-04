@@ -6,9 +6,10 @@ import json
 import logging
 
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.query_utils import Q
 
 from publics.models import BusinessArea, WBS, Grant, Fund, Currency, ExchangeRate, TravelExpenseType, Country, \
-    TravelAgent
+    TravelAgent, WBSGrantThrough, GrantFundThrough
 from vision.vision_data_synchronizer import VisionDataSynchronizer
 
 log = logging.getLogger(__name__)
@@ -148,6 +149,11 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
     def _convert_records(self, records):
         return json.loads(records)
 
+    @classmethod
+    def pre_run_cleanup(cls):
+        WBSGrantThrough.objects.all().delete()
+        GrantFundThrough.objects.all().delete()
+
     def _save_records(self, records):
         self.processed = 0
 
@@ -166,21 +172,18 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         grant_mapping = self.create_grant_objects(grant_code_set)
         fund_mapping = self.create_fund_objects(fund_code_set)
 
-        wbs_grant_mapping = defaultdict(list)
-        grant_fund_mapping = defaultdict(list)
+        wbs_grant_mapping = defaultdict(set)
+        grant_fund_mapping = defaultdict(set)
         for g in groups:
             wbs = wbs_mapping[g.wbs_code]
             grant = grant_mapping[g.grant_code]
             fund = fund_mapping[g.fund_code]
 
-            wbs_grant_mapping[wbs].append(grant)
-            grant_fund_mapping[grant].append(fund)
+            wbs_grant_mapping[wbs].add(grant)
+            grant_fund_mapping[grant].add(fund)
 
-        for wbs, grants in wbs_grant_mapping.items():
-            wbs.grants.set(grants)
-
-        for grant, funds in grant_fund_mapping.items():
-            grant.funds.set(funds)
+        self.update_wbs_grant_relations(wbs_grant_mapping)
+        self.update_grant_fund_relations(grant_fund_mapping)
 
         return self.processed
 
@@ -245,3 +248,23 @@ class CostAssignmentsSyncronizer(VisionDataSynchronizer):
         new_fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_to_create)}
         fund_mapping.update(new_fund_mapping)
         return fund_mapping
+
+    def update_wbs_grant_relations(self, wbs_grant_mapping):
+        m2m_relations = []
+
+        for wbs, grant_list in wbs_grant_mapping.items():
+            for grant in grant_list:
+                relation = WBSGrantThrough(wbs=wbs, grant=grant)
+                m2m_relations.append(relation)
+
+        WBSGrantThrough.objects.bulk_create(m2m_relations)
+
+    def update_grant_fund_relations(self, grant_fund_mapping):
+        m2m_relations = []
+
+        for grant, fund_list in grant_fund_mapping.items():
+            for fund in fund_list:
+                relation = GrantFundThrough(grant=grant, fund=fund)
+                m2m_relations.append(relation)
+
+        GrantFundThrough.objects.bulk_create(m2m_relations)
