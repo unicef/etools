@@ -1395,6 +1395,24 @@ class Intervention(TimeStampedModel):
         )
 
     @property
+    def days_from_submission_to_signed(self):
+        if not self.submission_date:
+            return u'Not Submitted'
+        if not self.signed_by_unicef_date or self.signed_by_partner_date:
+            return u'Not fully signed'
+        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
+        return relativedelta(signed_date - self.submission_date).days
+
+    @property
+    def days_from_review_to_signed(self):
+        if not self.review_date_prc:
+            return u'Not Reviewed'
+        if not self.signed_by_unicef_date or self.signed_by_partner_date:
+            return u'Not fully signed'
+        signed_date = max([self.signed_by_partner_date, self.signed_by_unicef_date])
+        return relativedelta(signed_date - self.review_date_prc).days
+
+    @property
     def sector_names(self):
         return u', '.join(Sector.objects.filter(intervention_locations__intervention=self).values_list('name', flat=True))
 
