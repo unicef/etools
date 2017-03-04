@@ -268,7 +268,9 @@ class TestModelExport(APITenantTestCase):
         self.assertEqual(dataset._get_headers(), [
             'Status',
             'Partner',
+            'Partner Type',
             'Agreement',
+            'Country Programme',
             'Document Type',
             'Reference Number',
             'Document Title',
@@ -285,6 +287,7 @@ class TestModelExport(APITenantTestCase):
             'RAM Indicators',
             'FR Number(s)',
             'Total UNICEF Budget (Local)',
+            'Total UNICEF Budget (USD)',
             'Total CSO Budget (USD)',
             'Total CSO Budget (Local)',
             'Planned Programmatic Visits',

@@ -10,7 +10,7 @@ def transition_to_active(i):
             i.partner_authorized_officer_signatory and i.start and i.end):
         raise TransitionError(['Transition to active illegal: signatories and dates required'])
     today = date.today()
-    if not i.start < today and i.end > today:
+    if not i.start <= today and i.end > today:
         raise TransitionError(['Transition to active illegal: not within the date range'])
     if not partner_focal_points_valid(i):
         raise TransitionError(['Partner focal point is required if Intervention status is ACTIVE or IMPLEMENTED.'])
@@ -32,6 +32,7 @@ def transition_to_active(i):
     for sectorlocation in i.sector_locations.all():
         if not sector_location_valid(sectorlocation):
             raise TransitionError(['Sector and locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
+
     return True
 
 def transition_to_implemented(i):
@@ -160,45 +161,51 @@ class InterventionValid(CompleteValidation):
 
     def state_active_valid(self, intervention, user=None):
         # Intervention fields
-        rigid_fields = [
-            'signed_by_unicef_date',
-            'signed_by_partner_date',
-        ]
-        rigid_valid, field = check_rigid_fields(intervention, rigid_fields)
-        if not rigid_valid:
-            raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
-
-        # Planned budget fields
-        planned_budget_rigid_fields = [
-            'unicef_cash',
-            'partner_contribution',
-            'in_kind_amount',
-            'unicef_cash_local',
-            'partner_contribution_local',
-            'in_kind_amount_local',
-        ]
-
-        # avoid n*m list traversal with dict lookup
-        old_instance_dict = {x.id: x for x in intervention.old_instance.planned_budget_old}
-        for budget in intervention.planned_budget.filter():
-            old_instance = old_instance_dict.get(budget.id)
-            planned_budget_rigid_valid, field = check_rigid_fields(budget, planned_budget_rigid_fields, old_instance)
-            if not planned_budget_rigid_valid:
+        if intervention.old_instance and intervention.old_instance.status == intervention.status:
+            validate_rigid_budget = True
+            rigid_fields = [
+                'signed_by_unicef_date',
+                'signed_by_partner_date',
+            ]
+            rigid_valid, field = check_rigid_fields(intervention, rigid_fields)
+            if not rigid_valid:
                 raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
 
-        # Planned visits fields
-        planned_visits_rigid_fields = [
-            'programmatic',
-            'spot_checks',
-            'audit',
-        ]
+            # Planned budget fields
+            planned_budget_rigid_fields = [
+                'unicef_cash',
+                'partner_contribution',
+                'in_kind_amount',
+                'unicef_cash_local',
+                'partner_contribution_local',
+                'in_kind_amount_local',
+            ]
+            for amd in intervention.amendments.filter():
+                if amd.type in [amd.CTBGT20, amd.CTBLT20, amd.CABLT20, amd.CABGT20, amd.CABGT20FACE]:
+                    validate_rigid_budget = False
+                    break
+            if validate_rigid_budget:
+                # avoid n*m list traversal with dict lookup
+                old_instance_dict = {x.id: x for x in intervention.old_instance.planned_budget_old}
+                for budget in intervention.planned_budget.filter():
+                    old_instance = old_instance_dict.get(budget.id)
+                    planned_budget_rigid_valid, field = check_rigid_fields(budget, planned_budget_rigid_fields, old_instance)
+                    if not planned_budget_rigid_valid:
+                        raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
 
-        # avoid n*m list traversal with dict lookup
-        old_instance_dict = {x.id: x for x in intervention.old_instance.planned_visits_old}
-        for visit in intervention.planned_visits.filter():
-            old_instance = old_instance_dict.get(visit.id)
-            planned_visits_rigid_valid, field = check_rigid_fields(visit, planned_visits_rigid_fields, old_instance)
-            if not planned_visits_rigid_valid:
-                raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
+            # Planned visits fields
+            planned_visits_rigid_fields = [
+                'programmatic',
+                'spot_checks',
+                'audit',
+            ]
+
+            # avoid n*m list traversal with dict lookup
+            old_instance_dict = {x.id: x for x in intervention.old_instance.planned_visits_old}
+            for visit in intervention.planned_visits.filter():
+                old_instance = old_instance_dict.get(visit.id)
+                planned_visits_rigid_valid, field = check_rigid_fields(visit, planned_visits_rigid_fields, old_instance)
+                if not planned_visits_rigid_valid:
+                    raise StateValidError(['Cannot change fields while intervention is active: {}'.format(field)])
 
         return True

@@ -130,14 +130,16 @@ class DistributionPlanNestedSerializer(serializers.ModelSerializer):
 
 
 class InterventionAmendmentCUSerializer(serializers.ModelSerializer):
-
+    amendment_number = serializers.CharField(read_only=True)
+    signed_amendment_file = serializers.FileField(source="signed_amendment", read_only=True)
     class Meta:
         model = InterventionAmendment
         fields = "__all__"
 
 
 class PlannedVisitsCUSerializer(serializers.ModelSerializer):
-
+    spot_checks = serializers.IntegerField(read_only=True)
+    audit = serializers.IntegerField(read_only=True)
     class Meta:
         model = InterventionPlannedVisits
         fields = "__all__"
@@ -347,14 +349,16 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     # TODO CP Outputs, RAM Indicators, Fund Commitment(s), Supply Plan, Distribution Plan, URL
 
     partner_name = serializers.CharField(source='agreement.partner.name')
+    partner_type = serializers.CharField(source='agreement.partner.partner_type')
     agreement_name = serializers.CharField(source='agreement.agreement_number')
+    country_programme = serializers.CharField(source='agreement.country_programme.name')
     offices = serializers.SerializerMethodField()
     sectors = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
-    planned_budget_local = serializers.IntegerField(source='total_budget_local')
-    unicef_budget = serializers.IntegerField(source='total_unicef_cash')
-    cso_contribution = serializers.IntegerField(source='total_partner_contribution')
-    partner_contribution_local = serializers.IntegerField(source='total_partner_contribution_local')
+    planned_budget_local = serializers.DecimalField(source='total_budget_local', read_only=True, max_digits=20, decimal_places=2)
+    unicef_budget = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
+    cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True,max_digits=20, decimal_places=2)
+    partner_contribution_local = serializers.DecimalField(source='total_partner_contribution_local', read_only=True, max_digits=20, decimal_places=2)
     # unicef_cash_local = serializers.IntegerField(source='total_unicef_cash_local')
     unicef_signatory = serializers.SerializerMethodField()
     hrp_name = serializers.CharField(source='hrp.name')
@@ -368,17 +372,19 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     spot_checks = serializers.SerializerMethodField()
     audit = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
+    days_from_submission_to_signed = serializers.SerializerMethodField()
+    days_from_review_to_signed = serializers.SerializerMethodField()
 
     class Meta:
         model = Intervention
         fields = (
-            "status", "partner_name", "agreement_name", "document_type", "number", "title",
-            "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
+            "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
             "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers",
-            "planned_budget_local", "unicef_budget", "cso_contribution",
+            "unicef_budget", "cso_contribution",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
             "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
-            "signed_by_partner_date", "supply_plans", "distribution_plans", "url"
+            "signed_by_partner_date", "supply_plans", "distribution_plans", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
         )
 
     def get_unicef_signatory(self, obj):
@@ -430,6 +436,12 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
+
+    def get_days_from_submission_to_signed(self, obj):
+        return obj.days_from_submission_to_signed
+
+    def get_days_from_review_to_signed(self, obj):
+        return obj.days_from_review_to_signed
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):

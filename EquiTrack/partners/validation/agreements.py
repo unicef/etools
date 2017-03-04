@@ -2,16 +2,26 @@ import logging
 from datetime import date, datetime
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
-
+from reports.models import CountryProgramme
 
 def agreement_transition_to_active_valid(agreement):
-    logging.debug(agreement.status, agreement.start, agreement.end, agreement.signed_by_partner_date, agreement.signed_by_unicef_date, agreement.signed_by, agreement.partner_manager)
-    if agreement.status == agreement.DRAFT and agreement.start and agreement.end and \
-            agreement.signed_by_unicef_date and agreement.signed_by_partner_date and \
-            agreement.signed_by and agreement.partner_manager:
+
+    if not(agreement.status == agreement.DRAFT and agreement.start and agreement.end and
+            agreement.signed_by_unicef_date and agreement.signed_by_partner_date and
+            agreement.signed_by and agreement.partner_manager and agreement.country_programme):
         logging.debug("moving to active ok")
-        return True
-    raise TransitionError(['agreement_transition_to_active_invalid'])
+        raise TransitionError(['agreement_transition_to_active_invalid'])
+    if agreement.agreement_type == agreement.PCA and \
+            agreement.__class__.objects.filter(partner=agreement.partner,
+                                     status=agreement.ACTIVE,
+                                     agreement_type=agreement.PCA,
+                                     country_programme=agreement.country_programme).count():
+
+        raise TransitionError(['agreement_transition_to_active_invalid_PCA'])
+    return True
+
+
+
 
 def agreement_transition_to_ended_valid(agreement):
     today = date.today()
@@ -51,6 +61,16 @@ def amendments_ok(agreement):
 def start_end_dates_valid(agreement):
     if agreement.start and agreement.end and agreement.start > agreement.end:
         return False
+    return True
+
+def end_date_country_programme_valid(agreement):
+    if agreement.agreement_type == agreement.PCA and agreement.start and agreement.end:
+        try:
+            cp = CountryProgramme.encapsulates(agreement.start, agreement.start)
+        except CountryProgramme.DoesNotExist:
+            return True
+        if agreement.end > cp.to_date:
+            return False
     return True
 
 def start_date_equals_max_signoff(agreement):
@@ -110,22 +130,25 @@ class AgreementValid(CompleteValidation):
         signed_date_valid,
         start_date_equals_max_signoff,
         partner_type_valid_cso,
+        end_date_country_programme_valid,
     ]
 
     VALID_ERRORS = {
         'signed_agreement_present': 'Signed agreement must be included in order to activate',
         'start_end_dates_valid': 'Agreement start date needs to be earlier than end date',
         'signed_by_everyone_valid': 'Agreement needs to be signed by UNICEF and Partner',
-        'signed_date_valid': 'Signed dates cannot be greater than today, only magical creatures can sign in the future',
+        'signed_date_valid': 'Signed dates cannot be greater than today',
         'transitional_one': 'Cannot Transition to draft',
         'generic_transition_fail': 'GENERIC TRANSITION FAIL',
         'suspended_invalid': 'Cant suspend an agreement that was supposed to be ended',
         'state_active_not_signed': 'This agreement needs to be signed in order to be active, no signed dates',
         'agreement_transition_to_active_invalid': "You can't transition to active without having the proper signatures",
+        'agreement_transition_to_active_invalid_PCA': "You cannot have more than 1 PCA active per Partner within 1 CP",
         'cant_create_in_active_state': 'When adding a new object the state needs to be "Draft"',
         'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
         'signed_by_valid': 'Partner manager and signed by must be provided.',
+        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.'
     }
 
     def state_suspended_valid(self, agreement, user=None):

@@ -163,7 +163,7 @@ class PmpStaticDropdownsListApiView(APIView):
         cso_types = choices_to_json_ready(list(PartnerOrganization.objects.values_list('cso_type', flat=True).order_by('cso_type').distinct('cso_type')))
         partner_types = choices_to_json_ready(tuple(PartnerType.CHOICES))
         agency_choices = choices_to_json_ready(tuple(PartnerOrganization.AGENCY_CHOICES))
-        assessment_types = choices_to_json_ready(list(Assessment.objects.values_list('type', flat=True).order_by('type').distinct()))
+        assessment_types = choices_to_json_ready(Assessment.ASSESMENT_TYPES)
         agreement_types = choices_to_json_ready([typ for typ in Agreement.AGREEMENT_TYPES if typ[0] not in ['IC', 'AWP']])
         agreement_status = choices_to_json_ready(Agreement.STATUS_CHOICES)
         agreement_amendment_types = choices_to_json_ready(tuple(AgreementAmendmentType.AMENDMENT_TYPES))
@@ -172,7 +172,7 @@ class PmpStaticDropdownsListApiView(APIView):
         intervention_amendment_types = choices_to_json_ready(InterventionAmendment.AMENDMENT_TYPES)
 
         currencies = map(lambda x: {"label": x[0], "value": x[1]},
-                         Currency.objects.values_list('name', 'id').order_by('name').distinct())
+                         Currency.objects.values_list('code', 'id').order_by('code').distinct())
 
         local_currency = local_workspace.local_currency.id if local_workspace.local_currency else None
 
@@ -205,7 +205,9 @@ class PMPDropdownsListApiView(APIView):
         """
         signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team']).values('id', 'first_name', 'last_name', 'email'))
         hrps = list(ResultStructure.objects.values())
-        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False).values('id', 'name', 'wbs'))
+        current_country_programme = CountryProgramme.current()
+        cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
+                                                country_programme=current_country_programme).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.all().values())
 
@@ -259,14 +261,19 @@ class PartnershipDashboardAPIView(APIView):
             start__isnull=False,
             end__isnull=False
         )
+        total_this_year = interventions.filter(start__year=current.year)
         active_this_year = active_partnerships.filter(start__year=current.year)
-        active_last_year = active_partnerships.filter(start__lte=last_year)
+        total_last_year = interventions.filter(end__lte=last_year, end__year=last_year.year)
+        active_last_year = active_partnerships.filter(end__lte=last_year, end__year=last_year.year)
+        total_expire_in_two_months = interventions.filter(
+            end__range=[current, current + datetime.timedelta(days=60)])
         expire_in_two_months = active_partnerships.filter(
             end__range=[current, current + datetime.timedelta(days=60)])
 
         def total_value_for_parternships(partnerships):
-            return sum(
+            sum_cash = sum(
                 map(lambda pd: pd.total_unicef_cash, partnerships))
+            return sum_cash
 
         result = {'partners': {}}
 
@@ -284,27 +291,34 @@ class PartnershipDashboardAPIView(APIView):
 
         # (1) Number and value of Active Interventions for this year
         result['active_count'] = len(active_partnerships)
+        result['total_count'] = len(interventions)
         result['active_value'] = total_value_for_parternships(active_partnerships)
         result['active_percentage'] = "{0:.0f}%".format(
-            result['active_count'] / result['active_count'] * 100) \
+            operator.truediv(result['active_count'], result['total_count']) * 100) \
             if result['active_count'] else "0%"
 
         # (2a) Number and value of Approved Interventions this year
+        result['total_this_year_count'] = len(total_this_year)
         result['active_this_year_count'] = len(active_this_year)
         result['active_this_year_value'] = total_value_for_parternships(active_this_year)
-        result['active_this_year_percentage'] = "{0:.0f}%".format(result['active_this_year_count'] / result['active_count'] * 100) \
-        if result['active_count'] else "0%"
+        result['active_this_year_percentage'] = "{0:.0f}%".format(
+            operator.truediv(result['active_this_year_count'], result['total_this_year_count']) * 100) \
+            if result['active_count'] else "0%"
 
         # (2b) Number and value of Approved Interventions last year
+        result['total_last_year_count'] = len(total_last_year)
         result['active_last_year_count'] = len(active_last_year)
         result['active_last_year_value'] = total_value_for_parternships(active_last_year)
-        result['active_last_year_percentage'] = "{0:.0f}%".format(result['active_last_year_count'] / result['active_count'] * 100) \
-        if result['active_last_year_count'] else "0%"
+        result['active_last_year_percentage'] = "{0:.0f}%".format(
+            operator.truediv(result['active_last_year_count'], result['active_last_year_count']) * 100) \
+            if result['active_last_year_count'] else "0%"
 
         # (3) Number and Value of Expiring Interventions in next two months
+        result['total_expire_in_two_months_count'] = len(total_expire_in_two_months)
         result['expire_in_two_months_count'] = len(expire_in_two_months)
         result['expire_in_two_months_value'] = total_value_for_parternships(expire_in_two_months)
-        result['expire_in_two_months_percentage'] = "{0:.0f}%".format(result['expire_in_two_months_count'] / result['active_count'] * 100) \
+        result['expire_in_two_months_percentage'] = "{0:.0f}%".format(
+            operator.truediv(result['expire_in_two_months_count'], result['active_count']) * 100) \
         if result['expire_in_two_months_count'] else "0%"
 
         return Response(result, status=status.HTTP_200_OK)

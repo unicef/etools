@@ -11,7 +11,7 @@ from rest_framework.generics import RetrieveAPIView, ListAPIView, RetrieveUpdate
 from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from users.serializers import MinimalUserSerializer
 from rest_framework.permissions import IsAdminUser
@@ -27,7 +27,7 @@ from .serializers import (
     UserCreationSerializer,
     SimpleProfileSerializer,
     SimpleUserSerializer,
-    MyProfileSerializer,
+    ProfileRetrieveUpdateSerializer,
 )
 
 
@@ -38,11 +38,6 @@ class UserAuthAPIView(RetrieveAPIView):
 
     def get_object(self, queryset=None, **kwargs):
         user = self.request.user
-        q = self.request.GET.get('device_id', None)
-        if q is not None:
-            profile = user.profile
-            profile.installation_id = string.replace(q, "_", "-")
-            profile.save()
         return user
 
 
@@ -97,12 +92,19 @@ class MyProfileAPIView(RetrieveUpdateAPIView):
     Updates a UserProfile object
     """
     queryset = UserProfile.objects.all()
-    serializer_class = MyProfileSerializer
+    serializer_class = ProfileRetrieveUpdateSerializer
+    permission_classes = (IsAuthenticated, )
 
     def get_object(self):
         """
         Always returns current user's profile
         """
+        try:
+            obj = self.request.user.profile
+        except AttributeError as e:
+            self.request.user.save()
+            obj = self.request.user.profile
+
         obj = get_object_or_404(UserProfile, user__id=self.request.user.id)
         # May raise a permission denied
         self.check_object_permissions(self.request, obj)
