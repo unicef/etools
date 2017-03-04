@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from datetime import datetime
 import json
 from freezegun import freeze_time
 from StringIO import StringIO
