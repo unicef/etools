@@ -1,4 +1,6 @@
 
+import vcr
+
 from django.core.urlresolvers import resolve
 from django.http.response import HttpResponse
 
@@ -10,6 +12,12 @@ from tenant_schemas.test.client import TenantClient
 from django.db import connection
 from django.core.management import call_command
 from tenant_schemas.utils import get_tenant_model
+
+
+VCR = vcr.VCR(serializer='yaml',
+              cassette_library_dir='fixtures/cassettes',
+              record_mode='once',
+              match_on=['uri', 'method'])
 
 
 class FastTenantTestCase(TenantTestCase):
