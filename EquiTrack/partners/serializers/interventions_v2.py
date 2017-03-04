@@ -355,7 +355,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     offices = serializers.SerializerMethodField()
     sectors = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
-    # planned_budget_local = serializers.DecimalField(source='total_budget_local', read_only=True)
+    planned_budget_local = serializers.DecimalField(source='total_budget_local', read_only=True, max_digits=20, decimal_places=2)
     unicef_budget = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
     cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True,max_digits=20, decimal_places=2)
     partner_contribution_local = serializers.DecimalField(source='total_partner_contribution_local', read_only=True, max_digits=20, decimal_places=2)
@@ -377,7 +377,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-            "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+            "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
             "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers",
             "unicef_budget", "cso_contribution",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
