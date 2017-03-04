@@ -142,12 +142,14 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
         dict_of_outputs = {o.wbs: o for o in cp_output_results}
 
         # Query FundsCommitmentItem objects with above Result wbs list
-        wbs_numbers = cp_output_results.values_list('wbs', flat=True)
+        wbs_numbers = [x for x in cp_output_results.values_list('wbs', flat=True) if x is not None]
 
         # Form queryset for FC since WBS-s are at the Activity level
-        q = reduce(operator.or_, (Q(wbs__icontains=x) for x in wbs_numbers))
-        target_funding_commitments = list(FundsCommitmentItem.objects.filter(q))
-
+        if wbs_numbers:
+            q = reduce(operator.or_, (Q(wbs__icontains=x) for x in wbs_numbers))
+            target_funding_commitments = list(FundsCommitmentItem.objects.filter(q))
+        else:
+            target_funding_commitments = []
         #
         fund_commitment_map = defaultdict(list)
         for f in target_funding_commitments:
@@ -161,7 +163,7 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
                     break
             return {"cp_output": output.id, "fc_records": v}
 
-        implementation_status = [get_fc_records(k) for k in cp_output_results]
+        implementation_status = [get_fc_records(k) for k in cp_output_results if k.wbs is not None]
         return implementation_status
 
     def validate(self, data):
