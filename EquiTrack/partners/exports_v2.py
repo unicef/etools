@@ -67,7 +67,7 @@ class AgreementCvsRenderer(r.CSVRenderer):
 
 class InterventionCvsRenderer(r.CSVRenderer):
     header = [
-            "status", "partner_name", "agreement_name", "document_type", "number", "title",
+            "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
             "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
             "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers",
             "planned_budget_local", "cso_contribution",
@@ -79,7 +79,9 @@ class InterventionCvsRenderer(r.CSVRenderer):
     labels = {
         "status": "Status",
         "partner_name": "Partner",
+        "partner_type": "Partner Type",
         "agreement_name": "Agreement",
+        "country_programme": "Country Programme",
         "document_type": "Document Type",
         "number": "Reference Number",
         "title": "Document Title",
@@ -95,7 +97,7 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "cp_outputs": "CP Outputs",
         "ram_indicators": "RAM Indicators",
         "fr_numbers": "FR Number(s)",
-        "planned_budget_local": "Total UNICEF Budget (Local)",
+        # "planned_budget_local": "Total UNICEF Budget (Local)",
         "unicef_budget": "Total UNICEF Budget (USD)",
         "cso_contribution": "Total CSO Budget (USD)",
         "partner_contribution_local": "Total CSO Budget (Local)",
