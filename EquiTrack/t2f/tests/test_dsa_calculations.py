@@ -96,7 +96,7 @@ class TestDSACalculations(APITenantTestCase):
                            'night_count': 0,
                            'paid_to_traveler': Decimal('60'),
                            'start_date': date(2017, 1, 1),
-                           'total_amount': Decimal('200')}])
+                           'total_amount': Decimal('80')}])
 
     def test_case_2(self):
         IteneraryItemFactory(travel=self.travel,
@@ -149,7 +149,7 @@ class TestDSACalculations(APITenantTestCase):
                            'night_count': 2,
                            'paid_to_traveler': Decimal('700'),
                            'start_date': date(2017, 1, 1),
-                           'total_amount': Decimal('1400')}])
+                           'total_amount': Decimal('1160')}])
 
     def test_case_3(self):
         IteneraryItemFactory(travel=self.travel,
@@ -200,7 +200,7 @@ class TestDSACalculations(APITenantTestCase):
                            'night_count': 0,
                            'paid_to_traveler': Decimal('105'),
                            'start_date': date(2017, 1, 3),
-                           'total_amount': Decimal('300')}])
+                           'total_amount': Decimal('120')}])
 
     def test_case_4(self):
         IteneraryItemFactory(travel=self.travel,
@@ -247,42 +247,42 @@ class TestDSACalculations(APITenantTestCase):
         self.assertEqual(calculator.paid_to_traveler, 12615)
 
         self.assertEqual(calculator.detailed_dsa,
-                         [{'daily_rate': Decimal('200.0000'),
-                           'deduction': Decimal('30.000000'),
+                         [{'daily_rate': Decimal('200'),
+                           'deduction': Decimal('30'),
                            'dsa_region': self.budapest.id,
                            'dsa_region_name': 'Hungary - Budapest',
                            'end_date': date(2017, 3, 1),
                            'night_count': 59,
-                           'paid_to_traveler': Decimal('11970.000000'),
+                           'paid_to_traveler': Decimal('11970'),
                            'start_date': date(2017, 1, 1),
-                           'total_amount': Decimal('12000.0000')},
-                          {'daily_rate': Decimal('120.0000'),
-                           'deduction': Decimal('18.000000'),
+                           'total_amount': Decimal('12000')},
+                          {'daily_rate': Decimal('120'),
+                           'deduction': Decimal('18'),
                            'dsa_region': self.budapest.id,
                            'dsa_region_name': 'Hungary - Budapest',
                            'end_date': date(2017, 3, 3),
                            'night_count': 1,
-                           'paid_to_traveler': Decimal('222.000000'),
+                           'paid_to_traveler': Decimal('222'),
                            'start_date': date(2017, 3, 2),
-                           'total_amount': Decimal('240.0000')},
-                          {'daily_rate': Decimal('180.0000'),
-                           'deduction': Decimal('27.000000'),
+                           'total_amount': Decimal('240')},
+                          {'daily_rate': Decimal('180'),
+                           'deduction': Decimal('27'),
                            'dsa_region': self.copenhagen.id,
                            'dsa_region_name': 'Denmark - Copenhagen',
                            'end_date': date(2017, 3, 4),
                            'night_count': 0,
-                           'paid_to_traveler': Decimal('153.000000'),
+                           'paid_to_traveler': Decimal('153'),
                            'start_date': date(2017, 3, 4),
-                           'total_amount': Decimal('180.0000')},
-                          {'daily_rate': Decimal('120.0000'),
-                           'deduction': Decimal('18.000000'),
+                           'total_amount': Decimal('180')},
+                          {'daily_rate': Decimal('120'),
+                           'deduction': Decimal('18'),
                            'dsa_region': self.budapest.id,
                            'dsa_region_name': 'Hungary - Budapest',
                            'end_date': date(2017, 3, 7),
                            'night_count': 2,
-                           'paid_to_traveler': Decimal('270.000000'),
+                           'paid_to_traveler': Decimal('270'),
                            'start_date': date(2017, 3, 5),
-                           'total_amount': Decimal('360.0000')}])
+                           'total_amount': Decimal('288')}])
 
     def test_case_5(self):
         IteneraryItemFactory(travel=self.travel,
@@ -321,4 +321,37 @@ class TestDSACalculations(APITenantTestCase):
                            'night_count': 2,
                            'paid_to_traveler': Decimal('460'),
                            'start_date': date(2017, 1, 1),
-                           'total_amount': Decimal('600')}])
+                           'total_amount': Decimal('480')}])
+
+    def test_case_6(self):
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 3, 12, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 3, 14, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 3),
+                         no_dsa=True)
+
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
+
+        self.assertEqual(calculator.total_dsa, 480)
+        self.assertEqual(calculator.total_deductions, 80)
+        self.assertEqual(calculator.paid_to_traveler, 400)
+
+        self.assertEqual(calculator.detailed_dsa,
+                         [{'daily_rate': Decimal('200'),
+                           'deduction': Decimal('80'),
+                           'dsa_region': self.budapest.id,
+                           'dsa_region_name': 'Hungary - Budapest',
+                           'end_date': date(2017, 1, 3),
+                           'night_count': 2,
+                           'paid_to_traveler': Decimal('400'),
+                           'start_date': date(2017, 1, 1),
+                           'total_amount': Decimal('480')}])
