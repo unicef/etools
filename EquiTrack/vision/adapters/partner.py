@@ -16,6 +16,12 @@ type_mapping = {
     "UN AGENCY": u'UN Agency',
 }
 
+cso_type_mapping = {
+    "International NGO ": u'International',
+    "National NGO ": u'National',
+    "Community based organization": u'Community Based Organization',
+    "Academic Institution": u'Academic Institution'
+}
 
 class PartnerSynchronizer(VisionDataSynchronizer):
 
@@ -162,6 +168,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org = PartnerOrganization(vendor_number=partner["VENDOR_CODE"])
                     new = True
 
+                #TODO: qucick and dirty fix for cso_type mapping... this entire syncronizer needs updating
+                partner['CSO_TYPE_NAME'] = cso_type_mapping.get(partner['CSO_TYPE_NAME'], None)
                 try:
                     type_mapping[partner["PARTNER_TYPE_DESC"]]
                 except KeyError as exp:
