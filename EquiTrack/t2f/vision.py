@@ -118,7 +118,7 @@ class InvoiceUpdater(object):
         self.root = ET.fromstring(xml_data)
 
     def update_invoices(self):
-        possible_statuses = {s[0] for s in Invoice.STATUS}
+        possible_statuses = {s[0].lower() for s in Invoice.STATUS}
 
         invoice_grouping = defaultdict(list)
         errors = []
@@ -148,6 +148,7 @@ class InvoiceUpdater(object):
             if extra_elements:
                 errors.append('Extra elements found: {}'.format(', '.join(extra_elements)))
 
+            data_dict['status'] = data_dict['status'].lower()
             if data_dict['status'] not in possible_statuses:
                 errors.append('Invalid invoice status: {}'.format(data_dict[self.STATUS_FIELD]))
 

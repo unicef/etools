@@ -209,8 +209,8 @@ class Travel(models.Model):
         from t2f.helpers.misc import get_open_travels_for_check
         travels = get_open_travels_for_check(self.traveler)
 
-        if travels.count() >= 4:
-            raise TransitionError('Maximum 4 open travels are allowed.')
+        if travels.count() >= 3:
+            raise TransitionError('Maximum 3 open travels are allowed.')
 
         end_date_limit = datetime.utcnow() + timedelta(days=15)
         if travels.filter(end_date__lte=end_date_limit).exists():
@@ -223,7 +223,7 @@ class Travel(models.Model):
             raise TransitionError('TA required to send for approval.')
         return True
 
-    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT], target=SUBMITTED,
+    @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
                 conditions=[has_supervisor, check_pending_invoices, check_ta_required, check_travel_count])
     def submit_for_approval(self):
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
