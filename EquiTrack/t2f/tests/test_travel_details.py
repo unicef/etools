@@ -557,4 +557,4 @@ class TravelDetails(APITenantTestCase):
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
-        self.assertEqual(response_json, {'non_field_errors': ['Maximum 4 open travels are allowed.']})
+        self.assertEqual(response_json, {'non_field_errors': ['Maximum 3 open travels are allowed.']})
