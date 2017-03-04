@@ -1,6 +1,8 @@
 import json
-
+import operator
+from collections import defaultdict
 from django.db import transaction
+from django.db.models import Q
 from django.contrib.auth.models import Group
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
@@ -137,13 +139,29 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
     def get_implementation_status(self, obj):
         # Grab all Result objects which result type is Output and has a link to governmentinterventionresult
         cp_output_results = Result.objects.filter(result_type__name="Output", governmentinterventionresult__in=obj.results.all())
+        dict_of_outputs = {o.wbs: o for o in cp_output_results}
 
         # Query FundsCommitmentItem objects with above Result wbs list
-        target_funding_commitments = list(FundsCommitmentItem.objects.filter(wbs__in=cp_output_results.values_list('wbs', flat=True)))
+        wbs_numbers = cp_output_results.values_list('wbs', flat=True)
 
-        # Create a dictionary where each key is Result object's name and each value is a list of serialized FundsCommitmentItem objects
-        implementation_status = [{"cp_output": result.id, 'fc_records':FundsCommitmentItemListSerializer(filter(lambda item: item.wbs == result.wbs, target_funding_commitments), many=True).data} for result in cp_output_results]
+        # Form queryset for FC since WBS-s are at the Activity level
+        q = reduce(operator.or_, (Q(wbs__icontains=x) for x in wbs_numbers))
+        target_funding_commitments = list(FundsCommitmentItem.objects.filter(q))
 
+        #
+        fund_commitment_map = defaultdict(list)
+        for f in target_funding_commitments:
+            fund_commitment_map[f.wbs].append(FundsCommitmentItemListSerializer(f).data)
+
+        def get_fc_records(output):
+            v = []
+            for k in fund_commitment_map:
+                if output.wbs in k:
+                    v = fund_commitment_map[k]
+                    break
+            return {"cp_output": output.id, "fc_records": v}
+
+        implementation_status = [get_fc_records(k) for k in cp_output_results]
         return implementation_status
 
     def validate(self, data):
