@@ -1,8 +1,16 @@
+
 __author__ = 'jcranwellward'
 
 from rest_framework import serializers
 
-from .models import User, UserProfile, Group, Office, Section
+from t2f.serializers.user_data import T2FUserDataSerializer
+from .models import User, UserProfile, Group, Office, Section, Country
+
+
+class SimpleCountrySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Country
+        fields = ('id', 'name', 'business_area_code')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -10,6 +18,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
     office = serializers.CharField(source='office.name')
     section = serializers.CharField(source='section.name')
     country_name = serializers.CharField(source='country.name')
+    countries_available = SimpleCountrySerializer(many=True, read_only=True)
 
     class Meta:
         model = UserProfile
@@ -38,23 +47,33 @@ class SimpleProfileSerializer(serializers.ModelSerializer):
         )
 
 
-class UserSerializer(serializers.ModelSerializer):
+class GroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = ('id', 'name')
 
-    # profile = serializers.SerializerMethodField('get_profile')
-    # It is redundant to specify `get_profile` on SerializerMethodField
-    # because it is the same as the default method name.
-    profile = serializers.SerializerMethodField()
 
-    def get_profile(self, user):
-        return UserProfileSerializer(user.profile).data
+class ProfileRetrieveUpdateSerializer(serializers.ModelSerializer):
+    countries_available = SimpleCountrySerializer(many=True, read_only=True)
+    supervisor = serializers.CharField(read_only=True)
+    groups = GroupSerializer(source="user.groups", read_only=True, many=True)
+    supervisees = serializers.PrimaryKeyRelatedField(source='user.supervisee', many=True, read_only=True)
+    name = serializers.CharField(source='user.get_full_name', read_only=True)
 
     class Meta:
+        model = UserProfile
+        fields = ('name', 'office', 'section', 'supervisor', 'countries_available',
+                  'oic', 'groups', 'supervisees', 'job_title', 'phone_number')
+
+
+class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True)
+    full_name = serializers.CharField(source='get_full_name')
+    t2f = T2FUserDataSerializer(source='*')
+    groups = GroupSerializer(many=True)
+    class Meta:
         model = User
-        exclude = (
-            'password',
-            'groups',
-            'user_permissions'
-        )
+        exclude = ('password', 'groups', 'user_permissions')
 
 
 class SectionSerializer(serializers.ModelSerializer):
@@ -69,19 +88,6 @@ class SectionSerializer(serializers.ModelSerializer):
         )
 
 
-class OfficeSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-
-    class Meta:
-        model = Office
-        fields = (
-            'id',
-            'name',
-            # 'zonal_chief'
-        )
-
-
 class UserProfileCreationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -90,6 +96,12 @@ class UserProfileCreationSerializer(serializers.ModelSerializer):
             'id',
             'user',
         )
+
+
+class OfficeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Office
+        fields = "__all__"
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -118,12 +130,46 @@ class GroupSerializer(serializers.ModelSerializer):
         )
 
 
+class SimpleNestedProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = (
+            'country',
+        )
+
+
+class SimpleUserSerializer(serializers.ModelSerializer):
+    profile = SimpleNestedProfileSerializer()
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'is_superuser',
+            'first_name',
+            'last_name',
+            'is_staff',
+            'is_active',
+            'profile'
+        )
+
+
+class MinimalUserSerializer(SimpleUserSerializer):
+    name = serializers.CharField(source='get_full_name', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'name', 'first_name', 'last_name')
+
+
 class UserCreationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
     groups = serializers.SerializerMethodField()
     user_permissions = serializers.SerializerMethodField()
     profile = UserProfileCreationSerializer()
+    t2f = T2FUserDataSerializer(source='*', read_only=True)
 
     def get_groups(self, user):
         return [grp.id for grp in user.groups.all()]
@@ -176,5 +222,6 @@ class UserCreationSerializer(serializers.ModelSerializer):
             'is_active',
             'groups',
             'user_permissions',
-            'profile'
+            'profile',
+            't2f',
         )

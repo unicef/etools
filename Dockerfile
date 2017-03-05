@@ -31,9 +31,6 @@ RUN apt-get install -y --no-install-recommends \
 
 RUN pip install --upgrade \
     setuptools \
-    virtualenv \
-    virtualenvwrapper \
-    fabric \
     pip \
     wheel
 
@@ -46,7 +43,7 @@ ADD ./EquiTrack/requirements/*.txt /pip/
 ADD ./EquiTrack/requirements/$REQUIREMENTS_FILE /pip/app_requirements.txt
 RUN pip install -f /pip -r /pip/app_requirements.txt
 
-ENV PYTHONUNBUFFERED 1 # for some this and every layer after this is not cached in docker
+ENV PYTHONUNBUFFERED 1
 ADD EquiTrack /code/
 
 WORKDIR /code/

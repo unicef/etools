@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.contrib import admin
 
 from import_export.admin import ImportExportModelAdmin
@@ -7,7 +5,7 @@ from mptt.admin import MPTTModelAdmin
 
 from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
-from partners.models import ResultChain
+
 from reports.models import (
     Sector,
     Goal,
@@ -16,7 +14,10 @@ from reports.models import (
     ResultStructure,
     ResultType,
     Result,
-    CountryProgramme
+    CountryProgramme,
+    LowerResult,
+    IndicatorBlueprint,
+    AppliedIndicator
 )
 from .forms import IndicatorAdminForm
 
@@ -130,6 +131,19 @@ class IndicatorAdmin(admin.ModelAdmin):
     # ]
 
 
+class LowerIndicatorAdmin(admin.ModelAdmin):
+    search_fields = ('name','code')
+    # list_filter = (
+    #     SectorListFilter,
+    #     'lower_result__result_structure',
+    #     'lower_result__result_type',
+    # )
+    list_display = (
+        'name',
+        'result',
+    )
+
+
 class HiddenResultFilter(admin.SimpleListFilter):
 
     title = 'Show Hidden'
@@ -193,6 +207,23 @@ class ResultAdmin(MPTTModelAdmin):
             results += 1
         self.message_user(request, '{} results were shown'.format(results))
 
+#
+# class LowerResultAdmin(MPTTModelAdmin):
+#     form = AutoSizeTextForm
+#     mptt_indent_field = 'result_name'
+#     search_fields = (
+#         'name',
+#     )
+#     list_filter = (
+#         'country_programme',
+#         'sector',
+#         'result_type',
+#     )
+#     list_display = (
+#         'result_name',
+#         'result_structure'
+#     )
+
 
 admin.site.register(Result, ResultAdmin)
 admin.site.register(ResultStructure)
@@ -201,5 +232,8 @@ admin.site.register(Sector, SectorAdmin)
 admin.site.register(Goal, GoalAdmin)
 admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
-#admin.site.register(ResultChain)
+# admin.site.register(ResultChain)
+admin.site.register(LowerResult)
 #admin.site.register(ResultType)
+admin.site.register(IndicatorBlueprint)
+admin.site.register(AppliedIndicator)

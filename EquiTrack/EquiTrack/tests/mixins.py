@@ -1,3 +1,4 @@
+
 from django.core.urlresolvers import resolve
 from django.http.response import HttpResponse
 
@@ -48,6 +49,18 @@ class FastTenantTestCase(TenantTestCase):
     def tearDownClass(cls):
         connection.set_schema_to_public()
 
+    def assertKeysIn(self, keys, container, msg=None, exact=False):
+        """Small helper to check all keys in the response payload"""
+        key_set = set(keys)
+        container_set = set(container)
+        missing_keys = key_set - container_set
+        if missing_keys:
+            self.fail('Missing keys: {}'.format(', '.join(missing_keys)))
+
+        if exact and len(key_set) != len(container_set):
+            self.fail('{} != {}'.format(', '.join(key_set), ', '.join(container_set)))
+
+
 class APITenantClient(TenantClient, APIClient):
     def __init__(self, tenant, **defaults):
         super(APITenantClient, self).__init__(tenant=tenant, defaults=defaults)
@@ -58,8 +71,9 @@ class APITenantTestCase(FastTenantTestCase):
     Base test case for testing APIs
     """
     client_class = APIClient
+    maxDiff = None
 
-    def forced_auth_req(self, method, url, user=None, data=None, **kwargs):
+    def forced_auth_req(self, method, url, user=None, data=None, request_format='json', **kwargs):
         """
         Function that allows api methods to be called with forced authentication
 
@@ -78,7 +92,7 @@ class APITenantTestCase(FastTenantTestCase):
         data = data or {}
         view = view_info.func
         req_to_call = getattr(factory, method)
-        request = req_to_call(url, data, format='json', **kwargs)
+        request = req_to_call(url, data, format=request_format, **kwargs)
 
         user = user or self.user
         force_authenticate(request, user=user)

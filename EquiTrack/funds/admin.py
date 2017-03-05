@@ -12,3 +12,7 @@ class GrantAdmin(admin.ModelAdmin):
 
 admin.site.register(models.Grant, GrantAdmin)
 admin.site.register(models.Donor)
+admin.site.register(models.FundsReservationHeader)
+admin.site.register(models.FundsReservationItem)
+admin.site.register(models.FundsCommitmentHeader)
+admin.site.register(models.FundsCommitmentItem)

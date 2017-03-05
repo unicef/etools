@@ -8,19 +8,14 @@ from django.db.models.query_utils import Q
 from rest_framework.filters import BaseFilterBackend
 
 from funds.models import Donor, Grant
-from locations.models import (
-    Governorate,
-    Region,
-    Locality,
-    GatewayType
-)
+from locations.models import GatewayType
 from partners.models import (
     PCA,
     PCAGrant,
     GwPCALocation,
     #IndicatorProgress,
 )
-from partners.serializers import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
+from partners.serializers.v1 import PartnershipExportFilterSerializer, AgreementExportFilterSerializer, \
     InterventionExportFilterSerializer, GovernmentInterventionExportFilterSerializer
 from reports.admin import SectorListFilter
 from reports.models import Sector, Indicator
@@ -71,66 +66,6 @@ class PCAGrantFilter(admin.SimpleListFilter):
         if self.value():
             grant = Grant.objects.get(pk=self.value())
             pca_ids = PCAGrant.objects.filter(grant=grant).values_list('partnership__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCAGovernorateFilter(admin.SimpleListFilter):
-
-    title = 'Governorate'
-    parameter_name = 'governorate'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (governorate.id, governorate.name) for governorate in Governorate.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            governorate = Governorate.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(governorate=governorate).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCARegionFilter(admin.SimpleListFilter):
-
-    title = 'District'
-    parameter_name = 'district'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (region.id, region.name) for region in Region.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            region = Region.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(region=region).values_list('pca__id')
-            return queryset.filter(id__in=pca_ids)
-        return queryset
-
-
-class PCALocalityFilter(admin.SimpleListFilter):
-
-    title = 'Sub-district'
-    parameter_name = 'sub'
-
-    def lookups(self, request, model_admin):
-
-        return [
-            (locality.id, locality.name) for locality in Locality.objects.all()
-        ]
-
-    def queryset(self, request, queryset):
-
-        if self.value():
-            locality = Locality.objects.get(pk=self.value())
-            pca_ids = GwPCALocation.objects.filter(locality=locality).values_list('pca__id')
             return queryset.filter(id__in=pca_ids)
         return queryset
 
@@ -199,7 +134,7 @@ class PCAOutputFilter(admin.SimpleListFilter):
 
 class PartnerScopeFilter(BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
-        if request.parser_context['kwargs']:
+        if request.parser_context['kwargs'] and 'partner_pk' in request.parser_context['kwargs']:
             return queryset.filter(partner__pk=request.parser_context['kwargs']['partner_pk'])
         return queryset
 
