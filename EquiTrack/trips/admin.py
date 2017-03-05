@@ -414,6 +414,9 @@ class TripReportAdmin(CountryUsersAdminMixin, ExportMixin, VersionAdmin):
             db_field, request, **kwargs
         )
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
 
 class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
     resource_class = ActionPointResource
@@ -462,7 +465,15 @@ class ActionPointsAdmin(CountryUsersAdminMixin, ExportMixin, admin.ModelAdmin):
 
         return readonly_fields
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+
+class TripLocationAdmin(admin.ModelAdmin):
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
 admin.site.register(Trip, TripReportAdmin)
 admin.site.register(ActionPoint, ActionPointsAdmin)
-admin.site.register(TripLocation)
+admin.site.register(TripLocation, TripLocationAdmin)
