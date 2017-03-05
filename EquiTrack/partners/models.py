@@ -8,7 +8,7 @@ from django.conf import settings
 from django.contrib.auth.models import User, Group
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.db import models, connection, transaction
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.db.models.signals import post_save, pre_delete
 from django.utils.translation import ugettext as _
 from django.utils.functional import cached_property
@@ -635,12 +635,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         if update_one:
             pv += 1
         else:
-            travelers = Travel.objects.filter(status__in=[Travel.COMPLETED]).values_list('traveler', flat=True)
             pv = TravelActivity.objects.filter(
                 travel_type=TravelType.PROGRAMME_MONITORING,
+                travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
                 partner=partner,
-                primary_traveler__in=travelers
             ).count() or 0
 
         partner.hact_values['programmatic_visits'] = pv
@@ -655,12 +654,11 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         if update_one:
             sc += 1
         else:
-            travelers = Travel.objects.filter(status__in=[Travel.COMPLETED]).values_list('traveler', flat=True)
             sc = TravelActivity.objects.filter(
                 travel_type=TravelType.SPOT_CHECK,
+                travels__traveler=F('primary_traveler'),
                 travels__status__in=[Travel.COMPLETED],
                 partner=partner,
-                primary_traveler__in=travelers
             ).count() or 0
 
         partner.hact_values['spot_checks'] = sc
@@ -668,18 +666,8 @@ class PartnerOrganization(AdminURLMixin, models.Model):
 
     @classmethod
     def follow_up_flags(cls, partner, action_point=None):
-        follow_ups = len([
-            action for trip in partner.trips
-            for action in trip.actionpoint_set.filter(
-                completed_date__isnull=True
-            )
-            if action.follow_up
-        ])
-        if action_point and action_point.completed_date is None and action_point.follow_up:
-            follow_ups += 1
 
-        partner.hact_values['follow_up_flags'] = follow_ups
-        partner.save()
+        pass
 
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
