@@ -57,8 +57,7 @@ TRAVEL_TYPE_MAP = {
 }
 
 
-biz_region = BusinessRegion(name='bizness', code='TK')
-biz_region.save()
+
 
 def migrate_trips(country):
     set_country(country.name)
@@ -67,6 +66,7 @@ def migrate_trips(country):
     trips_with_gov_activities = []
     failed_reference = []
     failed_integrity = []
+    biz_region, _ = BusinessRegion.objects.get_or_create(name='GlobalRegion', code='TK')
     try:
         for trip in trips:
             print 'trip: ', trip.reference()
@@ -338,7 +338,6 @@ def migrate_trips(country):
 
 
 def migrate_trips_all_countries():
-
     for country in Country.objects.all():
         if country.name in ["Global"]:
             continue
