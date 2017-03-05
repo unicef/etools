@@ -541,6 +541,8 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
         super(PartnershipAdmin, self).save_model(request, obj, form, change)
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
 
@@ -702,6 +704,8 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     #                         assigned_by=request.user
     #                     )
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
 class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.StackedInline):
     model = GovernmentInterventionResult
@@ -772,6 +776,8 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
 
         super(GovernmentInterventionAdmin, self).save_model(request, obj, form, change)
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
 class AssessmentAdminInline(admin.TabularInline):
     model = Assessment
@@ -811,6 +817,8 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
 
         super(PartnerStaffMemberAdmin, self).save_model(request, obj, form, change)
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
 class HiddenPartnerFilter(admin.SimpleListFilter):
 
@@ -872,7 +880,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
         (_('Partner Details'), {
             'fields':
                 ((u'name', u'vision_synced',),
-                 u'short_name',
+                 (u'short_name', u'alternate_name',),
                  (u'partner_type', u'cso_type',),
                  u'shared_with',
                  u'vendor_number',
@@ -881,7 +889,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'last_assessment_date',
                  # TODO remove field
                  u'address',
-                 u'street_address',
+                 # u'street_address',
                  u'city',
                  u'postal_code',
                  u'country',
@@ -934,6 +942,9 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
             partner.save()
             partners += 1
         self.message_user(request, '{} partners were shown'.format(partners))
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
 
 class AgreementAmendmentLogInlineAdmin(admin.TabularInline):
@@ -1044,6 +1055,9 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
 
         super(AgreementAdmin, self).save_model(request, obj, form, change)
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
 
 class FundingCommitmentAdmin(admin.ModelAdmin):
     search_fields = (
@@ -1081,14 +1095,28 @@ class FundingCommitmentAdmin(admin.ModelAdmin):
 
         super(FundingCommitmentAdmin, self).save_model(request, obj, form, change)
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
-admin.site.register(SupplyItem)
+
+class FileTypeAdmin(admin.ModelAdmin):
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+
+class SupplyItemAdmin(admin.ModelAdmin):
+
+    def has_module_permission(self, request):
+        return request.user.is_superuser
+
+admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendmentType)
 admin.site.register(PartnerOrganization, PartnerAdmin)
-admin.site.register(FileType)
+admin.site.register(FileType, FileTypeAdmin)
 # admin.site.register(Assessment, AssessmentAdmin)
 admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
@@ -1099,7 +1127,6 @@ admin.site.register(BankDetails)
 admin.site.register(InterventionPlannedVisits)
 # admin.site.register(Intervention)
 admin.site.register(InterventionAmendment)
-admin.site.register(PartnershipBudget)
 admin.site.register(InterventionSectorLocationLink)
 admin.site.register(InterventionResultLink)
 

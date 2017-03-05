@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.db import connection
 from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
@@ -484,7 +485,8 @@ def determine_file_upload_path(instance, filename):
     #          instance.travel.id,
     #          filename]
     #     )
-    return 'travels/{}/{}'.format(instance.travel.id, filename)
+    country_name = connection.schema_name or 'Uncategorized'
+    return 'travels/{}/{}/{}'.format(connection.schema_name, instance.travel.id, filename)
 
 
 class TravelAttachment(models.Model):
@@ -492,7 +494,10 @@ class TravelAttachment(models.Model):
     type = models.CharField(max_length=64)
 
     name = models.CharField(max_length=255)
-    file = models.FileField(upload_to=determine_file_upload_path)
+    file = models.FileField(
+        upload_to=determine_file_upload_path,
+        max_length=255
+    )
 
 
 class TravelPermission(models.Model):

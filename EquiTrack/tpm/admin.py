@@ -98,6 +98,8 @@ class TPMVisitAdmin(ExportMixin, VersionAdmin):
             obj.pca.partner_mng_email
         )
 
+    def has_module_permission(self, request):
+        return request.user.is_superuser
 
 class TPMLocationsAdmin(admin.ModelAdmin):
     list_display = (

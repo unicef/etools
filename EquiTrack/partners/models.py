@@ -1484,7 +1484,8 @@ class Intervention(TimeStampedModel):
     @transition(field=status,
                 source=[DRAFT, SUSPENDED],
                 target=[ACTIVE],
-                conditions=[intervention_validation.transition_to_active])
+                conditions=[intervention_validation.transition_to_active],
+                permission=intervention_validation.partnership_manager_only)
     def transition_to_active(self):
         # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
         # mess up the reference numbers.
@@ -1497,6 +1498,22 @@ class Intervention(TimeStampedModel):
     def transition_to_ended(self):
         # From active, ended, suspended and terminated you cannot move to draft or cancelled because you'll
         # mess up the reference numbers.
+        pass
+
+    @transition(field=status,
+                source=[ACTIVE],
+                target=[SUSPENDED],
+                conditions=[intervention_validation.transition_ok],
+                permission=intervention_validation.partnership_manager_only)
+    def transition_to_suspended(self):
+        pass
+
+    @transition(field=status,
+                source=[ACTIVE, SUSPENDED],
+                target=[TERMINATED],
+                conditions=[intervention_validation.transition_ok],
+                permission=intervention_validation.partnership_manager_only)
+    def transition_to_terminated(self):
         pass
 
     @property
