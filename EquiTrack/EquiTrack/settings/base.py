@@ -40,17 +40,17 @@ SUIT_CONFIG = {
 
         {'label': 'Dashboard', 'icon': 'icon-globe', 'url': 'dashboard'},
 
-        {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
-            {'model': 'partners.partnerorganization', 'label': 'Partners'},
-            {'model': 'partners.agreement'},
-            {'model': 'partners.intervention'},
-            {'model': 'partners.governmentintervention', 'label': 'Government'},
-        ]},
+        # {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
+        #     # {'model': 'partners.partnerorganization', 'label': 'Partners'},
+        #     {'model': 'partners.agreement'},
+        #     {'model': 'partners.intervention'},
+        #     {'model': 'partners.governmentintervention', 'label': 'Government'},
+        # ]},
 
-        {'app': 'trips', 'icon': 'icon-road', 'models': [
-            {'model': 'trips.trip'},
-            {'model': 'trips.actionpoint'},
-        ]},
+        # {'app': 'trips', 'icon': 'icon-road', 'models': [
+        #     {'model': 'trips.trip'},
+        #     {'model': 'trips.actionpoint'},
+        # ]},
 
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
@@ -66,7 +66,7 @@ SUIT_CONFIG = {
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
-        {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
+        # {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
 

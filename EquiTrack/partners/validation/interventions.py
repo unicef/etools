@@ -3,6 +3,14 @@ from datetime import date, datetime
 
 from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
 
+def partnership_manager_only(i, user):
+    # Transition cannot happen by a user that';s not a Partnership Manager
+    if not user.groups.filter(name__in=['Partnership Manager']).count():
+        raise TransitionError(['Only Partnership Managers can execute this transition'])
+    return True
+
+def transition_ok(i):
+    return True
 
 def transition_to_active(i):
     # i = intervention
