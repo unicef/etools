@@ -16,7 +16,7 @@ from django.contrib import admin
 from publics.views import StaticDataView, WBSGrantFundView
 
 admin.autodiscover()
-
+from django.views.generic.base import RedirectView
 from .stream_feed.feeds import JSONActivityFeedWithCustomData
 from .utils import staff_required
 from .views import (
@@ -133,15 +133,15 @@ urlpatterns = patterns(
     # TODO: overload login_required to staff_required to automatically re-route partners to the parter portal
 
     # Used for admin and dashboard pages in django
-    url(r'^$', staff_required(UserDashboardView.as_view()), name='dashboard'),
+    url(r'^$', RedirectView.as_view(url='/dash/', permanent=False), name='dashboard'),
     url(r'^login/$', MainView.as_view(), name='main'),
-    url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
-        name='workspace-inactive'),
-    url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
-    url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
-    url(r'^map/$', login_required(MapView.as_view()), name='map'),
-    url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
-    url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
+
+
+    # url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
+    # url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
+    # url(r'^map/$', login_required(MapView.as_view()), name='map'),
+    # url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
+    # url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
     url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
     url(r'^api/wbs_grants_funds/$', WBSGrantFundView.as_view(), name='wbs_grants_funds'),
@@ -155,7 +155,7 @@ urlpatterns = patterns(
     url(r'^api/', include(government_interventions_api.urls)),
     url(r'^api/', include(simple_government_interventions_api.urls)),
 
-    url(r'^trips/', include('trips.urls')),
+    # url(r'^trips/', include('trips.urls')),
     url(r'^api/', include(trips_api.urls)),
     url(r'^api/', include(tripsfiles_api.urls)),
     url(r'^api/', include(actionpoint_api.urls)),
@@ -181,6 +181,8 @@ urlpatterns = patterns(
     url(r'^login/token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),
     url(r'^api-token-auth/', 'rest_framework_jwt.views.obtain_jwt_token'),  # TODO: remove this when eTrips is deployed needed
     url(r'^outdated_browser', OutdatedBrowserView.as_view(), name='outdated_browser'),
+    url(r'^workspace_inactive/$', TemplateView.as_view(template_name='removed_workspace.html'),
+        name='workspace-inactive'),
 
     # Activity stream
     url(r'^activity/(?P<model_name>\w+)/json/$',
