@@ -665,9 +665,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         partner.save()
 
     @classmethod
-    def follow_up_flags(cls, partner, action_point=None):
-
-        pass
+    def follow_up_flags(cls, partner, update_one=False):
+        partner.hact_values['follow_up_flags'] = 0
+        partner.save()
 
     @classmethod
     def create_user(cls, sender, instance, created, **kwargs):
