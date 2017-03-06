@@ -36,9 +36,10 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
                 planned = travels.filter(status=Travel.PLANNED).count()
                 approved = travels.filter(status=Travel.APPROVED).count()
                 completed = travels.filter(status=Travel.COMPLETED).count()
+                section = travels.first().section
                 section_trips = {
-                    "section_id": travels.first().section.id,
-                    "section_name": travels.first().section.name,
+                    "section_id": section.id if section else None,
+                    "section_name": section.name if section else "No Section selected",
                     "planned_travels": planned,
                     "approved_travels": approved,
                     "completed_travels": completed,
@@ -69,9 +70,10 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin,
                 action_points = ActionPoint.objects.filter(travel__in=travels)
                 total = action_points.count()
                 completed = action_points.filter(status=Travel.COMPLETED).count()
+                section = travels.first().section
                 section_action_points = {
-                    "section_id": travels.first().section.id,
-                    "section_name": travels.first().section.name,
+                    "section_id": section.id if section else None,
+                    "section_name": section.name if section else "No Section selected",
                     "total_action_points": total,
                     "completed_action_points": completed,
                 }
