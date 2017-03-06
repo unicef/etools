@@ -17,8 +17,8 @@ type_mapping = {
 }
 
 cso_type_mapping = {
-    "International NGO ": u'International',
-    "National NGO ": u'National',
+    "International NGO": u'International',
+    "National NGO": u'National',
     "Community based organization": u'Community Based Organization',
     "Academic Institution": u'Academic Institution'
 }
