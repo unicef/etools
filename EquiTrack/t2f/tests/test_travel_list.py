@@ -48,7 +48,7 @@ class TravelList(APITenantTestCase):
         self.assertKeysIn(expected_keys, travel_data)
 
     def test_dashboard_travels_list_view(self):
-        with self.assertNumQueries(12):
+        with self.assertNumQueries(10):
             response = self.forced_auth_req(
                 'get',
                 reverse(
@@ -67,6 +67,35 @@ class TravelList(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_keys = ['travels_by_section', 'completed', 'planned', 'approved']
         self.assertKeysIn(expected_keys, response_json)
+        self.assertEqual(len(response_json['travels_by_section']), 1)
+        self.assertEqual(response_json['planned'], 1)
+
+    def test_dashboard_travels_list_view_no_section(self):
+        travel = TravelFactory(reference_number=make_travel_reference_number(),
+                                    traveler=self.traveler,
+                                    supervisor=self.unicef_staff,
+                                    section=None)
+
+        with self.assertNumQueries(10):
+            response = self.forced_auth_req(
+                'get',
+                reverse(
+                    't2f:travels:list:dashboard',
+                    kwargs={
+                        "year": travel.start_date.year,
+                        "month": '{month:02d}'.format(month=travel.start_date.month),
+                    }
+                ),
+                user=self.unicef_staff,
+                data={"office_id": travel.office.id}
+            )
+
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        expected_keys = ['travels_by_section', 'completed', 'planned', 'approved']
+        self.assertKeysIn(expected_keys, response_json)
+        self.assertEqual(response_json['travels_by_section'][0]['section_name'], 'no_section_selected')
         self.assertEqual(len(response_json['travels_by_section']), 1)
         self.assertEqual(response_json['planned'], 1)
 

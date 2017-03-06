@@ -36,9 +36,10 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
                 planned = travels.filter(status=Travel.PLANNED).count()
                 approved = travels.filter(status=Travel.APPROVED).count()
                 completed = travels.filter(status=Travel.COMPLETED).count()
+                section = travels.first().section
                 section_trips = {
-                    "section_id": travels.first().section.id,
-                    "section_name": travels.first().section.name,
+                    "section_id": section.id if section else None,
+                    "section_name": section.name if section else "no_section_selected",
                     "planned_travels": planned,
                     "approved_travels": approved,
                     "completed_travels": completed,
