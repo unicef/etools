@@ -338,12 +338,11 @@ def migrate_trips(country):
 
 
 def migrate_trips_all_countries():
-    for country in Country.objects.all():
+    for country in Country.objects.order_by('name').all():
         if country.name in ["Global"]:
             continue
-
         print("Migrating trips for: '%s'" % country.name)
-        migrate_trips(country.name)
+        migrate_trips(country)
 
 
 def migrate_trips_for(country_name):
