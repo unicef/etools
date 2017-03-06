@@ -39,7 +39,7 @@ class TravelDashboardViewSet(mixins.ListModelMixin,
                 section = travels.first().section
                 section_trips = {
                     "section_id": section.id if section else None,
-                    "section_name": section.name if section else "no_section_selected",
+                    "section_name": section.name if section else "No Section selected",
                     "planned_travels": planned,
                     "approved_travels": approved,
                     "completed_travels": completed,
@@ -73,7 +73,7 @@ class ActionPointDashboardViewSet(mixins.ListModelMixin,
                 section = travels.first().section
                 section_action_points = {
                     "section_id": section.id if section else None,
-                    "section_name": section.name if section else "no_section_selected",
+                    "section_name": section.name if section else "No Section selected",
                     "total_action_points": total,
                     "completed_action_points": completed,
                 }

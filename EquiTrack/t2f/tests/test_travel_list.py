@@ -95,7 +95,7 @@ class TravelList(APITenantTestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         expected_keys = ['travels_by_section', 'completed', 'planned', 'approved']
         self.assertKeysIn(expected_keys, response_json)
-        self.assertEqual(response_json['travels_by_section'][0]['section_name'], 'no_section_selected')
+        self.assertEqual(response_json['travels_by_section'][0]['section_name'], 'No Section selected')
         self.assertEqual(len(response_json['travels_by_section']), 1)
         self.assertEqual(response_json['planned'], 1)
 
