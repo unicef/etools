@@ -100,7 +100,7 @@ class TravelList(APITenantTestCase):
         self.assertEqual(response_json['planned'], 1)
 
     def test_dashboard_action_points_list_view(self):
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(6):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:action_points:dashboard'),
@@ -117,7 +117,7 @@ class TravelList(APITenantTestCase):
         self.assertEqual(response_json['action_points_by_section'][0]['total_action_points'], 1)
 
     def test_dashboard_action_points_list_view_no_office(self):
-        with self.assertNumQueries(8):
+        with self.assertNumQueries(6):
             response = self.forced_auth_req(
                 'get',
                 reverse('t2f:action_points:dashboard'),
