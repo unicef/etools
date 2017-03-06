@@ -86,6 +86,7 @@ class TravelAgenciesSyncronizer(VisionDataSynchronizer):
 
     def _save_records(self, records):
         records = records['ROWSET']['ROW']
+        records = self._filter_records(records)
         processed = 0
 
         for row in records:
@@ -101,6 +102,10 @@ class TravelAgenciesSyncronizer(VisionDataSynchronizer):
                 travel_agent = TravelAgent(code=vendor_code)
                 log.debug('Travel agent created with code %s', vendor_code)
 
+            travel_expense_type, _ = TravelExpenseType.objects.get_or_create(vendor_number=vendor_code,
+                                                    defaults={'title': name})
+
+            travel_agent.expense_type = travel_expense_type
             travel_agent.name = name
             travel_agent.city = city
 
@@ -124,8 +129,6 @@ class TravelAgenciesSyncronizer(VisionDataSynchronizer):
             travel_agent.save()
             log.info('Travel agent %s saved.', travel_agent.name)
 
-            TravelExpenseType.objects.get_or_create(vendor_number=vendor_code, is_travel_agent=True,
-                                                    defaults={'title': name})
 
         return processed
 
