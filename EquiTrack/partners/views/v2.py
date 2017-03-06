@@ -203,7 +203,11 @@ class PMPDropdownsListApiView(APIView):
         """
         Return All dropdown values used for Agreements form
         """
-        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team']).values('id', 'first_name', 'last_name', 'email'))
+        signed_by_unicef = list(models.User.objects.filter(groups__name__in=['Senior Management Team'],
+                                                           profile__country=request.tenant).values('id',
+                                                                                                   'first_name',
+                                                                                                   'last_name',
+                                                                                                   'email'))
         hrps = list(ResultStructure.objects.values())
         current_country_programme = CountryProgramme.current()
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False,
