@@ -91,7 +91,7 @@ class TravelAgenciesSyncronizer(VisionDataSynchronizer):
 
         for row in records:
             name = row['VENDOR_NAME']
-            vendor_code = ['VENDOR_CODE']
+            vendor_code = row['VENDOR_CODE']
             city = row['VENDOR_CITY']
             country_code = row['VENDOR_CTRY_CODE']
 
