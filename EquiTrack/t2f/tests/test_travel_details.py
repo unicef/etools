@@ -7,8 +7,9 @@ from unittest import skip
 
 from django.core.urlresolvers import reverse
 
-from EquiTrack.factories import UserFactory, LocationFactory
+from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, GovernmentInterventionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from partners.models import GovernmentIntervention
 from publics.models import DSARegion
 from publics.tests.factories import BusinessAreaFactory, WBSFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
@@ -557,3 +558,72 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         self.assertEqual(response_json, {'non_field_errors': ['Maximum 3 open travels are allowed.']})
+
+    def test_missing_clearances(self):
+        data = {'itinerary': [],
+                'activities': [{'is_primary_traveler': True,
+                                'locations': []}],
+                'cost_assignments': [],
+                'expenses': [],
+                'action_points': [],
+                'ta_required': True,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
+
+        # Check only if 200
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201)
+
+        response_json = json.loads(response.rendered_content)
+
+        travel = Travel.objects.get(id=response_json['id'])
+        travel.clearances.delete()
+
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': response_json['id']}),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+
+    def test_travel_activity_partnership(self):
+        partnership = InterventionFactory()
+        # government_partnership = GovernmentInterventionFactory()
+
+        data = {'itinerary': [],
+                'activities': [{'is_primary_traveler': True,
+                                'locations': [],
+                                'partnership': partnership.id}],
+                'cost_assignments': [],
+                'expenses': [],
+                'action_points': [],
+                'ta_required': True,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
+
+        # Check only if 200
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201)
+
+        response_json = json.loads(response.rendered_content)
+        activity = response_json['activities'][0]
+
+        self.assertEqual(activity['partnership'], partnership.id)
+        self.assertEqual(activity['government_partnership'], None)
+
+        government_partnership = GovernmentInterventionFactory()
+        data = response_json
+        data['activity'][0]['government_partnership'] = government_partnership.id
+
+        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': response_json['id']}),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+
+        response_json = json.loads(response.rendered_content)
+        activity = response_json['activities'][0]
+
+        self.assertEqual(activity['partnership'], None)
+        self.assertEqual(activity['government_partnership'], government_partnership.id)
