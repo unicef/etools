@@ -35,22 +35,22 @@ class VisionXML(APITenantTestCase):
         country.business_area_code = '0060'
         country.save()
 
-    def make_invoice_updater(self):
+    def make_invoice_updater(self, status=Invoice.SUCCESS):
         root = ET.Element('ta_invoice_acks')
-        for invoice in Invoice.objects.filter(status=Invoice.PROCESSING):
+        for invoice in Invoice.objects.filter(status__in=[Invoice.PROCESSING, Invoice.PENDING]):
             main = ET.SubElement(root, 'ta_invoice_ack')
             ET.SubElement(main, InvoiceUpdater.REFERENCE_NUMBER_FIELD).text = invoice.reference_number
-            ET.SubElement(main, InvoiceUpdater.STATUS_FIELD).text = 'success'
+            ET.SubElement(main, InvoiceUpdater.STATUS_FIELD).text = status
             ET.SubElement(main, InvoiceUpdater.MESSAGE_FIELD).text = 'explanation'
             ET.SubElement(main, InvoiceUpdater.VISON_REFERENCE_NUMBER_FIELD).text = 'vision_fi'
 
         return ET.tostring(root)
 
-    def test_invoice_making(self):
-        def make_invoices(travel):
-            maker = InvoiceMaker(travel)
-            maker.do_invoicing()
+    def make_invoices(self, travel):
+        maker = InvoiceMaker(travel)
+        maker.do_invoicing()
 
+    def prepare_travel(self):
         # Currencies
         huf = CurrencyFactory(name='HUF',
                               code='huf')
@@ -84,8 +84,15 @@ class VisionXML(APITenantTestCase):
                                       grant=grant_1,
                                       fund=fund_1)
 
+        return travel
+
+    def test_invoice_making(self):
+
+
+        travel = self.prepare_travel()
+
         # Generate invoice
-        make_invoices(travel)
+        self.make_invoices(travel)
 
         response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
         xml_data = response.content
@@ -106,3 +113,18 @@ class VisionXML(APITenantTestCase):
         xml_data = response.content
 
         self.assertEqual(xml_data, "<?xml version='1.0' encoding='UTF-8'?>\n<ta_invoices />")
+
+    def test_error_mail(self):
+        travel = self.prepare_travel()
+
+        self.make_invoices(travel)
+
+        updater_xml_structure = self.make_invoice_updater(Invoice.ERROR)
+
+        # Update invoices like vision would do it
+        response = self.forced_auth_req('post', reverse('t2f:vision_invoice_update'),
+                             data=updater_xml_structure,
+                             user=self.unicef_staff,
+                             request_format=None,
+                             content_type='text/xml')
+        self.assertEqual(response.status_code, 200)
