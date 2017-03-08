@@ -4,6 +4,7 @@ from itertools import chain
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
 from django.utils.itercompat import is_iterable
@@ -398,7 +399,11 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     def update_related_objects(self, attr_name, related_data):
         many = isinstance(self._fields[attr_name], serializers.ListSerializer)
 
-        related = getattr(self.instance, attr_name)
+        try:
+            related = getattr(self.instance, attr_name)
+        except ObjectDoesNotExist:
+            related = None
+
         if many:
             # Load the queryset
             related = related.all()
