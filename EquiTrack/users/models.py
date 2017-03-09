@@ -71,6 +71,43 @@ class Country(TenantMixin):
         return self.name
 
 
+class WorkspaceCounter(models.Model):
+    TRAVEL_REFERENCE = 'travel_reference_number_counter'
+    TRAVEL_INVOICE_REFERENCE = 'travel_invoice_reference_number_counter'
+
+    workspace = models.OneToOneField('users.Country', related_name='counters')
+
+    # T2F travel reference number counter
+    travel_reference_number_counter = models.PositiveIntegerField(default=1)
+    travel_invoice_reference_number_counter = models.PositiveIntegerField(default=1)
+
+    def get_next_value(self, counter_type):
+        assert connection.in_atomic_block, 'Counters should be used only within an atomic block'
+
+        # Locking the row
+        counter_model = WorkspaceCounter.objects.select_for_update().get(id=self.id)
+
+        counter_value = getattr(counter_model, counter_type, None)
+        if counter_value is None:
+            raise AttributeError('Invalid counter type')
+
+        setattr(counter_model, counter_type, counter_value + 1)
+        counter_model.save()
+
+        return counter_value
+
+    @classmethod
+    def create_counter_model(cls, sender, instance, created, **kwargs):
+        """
+        Signal handler to create user profiles automatically
+        """
+        if created:
+            cls.objects.create(workspace=instance)
+
+
+post_save.connect(WorkspaceCounter.create_counter_model, sender=Country)
+
+
 class CountryOfficeManager(models.Manager):
     def get_queryset(self):
         if hasattr(connection.tenant, 'id') and connection.tenant.schema_name != 'public':
