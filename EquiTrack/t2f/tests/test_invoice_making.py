@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.models import TravelExpenseType
+from publics.models import TravelExpenseType, WBSGrantThrough, GrantFundThrough
 from t2f.helpers.invoice_maker import InvoiceMaker
 
 from t2f.models import Travel, Expense, CostAssignment, InvoiceItem, Invoice
@@ -60,14 +60,15 @@ class InvoiceMaking(APITenantTestCase):
         grant_2 = GrantFactory(name='Grant #2')
         grant_3 = GrantFactory(name='Grant #3')
 
-        wbs_1.grants.add(grant_1)
-        wbs_2.grants.add(grant_2, grant_3)
+        WBSGrantThrough.objects.create(wbs=wbs_1, grant=grant_1)
+        WBSGrantThrough.objects.create(wbs=wbs_2, grant=grant_2)
+        WBSGrantThrough.objects.create(wbs=wbs_2, grant=grant_3)
 
         fund_1 = FundFactory(name='Fund #1')
         fund_2 = FundFactory(name='Fund #4')
 
-        grant_1.funds.add(fund_1)
-        grant_3.funds.add(fund_2)
+        GrantFundThrough.objects.create(grant=grant_1, fund=fund_1)
+        GrantFundThrough.objects.create(grant=grant_3, fund=fund_2)
 
         # Expense types
         et_t_food = ExpenseTypeFactory(title='Food', vendor_number=TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER)

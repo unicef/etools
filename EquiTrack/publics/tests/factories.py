@@ -5,7 +5,7 @@ import factory
 from factory import fuzzy
 
 from publics.models import DSARegion, Currency, AirlineCompany, Fund, Grant, WBS, TravelExpenseType, Country,\
-    BusinessArea, BusinessRegion, ExchangeRate, TravelAgent
+    BusinessArea, BusinessRegion, ExchangeRate, TravelAgent, WBSGrantThrough, GrantFundThrough
 
 _FUZZY_START_DATE = datetime.now() - timedelta(days=5)
 _FUZZY_END_DATE = datetime.now() + timedelta(days=5)
@@ -68,7 +68,7 @@ class WBSFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def populate_grants(self, create, extracted, **kwargs):
         grant = GrantFactory()
-        self.grants.add(grant)
+        WBSGrantThrough.objects.create(wbs=self, grant=grant)
 
 
 class GrantFactory(factory.DjangoModelFactory):
@@ -80,7 +80,7 @@ class GrantFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def populate_funds(self, create, extracted, **kwargs):
         fund = FundFactory()
-        self.funds.add(fund)
+        GrantFundThrough.objects.create(grant=self, fund=fund)
 
 
 class FundFactory(factory.DjangoModelFactory):

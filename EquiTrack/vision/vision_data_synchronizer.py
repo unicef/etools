@@ -23,7 +23,7 @@ class VisionDataSynchronizer:
     __metaclass__ = ABCMeta
 
     ENDPOINT = None
-    URL = settings.VISION_URL
+    URL = None
     NO_DATA_MESSAGE = u'No Data Available'
     REQUIRED_KEYS = {}
     GLOBAL_CALL = False
@@ -33,6 +33,8 @@ class VisionDataSynchronizer:
             raise VisionException(message='Country is required')
         if self.ENDPOINT is None:
             raise VisionException(message='You must set the ENDPOINT name')
+
+        self.URL = self.URL or settings.VISION_URL
 
         self.county = country
         self.url = '{}/{}'.format(
@@ -103,3 +105,10 @@ class VisionDataSynchronizer:
         finally:
             log.save()
 
+    @classmethod
+    def pre_run_cleanup(cls):
+        """
+        This is a highly specialized method. This will be executed only once even if the syncer runs per tenant.
+        The main purpose of this to do any kind of cleanup action before sync.
+        """
+        pass
