@@ -178,29 +178,20 @@ class TestDSACalculations(APITenantTestCase):
         calculator = DSACalculator(self.travel)
         calculator.calculate_dsa()
 
-        self.assertEqual(calculator.total_dsa, 520)
-        self.assertEqual(calculator.total_deductions, 25)
-        self.assertEqual(calculator.paid_to_traveler, 495)
+        self.assertEqual(calculator.total_dsa, 480)
+        self.assertEqual(calculator.total_deductions, 20)
+        self.assertEqual(calculator.paid_to_traveler, 460)
 
         self.assertEqual(calculator.detailed_dsa,
                          [{'daily_rate': Decimal('200'),
-                           'deduction': Decimal('10'),
+                           'deduction': Decimal('20'),
                            'dsa_region': self.budapest.id,
                            'dsa_region_name': 'Hungary - Budapest',
-                           'end_date': date(2017, 1, 2),
-                           'night_count': 1,
-                           'paid_to_traveler': Decimal('390'),
-                           'start_date': date(2017, 1, 1),
-                           'total_amount': Decimal('400')},
-                          {'daily_rate': Decimal('300'),
-                           'deduction': Decimal('15'),
-                           'dsa_region': self.copenhagen.id,
-                           'dsa_region_name': 'Denmark - Copenhagen',
                            'end_date': date(2017, 1, 3),
-                           'night_count': 0,
-                           'paid_to_traveler': Decimal('105'),
-                           'start_date': date(2017, 1, 3),
-                           'total_amount': Decimal('120')}])
+                           'night_count': 2,
+                           'paid_to_traveler': Decimal('460'),
+                           'start_date': date(2017, 1, 1),
+                           'total_amount': Decimal('480')}])
 
     def test_case_4(self):
         IteneraryItemFactory(travel=self.travel,

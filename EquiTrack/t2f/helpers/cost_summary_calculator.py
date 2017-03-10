@@ -69,12 +69,15 @@ class DSACalculator(object):
     class DSAdto(object):
         def __init__(self, d, itinerary_item):
             self.date = d
-            self.itinerary_item = itinerary_item
-            self.region = itinerary_item.dsa_region
+            self.set_itinerary_item(itinerary_item)
 
             self.dsa_amount = Decimal(0)
             self.deduction_multiplier = Decimal(0)
             self.last_day = False
+
+        def set_itinerary_item(self, itinerary_item):
+            self.itinerary_item = itinerary_item
+            self.region = itinerary_item.dsa_region
 
         def __repr__(self):
             return 'Date: {} | Region: {} | DSA amount: {} | Deduction: {} => Final: {}'.format(self.date,
@@ -134,7 +137,7 @@ class DSACalculator(object):
         dsa_dto_list = self.check_one_day_long_trip(dsa_dto_list)
         dsa_dto_list = self.calculate_daily_dsa_rate(dsa_dto_list)
         dsa_dto_list = self.calculate_daily_deduction(dsa_dto_list)
-
+        dsa_dto_list = self.check_last_day(dsa_dto_list)
 
         self.total_dsa = Decimal(0)
         self.total_deductions = Decimal(0)
@@ -191,12 +194,7 @@ class DSACalculator(object):
             dsa_dto_list.append(dto)
             counter += 1
 
-        dsa_dto_list = sorted(dsa_dto_list, cmp=lambda x, y: cmp(x.date, y.date))
-
-        if dsa_dto_list:
-            dsa_dto_list[-1].last_day = True
-
-        return dsa_dto_list
+        return sorted(dsa_dto_list, cmp=lambda x, y: cmp(x.date, y.date))
 
     def check_one_day_long_trip(self, dsa_dto_list):
         # If it's a day long trip and only one less than 8 hour travel was made, no dsa applied
@@ -218,7 +216,6 @@ class DSACalculator(object):
             return []
 
         return dsa_dto_list
-
 
     def calculate_daily_dsa_rate(self, dsa_dto_list):
         if not dsa_dto_list:
@@ -269,6 +266,28 @@ class DSACalculator(object):
         for dto in dsa_dto_list:
             dto.deduction_multiplier = deduction_mapping.get(dto.date, Decimal(0))
 
+        return dsa_dto_list
+
+    def check_last_day(self, dsa_dto_list):
+        if not dsa_dto_list:
+            return dsa_dto_list
+
+        last_dto = dsa_dto_list[-1]
+        last_day_departure_count = self.travel.itinerary.filter(departure_date__year=last_dto.date.year,
+                                                                departure_date__month=last_dto.date.month,
+                                                                departure_date__day=last_dto.date.day).count()
+
+
+        itinerary = self.travel.itinerary.order_by('-departure_date')
+        if last_day_departure_count and itinerary.count() > last_day_departure_count:
+            first_departure = itinerary[last_day_departure_count]
+
+            last_dto.set_itinerary_item(first_departure)
+            over_60 = len(dsa_dto_list) > 60
+            dsa_amount = self.get_dsa_amount(last_dto.region, over_60)
+            last_dto.dsa_amount = dsa_amount
+
+        last_dto.last_day = True
         return dsa_dto_list
 
     def aggregate_detailed_dsa(self, dsa_dto_list):
