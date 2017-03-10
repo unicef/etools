@@ -1,4 +1,4 @@
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import resolve
 from django.http.response import HttpResponse
 
@@ -10,6 +10,8 @@ from tenant_schemas.test.client import TenantClient
 from django.db import connection
 from django.core.management import call_command
 from tenant_schemas.utils import get_tenant_model
+
+from users.models import WorkspaceCounter
 
 
 class FastTenantTestCase(TenantTestCase):
@@ -25,6 +27,11 @@ class FastTenantTestCase(TenantTestCase):
         except:
             cls.tenant = TenantModel(domain_url=tenant_domain, schema_name='test')
             cls.tenant.save(verbosity=0)
+
+        try:
+            cls.tenant.counters
+        except ObjectDoesNotExist:
+            WorkspaceCounter.objects.create(workspace=cls.tenant)
 
         connection.set_tenant(cls.tenant)
 
