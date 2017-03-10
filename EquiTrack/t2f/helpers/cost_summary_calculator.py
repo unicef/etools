@@ -162,9 +162,6 @@ class DSACalculator(object):
 
         itinerary_item_list = list(self.travel.itinerary.order_by('arrival_date'))
 
-        start_date = self._cast_datetime(itinerary_item_list[0].arrival_date).date()
-        end_date = self._cast_datetime(itinerary_item_list[-1].departure_date).date()
-
         # To few elements, cannot calculate properly
         if len(itinerary_item_list) < 2:
             return []
@@ -172,6 +169,9 @@ class DSACalculator(object):
         for itinerary_item in itinerary_item_list[:-1]:
             arrival_date = self._cast_datetime(itinerary_item.arrival_date).date()
             mapping[arrival_date] = itinerary_item
+
+        start_date = self._cast_datetime(itinerary_item_list[0].arrival_date).date()
+        end_date = self._cast_datetime(itinerary_item_list[-1].departure_date).date()
 
         tmp_date = start_date
         previous_itinerary = None
