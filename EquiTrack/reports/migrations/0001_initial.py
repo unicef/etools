@@ -13,7 +13,6 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('activityinfo', '0002_auto_20151004_2246'),
     ]
 
     operations = [
@@ -54,8 +53,6 @@ class Migration(migrations.Migration):
                 ('baseline', models.CharField(blank=True, max_length=255, null=True)),
                 ('ram_indicator', models.BooleanField(default=False)),
                 ('view_on_dashboard', models.BooleanField(default=False)),
-                ('in_activity_info', models.BooleanField(default=False)),
-                ('activity_info_indicators', models.ManyToManyField(blank=True, to='activityinfo.Indicator')),
             ],
             options={
                 'ordering': ['name'],
