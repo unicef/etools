@@ -4,6 +4,7 @@ from itertools import chain
 from datetime import datetime
 
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.fields.related import ManyToManyField
 from django.utils.functional import cached_property
 from django.utils.itercompat import is_iterable
@@ -162,14 +163,22 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
 
     class Meta:
         model = TravelActivity
-        fields = ('id', 'travel_type', 'partner', 'partnership', 'result', 'locations', 'primary_traveler', 'date',
-                  'is_primary_traveler')
+        fields = ('id', 'travel_type', 'partner', 'partnership', 'government_partnership', 'result', 'locations',
+                  'primary_traveler', 'date', 'is_primary_traveler')
 
     def validate(self, attrs):
         if 'id' not in attrs:
             if not attrs.get('is_primary_traveler'):
                 if not attrs.get('primary_traveler'):
                     raise ValidationError({'primary_traveler': 'This field is required'})
+
+        if attrs.get('partnership') and attrs.get('government_partnership'):
+            raise ValidationError('Partnership and government partnership cannot be set at the same time')
+
+        if 'partnership' in attrs:
+            attrs['government_partnership'] = None
+        elif 'government_partnership' in attrs:
+            attrs['partnership'] = None
 
         return attrs
 
@@ -390,7 +399,11 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     def update_related_objects(self, attr_name, related_data):
         many = isinstance(self._fields[attr_name], serializers.ListSerializer)
 
-        related = getattr(self.instance, attr_name)
+        try:
+            related = getattr(self.instance, attr_name)
+        except ObjectDoesNotExist:
+            related = None
+
         if many:
             # Load the queryset
             related = related.all()

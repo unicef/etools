@@ -6,9 +6,9 @@ from rest_framework import generics, status
 from rest_framework.response import Response
 
 from locations.models import Location
-from partners.models import PartnerOrganization, Intervention
+from partners.models import PartnerOrganization, Intervention, GovernmentIntervention
 from publics.models import TravelAgent
-from reports.models import Result
+from reports.models import Result, ResultType
 
 from t2f.models import TravelType, ModeOfTravel, ActionPoint
 from t2f.serializers.static_data import StaticDataSerializer
@@ -23,7 +23,8 @@ class StaticDataView(generics.GenericAPIView):
     def get(self, request):
         data = {'partners': PartnerOrganization.objects.all(),
                 'partnerships': Intervention.objects.all(),
-                'results': Result.objects.all(),
+                'government_partnerships': GovernmentIntervention.objects.all(),
+                'results': Result.objects.filter(result_type__name=ResultType.OUTPUT),
                 'locations': Location.objects.all(),
                 'travel_types': [c[0] for c in TravelType.CHOICES],
                 'travel_modes': [c[0] for c in ModeOfTravel.CHOICES],

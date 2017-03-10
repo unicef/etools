@@ -1850,8 +1850,10 @@ class GovernmentIntervention(models.Model):
 
         super(GovernmentIntervention, self).save(**kwargs)
 
+
 def activity_default():
     return {}
+
 
 class GovernmentInterventionResult(models.Model):
     """
