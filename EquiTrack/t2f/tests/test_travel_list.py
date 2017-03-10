@@ -5,6 +5,7 @@ import logging
 import json
 from freezegun import freeze_time
 
+from django.db import connection
 from django.core.urlresolvers import reverse
 from rest_framework import status
 
@@ -155,6 +156,9 @@ class TravelList(APITenantTestCase):
         # Travels have to be deleted here to avoid reference numbers generated ouf of the desired time range
         # (setUp is not covered by the freezegun decorator)
         Travel.objects.all().delete()
+        counters = connection.tenant.counters
+        counters.travel_reference_number_counter = 1
+        counters.save()
 
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
         TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
@@ -166,7 +170,7 @@ class TravelList(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIn('data', response_json)
         reference_numbers = [e['reference_number'] for e in response_json['data']]
-        self.assertEqual(reference_numbers, ['2016/000001', '2016/000002', '2016/000003'])
+        self.assertEqual(reference_numbers, ['2016/1', '2016/2', '2016/3'])
 
         response = self.forced_auth_req('get', reverse('t2f:travels:list:index'), data={'sort_by': 'reference_number',
                                                                                         'reverse': True},
@@ -174,7 +178,7 @@ class TravelList(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertIn('data', response_json)
         reference_numbers = [e['reference_number'] for e in response_json['data']]
-        self.assertEqual(reference_numbers, ['2016/000003', '2016/000002', '2016/000001'])
+        self.assertEqual(reference_numbers, ['2016/3', '2016/2', '2016/1'])
 
         # Here just iterate over the possible fields and do all the combinations of sorting
         # to see if all works (non-500)

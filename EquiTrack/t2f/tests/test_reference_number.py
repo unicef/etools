@@ -24,31 +24,31 @@ class TestReferenceNumber(APITenantTestCase):
     @freeze_time('2016-12-09')
     def test_reference_number_increase(self):
         response_json = self._create_travel()
-        self.assertEqual(response_json['reference_number'], '2016/000001')
+        self.assertEqual(response_json['reference_number'], '2016/1')
 
         response_json = self._create_travel()
-        self.assertEqual(response_json['reference_number'], '2016/000002')
+        self.assertEqual(response_json['reference_number'], '2016/2')
 
         response_json = self._create_travel()
-        self.assertEqual(response_json['reference_number'], '2016/000003')
+        self.assertEqual(response_json['reference_number'], '2016/3')
 
         response_json = self._create_travel()
-        self.assertEqual(response_json['reference_number'], '2016/000004')
+        self.assertEqual(response_json['reference_number'], '2016/4')
 
         response_json = self._create_travel()
-        self.assertEqual(response_json['reference_number'], '2016/000005')
+        self.assertEqual(response_json['reference_number'], '2016/5')
 
     def test_year_change(self):
         with freeze_time('2016-12-09'):
             response_json = self._create_travel()
-            self.assertEqual(response_json['reference_number'], '2016/000001')
+            self.assertEqual(response_json['reference_number'], '2016/1')
 
             response_json = self._create_travel()
-            self.assertEqual(response_json['reference_number'], '2016/000002')
+            self.assertEqual(response_json['reference_number'], '2016/2')
 
         with freeze_time('2017-01-01'):
             response_json = self._create_travel()
-            self.assertEqual(response_json['reference_number'], '2017/000001')
+            self.assertEqual(response_json['reference_number'], '2017/3')
 
             response_json = self._create_travel()
-            self.assertEqual(response_json['reference_number'], '2017/000002')
+            self.assertEqual(response_json['reference_number'], '2017/4')
