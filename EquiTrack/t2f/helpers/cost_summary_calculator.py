@@ -131,8 +131,10 @@ class DSACalculator(object):
 
     def calculate_dsa(self):
         dsa_dto_list = self.get_by_day_grouping()
+        dsa_dto_list = self.check_one_day_long_trip(dsa_dto_list)
         dsa_dto_list = self.calculate_daily_dsa_rate(dsa_dto_list)
         dsa_dto_list = self.calculate_daily_deduction(dsa_dto_list)
+
 
         self.total_dsa = Decimal(0)
         self.total_deductions = Decimal(0)
@@ -160,6 +162,9 @@ class DSACalculator(object):
 
         itinerary_item_list = list(self.travel.itinerary.order_by('arrival_date'))
 
+        start_date = self._cast_datetime(itinerary_item_list[0].arrival_date).date()
+        end_date = self._cast_datetime(itinerary_item_list[-1].departure_date).date()
+
         # To few elements, cannot calculate properly
         if len(itinerary_item_list) < 2:
             return []
@@ -167,9 +172,6 @@ class DSACalculator(object):
         for itinerary_item in itinerary_item_list[:-1]:
             arrival_date = self._cast_datetime(itinerary_item.arrival_date).date()
             mapping[arrival_date] = itinerary_item
-
-        start_date = self._cast_datetime(itinerary_item_list[0].arrival_date).date()
-        end_date = self._cast_datetime(itinerary_item_list[-1].departure_date).date()
 
         tmp_date = start_date
         previous_itinerary = None
@@ -195,6 +197,28 @@ class DSACalculator(object):
             dsa_dto_list[-1].last_day = True
 
         return dsa_dto_list
+
+    def check_one_day_long_trip(self, dsa_dto_list):
+        # If it's a day long trip and only one less than 8 hour travel was made, no dsa applied
+        if not dsa_dto_list:
+            return dsa_dto_list
+
+        if len(dsa_dto_list) > 1:
+            return dsa_dto_list
+
+        same_day_travels = list(self.travel.itinerary.all())
+        for i, sdt in enumerate(same_day_travels[:-1]):
+            # If it was less than 8 hours long, skip it
+            arrival = sdt.arrival_date
+            departure = same_day_travels[i+1].departure_date
+            if (departure - arrival) >= timedelta(hours=8):
+                break
+        else:
+            # No longer than 8 hours travel found, no dsa should be applied
+            return []
+
+        return dsa_dto_list
+
 
     def calculate_daily_dsa_rate(self, dsa_dto_list):
         if not dsa_dto_list:

@@ -355,3 +355,28 @@ class TestDSACalculations(APITenantTestCase):
                            'paid_to_traveler': Decimal('400'),
                            'start_date': date(2017, 1, 1),
                            'total_amount': Decimal('480')}])
+
+    def test_case_7(self):
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 21, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
+
+        self.assertEqual(calculator.total_dsa, 0)
+        self.assertEqual(calculator.total_deductions, 0)
+        self.assertEqual(calculator.paid_to_traveler, 0)
+
+        self.assertEqual(calculator.detailed_dsa, [])
