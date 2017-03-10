@@ -614,16 +614,18 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(activity['government_partnership'], None)
 
         government_partnership = GovernmentInterventionFactory()
-        data = response_json
-        data['activity'][0]['government_partnership'] = government_partnership.id
 
-        response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
+        new_data = response_json
+        new_data['activities'][0]['government_partnership'] = government_partnership.id
+        del new_data['activities'][0]['partnership']
+
+        new_response = self.forced_auth_req('patch', reverse('t2f:travels:details:index',
                                                        kwargs={'travel_pk': response_json['id']}),
-                                        data=data, user=self.unicef_staff)
-        self.assertEqual(response.status_code, 200)
+                                        data=new_data, user=self.unicef_staff)
 
-        response_json = json.loads(response.rendered_content)
-        activity = response_json['activities'][0]
+        self.assertEqual(new_response.status_code, 200)
 
-        self.assertEqual(activity['partnership'], None)
-        self.assertEqual(activity['government_partnership'], government_partnership.id)
+        new_response_json = json.loads(new_response.rendered_content)
+        new_activity = response_json['activities'][0]
+
+        self.assertEqual(new_activity['government_partnership'], government_partnership.id)
