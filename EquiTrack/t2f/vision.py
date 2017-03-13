@@ -170,6 +170,9 @@ class InvoiceUpdater(object):
 
     @run_on_tenants
     def _update_invoices_in_tenants(self, workspace, invoice_grouping):
+        if workspace.business_area_code not in invoice_grouping:
+            return 
+
         workspace_group = invoice_grouping.pop(workspace.business_area_code, [])
         for invoice_data in workspace_group:
             invoice_number = invoice_data[self.REFERENCE_NUMBER_FIELD]

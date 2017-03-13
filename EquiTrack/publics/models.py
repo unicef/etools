@@ -52,6 +52,7 @@ class ExchangeRate(models.Model):
     class Meta:
         ordering = ('valid_from',)
 
+
 class AirlineCompany(models.Model):
     # This will be populated from vision
     name = models.CharField(max_length=255)
