@@ -179,6 +179,11 @@ class Travel(models.Model):
 
         return True
 
+    def check_completed_from_planned(self):
+        if self.ta_required:
+            raise TransitionError('Cannot switch from planned to completed if TA is required')
+        return True
+
     def check_pending_invoices(self):
         # If invoicing is turned off, don't check pending invoices
         if settings.DISABLE_INVOICING:
@@ -305,7 +310,7 @@ class Travel(models.Model):
                                      self.traveler.email,
                                      'emails/certified.html')
 
-    @transition(status, source=[CERTIFIED, SUBMITTED], target=COMPLETED,
+    @transition(status, source=[CERTIFIED, SUBMITTED, PLANNED], target=COMPLETED,
                 conditions=[check_completion_conditions])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
