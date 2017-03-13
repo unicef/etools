@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
-from unittest import skip
-
 import xlrd
 import datetime
-from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
-
+import tempfile
 from rest_framework import status
 from tablib.core import Dataset
+from django.core.files.uploadedfile import SimpleUploadedFile
 
+from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, PartnershipFactory, \
-    GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory
+    GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
+    ResultStructureFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from partners.models import GovernmentInterventionResult, ResultType
 
@@ -18,17 +18,54 @@ class TestModelExport(APITenantTestCase):
     def setUp(self):
         super(TestModelExport, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory(partner_type='Government')
+        self.partner = PartnerFactory(
+            partner_type='Government',
+            vendor_number='Vendor No',
+            short_name="Short Name",
+            alternate_name="Alternate Name",
+            shared_with=["DPKO", "ECA"],
+            address="Address 123",
+            phone_number="Phone no 1234567",
+            email="email@address.com",
+            rating="High",
+            core_values_assessment_date=datetime.date.today(),
+            total_ct_cp=10000,
+            total_ct_cy=20000,
+            deleted_flag=False,
+            blocked=False,
+            type_of_assessment="Type of Assessment",
+            last_assessment_date=datetime.date.today(),
+        )
+        attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
         self.agreement = AgreementFactory(
             partner=self.partner,
+            country_programme=CountryProgrammeFactory(wbs="random WBS"),
+            attached_agreement=attachment,
+            start=datetime.date.today(),
+            end=datetime.date.today(),
             signed_by_unicef_date=datetime.date.today(),
-            country_programme=CountryProgrammeFactory(wbs="random WBS")
+            signed_by=self.unicef_staff,
+            signed_by_partner_date=datetime.date.today()
         )
 
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
 
-        self.intervention = InterventionFactory(agreement=self.agreement)
+        self.intervention = InterventionFactory(
+            agreement=self.agreement,
+            document_type='SHPD',
+            hrp=ResultStructureFactory(),
+            status='draft',
+            start=datetime.date.today(),
+            end=datetime.date.today(),
+            submission_date=datetime.date.today(),
+            submission_date_prc=datetime.date.today(),
+            review_date_prc=datetime.date.today(),
+            signed_by_unicef_date=datetime.date.today(),
+            signed_by_partner_date=datetime.date.today(),
+            unicef_signatory=self.unicef_staff,
+            population_focus="Population focus",
+        )
         self.government_intervention = GovernmentInterventionFactory(
             partner=self.partner,
             country_programme=self.agreement.country_programme
@@ -42,180 +79,6 @@ class TestModelExport(APITenantTestCase):
             year=datetime.date.today().year,
             planned_amount=100,
         )
-
-    @skip("wrong endpoint")
-    def test_partner_export_api(self):
-        response = self.forced_auth_req('get',
-                                        '/api/partners/export/',
-                                        user=self.unicef_staff)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        dataset = Dataset().load(response.content, 'csv')
-
-        self.assertEqual(dataset.height, 2)
-        self.assertEqual(dataset._get_headers(),
-                         ['vendor_number',
-                          'vision_synced',
-                          'deleted_flag',
-                          'name',
-                          'short_name',
-                          'alternate_id',
-                          'alternate_name',
-                          'partner_type',
-                          'cso_type',
-                          'shared_partner',
-                          'address',
-                          'email',
-                          'phone_number',
-                          'risk_rating',
-                          'type_of_assessment',
-                          'last_assessment_date',
-                          'total_ct_cp',
-                          'total_ct_cy',
-                          'agreement_count',
-                          'intervention_count',
-                          'active_staff_members'])
-        self.assertEqual(dataset[0],
-                         ('',
-                          '0',
-                          '0',
-                          self.partner.name,
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          'No',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '1',
-                          '1',
-                          'Mace Windu'))
-
-    @skip("wrong api endpoint")
-    def test_agreement_export_api(self):
-        response = self.forced_auth_req('get',
-                                        '/api/partners/{}/agreements/export/'.format(self.partner.id),
-                                        user=self.unicef_staff)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        dataset = Dataset().load(response.content, 'csv')
-
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(dataset._get_headers(),
-                         ['reference_number',
-                          'partner__vendor_number',
-                          'partner__name',
-                          'partner__short_name',
-                          'start_date',
-                          'end_date',
-                          'signed_by_partner',
-                          'signed_by_partner_date',
-                          'signed_by_unicef',
-                          'signed_by_unicef_date',
-                          'authorized_officers'])
-        self.assertEqual(dataset[0],
-                         (self.agreement.reference_number,
-                          '',
-                          self.partner.name,
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          self.agreement.signed_by_unicef_date.strftime('%Y-%m-%d'),
-                          ''))
-
-    @skip("Fix export")
-    def test_intervention_export_api(self):
-        response = self.forced_auth_req('get',
-                                        '/api/partners/{}/interventions/export/'.format(self.partner.id),
-                                        user=self.unicef_staff)
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
-
-        dataset = Dataset().load(response.content, 'csv')
-
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(dataset._get_headers(),
-                         ['title',
-                          'reference_number',
-                          'status',
-                          'partner__name',
-                          'partnership_type',
-                          'sectors',
-                          'start_date',
-                          'end_date',
-                          'result_structure__name',
-                          'locations',
-                          'initiation_date',
-                          'submission_date',
-                          'review_date',
-                          'days_from_submission_to_signed',
-                          'days_from_review_to_signed',
-                          'signed_by_partner_date',
-                          'partner_manager_name',
-                          'signed_by_unicef_date',
-                          'unicef_manager_name',
-                          'total_unicef_cash',
-                          'supplies',
-                          'total_budget',
-                          'planned_visits'])
-        self.assertEqual(dataset[0],
-                         ('To save the galaxy from the Empire',
-                          self.intervention.reference_number,
-                          'in_process',
-                          self.partner.name,
-                          'PD',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '',
-                          self.intervention.initiation_date.strftime('%Y-%m-%d'),
-                          '',
-                          '',
-                          'Not Submitted',
-                          'Not Reviewed',
-                          '',
-                          '',
-                          '',
-                          '',
-                          '0',
-                          '',
-                          '0',
-                          '0'))
-
-    @skip("Outdated")
-    def test_government_export_api(self):
-        response = self.forced_auth_req('get',
-                                        '/api/partners/{}/government_interventions/export/'.format(self.partner.id),
-                                        user=self.unicef_staff)
-        self.assertEquals(response.status_code, status.HTTP_200_OK, response.content)
-
-        dataset = Dataset().load(response.content, 'csv')
-
-        self.assertEqual(dataset.height, 1)
-        self.assertEqual(dataset._get_headers(),
-                         ['number',
-                          'partner__name',
-                          'result_structure__name',
-                          'sectors',
-                          'cash_transfer',
-                          'year'])
-        self.assertEqual(dataset[0],
-                         ('RefNumber',
-                          self.partner.name,
-                          self.government_intervention.result_structure.name,
-                          '',
-                          '0',
-                          datetime.datetime.now().strftime('%Y')))
 
     def test_government_intervention_export_api(self):
         response = self.forced_auth_req(
@@ -305,6 +168,48 @@ class TestModelExport(APITenantTestCase):
             'URL'
         ])
 
+        self.assertEqual(dataset[0], (
+                self.intervention.status,
+                unicode(self.intervention.agreement.partner.name),
+                self.intervention.agreement.partner.partner_type,
+                self.intervention.agreement.agreement_number,
+                unicode(self.intervention.agreement.country_programme.name),
+                self.intervention.document_type,
+                self.intervention.reference_number,
+                unicode(self.intervention.title),
+                '{}'.format(self.intervention.start),
+                '{}'.format(self.intervention.end),
+                u'',
+                u'',
+                u'',
+                u'',
+                u'',
+                self.intervention.population_focus,
+                unicode(self.intervention.hrp.name),
+                u'',
+                u'',
+                u'',
+                u'{:.2f}'.format(self.intervention.total_budget_local),
+                u'{:.2f}'.format(self.intervention.total_unicef_cash),
+                u'{:.2f}'.format(self.intervention.total_partner_contribution),
+                u'{:.2f}'.format(self.intervention.total_partner_contribution_local),
+                u'',
+                u'',
+                u'',
+                '{}'.format(self.intervention.submission_date),
+                '{}'.format(self.intervention.submission_date_prc),
+                '{}'.format(self.intervention.review_date_prc),
+                u'',
+                '{}'.format(self.intervention.signed_by_unicef_date),
+                u'',
+                '{}'.format(self.intervention.signed_by_partner_date),
+                u'',
+                u'',
+                u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id)
+            )
+        )
+
+
     def test_agreement_export_api(self):
         response = self.forced_auth_req(
             'get',
@@ -331,6 +236,23 @@ class TestModelExport(APITenantTestCase):
             'Amendments',
             'URL'
         ])
+
+        self.assertEqual(dataset[0], (
+                self.agreement.agreement_number,
+                unicode(self.agreement.status),
+                unicode(self.agreement.partner.name),
+                self.agreement.agreement_type,
+                '{}'.format(self.agreement.start),
+                '{}'.format(self.agreement.end),
+                u'',
+                '{}'.format(self.agreement.signed_by_partner_date),
+                u'',
+                '{}'.format(self.agreement.signed_by_unicef_date),
+                u'',
+                u'',
+                u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id)
+            )
+        )
 
     def test_partners_export_api(self):
         response = self.forced_auth_req(
@@ -365,3 +287,27 @@ class TestModelExport(APITenantTestCase):
             'Staff Members',
             'URL'
         ])
+
+        self.assertEqual(dataset[0], (
+                self.partner.vendor_number,
+                unicode(self.partner.name),
+                self.partner.short_name,
+                self.partner.alternate_name,
+                self.partner.partner_type,
+                u'',
+                self.partner.address,
+                self.partner.phone_number,
+                self.partner.email,
+                self.partner.rating,
+                u'{}'.format(self.partner.core_values_assessment_date),
+                u'{:.2f}'.format(self.partner.total_ct_cp),
+                u'{:.2f}'.format(self.partner.total_ct_cy),
+                unicode(self.partner.deleted_flag),
+                unicode(self.partner.blocked),
+                self.partner.type_of_assessment,
+                u'{}'.format(self.partner.last_assessment_date),
+                u'',
+                u', '.join([x.get_full_name() for x in self.partner.staff_members.filter(active=True).all()]),
+                u'https://testserver/pmp/partners/{}/details/'.format(self.partner.id)
+            )
+        )

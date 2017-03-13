@@ -60,6 +60,27 @@ class TravelExports(APITenantTestCase):
                           'approval_date',
                           'is_driver',
                           'attachment_count'])
+        # TODO figure out date comparison and unicode vs str
+        line = export_csv.next()
+        self.assertEqual(line, [
+                str(self.travel.id),
+                str(self.travel.reference_number),
+                str(self.traveler.get_full_name()),
+                str(self.travel.purpose),
+                line[4],
+                line[5],
+                str(self.travel.status),
+                line[7],
+                str(self.travel.section.name),
+                str(self.travel.office.name),
+                str(self.travel.supervisor.id),
+                str(self.travel.check_ta_required()),
+                str(self.travel.reference_number),
+                line[13],
+                str(self.travel.is_driver),
+                str(self.travel.attachments.count()),
+            ]
+        )
 
     def test_finance_export(self):
         response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
@@ -83,6 +104,26 @@ class TravelExports(APITenantTestCase):
                           'dsa_total',
                           'expense_total',
                           'deductions_total'])
+        # TODO figure out date comparison and unicode vs str
+        line = export_csv.next()
+        self.assertEqual(line, [
+                str(self.travel.reference_number),
+                str(self.traveler.get_full_name()),
+                str(self.travel.office.name),
+                str(self.travel.section.name),
+                str(self.travel.status),
+                str(self.travel.supervisor.get_full_name()),
+                line[6],
+                line[7],
+                str(self.travel.purpose),
+                ', '.join(self.travel.mode_of_travel),
+                str(self.travel.international_travel),
+                str(self.travel.ta_required),
+                '{:.10f}'.format(self.travel.cost_summary["dsa_total"]),
+                '{:.10f}'.format(self.travel.cost_summary["expenses_total"]),
+                '{:.10f}'.format(self.travel.cost_summary["deductions_total"]),
+            ]
+        )
 
     def test_travel_admin_export(self):
         response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
@@ -104,6 +145,26 @@ class TravelExports(APITenantTestCase):
                           'overnight_travel',
                           'mode_of_travel',
                           'airline'])
+        # TODO figure out date comparison and unicode vs str
+        line = export_csv.next()
+        self.assertEqual(line, [
+                str(self.travel.reference_number),
+                str(self.traveler.get_full_name()),
+                str(self.travel.office.name),
+                str(self.travel.section.name),
+                str(self.travel.status),
+                str(self.travel.itinerary.first().origin),
+                str(self.travel.itinerary.first().destination),
+                # str(self.travel.itinerary.first().departure_date),
+                # str(self.travel.itinerary.first().arrival_date),
+                line[7],
+                line[8],
+                str(self.travel.itinerary.first().dsa_region.area_code),
+                str(self.travel.itinerary.first().overnight_travel),
+                str(self.travel.itinerary.first().mode_of_travel),
+                '',
+            ]
+        )
 
     def test_invoice_export(self):
         response = self.forced_auth_req('get', reverse('t2f:travels:list:invoice_export'),
