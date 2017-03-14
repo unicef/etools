@@ -262,6 +262,8 @@ class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
     hact_min_requirements = serializers.JSONField()
 
     def get_hact_values(self, obj):
+        hact = json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
+
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
 
     class Meta:

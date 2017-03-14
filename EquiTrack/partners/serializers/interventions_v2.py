@@ -1,9 +1,11 @@
 import json
 import logging
 from operator import xor
+import datetime
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Sum
 from rest_framework import serializers
 
 from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
@@ -449,10 +451,15 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
     partner_name = serializers.CharField(source='agreement.partner.name')
     # government intervention = true, for distinguishing on the front end
     government_intervention = serializers.SerializerMethodField()
-    planned_budget = InterventionBudgetCUSerializer(many=True, read_only=True)
+    planned_budget = serializers.SerializerMethodField()
 
     def get_government_intervention(self, obj):
         return False
+
+    def get_planned_budget(self, obj):
+        year = datetime.datetime.now().year
+        return obj.planned_budget.filter(year=year).aggregate(
+            total=Sum('unicef_cash'))['total'] or 0
 
     class Meta:
         model = Intervention
