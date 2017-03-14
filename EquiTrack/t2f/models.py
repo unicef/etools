@@ -1,16 +1,15 @@
 from __future__ import unicode_literals
 
-from django.db import connection
 from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
 
 from django.contrib.postgres.fields.array import ArrayField
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 from django.core.mail.message import EmailMultiAlternatives
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.db import models
+from django.db import models, connection
 from django.template.context import Context
 from django.template.loader import render_to_string
 from django.utils.translation import ugettext_lazy as _
@@ -20,6 +19,7 @@ from publics.models import TravelExpenseType
 from t2f.helpers.cost_summary_calculator import CostSummaryCalculator
 from t2f.helpers.invoice_maker import InvoiceMaker
 from t2f.serializers.mailing import TravelMailSerializer
+from users.models import WorkspaceCounter
 
 log = logging.getLogger(__name__)
 
@@ -92,20 +92,9 @@ class ModeOfTravel(object):
 
 
 def make_travel_reference_number():
+    numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
     year = datetime.now().year
-    travels_qs = Travel.objects.select_for_update().filter(created__year=year)
-
-    # This will lock the matching rows and prevent concurency issue
-    travels_qs.values_list('id')
-
-    last_travel = travels_qs.order_by('reference_number').last()
-    if last_travel:
-        reference_number = last_travel.reference_number
-        reference_number = int(reference_number.split('/')[1])
-        reference_number += 1
-    else:
-        reference_number = 1
-    return '{}/{:06d}'.format(year, reference_number)
+    return '{}/{}'.format(year, numeric_part)
 
 
 class Travel(models.Model):
@@ -188,6 +177,11 @@ class Travel(models.Model):
         if (not self.report_note) or (len(self.report_note) < 1):
             raise TransitionError('Field report has to be filled.')
 
+        return True
+
+    def check_completed_from_planned(self):
+        if self.ta_required:
+            raise TransitionError('Cannot switch from planned to completed if TA is required')
         return True
 
     def check_pending_invoices(self):
@@ -316,7 +310,7 @@ class Travel(models.Model):
                                      self.traveler.email,
                                      'emails/certified.html')
 
-    @transition(status, source=[CERTIFIED, SUBMITTED], target=COMPLETED,
+    @transition(status, source=[CERTIFIED, SUBMITTED, PLANNED], target=COMPLETED,
                 conditions=[check_completion_conditions])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
@@ -386,6 +380,7 @@ class TravelActivity(models.Model):
     # Partnership has to be filtered based on partner
     # TODO: assert self.partnership.agreement.partner == self.partner
     partnership = models.ForeignKey('partners.Intervention', null=True, related_name='+')
+    government_partnership = models.ForeignKey('partners.GovernmentIntervention', null=True, related_name='+')
     result = models.ForeignKey('reports.Result', null=True, related_name='+')
     locations = models.ManyToManyField('locations.Location', related_name='+')
     primary_traveler = models.ForeignKey(User)
@@ -611,12 +606,10 @@ class Invoice(models.Model):
 
     def save(self, **kwargs):
         if self.pk is None:
-            # This will lock the travel row and prevent concurency issues
-            travel = Travel.objects.select_for_update().get(id=self.travel_id)
-            invoice_counter = travel.invoices.all().count() + 1
+            numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_INVOICE_REFERENCE)
             self.reference_number = '{}/{}/{:02d}'.format(self.business_area,
                                                           self.travel.reference_number,
-                                                          invoice_counter)
+                                                          numeric_part)
         super(Invoice, self).save(**kwargs)
 
     @property
