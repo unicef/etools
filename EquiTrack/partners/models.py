@@ -56,6 +56,7 @@ from partners.validation.agreements import (
 from partners.validation import interventions as intervention_validation
 
 
+#test waffle
 # TODO: streamline this ...
 def get_agreement_path(instance, filename):
     return '/'.join(
