@@ -1,27 +1,57 @@
 from __future__ import absolute_import
+import datetime
 
-from partners.exports import PartnerExport, AgreementExport, InterventionExport, GovernmentExport
-from partners.filters import PartnerOrganizationExportFilter, AgreementExportFilter, InterventionExportFilter, \
-    GovernmentInterventionExportFilter, PartnerScopeFilter
-from partners.models import GovernmentIntervention
-
-from rest_framework.decorators import detail_route
-
+from collections import namedtuple
+from django.conf import settings
+from django.db import transaction
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView, View
 from django.utils.http import urlsafe_base64_decode
-from django.http import HttpResponse
-from django.conf import settings
-from django.shortcuts import get_object_or_404
 
-from rest_framework import status
+from rest_framework import status, viewsets, mixins
 from rest_framework.decorators import detail_route, list_route
 from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAdminUser
-from rest_framework import viewsets, mixins
 from rest_framework.response import Response
+
+from actstream import action
 from easy_pdf.views import PDFTemplateView
 
+from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+
 from locations.models import Location
+from reports.models import CountryProgramme
+from publics.models import Country as PublicsCountry, BusinessArea
+from users.models import Country
+from partners.models import (
+    FileType,
+    PartnershipBudget,
+    PCAFile,
+    PCA,
+    PartnerOrganization,
+    Agreement,
+    PCAGrant,
+    AmendmentLog,
+    PCASector,
+    GwPCALocation,
+    PartnerStaffMember,
+    # ResultChain,
+    IndicatorReport,
+    GovernmentIntervention
+)
+from partners.exports import (
+    PartnerExport, AgreementExport,
+    InterventionExport, GovernmentExport
+)
+from partners.filters import (
+    PartnerOrganizationExportFilter,
+    AgreementExportFilter,
+    InterventionExportFilter,
+    GovernmentInterventionExportFilter,
+    PartnerScopeFilter
+)
+from partners.permissions import PartnerPermission # ResultChainPermission
 from partners.serializers.v1 import (
     FileTypeSerializer,
     LocationSerializer,
@@ -39,51 +69,62 @@ from partners.serializers.v1 import (
     PCAFileSerializer,
     GovernmentInterventionSerializer,
 )
-from partners.permissions import PartnerPermission
-from partners.filters import PartnerScopeFilter
-
-from partners.models import (
-    FileType,
-    PartnershipBudget,
-    PCAFile,
-    PCA,
-    PartnerOrganization,
-    Agreement,
-    PCAGrant,
-    AmendmentLog,
-    PCASector,
-    GwPCALocation,
-    PartnerStaffMember,
-    IndicatorReport
-)
-from reports.models import CountryProgramme
-from rest_framework import status
-from rest_framework.response import Response
-
+from EquiTrack.utils import get_data_from_insight
 
 class PcaPDFView(PDFTemplateView):
     template_name = "partners/pca_pdf.html"
 
     def get_context_data(self, **kwargs):
         agr_id = self.kwargs.get('agr')
-        agreement = Agreement.objects.get(id=agr_id)
-        officers = agreement.authorized_officers.all()
+        error = None
+        try:
+            agreement = Agreement.objects.get(id=agr_id)
+        except Agreement.DoesNotExist:
+            return {"error": 'Agreement with specified ID does not exist'}
+
+        if not agreement.partner.vendor_number:
+            return {"error": "Partner Organization has no vendor number stored, please report to an etools focal point"}
+
+        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+                                                         {"vendor_code": agreement.partner.vendor_number})
+
+        if not valid_response:
+            return {"error": response}
+        try:
+            banks_records = response["ROWSET"]["ROW"]["VENDOR_BANK"]["VENDOR_BANK_ROW"]
+        except KeyError as e:
+            return {"error": 'Response returned by the Server does not have the necessary values to generate PCA'}
+
+        bank_key_values = [
+            ('bank_address', "BANK_ADDRESS"),
+            ('bank_name', 'BANK_NAME'),
+            ('account_title', "ACCT_HOLDER"),
+            ('routing_details', "SWIFT_CODE"),
+            ('account_number', "BANK_ACCOUNT_NO")
+        ]
+        Bank = namedtuple('Bank', ' '.join([i[0] for i in bank_key_values]))
+        bank_objects = []
+        for b in banks_records:
+            b["BANK_ADDRESS"] = '{}, {}'.format(b['STREET'], b['CITY'])
+            bank_objects.append(Bank(*[b[i[1]] for i in bank_key_values]))
+
         officers_list = []
-        for officer in officers:
+        for officer in agreement.authorized_officers.all():
             officers_list.append(
-                {'first_name': officer.officer.first_name,
-                 'last_name': officer.officer.last_name,
-                 'title': officer.officer.title}
+                {'first_name': officer.first_name,
+                 'last_name': officer.last_name,
+                 'title': officer.title}
             )
 
         return super(PcaPDFView, self).get_context_data(
+            error=error,
             pagesize="Letter",
             title="Partnership",
             agreement=agreement,
-            bank_details=agreement.bank_details.all(),
+            bank_details=bank_objects,
             cp=CountryProgramme.current(),
             auth_officers=officers_list,
-            country=self.request.tenant.name,
+            country=self.request.tenant.long_name,
             **kwargs
         )
 
@@ -113,10 +154,8 @@ class InterventionLocationView(ListAPIView):
         result_structure = self.request.query_params.get('result_structure', None)
         sector = self.request.query_params.get('sector', None)
         gateway = self.request.query_params.get('gateway', None)
-        governorate = self.request.query_params.get('governorate', None)
         donor = self.request.query_params.get('donor', None)
         partner = self.request.query_params.get('partner', None)
-        district = self.request.query_params.get('district', None)
 
         queryset = self.model.objects.filter(
             pca__status=status,
@@ -125,14 +164,6 @@ class InterventionLocationView(ListAPIView):
         if gateway is not None:
             queryset = queryset.filter(
                 location__gateway__id=int(gateway)
-            )
-        if governorate is not None:
-            queryset = queryset.filter(
-                governorate__id=int(governorate)
-            )
-        if district is not None:
-            queryset = queryset.filter(
-                region__id=int(district)
             )
         if result_structure is not None:
             queryset = queryset.filter(
@@ -247,7 +278,14 @@ class AgreementViewSet(
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
+        # TODO: Use a different action verb for each status choice in Agreement
+        # Draft, Active, Expired, Suspended, Terminated
+        create_snapshot_activity_stream(request.user, serializer.instance, created=True)
+
         serializer.instance = serializer.save()
+
+        with transaction.atomic():
+            action.send(request.user, verb="created", target=serializer.instance)
 
         headers = self.get_success_headers(serializer.data)
         return Response(
@@ -255,6 +293,28 @@ class AgreementViewSet(
             status=status.HTTP_201_CREATED,
             headers=headers
         )
+
+    def update(self, request, *args, **kwargs):
+        """
+        Update (with partially) an existing Agreement
+        :return: JSON
+        """
+        # Copied from update method in UpdateModelMixin and modified to add activity stream
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        create_snapshot_activity_stream(request.user, serializer.instance)
+
+        serializer.instance = serializer.save()
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
 
     @detail_route(methods=['get'], url_path='interventions')
     def interventions(self, request, partner_pk=None, pk =None):

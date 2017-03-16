@@ -9,22 +9,41 @@ from rest_framework import status
 from tablib.core import Dataset
 
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, PartnershipFactory, \
-    GovernmentInterventionFactory, InterventionFactory
+    GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory
 from EquiTrack.tests.mixins import APITenantTestCase
+from partners.models import GovernmentInterventionResult, ResultType
 
 
 class TestModelExport(APITenantTestCase):
     def setUp(self):
         super(TestModelExport, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.partner = PartnerFactory()
-        self.agreement = AgreementFactory(partner=self.partner, signed_by_unicef_date=datetime.date.today())
+        self.partner = PartnerFactory(partner_type='Government')
+        self.agreement = AgreementFactory(
+            partner=self.partner,
+            signed_by_unicef_date=datetime.date.today(),
+            country_programme=CountryProgrammeFactory(wbs="random WBS")
+        )
+
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
-        self.intervention = InterventionFactory(agreement=self.agreement)
-        self.government_intervention = GovernmentInterventionFactory(partner=self.partner)
 
-    @skip("Fix this")
+        self.intervention = InterventionFactory(agreement=self.agreement)
+        self.government_intervention = GovernmentInterventionFactory(
+            partner=self.partner,
+            country_programme=self.agreement.country_programme
+        )
+
+        output_res_type, _ = ResultType.objects.get_or_create(name='Output')
+        self.result = ResultFactory(result_type=output_res_type)
+        self.govint_result = GovernmentInterventionResult.objects.create(
+            intervention=self.government_intervention,
+            result=self.result,
+            year=datetime.date.today().year,
+            planned_amount=100,
+        )
+
+    @skip("wrong endpoint")
     def test_partner_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/export/',
@@ -79,6 +98,7 @@ class TestModelExport(APITenantTestCase):
                           '1',
                           'Mace Windu'))
 
+    @skip("wrong api endpoint")
     def test_agreement_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/agreements/export/'.format(self.partner.id),
@@ -112,7 +132,8 @@ class TestModelExport(APITenantTestCase):
                           '',
                           self.agreement.signed_by_unicef_date.strftime('%Y-%m-%d'),
                           ''))
-    @skip("Fix this")
+
+    @skip("Fix export")
     def test_intervention_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/interventions/export/'.format(self.partner.id),
@@ -171,6 +192,7 @@ class TestModelExport(APITenantTestCase):
                           '0',
                           '0'))
 
+    @skip("Outdated")
     def test_government_export_api(self):
         response = self.forced_auth_req('get',
                                         '/api/partners/{}/government_interventions/export/'.format(self.partner.id),
@@ -194,3 +216,152 @@ class TestModelExport(APITenantTestCase):
                           '',
                           '0',
                           datetime.datetime.now().strftime('%Y')))
+
+    def test_government_intervention_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(),
+                        [
+                            'Government Partner',
+                            'Country Programme',
+                            'Reference Number',
+                            'CP Output',
+                            'URL',
+                        ])
+
+        cp_outputs = ', '.join([
+            'Output: {} ({}/{}/{})'.format(
+                gr.result.name,
+                gr.year,
+                gr.planned_amount,
+                gr.planned_visits)
+            for gr in self.government_intervention.results.all()
+        ])
+        self.assertEqual(dataset[0],
+                        (
+                            self.partner.name,
+                            self.government_intervention.country_programme.name,
+                            self.government_intervention.number,
+                            cp_outputs,
+                            dataset[0][4],
+                        ))
+
+    def test_intervention_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/interventions/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 1)
+        self.assertEqual(dataset._get_headers(), [
+            'Status',
+            'Partner',
+            'Partner Type',
+            'Agreement',
+            'Country Programme',
+            'Document Type',
+            'Reference Number',
+            'Document Title',
+            'Start Date',
+            'End Date',
+            'UNICEF Office',
+            'Sectors',
+            'Locations',
+            'UNICEF Focal Points',
+            'CSO Authorized Officials',
+            'Population Focus',
+            'Humanitarian Response Plan',
+            'CP Outputs',
+            'RAM Indicators',
+            'FR Number(s)',
+            'Total UNICEF Budget (Local)',
+            'Total UNICEF Budget (USD)',
+            'Total CSO Budget (USD)',
+            'Total CSO Budget (Local)',
+            'Planned Programmatic Visits',
+            'Planned Spot Checks',
+            'Planned Audits',
+            'Document Submission Date by CSO',
+            'Submission Date to PRC',
+            'Review Date by PRC',
+            'Signed by Partner',
+            'Signed by Partner Date',
+            'Signed by UNICEF',
+            'Signed by UNICEF Date',
+            'Supply Plan',
+            'Distribution Plan',
+            'URL'
+        ])
+
+    def test_agreement_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/agreements/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset._get_headers(), [
+            'Reference Number',
+            'Status',
+            'Partner Name',
+            'Agreement Type',
+            'Start Date',
+            'End Date',
+            'Signed By Partner',
+            'Signed By Partner Date',
+            'Signed By UNICEF',
+            'Signed By UNICEF Date',
+            'Partner Authorized Officer',
+            'Amendments',
+            'URL'
+        ])
+
+    def test_partners_export_api(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/',
+            user=self.unicef_staff,
+            data={"format": "csv"},
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        dataset = Dataset().load(response.content, 'csv')
+        self.assertEqual(dataset.height, 2)
+        self.assertEqual(dataset._get_headers(), [
+            'Vendor Number',
+            'Organizations Full Name',
+            'Short Name',
+            'Alternate Name',
+            'Partner Type',
+            'Shared Partner',
+            'Address',
+            'Phone Number',
+            'Email Address',
+            'Risk Rating',
+            'Date Last Assessed Against Core Values',
+            'Actual Cash Transfer for CP (USD)',
+            'Actual Cash Transfer for Current Year (USD)',
+            'Marked for Deletion',
+            'Blocked',
+            'Assessment Type',
+            'Date Assessed',
+            'Assessment Type (Date Assessed)',
+            'Staff Members',
+            'URL'
+        ])

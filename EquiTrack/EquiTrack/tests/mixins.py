@@ -1,4 +1,4 @@
-
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import resolve
 from django.http.response import HttpResponse
 
@@ -10,6 +10,8 @@ from tenant_schemas.test.client import TenantClient
 from django.db import connection
 from django.core.management import call_command
 from tenant_schemas.utils import get_tenant_model
+
+from users.models import WorkspaceCounter
 
 
 class FastTenantTestCase(TenantTestCase):
@@ -25,6 +27,11 @@ class FastTenantTestCase(TenantTestCase):
         except:
             cls.tenant = TenantModel(domain_url=tenant_domain, schema_name='test')
             cls.tenant.save(verbosity=0)
+
+        try:
+            cls.tenant.counters
+        except ObjectDoesNotExist:
+            WorkspaceCounter.objects.create(workspace=cls.tenant)
 
         connection.set_tenant(cls.tenant)
 
@@ -49,10 +56,16 @@ class FastTenantTestCase(TenantTestCase):
     def tearDownClass(cls):
         connection.set_schema_to_public()
 
-    def assertKeysIn(self, keys, container, msg=None):
+    def assertKeysIn(self, keys, container, msg=None, exact=False):
         """Small helper to check all keys in the response payload"""
-        for key in keys:
-            self.assertIn(key, container, msg)
+        key_set = set(keys)
+        container_set = set(container)
+        missing_keys = key_set - container_set
+        if missing_keys:
+            self.fail('Missing keys: {}'.format(', '.join(missing_keys)))
+
+        if exact and len(key_set) != len(container_set):
+            self.fail('{} != {}'.format(', '.join(key_set), ', '.join(container_set)))
 
 
 class APITenantClient(TenantClient, APIClient):

@@ -137,7 +137,6 @@ class PCAResource(BaseExportResource):
         for num, location in enumerate(pca.locations.all()):
             num += 1
 
-            self.insert_column(row, 'Locality {}'.format(num), location.locality.name)
             self.insert_column(row, 'Location Type {}'.format(num), location.gateway.name)
             self.insert_column(row, 'Location Name {}'.format(num), location.location.name)
 
@@ -240,14 +239,14 @@ class PartnerExport(resources.ModelResource):
         return partner_organization.rating
 
     def dehydrate_agreement_count(self, partner_organization):
-        return partner_organization.agreement_set.count()
+        return partner_organization.agreements.count()
 
     def dehydrate_intervention_count(self, partner_organization):
         if partner_organization.partner_type == PartnerType.GOVERNMENT:
             return partner_organization.work_plans.count()
         intervention_count = 0
         # TODO: Nik revisit this... move this into a single query
-        for agr in partner_organization.agreement_set.all():
+        for agr in partner_organization.agreements.all():
             intervention_count += agr.interventions.count()
         return intervention_count
 
@@ -287,7 +286,7 @@ class AgreementExport(resources.ModelResource):
         return ''
 
     def dehydrate_authorized_officers(self, agreement):
-        names = [ao.officer.get_full_name() for ao in agreement.authorized_officers.all()]
+        names = [ao.get_full_name() for ao in agreement.authorized_officers.all()]
         return ', '.join(names)
 
     def dehydrate_start_date(self, agreement):

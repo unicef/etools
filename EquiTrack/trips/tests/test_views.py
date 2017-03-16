@@ -1,4 +1,5 @@
 from rest_framework import status
+from unittest import skip
 
 from EquiTrack.factories import TripFactory, UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
@@ -48,11 +49,13 @@ class TestTripViews(APITenantTestCase):
         self.assertEquals(self.trip.status, Trip.SUBMITTED)
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
+    @skip('Not using trips anymore')
     def test_view_trip_action(self):
         response = self.forced_auth_req('get', '/trips/offices/')
 
         self.assertEquals(response.status_code, 200)
 
+    @skip('Not using trips anymore')
     def test_view_trips_dashboard(self):
         response = self.forced_auth_req('get', '/trips/')
 

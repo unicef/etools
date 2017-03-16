@@ -1,9 +1,6 @@
-__author__ = 'jcranwellward'
-
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin
-
 from .models import UserProfile, Country, Office, Section
 
 
@@ -32,6 +29,8 @@ class ProfileInline(admin.StackedInline):
         u'user',
         u'country',
     )
+
+    fk_name = 'user'
 
     def get_fields(self, request, obj=None):
 
@@ -62,6 +61,14 @@ class ProfileAdmin(admin.ModelAdmin):
         'section',
         'job_title',
         'phone_number',
+        'staff_id',
+        'org_unit_code',
+        'org_unit_name',
+        'post_number',
+        'post_title',
+        'vendor_number',
+        'section_code'
+
     ]
     list_display = (
         'username',
@@ -91,6 +98,9 @@ class ProfileAdmin(admin.ModelAdmin):
     readonly_fields = (
         u'user',
         u'country',
+    )
+    suit_form_includes = (
+        ('users/supervisor.html', ),
     )
 
     def has_add_permission(self, request):
@@ -131,6 +141,15 @@ class ProfileAdmin(admin.ModelAdmin):
         return super(ProfileAdmin, self).formfield_for_manytomany(
             db_field, request, **kwargs
         )
+
+    def save_model(self, request, obj, form, change):
+        if form.data.get('supervisor'):
+            supervisor = User.objects.get(id=int(form.data['supervisor']))
+            obj.supervisor = supervisor
+        if form.data.get('oic'):
+            oic = User.objects.get(id=int(form.data['oic']))
+            obj.oic = oic
+        obj.save()
 
 
 class UserAdminPlus(UserAdmin):

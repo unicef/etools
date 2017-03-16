@@ -1,10 +1,13 @@
 """
 Model factories used for generating models dynamically for tests
 """
-from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
+import json
 
+from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
+import decimal
 from datetime import datetime, timedelta, date
 from django.db.models.signals import post_save
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.gis.geos import GEOSGeometry
 from django.contrib.auth.models import Group
 
@@ -18,23 +21,9 @@ from reports import models as report_models
 from locations import models as location_models
 from partners import models as partner_models
 from funds.models import Grant, Donor
+from notification import models as notification_models
 from workplan import models as workplan_models
 from workplan.models import WorkplanProject, CoverPage, CoverPageBudget
-
-
-class GovernorateFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.Governorate
-
-    name = factory.Sequence(lambda n: 'Gov {}'.format(n))
-
-
-class RegionFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.Region
-
-    name = factory.Sequence(lambda n: 'District {}'.format(n))
-    governorate = factory.SubFactory(GovernorateFactory)
 
 
 class OfficeFactory(factory.django.DjangoModelFactory):
@@ -67,6 +56,11 @@ class GroupFactory(factory.django.DjangoModelFactory):
 
     name = "Partnership Manager"
 
+class UnicefUserGroupFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Group
+
+    name = "UNICEF User"
 
 class ProfileFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -90,6 +84,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.Sequence(lambda n: "user{}@notanemail.com".format(n))
     password = factory.PostGenerationMethodCall('set_password', 'test')
 
+    #group = factory.SubFactory(UnicefUserGroupFactory)
     # We pass in 'user' to link the generated Profile to our just-generated User
     # This will call ProfileFactory(user=our_new_user), thus skipping the SubFactory.
     profile = factory.RelatedFactory(ProfileFactory, 'user')
@@ -104,6 +99,10 @@ class UserFactory(factory.django.DjangoModelFactory):
         post_save.connect(user_models.UserProfile.create_user_profile, user_models.User)
         return user
 
+    @factory.post_generation
+    def groups(self, create, extracted, **kwargs):
+        group, created = Group.objects.get_or_create(name='UNICEF User')
+        self.groups.add(group)
 
 class TripFactory(factory.django.DjangoModelFactory):
     class Meta:
@@ -132,15 +131,6 @@ class LocationFactory(factory.django.DjangoModelFactory):
     p_code = factory.Sequence(lambda n: 'PCODE{}'.format(n))
 
 
-class LinkedLocationFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = location_models.LinkedLocation
-
-    content_object = factory.SubFactory(TripFactory)
-    governorate = factory.SubFactory(GovernorateFactory)
-    region = factory.SubFactory(RegionFactory)
-
-
 class PartnerStaffFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.PartnerStaffMember
@@ -159,13 +149,25 @@ class PartnerFactory(factory.django.DjangoModelFactory):
     staff = factory.RelatedFactory(PartnerStaffFactory, 'partner')
 
 
+class CountryProgrammeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = report_models.CountryProgramme
+
+    name = factory.Sequence(lambda n: 'Country Programme {}'.format(n))
+    wbs = factory.Sequence(lambda n: 'WBS {}'.format(n))
+    from_date = date(date.today().year, 1, 1)
+    to_date = date(date.today().year, 12, 31)
+
+
 class AgreementFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = partner_models.Agreement
 
     partner = factory.SubFactory(PartnerFactory)
     agreement_type = u'PCA'
+    signed_by_unicef_date = date.today()
     status = 'active'
+    country_programme = factory.SubFactory(CountryProgrammeFactory)
 
 
 
@@ -189,6 +191,19 @@ class InterventionFactory(factory.django.DjangoModelFactory):
     submission_date = datetime.today()
 
 
+class InterventionBudgetFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = partner_models.InterventionBudget
+
+    intervention = factory.SubFactory(InterventionFactory)
+    unicef_cash = 100001.00
+    unicef_cash_local = 10.00
+    partner_contribution = 200.00
+    partner_contribution_local = 20.00
+    in_kind_amount = 10.00
+    in_kind_amount_local = 10.00
+    year = '2017'
+
 class ResultTypeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = report_models.ResultType
@@ -203,15 +218,6 @@ class ResultStructureFactory(factory.django.DjangoModelFactory):
     name = factory.Sequence(lambda n: 'RSSP {}'.format(n))
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
-
-
-class GovernmentInterventionFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = partner_models.GovernmentIntervention
-
-    partner = factory.SubFactory(PartnerFactory)
-    result_structure = factory.SubFactory(ResultStructureFactory)
-    number = 'RefNumber'
 
 
 class ResultFactory(factory.django.DjangoModelFactory):
@@ -234,6 +240,15 @@ class CountryProgrammeFactory(factory.DjangoModelFactory):
     from_date = date(date.today().year, 1, 1)
     to_date = date(date.today().year, 12, 31)
 
+
+class GovernmentInterventionFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = partner_models.GovernmentIntervention
+
+    partner = factory.SubFactory(PartnerFactory)
+    country_programme = factory.SubFactory(CountryProgrammeFactory)
+    result_structure = factory.SubFactory(ResultStructureFactory)
+    number = 'RefNumber'
 
 
 class WorkplanFactory(factory.django.DjangoModelFactory):
@@ -391,3 +406,24 @@ class GrantFactory(factory.DjangoModelFactory):
 #     fr_number = models.CharField(max_length=50)
 #     wbs = models.CharField(max_length=50)
 #     fc_type = models.CharField(max_length=50)
+
+# Credit goes to http://stackoverflow.com/a/41154232/2363915
+class JSONFieldFactory(factory.DictFactory):
+
+    @classmethod
+    def _build(cls, model_class, *args, **kwargs):
+        if args:
+            raise ValueError(
+                "DictFactory %r does not support Meta.inline_args.", cls)
+        return json.dumps(model_class(**kwargs))
+
+
+class NotificationFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = notification_models.Notification
+
+    type = "Email"
+    sender = factory.SubFactory(AgreementFactory)
+    template_name = 'trips/trip/TA_request'
+    recipients = ['test@test.com', 'test1@test.com', 'test2@test.com']
+    template_data = factory.Dict({'url': 'www.unicef.org', 'pa_assistant': 'Test revised', 'owner_name': 'Tester revised'}, dict_factory=JSONFieldFactory)

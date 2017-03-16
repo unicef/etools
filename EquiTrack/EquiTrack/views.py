@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from partners.models import PCA, PartnerOrganization, Intervention
 from reports.models import Sector, ResultStructure, Indicator
-from locations.models import CartoDBTable, GatewayType, Governorate, Region
+from locations.models import CartoDBTable, GatewayType
 from funds.models import Donor
 from trips.models import Trip, ActionPoint
 from partners.serializers.interventions_v2 import InterventionListSerializer
@@ -117,14 +117,6 @@ class PartnershipsView(DashboardView):
             end_date__range=[today, today + datetime.timedelta(days=60)]
         )
 
-        # govs = {}
-        # for gov in Governorate.objects.all():
-        #     govs[gov.name] = GwPCALocation.objects.filter(
-        #         governorate=gov,
-        #         pca__status=PCA.ACTIVE
-        #     ).distinct('pca').count()
-        # data['govs'] = govs
-
         partners = {}
         for p_type in [
             u'Bilateral / Multilateral',
@@ -171,10 +163,8 @@ class MapView(TemplateView):
         return {
             'tables': CartoDBTable.objects.all(),
             'gateway_list': GatewayType.objects.all(),
-            'governorate_list': Governorate.objects.all(),
             'sectors_list': Sector.objects.all(),
             'result_structure_list': ResultStructure.objects.all(),
-            'region_list': Region.objects.all(),
             'partner_list': PartnerOrganization.objects.all(),
             'indicator_list': Indicator.objects.all(),
             'donor_list': Donor.objects.all(),

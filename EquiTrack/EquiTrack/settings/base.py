@@ -40,17 +40,17 @@ SUIT_CONFIG = {
 
         {'label': 'Dashboard', 'icon': 'icon-globe', 'url': 'dashboard'},
 
-        {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
-            {'model': 'partners.partnerorganization', 'label': 'Partners'},
-            {'model': 'partners.agreement'},
-            {'model': 'partners.intervention'},
-            {'model': 'partners.governmentintervention', 'label': 'Government'},
-        ]},
+        # {'label': 'Partnerships', 'icon': 'icon-pencil', 'models': [
+        #     # {'model': 'partners.partnerorganization', 'label': 'Partners'},
+        #     {'model': 'partners.agreement'},
+        #     {'model': 'partners.intervention'},
+        #     {'model': 'partners.governmentintervention', 'label': 'Government'},
+        # ]},
 
-        {'app': 'trips', 'icon': 'icon-road', 'models': [
-            {'model': 'trips.trip'},
-            {'model': 'trips.actionpoint'},
-        ]},
+        # {'app': 'trips', 'icon': 'icon-road', 'models': [
+        #     {'model': 'trips.trip'},
+        #     {'model': 'trips.actionpoint'},
+        # ]},
 
         {'app': 'funds', 'icon': 'icon-briefcase'},
 
@@ -66,12 +66,12 @@ SUIT_CONFIG = {
 
         {'app': 'locations', 'icon': 'icon-map-marker'},
 
-        {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
+        # {'app': 'tpm', 'label': 'TPM Portal', 'icon': 'icon-calendar'},
     )
 }
 
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/dash/'
 AUTH_USER_MODEL = 'auth.User'
 AUTH_PROFILE_MODULE = 'users.UserProfile'
 
@@ -108,6 +108,11 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
         'EquiTrack.mixins.EToolsTenantJWTAuthentication',
         'EquiTrack.mixins.EtoolsTokenAuthentication',
+    ),
+    'TEST_REQUEST_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework_csv.renderers.CSVRenderer',
+        'rest_framework_xml.renderers.XMLRenderer',
     )
 }
 
@@ -187,6 +192,7 @@ SLACK_URL = os.environ.get('SLACK_URL')
 COUCHBASE_URL = os.environ.get('COUCHBASE_URL')
 COUCHBASE_USER = os.environ.get('COUCHBASE_USER')
 COUCHBASE_PASS = os.environ.get('COUCHBASE_PASS')
+INACTIVE_BUSINESS_AREAS = os.environ.get('INACTIVE_BUSINESS_AREAS', '').split(',')
 
 MONGODB_URL = os.environ.get('MONGODB_URL', 'mongodb://localhost:27017')
 MONGODB_DATABASE = os.environ.get('MONGODB_DATABASE', 'supplies')
@@ -211,7 +217,6 @@ USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
 # MANAGERS = ADMINS
 # ########## END MANAGER CONFIGURATION
 
-
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
 TIME_ZONE = 'EET'
@@ -230,6 +235,8 @@ USE_L10N = True
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#use-tz
 USE_TZ = True
+
+DISABLE_INVOICING = True if os.getenv('DISABLE_INVOICING', False) in ['1', 'True', 'true'] else False
 ########## END GENERAL CONFIGURATION
 
 
@@ -406,8 +413,10 @@ SHARED_APPS = (
 
     'vision',
     'management',
+    'publics',
     # you must list the app where your tenant model resides in
     'users',
+    'notification',
 )
 
 MPTT_ADMIN_LEVEL_INDENT = 20
@@ -427,6 +436,7 @@ TENANT_APPS = (
     'supplies',
     't2f',
     'workplan',
+    'actstream',
 )
 
 
@@ -435,6 +445,13 @@ LEAFLET_CONFIG = {
     'ATTRIBUTION_PREFIX': 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
     'MIN_ZOOM': 3,
     'MAX_ZOOM': 18,
+}
+
+ACTSTREAM_SETTINGS = {
+    'FETCH_RELATIONS': True,
+    'GFK_FETCH_DEPTH': 1,
+    'USE_JSONFIELD': True,
+    'MANAGER': 'EquiTrack.stream_feed.managers.CustomDataActionManager',
 }
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

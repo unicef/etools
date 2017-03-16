@@ -1,5 +1,3 @@
-__author__ = 'jcranwellward'
-
 from django.db import models
 
 
@@ -44,3 +42,98 @@ class Grant(models.Model):
             self.donor.name,
             self.name
         )
+
+
+class FundsReservationHeader(models.Model):
+    vendor_code = models.CharField(max_length=20)
+    fr_number = models.CharField(max_length=20, unique=True)
+    document_date = models.DateField(null=True, blank=True)
+    fr_type = models.CharField(max_length=50, null=True, blank=True)
+    currency = models.CharField(max_length=50, null=True, blank=True)
+    document_text = models.CharField(max_length=255, null=True, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+
+    def __unicode__(self):
+        return u'{}'.format(
+            self.fr_number,
+        )
+
+    class Meta:
+        ordering = ['fr_number']
+        unique_together = ('vendor_code', 'fr_number')
+
+
+class FundsReservationItem(models.Model):
+    fund_reservation = models.ForeignKey(FundsReservationHeader, related_name="fr_items")
+    fr_ref_number = models.CharField(max_length=30, null=True, blank=True)
+    line_item = models.CharField(max_length=5)
+    wbs = models.CharField(max_length=30, null=True, blank=True)
+    grant_number = models.CharField(max_length=20, null=True, blank=True)
+    fund = models.CharField(max_length=10, null=True, blank=True)
+    overall_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    overall_amount_dc = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    due_date = models.DateField(null=True, blank=True)
+    line_item_text = models.CharField(max_length=255, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'{}'.format(
+            self.fr_ref_number,
+        )
+
+    class Meta:
+        unique_together = ('fund_reservation', 'line_item')
+
+    def save(self, **kwargs):
+        if not self.fr_ref_number:
+            self.fr_ref_number = '{}-{}'.format(self.fund_reservation.fr_number, self.line_item)
+        return super(FundsReservationItem, self).save(**kwargs)
+
+
+class FundsCommitmentHeader(models.Model):
+    vendor_code = models.CharField(max_length=20)
+    fc_number = models.CharField(max_length=20, unique=True)
+    document_date = models.DateField(null=True, blank=True)
+    fc_type = models.CharField(max_length=50, null=True, blank=True)
+    currency = models.CharField(max_length=50, null=True, blank=True)
+    document_text = models.CharField(max_length=255, null=True, blank=True)
+    exchange_rate = models.CharField(max_length=20, null=True, blank=True)
+    responsible_person = models.CharField(max_length=100, blank=True, null=True)
+
+    def __unicode__(self):
+        return u'{}'.format(
+            self.fc_number,
+        )
+
+
+class FundsCommitmentItem(models.Model):
+    fund_commitment = models.ForeignKey(FundsCommitmentHeader, related_name='fc_items')
+    fc_ref_number = models.CharField(max_length=30, null=True, blank=True)
+    line_item = models.CharField(max_length=5)
+    wbs = models.CharField(max_length=30, null=True, blank=True)
+    grant_number = models.CharField(max_length=20, null=True, blank=True)
+    fund = models.CharField(max_length=10, null=True, blank=True)
+    gl_account = models.CharField(max_length=15, null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    fr_number = models.CharField(max_length=20, blank=True, null=True)
+    commitment_amount = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    commitment_amount_dc = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    amount_changed = models.DecimalField(default=0, max_digits=12, decimal_places=2)
+    line_item_text = models.CharField(max_length=255, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'{}'.format(
+            self.fc_ref_number,
+        )
+
+    class Meta:
+        unique_together = ('fund_commitment', 'line_item')
+
+    def save(self, **kwargs):
+        if not self.fc_ref_number:
+            self.fc_ref_number = '{}-{}'.format(self.fund_commitment.fc_number, self.line_item)
+        return super(FundsCommitmentItem, self).save(**kwargs)
+
+
+
+

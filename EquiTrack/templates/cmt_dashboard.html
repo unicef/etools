@@ -102,23 +102,6 @@
             </div>
             <div class="col-md-2">
                 <div class="btn-group btn-block">
-                    <button id="btn-governorate" type="button" class="col-md-10 btn btn-success">
-                       Governorate
-                    </button>
-
-                    <button class="col-md-2 btn btn-success dropdown-toggle" data-toggle="dropdown" type="=button">
-                         <span class="caret"></span>
-                    </button>
-                    <ul class="dropdown-menu scrollable-menu" role="menu" id="governorate_ul">
-                       <li><a href="javascript:void(0);" id="governorate999" onclick="DropdownSelect(this.id);" itemid="999">All Governorates</a></li>
-                        {% for governorate in governorate_list %}
-                            <li><a href="javascript:void(0);" id="governorate{{ governorate.id }}" onclick="DropdownSelect(this.id);" itemid="{{ governorate.id }}">{{ governorate.name }}</a></li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="btn-group btn-block">
                     <button id="btn-partner" type="button" class="col-md-10 btn btn-info">
                        Partner
                     </button>
@@ -347,7 +330,6 @@
             var resultStructure = $('#btn-result_structure').html();
             var sector = $('#btn-sector').html();
             var gateway = $('#btn-gateway').html();
-            var governorate = $('#btn-governorate').html();
             var status = $('#btn-status').html();
             var donor = $('#btn-donor').html();
             var partner = $('#btn-partner').html();
@@ -364,9 +346,6 @@
 
             if(!gateway.includes('Gateways'))
                 query += 'gateway=' + $("a:contains(" + gateway + ")").attr("itemid") + '&';
-
-            if(!governorate.includes('Governorate'))
-                query += 'governorate=' + $("a:contains(" + governorate + ")").attr("itemid") + '&';
 
             if(!status.includes('Status'))
                 query += 'status=' + $("a:contains(" + status + ")").html().toLowerCase() + '&';

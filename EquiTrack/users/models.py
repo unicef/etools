@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save, pre_delete
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.postgres.fields import ArrayField
 
 from djangosaml2.signals import pre_user_save
 
@@ -34,6 +35,7 @@ class Country(TenantMixin):
         max_length=10,
         null=True, blank=True
     )
+    long_name = models.CharField(max_length=255, null=True, blank=True)
     business_area_code = models.CharField(
         max_length=10,
         null=True, blank=True
@@ -52,12 +54,58 @@ class Country(TenantMixin):
     vision_sync_enabled = models.BooleanField(default=True)
     vision_last_synced = models.DateTimeField(null=True, blank=True)
 
+    local_currency = models.ForeignKey('publics.Currency',
+                                       related_name='workspaces',
+                                       null=True,
+                                       on_delete=models.SET_NULL,
+                                       blank=True)
+
     # TODO: rename the related name as it's inappropriate for relating offices to countries.. should be office_countries
     offices = models.ManyToManyField('Office', related_name='offices')
     sections = models.ManyToManyField('Section', related_name='sections')
 
+    threshold_tre_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
+    threshold_tae_usd = models.DecimalField(max_digits=20, decimal_places=4, default=None, null=True)
+
     def __unicode__(self):
         return self.name
+
+
+class WorkspaceCounter(models.Model):
+    TRAVEL_REFERENCE = 'travel_reference_number_counter'
+    TRAVEL_INVOICE_REFERENCE = 'travel_invoice_reference_number_counter'
+
+    workspace = models.OneToOneField('users.Country', related_name='counters')
+
+    # T2F travel reference number counter
+    travel_reference_number_counter = models.PositiveIntegerField(default=1)
+    travel_invoice_reference_number_counter = models.PositiveIntegerField(default=1)
+
+    def get_next_value(self, counter_type):
+        assert connection.in_atomic_block, 'Counters should be used only within an atomic block'
+
+        # Locking the row
+        counter_model = WorkspaceCounter.objects.select_for_update().get(id=self.id)
+
+        counter_value = getattr(counter_model, counter_type, None)
+        if counter_value is None:
+            raise AttributeError('Invalid counter type')
+
+        setattr(counter_model, counter_type, counter_value + 1)
+        counter_model.save()
+
+        return counter_value
+
+    @classmethod
+    def create_counter_model(cls, sender, instance, created, **kwargs):
+        """
+        Signal handler to create user profiles automatically
+        """
+        if created:
+            cls.objects.create(workspace=instance)
+
+
+post_save.connect(WorkspaceCounter.create_counter_model, sender=Country)
 
 
 class CountryOfficeManager(models.Manager):
@@ -106,7 +154,8 @@ class Section(models.Model):
     Represents a section for the country
     """
 
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=64, unique=True)
+    code = models.CharField(max_length=32, null=True, unique=True, blank=True)
 
     objects = CountrySectionManager()
 
@@ -144,7 +193,25 @@ class UserProfile(models.Model):
     office = models.ForeignKey(Office, null=True, blank=True)
     job_title = models.CharField(max_length=255, null=True, blank=True)
     phone_number = models.CharField(max_length=20, null=True, blank=True)
+
+    # TODO: remove this
     installation_id = models.CharField(max_length=50, null=True, blank=True, verbose_name='Device ID')
+
+    staff_id = models.CharField(max_length=32, null=True, blank=True, unique=True)
+    org_unit_code = models.CharField(max_length=32, null=True, blank=True)
+    org_unit_name = models.CharField(max_length=64, null=True, blank=True)
+    post_number = models.CharField(max_length=32, null=True, blank=True)
+    post_title = models.CharField(max_length=64, null=True, blank=True)
+    vendor_number = models.CharField(max_length=32, null=True, blank=True, unique=True)
+    supervisor = models.ForeignKey(User, related_name='supervisee', on_delete=models.SET_NULL, blank=True, null=True)
+    oic = models.ForeignKey(User, blank=True, on_delete=models.SET_NULL, null=True)  # related oic_set
+
+    # TODO: refactor when sections are properly set
+    section_code = models.CharField(max_length=32, null=True, blank=True)
+
+
+    # TODO: figure this out when we need to autmatically map to groups
+    #vision_roles = ArrayField(models.CharField(max_length=20, blank=True, choices=VISION_ROLES), blank=True, null=True)
 
     def username(self):
         return self.user.username
@@ -214,6 +281,12 @@ class UserProfile(models.Model):
 
         if self.country_override and self.country != self.country_override:
             self.country = self.country_override
+
+        if self.staff_id == '':
+            self.staff_id = None
+        if self.vendor_number == '':
+            self.vendor_number = None
+
         super(UserProfile, self).save(**kwargs)
 
 

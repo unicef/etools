@@ -1,163 +1,373 @@
 from __future__ import unicode_literals
 
-from unittest import skip
-import json
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from decimal import Decimal
 
-from django.core.urlresolvers import reverse
 from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from t2f.helpers import CostSummaryCalculator
-from t2f.models import Expense
-from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory, \
-    ExpenseTypeFactory, CurrencyFactory, ModeOfTravelFactory
+from publics.tests.factories import CountryFactory
+from t2f.helpers.cost_summary_calculator import DSACalculator
+from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory
 
 
 class TestDSACalculations(APITenantTestCase):
     def setUp(self):
         super(TestDSACalculations, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
-        self.hungary_region = DSARegionFactory(country='Hungary',
-                                               region='Budapest',
-                                               dsa_amount_usd=100,
-                                               dsa_amount_60plus_usd=80)
-        self.united_states_region = DSARegionFactory(country='United States',
-                                                     region='New York',
-                                                     dsa_amount_usd=150,
-                                                     dsa_amount_60plus_usd=130)
+
+        netherlands = CountryFactory(name='Netherlands', long_name='Netherlands')
+        hungary = CountryFactory(name='Hungary', long_name='Hungary')
+        denmark = CountryFactory(name='Denmark', long_name='Denmark')
+        germany = CountryFactory(name='Germany', long_name='Germany')
+
+        self.amsterdam = DSARegionFactory(country=netherlands,
+                                          area_name='Amsterdam',
+                                          area_code='ds1',
+                                          dsa_amount_usd=100,
+                                          dsa_amount_60plus_usd=60)
+
+        self.budapest = DSARegionFactory(country=hungary,
+                                         area_name='Budapest',
+                                         area_code='ds2',
+                                         dsa_amount_usd=200,
+                                         dsa_amount_60plus_usd=120)
+
+        self.copenhagen = DSARegionFactory(country=denmark,
+                                           area_name='Copenhagen',
+                                           area_code='ds3',
+                                           dsa_amount_usd=300,
+                                           dsa_amount_60plus_usd=180)
+
+        self.dusseldorf = DSARegionFactory(country=germany,
+                                           area_name='Duesseldorf',
+                                           area_code='ds4',
+                                           dsa_amount_usd=400,
+                                           dsa_amount_60plus_usd=240)
+
+        self.essen = DSARegionFactory(country=germany,
+                                      area_name='Essen',
+                                      area_code='ds5',
+                                      dsa_amount_usd=500,
+                                      dsa_amount_60plus_usd=300)
+
+        self.frankfurt = DSARegionFactory(country=germany,
+                                          area_name='Frankfurt',
+                                          area_code='ds6',
+                                          dsa_amount_usd=600,
+                                          dsa_amount_60plus_usd=360)
 
         self.travel = TravelFactory()
+
         # Delete default items created by factory
         self.travel.itinerary.all().delete()
         self.travel.expenses.all().delete()
         self.travel.deductions.all().delete()
 
-    def test_calculation(self):
+    def test_case_1(self):
         IteneraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 2, tzinfo=UTC),
-                             dsa_region=self.united_states_region,
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 15, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 1),
+                         lunch=True)
+
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
+
+        self.assertEqual(calculator.total_dsa, 80)
+        self.assertEqual(calculator.total_deductions, 20)
+        self.assertEqual(calculator.paid_to_traveler, 60)
+
+        self.assertEqual(calculator.detailed_dsa,
+                         [{'daily_rate': Decimal('200'),
+                           'deduction': Decimal('20'),
+                           'dsa_region': self.budapest.id,
+                           'dsa_region_name': 'Hungary - Budapest',
+                           'end_date': date(2017, 1, 1),
+                           'night_count': 0,
+                           'paid_to_traveler': Decimal('60'),
+                           'start_date': date(2017, 1, 1),
+                           'total_amount': Decimal('80')}])
+
+    def test_case_2(self):
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
+                             dsa_region=self.copenhagen)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 23, 0, tzinfo=UTC),
+                             dsa_region=self.dusseldorf)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 3, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 3, 13, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 1),
+                         accomodation=True)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 2),
+                         breakfast=True,
+                         lunch=True,
+                         dinner=True)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 3),
+                         lunch=True)
+
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
+
+        self.assertEqual(calculator.total_dsa, 1160)
+        self.assertEqual(calculator.total_deductions, 460)
+        self.assertEqual(calculator.paid_to_traveler, 700)
+
+        self.assertEqual(calculator.detailed_dsa,
+                         [{'daily_rate': Decimal('400'),
+                           'deduction': Decimal('460'),
+                           'dsa_region': self.dusseldorf.id,
+                           'dsa_region_name': 'Germany - Duesseldorf',
+                           'end_date': date(2017, 1, 3),
+                           'night_count': 2,
+                           'paid_to_traveler': Decimal('700'),
+                           'start_date': date(2017, 1, 1),
+                           'total_amount': Decimal('1160')}])
+
+    def test_case_3(self):
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 3, 2, 0, tzinfo=UTC),
+                             dsa_region=self.copenhagen)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 3, 11, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 3, 11, 30, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 2),
+                         breakfast=True)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 3),
+                         breakfast=True)
+
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
+
+        self.assertEqual(calculator.total_dsa, 480)
+        self.assertEqual(calculator.total_deductions, 20)
+        self.assertEqual(calculator.paid_to_traveler, 460)
+
+        self.assertEqual(calculator.detailed_dsa,
+                         [{'daily_rate': Decimal('200'),
+                           'deduction': Decimal('20'),
+                           'dsa_region': self.budapest.id,
+                           'dsa_region_name': 'Hungary - Budapest',
+                           'end_date': date(2017, 1, 3),
+                           'night_count': 2,
+                           'paid_to_traveler': Decimal('460'),
+                           'start_date': date(2017, 1, 1),
+                           'total_amount': Decimal('480')}])
+
+    def test_case_4(self):
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 3, 4, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 3, 4, 11, 0, tzinfo=UTC),
+                             dsa_region=self.copenhagen)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 3, 5, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 3, 5, 10, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 3, 7, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 3, 7, 11, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 2, 28),
+                         dinner=True)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 3, 2),
+                         dinner=True)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 3, 4),
+                         dinner=True)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 3, 6),
+                         dinner=True)
+
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
+
+        self.assertEqual(calculator.total_dsa, 12708)
+        self.assertEqual(calculator.total_deductions, 93)
+        self.assertEqual(calculator.paid_to_traveler, 12615)
+
+        self.assertEqual(calculator.detailed_dsa,
+                         [{'daily_rate': Decimal('200'),
+                           'deduction': Decimal('30'),
+                           'dsa_region': self.budapest.id,
+                           'dsa_region_name': 'Hungary - Budapest',
+                           'end_date': date(2017, 3, 1),
+                           'night_count': 59,
+                           'paid_to_traveler': Decimal('11970'),
+                           'start_date': date(2017, 1, 1),
+                           'total_amount': Decimal('12000')},
+                          {'daily_rate': Decimal('120'),
+                           'deduction': Decimal('18'),
+                           'dsa_region': self.budapest.id,
+                           'dsa_region_name': 'Hungary - Budapest',
+                           'end_date': date(2017, 3, 3),
+                           'night_count': 1,
+                           'paid_to_traveler': Decimal('222'),
+                           'start_date': date(2017, 3, 2),
+                           'total_amount': Decimal('240')},
+                          {'daily_rate': Decimal('180'),
+                           'deduction': Decimal('27'),
+                           'dsa_region': self.copenhagen.id,
+                           'dsa_region_name': 'Denmark - Copenhagen',
+                           'end_date': date(2017, 3, 4),
+                           'night_count': 0,
+                           'paid_to_traveler': Decimal('153'),
+                           'start_date': date(2017, 3, 4),
+                           'total_amount': Decimal('180')},
+                          {'daily_rate': Decimal('120'),
+                           'deduction': Decimal('18'),
+                           'dsa_region': self.budapest.id,
+                           'dsa_region_name': 'Hungary - Budapest',
+                           'end_date': date(2017, 3, 7),
+                           'night_count': 2,
+                           'paid_to_traveler': Decimal('270'),
+                           'start_date': date(2017, 3, 5),
+                           'total_amount': Decimal('288')}])
+
+    def test_case_5(self):
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2016, 12, 31, 22, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+                             dsa_region=self.budapest,
                              overnight_travel=True)
+
         IteneraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 3, 11, tzinfo=UTC),
-                             arrival_date=datetime(2017, 3, 13, tzinfo=UTC),
-                             dsa_region=self.hungary_region)
+                             departure_date=datetime(2017, 1, 3, 23, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam,
+                             overnight_travel=True)
 
         DeductionFactory(travel=self.travel,
-                         date=date(2017, 3, 12),
-                         breakfast=True,
-                         accomodation=True)
-
-        calculator = CostSummaryCalculator(self.travel)
-
-        # with self.assertNumQueries(5):
-        calculator.calculate_cost_summary()
-
-        cost_summary = calculator.get_cost_summary()
-        self.assertEqual(cost_summary,
-                         {'deductions_total': Decimal('55.0000'),
-                          'dsa': [{'amount_usd': Decimal('8850.0000'),  # 150 * 60 == 9000
-                                   'daily_rate_usd': Decimal('150.0000'),
-                                   'dsa_region': self.united_states_region.id,
-                                   'dsa_region_name': 'United States - New York',
-                                   'end_date': date(2017, 3, 1),
-                                   'night_count': 60,
-                                   'start_date': date(2017, 1, 1)},
-                                  {'amount_usd': Decimal('1170.0000'),  # 130 * 9 = 1170
-                                   'daily_rate_usd': Decimal('130.0000'),
-                                   'dsa_region': self.united_states_region.id,
-                                   'dsa_region_name': 'United States - New York',
-                                   'end_date': date(2017, 3, 10),
-                                   'night_count': 9,
-                                   'start_date': date(2017, 3, 2)},
-                                  {'amount_usd': Decimal('185.0000'),  # 100 * (1 + 0.45 + 0.4)
-                                   'daily_rate_usd': Decimal('100.0000'),
-                                   'dsa_region': self.hungary_region.id,
-                                   'dsa_region_name': 'Hungary - Budapest',
-                                   'end_date': date(2017, 3, 13),
-                                   'night_count': 3,
-                                   'start_date': date(2017, 3, 11)}],
-                          'dsa_total': Decimal('10260.0000'),
-                          'expenses_delta': Decimal('0'),
-                          'expenses_total': Decimal('0.0000'),
-                          'preserved_expenses': None})
-
-    def test_expenses(self):
-        IteneraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 3, tzinfo=UTC),
-                             dsa_region=self.united_states_region)
-        IteneraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 3, 11, tzinfo=UTC),
-                             arrival_date=datetime(2017, 3, 13, tzinfo=UTC),
-                             dsa_region=self.hungary_region)
+                         date=date(2017, 1, 2),
+                         breakfast=True)
 
         DeductionFactory(travel=self.travel,
-                         date=date(2017, 3, 12),
-                         breakfast=True,
-                         accomodation=True)
+                         date=date(2017, 1, 3),
+                         breakfast=True)
 
-        expense_type = ExpenseTypeFactory()
-        currency = CurrencyFactory()
-        Expense.objects.create(travel=self.travel,
-                               type=expense_type,
-                               document_currency=currency,
-                               account_currency=currency,
-                               amount=Decimal(89))
-        Expense.objects.create(travel=self.travel,
-                               type=expense_type,
-                               document_currency=currency,
-                               account_currency=currency,
-                               amount=Decimal('123.14'))
-        Expense.objects.create(travel=self.travel,
-                               type=expense_type,
-                               document_currency=currency,
-                               account_currency=currency,
-                               amount=Decimal('99.99'))
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
 
-        calculator = CostSummaryCalculator(self.travel)
+        self.assertEqual(calculator.total_dsa, 480)
+        self.assertEqual(calculator.total_deductions, 20)
+        self.assertEqual(calculator.paid_to_traveler, 460)
 
-        # with self.assertNumQueries(5):
-        calculator.calculate_cost_summary()
+        self.assertEqual(calculator.detailed_dsa,
+                         [{'daily_rate': Decimal('200'),
+                           'deduction': Decimal('20'),
+                           'dsa_region': self.budapest.id,
+                           'dsa_region_name': 'Hungary - Budapest',
+                           'end_date': date(2017, 1, 3),
+                           'night_count': 2,
+                           'paid_to_traveler': Decimal('460'),
+                           'start_date': date(2017, 1, 1),
+                           'total_amount': Decimal('480')}])
 
-        cost_summary = calculator.get_cost_summary()
-        self.assertEqual(cost_summary['expenses_total'], Decimal('312.13'))  # 89 + 123.14 + 99.99
-
-    def test_get_dsa_region_collection(self):
+    def test_case_6(self):
         IteneraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 1, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 3, tzinfo=UTC),
-                             dsa_region=self.united_states_region)
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
         IteneraryItemFactory(travel=self.travel,
-                             departure_date=datetime(2017, 1, 11, tzinfo=UTC),
-                             arrival_date=datetime(2017, 1, 13, tzinfo=UTC),
-                             dsa_region=self.hungary_region)
+                             departure_date=datetime(2017, 1, 3, 12, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 3, 14, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
 
-        calculator = CostSummaryCalculator(self.travel)
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 3),
+                         no_dsa=True)
 
-        itinerary = list(self.travel.itinerary.order_by('departure_date'))
-        mapping = calculator.get_date_dsa_region_mapping(itinerary)
-        mapping = {dto.date: dto.region for dto in mapping}
-        self.assertEqual(mapping,
-                         {date(2017, 1, 1): self.united_states_region,
-                          date(2017, 1, 2): self.united_states_region,
-                          date(2017, 1, 3): self.united_states_region,
-                          date(2017, 1, 4): self.united_states_region,
-                          date(2017, 1, 5): self.united_states_region,
-                          date(2017, 1, 6): self.united_states_region,
-                          date(2017, 1, 7): self.united_states_region,
-                          date(2017, 1, 8): self.united_states_region,
-                          date(2017, 1, 9): self.united_states_region,
-                          date(2017, 1, 10): self.united_states_region,
-                          date(2017, 1, 11): self.hungary_region,
-                          date(2017, 1, 12): self.hungary_region,
-                          date(2017, 1, 13): self.hungary_region})
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
 
-        collection = calculator.get_dsa_region_collection(itinerary)
-        collection = [(dto.region, dto.date_range) for dto in collection]
-        self.assertEqual(collection,
-                         [(self.united_states_region, [date(2017, 1, 1), date(2017, 1, 10)]),
-                          (self.hungary_region, [date(2017, 1, 11), date(2017, 1, 13)])])
+        self.assertEqual(calculator.total_dsa, 480)
+        self.assertEqual(calculator.total_deductions, 80)
+        self.assertEqual(calculator.paid_to_traveler, 400)
+
+        self.assertEqual(calculator.detailed_dsa,
+                         [{'daily_rate': Decimal('200'),
+                           'deduction': Decimal('80'),
+                           'dsa_region': self.budapest.id,
+                           'dsa_region_name': 'Hungary - Budapest',
+                           'end_date': date(2017, 1, 3),
+                           'night_count': 2,
+                           'paid_to_traveler': Decimal('400'),
+                           'start_date': date(2017, 1, 1),
+                           'total_amount': Decimal('480')}])
+
+    def test_case_7(self):
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 21, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
+
+        self.assertEqual(calculator.total_dsa, 0)
+        self.assertEqual(calculator.total_deductions, 0)
+        self.assertEqual(calculator.paid_to_traveler, 0)
+
+        self.assertEqual(calculator.detailed_dsa, [])
