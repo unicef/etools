@@ -1,6 +1,5 @@
 from __future__ import unicode_literals, absolute_import
 
-from collections import defaultdict, namedtuple
 from datetime import datetime
 import json
 import logging
@@ -13,6 +12,89 @@ from vision.vision_data_synchronizer import VisionDataSynchronizer
 
 log = logging.getLogger(__name__)
 
+
+class CostAssignmentSynch(VisionDataSynchronizer):
+    ENDPOINT = 'GetCostAssignmentInfo_JSON'
+    REQUIRED_KEYS = []
+
+    def __init__(self, *args, **kwargs):
+        super(CostAssignmentSynch, self).__init__(*args, **kwargs)
+        all_grants = Grant.objects.prefetch_related('funds').all()
+        all_funds = Fund.objects.all()
+        self.business_area = None
+        self.grants = {k.name:k for k in all_grants}
+        self.funds = {k.name:k for k in all_funds}
+        self.wbss = {}
+
+
+    def local_get_or_create_grant(self, grant_name):
+        if self.grants.get(grant_name, None):
+            return self.grants.get(grant_name)
+        grant, _ = Grant.objects.get_or_create(name=grant_name)
+        return grant
+
+    def local_get_or_create_fund(self, fund_name):
+        if self.funds.get(fund_name, None):
+            return self.funds.get(fund_name)
+        fund, _ = Fund.objects.get_or_create(name=fund_name)
+        return fund
+
+    def local_get_or_create_WBS(self, wbs_name):
+        if self.wbss.get(wbs_name, None):
+            return self.wbss.get(wbs_name)
+        wbs, _ = WBS.objects.get_or_create(name=wbs_name, business_area=self.business_area)
+        return wbs
+
+    def create_or_update_record(self, record):
+        wbs = self.local_get_or_create_WBS(record['wbs'])
+
+        list_of_grants = []
+        for record_grant in record['grants']:
+            grant = self.local_get_or_create_grant(record_grant['grant_name'])
+            if grant not in wbs.grants.all():
+                list_of_grants.append(grant)
+
+            grant_fund = self.local_get_or_create_fund(record_grant['fund_type'])
+            if grant_fund not in grant.funds.all():
+                grant.funds.add(grant_fund)
+        if list_of_grants:
+            wbs.grants.add(*list_of_grants)
+
+
+    def _convert_records(self, records):
+        return json.loads(records)
+
+    def _map_object(self, record):
+        r = {}
+        r['wbs'] = record['WBS_ELEMENT_EX']
+        r['grants'] = []
+        if record['FUND']:
+            for g in record['FUND']['FUND_ROW']:
+                r['grants'].append({
+                    'grant_name': g['GRANT_NBR'],
+                    'fund_type': g['FUND_TYPE_CODE'],
+                })
+        return r
+
+    def _save_records(self, records):
+        records = records['ROWSET']['ROW']
+        # get the business area
+
+        current_business_area_code = records[0]['WBS_ELEMENT_EX'].split('/')[0]
+
+        # let this one blow up if Business Area does not exist or returns two records
+        self.business_area = BusinessArea.objects.get(code=current_business_area_code)
+
+        local_list_of_wbs_objects = WBS.objects.filter(business_area__code=current_business_area_code). \
+            prefetch_related('grants', 'business_area', 'grants__funds').all()
+
+        self.wbss = {k.name:k for k in local_list_of_wbs_objects}
+
+        for record in records:
+            mapped_record = self._map_object(record)
+            self.create_or_update_record(mapped_record)
+
+        return len(records)
 
 class CurrencySyncronizer(VisionDataSynchronizer):
     ENDPOINT = 'GetCurrencyXrate_JSON'
@@ -133,118 +215,3 @@ class TravelAgenciesSyncronizer(VisionDataSynchronizer):
         return processed
 
 
-class CostAssignmentsSyncronizer(VisionDataSynchronizer):
-    ENDPOINT = 'GetCostAssignmentInfo_JSON'
-
-    REQUIRED_KEYS = (
-        'WBS_ELEMENT_EX',
-        'GRANT_REF',
-        'FUND_TYPE_CODE',
-    )
-
-    Group = namedtuple('Group', ['wbs_code', 'grant_code', 'fund_code'])
-
-    def __init__(self, country=None):
-        super(CostAssignmentsSyncronizer, self).__init__(country)
-        self.processed = 0
-
-    def _convert_records(self, records):
-        return json.loads(records)
-
-    def _save_records(self, records):
-        self.processed = 0
-
-        records = records['ROWSET']['ROW']
-
-        groups = []
-        for row in records:
-            g = self.Group(row['WBS_ELEMENT_EX'], row['GRANT_REF'], row['FUND_TYPE_CODE'])
-            groups.append(g)
-
-        wbs_code_set = {g.wbs_code for g in groups}
-        grant_code_set = {g.grant_code for g in groups}
-        fund_code_set = {g.fund_code for g in groups}
-
-        wbs_mapping = self.create_wbs_objects(wbs_code_set)
-        grant_mapping = self.create_grant_objects(grant_code_set)
-        fund_mapping = self.create_fund_objects(fund_code_set)
-
-        wbs_grant_mapping = defaultdict(list)
-        grant_fund_mapping = defaultdict(list)
-        for g in groups:
-            wbs = wbs_mapping[g.wbs_code]
-            grant = grant_mapping[g.grant_code]
-            fund = fund_mapping[g.fund_code]
-
-            wbs_grant_mapping[wbs].append(grant)
-            grant_fund_mapping[grant].append(fund)
-
-        for wbs, grants in wbs_grant_mapping.items():
-            wbs.grants.set(grants)
-
-        for grant, funds in grant_fund_mapping.items():
-            grant.funds.set(funds)
-
-        return self.processed
-
-    def _fetch_business_areas(self, wbs_set):
-        business_area_codes = {wbs_code[:4] for wbs_code in wbs_set}
-        business_area_qs = BusinessArea.objects.filter(code__in=business_area_codes)
-        return {ba.code: ba for ba in business_area_qs}
-
-    def create_wbs_objects(self, wbs_code_set):
-        business_area_cache = self._fetch_business_areas(wbs_code_set)
-
-        existing_wbs_objects = WBS.objects.filter(name__in=wbs_code_set)
-        existing_wbs_codes = {wbs.name for wbs in existing_wbs_objects}
-
-        wbs_to_create = wbs_code_set - existing_wbs_codes
-        bulk_wbs_list = []
-        for wbs_code in wbs_to_create:
-            business_area_code = wbs_code[:4]
-            wbs = WBS(name=wbs_code, business_area=business_area_cache[business_area_code])
-            bulk_wbs_list.append(wbs)
-
-        new_wbs_list = WBS.objects.bulk_create(bulk_wbs_list)
-        self.processed += len(new_wbs_list)
-
-        wbs_mapping = {wbs.name: wbs for wbs in existing_wbs_objects}
-        new_wbs_mapping = {wbs.name: wbs for wbs in WBS.objects.filter(name__in=wbs_to_create)}
-        wbs_mapping.update(new_wbs_mapping)
-        return wbs_mapping
-
-    def create_grant_objects(self, grant_code_set):
-        grant_objects = Grant.objects.filter(name__in=grant_code_set)
-        existing_grants = {g.name for g in grant_objects}
-
-        grant_to_create = grant_code_set - existing_grants
-        bulk_grant_list = []
-        for grant_code in grant_to_create:
-            grant = Grant(name=grant_code)
-            bulk_grant_list.append(grant)
-
-        new_grant_list = Grant.objects.bulk_create(bulk_grant_list)
-        self.processed += len(new_grant_list)
-
-        grant_mapping = {g.name: g for g in grant_objects}
-        new_grant_mapping = {g.name: g for g in Grant.objects.filter(name__in=grant_to_create)}
-        grant_mapping.update(new_grant_mapping)
-        return grant_mapping
-
-    def create_fund_objects(self, fund_code_set):
-        fund_objects = Fund.objects.filter(name__in=fund_code_set)
-        existing_funds = {f.name for f in fund_objects}
-
-        fund_to_create = fund_code_set - existing_funds
-        bulk_fund_list = []
-        for fund_code in fund_to_create:
-            fund = Fund(name=fund_code)
-            bulk_fund_list.append(fund)
-
-        new_fund_list = Fund.objects.bulk_create(bulk_fund_list)
-        self.processed += len(new_fund_list)
-
-        fund_mapping = {f.name: f for f in fund_objects}
-        new_fund_mapping = {f.name: f for f in Fund.objects.filter(name__in=fund_to_create)}
-        fund_mapping.update(new_fund_mapping)
-        return fund_mapping
