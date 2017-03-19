@@ -39,7 +39,7 @@ class CostAssignmentSynch(VisionDataSynchronizer):
         if self.funds.get(fund_name, None):
             return self.funds.get(fund_name)
         fund, _ = Fund.objects.get_or_create(name=fund_name)
-        self.funds[fund.name] = Fund
+        self.funds[fund.name] = fund
         return fund
 
     def local_get_or_create_WBS(self, wbs_name):
