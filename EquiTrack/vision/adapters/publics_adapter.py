@@ -21,9 +21,10 @@ class CostAssignmentSynch(VisionDataSynchronizer):
         super(CostAssignmentSynch, self).__init__(*args, **kwargs)
         all_grants = Grant.objects.prefetch_related('funds').all()
         all_funds = Fund.objects.all()
-        self.business_area = None
         self.grants = {k.name:k for k in all_grants}
         self.funds = {k.name:k for k in all_funds}
+
+        self.business_area = None
         self.wbss = {}
 
 
@@ -31,12 +32,14 @@ class CostAssignmentSynch(VisionDataSynchronizer):
         if self.grants.get(grant_name, None):
             return self.grants.get(grant_name)
         grant, _ = Grant.objects.get_or_create(name=grant_name)
+        self.grants[grant.name] = grant
         return grant
 
     def local_get_or_create_fund(self, fund_name):
         if self.funds.get(fund_name, None):
             return self.funds.get(fund_name)
         fund, _ = Fund.objects.get_or_create(name=fund_name)
+        self.funds[fund.name] = fund
         return fund
 
     def local_get_or_create_WBS(self, wbs_name):
