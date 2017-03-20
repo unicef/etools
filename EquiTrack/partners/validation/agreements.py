@@ -80,6 +80,17 @@ def start_date_equals_max_signoff(agreement):
         return False
     return True
 
+def end_date_pca_validation(agreement):
+    if agreement.agreement_type == agreement.__class__.PCA and agreement.start:
+        try:
+            cp = CountryProgramme.objects.filter(from_date__lte=agreement.start, to_date__gte=agreement.start)
+        except CountryProgramme.DoesNotExist:
+            return True
+        if agreement.end and agreement.end > cp.to_date or agreement.end is None:
+            return False
+
+
+
 def signed_date_valid(agreement):
     '''
     :param agreement:
@@ -131,6 +142,7 @@ class AgreementValid(CompleteValidation):
         start_date_equals_max_signoff,
         partner_type_valid_cso,
         end_date_country_programme_valid,
+        end_date_pca_validation,
     ]
 
     VALID_ERRORS = {
@@ -148,7 +160,8 @@ class AgreementValid(CompleteValidation):
         'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
         'signed_by_valid': 'Partner manager and signed by must be provided.',
-        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.'
+        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
+        'end_date_pca_validation': 'End date is not entered for PCA or end date cannot be after current Country Programme',
     }
 
     def state_suspended_valid(self, agreement, user=None):
