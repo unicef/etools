@@ -19,7 +19,7 @@ from rest_framework.generics import (
 )
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
-
+from EquiTrack.utils import get_data_from_insight
 from partners.models import (
     PartnerStaffMember,
     Intervention,
@@ -221,3 +221,104 @@ class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
         else:
             assessment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PartnerOrganizationAddView(ListCreateAPIView):
+    """
+        Create new Partners.
+        Returns a list of Partners.
+        """
+    queryset = PartnerOrganization.objects.all()
+    serializer_class = PartnerOrganizationCreateUpdateSerializer
+    permission_classes = (IsAdminUser,)
+    filter_backends = (PartnerScopeFilter,)
+
+    REQUIRED_KEYS = (
+        "BUSINESS_AREA_NAME",
+        "PARTNER_TYPE_DESC",
+        "CSO_TYPE_NAME",
+        "VENDOR_NAME",
+        "VENDOR_CODE",
+        "RISK_RATING_NAME",
+        "TYPE_OF_ASSESSMENT",
+        "LAST_ASSESSMENT_DATE",
+        "STREET_ADDRESS",
+        "VENDOR_CITY",
+        "VENDOR_CTRY_NAME",
+        "PHONE_NUMBER",
+        "EMAIL",
+        "GRANT_REF",
+        "GRANT_DESC",
+        "DONOR_NAME",
+        "EXPIRY_DATE",
+        "DELETED_FLAG",
+        "TOTAL_CASH_TRANSFERRED_CP",
+        "TOTAL_CASH_TRANSFERRED_CY",
+    )
+
+    MAPPING = {
+        'name': "VENDOR_NAME",
+        'cso_type': 'CSO_TYPE_NAME',
+        'rating': 'RISK_RATING_NAME',
+        'type_of_assessment': "TYPE_OF_ASSESSMENT",
+        'address': "STREET_ADDRESS",
+        'city': "VENDOR_CITY",
+        'country': "VENDOR_CTRY_NAME",
+        'phone_number': 'PHONE_NUMBER',
+        'email': "EMAIL",
+        'deleted_flag': "DELETED_FLAG",
+        'last_assessment_date': "LAST_ASSESSMENT_DATE",
+        'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
+        'partner_type': "PARTNER_TYPE_DESC",
+    }
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        # TODO: on create we should call the insight API with the vendor number and use that information to populate:
+        query_params = self.request.query_params
+        vendor = None
+        if query_params and "vendor" in query_params.keys():
+            vendor = query_params.get('vendor')
+            valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+                                                             {"vendor_code": vendor})
+            if not valid_response:
+                return {"error": response}
+            try:
+                partner_resp = response["ROWSET"]["ROW"]
+                partner_org = PartnerOrganization.objects.get(vendor_number=partner_resp["VENDOR_CODE"])
+                if partner_org.count() > 0:
+                    return {"error": 'Partner Organization already exists with this vendor number'}
+                else:
+                    partner_org = PartnerOrganization(vendor_number=partner_resp["VENDOR_CODE"])
+                    partner_org.name = partner_resp["VENDOR_NAME"]
+                    partner_org.cso_type = partner_resp["CSO_TYPE_NAME"]
+                    partner_org.rating = partner_resp["RISK_RATING_NAME"]
+                    partner_org.type_of_assessment = partner_resp["TYPE_OF_ASSESSMENT"]
+                    partner_org.address = partner_resp["STREET_ADDRESS"]
+                    partner_org.city = partner_resp["VENDOR_CITY"]
+                    partner_org.country = partner_resp["VENDOR_CTRY_NAME"]
+                    partner_org.phone_number = partner_resp["PHONE_NUMBER"]
+                    partner_org.email = partner_resp["EMAIL"]
+                    partner_org.core_values_assessment_date = wcf_json_date_as_datetime(
+                        partner_resp["CORE_VALUE_ASSESSMENT_DT"])
+                    partner_org.last_assessment_date = wcf_json_date_as_datetime(partner_resp["LAST_ASSESSMENT_DATE"])
+                    partner_org.partner_type = type_mapping[partner_resp["PARTNER_TYPE_DESC"]]
+                    partner_org.deleted_flag = True if partner_resp["DELETED_FLAG"] else False
+                    if not partner_org.hidden:
+                        partner_org.hidden = partner_org.deleted_flag
+                    partner_org.vision_synced = True
+                    saving = True
+
+                if partner_org.total_ct_cp == None or partner_org.total_ct_cy == None or \
+                        not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner["VENDOR_CODE"]]) or \
+                        not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner["VENDOR_CODE"]]):
+                    partner_org.total_ct_cy = _totals_cy[partner["VENDOR_CODE"]]
+                    partner_org.total_ct_cp = _totals_cp[partner["VENDOR_CODE"]]
+
+            except KeyError as e:
+                return {"error": 'Response returned by the Server cannot find the vendor number supplied'}
+
+        else:
+            return {"error": "No vendor number provided for Partner Organization"}
+
+        return Response(self.serializer_class.data, status=status.HTTP_201_CREATED, headers=headers)
