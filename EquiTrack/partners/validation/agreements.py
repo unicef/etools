@@ -82,13 +82,13 @@ def start_date_equals_max_signoff(agreement):
 
 def end_date_pca_validation(agreement):
     if agreement.agreement_type == agreement.__class__.PCA and agreement.start:
-        try:
-            cp = CountryProgramme.objects.filter(from_date__lte=agreement.start, to_date__gte=agreement.start)
-        except CountryProgramme.DoesNotExist:
-            return True
-        if agreement.end and agreement.end > cp.to_date or agreement.end is None:
-            return False
-
+        cp = CountryProgramme.objects.filter(from_date__lte=agreement.start,
+                                             to_date__gte=agreement.start,
+                                             wbs__contains='/A0/').order_by('id').first()
+        if cp:
+            if cp is None or agreement.end is None or agreement.end > cp.to_date:
+                return False
+    return True
 
 
 def signed_date_valid(agreement):
