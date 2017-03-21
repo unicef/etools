@@ -3,16 +3,11 @@ import datetime
 from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
-from rest_framework.generics import ListAPIView
-from rest_framework import status
-from rest_framework.response import Response
-
-from partners.models import PCA, PartnerOrganization, Intervention
+from partners.models import PCA, PartnerOrganization, GwPCALocation
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType
 from funds.models import Donor
 from trips.models import Trip, ActionPoint
-from partners.serializers.interventions_v2 import InterventionListSerializer
 
 
 class MainView(TemplateView):
