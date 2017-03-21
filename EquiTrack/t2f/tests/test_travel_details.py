@@ -61,7 +61,6 @@ class TravelDetails(APITenantTestCase):
                           response_json,
                           exact=True)
 
-
     @skip('Fix this')
     def test_file_attachments(self):
         class FakeFile(StringIO):
@@ -259,10 +258,26 @@ class TravelDetails(APITenantTestCase):
         response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['cost_summary']['expenses'],
-                         [{'amount': '200.00', 'vendor_number': 'Traveler'},
-                          {'amount': '100.00', 'vendor_number': 'ta1'},
-                          {'amount': '500.00', 'vendor_number': 'ta2'},
-                          {'amount': '1000.00', 'vendor_number': ''}])
+                         [{'amount': '80.00',
+                           'currency': currency.id,
+                           'label': user_et.title,
+                           'vendor_number': 'Traveler'},
+                          {'amount': '120.00',
+                           'currency': currency.id,
+                           'label': user_et.title,
+                           'vendor_number': 'Traveler'},
+                          {'amount': '100.00',
+                           'currency': currency.id,
+                           'label': travel_agent_1_et.title,
+                           'vendor_number': 'ta1'},
+                          {'amount': '500.00',
+                           'currency': currency.id,
+                           'label': travel_agent_2_et.title,
+                           'vendor_number': 'ta2'},
+                          {'amount': '1000.00',
+                           'currency': currency.id,
+                           'label': parking_money_et.title,
+                           'vendor_number': ''}])
 
     def test_cost_assignments(self):
         wbs = WBSFactory()
