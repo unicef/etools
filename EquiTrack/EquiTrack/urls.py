@@ -27,8 +27,7 @@ from .views import (
     CmtDashboardView,
     HACTDashboardView,
     PartnershipsView,
-    OutdatedBrowserView,
-    MyInterventionsListAPIView,
+    OutdatedBrowserView
 )
 from locations.views import (
     LocationTypesViewSet,
@@ -138,6 +137,16 @@ urlpatterns = patterns(
     url(r'^login/$', MainView.as_view(), name='main'),
 
 
+    # url(r'^indicators', login_required(DashboardView.as_view()), name='indicator_dashboard'),
+    # url(r'^partnerships', login_required(PartnershipsView.as_view()), name='partnerships_dashboard'),
+    # url(r'^map/$', login_required(MapView.as_view()), name='map'),
+    # url(r'^cmt/$', login_required(CmtDashboardView.as_view()), name='cmt'),
+    # url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
+
+    url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
+    url(r'^api/wbs_grants_funds/$', WBSGrantFundView.as_view(), name='wbs_grants_funds'),
+
+    # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
     url(r'^users/', include('users.urls')),
     url(r'^supplies/', include('supplies.urls')),
