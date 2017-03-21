@@ -1,6 +1,7 @@
 import json
 import operator
 import functools
+import datetime
 
 from django.db import transaction
 from django.db.models import Q
@@ -20,13 +21,15 @@ from rest_framework.generics import (
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.utils import get_data_from_insight
+
 from partners.models import (
     PartnerStaffMember,
     Intervention,
     GovernmentIntervention,
     PartnerOrganization,
     Assessment,
-    PartnerType
+    PartnerType,
+    BankDetails,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -36,7 +39,8 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
-    AssessmentDetailSerializer
+    AssessmentDetailSerializer,
+    BankDetailsCreateSerializer,
 )
 from partners.serializers.interventions_v2 import (
     InterventionSummaryListSerializer,
@@ -233,48 +237,29 @@ class PartnerOrganizationAddView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
     filter_backends = (PartnerScopeFilter,)
 
-    REQUIRED_KEYS = (
-        "BUSINESS_AREA_NAME",
-        "PARTNER_TYPE_DESC",
-        "CSO_TYPE_NAME",
-        "VENDOR_NAME",
-        "VENDOR_CODE",
-        "RISK_RATING_NAME",
-        "TYPE_OF_ASSESSMENT",
-        "LAST_ASSESSMENT_DATE",
-        "STREET_ADDRESS",
-        "VENDOR_CITY",
-        "VENDOR_CTRY_NAME",
-        "PHONE_NUMBER",
-        "EMAIL",
-        "GRANT_REF",
-        "GRANT_DESC",
-        "DONOR_NAME",
-        "EXPIRY_DATE",
-        "DELETED_FLAG",
-        "TOTAL_CASH_TRANSFERRED_CP",
-        "TOTAL_CASH_TRANSFERRED_CY",
-    )
+    type_mapping = {
+        "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
+        "CIVIL SOCIETY ORGANIZATION": u'Civil Society Organization',
+        "GOVERNMENT": u'Government',
+        "UN AGENCY": u'UN Agency',
+    }
 
-    MAPPING = {
-        'name': "VENDOR_NAME",
-        'cso_type': 'CSO_TYPE_NAME',
-        'rating': 'RISK_RATING_NAME',
-        'type_of_assessment': "TYPE_OF_ASSESSMENT",
-        'address': "STREET_ADDRESS",
-        'city': "VENDOR_CITY",
-        'country': "VENDOR_CTRY_NAME",
-        'phone_number': 'PHONE_NUMBER',
-        'email': "EMAIL",
-        'deleted_flag': "DELETED_FLAG",
-        'last_assessment_date': "LAST_ASSESSMENT_DATE",
-        'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
-        'partner_type': "PARTNER_TYPE_DESC",
+    cso_type_mapping = {
+        "I": u'International',
+        "N": u'National',
+        "CO": u'Community Based Organization',
+        "AI": u'Academic Institution'
+    }
+
+    risk_rating_mapping = {
+        "0": u'Low',
+        "1": u'Medium',
+        "2": u'Significant',
+        "3": u'high'
     }
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-        # TODO: on create we should call the insight API with the vendor number and use that information to populate:
         query_params = self.request.query_params
         vendor = None
         if query_params and "vendor" in query_params.keys():
@@ -283,42 +268,60 @@ class PartnerOrganizationAddView(ListCreateAPIView):
                                                              {"vendor_code": vendor})
             if not valid_response:
                 return {"error": response}
-            try:
-                partner_resp = response["ROWSET"]["ROW"]
-                partner_org = PartnerOrganization.objects.get(vendor_number=partner_resp["VENDOR_CODE"])
-                if partner_org.count() > 0:
-                    return {"error": 'Partner Organization already exists with this vendor number'}
-                else:
-                    partner_org = PartnerOrganization(vendor_number=partner_resp["VENDOR_CODE"])
-                    partner_org.name = partner_resp["VENDOR_NAME"]
-                    partner_org.cso_type = partner_resp["CSO_TYPE_NAME"]
-                    partner_org.rating = partner_resp["RISK_RATING_NAME"]
-                    partner_org.type_of_assessment = partner_resp["TYPE_OF_ASSESSMENT"]
-                    partner_org.address = partner_resp["STREET_ADDRESS"]
-                    partner_org.city = partner_resp["VENDOR_CITY"]
-                    partner_org.country = partner_resp["VENDOR_CTRY_NAME"]
-                    partner_org.phone_number = partner_resp["PHONE_NUMBER"]
-                    partner_org.email = partner_resp["EMAIL"]
-                    partner_org.core_values_assessment_date = wcf_json_date_as_datetime(
-                        partner_resp["CORE_VALUE_ASSESSMENT_DT"])
-                    partner_org.last_assessment_date = wcf_json_date_as_datetime(partner_resp["LAST_ASSESSMENT_DATE"])
-                    partner_org.partner_type = type_mapping[partner_resp["PARTNER_TYPE_DESC"]]
-                    partner_org.deleted_flag = True if partner_resp["DELETED_FLAG"] else False
-                    if not partner_org.hidden:
-                        partner_org.hidden = partner_org.deleted_flag
-                    partner_org.vision_synced = True
-                    saving = True
 
-                if partner_org.total_ct_cp == None or partner_org.total_ct_cy == None or \
-                        not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner["VENDOR_CODE"]]) or \
-                        not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner["VENDOR_CODE"]]):
-                    partner_org.total_ct_cy = _totals_cy[partner["VENDOR_CODE"]]
-                    partner_org.total_ct_cp = _totals_cp[partner["VENDOR_CODE"]]
+            partner_resp = response["ROWSET"]["ROW"]
+            partner_org = PartnerOrganization.objects.filter(vendor_number=partner_resp["VENDOR_CODE"]).first()
 
-            except KeyError as e:
-                return {"error": 'Response returned by the Server cannot find the vendor number supplied'}
+            if partner_org:
+                return Response({"error": 'Partner Organization already exists with this vendor number'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                partner_org = PartnerOrganization(vendor_number=partner_resp["VENDOR_CODE"])
+                partner_org.name = partner_resp["VENDOR_NAME"]
+                partner_org.partner_type = self.type_mapping[partner_resp["PARTNER_TYPE_DESC"]]
 
+                if partner_org.partner_type ==  u'Civil Society Organization':
+                    partner_org.cso_type = self.cso_type_mapping[partner_resp["CSO_TYPE"]]
+                    partner_org.core_values_assessment_date = datetime.datetime.strptime(partner_resp["CORE_VALUE_ASSESSMENT_DT"], '%d-%b-%y').date()
+                partner_org.rating = self.risk_rating_mapping[partner_resp["RISK_RATING"]]
+                partner_org.type_of_assessment = partner_resp["TYPE_OF_ASSESSMENT"]
+                partner_org.last_assessment_date = datetime.datetime.strptime(partner_resp["DATE_OF_ASSESSMENT"], '%d-%b-%y').date()
+
+                partner_org.address = '{} {}'.format(partner_resp["HOUSE_NUMBER"] if "HOUSE_NUMBER" in partner_resp else "", partner_resp['STREET'])
+                partner_org.postal_code = partner_resp['POSTAL_CODE'] if "POSTAL_CODE" in partner_resp else ""
+                partner_org.city = partner_resp["CITY"]
+                partner_org.country = partner_resp["COUNTRY"]
+                partner_org.phone_number = partner_resp["PHONE_NUMBER"]
+                partner_org.email = partner_resp["EMAIL"]
+                partner_org.vision_synced = True
+                partner_org.total_ct_cp = partner_resp['TOTAL_CASH_TRANSFERRED_CP']
+                partner_org.total_ct_cy = partner_resp['TOTAL_CASH_TRANSFERRED_CY']
+
+                po_serializer = self.get_serializer(data=partner_org.__dict__)
+                po_serializer.is_valid(raise_exception=True)
+                partner = po_serializer.save()
+
+                if "VENDOR_BANK" in partner_resp:
+                    vendor_banks = partner_resp["VENDOR_BANK"]["VENDOR_BANK_ROW"]
+                    for bank in vendor_banks:
+                        bd = BankDetails(partner_organization=partner)
+                        bd.account_number = bank['BANK_ACCOUNT_NO']
+                        bd.account_title = bank['ACCT_HOLDER']
+                        bd.bank_name = bank['BANK_NAME']
+                        bd.bank_address = '{}, {}'.format(bank['STREET'], bank['CITY'])
+                        bd.routing_details = bank['SWIFT_CODE']
+                        bd_serializer = BankDetailsCreateSerializer(data=bd.__dict__)
+                        try:
+                            bd_serializer.is_valid(raise_exception=True)
+                        except ValidationError as e:
+                            e.detail = {'bank_details': e.detail}
+                            raise e
+                        bank_detail = bd_serializer.save()
+
+
+
+                headers = self.get_success_headers(po_serializer.data)
+                return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         else:
-            return {"error": "No vendor number provided for Partner Organization"}
+            return Response({"error": "No vendor number provided for Partner Organization"}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(self.serializer_class.data, status=status.HTTP_201_CREATED, headers=headers)
+
