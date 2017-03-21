@@ -221,21 +221,3 @@ class HACTDashboardView(TemplateView):
 
 class OutdatedBrowserView(TemplateView):
     template_name = 'outdated_browser.html'
-
-
-class MyInterventionsListAPIView(ListAPIView):
-    # serializer_class = InterventionSerializer
-
-    def list(self, request):
-        """
-        Return All Interventions for Partner
-        """
-        interventions = Intervention.objects.filter(unicef_signatory=self.request.user).filter(
-                Q(status=Intervention.ACTIVE) | Q(status=Intervention.DRAFT)
-            ).order_by("number", "-created")
-        serializer = InterventionListSerializer(interventions, many=True)
-
-        return Response(
-            serializer.data,
-            status=status.HTTP_200_OK
-        )
