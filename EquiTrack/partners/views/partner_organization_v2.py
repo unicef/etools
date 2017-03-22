@@ -300,25 +300,6 @@ class PartnerOrganizationAddView(ListCreateAPIView):
                 po_serializer.is_valid(raise_exception=True)
                 partner = po_serializer.save()
 
-                if "VENDOR_BANK" in partner_resp:
-                    vendor_banks = partner_resp["VENDOR_BANK"]["VENDOR_BANK_ROW"]
-                    for bank in vendor_banks:
-                        bd = BankDetails(partner_organization=partner)
-                        bd.account_number = bank['BANK_ACCOUNT_NO']
-                        bd.account_title = bank['ACCT_HOLDER']
-                        bd.bank_name = bank['BANK_NAME']
-                        bd.bank_address = '{}, {}'.format(bank['STREET'], bank['CITY'])
-                        bd.routing_details = bank['SWIFT_CODE']
-                        bd_serializer = BankDetailsCreateSerializer(data=bd.__dict__)
-                        try:
-                            bd_serializer.is_valid(raise_exception=True)
-                        except ValidationError as e:
-                            e.detail = {'bank_details': e.detail}
-                            raise e
-                        bank_detail = bd_serializer.save()
-
-
-
                 headers = self.get_success_headers(po_serializer.data)
                 return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         else:
