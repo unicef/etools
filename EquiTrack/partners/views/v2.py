@@ -24,6 +24,7 @@ from reports.models import (
     ResultType,
 )
 from supplies.models import SupplyItem
+from funds.models import Donor
 
 from partners.models import (
     PartnerOrganization,
@@ -214,6 +215,7 @@ class PMPDropdownsListApiView(APIView):
                                                 country_programme=current_country_programme).values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.all().values())
+        donors = list(Donor.objects.all().values())
 
         return Response(
             {
@@ -221,7 +223,8 @@ class PMPDropdownsListApiView(APIView):
                 'hrps': hrps,
                 'cp_outputs': cp_outputs,
                 'supply_items': supply_items,
-                'file_types': file_types
+                'file_types': file_types,
+                'donors': donors,
 
              },
             status=status.HTTP_200_OK

@@ -22,6 +22,7 @@ from views.interventions_v2 import (
     InterventionResultLinkDeleteView,
     InterventionAmendmentDeleteView,
     InterventionSectorLocationLinkDeleteView,
+    InterventionListMapView,
 )
 from views.government import (
     GovernmentInterventionListAPIView,
@@ -72,6 +73,7 @@ urlpatterns = (
     url(r'^interventions/results/(?P<pk>\d+)/$', view=InterventionResultLinkDeleteView.as_view(http_method_names=['delete', ]), name='intervention-results-del'),
     url(r'^interventions/amendments/(?P<pk>\d+)/$', view=InterventionAmendmentDeleteView.as_view(http_method_names=['delete', ]), name='intervention-amendments-del'),
     url(r'^interventions/sector-locations/(?P<pk>\d+)/$', view=InterventionSectorLocationLinkDeleteView.as_view(http_method_names=['delete', ]), name='intervention-sector-locations-del'),
+    url(r'^interventions/map/$', view=InterventionListMapView.as_view(http_method_names=['get', ]), name='intervention-map'),
     # url(r'^interventions/(?P<pk>\d+)/$', view=InterventionDetailAPIView.as_view(), name='intervention-detail'),
 
     #GOVERNMENT

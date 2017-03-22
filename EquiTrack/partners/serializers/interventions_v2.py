@@ -27,7 +27,7 @@ from partners.models import (
     InterventionResultLink,
 )
 from reports.models import LowerResult
-from locations.serializers import LocationLightSerializer
+from locations.serializers import LocationLightSerializer, LocationSerializer
 from funds.models import FundsCommitmentHeader, FundsCommitmentItem
 
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
@@ -458,3 +458,27 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'government_intervention'
         )
+
+
+class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
+    locations = LocationSerializer(many=True)
+    sector = SectorLightSerializer()
+    class Meta:
+        model = InterventionSectorLocationLink
+        fields = (
+            'id', 'sector', 'locations'
+        )
+
+
+class InterventionListMapSerializer(serializers.ModelSerializer):
+    partner = serializers.CharField(source='agreement.partner.name')
+    sector_locations = InterventionLocationSectorMapNestedSerializer(many=True, read_only=True, required=False)
+
+    class Meta:
+        model = Intervention
+        fields = (
+            "id", "partner", "agreement", "document_type", "hrp", "number", "title", "status", "start", "end",
+            "offices", "sector_locations", "created", "modified",
+        )
+
+
