@@ -28,8 +28,6 @@ from partners.models import (
     PartnerOrganization,
     PartnerType,
     PartnerStaffMember,
-    BankDetails,
-
 )
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
