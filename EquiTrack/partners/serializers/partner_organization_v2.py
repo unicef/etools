@@ -283,10 +283,3 @@ class PartnerStaffMemberPropertiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
-
-
-class BankDetailsCreateSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = BankDetails
-        fields = "__all__"

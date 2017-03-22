@@ -40,7 +40,6 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
     AssessmentDetailSerializer,
-    BankDetailsCreateSerializer,
 )
 from partners.serializers.interventions_v2 import (
     InterventionSummaryListSerializer,
