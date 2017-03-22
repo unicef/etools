@@ -29,7 +29,6 @@ from partners.models import (
     PartnerOrganization,
     Assessment,
     PartnerType,
-    BankDetails,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
