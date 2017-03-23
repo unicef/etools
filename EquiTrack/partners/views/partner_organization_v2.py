@@ -289,7 +289,7 @@ class PartnerOrganizationAddView(CreateAPIView):
         valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
                                                              {"vendor_code": vendor})
         if not valid_response:
-            return {"error": response}
+            return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
         partner_resp = response["ROWSET"]["ROW"]
         try:
