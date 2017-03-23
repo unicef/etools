@@ -1,7 +1,7 @@
-import json
 import operator
 import functools
 import datetime
+from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
@@ -17,6 +17,7 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
+    CreateAPIView
 )
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
@@ -46,7 +47,7 @@ from partners.serializers.interventions_v2 import (
 from partners.serializers.government import (
     GovernmentInterventionSummaryListSerializer,
 )
-from partners.permissions import PartneshipManagerRepPermission
+from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
@@ -225,15 +226,40 @@ class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class PartnerOrganizationAddView(ListCreateAPIView):
+class PartnerOrganizationAddView(CreateAPIView):
     """
         Create new Partners.
         Returns a list of Partners.
         """
-    queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationCreateUpdateSerializer
-    permission_classes = (IsAdminUser,)
-    filter_backends = (PartnerScopeFilter,)
+    permission_classes = (PartneshipManagerPermission,)
+
+    # TODO: let's aim to standardize where mapping goes
+    MAPPING = {
+        'vendor_number': "VENDOR_CODE",
+        'name': "VENDOR_NAME",
+        'partner_type': 'PARTNER_TYPE_DESC',
+        'cso_type': 'CSO_TYPE',
+        'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
+        'rating': 'RISK_RATING',
+        'type_of_assessment': "TYPE_OF_ASSESSMENT",
+        'last_assessment_date': "DATE_OF_ASSESSMENT",
+        'address': "STREET",
+        'postal_code': "POSTAL_CODE",
+        'city': "CITY",
+        'country': "COUNTRY",
+        'phone_number': 'PHONE_NUMBER',
+        'email': "EMAIL",
+        'total_ct_cp': "TOTAL_CASH_TRANSFERRED_CP",
+        'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
+    }
+
+    cso_type_mapping = {
+        "International NGO": u'International',
+        "National NGO": u'National',
+        "Community based organization": u'Community Based Organization',
+        "Academic Institution": u'Academic Institution'
+    }
 
     type_mapping = {
         "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
@@ -242,65 +268,43 @@ class PartnerOrganizationAddView(ListCreateAPIView):
         "UN AGENCY": u'UN Agency',
     }
 
-    cso_type_mapping = {
-        "I": u'International',
-        "N": u'National',
-        "CO": u'Community Based Organization',
-        "AI": u'Academic Institution'
-    }
-
-    risk_rating_mapping = {
-        "0": u'Low',
-        "1": u'Medium',
-        "2": u'Significant',
-        "3": u'high'
-    }
+    def get_value_for_field(self, field, value):
+        if field in ['core_values_assessment_date', 'last_assessment_date']:
+            return datetime.datetime.strptime(value, '%d-%b-%y').date()
+        if field in ['partner_type']:
+            return self.type_mapping[value]
+        if field in ['cso_type']:
+            return self.cso_type_mapping[value]
+        if field in ['total_ct_cp', 'total_ct_cy']:
+            return Decimal(value.replace(",", ""))
+        return value
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
-        query_params = self.request.query_params
-        vendor = None
-        if query_params and "vendor" in query_params.keys():
-            vendor = query_params.get('vendor')
-            valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+        vendor = self.request.query_params.get('vendor', None)
+        if vendor is None:
+            return Response({"error": "No vendor number provided for Partner Organization"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
                                                              {"vendor_code": vendor})
-            if not valid_response:
-                return {"error": response}
+        if not valid_response:
+            return {"error": response}
 
-            partner_resp = response["ROWSET"]["ROW"]
-            partner_org = PartnerOrganization.objects.filter(vendor_number=partner_resp["VENDOR_CODE"]).first()
+        partner_resp = response["ROWSET"]["ROW"]
+        try:
+            partner_org = PartnerOrganization.objects.get(vendor_number=partner_resp[self.MAPPING['vendor_number']])
+            # TODO standardize error keys and abstract error messages where possible
+            return Response({"error": 'Partner Organization already exists with this vendor number'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        except PartnerOrganization.DoesNotExist:
+            partner_org = {k: self.get_value_for_field(k, partner_resp[v]) if v in partner_resp.keys() else None for k, v in self.MAPPING.items()}
+            partner_org['vision_synced'] = True
+            po_serializer = self.get_serializer(data=partner_org)
+            po_serializer.is_valid(raise_exception=True)
+            partner = po_serializer.save()
 
-            if partner_org:
-                return Response({"error": 'Partner Organization already exists with this vendor number'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                partner_org = PartnerOrganization(vendor_number=partner_resp["VENDOR_CODE"])
-                partner_org.name = partner_resp["VENDOR_NAME"]
-                partner_org.partner_type = self.type_mapping[partner_resp["PARTNER_TYPE_DESC"]]
-
-                if partner_org.partner_type ==  u'Civil Society Organization':
-                    partner_org.cso_type = self.cso_type_mapping[partner_resp["CSO_TYPE"]]
-                    partner_org.core_values_assessment_date = datetime.datetime.strptime(partner_resp["CORE_VALUE_ASSESSMENT_DT"], '%d-%b-%y').date()
-                partner_org.rating = self.risk_rating_mapping[partner_resp["RISK_RATING"]]
-                partner_org.type_of_assessment = partner_resp["TYPE_OF_ASSESSMENT"]
-                partner_org.last_assessment_date = datetime.datetime.strptime(partner_resp["DATE_OF_ASSESSMENT"], '%d-%b-%y').date()
-
-                partner_org.address = '{} {}'.format(partner_resp["HOUSE_NUMBER"] if "HOUSE_NUMBER" in partner_resp else "", partner_resp['STREET'])
-                partner_org.postal_code = partner_resp['POSTAL_CODE'] if "POSTAL_CODE" in partner_resp else ""
-                partner_org.city = partner_resp["CITY"]
-                partner_org.country = partner_resp["COUNTRY"]
-                partner_org.phone_number = partner_resp["PHONE_NUMBER"]
-                partner_org.email = partner_resp["EMAIL"]
-                partner_org.vision_synced = True
-                partner_org.total_ct_cp = partner_resp['TOTAL_CASH_TRANSFERRED_CP']
-                partner_org.total_ct_cy = partner_resp['TOTAL_CASH_TRANSFERRED_CY']
-
-                po_serializer = self.get_serializer(data=partner_org.__dict__)
-                po_serializer.is_valid(raise_exception=True)
-                partner = po_serializer.save()
-
-                headers = self.get_success_headers(po_serializer.data)
-                return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        else:
-            return Response({"error": "No vendor number provided for Partner Organization"}, status=status.HTTP_400_BAD_REQUEST)
+            headers = self.get_success_headers(po_serializer.data)
+            return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
