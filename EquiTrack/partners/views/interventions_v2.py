@@ -366,8 +366,6 @@ class InterventionListMapView(ListCreateAPIView):
                 queries.append(Q(status__in=[query_params.get("status")]))
             if "partner" in query_params.keys():
                 queries.append(Q(agreement__partner__in=[query_params.get("partner")]))
-            if "donor" in query_params.keys():
-                queries.append(Q(grant__gte=query_params.get("start")))
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
