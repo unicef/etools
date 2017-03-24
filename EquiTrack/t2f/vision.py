@@ -97,7 +97,13 @@ class InvoiceExport(object):
         ET.SubElement(expense, 'wbs').text = invoice_item.wbs.name
         ET.SubElement(expense, 'grant').text = invoice_item.grant.name
         ET.SubElement(expense, 'fund').text = invoice_item.fund.name
-        ET.SubElement(expense, 'pernr').text = invoice_item.invoice.travel.traveler.profile.staff_id
+
+        invoice = invoice_item.invoice
+        profile = invoice.travel.traveler.profile
+        if invoice.vendor_number == profile.vendor_number:
+            ET.SubElement(expense, 'pernr').text = profile.staff_id
+        else:
+            ET.SubElement(expense, 'pernr')
 
     def generate_tree(self, root):
         # https://docs.python.org/2/library/xml.etree.elementtree.html
