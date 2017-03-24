@@ -9,7 +9,7 @@ from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, Resu
     InterventionFactory
 from publics.tests.factories import DSARegionFactory, AirlineCompanyFactory, WBSFactory, GrantFactory, FundFactory, \
     CurrencyFactory, ExpenseTypeFactory
-from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
+from t2f.models import Travel, TravelActivity, ItineraryItem, Expense, Deduction, CostAssignment, Clearances,\
     ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
     TravelType
 
@@ -34,7 +34,7 @@ class TravelActivityFactory(factory.DjangoModelFactory):
         self.locations.add(location)
 
 
-class IteneraryItemFactory(factory.DjangoModelFactory):
+class ItineraryItemFactory(factory.DjangoModelFactory):
     origin = fuzzy.FuzzyText(length=32)
     destination = fuzzy.FuzzyText(length=32)
     departure_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
@@ -49,7 +49,7 @@ class IteneraryItemFactory(factory.DjangoModelFactory):
         self.airlines.add(airline)
 
     class Meta:
-        model = IteneraryItem
+        model = ItineraryItem
 
 
 class ExpenseFactory(factory.DjangoModelFactory):
@@ -120,7 +120,7 @@ class TravelFactory(factory.DjangoModelFactory):
     currency = factory.SubFactory(CurrencyFactory)
     mode_of_travel = []
 
-    itinerary = factory.RelatedFactory(IteneraryItemFactory, 'travel')
+    itinerary = factory.RelatedFactory(ItineraryItemFactory, 'travel')
     expenses = factory.RelatedFactory(ExpenseFactory, 'travel')
     deductions = factory.RelatedFactory(DeductionFactory, 'travel')
     cost_assignments = factory.RelatedFactory(CostAssignmentFactory, 'travel')

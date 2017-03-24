@@ -9,7 +9,7 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CountryFactory
 from t2f.helpers.cost_summary_calculator import DSACalculator
-from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory
+from t2f.tests.factories import TravelFactory, ItineraryItemFactory, DSARegionFactory, DeductionFactory
 
 
 class TestDSACalculations(APITenantTestCase):
@@ -66,12 +66,12 @@ class TestDSACalculations(APITenantTestCase):
         self.travel.deductions.all().delete()
 
     def test_case_1(self):
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 15, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
@@ -99,22 +99,22 @@ class TestDSACalculations(APITenantTestCase):
                            'total_amount': Decimal('80')}])
 
     def test_case_2(self):
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
                              dsa_region=self.copenhagen)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 23, 0, tzinfo=UTC),
                              dsa_region=self.dusseldorf)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 3, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 3, 13, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
@@ -152,17 +152,17 @@ class TestDSACalculations(APITenantTestCase):
                            'total_amount': Decimal('1160')}])
 
     def test_case_3(self):
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 3, 1, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 3, 2, 0, tzinfo=UTC),
                              dsa_region=self.copenhagen)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 3, 11, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 3, 11, 30, tzinfo=UTC),
                              dsa_region=self.amsterdam)
@@ -194,22 +194,22 @@ class TestDSACalculations(APITenantTestCase):
                            'total_amount': Decimal('480')}])
 
     def test_case_4(self):
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 11, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 3, 4, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 3, 4, 11, 0, tzinfo=UTC),
                              dsa_region=self.copenhagen)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 3, 5, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 3, 5, 10, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 3, 7, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 3, 7, 11, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
@@ -276,13 +276,13 @@ class TestDSACalculations(APITenantTestCase):
                            'total_amount': Decimal('288')}])
 
     def test_case_5(self):
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2016, 12, 31, 22, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
                              dsa_region=self.budapest,
                              overnight_travel=True)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 3, 23, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 4, 4, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam,
@@ -315,12 +315,12 @@ class TestDSACalculations(APITenantTestCase):
                            'total_amount': Decimal('480')}])
 
     def test_case_6(self):
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 3, 12, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 3, 14, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
@@ -348,17 +348,17 @@ class TestDSACalculations(APITenantTestCase):
                            'total_amount': Decimal('480')}])
 
     def test_case_7(self):
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 3, 0, tzinfo=UTC),
                              dsa_region=self.budapest)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 14, 0, tzinfo=UTC),
                              dsa_region=self.amsterdam)
 
-        IteneraryItemFactory(travel=self.travel,
+        ItineraryItemFactory(travel=self.travel,
                              departure_date=datetime(2017, 1, 1, 21, 0, tzinfo=UTC),
                              arrival_date=datetime(2017, 1, 1, 22, 0, tzinfo=UTC),
                              dsa_region=self.budapest)

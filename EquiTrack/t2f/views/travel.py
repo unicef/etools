@@ -21,7 +21,7 @@ from t2f.renderers import ActionPointCSVRenderer
 from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
     InvoiceExportSerializer, ActionPointExportSerializer
 
-from t2f.models import Travel, TravelAttachment, ActionPoint, IteneraryItem, InvoiceItem, TravelActivity
+from t2f.models import Travel, TravelAttachment, ActionPoint, ItineraryItem, InvoiceItem, TravelActivity
 from t2f.serializers.travel import TravelListSerializer, TravelDetailsSerializer, TravelAttachmentSerializer, \
     CloneParameterSerializer, CloneOutputSerializer, ActionPointSerializer, TravelActivityByPartnerSerializer
 from t2f.helpers.permission_matrix import PermissionMatrix, FakePermissionMatrix
@@ -78,7 +78,7 @@ class TravelListViewSet(mixins.ListModelMixin,
 
     def export_travel_admins(self, request, *args, **kwargs):
         travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number')
+        queryset = ItineraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number')
         queryset = queryset.prefetch_related('airlines')
         serialzier = TravelAdminExportSerializer(queryset, many=True, context=self.get_serializer_context())
 
