@@ -23,19 +23,11 @@ from .v1 import PartnerStaffMemberSerializer
 
 from partners.models import (
     Assessment,
-    PCA,
-    InterventionBudget,
-    SupplyPlan,
-    DistributionPlan,
-    InterventionPlannedVisits,
     Intervention,
-    InterventionAmendment,
     GovernmentIntervention,
     PartnerOrganization,
     PartnerType,
-    Agreement,
     PartnerStaffMember,
-
 )
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
