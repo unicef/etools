@@ -129,9 +129,9 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
 
-        # If invoicing is enabled, do the treshold check, otherwise it will result an infinite process loop
+        # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
         if not settings.DISABLE_INVOICING and serializer.transition_name == 'send_for_payment' \
-                and self.check_treshold(serializer.instance):
+                and self.check_threshold(serializer.instance):
             serializer.transition_name = 'submit_for_approval'
 
         run_transition(serializer)
@@ -141,7 +141,7 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
             serializer.transition_name = 'send_for_payment'
             run_transition(serializer)
 
-    def check_treshold(self, travel):
+    def check_threshold(self, travel):
         expenses = {'user': Decimal(0),
                     'travel_agent': Decimal(0)}
 
