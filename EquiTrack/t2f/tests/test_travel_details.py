@@ -337,7 +337,7 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'itinerary': ['Itinerary items have to be ordered by date']})
 
-    def test_itinerary_couny(self):
+    def test_itinerary_count(self):
         data = {'cost_assignments': [],
                 'deductions': [],
                 'expenses': [],
