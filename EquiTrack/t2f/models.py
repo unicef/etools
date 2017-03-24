@@ -403,7 +403,10 @@ class IteneraryItem(models.Model):
     airlines = models.ManyToManyField('publics.AirlineCompany', related_name='+')
 
     class Meta:
-        ordering = ('id',)
+        # https://docs.djangoproject.com/en/1.9/ref/models/options/#order-with-respect-to
+        # see also
+        # https://groups.google.com/d/msg/django-users/NQO8OjCHhnA/r9qKklm5y0EJ
+        order_with_respect_to = 'travel'
 
 
 class Expense(models.Model):
