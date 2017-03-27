@@ -23,11 +23,16 @@ class InvoiceMaker(object):
 
     def do_invoicing(self):
         """Main entry point of the class"""
+        self.delete_pending_invoices()
         existing_values = self.load_existing_invoices()
         current_values = self.get_current_values()
         delta_values = self.calculate_delta(existing_values, current_values)
 
         self.make_invoices(delta_values)
+
+    def delete_pending_invoices(self):
+        from t2f.models import Invoice
+        self.travel.invoices.filter(status=Invoice.PENDING).delete()
 
     def load_existing_invoices(self):
         """
@@ -40,8 +45,6 @@ class InvoiceMaker(object):
         :return: Aggregated values
         :rtype: dict
         """
-        from t2f.models import Invoice
-
         vendor_grouping = defaultdict(lambda: defaultdict(Decimal))
 
         for invoice in self.invoice_queryset:
