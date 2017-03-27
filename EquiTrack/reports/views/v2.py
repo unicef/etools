@@ -36,6 +36,9 @@ class ResultListAPIView(ListAPIView):
             if "country_programme" in query_params.keys():
                 cp = query_params.get("country_programme", None)
                 queries.append(Q(country_programme=cp))
+            if "result_id" in query_params.keys():
+                result_id = query_params.get("result_id", None)
+                queries.append(Q(id=result_id))
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
