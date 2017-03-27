@@ -606,10 +606,12 @@ class Invoice(models.Model):
 
     def save(self, **kwargs):
         if self.pk is None:
-            numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_INVOICE_REFERENCE)
+            # This will lock the travel row and prevent concurrency issues
+            travel = Travel.objects.select_for_update().get(id=self.travel_id)
+            invoice_counter = travel.invoices.all().count() + 1
             self.reference_number = '{}/{}/{:02d}'.format(self.business_area,
                                                           self.travel.reference_number,
-                                                          numeric_part)
+                                                          invoice_counter)
         super(Invoice, self).save(**kwargs)
 
     @property
