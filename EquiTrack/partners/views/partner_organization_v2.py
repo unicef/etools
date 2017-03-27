@@ -1,6 +1,7 @@
-import json
 import operator
 import functools
+import datetime
+from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
@@ -16,9 +17,11 @@ from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     DestroyAPIView,
+    CreateAPIView
 )
 
 from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
+from EquiTrack.utils import get_data_from_insight
 
 from partners.models import (
     PartnerStaffMember,
@@ -26,7 +29,7 @@ from partners.models import (
     GovernmentIntervention,
     PartnerOrganization,
     Assessment,
-    PartnerType
+    PartnerType,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -36,7 +39,7 @@ from partners.serializers.partner_organization_v2 import (
     PartnerStaffMemberCreateUpdateSerializer,
     PartnerStaffMemberDetailSerializer,
     PartnerOrganizationHactSerializer,
-    AssessmentDetailSerializer
+    AssessmentDetailSerializer,
 )
 from partners.serializers.interventions_v2 import (
     InterventionSummaryListSerializer,
@@ -44,7 +47,7 @@ from partners.serializers.interventions_v2 import (
 from partners.serializers.government import (
     GovernmentInterventionSummaryListSerializer,
 )
-from partners.permissions import PartneshipManagerRepPermission
+from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
@@ -221,3 +224,87 @@ class PartnerOrganizationAssessmentDeleteView(DestroyAPIView):
         else:
             assessment.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class PartnerOrganizationAddView(CreateAPIView):
+    """
+        Create new Partners.
+        Returns a list of Partners.
+        """
+    serializer_class = PartnerOrganizationCreateUpdateSerializer
+    permission_classes = (PartneshipManagerPermission,)
+
+    # TODO: let's aim to standardize where mapping goes
+    MAPPING = {
+        'vendor_number': "VENDOR_CODE",
+        'name': "VENDOR_NAME",
+        'partner_type': 'PARTNER_TYPE_DESC',
+        'cso_type': 'CSO_TYPE',
+        'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
+        'rating': 'RISK_RATING',
+        'type_of_assessment': "TYPE_OF_ASSESSMENT",
+        'last_assessment_date': "DATE_OF_ASSESSMENT",
+        'address': "STREET",
+        'postal_code': "POSTAL_CODE",
+        'city': "CITY",
+        'country': "COUNTRY",
+        'phone_number': 'PHONE_NUMBER',
+        'email': "EMAIL",
+        'total_ct_cp': "TOTAL_CASH_TRANSFERRED_CP",
+        'total_ct_cy': "TOTAL_CASH_TRANSFERRED_CY",
+    }
+
+    cso_type_mapping = {
+        "International NGO": u'International',
+        "National NGO": u'National',
+        "Community based organization": u'Community Based Organization',
+        "Academic Institution": u'Academic Institution'
+    }
+
+    type_mapping = {
+        "BILATERAL / MULTILATERAL": u'Bilateral / Multilateral',
+        "CIVIL SOCIETY ORGANIZATION": u'Civil Society Organization',
+        "GOVERNMENT": u'Government',
+        "UN AGENCY": u'UN Agency',
+    }
+
+    def get_value_for_field(self, field, value):
+        if field in ['core_values_assessment_date', 'last_assessment_date']:
+            return datetime.datetime.strptime(value, '%d-%b-%y').date()
+        if field in ['partner_type']:
+            return self.type_mapping[value]
+        if field in ['cso_type']:
+            return self.cso_type_mapping[value]
+        if field in ['total_ct_cp', 'total_ct_cy']:
+            return Decimal(value.replace(",", ""))
+        return value
+
+    @transaction.atomic
+    def create(self, request, *args, **kwargs):
+        vendor = self.request.query_params.get('vendor', None)
+        if vendor is None:
+            return Response({"error": "No vendor number provided for Partner Organization"},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
+                                                             {"vendor_code": vendor})
+        if not valid_response:
+            return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
+
+        partner_resp = response["ROWSET"]["ROW"]
+        try:
+            partner_org = PartnerOrganization.objects.get(vendor_number=partner_resp[self.MAPPING['vendor_number']])
+            # TODO standardize error keys and abstract error messages where possible
+            return Response({"error": 'Partner Organization already exists with this vendor number'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        except PartnerOrganization.DoesNotExist:
+            partner_org = {k: self.get_value_for_field(k, partner_resp[v]) if v in partner_resp.keys() else None for k, v in self.MAPPING.items()}
+            partner_org['vision_synced'] = True
+            po_serializer = self.get_serializer(data=partner_org)
+            po_serializer.is_valid(raise_exception=True)
+            partner = po_serializer.save()
+
+            headers = self.get_success_headers(po_serializer.data)
+            return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+
