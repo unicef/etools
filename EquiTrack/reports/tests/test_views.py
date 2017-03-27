@@ -105,9 +105,20 @@ class TestReportViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["country_programme"]), CountryProgramme.current().id)
 
+    def test_apiv2_results_list_filter_year(self):
+        param = {
+            "year": datetime.date.today().year,
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/results/',
+            user=self.unicef_staff,
+            data=param,
+        )
+
     def test_apiv2_results_list_filter_cp(self):
         param = {
-            "country_programme": datetime.date.today().year,
+            "country_programme": self.result1.country_programme.id,
         }
         response = self.forced_auth_req(
             'get',
@@ -136,7 +147,7 @@ class TestReportViews(APITenantTestCase):
     def test_apiv2_results_list_filter_combined(self):
         param = {
             "result_type": self.result_type.name,
-            "country_programme": datetime.date.today().year,
+            "year": datetime.date.today().year,
         }
         response = self.forced_auth_req(
             'get',
