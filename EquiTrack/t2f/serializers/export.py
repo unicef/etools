@@ -75,17 +75,18 @@ class InvoiceExportSerializer(serializers.Serializer):
     ta_number = serializers.CharField(source='invoice.travel.reference_number')
     vendor_number = serializers.CharField(source='invoice.vendor_number')
     currency = serializers.CharField(source='invoice.currency.name')
-    amount = serializers.DecimalField(max_digits=20, decimal_places=10)
+    total_amount = serializers.DecimalField(source='invoice.amount', max_digits=20, decimal_places=4)
     status = serializers.CharField(source='invoice.status')
     message = serializers.CharField(source='invoice.message')
     vision_fi_doc = serializers.CharField(source='invoice.vision_fi_id')
     wbs = serializers.CharField(source='wbs.name')
     grant = serializers.CharField(source='grant.name')
     fund = serializers.CharField(source='fund.name')
+    amount = serializers.DecimalField(max_digits=20, decimal_places=4)
 
     class Meta:
-        fields = ('reference_number', 'ta_number', 'vendor_number', 'currency', 'amount', 'status', 'message',
-                  'vision_fi_doc', 'wbs', 'grant', 'fund')
+        fields = ('reference_number', 'ta_number', 'vendor_number', 'currency', 'total_amount', 'status', 'message',
+                  'vision_fi_doc', 'wbs', 'grant', 'fund', 'amount')
 
 
 class ActionPointExportSerializer(serializers.Serializer):
