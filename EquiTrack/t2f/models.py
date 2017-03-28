@@ -2,10 +2,11 @@ from __future__ import unicode_literals
 
 from datetime import datetime, timedelta
 from decimal import Decimal
+from functools import wraps
 import logging
 
 from django.contrib.postgres.fields.array import ArrayField
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.core.mail.message import EmailMultiAlternatives
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -75,7 +76,7 @@ class TravelType(object):
 
 
 # TODO: all of these models that only have 1 field should be a choice field on the models that are using it
-# for many-to-many arrayfields are recommended
+# for many-to-many array fields are recommended
 class ModeOfTravel(object):
     PLANE = 'Plane'
     BUS = 'Bus'
@@ -95,6 +96,31 @@ def make_travel_reference_number():
     numeric_part = connection.tenant.counters.get_next_value(WorkspaceCounter.TRAVEL_REFERENCE)
     year = datetime.now().year
     return '{}/{}'.format(year, numeric_part)
+
+
+def approve_decorator(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
+        func(self, *args, **kwargs)
+
+        if settings.DISABLE_INVOICING:
+            self.send_for_payment(*args, **kwargs)
+
+    return wrapper
+
+
+def threshold_decorator(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
+        if not settings.DISABLE_INVOICING and self.check_threshold():
+            self.submit_for_approval(*args, **kwargs)
+            return
+
+        func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class Travel(models.Model):
@@ -169,6 +195,36 @@ class Travel(models.Model):
         calculator = CostSummaryCalculator(self)
         return calculator.get_cost_summary()
 
+    def check_threshold(self):
+        expenses = {'user': Decimal(0),
+                    'travel_agent': Decimal(0)}
+
+        for expense in self.expenses.all():
+            if expense.type.vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
+                expenses['user'] += expense.amount
+            else:
+                expenses['travel_agent'] += expense.amount
+
+        traveler_delta = 0
+        travel_agent_delta = 0
+        if self.approved_cost_traveler:
+            traveler_delta = expenses['user'] - self.approved_cost_traveler
+            if self.currency.code != 'USD':
+                exchange_rate = self.currency.exchange_rates.all().last()
+                traveler_delta *= exchange_rate.x_rate
+
+        if self.approved_cost_travel_agencies:
+            travel_agent_delta = expenses['travel_agent'] - self.approved_cost_travel_agencies
+
+        workspace = self.traveler.profile.country
+        if workspace.threshold_tre_usd and traveler_delta > workspace.threshold_tre_usd:
+            return True
+
+        if workspace.threshold_tae_usd and travel_agent_delta > workspace.threshold_tae_usd:
+            return True
+
+        return False
+
     # State machine transitions
     def check_completion_conditions(self):
         if self.status == Travel.SUBMITTED and not self.international_travel:
@@ -225,6 +281,7 @@ class Travel(models.Model):
                                      self.supervisor.email,
                                      'emails/submit_for_approval.html')
 
+    @approve_decorator
     @transition(status, source=[SUBMITTED], target=APPROVED)
     def approve(self):
         expenses = {'user': Decimal(0),
@@ -268,6 +325,7 @@ class Travel(models.Model):
     def plan(self):
         pass
 
+    @threshold_decorator
     @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
@@ -302,10 +360,12 @@ class Travel(models.Model):
                                      self.traveler.email,
                                      'emails/certificate_rejected.html')
 
+    @threshold_decorator
     @transition(status, source=[CERTIFICATION_APPROVED, SENT_FOR_PAYMENT],
                 target=CERTIFIED,
                 conditions=[check_pending_invoices])
     def mark_as_certified(self):
+        self.generate_invoices()
         self.send_notification_email('Travel #{} certification was certified.'.format(self.reference_number),
                                      self.traveler.email,
                                      'emails/certified.html')
