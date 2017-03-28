@@ -46,6 +46,7 @@ from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission
+from locations.models import Location
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
@@ -353,7 +354,7 @@ class InterventionListMapView(ListCreateAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        q = Intervention.objects.all()
+        q = Intervention.objects.filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)
         query_params = self.request.query_params
 
         if query_params:
@@ -369,4 +370,5 @@ class InterventionListMapView(ListCreateAPIView):
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
+
         return q
