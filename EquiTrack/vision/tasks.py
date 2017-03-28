@@ -8,7 +8,7 @@ from celery.utils.log import get_task_logger
 from EquiTrack.celery import app, send_to_slack
 from partners.models import PartnerOrganization
 from users.models import Country
-from vision.adapters.publics_adapter import CurrencySyncronizer, TravelAgenciesSyncronizer, CostAssignmentsSyncronizer
+from vision.adapters.publics_adapter import CurrencySyncronizer, TravelAgenciesSyncronizer, CostAssignmentSynch
 from vision_data_synchronizer import VisionException
 from vision.adapters.programme import ProgrammeSynchronizer, RAMSynchronizer
 from vision.adapters.partner import PartnerSynchronizer
@@ -33,7 +33,6 @@ SYNC_HANDLERS = [
     TravelAgenciesSyncronizer,
     FundReservationsSynchronizer,
     FundCommitmentSynchronizer,
-    # CostAssignmentsSyncronizer
     #DCTSynchronizer
 ]
 
@@ -64,6 +63,30 @@ def fake_task_no_delay():
     time.sleep(2)
     log.successful = True
     log.save()
+
+
+@app.task
+def cost_assignment_sync(country_name=None):
+    processed = []
+    countries = Country.objects.filter(vision_sync_enabled=True)
+    if country_name is not None:
+        countries = countries.filter(name=country_name)
+
+    for country in countries:
+        connection.set_tenant(country)
+
+        try:
+            logger.info('Starting vision sync handler {} for country {}'.format(
+                CostAssignmentSynch.__name__, country.name
+            ))
+            CostAssignmentSynch(country).sync()
+            logger.info("{} sync successfully".format(CostAssignmentSynch.__name__))
+
+        except VisionException as e:
+            logger.error("{} sync failed, Reason: {}".format(
+                CostAssignmentSynch.__name__, e.message
+                ))
+        processed.append(country)
 
 
 @app.task
