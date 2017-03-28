@@ -851,7 +851,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["errors"], ["Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date)."])
+        self.assertEquals(response.data["errors"], [{'start': ["Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date)."]}])
 
     def test_agreements_create_PCA_must_be_CSO(self):
         self.partner.partner_type = "Government"
@@ -871,7 +871,7 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data["errors"], ["Partner type must be CSO for PCA or SSFA agreement types."])
+        self.assertEquals(response.data["errors"], [{"partner_type":["Partner type must be CSO for PCA or SSFA agreement types."]}])
 
     @skip("Test transitions")
     def test_agreements_update_set_to_active_on_save(self):
@@ -1174,6 +1174,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         # Basic data to adjust in tests
+        today = datetime.date.today()
         self.intervention_data = {
             "agreement": self.agreement2.id,
             "partner_id": self.agreement2.partner.id,
@@ -1181,8 +1182,8 @@ class TestInterventionViews(APITenantTestCase):
             "hrp": ResultStructureFactory().id,
             "title": "2009 EFY AWP Updated",
             "status": "draft",
-            "start": "2016-10-28",
-            "end": "2016-10-28",
+            "start": date(today.year-1, 1, 1),
+            "end": date(today.year+1, 1, 1),
             "submission_date_prc": "2016-10-31",
             "review_date_prc": "2016-10-28",
             "submission_date": "2016-10-28",
@@ -1341,7 +1342,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Population focus is required if Intervention status is ACTIVE or IMPLEMENTED."])
+        self.assertEquals(response.data, [{'population_focus': [u'Population focus is required if Intervention status is ACTIVE or IMPLEMENTED.']}])
 
     def test_intervention_active_update_planned_budget(self):
         InterventionBudget.objects.filter(intervention=self.intervention_data.get("id")).delete()
@@ -1358,7 +1359,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."])
+        self.assertEquals(response.data, [{"planned_budget":["Planned budget is required if Intervention status is ACTIVE or IMPLEMENTED."]}])
 
     def test_intervention_active_update_planned_budget_rigid(self):
         intervention_obj = Intervention.objects.get(id=self.intervention_data["id"])
@@ -1393,7 +1394,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED."])
+        self.assertEquals(response.data, [{'sector_locations': [u'Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED.']}])
 
     def test_intervention_validation(self):
         response = self.forced_auth_req(
@@ -1418,7 +1419,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Document type must be PD or SHPD in case of agreement is PCA."])
+        self.assertEquals(response.data, [{'document_type': [u'Document type must be PD or SHPD in case of agreement is PCA.']}])
 
     def test_intervention_validation_doctype_ssfa(self):
         self.agreement.agreement_type = Agreement.SSFA
@@ -1434,7 +1435,7 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ["Document type must be SSFA in case of agreement is SSFA."])
+        self.assertEquals(response.data, [{'document_type': [u'Document type must be SSFA in case of agreement is SSFA.']}])
 
     def test_intervention_validation_dates(self):
         today = datetime.date.today()
@@ -1450,7 +1451,29 @@ class TestInterventionViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, ['Start date must precede end date'])
+        self.assertEquals(response.data, [{'start': [u'Start date must precede end date']}])
+
+    def test_intervention_validation_errors_aggregation(self):
+        self.agreement.agreement_type = Agreement.SSFA
+        self.agreement.save()
+        today = datetime.date.today()
+        data={
+            "start": datetime.date(today.year+1, 1, 1),
+            "end": today,
+            "document_type": Intervention.PD,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/interventions/{}/'.format(self.intervention["id"]),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, [
+            {'start': [u'Start date must precede end date']},
+            {'document_type': ['Document type must be SSFA in case of agreement is SSFA.']}
+        ])
 
     def test_intervention_update_planned_visits(self):
         import copy
