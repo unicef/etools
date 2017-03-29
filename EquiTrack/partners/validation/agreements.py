@@ -80,16 +80,6 @@ def start_date_equals_max_signoff(agreement):
         return False
     return True
 
-def end_date_pca_validation(agreement):
-    if agreement.agreement_type == agreement.__class__.PCA and agreement.start:
-        cp = CountryProgramme.objects.filter(from_date__lte=agreement.start,
-                                             to_date__gte=agreement.start,
-                                             wbs__contains='/A0/').order_by('id').first()
-        if cp:
-            if cp is None or agreement.end is None or agreement.end > cp.to_date:
-                return False
-    return True
-
 
 def signed_date_valid(agreement):
     '''
@@ -141,8 +131,7 @@ class AgreementValid(CompleteValidation):
         signed_date_valid,
         start_date_equals_max_signoff,
         partner_type_valid_cso,
-        end_date_country_programme_valid,
-        end_date_pca_validation,
+        end_date_country_programme_valid
     ]
 
     VALID_ERRORS = {
