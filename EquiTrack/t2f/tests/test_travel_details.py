@@ -458,6 +458,41 @@ class TravelDetails(APITenantTestCase):
         extracted_origin_destination = [(i['origin'], i['destination']) for i in response_json['itinerary']]
         self.assertEqual(extracted_origin_destination, itinerary_origin_destination_expectation)
 
+    def test_incorrect_itinerary_order(self):
+        dsa_1 = DSARegion.objects.first()
+        dsa_2 = DSARegionFactory()
+
+        data = {'itinerary': [{'airlines': [],
+                               'origin': 'b',
+                               'destination': 'c',
+                               'dsa_region': dsa_1.id,
+                               'departure_date': '2017-01-20T23:00:01.892Z',
+                               'arrival_date': '2017-01-27T23:00:01.905Z',
+                               'mode_of_travel': 'car'},
+                              {
+                               'origin': 'a',
+                               'destination': 'b',
+                               'dsa_region': dsa_2.id,
+                               'departure_date': '2017-01-18T23:00:01.224Z',
+                               'arrival_date': '2017-01-19T23:00:01.237Z',
+                               'mode_of_travel': 'car'}],
+                'activities': [{'is_primary_traveler': True,
+                                'locations': []}],
+                'cost_assignments': [],
+                'expenses': [],
+                'action_points': [],
+                'ta_required': True,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        itinerary_origin_destination_expectation = [u'Origin should match with'
+                                                     ' the previous destination',]
+        self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
+
     def test_ta_not_required(self):
         data = {'itinerary': [{}],
                 'activities': [{'is_primary_traveler': True,
