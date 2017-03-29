@@ -1,8 +1,9 @@
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext
 from rest_framework import serializers
 
-from t2f.models import Travel
+from t2f.models import Travel, ModeOfTravel
 from t2f.serializers.travel import TravelListSerializer
 
 
@@ -47,6 +48,14 @@ class FinanceExportSerializer(serializers.Serializer):
         return ', '.join(obj.mode_of_travel)
 
 
+class YesOrEmptyField(serializers.BooleanField):
+    def to_representation(self, value):
+        value = super(YesOrEmptyField, self).to_representation(value)
+        if value:
+            return ugettext('Yes')
+        return ''
+
+
 class TravelAdminExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number')
     traveler = serializers.CharField(source='travel.traveler.get_full_name')
@@ -55,10 +64,10 @@ class TravelAdminExportSerializer(serializers.Serializer):
     status = serializers.CharField(source='travel.status')
     origin = serializers.CharField()
     destination = serializers.CharField()
-    departure_time = serializers.DateTimeField(source='departure_date')
-    arrival_time = serializers.DateTimeField(source='arrival_date')
+    departure_time = serializers.DateTimeField(source='departure_date', format='%d-%b-%Y %I:%M %p')
+    arrival_time = serializers.DateTimeField(source='arrival_date', format='%d-%b-%Y %I:%M %p')
     dsa_area = serializers.CharField(source='dsa_region.area_code')
-    overnight_travel = serializers.BooleanField()
+    overnight_travel = YesOrEmptyField()
     mode_of_travel = serializers.CharField()
     airline = serializers.SerializerMethodField()
 
@@ -66,8 +75,14 @@ class TravelAdminExportSerializer(serializers.Serializer):
         fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'origin', 'destination',
                   'departure_time', 'arrival_time', 'dsa_area', 'overnight_travel', 'mode_of_travel', 'airline')
 
-    def get_airline(sele, obj):
-        return getattr(obj.airlines.order_by('id').last, 'name', None)
+    def get_airline(self, obj):
+        return getattr(obj.airlines.order_by('id').last(), 'name', None)
+
+    def to_representation(self, instance):
+        data = super(TravelAdminExportSerializer, self).to_representation(instance)
+        if not data['dsa_area']:
+            data['dsa_area'] = 'NODSA'
+        return data
 
 
 class InvoiceExportSerializer(serializers.Serializer):

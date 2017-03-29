@@ -1,17 +1,20 @@
 from __future__ import unicode_literals
 
+from datetime import datetime
+from decimal import Decimal
+from cStringIO import StringIO
 import csv
 import logging
-from cStringIO import StringIO
+from pytz import UTC
 
-from decimal import Decimal
 from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import CurrencyFactory, WBSFactory, GrantFactory, FundFactory
-from t2f.models import Invoice
-from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory
+from publics.tests.factories import CurrencyFactory, WBSFactory, GrantFactory, FundFactory, DSARegionFactory, \
+    AirlineCompanyFactory
+from t2f.models import Invoice, ModeOfTravel
+from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, IteneraryItemFactory
 
 from .factories import TravelFactory
 
@@ -21,7 +24,7 @@ log = logging.getLogger('__name__')
 class TravelExports(APITenantTestCase):
     def setUp(self):
         super(TravelExports, self).setUp()
-        self.traveler = UserFactory()
+        self.traveler = UserFactory(first_name='John', last_name='Doe')
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
@@ -91,12 +94,76 @@ class TravelExports(APITenantTestCase):
                           'deductions_total'])
 
     def test_travel_admin_export(self):
+        dsa_brd = DSARegionFactory(area_code='BRD')
+        dsa_lan = DSARegionFactory(area_code='LAN')
+
+        airline_jetstar = AirlineCompanyFactory(name='JetStar')
+        airline_spiceair = AirlineCompanyFactory(name='SpiceAir')
+
+        # First travel setup
+        travel_1 = TravelFactory(traveler=self.traveler, supervisor=self.unicef_staff)
+        travel_1.itinerary.all().delete()
+
+        itinerary_item_1 = IteneraryItemFactory(travel=travel_1,
+                                                origin='Origin1',
+                                                destination='Origin2',
+                                                departure_date=datetime(2016, 12, 3, 11, tzinfo=UTC),
+                                                arrival_date=datetime(2016, 12, 3, 12, tzinfo=UTC),
+                                                mode_of_travel=ModeOfTravel.CAR,
+                                                dsa_region=dsa_brd)
+        itinerary_item_1.airlines.all().delete()
+
+        itinerary_item_2 = IteneraryItemFactory(travel=travel_1,
+                                                origin='Origin2',
+                                                destination='Origin3',
+                                                departure_date=datetime(2016, 12, 5, 11, tzinfo=UTC),
+                                                arrival_date=datetime(2016, 12, 5, 12, tzinfo=UTC),
+                                                mode_of_travel=ModeOfTravel.PLANE,
+                                                dsa_region=dsa_lan)
+        itinerary_item_2.airlines.all().delete()
+        itinerary_item_2.airlines.add(airline_jetstar)
+
+        itinerary_item_3 = IteneraryItemFactory(travel=travel_1,
+                                                origin='Origin3',
+                                                destination='Origin1',
+                                                departure_date=datetime(2016, 12, 6, 11, tzinfo=UTC),
+                                                arrival_date=datetime(2016, 12, 6, 12, tzinfo=UTC),
+                                                mode_of_travel=ModeOfTravel.PLANE,
+                                                dsa_region=None)
+        itinerary_item_3.airlines.all().delete()
+        itinerary_item_3.airlines.add(airline_spiceair)
+
+        # Second travel setup
+        another_traveler = UserFactory(first_name='Max', last_name='Mustermann')
+        travel_2 = TravelFactory(traveler=another_traveler, supervisor=self.unicef_staff)
+        travel_2.itinerary.all().delete()
+
+        itinerary_item_4 = IteneraryItemFactory(travel=travel_2,
+                                                origin='Origin2',
+                                                destination='Origin1',
+                                                departure_date=datetime(2016, 12, 5, 11, tzinfo=UTC),
+                                                arrival_date=datetime(2016, 12, 5, 12, tzinfo=UTC),
+                                                mode_of_travel=ModeOfTravel.PLANE,
+                                                dsa_region=dsa_lan)
+        itinerary_item_4.airlines.all().delete()
+        itinerary_item_4.airlines.add(airline_jetstar)
+
+        itinerary_item_5 = IteneraryItemFactory(travel=travel_2,
+                                                origin='Origin3',
+                                                destination='Origin1',
+                                                departure_date=datetime(2016, 12, 6, 11, tzinfo=UTC),
+                                                arrival_date=datetime(2016, 12, 6, 12, tzinfo=UTC),
+                                                mode_of_travel=ModeOfTravel.CAR,
+                                                dsa_region=None)
+        itinerary_item_5.airlines.all().delete()
+        itinerary_item_5.airlines.add(airline_spiceair)
+
         response = self.forced_auth_req('get', reverse('t2f:travels:list:travel_admin_export'),
                                         user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 
-        self.assertEqual(len(rows), 3)
+        self.assertEqual(len(rows), 6)
 
         # check header
         self.assertEqual(rows[0],
@@ -113,6 +180,81 @@ class TravelExports(APITenantTestCase):
                           'overnight_travel',
                           'mode_of_travel',
                           'airline'])
+
+        self.assertEqual(rows[1],
+                         ['2017/1',
+                          'John Doe',
+                          'An Office',
+                          'section_2',
+                          'planned',
+                          'Origin1',
+                          'Origin2',
+                          '03-Dec-2016 11:00 AM',
+                          '03-Dec-2016 12:00 PM',
+                          'BRD',
+                          '',
+                          'Car',
+                          ''])
+
+        self.assertEqual(rows[2],
+                         ['2017/1',
+                          'John Doe',
+                          'An Office',
+                          'section_2',
+                          'planned',
+                          'Origin2',
+                          'Origin3',
+                          '05-Dec-2016 11:00 AM',
+                          '05-Dec-2016 12:00 PM',
+                          'LAN',
+                          '',
+                          'Plane',
+                          'JetStar'])
+
+        self.assertEqual(rows[3],
+                         ['2017/1',
+                          'John Doe',
+                          'An Office',
+                          'section_2',
+                          'planned',
+                          'Origin3',
+                          'Origin1',
+                          '06-Dec-2016 11:00 AM',
+                          '06-Dec-2016 12:00 PM',
+                          'NODSA',
+                          '',
+                          'Plane',
+                          'SpiceAir'])
+
+        self.assertEqual(rows[4],
+                         ['2017/2',
+                          'Max Mustermann',
+                          'An Office',
+                          'section_6',
+                          'planned',
+                          'Origin2',
+                          'Origin1',
+                          '05-Dec-2016 11:00 AM',
+                          '05-Dec-2016 12:00 PM',
+                          'LAN',
+                          '',
+                          'Plane',
+                          'JetStar'])
+
+        self.assertEqual(rows[5],
+                         ['2017/2',
+                          'Max Mustermann',
+                          'An Office',
+                          'section_6',
+                          'planned',
+                          'Origin3',
+                          'Origin1',
+                          '06-Dec-2016 11:00 AM',
+                          '06-Dec-2016 12:00 PM',
+                          'NODSA',
+                          '',
+                          'Car',
+                          'SpiceAir'])
 
     def test_invoice_export(self):
         # Setting up initial data

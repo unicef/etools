@@ -59,7 +59,7 @@ class TravelAdminExport(ExportBaseView):
 
     def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number')
+        queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number', 'id')
         queryset = queryset.prefetch_related('airlines')
         serializer = self.get_serializer(queryset, many=True)
 
