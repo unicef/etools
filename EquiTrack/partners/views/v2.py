@@ -211,7 +211,7 @@ class PMPDropdownsListApiView(APIView):
         hrps = list(ResultStructure.objects.values())
         current_country_programme = CountryProgramme.current()
         cp_outputs = list(Result.objects.filter(result_type__name=ResultType.OUTPUT, wbs__isnull=False)
-                          .values('id', 'name', 'wbs', 'country_programme'))
+                          .values('id', 'name', 'wbs'))
         supply_items = list(SupplyItem.objects.all().values())
         file_types = list(FileType.objects.all().values())
 
