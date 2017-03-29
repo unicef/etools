@@ -38,6 +38,7 @@ class TestModelExport(APITenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
+        self.partnerstaff = PartnerStaffFactory(partner=self.partner)
         attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
         self.agreement = AgreementFactory(
             partner=self.partner,
@@ -49,10 +50,10 @@ class TestModelExport(APITenantTestCase):
             signed_by=self.unicef_staff,
             signed_by_partner_date=datetime.date.today()
         )
-
+        self.agreement.authorized_officers.add(self.partnerstaff)
+        self.agreement.save()
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
-        self.partnerstaff = PartnerStaffFactory(partner=self.partner)
         self.intervention = InterventionFactory(
             agreement=self.agreement,
             document_type='SHPD',
@@ -159,6 +160,7 @@ class TestModelExport(APITenantTestCase):
             'Sectors',
             'Locations',
             'UNICEF Focal Points',
+            'CSO Authorized Officials',
             'Programme Focal Points',
             'Population Focus',
             'Humanitarian Response Plan',
@@ -202,6 +204,7 @@ class TestModelExport(APITenantTestCase):
                 u'',
                 u'',
                 u'',
+                ', '.join([x.get_full_name() for x in self.intervention.agreement.authorized_officers.all()]),
                 u'',
                 self.intervention.population_focus,
                 unicode(self.intervention.hrp.name),

@@ -68,7 +68,7 @@ class AgreementCvsRenderer(r.CSVRenderer):
 class InterventionCvsRenderer(r.CSVRenderer):
     header = [
             "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-            "start", "end", "offices", "sectors", "locations", "unicef_focal_points",
+            "start", "end", "offices", "sectors", "locations", "unicef_focal_points", "cso_authorized_officials",
             "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
             "planned_budget_local", "unicef_budget", "cso_contribution",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
@@ -92,6 +92,7 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "sectors": "Sectors",
         "locations": "Locations",
         "unicef_focal_points": "UNICEF Focal Points",
+        "cso_authorized_officials": "CSO Authorized Officials",
         "partner_focal_points": "Programme Focal Points",
         "population_focus": "Population Focus",
         "hrp_name": "Humanitarian Response Plan",

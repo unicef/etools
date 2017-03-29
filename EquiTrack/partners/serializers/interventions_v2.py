@@ -368,6 +368,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     supply_plans = serializers.SerializerMethodField()
     distribution_plans = serializers.SerializerMethodField()
     unicef_focal_points = serializers.SerializerMethodField()
+    cso_authorized_officials = serializers.SerializerMethodField()
     partner_authorized_officer_signatory = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     ram_indicators = serializers.SerializerMethodField()
@@ -382,7 +383,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-            "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
+            "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points", "cso_authorized_officials",
             "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
             "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
@@ -452,6 +453,9 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_fr_numbers(self, obj):
         return ', '.join([x for x in obj.fr_numbers]) if obj.fr_numbers else ""
+
+    def get_cso_authorized_officials(self, obj):
+        return ', '.join([x.get_full_name() for x in obj.agreement.authorized_officers.all()])
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
