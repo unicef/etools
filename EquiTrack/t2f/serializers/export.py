@@ -3,8 +3,24 @@ from __future__ import unicode_literals
 from django.utils.translation import ugettext
 from rest_framework import serializers
 
-from t2f.models import Travel, ModeOfTravel
+from t2f.models import Travel
 from t2f.serializers.travel import TravelListSerializer
+
+
+class YesOrEmptyField(serializers.BooleanField):
+    def to_representation(self, value):
+        value = super(YesOrEmptyField, self).to_representation(value)
+        if value:
+            return ugettext('Yes')
+        return ''
+
+
+class YesOrNoField(serializers.BooleanField):
+    def to_representation(self, value):
+        value = super(YesOrNoField, self).to_representation(value)
+        if value:
+            return ugettext('Yes')
+        return ugettext('No')
 
 
 class TravelListExportSerializer(TravelListSerializer):
@@ -29,15 +45,15 @@ class FinanceExportSerializer(serializers.Serializer):
     section = serializers.CharField(source='section.name')
     status = serializers.CharField()
     supervisor = serializers.CharField(source='supervisor.get_full_name')
-    start_date = serializers.DateTimeField()
-    end_date = serializers.DateTimeField()
+    start_date = serializers.DateTimeField(format='%d-%b-%Y')
+    end_date = serializers.DateTimeField(format='%d-%b-%Y')
     purpose_of_travel = serializers.CharField(source='purpose')
     mode_of_travel = serializers.SerializerMethodField()
-    international_travel = serializers.BooleanField()
-    require_ta = serializers.BooleanField(source='ta_required')
-    dsa_total = serializers.DecimalField(source='cost_summary.dsa_total', max_digits=20, decimal_places=10)
-    expense_total = serializers.DecimalField(source='cost_summary.expenses_total', max_digits=20, decimal_places=10)
-    deductions_total = serializers.DecimalField(source='cost_summary.deductions_total', max_digits=20, decimal_places=10)
+    international_travel = YesOrNoField()
+    require_ta = YesOrNoField(source='ta_required')
+    dsa_total = serializers.DecimalField(source='cost_summary.dsa_total', max_digits=20, decimal_places=2)
+    expense_total = serializers.DecimalField(source='cost_summary.expenses_total', max_digits=20, decimal_places=2)
+    deductions_total = serializers.DecimalField(source='cost_summary.deductions_total', max_digits=20, decimal_places=2)
 
     class Meta:
         fields = ('reference_number', 'traveler', 'office', 'section', 'status', 'supervisor', 'start_date',
@@ -46,14 +62,6 @@ class FinanceExportSerializer(serializers.Serializer):
 
     def get_mode_of_travel(self, obj):
         return ', '.join(obj.mode_of_travel)
-
-
-class YesOrEmptyField(serializers.BooleanField):
-    def to_representation(self, value):
-        value = super(YesOrEmptyField, self).to_representation(value)
-        if value:
-            return ugettext('Yes')
-        return ''
 
 
 class TravelAdminExportSerializer(serializers.Serializer):

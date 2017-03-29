@@ -14,7 +14,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory, WBSFactory, GrantFactory, FundFactory, DSARegionFactory, \
     AirlineCompanyFactory
 from t2f.models import Invoice, ModeOfTravel
-from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, IteneraryItemFactory
+from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, IteneraryItemFactory, ExpenseFactory
 
 from .factories import TravelFactory
 
@@ -25,7 +25,7 @@ class TravelExports(APITenantTestCase):
     def setUp(self):
         super(TravelExports, self).setUp()
         self.traveler = UserFactory(first_name='John', last_name='Doe')
-        self.unicef_staff = UserFactory(is_staff=True)
+        self.unicef_staff = UserFactory(first_name='Jakab', last_name='Gipsz', is_staff=True)
 
     def test_urls(self):
         export_url = reverse('t2f:travels:list:export')
@@ -46,7 +46,7 @@ class TravelExports(APITenantTestCase):
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 
-        self.assertEqual(len(rows), 3)
+        self.assertEqual(len(rows), 1)
 
         # check header
         self.assertEqual(rows[0],
@@ -68,12 +68,20 @@ class TravelExports(APITenantTestCase):
                           'attachment_count'])
 
     def test_finance_export(self):
+        travel = TravelFactory(traveler=self.traveler,
+                               supervisor=self.unicef_staff,
+                               start_date=datetime(2016, 11, 20, tzinfo=UTC),
+                               end_date=datetime(2016, 12, 5, tzinfo=UTC),
+                               mode_of_travel=[ModeOfTravel.PLANE])
+        travel.expenses.all().delete()
+        ExpenseFactory(travel=travel, amount=Decimal('500'))
+
         response = self.forced_auth_req('get', reverse('t2f:travels:list:finance_export'),
                                         user=self.unicef_staff)
         export_csv = csv.reader(StringIO(response.content))
         rows = [r for r in export_csv]
 
-        self.assertEqual(len(rows), 3)
+        self.assertEqual(len(rows), 2)
 
         # check header
         self.assertEqual(rows[0],
@@ -92,6 +100,23 @@ class TravelExports(APITenantTestCase):
                           'dsa_total',
                           'expense_total',
                           'deductions_total'])
+
+        self.assertEqual(rows[1],
+                         ['2017/1',
+                          'John Doe',
+                          'An Office',
+                          travel.section.name,
+                          'planned',
+                          'Jakab Gipsz',
+                          '20-Nov-2016',
+                          '05-Dec-2016',
+                          travel.purpose,
+                          'Plane',
+                          'No',
+                          'Yes',
+                          '0.00',
+                          '500.00',
+                          '0.00'])
 
     def test_travel_admin_export(self):
         dsa_brd = DSARegionFactory(area_code='BRD')
@@ -185,7 +210,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/1',
                           'John Doe',
                           'An Office',
-                          'section_2',
+                          travel_1.section.name,
                           'planned',
                           'Origin1',
                           'Origin2',
@@ -200,7 +225,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/1',
                           'John Doe',
                           'An Office',
-                          'section_2',
+                          travel_1.section.name,
                           'planned',
                           'Origin2',
                           'Origin3',
@@ -215,7 +240,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/1',
                           'John Doe',
                           'An Office',
-                          'section_2',
+                          travel_1.section.name,
                           'planned',
                           'Origin3',
                           'Origin1',
@@ -230,7 +255,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/2',
                           'Max Mustermann',
                           'An Office',
-                          'section_6',
+                          travel_2.section.name,
                           'planned',
                           'Origin2',
                           'Origin1',
@@ -245,7 +270,7 @@ class TravelExports(APITenantTestCase):
                          ['2017/2',
                           'Max Mustermann',
                           'An Office',
-                          'section_6',
+                          travel_2.section.name,
                           'planned',
                           'Origin3',
                           'Origin1',
