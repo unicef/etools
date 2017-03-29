@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import operator
 from itertools import chain
 from datetime import datetime
 
@@ -19,6 +20,13 @@ from t2f.serializers import CostSummarySerializer
 
 User = get_user_model()
 
+iteneraryItemSortKey = operator.attrgetter('departure_date')
+
+def order_iteneraryitems(instance, items):
+    # ensure iteneraryitems are ordered by `departure_date`
+    if (items is not None) and (len(items) > 1):
+        instance.set_iteneraryitem_order([i.pk for i in
+            sorted(items, key=iteneraryItemSortKey)])
 
 class LowerTitleField(serializers.CharField):
     def to_representation(self, value):
@@ -115,7 +123,6 @@ class IteneraryItemSerializer(PermissionBasedModelSerializer):
         model = IteneraryItem
         fields = ('id', 'origin', 'destination', 'departure_date', 'arrival_date', 'dsa_region', 'overnight_travel',
                   'mode_of_travel', 'airlines')
-
 
 class ExpenseSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -324,7 +331,9 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         instance = super(TravelDetailsSerializer, self).create(validated_data)
 
         # Reverse FK and M2M relations
-        self.create_related_models(IteneraryItem, itinerary, travel=instance)
+        iteneraryitems = self.create_related_models(IteneraryItem, itinerary, travel=instance)
+        # ensure iteneraryitems are ordered by `departure_date`
+        order_iteneraryitems(instance, iteneraryitems)
         self.create_related_models(Expense, expenses, travel=instance)
         self.create_related_models(Deduction, deductions, travel=instance)
         self.create_related_models(CostAssignment, cost_assignments, travel=instance)
@@ -438,6 +447,9 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
                 self.create_related_models(model, [related_data], travel=self.instance)
             elif related_data is None and related:
                 related.delete()
+
+        # ensure iteneraryitems are ordered by `departure_date`
+        order_iteneraryitems(self.instance, self.instance.itinerary.all())
 
 
 class TravelListSerializer(TravelDetailsSerializer):
