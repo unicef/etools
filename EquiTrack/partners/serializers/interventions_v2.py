@@ -355,6 +355,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     offices = serializers.SerializerMethodField()
     sectors = serializers.SerializerMethodField()
     locations = serializers.SerializerMethodField()
+    fr_numbers = serializers.SerializerMethodField()
+    local_currency = serializers.SerializerMethodField()
     planned_budget_local = serializers.DecimalField(source='total_budget_local', read_only=True, max_digits=20, decimal_places=2)
     unicef_budget = serializers.DecimalField(source='total_unicef_cash', read_only=True, max_digits=20, decimal_places=2)
     cso_contribution = serializers.DecimalField(source='total_partner_contribution', read_only=True,max_digits=20, decimal_places=2)
@@ -366,6 +368,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     supply_plans = serializers.SerializerMethodField()
     distribution_plans = serializers.SerializerMethodField()
     unicef_focal_points = serializers.SerializerMethodField()
+    partner_authorized_officer_signatory = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     ram_indicators = serializers.SerializerMethodField()
     planned_visits = serializers.SerializerMethodField()
@@ -380,8 +383,8 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         fields = (
             "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
             "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
-            "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers",
-            "unicef_budget", "cso_contribution",
+            "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
+            "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
             "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
             "signed_by_partner_date", "supply_plans", "distribution_plans", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
@@ -442,6 +445,13 @@ class InterventionExportSerializer(serializers.ModelSerializer):
 
     def get_days_from_review_to_signed(self, obj):
         return obj.days_from_review_to_signed
+
+    def get_local_currency(self, obj):
+        planned_budget = obj.planned_budget.first()
+        return planned_budget.currency if planned_budget else ""
+
+    def get_fr_numbers(self, obj):
+        return ', '.join([x for x in obj.fr_numbers]) if obj.fr_numbers else ""
 
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
