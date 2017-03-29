@@ -120,7 +120,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
             if "document_type" in query_params.keys():
-                queries.append(Q(partnership_type=query_params.get("document_type")))
+                queries.append(Q(document_type=query_params.get("document_type")))
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():

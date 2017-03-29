@@ -6,6 +6,7 @@ from reports.views.v1 import CountryProgrammeListView, CountryProgrammeRetrieveV
 
 urlpatterns = (
     url(r'^reports/results/$', view=ResultListAPIView.as_view(), name='report-result-list'),
+    url(r'^reports/results/dropdown/$', view=ResultListAPIView.as_view(http_method_names=['get']), name='report-result-dropdown'),
     url(r'^reports/lower_results/(?P<pk>\d+)/$', view=LowerResultsDeleteView.as_view(http_method_names=['delete']), name='lower-results-del'),
     url(r'^reports/results/(?P<pk>\d+)/$', view=ResultDetailAPIView.as_view(), name='report-result-detail'),
     url(r'^reports/countryprogramme/$', view=CountryProgrammeListView.as_view(),

@@ -25,7 +25,6 @@ class ResultListAPIView(ListAPIView):
         query_params = self.request.query_params
         if query_params:
             queries = []
-
             if "year" in query_params.keys():
                 cp_year = query_params.get("year", None)
                 queries.append(Q(country_programme__wbs__contains='/A0/'))
@@ -43,6 +42,21 @@ class ResultListAPIView(ListAPIView):
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
         return q
+
+    def list(self, request):
+        if "dropdown" in self.request.path:
+            cp_outputs = list(self.get_queryset().values('id', 'name', 'wbs'))
+            return Response(
+                {
+                    'cp_outputs': cp_outputs,
+                },
+                status=status.HTTP_200_OK
+            )
+        serializer = self.get_serializer(self.get_queryset(), many=True)
+        return Response(
+            serializer.data,
+            status=status.HTTP_200_OK
+        )
 
 
 class ResultDetailAPIView(RetrieveAPIView):
