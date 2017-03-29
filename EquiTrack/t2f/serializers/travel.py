@@ -335,7 +335,7 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         # ensure itineraryitems are ordered by `departure_date`
         order_itineraryitems(instance, itineraryitems)
 
-    self.create_related_models(Expense, expenses, travel=instance)
+        self.create_related_models(Expense, expenses, travel=instance)
         self.create_related_models(Deduction, deductions, travel=instance)
         self.create_related_models(CostAssignment, cost_assignments, travel=instance)
         self.create_related_models(ActionPoint, action_points, travel=instance)
