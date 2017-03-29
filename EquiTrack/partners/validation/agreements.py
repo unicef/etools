@@ -171,7 +171,8 @@ class AgreementValid(CompleteValidation):
             raise StateValidError(['signed_agreement_present'])
 
         if agreement.old_instance and agreement.status == agreement.old_instance.status:
-            rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
+            rigid_fields = []  # this males all fields editable, will remove later
+            # rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
             valid, changed_field = check_rigid_fields(agreement, rigid_fields)
             if not valid:
                 raise StateValidError('rigid_field_changed: %s' % changed_field)
