@@ -31,7 +31,7 @@ from partners.serializers.agreements_v2 import (
 )
 
 from partners.filters import PartnerScopeFilter
-from partners.permissions import PartneshipManagerRepPermission
+from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 
 from partners.exports_v2 import AgreementCvsRenderer
 from EquiTrack.validation_mixins import ValidatorViewMixin
@@ -134,7 +134,7 @@ class AgreementDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
     """
     queryset = Agreement.objects.all()
     serializer_class = AgreementRetrieveSerializer
-    permission_classes = (IsAdminUser,)
+    permission_classes = (PartneshipManagerPermission,)
 
     SERIALIZER_MAP = {
         'amendments': AgreementAmendmentCreateUpdateSerializer
