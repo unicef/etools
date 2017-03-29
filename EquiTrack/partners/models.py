@@ -1777,19 +1777,12 @@ class InterventionAttachment(models.Model):
         return self.attachment.name
 
 
-class InterventionSectorLocationLinkManager(models.Manager):
-
-    def get_queryset(self):
-        return super(InterventionSectorLocationLinkManager, self).get_queryset().select_related('locations')
-
-
 class InterventionSectorLocationLink(models.Model):
     intervention = models.ForeignKey(Intervention, related_name='sector_locations')
     sector = models.ForeignKey(Sector, related_name='intervention_locations')
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
 
     tracker = FieldTracker()
-    objects = models.Manager()
 
 class GovernmentInterventionManager(models.Manager):
     def get_queryset(self):

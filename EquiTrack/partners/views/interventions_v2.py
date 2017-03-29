@@ -355,6 +355,7 @@ class InterventionListMapView(ListCreateAPIView):
 
     def get_queryset(self):
         q = Intervention.objects.filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)
+            # .prefetch_related('sector_locations', 'sector_locations__locations')
         query_params = self.request.query_params
 
         if query_params:
