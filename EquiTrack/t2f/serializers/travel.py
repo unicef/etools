@@ -13,20 +13,20 @@ from rest_framework import serializers, ISO_8601
 from rest_framework.exceptions import ValidationError
 
 from publics.models import AirlineCompany
-from t2f.models import TravelActivity, Travel, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
+from t2f.models import TravelActivity, Travel, ItineraryItem, Expense, Deduction, CostAssignment, Clearances,\
     TravelAttachment, ActionPoint, TravelPermission
 from locations.models import Location
 from t2f.serializers import CostSummarySerializer
 
 User = get_user_model()
 
-iteneraryItemSortKey = operator.attrgetter('departure_date')
+itineraryItemSortKey = operator.attrgetter('departure_date')
 
-def order_iteneraryitems(instance, items):
-    # ensure iteneraryitems are ordered by `departure_date`
+def order_itineraryitems(instance, items):
+    # ensure itineraryitems are ordered by `departure_date`
     if (items is not None) and (len(items) > 1):
-        instance.set_iteneraryitem_order([i.pk for i in
-            sorted(items, key=iteneraryItemSortKey)])
+        instance.set_itineraryitem_order([i.pk for i in
+            sorted(items, key=itineraryItemSortKey)])
 
 class LowerTitleField(serializers.CharField):
     def to_representation(self, value):
@@ -113,14 +113,14 @@ class ActionPointSerializer(serializers.ModelSerializer):
         return value
 
 
-class IteneraryItemSerializer(PermissionBasedModelSerializer):
+class ItineraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
     airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.objects.all(), required=False,
                                                   allow_null=True)
     mode_of_travel = LowerTitleField(required=False)
 
     class Meta:
-        model = IteneraryItem
+        model = ItineraryItem
         fields = ('id', 'origin', 'destination', 'departure_date', 'arrival_date', 'dsa_region', 'overnight_travel',
                   'mode_of_travel', 'airlines')
 
@@ -208,7 +208,7 @@ class TravelAttachmentSerializer(serializers.ModelSerializer):
 
 
 class TravelDetailsSerializer(serializers.ModelSerializer):
-    itinerary = IteneraryItemSerializer(many=True, required=False)
+    itinerary = ItineraryItemSerializer(many=True, required=False)
     expenses = ExpenseSerializer(many=True, required=False)
     deductions = DeductionSerializer(many=True, required=False)
     cost_assignments = CostAssignmentSerializer(many=True, required=False)
@@ -331,9 +331,10 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
         instance = super(TravelDetailsSerializer, self).create(validated_data)
 
         # Reverse FK and M2M relations
-        iteneraryitems = self.create_related_models(IteneraryItem, itinerary, travel=instance)
-        # ensure iteneraryitems are ordered by `departure_date`
-        order_iteneraryitems(instance, iteneraryitems)
+        itineraryitems = self.create_related_models(ItineraryItem, itinerary, travel=instance)
+        # ensure itineraryitems are ordered by `departure_date`
+        order_itineraryitems(instance, itineraryitems)
+
         self.create_related_models(Expense, expenses, travel=instance)
         self.create_related_models(Deduction, deductions, travel=instance)
         self.create_related_models(CostAssignment, cost_assignments, travel=instance)
@@ -448,8 +449,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             elif related_data is None and related:
                 related.delete()
 
-        # ensure iteneraryitems are ordered by `departure_date`
-        order_iteneraryitems(self.instance, self.instance.itinerary.all())
+        # ensure itineraryitems are ordered by `departure_date`
+        order_itineraryitems(self.instance, self.instance.itinerary.all())
 
 
 class TravelListSerializer(TravelDetailsSerializer):
