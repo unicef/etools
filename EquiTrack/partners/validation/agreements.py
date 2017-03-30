@@ -58,6 +58,19 @@ def amendments_ok(agreement):
     # To be Continued
     return True
 
+def amendments_signed_amendment_valid(agreement):
+    for amendment in agreement.amendments.all():
+        if not amendment.signed_amendment:
+            return False
+    return True
+
+def amendments_signed_date_valid(agreement):
+    today = date.today()
+    for amendment in agreement.amendments.all():
+        if amendment.signed_date and amendment.signed_date > today:
+            return False
+    return True
+
 def start_end_dates_valid(agreement):
     if agreement.start and agreement.end and agreement.start > agreement.end:
         return False
@@ -131,6 +144,8 @@ class AgreementValid(CompleteValidation):
         start_date_equals_max_signoff,
         partner_type_valid_cso,
         end_date_country_programme_valid,
+        amendments_signed_amendment_valid,
+        amendments_signed_date_valid,
     ]
 
     VALID_ERRORS = {
@@ -148,7 +163,9 @@ class AgreementValid(CompleteValidation):
         'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
         'signed_by_valid': 'Partner manager and signed by must be provided.',
-        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.'
+        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
+        'amendments_signed_amendment_valid': {'signed_amendment': ['This field is required.']},
+        'amendments_signed_date_valid': {'signed_date': ['Signed date cannot be in the future']},
     }
 
     def state_suspended_valid(self, agreement, user=None):
