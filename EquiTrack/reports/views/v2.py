@@ -44,14 +44,17 @@ class ResultListAPIView(ListAPIView):
         return q
 
     def list(self, request):
-        if "dropdown" in self.request.path:
-            cp_outputs = list(self.get_queryset().values('id', 'name', 'wbs'))
-            return Response(
-                {
-                    'cp_outputs': cp_outputs,
-                },
-                status=status.HTTP_200_OK
-            )
+        query_params = self.request.query_params
+        if query_params and "dropdown" in query_params.keys():
+            dropdown = query_params.get("dropdown", None)
+            if dropdown == 'true':
+                cp_outputs = list(self.get_queryset().values('id', 'name', 'wbs'))
+                return Response(
+                    {
+                        'cp_outputs': cp_outputs,
+                    },
+                    status=status.HTTP_200_OK
+                )
         serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(
             serializer.data,
