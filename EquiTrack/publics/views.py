@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Grant, Fund, TravelExpenseType, \
     BusinessArea
 from publics.serializers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
-    WBSGrantFundSerializer, WBSGrantFundParameterSerializer
+    WBSGrantFundSerializer, WBSGrantFundParameterSerializer, CurrencySerializer, ExpenseTypeSerializer, \
+    BusinessAreaSerializer
 from t2f.models import TravelType, ModeOfTravel
 
 
@@ -37,19 +38,61 @@ class StaticDataView(generics.GenericAPIView):
         expense_type_q = Q(travel_agent__isnull=True) | Q(travel_agent__country__business_area__code=country.business_area_code)
         expense_types = TravelExpenseType.objects.select_related('travel_agent').filter(expense_type_q)
 
-        data = {'currencies': currencies,
+        data = {'currencies': currencies, # Moved
+                'dsa_regions': dsa_regions, # Moved
+                'business_areas': business_areas, # Moved
+                'expense_types': expense_types, # Moved
+
+                # These should stay here since all of them are "static"
                 'airlines': AirlineCompany.objects.all(),
-                'dsa_regions': dsa_regions,
                 'countries': Country.objects.all(),
-                'business_areas': business_areas,
-                'wbs': WBS.objects.prefetch_related('grants'),
-                'grants': Grant.objects.prefetch_related('funds'),
-                'funds': Fund.objects.all(),
-                'expense_types': expense_types,
                 'travel_types': [c[0].lower() for c in TravelType.CHOICES],
                 'travel_modes': [c[0].lower() for c in ModeOfTravel.CHOICES]}
 
         serializer = self.get_serializer(data)
+        return Response(serializer.data, status.HTTP_200_OK)
+
+
+class DSARegionsView(generics.GenericAPIView):
+    serializer_class = DSARegionSerializer
+
+    def get(self, request):
+        workspace = request.user.profile.country
+
+        dsa_regions = DSARegion.objects.filter(country__business_area__code=workspace.business_area_code)
+        dsa_regions = dsa_regions.select_related('country')
+
+        serializer = self.get_serializer(dsa_regions, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
+
+
+class BusinessAreasView(generics.GenericAPIView):
+    serializer_class = BusinessAreaSerializer
+
+    def get(self, request):
+        business_areas = BusinessArea.objects.all().select_related('region')
+        serializer = self.get_serializer(business_areas, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
+
+
+class CurrenciesView(generics.GenericAPIView):
+    serializer_class = CurrencySerializer
+
+    def get(self, request):
+        currencies = Currency.objects.all()
+        serializer = self.get_serializer(currencies, many=True)
+        return Response(serializer.data, status.HTTP_200_OK)
+
+
+class ExpenseTypesView(generics.GenericAPIView):
+    serializer_class = ExpenseTypeSerializer
+
+    def get(self, request):
+        workspace = request.user.profile.country
+        expense_type_q = Q(travel_agent__isnull=True) | Q(travel_agent__country__business_area__code=workspace.business_area_code)
+        expense_types = TravelExpenseType.objects.select_related('travel_agent').filter(expense_type_q)
+
+        serializer = self.get_serializer(expense_types, many=True)
         return Response(serializer.data, status.HTTP_200_OK)
 
 

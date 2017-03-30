@@ -13,14 +13,26 @@ from publics.tests.factories import AirlineCompanyFactory, DSARegionFactory, Cou
 from t2f.tests.factories import CurrencyFactory
 
 
-class StaticDataEndpoint(APITenantTestCase):
+class StaticDataEndpoints(APITenantTestCase):
     def setUp(self):
-        super(StaticDataEndpoint, self).setUp()
+        super(StaticDataEndpoints, self).setUp()
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
-        static_data_url = reverse('public_static')
+        static_data_url = reverse('public:static')
         self.assertEqual(static_data_url, '/api/static_data/')
+
+        currencies_url = reverse('public:currencies')
+        self.assertEqual(currencies_url, '/api/currencies/')
+
+        dsa_regions_url = reverse('public:dsa_regions')
+        self.assertEqual(dsa_regions_url, '/api/dsa_regions/')
+
+        business_areas_url = reverse('public:business_areas')
+        self.assertEqual(business_areas_url, '/api/business_areas/')
+
+        expense_types_url = reverse('public:expense_types')
+        self.assertEqual(expense_types_url, '/api/expense_types/')
 
     def test_endpoint(self):
         # This line is duplicated on purpose. Currency will have always 1+N number of queries
@@ -40,20 +52,17 @@ class StaticDataEndpoint(APITenantTestCase):
         FundFactory()
         ExpenseTypeFactory()
 
-        with self.assertNumQueries(16):
-            response = self.forced_auth_req('get', reverse('public_static'),
+        with self.assertNumQueries(11):
+            response = self.forced_auth_req('get', reverse('public:static'),
                                             user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
         self.assertKeysIn(['dsa_regions',
                            'currencies',
-                           'wbs',
                            'travel_types',
                            'countries',
-                           'funds',
                            'airlines',
                            'travel_modes',
-                           'grants',
                            'expense_types',
                            'business_areas'],
                           response_json,
@@ -85,7 +94,7 @@ class StaticDataEndpoint(APITenantTestCase):
         workspace.business_area_code = travel_agent_1_ba.code
         workspace.save()
 
-        response = self.forced_auth_req('get', reverse('public_static'),
+        response = self.forced_auth_req('get', reverse('public:static'),
                                         user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
@@ -94,3 +103,76 @@ class StaticDataEndpoint(APITenantTestCase):
         self.assertEqual(got_expense_type_ids, {user_1_et.id,
                                                 user_2_et.id,
                                                 travel_agent_1_et.id})
+
+    def test_currencies_view(self):
+        CurrencyFactory()
+        CurrencyFactory()
+        CurrencyFactory()
+
+        with self.assertNumQueries(4):
+            response = self.forced_auth_req('get', reverse('public:currencies'),
+                                            user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(len(response_json), 3)
+
+        expected_keys = ['iso_4217', 'code', 'exchange_to_dollar', 'id', 'name']
+        self.assertKeysIn(expected_keys, response_json[0], exact=True)
+
+    def test_dsa_regions_view(self):
+        workspace = self.unicef_staff.profile.country
+        workspace.business_area_code = '1234'
+        workspace.save()
+
+        business_area = BusinessAreaFactory(code=workspace.business_area_code)
+        country = CountryFactory(business_area=business_area)
+
+        DSARegionFactory(country=country)
+        DSARegionFactory(country=country)
+        DSARegionFactory(country=country)
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req('get', reverse('public:dsa_regions'),
+                                            user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(len(response_json), 3)
+
+        expected_keys = ['unique_name', 'dsa_amount_usd', 'country', 'area_name', 'room_rate', 'area_code', 'label',
+                         'dsa_amount_60plus_usd', 'long_name', 'eff_date', 'dsa_amount_60plus_local', 'id', 'unique_id',
+                         'dsa_amount_local', 'finalization_date']
+        self.assertKeysIn(expected_keys, response_json[0], exact=True)
+
+    def test_business_areas_view(self):
+        BusinessAreaFactory()
+        BusinessAreaFactory()
+        BusinessAreaFactory()
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req('get', reverse('public:business_areas'),
+                                            user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(len(response_json), 3)
+
+        expected_keys = ['region', 'code', 'id', 'name', 'default_currency']
+        self.assertKeysIn(expected_keys, response_json[0], exact=True)
+
+    def test_expense_types_view(self):
+        ExpenseTypeFactory()
+        ExpenseTypeFactory()
+        ExpenseTypeFactory()
+
+        with self.assertNumQueries(1):
+            response = self.forced_auth_req('get', reverse('public:expense_types'),
+                                            user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(len(response_json), 3)
+
+        expected_keys = ['vendor_number', 'unique', 'id', 'name']
+        self.assertKeysIn(expected_keys, response_json[0], exact=True)
