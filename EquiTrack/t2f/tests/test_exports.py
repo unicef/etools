@@ -405,7 +405,7 @@ class TravelExports(APITenantTestCase):
                           '123.0000'])
 
         self.assertEqual(rows[3],
-                         ['2060/2017/2/03',
+                         ['2060/2017/2/01',
                           '2017/2',
                           '12343424',
                           'USD',
@@ -419,7 +419,7 @@ class TravelExports(APITenantTestCase):
                           '1000.0000'])
 
         self.assertEqual(rows[4],
-                         ['2060/2017/2/03',
+                         ['2060/2017/2/01',
                           '2017/2',
                           '12343424',
                           'USD',
