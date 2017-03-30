@@ -3,7 +3,6 @@ import datetime
 from django.views.generic import TemplateView
 from django.db.models import Q
 from django.contrib.admin.models import LogEntry
-
 from partners.models import PCA, PartnerOrganization, GwPCALocation
 from reports.models import Sector, ResultStructure, Indicator
 from locations.models import CartoDBTable, GatewayType

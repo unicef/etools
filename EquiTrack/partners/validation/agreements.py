@@ -80,6 +80,7 @@ def start_date_equals_max_signoff(agreement):
         return False
     return True
 
+
 def signed_date_valid(agreement):
     '''
     :param agreement:
@@ -130,7 +131,7 @@ class AgreementValid(CompleteValidation):
         signed_date_valid,
         start_date_equals_max_signoff,
         partner_type_valid_cso,
-        end_date_country_programme_valid,
+        end_date_country_programme_valid
     ]
 
     VALID_ERRORS = {
@@ -148,7 +149,8 @@ class AgreementValid(CompleteValidation):
         'start_date_equals_max_signoff': 'Start date must equal to the most recent signoff date (either signed_by_unicef_date or signed_by_partner_date).',
         'partner_type_valid_cso': 'Partner type must be CSO for PCA or SSFA agreement types.',
         'signed_by_valid': 'Partner manager and signed by must be provided.',
-        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.'
+        'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
+        'end_date_pca_validation': 'End date is not entered for PCA or end date cannot be after current Country Programme',
     }
 
     def state_suspended_valid(self, agreement, user=None):
@@ -171,7 +173,8 @@ class AgreementValid(CompleteValidation):
             raise StateValidError(['signed_agreement_present'])
 
         if agreement.old_instance and agreement.status == agreement.old_instance.status:
-            rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
+            rigid_fields = []  # this males all fields editable, will remove later
+            # rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
             valid, changed_field = check_rigid_fields(agreement, rigid_fields)
             if not valid:
                 raise StateValidError('rigid_field_changed: %s' % changed_field)

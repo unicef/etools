@@ -128,48 +128,7 @@ class TravelDetailsViewSet(mixins.RetrieveModelMixin,
     @atomic
     def perform_update(self, serializer):
         super(TravelDetailsViewSet, self).perform_update(serializer)
-
-        # If invoicing is enabled, do the treshold check, otherwise it will result an infinite process loop
-        if not settings.DISABLE_INVOICING and serializer.transition_name == 'send_for_payment' \
-                and self.check_treshold(serializer.instance):
-            serializer.transition_name = 'submit_for_approval'
-
         run_transition(serializer)
-
-        # If invoicing is turned off, jump to sent_for_payment when someone approves the travel
-        if serializer.transition_name == 'approve' and settings.DISABLE_INVOICING:
-            serializer.transition_name = 'send_for_payment'
-            run_transition(serializer)
-
-    def check_treshold(self, travel):
-        expenses = {'user': Decimal(0),
-                    'travel_agent': Decimal(0)}
-
-        for expense in travel.expenses.all():
-            if expense.type.vendor_number == TravelExpenseType.USER_VENDOR_NUMBER_PLACEHOLDER:
-                expenses['user'] += expense.amount
-            elif expense.type.vendor_number:
-                expenses['travel_agent'] += expense.amount
-
-        traveler_delta = 0
-        travel_agent_delta = 0
-        if travel.approved_cost_traveler:
-            traveler_delta = expenses['user'] - travel.approved_cost_traveler
-            if travel.currency.code != 'USD':
-                exchange_rate = travel.currency.exchange_rates.all().last()
-                traveler_delta *= exchange_rate.x_rate
-
-        if travel.approved_cost_travel_agencies:
-            travel_agent_delta = expenses['travel_agent'] - travel.approved_cost_travel_agencies
-
-        workspace = self.request.user.profile.country
-        if workspace.threshold_tre_usd and traveler_delta > workspace.threshold_tre_usd:
-            return True
-
-        if workspace.threshold_tae_usd and travel_agent_delta > workspace.threshold_tae_usd:
-            return True
-
-        return False
 
     @atomic
     def clone_for_secondary_traveler(self, request, *args, **kwargs):
@@ -243,8 +202,8 @@ class ActionPointViewSet(mixins.ListModelMixin,
 
     def export(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        serialzier = ActionPointExportSerializer(queryset, many=True, context=self.get_serializer_context())
+        serializer = ActionPointExportSerializer(queryset, many=True, context=self.get_serializer_context())
 
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
+        response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="ActionPointExport.csv"'
         return response
