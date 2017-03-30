@@ -174,9 +174,21 @@ def sector_location_valid(sl):
         return False
     return True
 
-def amendments_valid(i):
+def amendments_valid_type(i):
     for a in i.amendments.all():
-        if not a.type or not a.signed_date:
+        if not a.type:
+            return False
+    return True
+
+def amendments_valid_signed_date(i):
+    for a in i.amendments.all():
+        if not a.signed_date:
+            return False
+    return True
+
+def amendments_valid_signed_amendment(i):
+    for a in i.amendments.all():
+        if not a.signed_amendment:
             return False
     return True
 
@@ -195,7 +207,9 @@ class InterventionValid(CompleteValidation):
         signed_by_unicef_date_valid,
         document_type_pca_valid,
         document_type_ssfa_valid,
-        amendments_valid,
+        amendments_valid_type,
+        amendments_valid_signed_date,
+        amendments_valid_signed_amendment,
     ]
 
     VALID_ERRORS = {
@@ -223,13 +237,21 @@ class InterventionValid(CompleteValidation):
         'document_type_ssfa_valid': {
             'document_type': ['Document type must be SSFA in case of agreement is SSFA.']
         },
-        'amendments_valid': {
+        'amendments_valid_type': {
             'amendments' : {
                 'type': ['This field is required.'],
+            }
+        },
+        'amendments_valid_signed_date': {
+            'amendments' : {
                 'signed_date': ['This field is required.'],
+            }
+        },
+        'amendments_valid_signed_amendment': {
+            'amendments' : {
                 'signed_amendment': ['This field is required.'],
             }
-        }
+        },
     }
 
     def state_suspended_valid(self, intervention, user=None):
