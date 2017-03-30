@@ -25,7 +25,11 @@ class TravelMailSerializer(serializers.Serializer):
     cost_summary = CostSummarySerializer(read_only=True)
     location = serializers.CharField(source='itinerary.first.destination')
     cost_assignments = CostAssignmentNameSerializer(many=True)
+    reference_number = serializers.CharField()
+    purpose = serializers.CharField()
+    rejection_note = serializers.CharField()
 
     class Meta:
         fields = ('traveler', 'supervisor', 'start_date', 'end_date', 'estimated_travel_cost', 'purpose',
-                  'reference_number', 'currency', 'cost_summary', 'rejection_note', 'location', 'cost_assignments')
+                  'reference_number', 'currency', 'cost_summary', 'rejection_note', 'location', 'cost_assignments',
+                  'reference_number', 'purpose', 'rejection_note')
