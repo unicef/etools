@@ -7,6 +7,7 @@ from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from t2f.models import Invoice
 from publics.tests.factories import BusinessAreaFactory
+from t2f.serializers.mailing import TravelMailSerializer
 
 from .factories import TravelFactory
 
@@ -43,3 +44,20 @@ class MailingTest(APITenantTestCase):
 
         for email in mail.outbox:
             self.assertIn(self.travel.reference_number, email.subject, email.subject)
+
+    def test_mailing_serializer(self):
+        serializer = TravelMailSerializer(self.travel, context={})
+        self.assertKeysIn(['reference_number',
+                           'cost_summary',
+                           'supervisor',
+                           'end_date',
+                           'cost_assignments',
+                           'rejection_note',
+                           'currency',
+                           'estimated_travel_cost',
+                           'location',
+                           'traveler',
+                           'start_date',
+                           'purpose'],
+                          serializer.data,
+                          exact=True)
