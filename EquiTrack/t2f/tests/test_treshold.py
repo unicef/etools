@@ -21,8 +21,8 @@ class ThresholdTest(APITenantTestCase):
         self.travel = TravelFactory(traveler=self.traveler,
                                     supervisor=self.unicef_staff)
         workspace = self.unicef_staff.profile.country
-        workspace.threshold_tae_usd = 10
-        workspace.threshold_tre_usd = 10
+        workspace.threshold_tae_usd = 100
+        workspace.threshold_tre_usd = 100
         workspace.save()
 
     def _prepare_test(self):
@@ -58,7 +58,7 @@ class ThresholdTest(APITenantTestCase):
         return travel_id, data
 
     @override_settings(DISABLE_INVOICING=False)
-    def test_threshold(self):
+    def test_threshold_with_invoicing(self):
         travel_id, data = self._prepare_test()
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -66,7 +66,10 @@ class ThresholdTest(APITenantTestCase):
                                                                 'transition_name': 'approve'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], None)
+
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
@@ -74,9 +77,12 @@ class ThresholdTest(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.00')
 
-        # Treshold reached. Send for approval
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)
+
+        # Threshold reached. Send for approval
         data = response_json
         data['expenses'][0]['amount'] = '300'
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -87,8 +93,12 @@ class ThresholdTest(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.SUBMITTED)
 
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)
+
     @override_settings(DISABLE_INVOICING=True)
-    def test_threshold(self):
+    def test_threshold_without_invoicing(self):
         travel_id, data = self._prepare_test()
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -96,17 +106,23 @@ class ThresholdTest(APITenantTestCase):
                                                                 'transition_name': 'approve'}),
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.00')
+
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
                                                         kwargs={'travel_pk': travel_id,
                                                                 'transition_name': 'send_for_payment'}),
-                                        data=data, user=self.unicef_staff)
+                                        data=response_json, user=self.unicef_staff)
 
         response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json['cost_summary']['preserved_expenses'], '120.00')
 
-        # Treshold reached. Send for approval
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)
+
+        # Threshold reached. Send for payment (skip approval if invoicing is disabled)
         data = response_json
         data['expenses'][0]['amount'] = '300'
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -116,3 +132,65 @@ class ThresholdTest(APITenantTestCase):
 
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.SENT_FOR_PAYMENT)
+
+    def test_multi_step_reach(self):
+        travel_id, data = self._prepare_test()
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'approve'}),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=response_json, user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)
+
+        # Threshold not reached yet. Still send for payment
+        data = response_json
+        data['expenses'][0]['amount'] = '180'
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=data, user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.SENT_FOR_PAYMENT)
+
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)
+
+        # Threshold reached. Send for approval
+        currency = CurrencyFactory()
+        # If vendor number is empty, considered as estimated travel cost
+        # and should be included while calculating the threshold
+        expense_type = ExpenseTypeFactory(vendor_number='')
+
+        data = response_json
+        data['expenses'].append({'amount': '41',
+                                 'type': expense_type.id,
+                                 'account_currency': currency.id,
+                                 'document_currency': currency.id})
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': travel_id,
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=data, user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.SUBMITTED)
+
+        travel = Travel.objects.get(id=travel_id)
+        self.assertEqual(travel.approved_cost_traveler, 0)
+        self.assertEqual(travel.approved_cost_travel_agencies, 120)

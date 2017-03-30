@@ -302,7 +302,7 @@ class PartnershipDashboardAPIView(APIView):
         result['active_value'] = total_value_for_parternships(active_partnerships)
         result['active_percentage'] = "{0:.0f}%".format(
             operator.truediv(result['active_count'], result['total_count']) * 100) \
-            if result['active_count'] else "0%"
+            if result['total_count'] and result['active_count'] else "0%"
 
         # (2a) Number and value of Approved Interventions this year
         result['total_this_year_count'] = len(total_this_year)
@@ -310,15 +310,15 @@ class PartnershipDashboardAPIView(APIView):
         result['active_this_year_value'] = total_value_for_parternships(active_this_year)
         result['active_this_year_percentage'] = "{0:.0f}%".format(
             operator.truediv(result['active_this_year_count'], result['total_this_year_count']) * 100) \
-            if result['active_count'] else "0%"
+            if result['total_this_year_count'] and result['active_this_year_count'] else "0%"
 
         # (2b) Number and value of Approved Interventions last year
         result['total_last_year_count'] = len(total_last_year)
         result['active_last_year_count'] = len(active_last_year)
         result['active_last_year_value'] = total_value_for_parternships(active_last_year)
         result['active_last_year_percentage'] = "{0:.0f}%".format(
-            operator.truediv(result['active_last_year_count'], result['active_last_year_count']) * 100) \
-            if result['active_last_year_count'] else "0%"
+            operator.truediv(result['active_last_year_count'], result['total_last_year_count']) * 100) \
+            if result['total_last_year_count'] and result['active_last_year_count'] else "0%"
 
         # (3) Number and Value of Expiring Interventions in next two months
         result['total_expire_in_two_months_count'] = len(total_expire_in_two_months)
@@ -326,6 +326,6 @@ class PartnershipDashboardAPIView(APIView):
         result['expire_in_two_months_value'] = total_value_for_parternships(expire_in_two_months)
         result['expire_in_two_months_percentage'] = "{0:.0f}%".format(
             operator.truediv(result['expire_in_two_months_count'], result['active_count']) * 100) \
-        if result['expire_in_two_months_count'] else "0%"
+        if result['active_count'] and result['expire_in_two_months_count'] else "0%"
 
         return Response(result, status=status.HTTP_200_OK)

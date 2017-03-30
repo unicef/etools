@@ -29,6 +29,9 @@ RUN apt-get install -y --no-install-recommends \
     libxslt-dev \
     xmlsec1
 
+# appdirs needs to be upgraded before setuptools, or else it will break the next cmd install
+RUN pip install --upgrade appdirs
+
 RUN pip install --upgrade \
     setuptools \
     virtualenv \
