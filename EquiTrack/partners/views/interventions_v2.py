@@ -369,6 +369,6 @@ class InterventionListMapView(ListCreateAPIView):
                 queries.append(Q(agreement__partner__in=[query_params.get("partner")]))
             if queries:
                 expression = functools.reduce(operator.and_, queries)
-                q = q.filter(expression)
+                q = q.filter(expression).distinct()
 
         return q
