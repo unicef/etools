@@ -273,7 +273,7 @@ class TestModelExport(APITenantTestCase):
                 '{}'.format(self.agreement.signed_by_partner_date),
                 u'',
                 '{}'.format(self.agreement.signed_by_unicef_date),
-                u'',
+                ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
                 u'',
                 u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id)
             )
@@ -320,7 +320,7 @@ class TestModelExport(APITenantTestCase):
                 unicode(self.partner.name),
                 self.partner.short_name,
                 self.partner.alternate_name,
-                self.partner.partner_type,
+                "{}/{}".format(self.partner.partner_type, self.partner.cso_type),
                 u', '.join([x for x in self.partner.shared_with]),
                 self.partner.address,
                 self.partner.phone_number,

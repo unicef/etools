@@ -150,7 +150,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
     date_assessed = serializers.CharField(source='last_assessment_date')
     url = serializers.SerializerMethodField()
     shared_with = serializers.SerializerMethodField()
-
+    partner_type = serializers.SerializerMethodField()
 
     class Meta:
 
@@ -180,6 +180,9 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
 
     def get_blocked(self, obj):
         return "Yes" if obj.blocked else "No"
+
+    def get_partner_type(self, obj):
+        return "{}/{}".format(obj.partner_type, obj.cso_type)
 
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
