@@ -399,12 +399,6 @@ class Indicator(models.Model):
 
     view_on_dashboard = models.BooleanField(default=False)
 
-    in_activity_info = models.BooleanField(default=False)
-    activity_info_indicators = models.ManyToManyField(
-        'activityinfo.Indicator',
-        blank=True
-    )
-
     class Meta:
         ordering = ['name']
         unique_together = (("name", "result", "sector"),)

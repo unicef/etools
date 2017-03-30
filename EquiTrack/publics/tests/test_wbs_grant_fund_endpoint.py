@@ -15,7 +15,7 @@ class WBSGrantFundEndpoint(APITenantTestCase):
         self.unicef_staff = UserFactory(is_staff=True)
 
     def test_urls(self):
-        details_url = reverse('wbs_grants_funds')
+        details_url = reverse('public:wbs_grants_funds')
         self.assertEqual(details_url, '/api/wbs_grants_funds/')
 
     def test_wbs_grant_fund_view(self):
@@ -28,7 +28,7 @@ class WBSGrantFundEndpoint(APITenantTestCase):
         WBSFactory(business_area=business_area)
 
         with self.assertNumQueries(6):
-            response = self.forced_auth_req('get', reverse('wbs_grants_funds'),
+            response = self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
                                             data={'business_area': business_area.id},
                                             user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
