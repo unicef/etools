@@ -82,6 +82,7 @@ def start_date_equals_max_signoff(agreement):
         return False
     return True
 
+
 def signed_by_unicef_date_past(agreement):
     '''
     :param agreement:
@@ -149,7 +150,7 @@ class AgreementValid(CompleteValidation):
         signed_by_partner_date_past,
         start_date_equals_max_signoff,
         partner_type_valid_cso,
-        end_date_country_programme_valid,
+        end_date_country_programme_valid
     ]
 
     VALID_ERRORS = {
@@ -172,7 +173,7 @@ class AgreementValid(CompleteValidation):
             'signed_by_unicef_date': ['Signed dates cannot be greater than today']
         },
         'signed_by_partner_date_past': {
-            'signed_by_unicef_date': ['Signed dates cannot be greater than today']
+            'signed_by_partner_date': ['Signed dates cannot be greater than today']
         },
         'suspended_invalid': {
             'status': ['Cant suspend an agreement that was supposed to be ended']
@@ -199,10 +200,10 @@ class AgreementValid(CompleteValidation):
             'partner_type': ['Partner type must be CSO for PCA or SSFA agreement types.']
         },
         'signed_by_valid': {
-            'signed_by': ['Partner manager and signed by must be provided.']
+            'signed_by': ['Signed by UNICEF must be provided']
         },
         'signed_by_valid_partner': {
-            'partner_manager': ['Partner manager and signed by must be provided.']
+            'partner_manager': ['Signed by Partner must be provided']
         },
         'end_date_country_programme_valid': {
             'end': ['PCA cannot end after current Country Programme.']
@@ -235,7 +236,8 @@ class AgreementValid(CompleteValidation):
             errors.append('signed_agreement_present')
 
         if agreement.old_instance and agreement.status == agreement.old_instance.status:
-            rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
+            rigid_fields = []  # this males all fields editable, will remove later
+            # rigid_fields = ['signed_by_unicef_date', 'signed_by_partner_date', 'signed_by', 'partner_manager']
             valid, changed_field = check_rigid_fields(agreement, rigid_fields)
             if not valid:
                 errors.append('rigid_field_changed: %s' % changed_field)

@@ -66,10 +66,11 @@ class ValidatorViewMixin(object):
 
             try:
                 instance_serializer.is_valid(raise_exception=True)
+                # ValidationError can be raised by one of the sub-related fields inside the serializer on save
+                instance_serializer.save()
             except ValidationError as e:
                 e.detail = {rel_prop_name: e.detail}
                 raise e
-            instance_serializer.save()
 
     def my_create(self, request, related_f, snapshot=None, nested_related_names=None, **kwargs):
         my_relations = {}
