@@ -13,8 +13,7 @@ from publics.tests.factories import DSARegionFactory, AirlineCompanyFactory, WBS
     CurrencyFactory, ExpenseTypeFactory
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
-    TravelType
-
+    TravelType, Invoice, InvoiceItem
 
 TZ = timezone(settings.TIME_ZONE)
 _FUZZY_START_DATE = TZ.localize(datetime.now() - timedelta(days=5))
@@ -137,3 +136,27 @@ class TravelFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = Travel
+
+
+class InvoiceFactory(factory.DjangoModelFactory):
+    travel = factory.SubFactory(TravelFactory)
+    business_area = fuzzy.FuzzyText(length=12)
+    vendor_number = fuzzy.FuzzyText(length=12)
+    currency = factory.SubFactory(CurrencyFactory)
+    amount = fuzzy.FuzzyDecimal(0, 1000)
+    status = Invoice.PENDING
+    messages = []
+
+    class Meta:
+        model = Invoice
+
+
+class InvoiceItemFactory(factory.DjangoModelFactory):
+    invoice = factory.SubFactory(InvoiceFactory)
+    wbs = factory.SubFactory(WBSFactory)
+    grant = factory.SubFactory(GrantFactory)
+    fund = factory.SubFactory(FundFactory)
+    amount = fuzzy.FuzzyDecimal(0, 250)
+
+    class Meta:
+        model = InvoiceItem
