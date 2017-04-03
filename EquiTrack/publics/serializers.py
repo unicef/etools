@@ -96,16 +96,13 @@ class PublicStaticDataSerializer(serializers.Serializer):
     dsa_regions = DSARegionSerializer(many=True)
     countries = CountrySerializer(many=True)
     business_areas = BusinessAreaSerializer(many=True)
-    wbs = WBSSerializer(many=True)
-    grants = GrantSerializer(many=True)
-    funds = FundSerializer(many=True)
     expense_types = ExpenseTypeSerializer(many=True)
     travel_types = serializers.ListField(child=serializers.CharField())
     travel_modes = serializers.ListField(child=serializers.CharField())
 
     class Meta:
-        fields = ('currencies', 'airlines', 'dsa_regions', 'countries', 'business_areas', 'wbs', 'grants', 'funds',
-                  'expense_types', 'travel_types', 'travel_modes')
+        fields = ('currencies', 'airlines', 'dsa_regions', 'countries', 'business_areas', 'expense_types',
+                  'travel_types', 'travel_modes')
 
 
 class WBSGrantFundParameterSerializer(serializers.Serializer):

@@ -93,6 +93,7 @@ def start_date_equals_max_signoff(agreement):
         return False
     return True
 
+
 def signed_date_valid(agreement):
     '''
     :param agreement:
@@ -166,6 +167,7 @@ class AgreementValid(CompleteValidation):
         'end_date_country_programme_valid': 'PCA cannot end after current Country Programme.',
         'amendments_signed_amendment_valid': {'signed_amendment': ['This field is required.']},
         'amendments_signed_date_valid': {'signed_date': ['Signed date cannot be in the future']},
+        'end_date_pca_validation': 'End date is not entered for PCA or end date cannot be after current Country Programme',
     }
 
     def state_suspended_valid(self, agreement, user=None):

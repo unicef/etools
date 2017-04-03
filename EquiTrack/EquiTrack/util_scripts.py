@@ -785,7 +785,7 @@ def local_country_keep():
     keeping = ['Global', 'UAT', 'Lebanon', 'Syria', 'Indonesia', 'Sudan', 'Syria Cross Border']
     Country.objects.exclude(name__in=keeping).all().delete()
 
-
+          
 def migrate_authorized_officers(country_name):
     """
     Migrates AuthorizedOfficer from schema  , cntryinstances back to the Agreement as a M2M field
@@ -829,7 +829,6 @@ def change_partner_cso_type(country_name):
         if partner.cso_type in ['Community based organization', 'Community Based Organisation']:
             partner.cso_type = 'Community Based Organization'
         partner.save()
-
 
 def after_partner_migration():
     copy_pca_fields_to_intervention()
