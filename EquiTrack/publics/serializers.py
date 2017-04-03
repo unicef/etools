@@ -96,20 +96,25 @@ class PublicStaticDataSerializer(serializers.Serializer):
     dsa_regions = DSARegionSerializer(many=True)
     countries = CountrySerializer(many=True)
     business_areas = BusinessAreaSerializer(many=True)
-    wbs = WBSSerializer(many=True)
-    grants = GrantSerializer(many=True)
-    funds = FundSerializer(many=True)
     expense_types = ExpenseTypeSerializer(many=True)
     travel_types = serializers.ListField(child=serializers.CharField())
     travel_modes = serializers.ListField(child=serializers.CharField())
 
     class Meta:
-        fields = ('currencies', 'airlines', 'dsa_regions', 'countries', 'business_areas', 'wbs', 'grants', 'funds',
-                  'expense_types', 'travel_types', 'travel_modes')
+        fields = ('currencies', 'airlines', 'dsa_regions', 'countries', 'business_areas', 'expense_types',
+                  'travel_types', 'travel_modes')
 
 
 class WBSGrantFundParameterSerializer(serializers.Serializer):
-    business_area = serializers.PrimaryKeyRelatedField(queryset=BusinessArea.objects.all())
+    business_area = serializers.PrimaryKeyRelatedField(queryset=BusinessArea.objects.all(), required=False)
+
+    def to_internal_value(self, data):
+        ret = super(WBSGrantFundParameterSerializer, self).to_internal_value(data)
+        if 'business_area' not in ret:
+            default_business_area_code = self.context['request'].user.profile.country.business_area_code
+            default_business_area = BusinessArea.objects.get(code=default_business_area_code)
+            ret['business_area'] = default_business_area
+        return ret
 
 
 class WBSGrantFundSerializer(serializers.Serializer):
