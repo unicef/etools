@@ -2,9 +2,11 @@ from __future__ import unicode_literals
 import json
 import logging
 from operator import xor
+import datetime
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Sum
 from rest_framework import serializers
 
 from reports.serializers.v1 import SectorLightSerializer, ResultLightSerializer, RAMIndicatorLightSerializer
@@ -366,10 +368,7 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     unicef_signatory = serializers.SerializerMethodField()
     hrp_name = serializers.CharField(source='hrp.name')
     partner_focal_points = serializers.SerializerMethodField()
-    supply_plans = serializers.SerializerMethodField()
-    distribution_plans = serializers.SerializerMethodField()
     unicef_focal_points = serializers.SerializerMethodField()
-    cso_authorized_officials = serializers.SerializerMethodField()
     partner_authorized_officer_signatory = serializers.SerializerMethodField()
     cp_outputs = serializers.SerializerMethodField()
     ram_indicators = serializers.SerializerMethodField()
@@ -384,12 +383,12 @@ class InterventionExportSerializer(serializers.ModelSerializer):
         model = Intervention
         fields = (
             "status", "partner_name", "partner_type", "agreement_name", "country_programme", "document_type", "number", "title",
-            "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points", "cso_authorized_officials",
+            "start", "end", "offices", "sectors", "locations", "planned_budget_local", "unicef_focal_points",
             "partner_focal_points", "population_focus", "hrp_name", "cp_outputs", "ram_indicators", "fr_numbers", "local_currency",
             "unicef_budget", "cso_contribution", "partner_authorized_officer_signatory",
             "partner_contribution_local", "planned_visits", "spot_checks", "audit", "submission_date",
             "submission_date_prc", "review_date_prc", "unicef_signatory", "signed_by_unicef_date",
-            "signed_by_partner_date", "supply_plans", "distribution_plans", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
+            "signed_by_partner_date", "url", "days_from_submission_to_signed", "days_from_review_to_signed"
         )
 
     def get_unicef_signatory(self, obj):
@@ -433,12 +432,6 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_audit(self, obj):
         return ', '.join(['{} ({})'.format(pv.audit, pv.year) for pv in obj.planned_visits.all()])
 
-    def get_supply_plans(self, obj):
-        return ', '.join(['"{}" ({})'.format(s.item.name, s.quantity) for s in obj.supplies.all()])
-
-    def get_distribution_plans(self, obj):
-        return ', '.join(['"{}"/{} ({})'.format(d.item.name, d.quantity, d.site) for d in obj.distributions.all()])
-
     def get_url(self, obj):
         return 'https://{}/pmp/interventions/{}/details/'.format(self.context['request'].get_host(), obj.id)
 
@@ -455,21 +448,25 @@ class InterventionExportSerializer(serializers.ModelSerializer):
     def get_fr_numbers(self, obj):
         return ', '.join([x for x in obj.fr_numbers]) if obj.fr_numbers else ""
 
-    def get_cso_authorized_officials(self, obj):
-        return ', '.join([x.get_full_name() for x in obj.agreement.authorized_officers.all()])
-
 
 class InterventionSummaryListSerializer(serializers.ModelSerializer):
 
     partner_name = serializers.CharField(source='agreement.partner.name')
     # government intervention = true, for distinguishing on the front end
     government_intervention = serializers.SerializerMethodField()
+    planned_budget = serializers.SerializerMethodField()
 
     def get_government_intervention(self, obj):
         return False
 
+    def get_planned_budget(self, obj):
+        year = datetime.datetime.now().year
+        return obj.planned_budget.filter(year=year).aggregate(
+            total=Sum('unicef_cash'))['total'] or 0
+
     class Meta:
         model = Intervention
         fields = (
-            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end', 'government_intervention'
+            'id', 'number', 'partner_name', 'status', 'title', 'start', 'end',
+            'government_intervention', 'planned_budget'
         )

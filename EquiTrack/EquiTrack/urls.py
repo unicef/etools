@@ -83,7 +83,8 @@ from workplan.views import (
     MilestoneViewSet
 )
 
-from t2f.urls import urlpatterns as et2f_patterns
+from t2f.urls import urlpatterns as t2f_patterns
+from publics import urls as publics_patterns
 
 schema_view = get_swagger_view(title='eTools API')
 
@@ -144,7 +145,6 @@ urlpatterns = patterns(
     # url(r'^hact/$', login_required(HACTDashboardView.as_view()), name='hact_dashboard'),
 
     url(r'^api/static_data/$', StaticDataView.as_view(), name='public_static'),
-    url(r'^api/wbs_grants_funds/$', WBSGrantFundView.as_view(), name='wbs_grants_funds'),
 
     # ***************  API version 1  ********************
     url(r'^locations/', include('locations.urls')),
@@ -154,6 +154,7 @@ urlpatterns = patterns(
     url(r'^api/', include(staffm_api.urls)),
     url(r'^api/', include(government_interventions_api.urls)),
     url(r'^api/', include(simple_government_interventions_api.urls)),
+    url(r'^api/', include(publics_patterns, namespace='public')),
 
     # url(r'^trips/', include('trips.urls')),
     url(r'^api/', include(trips_api.urls)),
@@ -162,7 +163,7 @@ urlpatterns = patterns(
 
     # ***************  API version 2  ******************
     url(r'^api/locations/pcode/(?P<p_code>\w+)/$', LocationsViewSet.as_view({'get': 'retrieve'}), name='locations_detail_pcode'),
-    url(r'^api/t2f/', include(et2f_patterns, namespace='t2f')),
+    url(r'^api/t2f/', include(t2f_patterns, namespace='t2f')),
     url(r'^api/v2/', include('reports.urls_v2')),
     url(r'^api/v2/', include('partners.urls_v2')),
     url(r'^api/v2/users/', include('users.urls_v2')),

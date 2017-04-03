@@ -160,7 +160,6 @@ class TestModelExport(APITenantTestCase):
             'Sectors',
             'Locations',
             'UNICEF Focal Points',
-            'CSO Authorized Officials',
             'Programme Focal Points',
             'Population Focus',
             'Humanitarian Response Plan',
@@ -184,8 +183,6 @@ class TestModelExport(APITenantTestCase):
             'Signed by UNICEF Date',
             'Days from Submission to Signed',
             'Days from Review to Signed',
-            'Supply Plan',
-            'Distribution Plan',
             'URL'
         ])
 
@@ -204,7 +201,6 @@ class TestModelExport(APITenantTestCase):
                 u'',
                 u'',
                 u'',
-                ', '.join([x.get_full_name() for x in self.intervention.agreement.authorized_officers.all()]),
                 u'',
                 self.intervention.population_focus,
                 unicode(self.intervention.hrp.name),
@@ -228,8 +224,6 @@ class TestModelExport(APITenantTestCase):
                 '{}'.format(self.intervention.signed_by_partner_date),
                 '{}'.format(self.intervention.days_from_submission_to_signed),
                 '{}'.format(self.intervention.days_from_review_to_signed),
-                ', '.join(['"{}" ({})'.format(s.item.name, s.quantity) for s in self.intervention.supplies.all()]),
-                ', '.join(['"{}"/{} ({})'.format(d.item.name, d.quantity, d.site) for d in self.intervention.distributions.all()]),
                 u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id)
             )
         )
