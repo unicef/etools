@@ -21,6 +21,10 @@ class WBSGrantFundEndpoint(APITenantTestCase):
     def test_wbs_grant_fund_view(self):
         business_area = BusinessAreaFactory()
 
+        workspace = self.unicef_staff.profile.country
+        workspace.business_area_code = business_area.code
+        workspace.save()
+
         # Create a few wbs/grant/fund to see if the query count grows
         WBSFactory(business_area=business_area)
         WBSFactory(business_area=business_area)
@@ -29,8 +33,21 @@ class WBSGrantFundEndpoint(APITenantTestCase):
 
         with self.assertNumQueries(6):
             response = self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
-                                            data={'business_area': business_area.id},
                                             user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
 
+        self.assertEqual(len(response_json['wbs']), 4)
         self.assertKeysIn(['wbs', 'grants', 'funds'], response_json)
+
+        # Check different business area lookup
+        business_area_2 = BusinessAreaFactory()
+
+        WBSFactory(business_area=business_area_2)
+        WBSFactory(business_area=business_area_2)
+
+        with self.assertNumQueries(6):
+            response = self.forced_auth_req('get', reverse('public:wbs_grants_funds'),
+                                            data={'business_area': business_area_2.id},
+                                            user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['wbs']), 2)
