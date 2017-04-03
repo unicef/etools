@@ -32,6 +32,7 @@ class GatewayTypeSerializer(serializers.ModelSerializer):
 class LocationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
+    gateway = serializers.CharField(source='gateway.name')
 
     class Meta:
         model = Location
@@ -57,20 +58,5 @@ class LocationLightSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'name',
-            'p_code',
-        )
-
-
-class LocationMapSerializer(serializers.ModelSerializer):
-
-    id = serializers.CharField(read_only=True)
-    type = serializers.CharField(source='gateway.name')
-
-    class Meta:
-        model = Location
-        fields = (
-            'id',
-            'name',
-            'type',
             'p_code',
         )
