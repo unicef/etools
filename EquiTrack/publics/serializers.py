@@ -106,7 +106,15 @@ class PublicStaticDataSerializer(serializers.Serializer):
 
 
 class WBSGrantFundParameterSerializer(serializers.Serializer):
-    business_area = serializers.PrimaryKeyRelatedField(queryset=BusinessArea.objects.all())
+    business_area = serializers.PrimaryKeyRelatedField(queryset=BusinessArea.objects.all(), required=False)
+
+    def to_internal_value(self, data):
+        ret = super(WBSGrantFundParameterSerializer, self).to_internal_value(data)
+        if 'business_area' not in ret:
+            default_business_area_code = self.context['request'].user.profile.country.business_area_code
+            default_business_area = BusinessArea.objects.get(code=default_business_area_code)
+            ret['business_area'] = default_business_area
+        return ret
 
 
 class WBSGrantFundSerializer(serializers.Serializer):
