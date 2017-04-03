@@ -242,6 +242,8 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
+        self.assertIn("hact_min_requirements", response.data.keys())
+        self.assertIn("hact_values", response.data.keys())
         self.assertEquals(response.data['interventions'], [])
 
     def test_api_partners_retrieve_staff_members(self):
