@@ -59,3 +59,18 @@ class LocationLightSerializer(serializers.ModelSerializer):
             'name',
             'p_code',
         )
+
+
+class LocationMapSerializer(serializers.ModelSerializer):
+
+    id = serializers.CharField(read_only=True)
+    type = serializers.CharField(source='gateway.name')
+
+    class Meta:
+        model = Location
+        fields = (
+            'id',
+            'name',
+            'type',
+            'p_code',
+        )

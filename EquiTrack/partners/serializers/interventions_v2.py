@@ -30,7 +30,7 @@ from partners.models import (
     InterventionResultLink,
 )
 from reports.models import LowerResult
-from locations.serializers import LocationLightSerializer, LocationSerializer
+from locations.serializers import LocationLightSerializer, LocationMapSerializer
 from funds.models import FundsCommitmentHeader, FundsCommitmentItem
 
 from partners.serializers.v1 import PCASectorSerializer, DistributionPlanSerializer
@@ -471,7 +471,7 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
 
 
 class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
-    locations = LocationLightSerializer(many=True)
+    locations = LocationMapSerializer(many=True)
     sector = SectorLightSerializer()
     class Meta:
         model = InterventionSectorLocationLink
