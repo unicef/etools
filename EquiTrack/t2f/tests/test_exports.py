@@ -123,7 +123,7 @@ class TravelExports(APITenantTestCase):
                           'No',
                           'Yes',
                           '0.00',
-                          '500.00',
+                          '500 USD',
                           '0.00'])
 
         self.assertEqual(rows[2],

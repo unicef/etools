@@ -52,7 +52,7 @@ class FinanceExportSerializer(serializers.Serializer):
     international_travel = YesOrNoField()
     require_ta = YesOrNoField(source='ta_required')
     dsa_total = serializers.DecimalField(source='cost_summary.dsa_total', max_digits=20, decimal_places=2)
-    expense_total = serializers.DecimalField(source='cost_summary.expenses_total', max_digits=20, decimal_places=2)
+    expense_total = serializers.SerializerMethodField()
     deductions_total = serializers.DecimalField(source='cost_summary.deductions_total', max_digits=20, decimal_places=2)
 
     class Meta:
@@ -65,6 +65,12 @@ class FinanceExportSerializer(serializers.Serializer):
             return ', '.join(obj.mode_of_travel)
         return ''
 
+    def get_expense_total(self, obj):
+        ret = []
+        for expense in obj.cost_summary['expenses_total']:
+            ret.append('{amount:.{currency.decimal_places}f} {currency.code}'.format(amount=expense['amount'],
+                                                                                     currency=expense['currency']))
+        return '+'.join(ret)
 
 class TravelAdminExportSerializer(serializers.Serializer):
     reference_number = serializers.CharField(source='travel.reference_number')
