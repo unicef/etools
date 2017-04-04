@@ -13,7 +13,7 @@ from reports.models import ResultType, Result, CountryProgramme, Indicator, Resu
 from partners.models import FundingCommitment, PCA, InterventionPlannedVisits, AuthorizedOfficer, BankDetails, \
     AgreementAmendmentLog, AgreementAmendment, Intervention, AmendmentLog, InterventionAmendment, RAMIndicator, \
     InterventionResultLink, PartnershipBudget, InterventionBudget, InterventionAttachment, PCAFile, Sector, \
-    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement, PartnerOrganization, GovernmentIntervention
+    InterventionSectorLocationLink, SupplyPlan, DistributionPlan, Agreement, PartnerOrganization
 
 def printtf(*args):
     print([arg for arg in args])
