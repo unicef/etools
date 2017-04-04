@@ -851,24 +851,3 @@ def release_3_migrations():
     all_countries_do(migrate_authorized_officers, 'migrate authorized officers')
     all_countries_do(change_partner_shared_women, 'change Women to UN Women migrations')
     all_countries_do(change_partner_cso_type, 'change old partner cso types')
-
-
-def gov_unique_reference_number():
-    for cntry in Country.objects.exclude(name__in=['Global']).order_by('name').all():
-        set_country(cntry)
-        gov_int = GovernmentIntervention.objects.all()
-        for gov in gov_int:
-            if not gov.number:
-                print(gov)
-                gov.number = 'blk:{}'.format(gov.id)
-                gov.save()
-        dupes = GovernmentIntervention.objects.values('number').annotate(
-            Count('number')).order_by().filter(number__count__gt=1).all()
-        for dup in dupes:
-            cdupes = GovernmentIntervention.objects.filter(number=dup['number'])
-            for cdup in cdupes:
-                if len(cdup.number) > 40:
-                    cdup.number = cdup.number[len(cdup.number)-40:]
-                cdup.number = '{}|{}'.format(cdup.number, cdup.id)
-                print(cdup)
-                cdup.save()

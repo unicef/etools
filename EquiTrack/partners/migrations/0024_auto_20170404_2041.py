@@ -24,8 +24,8 @@ def gov_int_unique_reference_number(apps, schema_editor):
             if len(cdup.number) > 40:
                 cdup.number = cdup.number[len(cdup.number) - 40:]
             cdup.number = '{}|{}'.format(cdup.number, cdup.id)
-            print(cdup)
             cdup.save()
+
 
 class Migration(migrations.Migration):
 

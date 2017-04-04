@@ -227,7 +227,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     AGENCY_CHOICES = Choices(
         ('DPKO', 'DPKO'),
         ('ECA', 'ECA'),
-        ('ECLAC', 'ECLAC'),
+        ('ECL AC', 'ECLAC'),
         ('ESCWA', 'ESCWA'),
         ('FAO', 'FAO'),
         ('ILO', 'ILO'),
