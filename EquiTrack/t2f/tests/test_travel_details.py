@@ -510,6 +510,41 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
 
+    def test_not_primary_traveler(self):
+        primary_traveler = UserFactory()
+
+        data = {'itinerary': [{}],
+                'activities': [{'is_primary_traveler': False,
+                                'locations': []}],
+                'cost_assignments': [],
+                'expenses': [{}],
+                'action_points': [],
+                'ta_required': False,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
+
+        data = {'itinerary': [{}],
+                'activities': [{'is_primary_traveler': False,
+                                'primary_traveler': primary_traveler.id,
+                                'locations': []}],
+                'cost_assignments': [],
+                'expenses': [{}],
+                'action_points': [],
+                'ta_required': False,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201)
+
     @freeze_time('2017-02-15')
     def test_action_point_500(self):
         dsa = DSARegionFactory()
