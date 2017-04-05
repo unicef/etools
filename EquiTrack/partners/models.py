@@ -1805,6 +1805,7 @@ class GovernmentIntervention(models.Model):
         max_length=45L,
         blank=True,
         verbose_name='Reference Number',
+        unique=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
