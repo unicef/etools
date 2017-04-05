@@ -12,6 +12,7 @@ from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.exceptions import ValidationError
 
 from users.serializers import MinimalUserSerializer
 from rest_framework.permissions import IsAdminUser
@@ -81,6 +82,17 @@ class UsersView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+        user_ids = self.request.query_params.get("values", None)
+        if user_ids:
+            try:
+                user_ids = [int(x) for x in user_ids.split(",")]
+                return self.model.objects.filter(
+                    user__id__in=user_ids,
+                    user__is_staff=True
+                ).order_by('user__first_name')
+            except ValueError:
+                raise ValidationError("Query parameter values are not integers")
+
         return self.model.objects.filter(
             country=user.profile.country,
             user__is_staff=True

@@ -35,6 +35,13 @@ class ResultListAPIView(ListAPIView):
             if "country_programme" in query_params.keys():
                 cp = query_params.get("country_programme", None)
                 queries.append(Q(country_programme=cp))
+            if "values" in query_params.keys():
+                result_ids = query_params.get("values", None)
+                try:
+                    result_ids = [int(x) for x in result_ids.split(",")]
+                    queries.append(Q(id__in=result_ids))
+                except ValueError:
+                    raise ValidationError("Query parameter values are not an integer")
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)

@@ -25,6 +25,9 @@ class TestUserViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data), 3)
 
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, "Query parameter values are not integers")
+
     def test_api_users_list_managers(self):
         response = self.forced_auth_req(
             'get',
