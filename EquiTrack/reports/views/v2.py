@@ -41,7 +41,7 @@ class ResultListAPIView(ListAPIView):
                     result_ids = [int(x) for x in result_ids.split(",")]
                     queries.append(Q(id__in=result_ids))
                 except ValueError:
-                    raise ValidationError("Query parameter values are not an integer")
+                    raise ValidationError("Query parameter values are not integers")
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
