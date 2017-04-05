@@ -6,11 +6,11 @@ from rest_framework.response import Response
 
 from rest_framework_csv import renderers
 
-from t2f.filters import travel_list, action_points
+from t2f.filters import travel_list
 from t2f.serializers.export import TravelListExportSerializer, FinanceExportSerializer, TravelAdminExportSerializer, \
-    InvoiceExportSerializer, ActionPointExportSerializer
+    InvoiceExportSerializer
 
-from t2f.models import Travel, IteneraryItem, InvoiceItem, ActionPoint
+from t2f.models import Travel, IteneraryItem, InvoiceItem
 from t2f.views import T2FPagePagination
 
 
@@ -33,11 +33,11 @@ class ExportBaseView(generics.GenericAPIView):
 class TravelListExport(ExportBaseView):
     serializer_class = TravelListExportSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        serialzier = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
 
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
+        response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="TravelListExport.csv"'
         return response
 
@@ -45,11 +45,11 @@ class TravelListExport(ExportBaseView):
 class FinanceExport(ExportBaseView):
     serializer_class = FinanceExportSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         queryset = self.filter_queryset(self.get_queryset())
-        serialzier = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
 
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
+        response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="FinanceExport.csv"'
         return response
 
@@ -57,13 +57,13 @@ class FinanceExport(ExportBaseView):
 class TravelAdminExport(ExportBaseView):
     serializer_class = TravelAdminExportSerializer
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
-        queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number')
+        queryset = IteneraryItem.objects.filter(travel__in=travel_queryset).order_by('travel__reference_number', 'id')
         queryset = queryset.prefetch_related('airlines')
-        serialzier = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True)
 
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
+        response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="TravelAdminExport.csv"'
         return response
 
@@ -71,12 +71,12 @@ class TravelAdminExport(ExportBaseView):
 class InvoiceExport(ExportBaseView):
     serializer_class = InvoiceExportSerializer
 
-    def export_invoices(self, request, *args, **kwargs):
+    def get(self, request):
         travel_queryset = self.filter_queryset(self.get_queryset())
         queryset = InvoiceItem.objects.filter(invoice__travel__in=travel_queryset)
-        queryset = queryset.order_by('invoice__travel__reference_number')
-        serialzier = self.get_serializer(queryset, many=True)
+        queryset = queryset.order_by('invoice__travel__reference_number', 'id')
+        serializer = self.get_serializer(queryset, many=True)
 
-        response = Response(data=serialzier.data, status=status.HTTP_200_OK)
+        response = Response(data=serializer.data, status=status.HTTP_200_OK)
         response['Content-Disposition'] = 'attachment; filename="InvoiceExport.csv"'
         return response

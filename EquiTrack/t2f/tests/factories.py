@@ -3,7 +3,9 @@ from __future__ import unicode_literals
 from datetime import datetime, timedelta
 import factory
 from factory import fuzzy
-from pytz import UTC
+from pytz import timezone, UTC
+
+from django.conf import settings
 
 from EquiTrack.factories import UserFactory, OfficeFactory, SectionFactory, ResultFactory, LocationFactory,\
     InterventionFactory
@@ -11,11 +13,11 @@ from publics.tests.factories import DSARegionFactory, AirlineCompanyFactory, WBS
     CurrencyFactory, ExpenseTypeFactory
 from t2f.models import Travel, TravelActivity, IteneraryItem, Expense, Deduction, CostAssignment, Clearances,\
     ActionPoint, make_travel_reference_number, make_action_point_number, ModeOfTravel, \
-    TravelType
+    TravelType, Invoice, InvoiceItem
 
-
-_FUZZY_START_DATE = datetime.now() - timedelta(days=5)
-_FUZZY_END_DATE = datetime.now() + timedelta(days=5)
+TZ = timezone(settings.TIME_ZONE)
+_FUZZY_START_DATE = TZ.localize(datetime.now() - timedelta(days=5))
+_FUZZY_END_DATE = TZ.localize(datetime.now() + timedelta(days=5))
 
 
 class TravelActivityFactory(factory.DjangoModelFactory):
@@ -37,8 +39,8 @@ class TravelActivityFactory(factory.DjangoModelFactory):
 class IteneraryItemFactory(factory.DjangoModelFactory):
     origin = fuzzy.FuzzyText(length=32)
     destination = fuzzy.FuzzyText(length=32)
-    departure_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
-    arrival_date = fuzzy.FuzzyNaiveDateTime(start_dt=datetime.now(), end_dt=_FUZZY_END_DATE)
+    departure_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=TZ.localize(datetime.now()))
+    arrival_date = fuzzy.FuzzyDateTime(start_dt=TZ.localize(datetime.now()), end_dt=_FUZZY_END_DATE)
     dsa_region = factory.SubFactory(DSARegionFactory)
     overnight_travel = False
     mode_of_travel = ModeOfTravel.BOAT
@@ -63,7 +65,7 @@ class ExpenseFactory(factory.DjangoModelFactory):
 
 
 class DeductionFactory(factory.DjangoModelFactory):
-    date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=_FUZZY_END_DATE)
+    date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=_FUZZY_END_DATE)
     breakfast = False
     lunch = False
     dinner = False
@@ -96,7 +98,7 @@ class ClearanceFactory(factory.DjangoModelFactory):
 class ActionPointFactory(factory.DjangoModelFactory):
     action_point_number = factory.Sequence(lambda n: make_action_point_number())
     description = fuzzy.FuzzyText(length=128)
-    due_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
+    due_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=TZ.localize(datetime.now()))
     person_responsible = factory.SubFactory(UserFactory)
     assigned_by = factory.SubFactory(UserFactory)
     status = 'open'
@@ -111,8 +113,8 @@ class TravelFactory(factory.DjangoModelFactory):
     supervisor = factory.SubFactory(UserFactory)
     office = factory.SubFactory(OfficeFactory)
     section = factory.SubFactory(SectionFactory)
-    start_date = fuzzy.FuzzyNaiveDateTime(start_dt=_FUZZY_START_DATE, end_dt=datetime.now())
-    end_date = fuzzy.FuzzyNaiveDateTime(start_dt=datetime.now(), end_dt=_FUZZY_END_DATE)
+    start_date = fuzzy.FuzzyDateTime(start_dt=_FUZZY_START_DATE, end_dt=TZ.localize(datetime.now()))
+    end_date = fuzzy.FuzzyDateTime(start_dt=TZ.localize(datetime.now()), end_dt=_FUZZY_END_DATE)
     purpose = factory.Sequence(lambda n: 'Purpose #{}'.format(n))
     international_travel = False
     ta_required = True
@@ -134,3 +136,27 @@ class TravelFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = Travel
+
+
+class InvoiceFactory(factory.DjangoModelFactory):
+    travel = factory.SubFactory(TravelFactory)
+    business_area = fuzzy.FuzzyText(length=12)
+    vendor_number = fuzzy.FuzzyText(length=12)
+    currency = factory.SubFactory(CurrencyFactory)
+    amount = fuzzy.FuzzyDecimal(0, 1000)
+    status = Invoice.PENDING
+    messages = []
+
+    class Meta:
+        model = Invoice
+
+
+class InvoiceItemFactory(factory.DjangoModelFactory):
+    invoice = factory.SubFactory(InvoiceFactory)
+    wbs = factory.SubFactory(WBSFactory)
+    grant = factory.SubFactory(GrantFactory)
+    fund = factory.SubFactory(FundFactory)
+    amount = fuzzy.FuzzyDecimal(0, 250)
+
+    class Meta:
+        model = InvoiceItem

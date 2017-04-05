@@ -56,6 +56,8 @@ from partners.validation.agreements import (
 from partners.validation import interventions as intervention_validation
 
 
+# test waffle
+
 # TODO: streamline this ...
 def get_agreement_path(instance, filename):
     return '/'.join(
@@ -668,18 +670,6 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def follow_up_flags(cls, partner, update_one=False):
         partner.hact_values['follow_up_flags'] = 0
         partner.save()
-
-    @classmethod
-    def create_user(cls, sender, instance, created, **kwargs):
-        '''
-        Used for UNI_SUPPLY
-        '''
-        if instance.short_name and instance.alternate_name:
-            set_unisupply_user.delay(
-                instance.short_name,
-                instance.alternate_name
-            )
-post_save.connect(PartnerOrganization.create_user, sender=PartnerOrganization)
 
 
 class PartnerStaffMemberManager(models.Manager):
