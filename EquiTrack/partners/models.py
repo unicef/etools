@@ -475,7 +475,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                         last_audit = assesment
                 else:
                     last_audit = assesment
-
+            # TODO: this logic is not needed if done is correct.. this reflects "needed" not MR like shown in the dash
             if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
                 audits = 0
         hact['audits_mr'] = audits
@@ -497,7 +497,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def hact_min_requirements(self):
         programme_visits = spot_checks = audits = 0
         cash_transferred = self.total_ct_cy
-        if cash_transferred <= 50000.00:
+        if cash_transferred == 0:
+            programme_visits = 0
+        elif 0 < cash_transferred <= 50000.00:
             programme_visits = 1
         elif 50000.00 < cash_transferred <= 100000.00:
             programme_visits = 1
@@ -512,7 +514,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         else:
             if self.rating in ['Low', 'Moderate']:
                 programme_visits = 2
-                spot_checks = 2
+                spot_checks = 1
             else:
                 programme_visits = 4
                 spot_checks = 3
