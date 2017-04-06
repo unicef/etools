@@ -230,7 +230,7 @@ class Travel(models.Model):
         if self.status == Travel.SUBMITTED and not self.international_travel:
             return False
 
-        if (not self.report_note) or (len(self.report_note) < 1):
+        if (not self.international_travel) and ((not self.report_note) or (len(self.report_note) < 1)):
             raise TransitionError('Field report has to be filled.')
 
         return True
