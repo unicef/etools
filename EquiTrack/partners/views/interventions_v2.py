@@ -46,7 +46,7 @@ from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission
-from locations.models import Location
+
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """

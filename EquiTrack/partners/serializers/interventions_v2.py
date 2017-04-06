@@ -471,7 +471,6 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
 
 
 class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
-    locations = LocationLightSerializer(many=True)
     sector = SectorLightSerializer()
     class Meta:
         model = InterventionSectorLocationLink
