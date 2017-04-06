@@ -245,7 +245,6 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
             ta_required |= self.instance.ta_required
 
         if not ta_required:
-            data.pop('itinerary', None)
             data.pop('deductions', None)
             data.pop('expenses', None)
             data.pop('cost_assignments', None)
@@ -263,7 +262,8 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
 
     def validate_itinerary(self, value):
         if self.transition_name == 'submit_for_approval' and len(value) < 2:
-            raise ValidationError('Travel must have at least two itinerary item')
+            if self.instance and self.instance.ta_required:
+                raise ValidationError('Travel must have at least two itinerary item')
 
         if not value:
             return value
