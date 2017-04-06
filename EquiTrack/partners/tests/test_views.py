@@ -3,7 +3,7 @@ __author__ = 'unicef-leb-inn'
 from unittest import skip
 import json
 import datetime
-from datetime import date
+from datetime import date, timedelta
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework import status
@@ -236,6 +236,79 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         assessments = [{
                 "id": self.assessment2.id,
                 "completed_date": datetime.date(today.year+1, 1, 1),
+            }]
+        data = {
+            "assessments": assessments,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, {"assessments":{"completed_date":["The Date of Report cannot be in the future"]}})
+
+    def test_api_partners_update_assessments_longago(self):
+        today = datetime.date.today()
+        assessments = [{
+                "id": self.assessment2.id,
+                "completed_date": datetime.date(today.year-3, 1, 1),
+            }]
+        data = {
+            "assessments": assessments,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_api_partners_update_assessments_today(self):
+        completed_date = datetime.date.today()
+        assessments = [{
+                "id": self.assessment2.id,
+                "completed_date": completed_date,
+            }]
+        data = {
+            "assessments": assessments,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_api_partners_update_assessments_yesterday(self):
+        completed_date = datetime.date.today() - timedelta(days=1)
+        assessments = [{
+                "id": self.assessment2.id,
+                "completed_date": completed_date,
+            }]
+        data = {
+            "assessments": assessments,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+
+    def test_api_partners_update_assessments_tomorrow(self):
+        completed_date = datetime.date.today() + timedelta(days=1)
+        assessments = [{
+                "id": self.assessment2.id,
+                "completed_date": completed_date,
             }]
         data = {
             "assessments": assessments,

@@ -59,10 +59,7 @@ def amendments_ok(agreement):
     return True
 
 def amendments_signed_amendment_valid(agreement):
-    for amendment in agreement.amendments.all():
-        if not amendment.signed_amendment:
-            return False
-    return True
+    return all(agreement.amendments.values_list('signed_amendment', flat=True))
 
 def amendments_signed_date_valid(agreement):
     today = date.today()
