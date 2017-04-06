@@ -372,6 +372,16 @@ class TestPartnerOrganizationModel(TenantTestCase):
         PartnerOrganization.audit_done(self.partner_organization)
         self.assertEqual(self.partner_organization.hact_values['audits_done'], 0)
 
+    def test_hact_min_requirements_ct_equals_0(self):
+        self.partner_organization.total_ct_cy = 0
+        self.partner_organization.save()
+        hact_min_req = self.partner_organization.hact_min_requirements
+        data = {
+            "programme_visits": 0,
+            "spot_checks": 0,
+        }
+        self.assertEqual(hact_min_req, data)
+
     def test_hact_min_requirements_ct_under_50k(self):
         self.partner_organization.total_ct_cy = 50000.00
         self.partner_organization.save()
@@ -421,7 +431,7 @@ class TestPartnerOrganizationModel(TenantTestCase):
         hact_min_req = self.partner_organization.hact_min_requirements
         data = {
             "programme_visits": 2,
-            "spot_checks": 2,
+            "spot_checks": 1,
         }
         self.assertEqual(hact_min_req, data)
 

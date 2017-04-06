@@ -100,10 +100,10 @@ class ActionPointSerializer(serializers.ModelSerializer):
             status = self.instance.status
 
         if status == ActionPoint.COMPLETED and not attrs.get('completed_at'):
-            error_dict['completed_at'] = 'This field is required'
+            error_dict['completed_at'] = serializers.Field.default_error_messages['required']
 
         if (status == ActionPoint.COMPLETED or attrs.get('completed_at')) and not attrs.get('actions_taken'):
-            error_dict['actions_taken'] = 'This field is required'
+            error_dict['actions_taken'] = serializers.Field.default_error_messages['required']
 
         if error_dict:
             raise ValidationError(error_dict)
@@ -171,7 +171,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
                                                    allow_null=True)
     travel_type = LowerTitleField(required=False, allow_null=True)
     is_primary_traveler = serializers.BooleanField(required=False)
-    primary_traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True)
+    primary_traveler = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(), allow_null=True, required=False)
 
     class Meta:
         model = TravelActivity
@@ -182,7 +182,7 @@ class TravelActivitySerializer(PermissionBasedModelSerializer):
         if 'id' not in attrs:
             if not attrs.get('is_primary_traveler'):
                 if not attrs.get('primary_traveler'):
-                    raise ValidationError({'primary_traveler': 'This field is required'})
+                    raise ValidationError({'primary_traveler': serializers.Field.default_error_messages['required']})
 
         if attrs.get('partnership') and attrs.get('government_partnership'):
             raise ValidationError('Partnership and government partnership cannot be set at the same time')
