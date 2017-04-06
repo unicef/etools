@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 
-from time import time
-from StringIO import StringIO
-
 from t2f.vision import InvoiceUpdater
 
 try:
@@ -17,7 +14,7 @@ from EquiTrack.tests.mixins import APITenantTestCase
 from publics.models import TravelExpenseType
 from t2f.helpers.invoice_maker import InvoiceMaker
 
-from t2f.models import Travel, Expense, CostAssignment, InvoiceItem, Invoice
+from t2f.models import Travel, Expense, CostAssignment, Invoice
 from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, WBSFactory, GrantFactory, FundFactory
 
 
@@ -29,6 +26,7 @@ class VisionXML(APITenantTestCase):
 
         profile = self.traveler.profile
         profile.vendor_number = 'user0001'
+        profile.staff_id = 'staff001'
         profile.save()
 
         country = profile.country
@@ -87,8 +85,6 @@ class VisionXML(APITenantTestCase):
         return travel
 
     def test_invoice_making(self):
-
-
         travel = self.prepare_travel()
 
         # Generate invoice
@@ -128,3 +124,27 @@ class VisionXML(APITenantTestCase):
                              request_format=None,
                              content_type='text/xml')
         self.assertEqual(response.status_code, 200)
+
+    def test_personal_number_usage(self):
+        travel = self.prepare_travel()
+
+        travel_agent_expense_type = ExpenseTypeFactory(title='Travel Agent', vendor_number='trav01')
+
+        eur = CurrencyFactory(name='EUR',
+                              code='eur')
+
+        # Add expenses
+        Expense.objects.create(travel=travel,
+                               type=travel_agent_expense_type,
+                               document_currency=eur,
+                               account_currency=eur,
+                               amount=35)
+
+        # Generate invoice
+        self.make_invoices(travel)
+
+        response = self.forced_auth_req('get', reverse('t2f:vision_invoice_export'), user=self.unicef_staff)
+        xml_data = response.content
+
+        self.assertEqual(xml_data.count('<pernr />'), 1)
+        self.assertEqual(xml_data.count('<pernr>{}</pernr>'.format(self.traveler.profile.staff_id)), 1)
