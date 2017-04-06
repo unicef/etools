@@ -371,3 +371,30 @@ class TestDSACalculations(APITenantTestCase):
         self.assertEqual(calculator.paid_to_traveler, 0)
 
         self.assertEqual(calculator.detailed_dsa, [])
+
+    def test_ta_not_required(self):
+        self.travel.ta_required = False
+        self.travel.save()
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 2, 0, tzinfo=UTC),
+                             dsa_region=self.budapest)
+
+        IteneraryItemFactory(travel=self.travel,
+                             departure_date=datetime(2017, 1, 1, 10, 0, tzinfo=UTC),
+                             arrival_date=datetime(2017, 1, 1, 15, 0, tzinfo=UTC),
+                             dsa_region=self.amsterdam)
+
+        DeductionFactory(travel=self.travel,
+                         date=date(2017, 1, 1),
+                         lunch=True)
+
+        calculator = DSACalculator(self.travel)
+        calculator.calculate_dsa()
+
+        self.assertEqual(calculator.total_dsa, 0)
+        self.assertEqual(calculator.total_deductions, 0)
+        self.assertEqual(calculator.paid_to_traveler, 0)
+
+        self.assertEqual(calculator.detailed_dsa, [])
