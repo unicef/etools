@@ -153,3 +153,83 @@ class StateMachineTest(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json['status'], Travel.COMPLETED)
+
+    def test_ta_not_required_flow_instant_complete(self):
+        data = {'traveler': self.traveler.id,
+                'ta_required': False,
+                'international_travel': False,
+                'supervisor': self.unicef_staff.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
+                                                        kwargs={'transition_name': 'mark_as_completed'}),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.COMPLETED)
+
+    def test_ta_not_required_flow_send_for_approval(self):
+        data = {'traveler': self.traveler.id,
+                'ta_required': False,
+                'international_travel': False,
+                'supervisor': self.unicef_staff.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
+                                                        kwargs={'transition_name': 'save_and_submit'}),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.SUBMITTED)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': response_json['id'],
+                                                                'transition_name': 'reject'}),
+                                        data=response_json, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.rendered_content)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': response_json['id'],
+                                                                'transition_name': 'submit_for_approval'}),
+                                        data=response_json, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.rendered_content)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': response_json['id'],
+                                                                'transition_name': 'mark_as_completed'}),
+                                        data=response_json, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.COMPLETED)
+
+    def test_international_travel(self):
+        data = {'traveler': self.traveler.id,
+                'ta_required': False,
+                'international_travel': True,
+                'supervisor': self.unicef_staff.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
+                                                        kwargs={'transition_name': 'save_and_submit'}),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.SUBMITTED)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': response_json['id'],
+                                                                'transition_name': 'mark_as_completed'}),
+                                        data=response_json, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json['status'], Travel.COMPLETED)
+
+        # Try to complete an international travel instantly
+        data = {'traveler': self.traveler.id,
+                'ta_required': False,
+                'international_travel': True,
+                'supervisor': self.unicef_staff.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:state_change',
+                                                        kwargs={'transition_name': 'mark_as_completed'}),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 400)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json,
+                         {'non_field_errors': ["Transition conditions have not been met "
+                                               "for method 'mark_as_completed'"]})

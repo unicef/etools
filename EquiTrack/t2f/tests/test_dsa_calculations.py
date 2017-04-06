@@ -396,5 +396,4 @@ class TestDSACalculations(APITenantTestCase):
         self.assertEqual(calculator.total_dsa, 0)
         self.assertEqual(calculator.total_deductions, 0)
         self.assertEqual(calculator.paid_to_traveler, 0)
-
         self.assertEqual(calculator.detailed_dsa, [])
