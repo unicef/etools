@@ -7,9 +7,11 @@ from datetime import datetime
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.fields.related import ManyToManyField
+from django.db.models.query_utils import Q
 from django.utils.functional import cached_property
 from django.utils.itercompat import is_iterable
-from rest_framework import serializers, ISO_8601
+from django.utils.translation import ugettext
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from publics.models import AirlineCompany
@@ -125,6 +127,7 @@ class IteneraryItemSerializer(PermissionBasedModelSerializer):
         model = IteneraryItem
         fields = ('id', 'origin', 'destination', 'departure_date', 'arrival_date', 'dsa_region', 'overnight_travel',
                   'mode_of_travel', 'airlines')
+
 
 class ExpenseSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
@@ -293,6 +296,26 @@ class TravelDetailsSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if 'mode_of_travel' in attrs and attrs['mode_of_travel'] is None:
             attrs['mode_of_travel'] = []
+
+        if self.transition_name in ['submit_for_approval', 'send_for_payment', 'certify']:
+            traveler = attrs.get('traveler', None)
+            if not traveler and self.instance:
+                traveler = self.instance.traveler
+
+            start_date = attrs.get('start_date', getattr(self.instance, 'start_date', None))
+            end_date = attrs.get('end_date', getattr(self.instance, 'end_date', None))
+
+            if start_date and end_date:
+                # All travels which shares the same traveller, not planned or cancelled and has start
+                # or end date between the range of the start and end date of the current trip
+                travel_q = Q(traveler=traveler)
+                travel_q &= ~Q(status__in=[Travel.PLANNED, Travel.CANCELLED])
+                travel_q &= Q(start_date__range=(start_date, end_date)) | Q(end_date__range=(start_date, end_date))
+
+                if Travel.objects.filter(travel_q).exists():
+                    raise ValidationError(ugettext('You have an existing trip with overlapping dates. '
+                                                   'Please adjust your trip accordingly.'))
+
         return super(TravelDetailsSerializer, self).validate(attrs)
 
     def to_internal_value(self, data):
