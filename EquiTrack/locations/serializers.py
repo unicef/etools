@@ -32,7 +32,7 @@ class GatewayTypeSerializer(serializers.ModelSerializer):
 class LocationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
-    type = serializers.CharField(source='gateway.name')
+    location_type = serializers.CharField(source='gateway.name')
 
     class Meta:
         model = Location
@@ -40,7 +40,7 @@ class LocationSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'p_code',
-            'type',
+            'location_type',
             'point',
             'latitude',
             'longitude',

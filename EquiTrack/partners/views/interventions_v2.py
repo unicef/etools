@@ -362,11 +362,11 @@ class InterventionListMapView(ListCreateAPIView):
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
-                queries.append(Q(sector_locations__sector__id__in=[query_params.get("sector")]))
+                queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
             if "status" in query_params.keys():
-                queries.append(Q(status__in=[query_params.get("status")]))
+                queries.append(Q(status=query_params.get("status")))
             if "partner" in query_params.keys():
-                queries.append(Q(agreement__partner__in=[query_params.get("partner")]))
+                queries.append(Q(agreement__partner=query_params.get("partner")))
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression).distinct()

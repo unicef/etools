@@ -480,14 +480,15 @@ class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer)
 
 
 class InterventionListMapSerializer(serializers.ModelSerializer):
-    partner = serializers.CharField(source='agreement.partner.name')
+    partner_name = serializers.CharField(source='agreement.partner.name')
+    partner_id = serializers.CharField(source='agreement.partner.id')
     sector_locations = InterventionLocationSectorMapNestedSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Intervention
         fields = (
-            "id", "partner", "agreement", "document_type", "hrp", "number", "title", "status", "start", "end",
-            "offices", "sector_locations", "created", "modified",
+            "id", "partner_id", "partner_name", "agreement", "document_type", "hrp", "number", "title", "status", "start", "end",
+            "offices", "sector_locations",
         )
 
 
