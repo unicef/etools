@@ -21,7 +21,7 @@ class ResultListAPIView(ListAPIView):
     def get_queryset(self):
         current_cp = CountryProgramme.current()
         q = Result.objects.filter(country_programme=current_cp)
-
+        cp_filter = False
         query_params = self.request.query_params
         if query_params:
             queries = []
@@ -30,26 +30,32 @@ class ResultListAPIView(ListAPIView):
                 queries.append(Q(country_programme__wbs__contains='/A0/'))
                 queries.append(Q(country_programme__from_date__year__lte=cp_year))
                 queries.append(Q(country_programme__to_date__year__gte=cp_year))
+                cp_filter = True
             if "result_type" in query_params.keys():
                 queries.append(Q(result_type__name=query_params.get("result_type")))
             if "country_programme" in query_params.keys():
                 cp = query_params.get("country_programme", None)
                 queries.append(Q(country_programme=cp))
+                cp_filter = True
             if "values" in query_params.keys():
                 result_ids = query_params.get("values", None)
                 try:
                     result_ids = [int(x) for x in result_ids.split(",")]
-                    queries.append(Q(id__in=result_ids))
                 except ValueError:
                     raise ValidationError("Query parameter values are not integers")
+                else:
+                    queries.append(Q(id__in=result_ids))
+
             if queries:
                 expression = functools.reduce(operator.and_, queries)
+                if cp_filter:
+                    q = Result.objects.all()
                 q = q.filter(expression)
         return q
 
     def list(self, request):
         dropdown = self.request.query_params.get("dropdown", None)
-        if dropdown in ['true', 'True', '1']:
+        if dropdown in ['true', 'True', '1', 'yes']:
             cp_outputs = list(self.get_queryset().values('id', 'name', 'wbs'))
             return Response(
                 {
