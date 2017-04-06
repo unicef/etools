@@ -225,15 +225,22 @@ class Travel(models.Model):
 
         return False
 
-    # State machine transitions
-    def check_completion_conditions(self):
-        if self.status == Travel.SUBMITTED and self.ta_required:
-            return False
-
+    # Completion conditions
+    def check_trip_report(self):
         if (not self.international_travel) and (self.ta_required) and ((not self.report_note) or
                                                                            (len(self.report_note) < 1)):
             raise TransitionError('Field report has to be filled.')
+        return True
 
+    def check_state_flow(self):
+        # Complete action should be called only after certification was done.
+        # Special case is the TA not required NOT international travel, where supervisor should be able to complete it
+        # after approval
+        if (self.status == Travel.SUBMITTED) and (self.ta_required) and (not self.international_travel):
+            return False
+
+        if (self.status == Travel.PLANNED) and (self.international_travel):
+            return False
         return True
 
     def check_completed_from_planned(self):
@@ -367,7 +374,7 @@ class Travel(models.Model):
                                      'emails/certified.html')
 
     @transition(status, source=[CERTIFIED, SUBMITTED, PLANNED], target=COMPLETED,
-                conditions=[check_completion_conditions])
+                conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
         self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
