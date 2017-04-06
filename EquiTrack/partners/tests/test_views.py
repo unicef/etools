@@ -1817,6 +1817,40 @@ class TestGovernmentInterventionViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         #self.assertEquals(response.data, {'errors': [u'Planned visits cannot be changed.']})
 
+    def test_govint_create_update_reference_number_valid(self):
+        govint_result = {
+            "result": self.cp_output.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+            "planned_visits": 5,
+            "sectors": [Sector.objects.create(name="Sector 1").id],
+        }
+        data = {
+            "partner": self.partner.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        data = response.data
+        new_data = {
+            "number": data["number"]
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/government_interventions/{}/'.format(data["id"]-1),
+            user=self.unicef_staff,
+            data=new_data,
+        )
+        self.assertEquals(response.data, {"number":["government intervention with this Reference Number already exists."]})
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_govint_create_validation_sectors_sections(self):
         govint_result = {
             "intervention": self.govint.id,
