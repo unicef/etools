@@ -227,10 +227,11 @@ class Travel(models.Model):
 
     # State machine transitions
     def check_completion_conditions(self):
-        if self.status == Travel.SUBMITTED and not self.international_travel:
+        if self.status == Travel.SUBMITTED and self.ta_required:
             return False
 
-        if (not self.international_travel) and ((not self.report_note) or (len(self.report_note) < 1)):
+        if (not self.international_travel) and (self.ta_required) and ((not self.report_note) or
+                                                                           (len(self.report_note) < 1)):
             raise TransitionError('Field report has to be filled.')
 
         return True
@@ -269,13 +270,8 @@ class Travel(models.Model):
 
         return True
 
-    def check_ta_required(self):
-        if not self.ta_required:
-            raise TransitionError('TA required to send for approval.')
-        return True
-
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[has_supervisor, check_pending_invoices, check_ta_required, check_travel_count])
+                conditions=[has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
