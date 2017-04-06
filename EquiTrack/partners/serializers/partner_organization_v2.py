@@ -211,6 +211,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
+    hact_min_requirements = serializers.JSONField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values
