@@ -19,25 +19,22 @@ class ResultListAPIView(ListAPIView):
     permission_classes = (IsAdminUser,)
 
     def get_queryset(self):
-        current_cp = CountryProgramme.current()
-        q = Result.objects.filter(country_programme=current_cp)
-        cp_filter = False
+        q = Result.objects.all()
         query_params = self.request.query_params
+        queries = []
         if query_params:
-            queries = []
             if "year" in query_params.keys():
                 cp_year = query_params.get("year", None)
                 queries.append(Q(country_programme__wbs__contains='/A0/'))
                 queries.append(Q(country_programme__from_date__year__lte=cp_year))
                 queries.append(Q(country_programme__to_date__year__gte=cp_year))
-                cp_filter = True
             if "result_type" in query_params.keys():
-                queries.append(Q(result_type__name=query_params.get("result_type")))
+                queries.append(Q(result_type__name=query_params.get("result_type").title()))
             if "country_programme" in query_params.keys():
                 cp = query_params.get("country_programme", None)
                 queries.append(Q(country_programme=cp))
-                cp_filter = True
             if "values" in query_params.keys():
+                #TODO: if you pass in two values.. make sure you return an error if both are not found
                 result_ids = query_params.get("values", None)
                 try:
                     result_ids = [int(x) for x in result_ids.split(",")]
@@ -45,13 +42,16 @@ class ResultListAPIView(ListAPIView):
                     raise ValidationError("Query parameter values are not integers")
                 else:
                     queries.append(Q(id__in=result_ids))
+        if queries:
+            expression = functools.reduce(operator.and_, queries)
+            q = q.filter(expression)
 
-            if queries:
-                expression = functools.reduce(operator.and_, queries)
-                if cp_filter:
-                    q = Result.objects.all()
-                q = q.filter(expression)
-        return q
+        if any(x in ['year', 'country_programme', 'values'] for x in query_params.keys()):
+            return q
+        else:
+            current_cp = CountryProgramme.current()
+            return q.filter(country_programme=current_cp)
+
 
     def list(self, request):
         dropdown = self.request.query_params.get("dropdown", None)
