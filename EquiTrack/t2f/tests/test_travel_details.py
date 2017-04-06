@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 
+from datetime import datetime
 import json
 from freezegun import freeze_time
+from pytz import UTC
 from StringIO import StringIO
 from unittest import skip
 
@@ -510,6 +512,41 @@ class TravelDetails(APITenantTestCase):
                                         data=data, user=self.unicef_staff)
         self.assertEqual(response.status_code, 201)
 
+    def test_not_primary_traveler(self):
+        primary_traveler = UserFactory()
+
+        data = {'itinerary': [{}],
+                'activities': [{'is_primary_traveler': False,
+                                'locations': []}],
+                'cost_assignments': [],
+                'expenses': [{}],
+                'action_points': [],
+                'ta_required': False,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
+
+        data = {'itinerary': [{}],
+                'activities': [{'is_primary_traveler': False,
+                                'primary_traveler': primary_traveler.id,
+                                'locations': []}],
+                'cost_assignments': [],
+                'expenses': [{}],
+                'action_points': [],
+                'ta_required': False,
+                'international_travel': False,
+                'traveler': self.traveler.id,
+                'mode_of_travel': []}
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'),
+                                        data=data, user=self.unicef_staff)
+        self.assertEqual(response.status_code, 201)
+
     @freeze_time('2017-02-15')
     def test_action_point_500(self):
         dsa = DSARegionFactory()
@@ -572,18 +609,28 @@ class TravelDetails(APITenantTestCase):
     def test_travel_count_at_approval(self):
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 1, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 2, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 2, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 3, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 3, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 4, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 4, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
 
         extra_travel = TravelFactory(traveler=self.traveler,
+                                     start_date=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
+                                     end_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
                                      supervisor=self.unicef_staff)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -593,6 +640,27 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         self.assertEqual(response_json, {'non_field_errors': ['Maximum 3 open travels are allowed.']})
+
+    def test_too_old_open_travel(self):
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 1, 5, 1, 0, tzinfo=UTC),
+                      status=Travel.SENT_FOR_PAYMENT)
+
+        extra_travel = TravelFactory(traveler=self.traveler,
+                                     start_date=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
+                                     end_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
+                                     supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': extra_travel.id,
+                                                                'transition_name': 'submit_for_approval'}),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response_json,
+                         {'non_field_errors': ['Travel is older than 15 days. Please complete it first.']})
 
     def test_missing_clearances(self):
         data = {'itinerary': [],
