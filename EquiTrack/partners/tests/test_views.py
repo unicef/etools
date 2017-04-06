@@ -242,6 +242,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
+        self.assertEquals(['programme_visits', 'spot_checks'], response.data["hact_min_requirements"].keys())
+        self.assertEquals(['audits_done', 'planned_visits', 'spot_checks', 'programmatic_visits', 'follow_up_flags',
+                           'planned_cash_transfer', 'micro_assessment_needed', 'audits_mr'], response.data["hact_values"].keys())
         self.assertEquals(response.data['interventions'], [])
 
     def test_api_partners_retrieve_staff_members(self):
