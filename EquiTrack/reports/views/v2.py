@@ -58,9 +58,7 @@ class ResultListAPIView(ListAPIView):
         if dropdown in ['true', 'True', '1', 'yes']:
             cp_outputs = list(self.get_queryset().values('id', 'name', 'wbs'))
             return Response(
-                {
-                    'cp_outputs': cp_outputs,
-                },
+                cp_outputs,
                 status=status.HTTP_200_OK
             )
         serializer = self.get_serializer(self.get_queryset(), many=True)
