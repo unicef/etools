@@ -86,12 +86,13 @@ class UsersView(ListAPIView):
         if user_ids:
             try:
                 user_ids = [int(x) for x in user_ids.split(",")]
+            except ValueError:
+                raise ValidationError("Query parameter values are not integers")
+            else:
                 return self.model.objects.filter(
                     user__id__in=user_ids,
                     user__is_staff=True
                 ).order_by('user__first_name')
-            except ValueError:
-                raise ValidationError("Query parameter values are not integers")
 
         return self.model.objects.filter(
             country=user.profile.country,
