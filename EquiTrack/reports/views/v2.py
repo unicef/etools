@@ -22,6 +22,7 @@ class ResultListAPIView(ListAPIView):
         q = Result.objects.all()
         query_params = self.request.query_params
         queries = []
+        result_ids = []
         if query_params:
             if "year" in query_params.keys():
                 cp_year = query_params.get("year", None)
@@ -34,7 +35,6 @@ class ResultListAPIView(ListAPIView):
                 cp = query_params.get("country_programme", None)
                 queries.append(Q(country_programme=cp))
             if "values" in query_params.keys():
-                #TODO: if you pass in two values.. make sure you return an error if both are not found
                 result_ids = query_params.get("values", None)
                 try:
                     result_ids = [int(x) for x in result_ids.split(",")]
@@ -45,6 +45,9 @@ class ResultListAPIView(ListAPIView):
         if queries:
             expression = functools.reduce(operator.and_, queries)
             q = q.filter(expression)
+            # check if all value IDs passed in are returned by the query
+            if result_ids and len(result_ids) != q.count():
+                raise ValidationError("One of the value IDs was not found")
 
         if any(x in ['year', 'country_programme', 'values'] for x in query_params.keys()):
             return q
