@@ -1156,6 +1156,12 @@ class AgreementAmendment(TimeStampedModel):
 
     tracker = FieldTracker()
 
+    def __unicode__(self):
+        return "{} {}".format(
+            self.agreement.reference_number,
+            self.number
+        )
+
     def compute_reference_number(self):
         if self.signed_date:
             return '{0:02d}'.format(self.agreement.amendments.filter(signed_date__isnull=False).count() + 1)
@@ -1212,6 +1218,12 @@ class AgreementAmendmentType(models.Model):
             self.cp_cycle_end = CountryProgramme.current().to_date
         return super(AgreementAmendmentType, self).save(**kwargs)
 
+    def __unicode__(self):
+        return "{}-{}-{}".format(
+            self.agreement_amendment.agreement.reference_number,
+            self.agreement_amendment.number,
+            self.type or ''
+        )
 
 class InterventionManager(models.Manager):
 
