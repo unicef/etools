@@ -61,7 +61,9 @@ class FinanceExportSerializer(serializers.Serializer):
                   'expense_total', 'deductions_total')
 
     def get_mode_of_travel(self, obj):
-        return ', '.join(obj.mode_of_travel)
+        if obj.mode_of_travel:
+            return ', '.join(obj.mode_of_travel)
+        return ''
 
 
 class TravelAdminExportSerializer(serializers.Serializer):
