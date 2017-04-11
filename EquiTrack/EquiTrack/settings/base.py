@@ -207,19 +207,10 @@ VISION_USER = os.getenv('VISION_USER', 'invalid_vision_user')
 VISION_PASSWORD = os.getenv('VISION_PASSWORD', 'invalid_vision_password')
 
 USERVOICE_WIDGET_KEY = os.getenv('USERVOICE_KEY', '')
-# ########## MANAGER CONFIGURATION
-# # See: https://docs.djangoproject.com/en/dev/ref/settings/#admins
-# ADMINS = (
-#     ('James Cranwell-Ward', 'jcranwellward@unicef.org'),
-# )
-#
-# # See: https://docs.djangoproject.com/en/dev/ref/settings/#managers
-# MANAGERS = ADMINS
-# ########## END MANAGER CONFIGURATION
 
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
-TIME_ZONE = 'EET'
+TIME_ZONE = 'UTC'
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#language-code
 LANGUAGE_CODE = 'en-us'
