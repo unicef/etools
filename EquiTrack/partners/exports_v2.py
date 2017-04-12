@@ -92,7 +92,7 @@ class InterventionCvsRenderer(r.CSVRenderer):
         "sectors": "Sectors",
         "locations": "Locations",
         "unicef_focal_points": "UNICEF Focal Points",
-        "partner_focal_points": "Programme Focal Points",
+        "partner_focal_points": "CSO Authorized Officials",
         "population_focus": "Population Focus",
         "hrp_name": "Humanitarian Response Plan",
         "cp_outputs": "CP Outputs",
