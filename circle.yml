@@ -36,7 +36,7 @@ test:
 
 deployment:
    hub:
-     branch: [develop, staging, master]
+     branch: [develop, staging, demo, master]
      commands:
        - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
        - docker push unicef/etools:$CIRCLE_BRANCH
