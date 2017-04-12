@@ -176,8 +176,8 @@ class ActionPoints(APITenantTestCase):
 
         response_json = json.loads(response.rendered_content)['action_points']
         self.assertEqual(response_json,
-                         [{'completed_at': ['This field is required'],
-                           'actions_taken': ['This field is required']}])
+                         [{'completed_at': ['This field is required.'],
+                           'actions_taken': ['This field is required.']}])
 
         # Check when the completed at is populated but not completed
         data = {'action_points': [{'description': 'Something',
@@ -196,7 +196,7 @@ class ActionPoints(APITenantTestCase):
 
         response_json = json.loads(response.rendered_content)['action_points']
         self.assertEqual(response_json,
-                         [{'actions_taken': ['This field is required']}])
+                         [{'actions_taken': ['This field is required.']}])
 
     def test_automatic_state_change(self):
         # Check switch to ongoing
