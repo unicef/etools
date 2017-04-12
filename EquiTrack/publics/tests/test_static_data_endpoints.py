@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import json
 
 from django.core.urlresolvers import reverse
-from django.db import connection
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase

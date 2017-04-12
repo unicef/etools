@@ -1,10 +1,47 @@
 from __future__ import unicode_literals
-# TODO move static to files instead of models
+
+from datetime import datetime
+from pytz import UTC
+
+from django.db.models import QuerySet
+from django.db.models.query_utils import Q
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.utils.timezone import now
+
+EPOCH_ZERO = datetime(1970, 1, 1, tzinfo=UTC)
 
 
-class TravelAgent(models.Model):
+class ValidityQuerySet(QuerySet):
+    def __init__(self, *args, **kwargs):
+        super(ValidityQuerySet, self).__init__(*args, **kwargs)
+
+        if self.model:
+            self.add_intial_q()
+
+    def delete(self):
+        self.update(deleted_at=now())
+
+    def add_intial_q(self):
+        self.query.add_q(Q(deleted_at=EPOCH_ZERO))
+
+
+class AbstractBaseModel(models.Model):
+    deleted_at = models.DateField(default=EPOCH_ZERO)
+
+    objects = ValidityQuerySet.as_manager()
+    admin_objects = QuerySet.as_manager()
+
+    class Meta:
+        abstract = True
+
+    def delete(self, using=None, keep_parents=False):
+        self.deleted_at = now()
+        self.save()
+
+
+class TravelAgent(AbstractBaseModel):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=128)
     city = models.CharField(max_length=128, null=True)
@@ -12,7 +49,7 @@ class TravelAgent(models.Model):
     expense_type = models.OneToOneField('TravelExpenseType', related_name='travel_agent')
 
 
-class TravelExpenseType(models.Model):
+class TravelExpenseType(AbstractBaseModel):
     # User related expense types have this placeholder as the vendor code
     USER_VENDOR_NUMBER_PLACEHOLDER = 'user'
 
@@ -34,7 +71,7 @@ class TravelExpenseType(models.Model):
         return self.title
 
 
-class Currency(models.Model):
+class Currency(AbstractBaseModel):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=5)
     decimal_places = models.PositiveIntegerField(default=0)
@@ -43,7 +80,7 @@ class Currency(models.Model):
         return self.name
 
 
-class ExchangeRate(models.Model):
+class ExchangeRate(AbstractBaseModel):
     currency = models.ForeignKey('publics.Currency', related_name='exchange_rates')
     valid_from = models.DateField()
     valid_to = models.DateField()
@@ -53,7 +90,7 @@ class ExchangeRate(models.Model):
         ordering = ('valid_from',)
 
 
-class AirlineCompany(models.Model):
+class AirlineCompany(AbstractBaseModel):
     # This will be populated from vision
     name = models.CharField(max_length=255)
     code = models.IntegerField()
@@ -65,7 +102,7 @@ class AirlineCompany(models.Model):
         return self.name
 
 
-class BusinessRegion(models.Model):
+class BusinessRegion(AbstractBaseModel):
     name = models.CharField(max_length=16)
     code = models.CharField(max_length=2)
 
@@ -73,7 +110,7 @@ class BusinessRegion(models.Model):
         return self.name
 
 
-class BusinessArea(models.Model):
+class BusinessArea(AbstractBaseModel):
     name = models.CharField(max_length=128)
     code = models.CharField(max_length=32)
     region = models.ForeignKey('BusinessRegion', related_name='business_areas')
@@ -83,7 +120,7 @@ class BusinessArea(models.Model):
         return self.name
 
 
-class WBS(models.Model):
+class WBS(AbstractBaseModel):
     business_area = models.ForeignKey('BusinessArea', null=True)
     name = models.CharField(max_length=25)
     grants = models.ManyToManyField('Grant', related_name='wbs')
@@ -92,7 +129,7 @@ class WBS(models.Model):
         return self.name
 
 
-class Grant(models.Model):
+class Grant(AbstractBaseModel):
     name = models.CharField(max_length=25)
     funds = models.ManyToManyField('Fund', related_name='grants')
 
@@ -100,14 +137,14 @@ class Grant(models.Model):
         return self.name
 
 
-class Fund(models.Model):
+class Fund(AbstractBaseModel):
     name = models.CharField(max_length=25)
 
     def __unicode__(self):
         return self.name
 
 
-class Country(models.Model):
+class Country(AbstractBaseModel):
     name = models.CharField(max_length=64)
     long_name = models.CharField(max_length=128)
     business_area = models.ForeignKey('BusinessArea', related_name='countries', null=True)
@@ -122,7 +159,7 @@ class Country(models.Model):
         return self.name
 
 
-class DSARegion(models.Model):
+class DSARegion(AbstractBaseModel):
     country = models.ForeignKey('Country', related_name='dsa_regions')
     area_name = models.CharField(max_length=120)
     area_code = models.CharField(max_length=3)

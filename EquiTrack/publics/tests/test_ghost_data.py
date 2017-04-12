@@ -1,0 +1,138 @@
+from __future__ import unicode_literals
+
+import json
+
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
+
+from EquiTrack.factories import UserFactory
+from EquiTrack.tests.mixins import APITenantTestCase
+from publics.models import TravelExpenseType, EPOCH_ZERO
+from publics.tests.factories import ExpenseTypeFactory, AirlineCompanyFactory
+
+
+class GhostData(APITenantTestCase):
+    def setUp(self):
+        super(GhostData, self).setUp()
+        self.unicef_staff = UserFactory(is_staff=True)
+        
+    def test_urls(self):
+        static_data_url = reverse('public:missing_static')
+        self.assertEqual(static_data_url, '/api/static_data/missing/')
+
+        currencies_url = reverse('public:missing_currencies')
+        self.assertEqual(currencies_url, '/api/currencies/missing/')
+
+        dsa_regions_url = reverse('public:missing_dsa_regions')
+        self.assertEqual(dsa_regions_url, '/api/dsa_regions/missing/')
+
+        business_areas_url = reverse('public:missing_business_areas')
+        self.assertEqual(business_areas_url, '/api/business_areas/missing/')
+
+        expense_types_url = reverse('public:missing_expense_types')
+        self.assertEqual(expense_types_url, '/api/expense_types/missing/')
+
+    def test_on_instance_delete(self):
+        expense_type = ExpenseTypeFactory()
+
+        self.assertEqual(expense_type.deleted_at, EPOCH_ZERO)
+
+        expense_type.delete()
+        self.assertNotEqual(expense_type.deleted_at, EPOCH_ZERO)
+
+    def test_queryset_delete(self):
+        ExpenseTypeFactory()
+        ExpenseTypeFactory()
+        ExpenseTypeFactory()
+
+        total_expense_type_count = TravelExpenseType.objects.all().count()
+        self.assertEqual(total_expense_type_count, 3)
+
+        deleted_at_epoch_zero_count = TravelExpenseType.objects.filter(deleted_at=EPOCH_ZERO).count()
+        self.assertEqual(deleted_at_epoch_zero_count, 3)
+
+        deleted_at_populated_count = TravelExpenseType.objects.exclude(deleted_at=EPOCH_ZERO).count()
+        self.assertEqual(deleted_at_populated_count, 0)
+
+        TravelExpenseType.objects.all().delete()
+
+        deleted_at_epoch_zero_count = TravelExpenseType.objects.filter(deleted_at=EPOCH_ZERO).count()
+        self.assertEqual(deleted_at_epoch_zero_count, 0)
+
+        deleted_at_populated_count = TravelExpenseType.admin_objects.exclude(deleted_at=EPOCH_ZERO).count()
+        self.assertEqual(deleted_at_populated_count, 3)
+
+    def test_single_endpoint(self):
+        expense_type = ExpenseTypeFactory()
+
+        response = self.forced_auth_req('get', reverse('public:expense_types'),
+                                        user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 1)
+
+        expense_type.delete()
+
+        response = self.forced_auth_req('get', reverse('public:expense_types'),
+                                        user=self.unicef_staff)
+
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json), 0)
+
+        response = self.forced_auth_req('get', reverse('public:missing_expense_types'),
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 400)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json,
+                         {'value': ['This field is required.']})
+
+        response = self.forced_auth_req('get', reverse('public:missing_expense_types'),
+                                        data={'value': expense_type.pk},
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+
+    def test_multiendpoint(self):
+        airline = AirlineCompanyFactory()
+
+        response = self.forced_auth_req('get', reverse('public:static'),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['airlines']), 1)
+
+        airline.delete()
+
+        response = self.forced_auth_req('get', reverse('public:static'),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(len(response_json['airlines']), 0)
+
+        response = self.forced_auth_req('get', reverse('public:missing_static'),
+                                        data={'value': airline.pk},
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 400)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json,
+                         {'category': ['This field is required.']})
+
+        response = self.forced_auth_req('get', reverse('public:missing_static'),
+                                        data={'value': airline.pk,
+                                              'category': 'airlines'},
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)
+
+    def test_invalid_pk_value(self):
+        expense_type = ExpenseTypeFactory()
+
+        invalid_pk = expense_type.pk + 10
+
+        # Validate if it is really invalid
+        with self.assertRaises(ObjectDoesNotExist):
+            TravelExpenseType.objects.get(id=invalid_pk)
+
+        response = self.forced_auth_req('get', reverse('public:missing_expense_types'),
+                                        data={'value': invalid_pk},
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 400)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response_json,
+                         {'non_field_errors': ['Invalid PK value']})
