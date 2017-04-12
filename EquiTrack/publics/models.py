@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+
+from django.db.models.manager import Manager
 from pytz import UTC
 
 from django.db.models import QuerySet
@@ -30,8 +32,8 @@ class ValidityQuerySet(QuerySet):
 class AbstractBaseModel(models.Model):
     deleted_at = models.DateField(default=EPOCH_ZERO)
 
-    objects = ValidityQuerySet.as_manager()
     admin_objects = QuerySet.as_manager()
+    objects = ValidityQuerySet.as_manager()
 
     class Meta:
         abstract = True
