@@ -39,12 +39,14 @@ from partners.serializers.interventions_v2 import (
     InterventionAttachmentSerializer,
     InterventionAmendmentCUSerializer,
     InterventionSectorLocationCUSerializer,
-    InterventionResultCUSerializer
+    InterventionResultCUSerializer,
+    InterventionListMapSerializer,
 )
 from partners.exports_v2 import InterventionCvsRenderer
 from partners.filters import PartnerScopeFilter
 from partners.validation.interventions import InterventionValid
 from partners.permissions import PartneshipManagerRepPermission
+
 
 class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     """
@@ -120,7 +122,7 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
                 queries.append(Q(unicef_focal_points__in=[self.request.user.id]) |
                                Q(unicef_signatory=self.request.user))
             if "document_type" in query_params.keys():
-                queries.append(Q(partnership_type=query_params.get("document_type")))
+                queries.append(Q(document_type=query_params.get("document_type")))
             if "country_programme" in query_params.keys():
                 queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
             if "sector" in query_params.keys():
@@ -341,3 +343,32 @@ class InterventionSectorLocationLinkDeleteView(DestroyAPIView):
         else:
             raise ValidationError("You do not have permissions to delete a sector location")
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class InterventionListMapView(ListCreateAPIView):
+    """
+    Create new Interventions.
+    Returns a list of Interventions.
+    """
+    serializer_class = InterventionListMapSerializer
+    permission_classes = (IsAdminUser,)
+
+    def get_queryset(self):
+        q = Intervention.objects.filter(sector_locations__isnull=False).exclude(sector_locations__locations=None)
+        query_params = self.request.query_params
+
+        if query_params:
+            queries = []
+            if "country_programme" in query_params.keys():
+                queries.append(Q(agreement__country_programme=query_params.get("country_programme")))
+            if "sector" in query_params.keys():
+                queries.append(Q(sector_locations__sector__id=query_params.get("sector")))
+            if "status" in query_params.keys():
+                queries.append(Q(status=query_params.get("status")))
+            if "partner" in query_params.keys():
+                queries.append(Q(agreement__partner=query_params.get("partner")))
+            if queries:
+                expression = functools.reduce(operator.and_, queries)
+                q = q.filter(expression).distinct()
+
+        return q

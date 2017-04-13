@@ -470,3 +470,27 @@ class InterventionSummaryListSerializer(serializers.ModelSerializer):
             'id', 'number', 'partner_name', 'status', 'title', 'start', 'end',
             'government_intervention', 'planned_budget'
         )
+
+
+class InterventionLocationSectorMapNestedSerializer(serializers.ModelSerializer):
+    sector = SectorLightSerializer()
+    class Meta:
+        model = InterventionSectorLocationLink
+        fields = (
+            'id', 'sector', 'locations'
+        )
+
+
+class InterventionListMapSerializer(serializers.ModelSerializer):
+    partner_name = serializers.CharField(source='agreement.partner.name')
+    partner_id = serializers.CharField(source='agreement.partner.id')
+    sector_locations = InterventionLocationSectorMapNestedSerializer(many=True, read_only=True, required=False)
+
+    class Meta:
+        model = Intervention
+        fields = (
+            "id", "partner_id", "partner_name", "agreement", "document_type", "hrp", "number", "title", "status", "start", "end",
+            "offices", "sector_locations",
+        )
+
+
