@@ -475,7 +475,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
                         last_audit = assesment
                 else:
                     last_audit = assesment
-
+            # TODO: this logic is not needed if done is correct.. this reflects "needed" not MR like shown in the dash
             if last_audit and current_cycle.from_date < last_audit.completed_date < current_cycle.to_date:
                 audits = 0
         hact['audits_mr'] = audits
@@ -497,7 +497,9 @@ class PartnerOrganization(AdminURLMixin, models.Model):
     def hact_min_requirements(self):
         programme_visits = spot_checks = audits = 0
         cash_transferred = self.total_ct_cy
-        if cash_transferred <= 50000.00:
+        if cash_transferred == 0:
+            programme_visits = 0
+        elif 0 < cash_transferred <= 50000.00:
             programme_visits = 1
         elif 50000.00 < cash_transferred <= 100000.00:
             programme_visits = 1
@@ -512,7 +514,7 @@ class PartnerOrganization(AdminURLMixin, models.Model):
         else:
             if self.rating in ['Low', 'Moderate']:
                 programme_visits = 2
-                spot_checks = 2
+                spot_checks = 1
             else:
                 programme_visits = 4
                 spot_checks = 3
@@ -1154,6 +1156,12 @@ class AgreementAmendment(TimeStampedModel):
 
     tracker = FieldTracker()
 
+    def __unicode__(self):
+        return "{} {}".format(
+            self.agreement.reference_number,
+            self.number
+        )
+
     def compute_reference_number(self):
         if self.signed_date:
             return '{0:02d}'.format(self.agreement.amendments.filter(signed_date__isnull=False).count() + 1)
@@ -1210,17 +1218,23 @@ class AgreementAmendmentType(models.Model):
             self.cp_cycle_end = CountryProgramme.current().to_date
         return super(AgreementAmendmentType, self).save(**kwargs)
 
+    def __unicode__(self):
+        return "{}-{}-{}".format(
+            self.agreement_amendment.agreement.reference_number,
+            self.agreement_amendment.number,
+            self.type or ''
+        )
 
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
         return super(InterventionManager, self).get_queryset().prefetch_related('result_links',
                                                                                 'sector_locations__sector',
+                                                                                'sector_locations__locations',
                                                                                 'unicef_focal_points',
                                                                                 'offices',
                                                                                 'agreement__partner',
                                                                                 'planned_budget')
-
 
 class Intervention(TimeStampedModel):
     """
@@ -1772,7 +1786,6 @@ class InterventionSectorLocationLink(models.Model):
 
     tracker = FieldTracker()
 
-
 class GovernmentInterventionManager(models.Manager):
     def get_queryset(self):
         return super(GovernmentInterventionManager, self).get_queryset().prefetch_related('results', 'results__sectors', 'results__unicef_managers')
@@ -1803,6 +1816,7 @@ class GovernmentIntervention(models.Model):
         max_length=45L,
         blank=True,
         verbose_name='Reference Number',
+        unique=True
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
