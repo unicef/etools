@@ -30,6 +30,12 @@ class TestReportViews(APITenantTestCase):
             country_programme=CountryProgrammeFactory(wbs="/A0/"),
         )
 
+        self.result2 = ResultFactory(
+            result_type=self.result_type,
+            result_structure=self.result1.result_structure,
+            country_programme=self.result1.country_programme,
+        )
+
         # Additional data to use in tests
         self.location1 = LocationFactory()
         self.location3 = LocationFactory()
@@ -105,9 +111,9 @@ class TestReportViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["country_programme"]), CountryProgramme.current().id)
 
-    def test_apiv2_results_list_filter_cp(self):
+    def test_apiv2_results_list_filter_year(self):
         param = {
-            "country_programme": datetime.date.today().year,
+            "year": datetime.date.today().year,
         }
         response = self.forced_auth_req(
             'get',
@@ -116,6 +122,16 @@ class TestReportViews(APITenantTestCase):
             data=param,
         )
 
+    def test_apiv2_results_list_filter_cp(self):
+        param = {
+            "country_programme": self.result1.country_programme.id,
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/results/',
+            user=self.unicef_staff,
+            data=param,
+        )
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["id"]), self.result1.id)
 
@@ -129,14 +145,39 @@ class TestReportViews(APITenantTestCase):
             user=self.unicef_staff,
             data=param,
         )
-
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(int(response.data[0]["id"]), self.result1.id)
+
+    def test_apiv2_results_list_filter_values(self):
+        param = {
+            "values": '{},{}'.format(self.result1.id, self.result2.id)
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/results/',
+            user=self.unicef_staff,
+            data=param,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data), 2)
+
+    def test_apiv2_results_list_filter_values_bad(self):
+        param = {
+            "values": '{},{}'.format('23fg', 'aasd67')
+        }
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/reports/results/',
+            user=self.unicef_staff,
+            data=param,
+        )
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEquals(response.data, ['Query parameter values are not integers'])
 
     def test_apiv2_results_list_filter_combined(self):
         param = {
             "result_type": self.result_type.name,
-            "country_programme": datetime.date.today().year,
+            "year": datetime.date.today().year,
         }
         response = self.forced_auth_req(
             'get',
