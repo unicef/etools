@@ -93,9 +93,11 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                 hidden = None
                 if query_params.get("hidden").lower() == "true":
                     hidden = True
-                if query_params.get("hidden").lower() == "false":
+                    # return all partners when exporting and hidden=true
                     if query_params.get("format", None) == 'csv':
                         hidden = None
+                if query_params.get("hidden").lower() == "false":
+                    hidden = False
                 if hidden is not None:
                     queries.append(Q(hidden=hidden))
             if "search" in query_params.keys():
@@ -107,6 +109,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
+        print q.count()
         return q
 
     def list(self, request, format=None):
@@ -118,7 +121,6 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         response = super(PartnerOrganizationListAPIView, self).list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
-
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
 
         return response
