@@ -1230,11 +1230,11 @@ class InterventionManager(models.Manager):
     def get_queryset(self):
         return super(InterventionManager, self).get_queryset().prefetch_related('result_links',
                                                                                 'sector_locations__sector',
+                                                                                'sector_locations__locations',
                                                                                 'unicef_focal_points',
                                                                                 'offices',
                                                                                 'agreement__partner',
                                                                                 'planned_budget')
-
 
 class Intervention(TimeStampedModel):
     """
@@ -1785,7 +1785,6 @@ class InterventionSectorLocationLink(models.Model):
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
 
     tracker = FieldTracker()
-
 
 class GovernmentInterventionManager(models.Manager):
     def get_queryset(self):
