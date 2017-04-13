@@ -117,6 +117,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
         response = super(PartnerOrganizationListAPIView, self).list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
+
                 response['Content-Disposition'] = "attachment;filename=partner.csv"
 
         return response

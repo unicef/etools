@@ -182,7 +182,7 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
         return "Yes" if obj.blocked else "No"
 
     def get_partner_type(self, obj):
-        if obj.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION:
+        if obj.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and obj.cso_type:
             return "{}/{}".format(obj.partner_type, obj.cso_type)
         return "{}".format(obj.partner_type)
 
