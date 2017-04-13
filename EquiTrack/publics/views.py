@@ -6,13 +6,12 @@ from rest_framework import viewsets, mixins, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 
-from funds.serializers import GrantSerializer
 from publics.models import Country, DSARegion, Currency, AirlineCompany, WBS, Grant, Fund, TravelExpenseType, \
     BusinessArea
 from publics.serializers import CountrySerializer, DSARegionSerializer, PublicStaticDataSerializer, \
     WBSGrantFundSerializer, WBSGrantFundParameterSerializer, CurrencySerializer, ExpenseTypeSerializer, \
     BusinessAreaSerializer, GhostDataPKSerializer, MultiGhostDataSerializer, AirlineSerializer, FundSerializer, \
-    WBSSerializer
+    WBSSerializer, GrantSerializer
 from t2f.models import TravelType, ModeOfTravel
 
 
