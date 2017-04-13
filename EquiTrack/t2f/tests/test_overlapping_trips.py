@@ -140,7 +140,18 @@ class OverlappingTravelsTest(APITenantTestCase):
                                         data=response_json, user=self.unicef_staff)
         # No error should appear, expected 200
         self.assertEqual(response.status_code, 200)
+        response_json = json.loads(response.rendered_content)
 
+        travel = Travel.objects.get(id=response_json['id'])
+        travel.approve()
+        travel.save()
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': response_json['id'],
+                                                                'transition_name': 'send_for_payment'}),
+                                        data=response_json, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        self.assertEqual(response.status_code, 200)
 
     def test_edit_to_overlap(self):
         currency = CurrencyFactory()
