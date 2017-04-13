@@ -93,10 +93,9 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                 hidden = None
                 if query_params.get("hidden").lower() == "true":
                     hidden = True
+                if query_params.get("hidden").lower() == "false":
                     if query_params.get("format", None) == 'csv':
                         hidden = None
-                if query_params.get("hidden").lower() == "false":
-                    hidden = False
                 if hidden is not None:
                     queries.append(Q(hidden=hidden))
             if "search" in query_params.keys():
