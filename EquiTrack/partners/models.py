@@ -1156,6 +1156,12 @@ class AgreementAmendment(TimeStampedModel):
 
     tracker = FieldTracker()
 
+    def __unicode__(self):
+        return "{} {}".format(
+            self.agreement.reference_number,
+            self.number
+        )
+
     def compute_reference_number(self):
         if self.signed_date:
             return '{0:02d}'.format(self.agreement.amendments.filter(signed_date__isnull=False).count() + 1)
@@ -1212,17 +1218,23 @@ class AgreementAmendmentType(models.Model):
             self.cp_cycle_end = CountryProgramme.current().to_date
         return super(AgreementAmendmentType, self).save(**kwargs)
 
+    def __unicode__(self):
+        return "{}-{}-{}".format(
+            self.agreement_amendment.agreement.reference_number,
+            self.agreement_amendment.number,
+            self.type or ''
+        )
 
 class InterventionManager(models.Manager):
 
     def get_queryset(self):
         return super(InterventionManager, self).get_queryset().prefetch_related('result_links',
                                                                                 'sector_locations__sector',
+                                                                                'sector_locations__locations',
                                                                                 'unicef_focal_points',
                                                                                 'offices',
                                                                                 'agreement__partner',
                                                                                 'planned_budget')
-
 
 class Intervention(TimeStampedModel):
     """
@@ -1773,7 +1785,6 @@ class InterventionSectorLocationLink(models.Model):
     locations = models.ManyToManyField(Location, related_name='intervention_sector_locations', blank=True)
 
     tracker = FieldTracker()
-
 
 class GovernmentInterventionManager(models.Manager):
     def get_queryset(self):

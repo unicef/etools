@@ -263,7 +263,7 @@ class Travel(models.Model):
         if travels.count() >= 3:
             raise TransitionError('Maximum 3 open travels are allowed.')
 
-        end_date_limit = datetime.utcnow() + timedelta(days=15)
+        end_date_limit = datetime.utcnow() - timedelta(days=15)
         if travels.filter(end_date__lte=end_date_limit).exists():
             raise TransitionError('Travel is older than 15 days. Please complete it first.')
 
