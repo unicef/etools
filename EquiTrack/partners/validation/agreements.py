@@ -63,7 +63,7 @@ def amendments_signed_amendment_valid(agreement):
 
 def amendments_signed_date_valid(agreement):
     today = date.today()
-    for amendment in agreement.amendments.all():
+    for amendment in agreement.amendments.filter():
         if amendment.signed_date and amendment.signed_date > today:
             return False
     return True
