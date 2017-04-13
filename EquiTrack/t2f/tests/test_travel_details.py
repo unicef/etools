@@ -759,11 +759,38 @@ class TravelDetails(APITenantTestCase):
 
         airline.delete()
 
-        travel = Travel.objects.get(id=travel_id)
-
         response = self.forced_auth_req('get', reverse('t2f:travels:details:index',
                                                        kwargs={'travel_pk': travel_id}),
                                         user=self.unicef_staff)
         response_json = json.loads(response.rendered_content)
-
         self.assertEqual(response_json['itinerary'][0]['airlines'], [airline.id])
+
+    def test_save_with_ghost_data(self):
+        dsa_region = DSARegion.objects.first()
+        airline = AirlineCompanyFactory()
+
+        data = {'cost_assignments': [],
+                'deductions': [],
+                'expenses': [],
+                'itinerary': [{'origin': 'Budapest',
+                               'destination': 'Berlin',
+                               'departure_date': '2016-11-16T12:06:55.821490',
+                               'arrival_date': '2016-11-17T12:06:55.821490',
+                               'dsa_region': dsa_region.id,
+                               'overnight_travel': False,
+                               'mode_of_travel': ModeOfTravel.PLANE,
+                               'airlines': [airline.id]}],
+                'traveler': self.traveler.id,
+                'ta_required': True,
+                'supervisor': self.unicef_staff.id}
+        response = self.forced_auth_req('post', reverse('t2f:travels:list:index'), data=data, user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+        travel_id = response_json['id']
+
+        airline.delete()
+
+        response = self.forced_auth_req('put', reverse('t2f:travels:details:index',
+                                                       kwargs={'travel_pk': travel_id}),
+                                        data=response_json,
+                                        user=self.unicef_staff)
+        self.assertEqual(response.status_code, 200)

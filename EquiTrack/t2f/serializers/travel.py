@@ -119,8 +119,8 @@ class ActionPointSerializer(serializers.ModelSerializer):
 
 class IteneraryItemSerializer(PermissionBasedModelSerializer):
     id = serializers.IntegerField(required=False)
-    airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.objects.all(), required=False,
-                                                  allow_null=True)
+    airlines = serializers.PrimaryKeyRelatedField(many=True, queryset=AirlineCompany.admin_objects.all(),
+                                                  required=False, allow_null=True)
     mode_of_travel = LowerTitleField(required=False)
 
     class Meta:
