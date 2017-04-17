@@ -198,7 +198,6 @@ class PartnerOrganizationHactAPIView(ListCreateAPIView):
             Q(agreements__interventions__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
             (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
         ).distinct()
-
     serializer_class = PartnerOrganizationHactSerializer
 
 
