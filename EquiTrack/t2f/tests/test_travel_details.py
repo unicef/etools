@@ -11,11 +11,10 @@ from django.core.urlresolvers import reverse
 
 from EquiTrack.factories import UserFactory, LocationFactory, InterventionFactory, GovernmentInterventionFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import GovernmentIntervention
 from publics.models import DSARegion
-from publics.tests.factories import BusinessAreaFactory, WBSFactory
+from publics.tests.factories import BusinessAreaFactory, WBSFactory, DSARegionFactory
 from t2f.models import TravelAttachment, Travel, ModeOfTravel
-from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory, DSARegionFactory
+from t2f.tests.factories import CurrencyFactory, ExpenseTypeFactory, AirlineCompanyFactory
 
 from .factories import TravelFactory
 

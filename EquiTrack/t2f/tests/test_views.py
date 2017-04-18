@@ -31,25 +31,6 @@ class TravelViews(APITenantTestCase):
         section = SectionFactory()
         currency = CurrencyFactory()
 
-        # data = {'cost_assignments': [],
-        #         'deductions': [{'date': '2016-11-03',
-        #                         'breakfast': True,
-        #                         'lunch': True,
-        #                         'dinner': False,
-        #                         'accomodation': True}],
-        #         'expenses': [],
-        #         'itinerary': [{'origin': 'Budapest',
-        #                        'destination': 'Berlin',
-        #                        'departure_date': '2016-11-16T12:06:55.821490',
-        #                        'arrival_date': '2016-11-16T12:06:55.821490',
-        #                        'dsa_region': dsaregion.id,
-        #                        'overnight_travel': False,
-        #                        'mode_of_travel': 'plane',
-        #                        'airlines': [airlines.id, airlines2.id]}],
-        #         'activities': [],
-        #         'start_date': '2016-11-15T12:06:55.821490',
-        #         'end_date': '2016-11-17T12:06:55.821490'}
-
         data = {"deductions": [{"date": "2016-11-16",
                                 "breakfast": False,
                                 "lunch": False,

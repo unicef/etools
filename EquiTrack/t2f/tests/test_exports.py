@@ -12,7 +12,7 @@ from django.core.urlresolvers import reverse
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
 from publics.tests.factories import CurrencyFactory, WBSFactory, GrantFactory, FundFactory, DSARegionFactory, \
-    AirlineCompanyFactory
+    AirlineCompanyFactory, DSARateFactory
 from t2f.models import Invoice, ModeOfTravel
 from t2f.tests.factories import InvoiceFactory, InvoiceItemFactory, IteneraryItemFactory, ExpenseFactory
 
@@ -145,7 +145,9 @@ class TravelExports(APITenantTestCase):
 
     def test_travel_admin_export(self):
         dsa_brd = DSARegionFactory(area_code='BRD')
+        DSARateFactory(region=dsa_brd)
         dsa_lan = DSARegionFactory(area_code='LAN')
+        DSARateFactory(region=dsa_lan)
 
         airline_jetstar = AirlineCompanyFactory(name='JetStar')
         airline_spiceair = AirlineCompanyFactory(name='SpiceAir')

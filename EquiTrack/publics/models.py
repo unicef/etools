@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
-from django.db.models.manager import Manager
 from pytz import UTC
 
-from django.db.models import QuerySet
-from django.db.models.query_utils import Q
-
+from celery.utils.functional import memoize
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
+from django.db.models import QuerySet
+from django.db.models.query_utils import Q
+from django.db.utils import IntegrityError
 from django.utils.timezone import now
 
 # UTC have to be here to be able to directly compare with the values from the db (orm always returns tz aware values)
@@ -181,19 +181,22 @@ class Country(SoftDeleteMixin, models.Model):
         return self.name
 
 
+class DSARegionQuerySet(ValidityQuerySet):
+    def active(self):
+        return self.active_at(now())
+
+    def active_at(self, dt):
+        return self.filter(rates__valid_from__lte=dt,
+                           rates__valid_to__gte=dt)
+
+
 class DSARegion(SoftDeleteMixin, models.Model):
     country = models.ForeignKey('Country', related_name='dsa_regions')
     area_name = models.CharField(max_length=120)
     area_code = models.CharField(max_length=3)
+    user_defined = models.BooleanField(default=False)
 
-    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
-    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
-
-    room_rate = models.DecimalField(max_digits=20, decimal_places=4)
-    finalization_date = models.DateField()
-    eff_date = models.DateField()
+    objects = DSARegionQuerySet.as_manager()
 
     @property
     def label(self):
@@ -209,3 +212,54 @@ class DSARegion(SoftDeleteMixin, models.Model):
 
     def __unicode__(self):
         return self.label
+
+    @memoize(maxsize=50)
+    def get_rate_at(self, rate_date=None):
+        """Returns a dsa rate model for a specific time or None if no rate was applicable that time"""
+        if not rate_date:
+            rate_date = now()
+
+        return self.rates.filter(valid_from__lte=rate_date, valid_to__gte=rate_date).first()
+
+    def __getattr__(self, item):
+        if item in ['dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local',
+                    'room_rate', 'finalization_date', 'eff_date']:
+            return getattr(self.get_rate_at(), item)
+        return super(DSARegion, self).__getattr__(item)
+
+
+class DSARate(models.Model):
+    DEFAULT_VALID_TO = datetime(2999, 12, 31, 23, 59, 59, tzinfo=UTC)
+
+    region = models.ForeignKey('DSARegion', related_name='rates')
+    valid_from = models.DateTimeField(auto_now_add=True)
+    valid_to = models.DateTimeField(default=DEFAULT_VALID_TO)
+
+    dsa_amount_usd = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_60plus_usd = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_local = models.DecimalField(max_digits=20, decimal_places=4)
+    dsa_amount_60plus_local = models.DecimalField(max_digits=20, decimal_places=4)
+
+    room_rate = models.DecimalField(max_digits=20, decimal_places=4)
+    finalization_date = models.DateField()
+    eff_date = models.DateField()
+
+    class Meta:
+        unique_together = ('region', 'valid_to')
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            is_overlapping = DSARate.objects.filter(region=self.region, valid_to__gte=self.valid_from)\
+                .exclude(valid_to=self.DEFAULT_VALID_TO).exists()
+            if is_overlapping:
+                raise IntegrityError('DSA rates cannot overlap')
+
+            # Close old entry
+            new_valid_to_date = self.valid_from - timedelta(microseconds=1)
+            DSARate.objects.filter(region=self.region,
+                                   valid_to=self.DEFAULT_VALID_TO).update(valid_to=new_valid_to_date)
+
+        super(DSARate, self).save(*args, **kwargs)
+
+    def __getattr__(self, item):
+        return getattr(self.region, item)

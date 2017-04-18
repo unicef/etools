@@ -7,9 +7,9 @@ from pytz import UTC
 
 from EquiTrack.factories import UserFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from publics.tests.factories import CountryFactory
+from publics.tests.factories import CountryFactory, DSARegionFactory, DSARateFactory
 from t2f.helpers.cost_summary_calculator import DSACalculator
-from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DSARegionFactory, DeductionFactory
+from t2f.tests.factories import TravelFactory, IteneraryItemFactory, DeductionFactory
 
 
 class TestDSACalculations(APITenantTestCase):
@@ -23,40 +23,46 @@ class TestDSACalculations(APITenantTestCase):
         germany = CountryFactory(name='Germany', long_name='Germany')
 
         self.amsterdam = DSARegionFactory(country=netherlands,
-                                          area_name='Amsterdam',
-                                          area_code='ds1',
-                                          dsa_amount_usd=100,
-                                          dsa_amount_60plus_usd=60)
+                                            area_name='Amsterdam',
+                                            area_code='ds1')
+        DSARateFactory(region=self.amsterdam,
+                       dsa_amount_usd=100,
+                       dsa_amount_60plus_usd=60)
 
         self.budapest = DSARegionFactory(country=hungary,
-                                         area_name='Budapest',
-                                         area_code='ds2',
-                                         dsa_amount_usd=200,
-                                         dsa_amount_60plus_usd=120)
+                                           area_name='Budapest',
+                                           area_code='ds2')
+        DSARateFactory(region=self.budapest,
+                       dsa_amount_usd=200,
+                       dsa_amount_60plus_usd=120)
 
         self.copenhagen = DSARegionFactory(country=denmark,
                                            area_name='Copenhagen',
-                                           area_code='ds3',
-                                           dsa_amount_usd=300,
-                                           dsa_amount_60plus_usd=180)
+                                           area_code='ds3')
+        DSARateFactory(region=self.copenhagen,
+                       dsa_amount_usd=300,
+                       dsa_amount_60plus_usd=180)
 
         self.dusseldorf = DSARegionFactory(country=germany,
                                            area_name='Duesseldorf',
-                                           area_code='ds4',
-                                           dsa_amount_usd=400,
-                                           dsa_amount_60plus_usd=240)
+                                           area_code='ds4')
+        DSARateFactory(region=self.dusseldorf,
+                       dsa_amount_usd=400,
+                       dsa_amount_60plus_usd=240)
 
         self.essen = DSARegionFactory(country=germany,
-                                      area_name='Essen',
-                                      area_code='ds5',
-                                      dsa_amount_usd=500,
-                                      dsa_amount_60plus_usd=300)
+                                        area_name='Essen',
+                                        area_code='ds5')
+        DSARateFactory(region=self.essen,
+                       dsa_amount_usd=500,
+                       dsa_amount_60plus_usd=300)
 
         self.frankfurt = DSARegionFactory(country=germany,
                                           area_name='Frankfurt',
-                                          area_code='ds6',
-                                          dsa_amount_usd=600,
-                                          dsa_amount_60plus_usd=360)
+                                          area_code='ds6')
+        DSARateFactory(region=self.frankfurt,
+                       dsa_amount_usd=600,
+                       dsa_amount_60plus_usd=360)
 
         self.travel = TravelFactory()
 

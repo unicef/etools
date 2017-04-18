@@ -1,12 +1,13 @@
 from __future__ import unicode_literals
 
+from django.utils.timezone import now
 from django.utils.translation import ugettext
 
-from rest_framework import serializers
+from rest_framework import serializers, ISO_8601
 from rest_framework.exceptions import ValidationError
 
-from publics.models import Country, DSARegion, BusinessArea, BusinessRegion, Currency, AirlineCompany, WBS, Grant,\
-    Fund, TravelExpenseType
+from publics.models import Country, BusinessArea, BusinessRegion, Currency, AirlineCompany, WBS, Grant, Fund,\
+    TravelExpenseType, DSARate, DSARegion
 
 
 class CountrySerializer(serializers.ModelSerializer):
@@ -14,16 +15,39 @@ class CountrySerializer(serializers.ModelSerializer):
         model = Country
         fields = ('id', 'name', 'long_name', 'business_area', 'vision_code', 'iso_2', 'iso_3', 'currency', 'valid_from',
                   'valid_to')
-        
+
+
+class DSARegionsParameterSerializer(serializers.Serializer):
+    values_at = serializers.DateTimeField(format=ISO_8601, required=False, default=now)
+
+
+class DSARateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DSARate
+        fields = ('dsa_amount_usd', 'dsa_amount_60plus_usd', 'dsa_amount_local', 'dsa_amount_60plus_local', 'room_rate',
+                  'finalization_date', 'eff_date',)
+
         
 class DSARegionSerializer(serializers.ModelSerializer):
+    country = serializers.IntegerField(source='country.id', read_only=True)
     long_name = serializers.CharField(source='label')
 
     class Meta:
         model = DSARegion
-        fields = ('id', 'country', 'area_name', 'area_code', 'dsa_amount_usd', 'dsa_amount_60plus_usd',
-                  'dsa_amount_local', 'dsa_amount_60plus_local', 'room_rate', 'finalization_date', 'eff_date',
-                  'unique_id', 'unique_name', 'label', 'long_name')
+        fields = ('id', 'country', 'area_name', 'area_code', 'unique_id', 'unique_name', 'label', 'long_name')
+
+    def to_representation(self, instance):
+        ret = super(DSARegionSerializer, self).to_representation(instance)
+
+        values_at = self.context.get('values_at', now())
+        rate = instance.rates.get(valid_from__lte=values_at, valid_to__gte=values_at)
+
+        rate_serializer = DSARateSerializer(rate, context=self.context)
+        rate_data = rate_serializer.data
+
+        # Rate data is updated to give bigger priority to dsa region serializer data
+        rate_data.update(ret)
+        return rate_data
 
 
 class BusinessRegionSerializer(serializers.ModelSerializer):
