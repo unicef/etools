@@ -231,6 +231,36 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(len(response.data["staff_members"]), 2)
 
+    def test_api_partners_update_with_members_null_phone(self):
+        response = self.forced_auth_req(
+            'get',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(len(response.data["staff_members"]), 1)
+        self.assertEquals(response.data["staff_members"][0]["first_name"], "Mace")
+
+        staff_members = [{
+                "title": "Some title",
+                "first_name": "John",
+                "last_name": "Doe",
+                "email": "a1@a.com",
+                "active": True,
+                "phone": None
+            }]
+        data = {
+            "staff_members": staff_members,
+        }
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/partners/{}/'.format(self.partner.id),
+            user=self.unicef_staff,
+            data=data,
+        )
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["staff_members"][1]["phone"], None)
+
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
             'get',
@@ -242,6 +272,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         self.assertIn("vendor_number", response.data.keys())
         self.assertIn("address", response.data.keys())
         self.assertIn("Partner", response.data["name"])
+        self.assertEquals(['programme_visits', 'spot_checks'], response.data["hact_min_requirements"].keys())
+        self.assertEquals(['audits_done', 'planned_visits', 'spot_checks', 'programmatic_visits', 'follow_up_flags',
+                           'planned_cash_transfer', 'micro_assessment_needed', 'audits_mr'], response.data["hact_values"].keys())
         self.assertEquals(response.data['interventions'], [])
 
     def test_api_partners_retrieve_staff_members(self):
@@ -1816,6 +1849,40 @@ class TestGovernmentInterventionViews(APITenantTestCase):
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         #self.assertEquals(response.data, {'errors': [u'Planned visits cannot be changed.']})
+
+    def test_govint_create_update_reference_number_valid(self):
+        govint_result = {
+            "result": self.cp_output.id,
+            "year": datetime.date.today().year,
+            "planned_amount": 100,
+            "planned_visits": 5,
+            "sectors": [Sector.objects.create(name="Sector 1").id],
+        }
+        data = {
+            "partner": self.partner.id,
+            "country_programme": self.cp.id,
+            "results": [govint_result],
+        }
+        response = self.forced_auth_req(
+            'post',
+            '/api/v2/government_interventions/',
+            user=self.unicef_staff,
+            data=data,
+        )
+
+        data = response.data
+        new_data = {
+            "number": data["number"]
+        }
+
+        response = self.forced_auth_req(
+            'patch',
+            '/api/v2/government_interventions/{}/'.format(data["id"]-1),
+            user=self.unicef_staff,
+            data=new_data,
+        )
+        self.assertEquals(response.data, {"number":["government intervention with this Reference Number already exists."]})
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_govint_create_validation_sectors_sections(self):
         govint_result = {

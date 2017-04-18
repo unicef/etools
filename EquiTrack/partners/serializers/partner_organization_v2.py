@@ -145,10 +145,12 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
     date_last_assessment_against_core_values = serializers.CharField(source='core_values_assessment_date')
     actual_cash_transfer_for_cp = serializers.CharField(source='total_ct_cp')
     actual_cash_transfer_for_current_year = serializers.CharField(source='total_ct_cy')
-    marked_for_deletion = serializers.CharField(source='deleted_flag')
+    marked_for_deletion = serializers.SerializerMethodField()
+    blocked = serializers.SerializerMethodField()
     date_assessed = serializers.CharField(source='last_assessment_date')
     url = serializers.SerializerMethodField()
-
+    shared_with = serializers.SerializerMethodField()
+    partner_type = serializers.SerializerMethodField()
 
     class Meta:
 
@@ -162,13 +164,27 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
                   'date_last_assessment_against_core_values', 'assessments', 'url',)
 
     def get_staff_members(self, obj):
-        return ', '.join([sm.get_full_name() for sm in obj.staff_members.filter(active=True).all()])
+        return ', '.join(["{} ({})".format(sm.get_full_name(), sm.email) for sm in obj.staff_members.filter(active=True).all()])
 
     def get_assessments(self, obj):
         return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])
 
     def get_url(self, obj):
         return 'https://{}/pmp/partners/{}/details/'.format(self.context['request'].get_host(), obj.id)
+
+    def get_shared_with(self, obj):
+        return ', '.join([x for x in obj.shared_with]) if obj.shared_with else ""
+
+    def get_marked_for_deletion(self, obj):
+        return "Yes" if obj.deleted_flag else "No"
+
+    def get_blocked(self, obj):
+        return "Yes" if obj.blocked else "No"
+
+    def get_partner_type(self, obj):
+        if obj.partner_type == PartnerType.CIVIL_SOCIETY_ORGANIZATION and obj.cso_type:
+            return "{}/{}".format(obj.partner_type, obj.cso_type)
+        return "{}".format(obj.partner_type)
 
 
 class AssessmentDetailSerializer(serializers.ModelSerializer):
@@ -211,6 +227,7 @@ class PartnerOrganizationDetailSerializer(serializers.ModelSerializer):
     hact_values = serializers.SerializerMethodField(read_only=True)
     core_values_assessment_file = serializers.FileField(source='core_values_assessment', read_only=True)
     interventions = serializers.SerializerMethodField(read_only=True)
+    hact_min_requirements = serializers.JSONField(read_only=True)
 
     def get_hact_values(self, obj):
         return json.loads(obj.hact_values) if isinstance(obj.hact_values, str) else obj.hact_values

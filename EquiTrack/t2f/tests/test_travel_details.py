@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 
+from datetime import datetime
 import json
 from freezegun import freeze_time
+from pytz import UTC
 from StringIO import StringIO
 from unittest import skip
 
@@ -607,18 +609,28 @@ class TravelDetails(APITenantTestCase):
     def test_travel_count_at_approval(self):
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 1, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 2, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 2, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 3, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 3, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
         TravelFactory(traveler=self.traveler,
                       supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 4, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 4, 5, 1, 0, tzinfo=UTC),
                       status=Travel.SENT_FOR_PAYMENT)
 
         extra_travel = TravelFactory(traveler=self.traveler,
+                                     start_date=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
+                                     end_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
                                      supervisor=self.unicef_staff)
 
         response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
@@ -628,6 +640,27 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
 
         self.assertEqual(response_json, {'non_field_errors': ['Maximum 3 open travels are allowed.']})
+
+    def test_too_old_open_travel(self):
+        TravelFactory(traveler=self.traveler,
+                      supervisor=self.unicef_staff,
+                      start_date=datetime(2017, 1, 1, 1, 0, tzinfo=UTC),
+                      end_date=datetime(2017, 1, 5, 1, 0, tzinfo=UTC),
+                      status=Travel.SENT_FOR_PAYMENT)
+
+        extra_travel = TravelFactory(traveler=self.traveler,
+                                     start_date=datetime(2017, 5, 1, 1, 0, tzinfo=UTC),
+                                     end_date=datetime(2017, 5, 5, 1, 0, tzinfo=UTC),
+                                     supervisor=self.unicef_staff)
+
+        response = self.forced_auth_req('post', reverse('t2f:travels:details:state_change',
+                                                        kwargs={'travel_pk': extra_travel.id,
+                                                                'transition_name': 'submit_for_approval'}),
+                                        user=self.unicef_staff)
+        response_json = json.loads(response.rendered_content)
+
+        self.assertEqual(response_json,
+                         {'non_field_errors': ['Travel is older than 15 days. Please complete it first.']})
 
     def test_missing_clearances(self):
         data = {'itinerary': [],
