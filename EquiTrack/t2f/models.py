@@ -110,7 +110,7 @@ def approve_decorator(func):
     return wrapper
 
 
-def send_for_paymnet_threshold_decorator(func):
+def send_for_payment_threshold_decorator(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
@@ -339,7 +339,7 @@ class Travel(models.Model):
     def plan(self):
         pass
 
-    @send_for_paymnet_threshold_decorator
+    @send_for_payment_threshold_decorator
     @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
