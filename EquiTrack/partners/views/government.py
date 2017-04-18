@@ -109,7 +109,7 @@ class GovernmentInterventionListAPIView(ListCreateAPIView, ValidatorViewMixin):
         response = super(GovernmentInterventionListAPIView, self).list(request)
         if "format" in query_params.keys():
             if query_params.get("format") == 'csv':
-                response['Content-Disposition'] = "attachment;filename=interventions.csv"
+                response['Content-Disposition'] = "attachment;filename=government_interventions.csv"
 
         return response
 
