@@ -1,7 +1,7 @@
-import logging
-from datetime import date, datetime
+from datetime import date
 
-from EquiTrack.validation_mixins import TransitionError, CompleteValidation, check_rigid_fields, StateValidError
+from EquiTrack.validation_mixins import TransitionError, CompleteValidation, StateValidError
+
 
 def partnership_manager_only(i, user):
     # Transition cannot happen by a user that';s not a Partnership Manager
@@ -9,8 +9,10 @@ def partnership_manager_only(i, user):
         raise TransitionError(['Only Partnership Managers can execute this transition'])
     return True
 
+
 def transition_ok(i):
     return True
+
 
 def transition_to_active(i):
     # i = intervention
@@ -39,9 +41,11 @@ def transition_to_active(i):
         raise TransitionError(['Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
     for sectorlocation in i.sector_locations.all():
         if not sector_location_valid(sectorlocation):
-            raise TransitionError(['Sector and locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
+            raise TransitionError(
+                ['Sector and locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
 
     return True
+
 
 def transition_to_implemented(i):
     # i = intervention
@@ -67,8 +71,10 @@ def transition_to_implemented(i):
         raise TransitionError(['Sector locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
     for sectorlocation in i.sector_locations.all():
         if not sector_location_valid(sectorlocation):
-            raise TransitionError(['Sector and locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
+            raise TransitionError(
+                ['Sector and locations are required if Intervention status is ACTIVE or IMPLEMENTED.'])
     return True
+
 
 def start_end_dates_valid(i):
     # i = intervention
@@ -76,6 +82,7 @@ def start_end_dates_valid(i):
             i.end < i.start:
         return False
     return True
+
 
 def signed_date_valid(i):
     # i = intervention
@@ -88,45 +95,54 @@ def signed_date_valid(i):
         return False
     return True
 
+
 def document_type_pca_valid(i):
     if i.agreement.agreement_type == "PCA" and i.document_type not in ["PD", "SHPD"]:
         return False
     return True
+
 
 def document_type_ssfa_valid(i):
     if i.agreement.agreement_type == "SSFA" and i.document_type not in ["SSFA"]:
         return False
     return True
 
+
 def partner_focal_points_valid(i):
     if not i.partner_focal_points:
         return False
     return True
+
 
 def unicef_focal_points_valid(i):
     if not i.unicef_focal_points:
         return False
     return True
 
+
 def population_focus_valid(i):
     if not i.population_focus:
         return False
     return True
+
 
 def unicef_cash_valid(b):
     if not b.unicef_cash:
         return False
     return True
 
+
 def partner_contribution_valid(b):
     if not b.partner_contribution:
         return False
     return True
 
+
 def sector_location_valid(sl):
     if not sl.sector or not sl.locations.exists():
         return False
     return True
+
 
 def amendments_valid(i):
     for a in i.amendments.all():
@@ -161,7 +177,7 @@ class InterventionValid(CompleteValidation):
     def state_suspended_valid(self, intervention, user=None):
         # if we're just now trying to transition to suspended
         if intervention.old_instance and intervention.old_instance.status == intervention.status:
-            #TODO ask business owner what to do if a suspended intervention passes end date and is being modified
+            # TODO ask business owner what to do if a suspended intervention passes end date and is being modified
             if intervention.end > date.today():
                 raise StateValidError(['suspended_expired_error'])
 

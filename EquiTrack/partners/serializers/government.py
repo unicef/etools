@@ -1,13 +1,9 @@
-import json
 import operator
 from collections import defaultdict
 from django.db import transaction
 from django.db.models import Q
-from django.contrib.auth.models import Group
 from rest_framework import serializers
 from rest_framework.serializers import ValidationError
-
-from EquiTrack.serializers import JsonFieldSerializer
 
 from reports.models import Result
 from funds.models import FundsCommitmentItem
@@ -15,7 +11,8 @@ from funds.models import FundsCommitmentItem
 from partners.models import (
     GovernmentIntervention, PartnerType,
     GovernmentInterventionResult, GovernmentInterventionResultActivity,
-    )
+)
+from functools import reduce
 
 
 class FundsCommitmentItemListSerializer(serializers.ModelSerializer):
@@ -138,8 +135,9 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
 
     def get_implementation_status(self, obj):
         # Grab all Result objects which result type is Output and has a link to governmentinterventionresult
-        cp_output_results = Result.objects.filter(result_type__name="Output", governmentinterventionresult__in=obj.results.all())
-        dict_of_outputs = {o.wbs: o for o in cp_output_results}
+        cp_output_results = Result.objects.filter(
+            result_type__name="Output",
+            governmentinterventionresult__in=obj.results.all())
 
         # Query FundsCommitmentItem objects with above Result wbs list
         wbs_numbers = [x for x in cp_output_results.values_list('wbs', flat=True) if x is not None]
@@ -150,7 +148,7 @@ class GovernmentInterventionCreateUpdateSerializer(serializers.ModelSerializer):
             target_funding_commitments = list(FundsCommitmentItem.objects.filter(q))
         else:
             target_funding_commitments = []
-        #
+
         fund_commitment_map = defaultdict(list)
         for f in target_funding_commitments:
             fund_commitment_map[f.wbs].append(FundsCommitmentItemListSerializer(f).data)
@@ -201,7 +199,7 @@ class GovernmentInterventionExportSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GovernmentIntervention
-        fields = ["partner_name", "country_programme_name", "number", "cp_outputs", "url",]
+        fields = ["partner_name", "country_programme_name", "number", "cp_outputs", "url", ]
 
 
 class GovernmentInterventionSummaryListSerializer(serializers.ModelSerializer):

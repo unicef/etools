@@ -5,14 +5,12 @@ from decimal import Decimal
 
 from django.db import transaction
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
 
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser
 from rest_framework_csv import renderers as r
-from rest_framework.views import APIView
 from rest_framework.generics import (
     ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
@@ -20,16 +18,14 @@ from rest_framework.generics import (
     CreateAPIView
 )
 
-from EquiTrack.stream_feed.actions import create_snapshot_activity_stream
 from EquiTrack.utils import get_data_from_insight
+from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import (
     PartnerStaffMember,
     Intervention,
-    GovernmentIntervention,
     PartnerOrganization,
     Assessment,
-    PartnerType,
 )
 from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationExportSerializer,
@@ -41,18 +37,10 @@ from partners.serializers.partner_organization_v2 import (
     PartnerOrganizationHactSerializer,
     AssessmentDetailSerializer,
 )
-from partners.serializers.interventions_v2 import (
-    InterventionSummaryListSerializer,
-)
-from partners.serializers.government import (
-    GovernmentInterventionSummaryListSerializer,
-)
 from partners.permissions import PartneshipManagerRepPermission, PartneshipManagerPermission
 from partners.filters import PartnerScopeFilter
 from partners.exports_v2 import PartnerOrganizationCsvRenderer
 
-from EquiTrack.parsers import parse_multipart_data
-from EquiTrack.validation_mixins import ValidatorViewMixin
 
 class PartnerOrganizationListAPIView(ListCreateAPIView):
     """
@@ -160,7 +148,7 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
     queryset = PartnerOrganization.objects.all()
     serializer_class = PartnerOrganizationDetailSerializer
     permission_classes = (IsAdminUser,)
-    #parser_classes = (FormParser, MultiPartParser)
+    # parser_classes = (FormParser, MultiPartParser)
 
     SERIALIZER_MAP = {
         'assessments': AssessmentDetailSerializer,
@@ -180,13 +168,12 @@ class PartnerOrganizationDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroy
         instance, old_instance, serializer = self.my_update(
             request,
             related_fields,
-            snapshot=True,  **kwargs)
+            snapshot=True, **kwargs)
 
         if getattr(instance, '_prefetched_objects_cache', None):
             # If 'prefetch_related' has been applied to a queryset, we need to
             # refresh the instance from the database.
             instance = self.get_object()
-            po_serializer = self.get_serializer(instance)
 
         return Response(PartnerOrganizationDetailSerializer(instance).data)
 
@@ -199,9 +186,9 @@ class PartnerOrganizationHactAPIView(ListCreateAPIView):
     """
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(
-            Q(documents__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
-            (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
-        ).distinct()
+        Q(documents__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
+        (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
+    ).distinct()
     serializer_class = PartnerOrganizationHactSerializer
 
 
@@ -291,7 +278,7 @@ class PartnerOrganizationAddView(CreateAPIView):
                             status=status.HTTP_400_BAD_REQUEST)
 
         valid_response, response = get_data_from_insight('GetPartnerDetailsInfo_json/{vendor_code}',
-                                                             {"vendor_code": vendor})
+                                                         {"vendor_code": vendor})
         if not valid_response:
             return Response({"error": response}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -302,13 +289,15 @@ class PartnerOrganizationAddView(CreateAPIView):
             return Response({"error": 'Partner Organization already exists with this vendor number'},
                             status=status.HTTP_400_BAD_REQUEST)
         except PartnerOrganization.DoesNotExist:
-            partner_org = {k: self.get_value_for_field(k, partner_resp[v]) if v in partner_resp.keys() else None for k, v in self.MAPPING.items()}
+            partner_org = {
+                k: self.get_value_for_field(
+                    k,
+                    partner_resp[v]) if v in partner_resp.keys() else None for k,
+                v in self.MAPPING.items()}
             partner_org['vision_synced'] = True
             po_serializer = self.get_serializer(data=partner_org)
             po_serializer.is_valid(raise_exception=True)
-            partner = po_serializer.save()
+            po_serializer.save()
 
             headers = self.get_success_headers(po_serializer.data)
             return Response(po_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-
-

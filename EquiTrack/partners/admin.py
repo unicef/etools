@@ -71,7 +71,6 @@ from .forms import (
     AssessmentAdminForm,
     AmendmentForm,
     AgreementForm,
-    AgreementAmendmentForm,
     DistributionPlanForm,
     DistributionPlanFormSet,
     PartnershipBudgetAdminForm,
@@ -481,7 +480,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
 
     suit_form_includes = (
         ('admin/partners/funding_summary.html', 'middle', 'info'),
-        #('admin/partners/work_plan.html', 'bottom', 'results'),
+        # ('admin/partners/work_plan.html', 'bottom', 'results'),
         ('admin/partners/trip_summary.html', 'top', 'trips'),
         ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
@@ -544,6 +543,7 @@ class PartnershipAdmin(ExportMixin, CountryUsersAdminMixin, HiddenPartnerMixin, 
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+
 class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin):
 
     date_hierarchy = 'start'
@@ -566,7 +566,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
         'hrp',
         # PCASectorFilter,
         'status',
-        #'partner',
+        # 'partner',
         # PCADonorFilter,
         # PCAGatewayTypeFilter,
         # PCAGrantFilter,
@@ -578,10 +578,10 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
     readonly_fields = (
         'number',
         'total_budget',
-        #'days_from_submission_to_signed',
-        #'days_from_review_to_signed',
-        #'duration',
-        #'work_plan_template',
+        # 'days_from_submission_to_signed',
+        # 'days_from_review_to_signed',
+        # 'duration',
+        # 'work_plan_template',
     )
     filter_horizontal = (
         'unicef_focal_points',
@@ -610,7 +610,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
                  ('unicef_signatory', 'signed_by_unicef_date',),
                  'partner_focal_points',
                  'unicef_focal_points',
-                 #('days_from_submission_to_signed', 'days_from_review_to_signed',),
+                 # ('days_from_submission_to_signed', 'days_from_review_to_signed',),
                  ('start', 'end'),
                  'population_focus',
                  'fr_numbers',),
@@ -652,9 +652,9 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
 
     suit_form_includes = (
         ('admin/partners/funding_summary.html', 'middle', 'info'),
-        #('admin/partners/work_plan.html', 'bottom', 'results'),
-        #('admin/partners/trip_summary.html', 'top', 'trips'),
-        #('admin/partners/attachments_note.html', 'top', 'attachments'),
+        # ('admin/partners/work_plan.html', 'bottom', 'results'),
+        # ('admin/partners/trip_summary.html', 'top', 'trips'),
+        # ('admin/partners/attachments_note.html', 'top', 'attachments'),
     )
 
     def created_date(self, obj):
@@ -706,6 +706,7 @@ class InterventionAdmin(CountryUsersAdminMixin, HiddenPartnerMixin, VersionAdmin
 
     def has_module_permission(self, request):
         return request.user.is_superuser
+
 
 class GovernmentInterventionResultAdminInline(CountryUsersAdminMixin, admin.StackedInline):
     model = GovernmentInterventionResult
@@ -779,6 +780,7 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+
 class AssessmentAdminInline(admin.TabularInline):
     model = Assessment
     form = AssessmentAdminForm
@@ -819,6 +821,7 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request):
         return request.user.is_superuser
+
 
 class HiddenPartnerFilter(admin.SimpleListFilter):
 
@@ -1110,6 +1113,7 @@ class SupplyItemAdmin(admin.ModelAdmin):
     def has_module_permission(self, request):
         return request.user.is_superuser
 
+
 admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Intervention, InterventionAdmin)
@@ -1129,4 +1133,3 @@ admin.site.register(InterventionPlannedVisits)
 admin.site.register(InterventionAmendment)
 admin.site.register(InterventionSectorLocationLink)
 admin.site.register(InterventionResultLink)
-

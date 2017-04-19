@@ -1,25 +1,13 @@
 import json
-from operator import xor
 
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.contrib.auth.models import User
-from django.db import transaction
 from rest_framework import serializers
 
-from reports.serializers.v1 import IndicatorSerializer, OutputSerializer
-from partners.serializers.v1 import (
-    PartnerOrganizationSerializer,
-    PartnerStaffMemberEmbedSerializer,
-    InterventionSerializer,
-)
+from partners.serializers.v1 import PartnerOrganizationSerializer
 from partners.serializers.interventions_v2 import InterventionSummaryListSerializer
 from partners.serializers.government import GovernmentInterventionSummaryListSerializer
-from locations.models import Location
-
-from .v1 import PartnerStaffMemberSerializer
-
-
 
 from partners.models import (
     Assessment,
@@ -29,6 +17,7 @@ from partners.models import (
     PartnerType,
     PartnerStaffMember,
 )
+
 
 class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
 
@@ -54,6 +43,7 @@ class PartnerStaffMemberCreateSerializer(serializers.ModelSerializer):
 
         return data
 
+
 class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
     """
     A serilizer to be used for nested staff member handling. The 'partner' field
@@ -68,6 +58,7 @@ class SimpleStaffMemberSerializer(PartnerStaffMemberCreateSerializer):
             "first_name",
             "last_name"
         )
+
 
 class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
     """
@@ -90,6 +81,7 @@ class PartnerStaffMemberNestedSerializer(PartnerStaffMemberCreateSerializer):
 
 class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(required=True)
+
     class Meta:
         model = PartnerStaffMember
         fields = "__all__"
@@ -98,7 +90,6 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         data = super(PartnerStaffMemberCreateUpdateSerializer, self).validate(data)
         email = data.get('email', "")
         active = data.get('active', "")
-
 
         try:
             existing_user = User.objects.get(email=email)
@@ -114,7 +105,8 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
         # make sure email addresses are not editable after creation.. user must be removed and re-added
         if self.instance:
             if email != self.instance.email:
-                raise ValidationError("User emails cannot be changed, please remove the user and add another one: {}".format(email))
+                raise ValidationError(
+                    "User emails cannot be changed, please remove the user and add another one: {}".format(email))
 
             # when adding the active tag to a previously untagged user
             # make sure this user has not already been associated with another partnership.
@@ -127,6 +119,7 @@ class PartnerStaffMemberCreateUpdateSerializer(serializers.ModelSerializer):
                 )
 
         return data
+
 
 class PartnerStaffMemberDetailSerializer(serializers.ModelSerializer):
     class Meta:
@@ -164,7 +157,8 @@ class PartnerOrganizationExportSerializer(serializers.ModelSerializer):
                   'date_last_assessment_against_core_values', 'assessments', 'url',)
 
     def get_staff_members(self, obj):
-        return ', '.join(["{} ({})".format(sm.get_full_name(), sm.email) for sm in obj.staff_members.filter(active=True).all()])
+        return ', '.join(["{} ({})".format(sm.get_full_name(), sm.email)
+                          for sm in obj.staff_members.filter(active=True).all()])
 
     def get_assessments(self, obj):
         return ', '.join(["{} ({})".format(a.type, a.completed_date) for a in obj.assessments.all()])
@@ -264,6 +258,7 @@ class PartnerOrganizationCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PartnerOrganization
         fields = "__all__"
+
 
 class PartnerOrganizationHactSerializer(serializers.ModelSerializer):
 

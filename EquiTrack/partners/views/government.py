@@ -1,6 +1,5 @@
 import operator
 import functools
-import logging
 
 from django.db import transaction
 from django.db.models import Q
@@ -15,8 +14,6 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 from rest_framework_csv import renderers as r
-
-from EquiTrack.validation_mixins import ValidatorViewMixin
 
 from partners.models import GovernmentIntervention, GovernmentInterventionResultActivity, GovernmentInterventionResult
 from partners.serializers.government import (
@@ -155,7 +152,8 @@ class GovernmentDetailAPIView(ValidatorViewMixin, RetrieveUpdateDestroyAPIView):
         for govint_result in instance.results.filter():
             # Old instance should be the instance with the same id from old_instance.results
             old_govint_result = old_instance.results.filter(id=govint_result.id).first()
-            validator = GovernmentInterventionResultValid(govint_result, old=old_govint_result, user=request.user, stateless=True)
+            validator = GovernmentInterventionResultValid(
+                govint_result, old=old_govint_result, user=request.user, stateless=True)
             if not validator.is_valid:
                 raise ValidationError({'errors': validator.errors})
 
