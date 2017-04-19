@@ -59,11 +59,12 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
     renderer_classes = (r.JSONRenderer, InterventionCvsRenderer)
 
     SERIALIZER_MAP = {
-        'planned_budget' : InterventionBudgetCUSerializer,
+        'planned_budget': InterventionBudgetCUSerializer,
         'planned_visits': PlannedVisitsCUSerializer,
         'attachments': InterventionAttachmentSerializer,
         'amendments': InterventionAmendmentCUSerializer,
-        'sector_locations': InterventionSectorLocationCUSerializer
+        'sector_locations': InterventionSectorLocationCUSerializer,
+        'result_links': InterventionResultCUSerializer
     }
 
     def get_serializer_class(self):
@@ -95,10 +96,15 @@ class InterventionListAPIView(ValidatorViewMixin, ListCreateAPIView):
             'planned_visits',
             'attachments',
             'amendments',
-            'sector_locations'
+            'sector_locations',
+            'result_links'
         ]
-
-        serializer = self.my_create(request, related_fields, snapshot=True, **kwargs)
+        nested_related_names = ['ll_results']
+        serializer = self.my_create(request,
+                                    related_fields,
+                                    snapshot=True,
+                                    nested_related_names=nested_related_names,
+                                    **kwargs)
 
         validator = InterventionValid(serializer.instance, user=request.user)
         if not validator.is_valid:
