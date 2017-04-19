@@ -38,6 +38,7 @@ class StateMachineTest(APITenantTestCase):
                           'certification_submitted': ['certification_rejected',
                                                       'certification_approved'],
                           'certified': ['sent_for_payment',
+                                        'certification_submitted',
                                         'cancelled',
                                         'completed'],
                           'planned': ['submitted',
