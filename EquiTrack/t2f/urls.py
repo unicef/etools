@@ -59,7 +59,7 @@ travel_details_patterns = patterns(
 travel_list_patterns = patterns(
     '',
     url(r'^$', travel_list, name='index'),
-    url(r'^(?P<transition_name>save_and_submit)/$', travel_list_state_change, name='state_change'),
+    url(r'^(?P<transition_name>save_and_submit|mark_as_completed)/$', travel_list_state_change, name='state_change'),
     url(r'^export/$', TravelListExport.as_view(), name='export'),
     url(r'^finance-export/$', FinanceExport.as_view(), name='finance_export'),
     url(r'^travel-admin-export/$', TravelAdminExport.as_view(),

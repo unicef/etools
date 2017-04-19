@@ -186,7 +186,7 @@ class PartnerOrganizationHactAPIView(ListCreateAPIView):
     """
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(
-        Q(documents__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
+        Q(agreements__interventions__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
         (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
     ).distinct()
     serializer_class = PartnerOrganizationHactSerializer
