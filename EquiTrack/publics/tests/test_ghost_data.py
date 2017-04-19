@@ -84,10 +84,10 @@ class GhostData(APITenantTestCase):
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json,
-                         {'value': ['This field is required.']})
+                         {'values': ['This list may not be empty.']})
 
         response = self.forced_auth_req('get', reverse('public:missing_expense_types'),
-                                        data={'value': expense_type.pk},
+                                        data={'values': [expense_type.pk]},
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
 
@@ -107,7 +107,7 @@ class GhostData(APITenantTestCase):
         self.assertEqual(len(response_json['airlines']), 0)
 
         response = self.forced_auth_req('get', reverse('public:missing_static'),
-                                        data={'value': airline.pk},
+                                        data={'values': [airline.pk]},
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 400)
         response_json = json.loads(response.rendered_content)
@@ -115,24 +115,7 @@ class GhostData(APITenantTestCase):
                          {'category': ['This field is required.']})
 
         response = self.forced_auth_req('get', reverse('public:missing_static'),
-                                        data={'value': airline.pk,
+                                        data={'values': [airline.pk],
                                               'category': 'airlines'},
                                         user=self.unicef_staff)
         self.assertEqual(response.status_code, 200)
-
-    def test_invalid_pk_value(self):
-        expense_type = ExpenseTypeFactory()
-
-        invalid_pk = expense_type.pk + 10
-
-        # Validate if it is really invalid
-        with self.assertRaises(ObjectDoesNotExist):
-            TravelExpenseType.objects.get(id=invalid_pk)
-
-        response = self.forced_auth_req('get', reverse('public:missing_expense_types'),
-                                        data={'value': invalid_pk},
-                                        user=self.unicef_staff)
-        self.assertEqual(response.status_code, 400)
-        response_json = json.loads(response.rendered_content)
-        self.assertEqual(response_json,
-                         {'non_field_errors': ['Invalid PK value']})

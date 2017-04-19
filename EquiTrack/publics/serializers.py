@@ -130,7 +130,8 @@ class WBSGrantFundSerializer(serializers.Serializer):
 
 
 class GhostDataPKSerializer(serializers.Serializer):
-    value = serializers.IntegerField(min_value=1, required=True)
+    values = serializers.ListField(child=serializers.IntegerField(min_value=1, required=True), required=True,
+                                   allow_empty=False)
 
 
 class MultiGhostDataSerializer(GhostDataPKSerializer):

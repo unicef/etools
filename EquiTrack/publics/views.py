@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.query_utils import Q
+from django.utils.functional import cached_property
 from rest_framework import viewsets, mixins, status
 from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
@@ -22,14 +23,9 @@ class GhostDataMixin(object):
 
         queryset = self.get_queryset()
         model = queryset.model
-        
-        try:
-            obj = model.admin_objects.get(id=parameter_serializer.data['value'])
-        except ObjectDoesNotExist:
-            return Response({'non_field_errors': ['Invalid PK value']},
-                            status.HTTP_400_BAD_REQUEST)
-            
-        serializer = self.get_serializer(obj)
+
+        obj = model.admin_objects.filter(id__in=parameter_serializer.data['values'])
+        serializer = self.get_serializer(obj, many=True)
         return Response(serializer.data, status.HTTP_200_OK)
 
 
@@ -89,13 +85,8 @@ class StaticDataView(GhostDataMixin,
 
         model = queryset.model
 
-        try:
-            obj = model.admin_objects.get(id=parameter_serializer.data['value'])
-        except ObjectDoesNotExist:
-            return Response({'non_field_errors': ['Invalid PK value']},
-                            status.HTTP_400_BAD_REQUEST)
-
-        serializer = serializer_class(obj, context=self.get_serializer_context())
+        obj = model.admin_objects.filter(id__in=parameter_serializer.data['values'])
+        serializer = serializer_class(obj, many=True, context=self.get_serializer_context())
         return Response(serializer.data, status.HTTP_200_OK)
 
     def get_airlines_queryset(self):
@@ -164,9 +155,9 @@ class WBSGrantFundView(GhostDataMixin,
     serializer_class = WBSGrantFundSerializer
 
     def list(self, request):
-        wbs_qs = self.get_wbs_queryset()
-        grant_qs = self.get_grants_queryset()
-        funds_qs = self.get_funds_queryset()
+        wbs_qs = self.wbs_queryset
+        grant_qs = self.grants_queryset
+        funds_qs = self.funds_queryset
         data = {'wbs': wbs_qs,
                 'funds': funds_qs,
                 'grants': grant_qs}
@@ -181,13 +172,13 @@ class WBSGrantFundView(GhostDataMixin,
         category = parameter_serializer.data['category']
 
         if category == 'wbs':
-            queryset = self.get_wbs_queryset()
+            queryset = self.wbs_queryset
             serializer_class = WBSSerializer
         elif category == 'grants':
-            queryset = self.get_grants_queryset()
+            queryset = self.grants_queryset
             serializer_class = GrantSerializer
         elif category == 'funds':
-            queryset = self.get_funds_queryset()
+            queryset = self.funds_queryset
             serializer_class = FundSerializer
         else:
             raise ValueError('Invalid category')
@@ -203,7 +194,8 @@ class WBSGrantFundView(GhostDataMixin,
         serializer = serializer_class(obj, context=self.get_serializer_context())
         return Response(serializer.data, status.HTTP_200_OK)
 
-    def get_wbs_queryset(self):
+    @cached_property
+    def wbs_queryset(self):
         parameter_serializer = WBSGrantFundParameterSerializer(data=self.request.GET,
                                                                context=self.get_serializer_context())
         parameter_serializer.is_valid(raise_exception=True)
@@ -211,10 +203,12 @@ class WBSGrantFundView(GhostDataMixin,
         business_area = parameter_serializer.validated_data['business_area']
         return WBS.objects.filter(business_area=business_area).prefetch_related('grants')
 
-    def get_grants_queryset(self):
-        wbs_qs = self.get_wbs_queryset()
+    @cached_property
+    def grants_queryset(self):
+        wbs_qs = self.wbs_queryset
         return Grant.objects.filter(wbs__in=wbs_qs).prefetch_related('funds')
 
-    def get_funds_queryset(self):
-        grant_qs = self.get_grants_queryset()
+    @cached_property
+    def funds_queryset(self):
+        grant_qs = self.grants_queryset
         return Fund.objects.filter(grants__in=grant_qs)
