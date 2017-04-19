@@ -239,14 +239,22 @@ class Travel(models.Model):
 
         return False
 
-    # State machine transitions
-    def check_completion_conditions(self):
-        if self.status == Travel.SUBMITTED and not self.international_travel:
+    # Completion conditions
+    def check_trip_report(self):
+        if (not self.international_travel) and (self.ta_required) and ((not self.report_note) or
+                                                                           (len(self.report_note) < 1)):
+            raise TransitionError('Field report has to be filled.')
+        return True
+
+    def check_state_flow(self):
+        # Complete action should be called only after certification was done.
+        # Special case is the TA not required NOT international travel, where supervisor should be able to complete it
+        # after approval
+        if (self.status == Travel.SUBMITTED) and (self.ta_required) and (not self.international_travel):
             return False
 
-        if (not self.report_note) or (len(self.report_note) < 1):
-            raise TransitionError('Field report has to be filled.')
-
+        if (self.status == Travel.PLANNED) and (self.international_travel):
+            return False
         return True
 
     def check_completed_from_planned(self):
@@ -283,13 +291,8 @@ class Travel(models.Model):
 
         return True
 
-    def check_ta_required(self):
-        if not self.ta_required:
-            raise TransitionError('TA required to send for approval.')
-        return True
-
     @transition(status, source=[PLANNED, REJECTED, SENT_FOR_PAYMENT, CANCELLED], target=SUBMITTED,
-                conditions=[has_supervisor, check_pending_invoices, check_ta_required, check_travel_count])
+                conditions=[has_supervisor, check_pending_invoices, check_travel_count])
     def submit_for_approval(self):
         self.send_notification_email('Travel #{} was sent for approval.'.format(self.reference_number),
                                      self.supervisor.email,
@@ -386,7 +389,7 @@ class Travel(models.Model):
 
     @mark_as_certified_or_completed_threshold_decorator
     @transition(status, source=[CERTIFIED, SUBMITTED, PLANNED], target=COMPLETED,
-                conditions=[check_completion_conditions])
+                conditions=[check_trip_report, check_state_flow])
     def mark_as_completed(self):
         self.completed_at = datetime.now()
         self.send_notification_email('Travel #{} was completed.'.format(self.reference_number),
