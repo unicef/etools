@@ -110,7 +110,7 @@ def approve_decorator(func):
     return wrapper
 
 
-def threshold_decorator(func):
+def send_for_payment_threshold_decorator(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
@@ -121,6 +121,20 @@ def threshold_decorator(func):
         func(self, *args, **kwargs)
 
     return wrapper
+
+
+def mark_as_certified_or_completed_threshold_decorator(func):
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        # If invoicing is enabled, do the threshold check, otherwise it will result an infinite process loop
+        if not settings.DISABLE_INVOICING and self.check_threshold():
+            self.submit_certificate(*args, **kwargs)
+            return
+
+        func(self, *args, **kwargs)
+
+    return wrapper
+
 
 
 class Travel(models.Model):
@@ -325,7 +339,7 @@ class Travel(models.Model):
     def plan(self):
         pass
 
-    @threshold_decorator
+    @send_for_payment_threshold_decorator
     @transition(status, source=[APPROVED, SENT_FOR_PAYMENT, CERTIFIED], target=SENT_FOR_PAYMENT)
     def send_for_payment(self):
         self.preserved_expenses = self.cost_summary['expenses_total']
@@ -339,7 +353,7 @@ class Travel(models.Model):
                                      self.traveler.email,
                                      'emails/sent_for_payment.html')
 
-    @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED],
+    @transition(status, source=[SENT_FOR_PAYMENT, CERTIFICATION_REJECTED, CERTIFIED],
                 target=CERTIFICATION_SUBMITTED,
                 conditions=[check_pending_invoices])
     def submit_certificate(self):
@@ -360,7 +374,7 @@ class Travel(models.Model):
                                      self.traveler.email,
                                      'emails/certificate_rejected.html')
 
-    @threshold_decorator
+    @mark_as_certified_or_completed_threshold_decorator
     @transition(status, source=[CERTIFICATION_APPROVED, SENT_FOR_PAYMENT],
                 target=CERTIFIED,
                 conditions=[check_pending_invoices])
@@ -370,6 +384,7 @@ class Travel(models.Model):
                                      self.traveler.email,
                                      'emails/certified.html')
 
+    @mark_as_certified_or_completed_threshold_decorator
     @transition(status, source=[CERTIFIED, SUBMITTED, PLANNED], target=COMPLETED,
                 conditions=[check_completion_conditions])
     def mark_as_completed(self):
