@@ -185,13 +185,8 @@ class WBSGrantFundView(GhostDataMixin,
 
         model = queryset.model
 
-        try:
-            obj = model.admin_objects.get(id=parameter_serializer.data['value'])
-        except ObjectDoesNotExist:
-            return Response({'non_field_errors': ['Invalid PK value']},
-                            status.HTTP_400_BAD_REQUEST)
-
-        serializer = serializer_class(obj, context=self.get_serializer_context())
+        obj = model.admin_objects.filter(id__in=parameter_serializer.data['values'])
+        serializer = serializer_class(obj, many=True, context=self.get_serializer_context())
         return Response(serializer.data, status.HTTP_200_OK)
 
     @cached_property
