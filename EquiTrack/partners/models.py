@@ -1216,8 +1216,6 @@ class AgreementAmendmentType(models.Model):
     def save(self, **kwargs):
         if self.pk is None and self.type == 'CP extension':
             self.cp_cycle_end = CountryProgramme.current().to_date
-        if self.officer and self.type == 'Change authorized officer':
-            self.agreement_amendment.agreement.authorized_officers.add(self.officer)
         return super(AgreementAmendmentType, self).save(**kwargs)
 
     def __unicode__(self):
