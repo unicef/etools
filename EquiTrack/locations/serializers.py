@@ -33,6 +33,10 @@ class LocationSerializer(serializers.ModelSerializer):
 
     id = serializers.CharField(read_only=True)
     location_type = serializers.CharField(source='gateway.name')
+    geo_point = serializers.SerializerMethodField()
+
+    def get_geo_point(self, obj):
+        return "{}".format(obj.geo_point)
 
     class Meta:
         model = Location
@@ -41,11 +45,8 @@ class LocationSerializer(serializers.ModelSerializer):
             'name',
             'p_code',
             'location_type',
-            'point',
-            'latitude',
-            'longitude',
             'parent',
-            'geom',
+            'geo_point'
         )
 
 
