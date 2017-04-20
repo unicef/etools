@@ -93,6 +93,9 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
                 hidden = None
                 if query_params.get("hidden").lower() == "true":
                     hidden = True
+                    # return all partners when exporting and hidden=true
+                    if query_params.get("format", None) == 'csv':
+                        hidden = None
                 if query_params.get("hidden").lower() == "false":
                     hidden = False
                 if hidden is not None:
@@ -106,6 +109,7 @@ class PartnerOrganizationListAPIView(ListCreateAPIView):
             if queries:
                 expression = functools.reduce(operator.and_, queries)
                 q = q.filter(expression)
+        print q.count()
         return q
 
     def list(self, request, format=None):
@@ -195,7 +199,7 @@ class PartnerOrganizationHactAPIView(ListCreateAPIView):
     """
     permission_classes = (IsAdminUser,)
     queryset = PartnerOrganization.objects.filter(
-            Q(documents__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
+            Q(agreements__interventions__status__in=[Intervention.ACTIVE, Intervention.IMPLEMENTED]) |
             (Q(partner_type=u'Government') & Q(work_plans__isnull=False))
         ).distinct()
     serializer_class = PartnerOrganizationHactSerializer

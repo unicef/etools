@@ -496,7 +496,7 @@ class TravelDetails(APITenantTestCase):
         self.assertEqual(response_json['itinerary'], itinerary_origin_destination_expectation)
 
     def test_ta_not_required(self):
-        data = {'itinerary': [{}],
+        data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': True,
                                 'locations': []}],
                 'cost_assignments': [],
@@ -515,7 +515,7 @@ class TravelDetails(APITenantTestCase):
     def test_not_primary_traveler(self):
         primary_traveler = UserFactory()
 
-        data = {'itinerary': [{}],
+        data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': False,
                                 'locations': []}],
                 'cost_assignments': [],
@@ -531,7 +531,7 @@ class TravelDetails(APITenantTestCase):
         response_json = json.loads(response.rendered_content)
         self.assertEqual(response_json, {'activities': [{'primary_traveler': ['This field is required.']}]})
 
-        data = {'itinerary': [{}],
+        data = {'itinerary': [],
                 'activities': [{'is_primary_traveler': False,
                                 'primary_traveler': primary_traveler.id,
                                 'locations': []}],

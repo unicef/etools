@@ -9,9 +9,11 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from EquiTrack.tests.mixins import FastTenantTestCase as TenantTestCase
 from EquiTrack.factories import UserFactory, PartnerFactory, AgreementFactory, PartnershipFactory, \
     GovernmentInterventionFactory, InterventionFactory, CountryProgrammeFactory, ResultFactory, \
-    ResultStructureFactory
+    ResultStructureFactory, InterventionBudgetFactory, PartnerStaffFactory, LocationFactory
 from EquiTrack.tests.mixins import APITenantTestCase
-from partners.models import GovernmentInterventionResult, ResultType
+from publics.tests.factories import CurrencyFactory
+from partners.models import GovernmentInterventionResult, ResultType, SupplyPlan, DistributionPlan
+from supplies.models import SupplyItem
 
 
 class TestModelExport(APITenantTestCase):
@@ -36,6 +38,7 @@ class TestModelExport(APITenantTestCase):
             type_of_assessment="Type of Assessment",
             last_assessment_date=datetime.date.today(),
         )
+        self.partnerstaff = PartnerStaffFactory(partner=self.partner)
         attachment = tempfile.NamedTemporaryFile(suffix=".pdf").name
         self.agreement = AgreementFactory(
             partner=self.partner,
@@ -47,10 +50,10 @@ class TestModelExport(APITenantTestCase):
             signed_by=self.unicef_staff,
             signed_by_partner_date=datetime.date.today()
         )
-
+        self.agreement.authorized_officers.add(self.partnerstaff)
+        self.agreement.save()
         # This is here to test partner scoping
         AgreementFactory(signed_by_unicef_date=datetime.date.today())
-
         self.intervention = InterventionFactory(
             agreement=self.agreement,
             document_type='SHPD',
@@ -65,7 +68,21 @@ class TestModelExport(APITenantTestCase):
             signed_by_partner_date=datetime.date.today(),
             unicef_signatory=self.unicef_staff,
             population_focus="Population focus",
+            fr_numbers=["1234", "124456"],
+            partner_authorized_officer_signatory=self.partnerstaff,
         )
+        self.supply_item = SupplyItem.objects.create(name="foo", description="bar")
+        self.supplyplan = SupplyPlan.objects.create(
+            intervention=self.intervention,
+            quantity=1,
+            item=self.supply_item
+        )
+        self.distributionplan = DistributionPlan.objects.create(
+            intervention=self.intervention,
+            item=self.supply_item,
+            quantity=1
+        )
+        self.ib = InterventionBudgetFactory(intervention=self.intervention, currency=CurrencyFactory())
         self.government_intervention = GovernmentInterventionFactory(
             partner=self.partner,
             country_programme=self.agreement.country_programme
@@ -149,6 +166,7 @@ class TestModelExport(APITenantTestCase):
             'CP Outputs',
             'RAM Indicators',
             'FR Number(s)',
+            'Local Currency of Planned Budget',
             'Total UNICEF Budget (Local)',
             'Total UNICEF Budget (USD)',
             'Total CSO Budget (USD)',
@@ -163,8 +181,8 @@ class TestModelExport(APITenantTestCase):
             'Signed by Partner Date',
             'Signed by UNICEF',
             'Signed by UNICEF Date',
-            'Supply Plan',
-            'Distribution Plan',
+            'Days from Submission to Signed',
+            'Days from Review to Signed',
             'URL'
         ])
 
@@ -188,7 +206,8 @@ class TestModelExport(APITenantTestCase):
                 unicode(self.intervention.hrp.name),
                 u'',
                 u'',
-                u'',
+                u', '.join(self.intervention.fr_numbers),
+                '{}'.format(self.intervention.planned_budget.first().currency),
                 u'{:.2f}'.format(self.intervention.total_budget_local),
                 u'{:.2f}'.format(self.intervention.total_unicef_cash),
                 u'{:.2f}'.format(self.intervention.total_partner_contribution),
@@ -199,12 +218,12 @@ class TestModelExport(APITenantTestCase):
                 '{}'.format(self.intervention.submission_date),
                 '{}'.format(self.intervention.submission_date_prc),
                 '{}'.format(self.intervention.review_date_prc),
-                u'',
+                u'{}'.format(self.intervention.partner_authorized_officer_signatory.get_full_name()),
                 '{}'.format(self.intervention.signed_by_unicef_date),
                 u'',
                 '{}'.format(self.intervention.signed_by_partner_date),
-                u'',
-                u'',
+                '{}'.format(self.intervention.days_from_submission_to_signed),
+                '{}'.format(self.intervention.days_from_review_to_signed),
                 u'https://testserver/pmp/interventions/{}/details/'.format(self.intervention.id)
             )
         )
@@ -248,7 +267,7 @@ class TestModelExport(APITenantTestCase):
                 '{}'.format(self.agreement.signed_by_partner_date),
                 u'',
                 '{}'.format(self.agreement.signed_by_unicef_date),
-                u'',
+                ', '.join([sm.get_full_name() for sm in self.agreement.authorized_officers.all()]),
                 u'',
                 u'https://testserver/pmp/agreements/{}/details/'.format(self.agreement.id)
             )
@@ -287,14 +306,16 @@ class TestModelExport(APITenantTestCase):
             'Staff Members',
             'URL'
         ])
+        deleted_flag = "Yes" if self.partner.deleted_flag else "No"
+        blocked = "Yes" if self.partner.blocked else "No"
 
         self.assertEqual(dataset[0], (
                 self.partner.vendor_number,
                 unicode(self.partner.name),
                 self.partner.short_name,
                 self.partner.alternate_name,
-                self.partner.partner_type,
-                u'',
+                "{}".format(self.partner.partner_type),
+                u', '.join([x for x in self.partner.shared_with]),
                 self.partner.address,
                 self.partner.phone_number,
                 self.partner.email,
@@ -302,12 +323,12 @@ class TestModelExport(APITenantTestCase):
                 u'{}'.format(self.partner.core_values_assessment_date),
                 u'{:.2f}'.format(self.partner.total_ct_cp),
                 u'{:.2f}'.format(self.partner.total_ct_cy),
-                unicode(self.partner.deleted_flag),
-                unicode(self.partner.blocked),
+                deleted_flag,
+                blocked,
                 self.partner.type_of_assessment,
                 u'{}'.format(self.partner.last_assessment_date),
                 u'',
-                u', '.join([x.get_full_name() for x in self.partner.staff_members.filter(active=True).all()]),
+                ', '.join(["{} ({})".format(sm.get_full_name(), sm.email) for sm in self.partner.staff_members.filter(active=True).all()]),
                 u'https://testserver/pmp/partners/{}/details/'.format(self.partner.id)
             )
         )
