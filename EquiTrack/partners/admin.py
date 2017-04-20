@@ -1031,7 +1031,6 @@ class AgreementAdmin(ExportMixin, HiddenPartnerMixin, CountryUsersAdminMixin, ad
     readonly_fields = (
         u'download_url',
         u'agreement_number',
-        u'status'
     )
     filter_horizontal = (
         u'authorized_officers',

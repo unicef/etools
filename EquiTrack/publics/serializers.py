@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 
+from django.utils.translation import ugettext
+
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from publics.models import Country, DSARegion, BusinessArea, BusinessRegion, Currency, AirlineCompany, WBS, Grant,\
     Fund, TravelExpenseType
@@ -124,3 +127,21 @@ class WBSGrantFundSerializer(serializers.Serializer):
 
     class Meta:
         fields = ('wbs', 'grant', 'fund')
+
+
+class GhostDataPKSerializer(serializers.Serializer):
+    values = serializers.ListField(child=serializers.IntegerField(min_value=1, required=True), required=True,
+                                   allow_empty=False)
+
+
+class MultiGhostDataSerializer(GhostDataPKSerializer):
+    category = serializers.CharField(required=True)
+
+    def validate_category(self, value):
+        if 'available_categories' not in self.context:
+            return value
+
+        if value not in self.context['available_categories']:
+            raise ValidationError(ugettext('Invalid category'))
+
+        return value
