@@ -60,8 +60,10 @@ def amendments_ok(agreement):
     # To be Continued
     return True
 
+
 def amendments_signed_amendment_valid(agreement):
     return all(agreement.amendments.values_list('signed_amendment', flat=True))
+
 
 def amendments_signed_date_valid(agreement):
     today = date.today()
@@ -69,6 +71,7 @@ def amendments_signed_date_valid(agreement):
         if amendment.signed_date and amendment.signed_date > today:
             return False
     return True
+
 
 def start_end_dates_valid(agreement):
     if agreement.start and agreement.end and agreement.start > agreement.end:

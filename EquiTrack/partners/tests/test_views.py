@@ -215,7 +215,7 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         today = datetime.date.today()
         assessments = [{
                 "id": self.assessment2.id,
-                "completed_date": datetime.date(today.year+1, 1, 1),
+                "completed_date": datetime.date(today.year + 1, 1, 1),
             }]
         data = {
             "assessments": assessments,
@@ -228,13 +228,15 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, {"assessments":{"completed_date":["The Date of Report cannot be in the future"]}})
+        self.assertEquals(response.data, {"assessments":
+                                          {"completed_date":
+                                           ["The Date of Report cannot be in the future"]}})
 
     def test_api_partners_update_assessments_longago(self):
         today = datetime.date.today()
         assessments = [{
                 "id": self.assessment2.id,
-                "completed_date": datetime.date(today.year-3, 1, 1),
+                "completed_date": datetime.date(today.year - 3, 1, 1),
             }]
         data = {
             "assessments": assessments,
@@ -333,7 +335,9 @@ class TestPartnerOrganizationViews(APITenantTestCase):
         )
 
         self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEquals(response.data, {"assessments":{"completed_date":["The Date of Report cannot be in the future"]}})
+        self.assertEquals(response.data, {"assessments":
+                                          {"completed_date":
+                                           ["The Date of Report cannot be in the future"]}})
 
     def test_api_partners_retrieve(self):
         response = self.forced_auth_req(
@@ -1027,7 +1031,6 @@ class TestAgreementAPIView(APITenantTestCase):
         )
 
         self.assertEquals(amendment_type.cp_cycle_end, CountryProgramme.current().to_date)
-
 
     @skip("signed amendment is now mandatory so we cannot delete?")
     def test_agreement_amendment_delete_valid(self):
