@@ -1,5 +1,7 @@
 import copy
 import logging
+import collections
+
 from django.apps import apps
 from django.utils.functional import cached_property
 
@@ -395,7 +397,9 @@ class CompleteValidation(object):
         return not len(errors), errors
 
     def map_errors(self, errors):
-        return [self.VALID_ERRORS.get(error, error) for error in errors]
+        def get_error_message(error):
+            return self.VALID_ERRORS.get(error, error) if isinstance(error, collections.Hashable) else error
+        return [get_error_message(error) for error in errors]
 
     @cached_property
     def total_validation(self):
