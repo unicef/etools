@@ -8,8 +8,7 @@ from vision.utils import wcf_json_date_as_datetime, comp_decimals
 from django.utils import timezone
 
 from funds.models import (
-    Grant, Donor,
-    FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
+    Grant, FundsCommitmentHeader, FundsCommitmentItem, FundsReservationHeader, FundsReservationItem
 )
 from partners.models import FundingCommitment, DirectCashTransfer
 
@@ -70,10 +69,10 @@ class FundingSynchronizer(VisionDataSynchronizer):
         fetched_grants = {}
         fcs = {}
 
-        def _changed_fields( fields, local_obj, api_obj):
+        def _changed_fields(fields, local_obj, api_obj):
             for field in fields:
                 apiobj_field = api_obj[self.MAPPING[field]]
-                if field in ['fr_item_amount_usd','agreement_amount', 'commitment_amount', 'expenditure_amount']:
+                if field in ['fr_item_amount_usd', 'agreement_amount', 'commitment_amount', 'expenditure_amount']:
                     return not comp_decimals(getattr(local_obj, field), apiobj_field)
 
                 if field in ['start', 'end']:
@@ -87,7 +86,6 @@ class FundingSynchronizer(VisionDataSynchronizer):
                 if getattr(local_obj, field) != apiobj_field:
                     return True
             return False
-
 
         for fc_line in filtered_records:
             grant = None
@@ -330,7 +328,8 @@ class FundReservationsSynchronizer(VisionDataSynchronizer):
         if to_create:
             created_objects = FundsReservationHeader.objects.bulk_create(to_create)
             # TODO in Django 1.10 the following line is not needed because ids are returned
-            created_objects = FundsReservationHeader.objects.filter(fr_number__in=[c.fr_number for c in created_objects])
+            created_objects = FundsReservationHeader.objects.filter(
+                fr_number__in=[c.fr_number for c in created_objects])
             self.map_header_objects(created_objects)
 
         self.map_header_objects(to_update)
@@ -594,4 +593,3 @@ class FundCommitmentSynchronizer(VisionDataSynchronizer):
         processed = h_processed[0] + i_processed[0] + h_processed[1] + i_processed[1]
 
         return processed
-

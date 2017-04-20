@@ -35,5 +35,3 @@ class VisionSyncLogAdmin(admin.ModelAdmin):
 
 
 admin.site.register(VisionSyncLog, VisionSyncLogAdmin)
-
-

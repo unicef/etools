@@ -1,10 +1,6 @@
 import json
-import decimal
-
-from django.db import IntegrityError
 
 from vision.vision_data_synchronizer import VisionDataSynchronizer
-from django.db import transaction
 from vision.utils import wcf_json_date_as_datetime, comp_decimals
 from funds.models import Grant, Donor
 from partners.models import PartnerOrganization
@@ -22,6 +18,7 @@ cso_type_mapping = {
     "Community based organization": u'Community Based Organization',
     "Academic Institution": u'Academic Institution'
 }
+
 
 class PartnerSynchronizer(VisionDataSynchronizer):
 
@@ -49,7 +46,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         "TOTAL_CASH_TRANSFERRED_CY",
     )
 
-
     MAPPING = {
         'name': "VENDOR_NAME",
         'cso_type': 'CSO_TYPE_NAME',
@@ -65,6 +61,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         'core_values_assessment_date': "CORE_VALUE_ASSESSMENT_DT",
         'partner_type': "PARTNER_TYPE_DESC",
     }
+
     def _convert_records(self, records):
         return json.loads(records)
 
@@ -79,7 +76,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         return filter(bad_record, records)
 
     def _get_json(self, data):
-            return [] if data == self.NO_DATA_MESSAGE else data
+        return [] if data == self.NO_DATA_MESSAGE else data
 
     def update_stuff(self, records):
         _pos = []
@@ -89,8 +86,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         _totals_cy = {}
         _totals_cp = {}
 
-
-        def _changed_fields( fields, local_obj, api_obj):
+        def _changed_fields(fields, local_obj, api_obj):
             for field in fields:
                 apiobj_field = api_obj[self.MAPPING[field]]
 
@@ -110,10 +106,6 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     print "field changed", field
                     return True
             return False
-
-
-
-
 
         def _process_po(po_api):
             if po_api['VENDOR_CODE'] not in _vendors:
@@ -155,9 +147,7 @@ class PartnerSynchronizer(VisionDataSynchronizer):
             else:
                 _totals_cy[po_api['VENDOR_CODE']] += po_api["TOTAL_CASH_TRANSFERRED_CY"]
 
-
         def _partner_save(processed, partner):
-
 
             try:
                 new = False
@@ -168,27 +158,26 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org = PartnerOrganization(vendor_number=partner["VENDOR_CODE"])
                     new = True
 
-                #TODO: qucick and dirty fix for cso_type mapping... this entire syncronizer needs updating
+                # TODO: qucick and dirty fix for cso_type mapping... this entire syncronizer needs updating
                 partner['CSO_TYPE_NAME'] = cso_type_mapping.get(partner['CSO_TYPE_NAME'], None)
                 try:
                     type_mapping[partner["PARTNER_TYPE_DESC"]]
                 except KeyError as exp:
                     print "Partner {} skipped, because PartnerType ={}".format(
                         partner['VENDOR_NAME'], exp
-                        )
+                    )
                     # if partner organization exists in etools db (these are nameless)
                     if partner_org.id:
-                        partner_org.name = ""# leaving the name blank on purpose (invalid record)
+                        partner_org.name = ""  # leaving the name blank on purpose (invalid record)
                         partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
                         partner_org.hidden = True
                         partner_org.save()
                     return processed
 
-
                 if new or _changed_fields(['name', 'cso_type', 'rating', 'type_of_assessment',
-                                                'address', 'phone_number', 'email', 'deleted_flag',
-                                                'last_assessment_date', 'core_values_assessment_date', 'city', 'country'],
-                                               partner_org, partner):
+                                           'address', 'phone_number', 'email', 'deleted_flag',
+                                           'last_assessment_date', 'core_values_assessment_date', 'city', 'country'],
+                                          partner_org, partner):
                     partner_org.name = partner["VENDOR_NAME"]
                     partner_org.cso_type = partner["CSO_TYPE_NAME"]
                     partner_org.rating = partner["RISK_RATING_NAME"]
@@ -198,7 +187,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.country = partner["VENDOR_CTRY_NAME"]
                     partner_org.phone_number = partner["PHONE_NUMBER"]
                     partner_org.email = partner["EMAIL"]
-                    partner_org.core_values_assessment_date = wcf_json_date_as_datetime(partner["CORE_VALUE_ASSESSMENT_DT"])
+                    partner_org.core_values_assessment_date = wcf_json_date_as_datetime(
+                        partner["CORE_VALUE_ASSESSMENT_DT"])
                     partner_org.last_assessment_date = wcf_json_date_as_datetime(partner["LAST_ASSESSMENT_DATE"])
                     partner_org.partner_type = type_mapping[partner["PARTNER_TYPE_DESC"]]
                     partner_org.deleted_flag = True if partner["DELETED_FLAG"] else False
@@ -207,14 +197,12 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                     partner_org.vision_synced = True
                     saving = True
 
-                if partner_org.total_ct_cp == None or partner_org.total_ct_cy == None or \
+                if partner_org.total_ct_cp is None or partner_org.total_ct_cy is None or \
                         not comp_decimals(partner_org.total_ct_cp, _totals_cp[partner["VENDOR_CODE"]]) or \
                         not comp_decimals(partner_org.total_ct_cy, _totals_cy[partner["VENDOR_CODE"]]):
 
                     partner_org.total_ct_cy = _totals_cy[partner["VENDOR_CODE"]]
                     partner_org.total_ct_cp = _totals_cp[partner["VENDOR_CODE"]]
-
-
 
                     saving = True
                     print "sums changed", partner_org
@@ -231,17 +219,15 @@ class PartnerSynchronizer(VisionDataSynchronizer):
                 print "Exception message: {} " \
                       "Exception type: {} " \
                       "Exception args: {} ".format(
-                        exp.message, type(exp).__name__, exp.args
-                    )
+                          exp.message, type(exp).__name__, exp.args
+                      )
             return processed
-
 
         processed = 0
         filtered_records = self._filter_records(records)
 
         for partner in filtered_records:
             _process_po(partner)
-
 
         for partner in _pos:
             processed = _partner_save(processed, partner)
@@ -254,12 +240,8 @@ class PartnerSynchronizer(VisionDataSynchronizer):
         self._totals_cp = {}
         return processed
 
-
     def _save_records(self, records):
 
-
-
         processed = self.update_stuff(records)
-
 
         return processed
