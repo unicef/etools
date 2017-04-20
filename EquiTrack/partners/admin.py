@@ -781,27 +781,35 @@ class GovernmentInterventionAdmin(ExportMixin, admin.ModelAdmin):
         return request.user.is_superuser
 
 
-class AssessmentAdminInline(admin.TabularInline):
+# class AssessmentAdminInline(admin.TabularInline):
+#     model = Assessment
+#     form = AssessmentAdminForm
+#     formset = ParentInlineAdminFormSet
+#     extra = 0
+#     fields = (
+#         u'type',
+#         u'completed_date',
+#         u'current',
+#         u'report',
+#     )
+#     verbose_name = u'Assessments and Audits record'
+#     verbose_name_plural = u'Assessments and Audits records'
+
+class AssessmentAdmin(admin.ModelAdmin):
     model = Assessment
-    form = AssessmentAdminForm
-    formset = ParentInlineAdminFormSet
-    extra = 0
     fields = (
-        u'type',
-        u'completed_date',
-        u'current',
-        u'report',
+         u'partner',
+         u'type',
+         u'completed_date',
+         u'current',
+         u'report',
     )
-    verbose_name = u'Assessments and Audits record'
-    verbose_name_plural = u'Assessments and Audits records'
-
-
-class PartnerStaffMemberInlineAdmin(admin.TabularInline):
-    model = PartnerStaffMember
-    form = PartnerStaffMemberForm
-
-    def has_delete_permission(self, request, obj=None):
-        return False
+    list_filter = (
+        u'partner',
+        u'type'
+    )
+    verbose_name = u'Assessment'
+    verbose_name_plural = u'Assessments'
 
 
 class PartnerStaffMemberAdmin(admin.ModelAdmin):
@@ -811,6 +819,11 @@ class PartnerStaffMemberAdmin(admin.ModelAdmin):
         '__unicode__',
         'title',
         'email',
+    )
+    search_fields = (
+        u'first_name',
+        u'last_name',
+        u'email'
     )
 
     def save_model(self, request, obj, form, change):
@@ -841,12 +854,6 @@ class HiddenPartnerFilter(admin.SimpleListFilter):
         if value == 'True':
             return queryset.filter(hidden=True)
         return queryset.filter(hidden=False)
-
-
-class BankDetailsInlineAdmin(admin.StackedInline):
-    model = BankDetails
-    verbose_name_plural = "Bank Details"
-    extra = 1
 
 
 class PartnerAdmin(ExportMixin, admin.ModelAdmin):
@@ -890,9 +897,7 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'rating',
                  u'type_of_assessment',
                  u'last_assessment_date',
-                 # TODO remove field
                  u'address',
-                 # u'street_address',
                  u'city',
                  u'postal_code',
                  u'country',
@@ -904,24 +909,10 @@ class PartnerAdmin(ExportMixin, admin.ModelAdmin):
                  u'blocked',
                  )
         }),
-        (_('Alternate Name'), {
-            u'classes': (u'collapse', u'open'),
-            'fields':
-                ((u'alternate_id', u'alternate_name',),)
-        }),
     )
     inlines = [
-        AssessmentAdminInline,
-        BankDetailsInlineAdmin,
-        PartnerStaffMemberInlineAdmin,
-        # TODO: create an html table
-        # InterventionInlineAdmin,
+        # PartnerStaffMemberInlineAdmin,
     ]
-    suit_form_includes = (
-        ('admin/partners/interventions_inline.html', '', ''),
-        # TODO: Nik get this working
-        ('admin/partners/assurance_table.html', '', ''),
-    )
 
     actions = (
         'hide_partners',
@@ -1113,20 +1104,25 @@ class SupplyItemAdmin(admin.ModelAdmin):
         return request.user.is_superuser
 
 
+admin.site.register(PartnerOrganization, PartnerAdmin)
+admin.site.register(Assessment, AssessmentAdmin)
+admin.site.register(BankDetails)
+admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
+
+
 admin.site.register(SupplyItem, SupplyItemAdmin)
 admin.site.register(PCA, PartnershipAdmin)
 admin.site.register(Intervention, InterventionAdmin)
 admin.site.register(Agreement, AgreementAdmin)
 admin.site.register(AgreementAmendmentType)
-admin.site.register(PartnerOrganization, PartnerAdmin)
+
 admin.site.register(FileType, FileTypeAdmin)
 # admin.site.register(Assessment, AssessmentAdmin)
-admin.site.register(PartnerStaffMember, PartnerStaffMemberAdmin)
 admin.site.register(FundingCommitment, FundingCommitmentAdmin)
 admin.site.register(GovernmentIntervention, GovernmentInterventionAdmin)
 admin.site.register(GovernmentInterventionResultActivity)
 admin.site.register(IndicatorReport)
-admin.site.register(BankDetails)
+
 admin.site.register(InterventionPlannedVisits)
 # admin.site.register(Intervention)
 admin.site.register(InterventionAmendment)
