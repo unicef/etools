@@ -3,7 +3,6 @@ from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
 from mptt.admin import MPTTModelAdmin
 
-from EquiTrack.utils import get_changeform_link
 from EquiTrack.forms import AutoSizeTextForm
 
 from reports.models import (
@@ -12,7 +11,6 @@ from reports.models import (
     Unit,
     Indicator,
     ResultStructure,
-    ResultType,
     Result,
     CountryProgramme,
     LowerResult,
@@ -107,7 +105,7 @@ class GoalAdmin(admin.ModelAdmin):
 
 class IndicatorAdmin(admin.ModelAdmin):
     form = IndicatorAdminForm
-    search_fields = ('name','code')
+    search_fields = ('name', 'code')
     list_editable = (
         'view_on_dashboard',
     )
@@ -132,7 +130,7 @@ class IndicatorAdmin(admin.ModelAdmin):
 
 
 class LowerIndicatorAdmin(admin.ModelAdmin):
-    search_fields = ('name','code')
+    search_fields = ('name', 'code')
     # list_filter = (
     #     SectorListFilter,
     #     'lower_result__result_structure',
@@ -197,7 +195,7 @@ class ResultAdmin(MPTTModelAdmin):
             result.save()
             results += 1
         self.message_user(request, '{} results were hidden'.format(results))
-            
+
     def show_results(self, request, queryset):
 
         results = 0
@@ -234,6 +232,6 @@ admin.site.register(Unit, ImportExportModelAdmin)
 admin.site.register(Indicator, IndicatorAdmin)
 # admin.site.register(ResultChain)
 admin.site.register(LowerResult)
-#admin.site.register(ResultType)
+# admin.site.register(ResultType)
 admin.site.register(IndicatorBlueprint)
 admin.site.register(AppliedIndicator)

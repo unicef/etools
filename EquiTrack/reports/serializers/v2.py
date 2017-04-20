@@ -1,4 +1,3 @@
-import logging
 
 from django.db import transaction
 from rest_framework import serializers
@@ -34,7 +33,6 @@ class IndicatorBlueprintCUSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
 class AppliedIndicatorCUSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -46,6 +44,7 @@ class LowerResultSerializer(serializers.ModelSerializer):
 
     applied_indicators = AppliedIndicatorSerializer(many=True, read_only=True)
     code = serializers.CharField(read_only=True)
+
     class Meta:
         model = LowerResult
         fields = '__all__'
@@ -53,6 +52,7 @@ class LowerResultSerializer(serializers.ModelSerializer):
 
 class LowerResultCUSerializer(serializers.ModelSerializer):
     code = serializers.CharField(read_only=True)
+
     class Meta:
         model = LowerResult
         fields = '__all__'

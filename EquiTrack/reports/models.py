@@ -3,17 +3,11 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext as _
 
 from mptt.models import MPTTModel, TreeForeignKey
 from paintstore.fields import ColorPickerField
 
-from model_utils import Choices
-from model_utils.models import (
-    TimeFramedModel,
-    TimeStampedModel,
-)
-
+from model_utils.models import TimeStampedModel
 
 
 class Quarter(models.Model):
@@ -125,9 +119,9 @@ class Sector(models.Model):
     Represents a sector
     """
 
-    name = models.CharField(max_length=45L, unique=True)
+    name = models.CharField(max_length=45, unique=True)
     description = models.CharField(
-        max_length=256L,
+        max_length=256,
         blank=True,
         null=True
     )
@@ -157,7 +151,8 @@ class Sector(models.Model):
 
 class ResultManager(models.Manager):
     def get_queryset(self):
-        return super(ResultManager, self).get_queryset().select_related('country_programme', 'result_structure', 'result_type')
+        return super(ResultManager, self).get_queryset().select_related(
+            'country_programme', 'result_structure', 'result_type')
 
 
 class Result(MPTTModel):
@@ -261,10 +256,9 @@ class LowerResult(TimeStampedModel):
         if not self.code:
             self.code = '{}-{}'.format(
                 self.result_link.intervention.id,
-                self.result_link.ll_results.count()+1
+                self.result_link.ll_results.count() + 1
             )
         return super(LowerResult, self).save(**kwargs)
-
 
 
 class Goal(models.Model):
@@ -278,8 +272,8 @@ class Goal(models.Model):
     result_structure = models.ForeignKey(
         ResultStructure, blank=True, null=True, on_delete=models.DO_NOTHING)
     sector = models.ForeignKey(Sector, related_name='goals')
-    name = models.CharField(max_length=512L, unique=True)
-    description = models.CharField(max_length=512L, blank=True)
+    name = models.CharField(max_length=512, unique=True)
+    description = models.CharField(max_length=512, blank=True)
 
     class Meta:
         verbose_name = 'CCC'
@@ -293,7 +287,7 @@ class Unit(models.Model):
     """
     Represents an unit of measurement
     """
-    type = models.CharField(max_length=45L, unique=True)
+    type = models.CharField(max_length=45, unique=True)
 
     class Meta:
         ordering = ['type']
