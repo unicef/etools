@@ -79,7 +79,7 @@ class Location(MPTTModel):
 
     @property
     def geo_point(self):
-        return self.point if self.point else self.geom.point_on_surface
+        return self.point if self.point else self.geom.point_on_surface if self.geom else ""
 
 
     @property
